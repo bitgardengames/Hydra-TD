@@ -1,0 +1,1266 @@
+local Constants = require("core.constants")
+local Theme = require("core.theme")
+local Hotkeys = require("core.hotkeys")
+local Util = require("core.util")
+local State = require("core.state")
+local MapMod = require("world.map")
+local Enemies = require("world.enemies")
+local Towers = require("world.towers")
+local Projectiles = require("world.projectiles")
+local Floaters = require("ui.floaters")
+local Waves = require("systems.waves")
+
+local lg = love.graphics
+local lmr = love.math.random
+local min = math.min
+local max = math.max
+local sin = math.sin
+local cos = math.cos
+local ceil = math.ceil
+local floor = math.floor
+local atan2 = math.atan2
+local format = string.format
+local tinsert = table.insert
+local tsort = table.sort
+
+local outlineColor = Theme.outline.color
+local outlineWidth = Theme.outline.width
+
+local enemyShadow = Theme.enemy.shadow
+local enemyBody = Theme.enemy.body
+local enemyFace = Theme.enemy.face
+
+local colorGrass = Theme.terrain.grass
+local colorPath = Theme.terrain.path
+local colorText = Theme.ui.text
+local colorGrid = Theme.grid
+local colorSlow = Theme.tower.slow
+local colorGood = Theme.ui.good
+local colorBad = Theme.ui.bad
+local colorPanel = Theme.ui.panel
+local colorPanel2 = Theme.ui.panel2
+local colorSelected = Theme.ui.selected
+
+local zapJitter = 2 -- jitter strength
+
+local tile = Constants.TILE
+local gridW = Constants.GRID_W
+local gridH = Constants.GRID_H
+
+local shopBumps = {} -- Tower shop affordability animations
+
+local function jitter(amount)
+	return (lmr() * 2 - 1) * amount
+end
+
+local function wobble(t, amp)
+	return sin(t * 6.0) * amp, cos(t * 4.5) * amp
+end
+
+local function formatNum(n)
+    return tostring(floor(n + 0.5)):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+end
+
+local function printShadow(text, x, y)
+	local r, g, b, a = lg.getColor()
+
+	-- Shadow
+	lg.setColor(0, 0, 0, a * 0.4)
+	lg.print(text, x + 1, y + 1)
+
+	-- Main
+	lg.setColor(r, g, b, a)
+	lg.print(text, x, y)
+end
+
+local function printfShadow(text, x, y, w, align)
+	local r, g, b, a = lg.getColor()
+
+	-- Shadow
+	lg.setColor(0, 0, 0, a * 0.4)
+	lg.printf(text, x + 1, y + 1, w, align)
+
+	-- Main
+	lg.setColor(r, g, b, a)
+	lg.printf(text, x, y, w, align)
+end
+
+local BAR_W = 64
+local BAR_H = 8
+local LABEL_W = 44
+
+local function drawStatusBar(label, color, timeLeft, duration, x, y)
+	-- Safety guards
+	if not timeLeft or timeLeft <= 0 then return end
+	if not duration or duration <= 0 then return end
+
+	local t = math.max(0, math.min(1, timeLeft / duration))
+
+	-- Subtle pulse near expiration
+	local pulse = 1
+
+	if t < 0.25 then
+		pulse = 0.85 + math.sin(love.timer.getTime() * 10) * 0.15
+	end
+
+	-- Label
+	lg.setColor(colorText)
+	printShadow(label, x, y)
+
+	-- Bar background
+	lg.setColor(0, 0, 0, 0.35)
+	lg.rectangle("fill", x + LABEL_W, y + 4, BAR_W, BAR_H, 4, 4)
+
+	-- Bar fill
+	lg.setColor(color[1] * pulse, color[2] * pulse, color[3] * pulse, 1)
+	lg.rectangle("fill", x + LABEL_W, y + 4, BAR_W * t, BAR_H, 4, 4)
+
+	-- Optional time text (kept subtle)
+	lg.setColor(1, 1, 1, 0.85)
+	printShadow(string.format("%.1fs", timeLeft), x + LABEL_W + BAR_W + 6, y)
+end
+
+local function formatModifier(label, value, suffix)
+    if not value or value == 1 then return nil end
+
+    local delta = (value - 1) * 100
+    local sign = delta > 0 and "+" or "-"
+    local pct = math.abs(math.floor(delta + 0.5))
+
+    return ("%s%d%% %s %s"):format(sign, pct, label, suffix)
+end
+
+local function drawGrid()
+	lg.setColor(colorGrass)
+	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
+
+	for y = 1, gridH do
+		for x = 1, gridW do
+			local k = MapMod.makeKey(x, y)
+
+			if MapMod.map.isPath[k] then
+				lg.setColor(colorPath)
+				lg.rectangle("fill", (x - 1) * tile, (y - 1) * tile, tile, tile)
+			end
+		end
+	end
+
+	lg.setColor(Theme.grid)
+
+	for x = 0, gridW do
+		lg.line(x * tile, 0, x * tile, gridH * tile)
+	end
+
+	for y = 0, gridH do
+		lg.line(0, y * tile, gridW * tile, y * tile)
+	end
+end
+
+local function drawEnemies()
+	for _, e in ipairs(Enemies.enemies) do
+		local bounce = sin(e.animT) * (e.slowTimer > 0 and 1 or 2)
+		local weight = sin(e.animT * 0.8) * 0.5
+		local y = e.y + bounce
+
+		-- Boss horns
+		if e.boss then
+			lg.setColor(outlineColor)
+
+			local hornW = e.radius * 0.55
+			local hornH = e.radius * 0.75
+			local hornY = y - e.radius * 1.05 -- + 3
+			local hornWob = sin(e.animT * 2.5) * 0.06
+
+			-- Left horn
+			lg.push()
+			lg.translate(e.x - e.radius * 0.46, hornY)
+			lg.rotate(-0.26 + hornWob)
+			lg.polygon("fill", 0, 0, -hornW,  hornH * 0.5, -hornW, -hornH * 0.5)
+			lg.pop()
+
+			-- Right horn
+			lg.push()
+			lg.translate(e.x + e.radius * 0.46, hornY)
+			lg.rotate(0.26 - hornWob)
+			lg.polygon("fill", 0, 0, hornW, -hornH * 0.5, hornW,  hornH * 0.5)
+			lg.pop()
+		end
+
+		local enemyAlpha = e.alpha
+		local shadowAlpha = enemyShadow[4] * (enemyAlpha ^ 1.3)
+
+		-- Shadow
+		lg.setColor(enemyShadow[1], enemyShadow[2], enemyShadow[3], shadowAlpha)
+		lg.ellipse("fill", e.x, e.y + e.radius, e.radius * 1.1, e.radius * 0.4)
+
+		-- Outline
+		lg.setLineWidth(outlineWidth)
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], enemyAlpha)
+		lg.circle("line", e.x, y, e.radius + 1 + weight)
+
+		-- Body
+		lg.setLineWidth(1)
+		lg.setColor(enemyBody[1], enemyBody[2], enemyBody[3], enemyAlpha)
+		lg.circle("fill", e.x, y, e.radius)
+
+		-- Hit flash
+		if e.hitFlash > 0 then
+			local a = min(1, e.hitFlash / 0.05)
+
+			lg.setColor(1.0, 0.95, 0.9, a * 0.35)
+			lg.circle("fill", e.x, e.y, e.radius + 1)
+		end
+
+		-- Slow
+		if e.slowTimer > 0 then
+			local pulse = 0.5 + sin(e.animT * 5) * 0.5
+			local slowAlpha = (0.18 + pulse * 0.08) * enemyAlpha
+
+			lg.setColor(colorSlow[1], colorSlow[2], colorSlow[3], slowAlpha)
+			lg.circle("fill", e.x, y, e.radius - 2)
+
+			-- inner frost ring
+			lg.setLineWidth(1)
+			lg.setColor(colorSlow[1], colorSlow[2], colorSlow[3], 0.35)
+			lg.circle("line", e.x, y, e.radius - 1)
+		end
+
+		-- Poison
+		if e.poisonStacks and e.poisonStacks > 0 then
+			local wobble = sin(e.animT * 3 + e.poisonStacks) * 0.5
+			local intensity = min(0.35, 0.15 + e.poisonStacks * 0.05)
+			local poisonAlpha = intensity * (enemyAlpha ^ 0.75)
+
+			lg.setColor(0.35, 0.85, 0.35, poisonAlpha)
+			lg.circle("fill", e.x, y + wobble, e.radius - 3)
+		end
+
+		-- Eyes
+		local eyeSep  = e.radius * 0.38
+		local eyeSize = max(1.6, e.radius * 0.16)
+		local eyeY = y - e.radius * 0.22
+
+		lg.setColor(enemyFace[1], enemyFace[2], enemyFace[3], enemyAlpha)
+
+		if e.boss and e.dying then
+			local bigR   = eyeSize + 1
+			local smallR = max(2, eyeSize - 1)
+			print(smallR)
+			local p = 1 - (e.deathT / e.deathDur)
+			local pop = 1 + (1 - (p * p)) * 0.15
+
+			lg.push()
+			lg.translate(e.x, eyeY)
+			lg.scale(pop, pop)
+
+			-- Big shocked eye (outline)
+			lg.setLineWidth(3)
+			lg.circle("line", -eyeSep, 0, bigR)
+
+			-- Small collapsed eye (fill)
+			lg.circle("fill", eyeSep, 0, smallR)
+
+			lg.setLineWidth(1)
+			lg.pop()
+		elseif e.boss then
+			-- Normal boss face
+			local browLen = eyeSize * 2.4
+			local browDrop = eyeSize * 0.85
+			local browTension = sin(e.animT * 1.8) * 0.8
+
+			lg.circle("fill", e.x - eyeSep, eyeY, eyeSize)
+			lg.circle("fill", e.x + eyeSep, eyeY, eyeSize)
+
+			lg.setLineWidth(2)
+			lg.line(e.x - eyeSep - browLen * 0.65, eyeY - browDrop, e.x - eyeSep + browLen * 0.35, eyeY - browDrop * 0.15 + browTension)
+			lg.line(e.x + eyeSep - browLen * 0.35, eyeY - browDrop * 0.15 + browTension, e.x + eyeSep + browLen * 0.65, eyeY - browDrop)
+			lg.setLineWidth(1)
+		else
+			local eyeDriftX = sin(e.animT * 1.3) * 0.6
+			local eyeDriftY = cos(e.animT * 1.1) * 0.4
+
+			lg.circle("fill", e.x - eyeSep + eyeDriftX, eyeY + eyeDriftY, eyeSize)
+			lg.circle("fill", e.x + eyeSep + eyeDriftX, eyeY + eyeDriftY, eyeSize)
+		end
+
+		-- Selection
+		if State.selectedEnemy == e then
+			lg.setColor(colorSelected[1], colorSelected[2], colorSelected[3], 0.25)
+			lg.circle("fill", e.x, y, e.radius + 4)
+
+			lg.setColor(colorSelected)
+			lg.circle("line", e.x, y, e.radius + 4)
+		end
+
+		-- Health bar
+		if not e.dying then
+			local w = e.boss and 44 or 28
+			local h = e.boss and 7 or 5
+			local x = e.x - w / 2
+			local y = e.y - e.radius - (e.boss and 18 or 12)
+
+			lg.setColor(0, 0, 0, 0.5)
+			lg.rectangle("fill", x, y, w, h, 3, 3)
+
+			local t = max(0, e.hp / e.maxHp)
+
+			local r, g
+
+			if t > 0.5 then
+				-- Green to Yellow
+				local p = (t - 0.5) / 0.5
+				r = 1 - p
+				g = 1
+			else
+				-- Yellow to Red
+				local p = t / 0.5
+				r = 1
+				g = p
+			end
+
+			lg.setColor(r, g, 0.15, 0.9)
+			lg.rectangle("fill", x, y, w * t, h, 3, 3)
+		end
+	end
+
+	for _, d in ipairs(Enemies.deathFX) do
+		local p = d.t / 0.14
+		local alpha = (1 - p) * 0.6
+		local scale = 1 + p * 0.25
+
+		lg.setColor(1, 1, 1, alpha)
+		lg.circle("line", d.x, d.y, d.r * scale)
+
+		lg.setColor(1, 1, 1, alpha * 0.2)
+		lg.circle("fill", d.x, d.y, d.r * scale)
+	end
+end
+
+local function forwardOffset(t, dist)
+    return cos(t.angle) * dist, sin(t.angle) * dist
+end
+
+local function drawLancerFX(t)
+    local a = t.fireAnim
+    if a <= 0 then return end
+
+    local fx, fy = forwardOffset(t, tile * 0.34)
+
+    -- Muzzle flash
+    lg.setColor(1, 1, 1, 0.9 * a)
+    lg.circle("fill", t.x + fx, t.y + fy, 2)
+end
+
+local function drawSlowFX(t)
+    local time = love.timer.getTime()
+    local pulse = 0.5 + sin(time * 2) * 0.5
+
+    local r = tile * (0.45 + pulse * 0.08)
+
+    lg.setLineWidth(3)
+    lg.setColor(
+        Theme.tower.slow[1],
+        Theme.tower.slow[2],
+        Theme.tower.slow[3],
+        0.6
+    )
+    lg.circle("line", t.x, t.y, r)
+
+    lg.setLineWidth(1)
+end
+
+local function drawPoisonFX(t)
+    local time = love.timer.getTime()
+    local wobble = sin(time * 4 + t.x) * 3
+
+    lg.setColor(
+        Theme.tower.poison[1],
+        Theme.tower.poison[2],
+        Theme.tower.poison[3],
+        0.65
+    )
+    lg.circle("fill", t.x + wobble, t.y, tile * 0.22)
+
+    lg.setColor(0, 0, 0, 0.25)
+    lg.circle("line", t.x + wobble, t.y, tile * 0.22)
+end
+
+local function drawShockFX(t)
+    local w = t.windUp
+    if not w or w <= 0 then return end
+
+    -- This MUST match drawTowerCore
+    local size = tile * 0.42
+    local bodyR = size * 0.36
+
+    -- Wind-up normalization (0 → 1)
+    local windDur = 0.08
+    local p = 1 - (w / windDur)
+    if p < 0 then p = 0 end
+    if p > 1 then p = 1 end
+
+    -- Ring geometry
+    local stroke = 2                -- 1–2px as requested
+    local startR = bodyR - stroke   -- inside edge of body
+    local endR   = 1                -- collapse to center dot
+
+    local r = startR + (endR - startR) * p
+
+    lg.setColor(
+        Theme.tower.shock[1],
+        Theme.tower.shock[2],
+        Theme.tower.shock[3],
+        1
+    )
+
+    if r > endR + 0.5 then
+        lg.setLineWidth(stroke)
+        lg.circle("line", t.x, t.y, r)
+        lg.setLineWidth(1)
+    else
+        -- Final collapse
+        lg.circle("fill", t.x, t.y, 2)
+    end
+end
+
+local function drawCannonFX(t)
+    local a = t.fireAnim
+    if a <= 0 then return end
+
+    local size = tile * 0.6
+    local fx, fy = forwardOffset(t, size)
+
+    local r = 8 + (1 - a) * 6
+
+    lg.setColor(0.9, 0.9, 0.9, 0.75 * a)
+    lg.circle(
+        "fill",
+        t.x + fx,
+        t.y + fy,
+        r
+    )
+end
+
+local function drawTowerFX(t)
+    if t.kind == "shock" then
+        drawShockFX(t)
+    elseif t.kind == "cannon" then
+        drawCannonFX(t)
+    elseif t.kind == "lancer" then
+        drawLancerFX(t)
+    elseif t.kind == "slow" then
+        drawSlowFX(t)
+    elseif t.kind == "poison" then
+        drawPoisonFX(t)
+    end
+end
+
+local function drawTowerCore(kind, cx, cy, opts)
+	opts = opts or {}
+
+	local def = Towers.towerDefs[kind]
+
+	if not def then
+		return
+	end
+
+	local size = tile * 0.42
+	local color = def.color
+	local angle = opts.angle or -math.pi / 2
+	local recoilX = opts.rx or 0
+	local recoilY = opts.ry or 0
+	local alpha = opts.alpha or 1
+	local tintR = opts.tintR or 1
+	local tintG = opts.tintG or 1
+	local tintB = opts.tintB or 1
+	local drawShadow = opts.shadow ~= false
+	local outlineA = alpha
+	local bodyA = alpha
+
+	-- Shadow (real towers only)
+	if drawShadow then
+		lg.setColor(0, 0, 0, 0.35 * alpha)
+		lg.ellipse("fill", cx, cy + size * 0.5, size, size * 0.45)
+	end
+
+	-- Base
+	lg.setLineWidth(outlineWidth)
+	lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+	lg.rectangle("line", cx - size * 0.6, cy - size * 0.6, size * 1.2, size * 1.2, 6, 6)
+
+	lg.setLineWidth(1)
+	lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
+	lg.rectangle("fill", cx - size * 0.55, cy - size * 0.55, size * 1.1, size * 1.1, 6, 6)
+
+	-- Body + Barrel
+	lg.push()
+	lg.translate(cx + recoilX, cy + recoilY)
+	lg.rotate(angle)
+
+	if kind == "cannon" then
+		lg.setLineWidth(outlineWidth)
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.circle("line", 0, 0, size * 0.42)
+
+		lg.setLineWidth(1)
+		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
+		lg.circle("fill", 0, 0, size * 0.39)
+
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.rectangle("fill", size * 0.26, -size * 0.18, size * 0.54, size * 0.36, 4, 4)
+	elseif kind == "slow" then
+		lg.push()
+		lg.rotate(math.pi / 4)
+
+		lg.setLineWidth(outlineWidth)
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.rectangle("line", -size * 0.34, -size * 0.34, size * 0.68, size * 0.68, 3, 3)
+
+		lg.setLineWidth(1)
+		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
+		lg.rectangle("fill", -size * 0.31, -size * 0.31, size * 0.62, size * 0.62, 3, 3)
+
+		lg.pop()
+	elseif kind == "shock" then
+		lg.setLineWidth(2)
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.circle("line", 0, 0, size * 0.36)
+	elseif kind == "poison" then
+		lg.setLineWidth(outlineWidth)
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.circle("line", 0, 0, size * 0.38)
+
+		lg.setLineWidth(1)
+		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
+		lg.circle("fill", 0, 0, size * 0.35)
+
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.circle("fill", size * 0.26, 0, size * 0.16)
+	else -- lancer + fallback
+		lg.setLineWidth(outlineWidth)
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.rectangle("line", -size * 0.35, -size * 0.35, size * 0.7, size * 0.7, 5, 5)
+
+		lg.setLineWidth(1)
+		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
+		lg.rectangle("fill", -size * 0.32, -size * 0.32, size * 0.64, size * 0.64, 5, 5)
+
+		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.rectangle("fill", size * 0.32, -size * 0.08, size * 0.55, size * 0.16, 3, 3)
+	end
+
+	lg.pop()
+end
+
+local function drawTowerGhost()
+	if not State.placing or not State.hoverGX or not State.hoverGY then
+		return
+	end
+
+	local def = Towers.towerDefs[State.placing]
+
+	if not def then
+		return
+	end
+
+	local gx, gy = State.hoverGX, State.hoverGY
+	local cx, cy = MapMod.gridToCenter(gx, gy)
+
+	local placeOk = MapMod.canPlaceAt(gx, gy)
+	local canAfford = State.money >= def.cost
+	local ok = placeOk and canAfford
+
+	local fade = State.placingFade or 1
+
+	-- Range indicator
+	lg.setColor(ok and 0.2 or 0.6, ok and 1.0 or 0.2, ok and 0.2 or 0.2, 0.14 * fade)
+	lg.circle("fill", cx, cy, def.range)
+
+	lg.setColor(ok and colorGood[1] or colorBad[1], ok and colorGood[2] or colorBad[2], ok and colorGood[3] or colorBad[3], 0.45 * fade)
+	lg.circle("line", cx, cy, def.range)
+
+	-- Tower ghost
+	drawTowerCore(State.placing, cx, cy, {
+		alpha = (ok and 0.45 or 0.25) * fade,
+		tintR = 1,
+		tintG = ok and 1 or 0.4,
+		tintB = ok and 1 or 0.4,
+		shadow = false,
+	})
+end
+
+local function drawTowers()
+	for _, t in ipairs(Towers.towers) do
+		local color = t.def.color
+		local cx = t.x
+		local cy = t.y
+		local size = tile * 0.42
+		local dx, dy = 0, -1
+
+		if t.target then
+			dx = t.target.x - cx
+			dy = t.target.y - cy
+			dx, dy = Util.norm(dx, dy)
+		end
+
+		local rx = -dx * t.recoil
+		local ry = -dy * t.recoil
+
+		drawTowerCore(t.kind, cx, cy, {
+			angle = t.angle,
+			rx = rx,
+			ry = ry,
+			alpha = 1,
+		})
+
+		--drawTowerFX(t)
+
+		-- Upgrade pips & animation
+		local pips = min(8, t.level)
+
+		lg.setColor(0.92, 0.92, 0.92, 1)
+
+		for i = 1, pips do
+			lg.rectangle("fill", (t.gx - 1) * tile + 10 + (i - 1) * 4, (t.gy - 1) * tile + tile - 11, 3, 4)
+		end
+
+		if t.levelUpAnim and t.levelUpAnim > 0 then
+			local a = t.levelUpAnim
+			lg.setColor(1, 1, 1, a * 0.4)
+			lg.circle("line", cx, cy, size * (1 + (1 - a)))
+		end
+	end
+
+	local selected = State.selectedTower
+
+	if selected then
+		local size = tile * 0.42
+		local pad = 2 -- outward expansion
+
+		-- Range highlight
+		lg.setColor(colorSelected[1], colorSelected[2], colorSelected[3], 0.18)
+		lg.circle("fill", selected.x, selected.y, selected.range)
+
+		lg.setColor(colorSelected)
+		lg.circle("line", selected.x, selected.y, selected.range)
+
+		-- Base outline
+		lg.setLineWidth(2)
+		lg.rectangle("line", selected.x - size * 0.6 - pad, selected.y - size * 0.6 - pad, size * 1.2 + pad * 2, size * 1.2 + pad * 2, 6 + pad, 6 + pad)
+
+		lg.setLineWidth(1)
+	end
+end
+
+local function drawProjectiles()
+    for _, p in ipairs(Projectiles.projectiles) do
+        local rotation = 0
+		local a = min(1, p.t * 10)
+
+        -- Homing: aim at target (or last known)
+        if p.mode == "homing" then
+            local dx = (p.lastTX or p.x) - p.x
+            local dy = (p.lastTY or p.y) - p.y
+            rotation = atan2(dy, dx)
+        -- Ground (Cannon): aim at targetted impact point
+        elseif p.mode == "ground" then
+            local dx = (p.tx or p.x) - p.x
+            local dy = (p.ty or p.y) - p.y
+            rotation = atan2(dy, dx)
+        end
+
+        if p.splash then
+            lg.setColor(1, 1, 1, a)
+            lg.draw(Projectiles.cache.cannon, p.x, p.y, rotation, 1, 1, 13, 6)
+        elseif p.slow then
+			local speedStretch = min(1.25, 1 + (p.speed or 300) / 600)
+            lg.setColor(1, 1, 1, a)
+            lg.draw(Projectiles.cache.slow, p.x, p.y, rotation, speedStretch, 1, 8, 8)
+        elseif p.poison then
+			local wx, wy = wobble(p.t or 0, 1.5)
+            lg.setColor(0.6, 0.9, 0.5, a)
+            lg.circle("fill", p.x + wx, p.y + wy, p.r + 1.5)
+        else
+			local speedStretch = min(1.25, 1 + (p.speed or 300) / 600)
+            lg.setColor(1, 1, 1, a)
+            lg.draw(Projectiles.cache.bullet, p.x, p.y, rotation, speedStretch, 1, 6, 6)
+        end
+    end
+
+	-- Cannon splash rings
+	for _, s in ipairs(Projectiles.splashes) do
+		local t = s.t / s.life
+
+		-- Faster initial expansion, slower fade
+		local ease = t * (2 - t)
+		local radius = s.r * ease
+		local wobble = sin(s.t * 40) * (1 - t) * 1.5
+
+		radius = radius + wobble
+
+		-- Hold brightness briefly, then drop
+		local alpha = (1 - t) * 0.85
+
+		if t < 0.15 then
+			alpha = 0.9
+		end
+
+		-- Faint inner body (adds presence)
+		lg.setColor(1, 0.75, 0.45, alpha * 0.25)
+		lg.circle("fill", s.x, s.y, radius * 0.92)
+
+		-- Main shock ring
+		lg.setLineWidth(3 * (1 - t) + 1)
+		lg.setColor(1.0, 0.85, 0.55, alpha)
+		lg.circle("line", s.x, s.y, radius)
+
+		-- White flash, Note: add wobble to the explosions for more variable flavor
+		if t < 0.05 then
+			lg.setColor(1, 1, 1, 0.8)
+			lg.circle("fill", s.x, s.y, radius * 0.4)
+		end
+	end
+
+	lg.setLineWidth(1)
+
+	for _, z in ipairs(Projectiles.zaps) do
+		local px, py = z.x, z.y
+		local count = #z.chain
+
+		for i, seg in ipairs(z.chain) do
+			local t = (i - 1) / count
+			local radius = 2 * (1 - t) + 1
+
+			lg.setColor(0.97, 0.97, 0.97, 0.8)
+			lg.circle("fill", seg.to.x, seg.to.y, radius) -- Note: Should I jitter this too?
+
+			lg.setLineWidth(2 * (1 - t) + 1)
+
+			local x1 = px + jitter(zapJitter)
+			local y1 = py + jitter(zapJitter)
+			local x2 = seg.to.x + jitter(zapJitter)
+			local y2 = seg.to.y + jitter(zapJitter)
+
+			lg.setColor(0.6, 0.9, 1, 0.9)
+			lg.line(x1, y1, x2, y2)
+
+			px, py = seg.to.x, seg.to.y
+		end
+	end
+
+	lg.setLineWidth(1)
+end
+
+local function drawFloaters()
+	for _, f in ipairs(Floaters.floaters) do
+		local p = f.t / f.life
+
+		-- Ease out upward motion
+		local rise = (1 - p) * 10
+
+		-- Alpha curve
+		local alpha = (p < 0.2) and 1 or (1 - (p - 0.2) / 0.8)
+
+		-- Pixel snap
+		local x = floor(f.x + 0.5)
+		local y = floor(f.y - rise + 0.5)
+
+		local text = f.text
+		local textW = lg.getFont():getWidth(text)
+		local tx = x - textW / 2
+
+		-- Main text
+		lg.setColor(f.r, f.g, f.b, alpha)
+		printShadow(text, tx, y)
+	end
+end
+
+local function drawExplosions()
+    for _, e in ipairs(Projectiles.explosions) do
+        local t = e.t / e.life
+
+        if e.type == "particle" then
+            local a = 1 - t
+            lg.setColor(1, 0.85, 0.55, a)
+            lg.circle("fill", e.x, e.y, e.r * (1 - t * 0.4))
+
+        elseif e.type == "ring" then
+            local rr = e.r * (1.2 + t * 1.4)
+            lg.setLineWidth(3 * (1 - t) + 1)
+            lg.setColor(1, 0.9, 0.6, 0.7 * (1 - t))
+            lg.circle("line", e.x, e.y, rr)
+        end
+    end
+
+    lg.setLineWidth(1)
+end
+
+local function drawDamageMeter()
+    if not State.stats or not State.stats.showDamageMeter then
+        return
+    end
+
+    local stats = State.stats
+    local isBossView = (stats.damageView == 1)
+
+    local dmgTable = isBossView and stats.bossDamageByTower or stats.damageByTower
+    local total = isBossView and stats.bossTotalDamage  or stats.totalDamage
+
+    if not dmgTable then
+        return
+    end
+
+	-- Sort list
+    local list = {}
+
+    for kind, dmg in pairs(dmgTable) do
+        if dmg > 0 then
+            tinsert(list, {kind = kind, dmg = dmg})
+        end
+    end
+
+    if #list == 0 then
+        return
+    end
+
+    tsort(list, function(a, b)
+        return a.dmg > b.dmg
+    end)
+
+	-- Layout
+    local panelW = 200
+    local barH = 16
+    local lineH = 22
+    local padX = 8
+    local panelPad = 8
+
+	local sw = lg.getDimensions()
+    local x = sw - panelW - 12
+    local y = 12
+
+    local panelH = 32 + (#list * lineH)
+
+    -- Bar width is constrained by panel width
+    local maxBarW = panelW - (padX * 2)
+
+	-- Panel background
+    lg.setColor(0, 0, 0, 0.6)
+    lg.rectangle("fill", x - panelPad, y - panelPad, panelW + panelPad * 2, panelH, 8, 8)
+
+    -- Header
+    lg.setColor(colorText)
+    printShadow(isBossView and "Boss Damage" or "Damage", x, y)
+
+    y = y + 20
+
+    -- Bars
+    local font  = lg.getFont()
+    local textH = font:getHeight()
+
+    for _, entry in ipairs(list) do
+        local def = Towers.towerDefs[entry.kind]
+
+        if def then
+            local pct = (total > 0) and (entry.dmg / total) or 0
+            local text = format("%s  %s (%.0f%%)", def.name, formatNum(entry.dmg), pct * 100)
+
+            -- Bar background (full width inside panel)
+            lg.setColor(def.color[1], def.color[2], def.color[3], 0.25)
+            lg.rectangle("fill", x, y, maxBarW, barH, 6, 6)
+
+            -- Filled portion
+            lg.setColor(def.color[1], def.color[2], def.color[3], 0.6)
+            lg.rectangle("fill", x, y, maxBarW * pct, barH, 6, 6)
+
+            -- Text centered inside bar
+            lg.setColor(1, 1, 1, 0.95)
+            printShadow(text, x + padX, y + (barH - textH) * 0.5)
+
+            y = y + lineH
+        end
+    end
+
+    -- Empty boss damage
+    if isBossView and total <= 0 then
+        lg.setColor(1, 1, 1, 0.6)
+        printShadow("No boss damage yet", x, y + 4)
+    end
+end
+
+local function drawBossHPBar()
+    local boss = State.activeBoss
+
+    if not boss or boss.hp <= 0 then
+        return
+    end
+
+    -- Layout
+    local barW = 340
+    local barH = 22
+
+	local sw = lg.getDimensions()
+    local x = (sw - barW) * 0.5
+    local y = 14
+
+    local pad = 4
+    local radius = 8
+
+    local hpFrac = max(0, boss.hp / boss.maxHp)
+
+    -- Background frame
+    lg.setColor(0, 0, 0, 0.75)
+    lg.rectangle("fill", x - pad, y - pad, barW + pad * 2, barH + pad * 2, radius, radius)
+
+    -- HP fill
+    lg.setColor(0.75, 0.15, 0.15, 0.9)
+    lg.rectangle("fill", x, y, barW * hpFrac, barH, radius - 4, radius - 4)
+
+    --[[ Border
+    lg.setColor(1, 1, 1, 0.35)
+    lg.rectangle("line", x, y, barW, barH, radius, radius)]]
+
+    -- Text
+	local hpText = format("%s / %s", formatNum(ceil(boss.hp)), formatNum(boss.maxHp))
+
+    local font = lg.getFont()
+    local textW = font:getWidth(hpText)
+    local textH = font:getHeight()
+
+    lg.setColor(1, 1, 1, 0.95)
+    printShadow(hpText, x + (barW - textW) * 0.5, y + (barH - textH) * 0.5)
+end
+
+local SHOP_W = 520 -- left panel
+local COL_W = 120
+local HUD_H = 28 -- top strip height
+local PAD = 8
+local PAD2 = PAD * 2
+local GAP = PAD
+
+local ACTION_W = 220 -- matches divider width
+local BUTTON_W = (ACTION_W - GAP) / 2
+local BUTTON_H = 28
+
+local function drawBottomBar()
+	local font = lg.getFont()
+	local textH = font:getHeight()
+	local sw, sh = lg.getDimensions()
+	local UI_H = Constants.UI_H
+	local UI_Y = sh - UI_H
+
+	-- Background panels
+	lg.setColor(colorPanel)
+	lg.rectangle("fill", 0, UI_Y, sw, UI_H)
+
+	lg.setColor(colorPanel2)
+	lg.rectangle("fill", 0, UI_Y, sw, HUD_H)
+
+	lg.setColor(colorPanel)
+	lg.rectangle("fill", 0, UI_Y + HUD_H, SHOP_W, UI_H - HUD_H)
+
+	lg.setColor(colorPanel)
+	lg.rectangle("fill", SHOP_W, UI_Y + HUD_H, sw - SHOP_W, UI_H - HUD_H)
+
+	lg.setColor(colorPanel2)
+	lg.rectangle("line", SHOP_W + 0.5, UI_Y + HUD_H + 0.5, sw - SHOP_W - 1, UI_H - HUD_H - 1)
+
+	-- Top HUD
+	local y = UI_Y + floor((HUD_H - textH) * 0.5 + 0.5)
+
+	-- Animation math
+	local livesAnim = State.livesAnim or 0
+	local livesFlash = livesAnim
+	local lp = 1 - (1 - livesAnim) * (1 - livesAnim)
+	local livesDrop = floor(lp * 3 + 0.5)
+
+	local waveAnim = State.waveAnim or 0
+	local waveFlash = waveAnim
+	local wp = 1 - (1 - waveAnim) * (1 - waveAnim)
+	local waveLift = floor(wp * 3 + 0.5)
+
+	State.moneyLerp = State.moneyLerp + (State.money - State.moneyLerp) * 0.25
+
+	-- Money text
+	lg.setColor(colorText)
+	printShadow("$" .. formatNum(floor(State.moneyLerp + 0.5)), 12, y)
+
+	-- Lives text
+	local livesX = 90
+	local livesText = "Lives " .. State.lives
+
+	lg.setColor(1, 1 - livesFlash * 0.6, 1 - livesFlash * 0.6, 1)
+	printShadow(livesText, livesX, y + livesDrop)
+
+	-- Wave text
+	local base = 0.85
+	local boost = waveFlash * 0.25
+	local waveColor = min(1, base + boost) -- Bass boosted wub wub
+
+	lg.setColor(waveColor, waveColor, waveColor, 0.85)
+	printShadow("Wave " .. State.wave, 170, y - waveLift)
+
+	if State.inPrep then
+		lg.setColor(colorGood)
+		printShadow(("Prep %.1fs  (Space to start)"):format(State.prepTimer), 260, y)
+	else
+		lg.setColor(0.85, 0.85, 0.85, 0.85)
+		printShadow(("Spawning %d   Alive %d"):format(Waves.spawner.remaining, #Enemies.enemies), 260, y)
+	end
+
+	-- Tower shop
+	local shopX = PAD
+	local shopY = UI_Y + HUD_H + PAD
+
+	local btnW, btnH = 124, 32
+	local cols = floor((SHOP_W - PAD * 2) / (btnW + GAP))
+	local i = 0
+
+	for _, key in ipairs(Towers.shopOrder) do
+		local def = Towers.towerDefs[key]
+		local hotkey = Hotkeys.getShopKey(key)
+
+		local col = i % cols
+		local row = floor(i / cols)
+
+		local x = shopX + col * (btnW + GAP)
+		local y = shopY + row * (btnH + GAP)
+
+		local selected = State.placing == key
+		local canAfford = State.money >= def.cost
+		local pulse = selected and (0.9 + sin(love.timer.getTime() * 6) * 0.1) or 1
+		local base = selected and colorSelected or colorGrid
+
+		-- Detect transition: unaffordable -> affordable
+		local bump = shopBumps[key]
+		local bumpPad = 0
+
+		if not bump then
+			bump = {t = 0, active = false, wasAffordable = canAfford}
+			shopBumps[key] = bump
+		end
+
+		-- Trigger bump
+		if canAfford and not bump.wasAffordable then
+			bump.t = 0
+			bump.active = true
+		end
+
+		bump.wasAffordable = canAfford
+
+		if bump.active then
+			bump.t = bump.t + love.timer.getDelta() * 8 -- speed
+
+			if bump.t >= 1 then
+				bump.t = 1
+				bump.active = false
+			end
+
+			-- Ease out (quick expand, gentle settle)
+			local p = bump.t
+			local ease = p * p * (3 - 2 * p)
+
+			bumpPad = ease * 1 -- 1px per edge
+		end
+
+		lg.setColor(base[1] * pulse, base[2] * pulse, base[3] * pulse, 1)
+		lg.rectangle("fill", x - bumpPad, y - bumpPad, btnW + bumpPad * 2, btnH + bumpPad * 2, 6 + bumpPad, 6 + bumpPad)
+
+		-- Disabled overlay if unaffordable
+		if not canAfford then
+			lg.setColor(0, 0, 0, 0.35)
+			lg.rectangle("fill", x, y, btnW, btnH, 6, 6)
+		end
+
+		local ty = y + (btnH - textH) * 0.5
+
+		-- Name
+		local textX = x + PAD
+		local colorAfford = canAfford and colorText or colorBad
+
+		if hotkey then
+			-- Hotkey
+			local hkText = "[" .. hotkey:upper() .. "] "
+
+			lg.setColor(colorAfford[1], colorAfford[2], colorAfford[3], 0.85)
+			printShadow(hkText, textX, ty)
+
+			-- Name
+			local hkW = lg.getFont():getWidth(hkText .. " ")
+
+			lg.setColor(colorAfford)
+			printShadow(def.name, textX + hkW, ty)
+		else
+			-- Name only
+			lg.setColor(colorAfford)
+			printShadow(def.name, textX, ty)
+		end
+
+		-- Cost
+		lg.setColor(colorAfford)
+		printfShadow("$" .. def.cost, x + PAD, ty, btnW - PAD2, "right")
+
+		i = i + 1
+	end
+
+	-- Inspect panel
+	local inspectX = SHOP_W + PAD
+	local inspectY = UI_Y + HUD_H + PAD
+	local rightColX = inspectX + COL_W + 32
+	local statsY = inspectY + 18
+	local lineH = 16
+	local actionX = inspectX
+	local actionY = statsY + lineH * 2 + 14
+	local sellX = actionX + BUTTON_W + GAP
+
+	if State.selectedTower then
+		local t = State.selectedTower
+
+		-- Name and level
+		lg.setColor(colorText)
+		printShadow(("%s level %d"):format(t.def.name, t.level), inspectX, inspectY)
+
+		-- Divider
+		lg.setColor(1, 1, 1, 0.15)
+		lg.line(inspectX, inspectY + 16, inspectX + 220, inspectY + 16)
+
+		-- Stats
+		lg.setColor(colorText)
+		printShadow(("Damage: %s"):format(formatNum(t.damageDealt)), inspectX, statsY)
+		printShadow(("Kills: %d"):format(t.kills), inspectX, statsY + lineH)
+
+		-- Upgrade Button
+		local upgradeCost = Towers.towerUpgradeCost(t)
+		local canUpgrade = State.money >= upgradeCost
+		local upgradeKey = Hotkeys.getActionKey("upgrade")
+		local colorUpgrade = canUpgrade and colorText or colorBad
+		local tyBtn = actionY + (BUTTON_H - textH) * 0.5
+
+		-- Background
+		lg.setColor(colorGrid)
+		lg.rectangle("fill", actionX, actionY, BUTTON_W, BUTTON_H, 6, 6)
+
+		-- Text
+		local ux = actionX + PAD
+
+		if upgradeKey then
+			local hkText = "[" .. upgradeKey:upper() .. "] "
+
+			-- Hotkey
+			lg.setColor(colorUpgrade[1], colorUpgrade[2], colorUpgrade[3], 0.85)
+			printShadow(hkText, ux, tyBtn)
+
+			-- Label
+			local hkW = lg.getFont():getWidth(hkText .. " ")
+			lg.setColor(colorUpgrade)
+			printShadow("Upgrade", ux + hkW, tyBtn)
+		else
+			lg.setColor(colorUpgrade)
+			printShadow("Upgrade", ux, tyBtn)
+		end
+
+		-- Cost
+		lg.setColor(colorUpgrade)
+		printfShadow("$" .. upgradeCost, actionX + PAD, tyBtn, BUTTON_W - PAD2, "right")
+
+		-- Sell Button
+		local sellKey = Hotkeys.getActionKey("sell")
+		local sellValue = t.sellValue or 0
+		local sx = sellX + PAD
+
+		-- Background
+		lg.setColor(colorGrid)
+		lg.rectangle("fill", sellX, actionY, BUTTON_W, BUTTON_H, 6, 6)
+
+		-- Text
+		if sellKey then
+			local hkText = "[" .. sellKey:upper() .. "] "
+
+			-- Hotkey
+			lg.setColor(colorGood[1], colorGood[2], colorGood[3], 0.85)
+			printShadow(hkText, sx, tyBtn)
+
+			-- Label
+			local hkW = lg.getFont():getWidth(hkText .. " ")
+			lg.setColor(colorGood)
+			printShadow("Sell", sx + hkW, tyBtn)
+		else
+			lg.setColor(colorGood)
+			printShadow("Sell", sx, tyBtn)
+		end
+
+		-- Value
+		lg.setColor(colorGood)
+		printfShadow("+$" .. sellValue, sellX + PAD, tyBtn, BUTTON_W - PAD2, "right")
+	elseif State.selectedEnemy then
+		local e = State.selectedEnemy
+
+		local hpY = inspectY + 18
+		local statusY = inspectY + 38
+
+		-- Name
+		lg.setColor(colorText)
+		printShadow(e.def.name, inspectX, inspectY)
+
+		-- Divider
+		lg.setColor(1, 1, 1, 0.15)
+		lg.line(inspectX, inspectY + 16, inspectX + 220, inspectY + 16)
+
+		lg.setColor(colorText)
+		printShadow(("HP: %s / %s"):format(formatNum(e.hp), formatNum(e.maxHp)), inspectX, hpY)
+
+		-- Status effects
+		local statusY = hpY + 16
+
+		if e.slowTimer and e.slowTimer > 0 then
+			drawStatusBar("Slow", Theme.tower.slow, e.slowTimer, e.slowDuration, inspectX, statusY)
+			statusY = statusY + 16
+		end
+
+		if e.poisonStacks and e.poisonStacks > 0 then
+			drawStatusBar("Poison", Theme.tower.poison, e.poisonTimer, e.poisonDuration, inspectX, statusY)
+			statusY = statusY + 16
+		end
+
+		-- Modifiers (resistances / vulnerabilities)
+		if e.modifiers then
+			local modLines = {}
+
+			local slowLine = formatModifier("Slow",e.modifiers.slow, "effect")
+			local poisonLine = formatModifier("Poison", e.modifiers.poison, "damage")
+
+			if slowLine then   tinsert(modLines, slowLine) end
+			if poisonLine then tinsert(modLines, poisonLine) end
+
+			lg.setColor(colorText)
+
+			if #modLines > 0 then
+				printShadow("Modifiers:", rightColX, hpY)
+
+				for i, line in ipairs(modLines) do
+					printShadow(line, rightColX, hpY + i * 16)
+				end
+			end
+		end
+	end
+end
+
+local function drawWorld()
+	drawGrid()
+	drawTowerGhost()
+	drawTowers()
+	drawEnemies()
+	drawProjectiles()
+	drawExplosions()
+	drawFloaters()
+end
+
+local function drawUI()
+	drawBottomBar()
+	drawBossHPBar()
+	drawDamageMeter()
+end
+
+return {
+	drawWorld = drawWorld,
+	drawUI = drawUI,
+}

@@ -1,0 +1,75 @@
+local Constants = require("core.constants")
+
+local map = {
+	blocked = {},
+	isPath = {},
+	path = {},
+}
+
+local currentMap = nil
+local PAD_X = math.floor((Constants.GRID_W - 26) / 2) -- 26 is the authored map width, can make a constant later if I want
+
+local function makeKey(gx, gy)
+	return gx .. "," .. gy
+end
+
+local function loadPath(points)
+    map.path = {}
+    map.isPath = {}
+
+    for i = 1, #points - 1 do
+        local ax, ay = points[i][1] + PAD_X, points[i][2]
+        local bx, by = points[i + 1][1] + PAD_X, points[i + 1][2]
+        local dx = (bx > ax) and 1 or (bx < ax and -1 or 0)
+        local dy = (by > ay) and 1 or (by < ay and -1 or 0)
+
+        local x, y = ax, ay
+        table.insert(map.path, {x, y})
+        map.isPath[makeKey(x, y)] = true
+
+        while x ~= bx or y ~= by do
+            x = x + dx
+            y = y + dy
+            table.insert(map.path, {x, y})
+            map.isPath[makeKey(x, y)] = true
+        end
+    end
+end
+
+local function buildPath(mapDef)
+    currentMap = mapDef
+    loadPath(mapDef.path)
+end
+
+local function canPlaceAt(gx, gy)
+	if not gx then
+		return false, "outside"
+
+	end
+	if map.isPath[makeKey(gx, gy)] then
+		return false, "path"
+	end
+
+	if map.blocked[makeKey(gx, gy)] then
+		return false, "occupied"
+	end
+
+	return true
+end
+
+local function gridToCenter(gx, gy)
+	return (gx - 0.5) * Constants.TILE, (gy - 0.5) * Constants.TILE
+end
+
+local function clearBlocked()
+	map.blocked = {}
+end
+
+return {
+	map = map,
+	makeKey = makeKey,
+	buildPath = buildPath,
+	canPlaceAt = canPlaceAt,
+	gridToCenter = gridToCenter,
+	clearBlocked = clearBlocked,
+}
