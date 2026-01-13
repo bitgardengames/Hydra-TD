@@ -4,6 +4,7 @@ local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local Fonts = require("core.fonts")
 local State = require("core.state")
+local Save = require("core.save")
 local MapMod = require("world.map")
 local Maps = require("world.maps")
 local Enemies = require("world.enemies")
@@ -27,6 +28,9 @@ local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
 local colorBg = Theme.terrain.bg
+
+-- Artwork export, always make sure it's disabled
+DEV_EXPORT = true
 
 function resetGame()
     -- Clear world state
@@ -81,6 +85,8 @@ function resetGame()
 end
 
 function love.load()
+	Save.load()
+
 	love.window.setFullscreen(true)
 	love.window.setTitle("Hydra TD")
 
@@ -88,7 +94,7 @@ function love.load()
 
 	Fonts.load()
 
-	Camera.resize(love.graphics.getDimensions())
+	Camera.load()
 
 	Sound.load()
 	Sound.playMusic("bg")
@@ -99,6 +105,10 @@ function love.load()
 	love.math.setRandomSeed(os.time())
 
 	Menu.load()
+
+	if DEV_EXPORT then
+		require("tools.art_export").run()
+	end
 end
 
 function love.update(dt)
@@ -166,6 +176,10 @@ function love.update(dt)
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
 		if State.wave == 20 and not State.endless then
+			-- Save
+			Save.data.furthestIndex = math.max(Save.data.furthestIndex, State.mapIndex + 1)
+			Save.flush()
+
 			State.gameOver = true
 			State.victory = true
 
@@ -194,8 +208,10 @@ function love.draw()
 	if State.mode == "game" or State.mode == "pause" then
 		Camera.begin()
 		Draw.drawWorld()
-		Camera.finish()
 		Draw.drawUI()
+		Camera.finish()
+
+		Camera.present()
 
 		-- Pause overlay on top
 		if State.mode == "pause" then

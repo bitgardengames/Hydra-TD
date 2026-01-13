@@ -156,171 +156,171 @@ local function drawGrid()
 	end
 end
 
+local function drawEnemy(e)
+	local bounce = sin(e.animT) * (e.slowTimer > 0 and 1 or 2)
+	local weight = sin(e.animT * 0.8) * 0.5
+	local y = e.y + bounce
+
+	-- Boss horns
+	if e.boss then
+		lg.setColor(outlineColor)
+
+		local hornW = e.radius * 0.55
+		local hornH = e.radius * 0.75
+		local hornY = y - e.radius * 1.05
+		local hornWob = sin(e.animT * 2.5) * 0.06
+
+		lg.push()
+		lg.translate(e.x - e.radius * 0.46, hornY)
+		lg.rotate(-0.26 + hornWob)
+		lg.polygon("fill", 0, 0, -hornW,  hornH * 0.5, -hornW, -hornH * 0.5)
+		lg.pop()
+
+		lg.push()
+		lg.translate(e.x + e.radius * 0.46, hornY)
+		lg.rotate(0.26 - hornWob)
+		lg.polygon("fill", 0, 0, hornW, -hornH * 0.5, hornW,  hornH * 0.5)
+		lg.pop()
+	end
+
+	local enemyAlpha = e.alpha
+	local shadowAlpha = enemyShadow[4] * (enemyAlpha ^ 1.3)
+
+	-- Shadow
+	lg.setColor(enemyShadow[1], enemyShadow[2], enemyShadow[3], shadowAlpha)
+	lg.ellipse("fill", e.x, e.y + e.radius, e.radius * 1.1, e.radius * 0.4)
+
+	-- Outline
+	lg.setLineWidth(outlineWidth)
+	lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], enemyAlpha)
+	lg.circle("line", e.x, y, e.radius + 1 + weight)
+
+	-- Body
+	lg.setLineWidth(1)
+	lg.setColor(enemyBody[1], enemyBody[2], enemyBody[3], enemyAlpha)
+	lg.circle("fill", e.x, y, e.radius)
+
+	-- Hit flash
+	if e.hitFlash > 0 then
+		local a = min(1, e.hitFlash / 0.05)
+		lg.setColor(1.0, 0.95, 0.9, a * 0.35)
+		lg.circle("fill", e.x, e.y, e.radius + 1)
+	end
+
+	-- Slow
+	if e.slowTimer > 0 then
+		local pulse = 0.5 + sin(e.animT * 5) * 0.5
+		local slowAlpha = (0.18 + pulse * 0.08) * enemyAlpha
+
+		lg.setColor(colorSlow[1], colorSlow[2], colorSlow[3], slowAlpha)
+		lg.circle("fill", e.x, y, e.radius - 2)
+
+		lg.setLineWidth(1)
+		lg.setColor(colorSlow[1], colorSlow[2], colorSlow[3], 0.35)
+		lg.circle("line", e.x, y, e.radius - 1)
+	end
+
+	-- Poison
+	if e.poisonStacks and e.poisonStacks > 0 then
+		local wobble = sin(e.animT * 3 + e.poisonStacks) * 0.5
+		local intensity = min(0.35, 0.15 + e.poisonStacks * 0.05)
+		local poisonAlpha = intensity * (enemyAlpha ^ 0.75)
+
+		lg.setColor(0.35, 0.85, 0.35, poisonAlpha)
+		lg.circle("fill", e.x, y + wobble, e.radius - 3)
+	end
+
+	-- Eyes
+	local eyeSep  = e.radius * 0.38
+	local eyeSize = max(1.6, e.radius * 0.16)
+	local eyeY = y - e.radius * 0.22
+
+	lg.setColor(enemyFace[1], enemyFace[2], enemyFace[3], enemyAlpha)
+
+	if e.boss and e.dying then
+		local bigR   = eyeSize + 1
+		local smallR = max(2, eyeSize - 1)
+
+		local p = 1 - (e.deathT / e.deathDur)
+		local pop = 1 + (1 - (p * p)) * 0.15
+
+		lg.push()
+		lg.translate(e.x, eyeY)
+		lg.scale(pop, pop)
+
+		-- Big shocked eye (outline)
+		lg.setLineWidth(3)
+		lg.circle("line", -eyeSep, 0, bigR)
+
+		-- Small collapsed eye (fill)
+		lg.circle("fill", eyeSep, 0, smallR)
+
+		lg.setLineWidth(1)
+		lg.pop()
+	elseif e.boss then
+		-- Normal boss face
+		local browLen = eyeSize * 2.4
+		local browDrop = eyeSize * 0.85
+		local browTension = sin(e.animT * 1.8) * 0.8
+
+		lg.circle("fill", e.x - eyeSep, eyeY, eyeSize)
+		lg.circle("fill", e.x + eyeSep, eyeY, eyeSize)
+
+		lg.setLineWidth(2)
+		lg.line(e.x - eyeSep - browLen * 0.65, eyeY - browDrop, e.x - eyeSep + browLen * 0.35, eyeY - browDrop * 0.15 + browTension)
+		lg.line(e.x + eyeSep - browLen * 0.35, eyeY - browDrop * 0.15 + browTension, e.x + eyeSep + browLen * 0.65, eyeY - browDrop)
+		lg.setLineWidth(1)
+	else
+		local eyeDriftX = sin(e.animT * 1.3) * 0.6
+		local eyeDriftY = cos(e.animT * 1.1) * 0.4
+
+		lg.circle("fill", e.x - eyeSep + eyeDriftX, eyeY + eyeDriftY, eyeSize)
+		lg.circle("fill", e.x + eyeSep + eyeDriftX, eyeY + eyeDriftY, eyeSize)
+	end
+
+	-- Selection
+	if State.selectedEnemy == e then
+		lg.setColor(colorSelected[1], colorSelected[2], colorSelected[3], 0.25)
+		lg.circle("fill", e.x, y, e.radius + 4)
+
+		lg.setColor(colorSelected)
+		lg.circle("line", e.x, y, e.radius + 4)
+	end
+
+	-- Health bar
+	if e.hp > 0 then
+		local w = e.boss and 44 or 28
+		local h = e.boss and 7 or 5
+		local x = e.x - w / 2
+		local y = e.y - e.radius - (e.boss and 18 or 12)
+
+		lg.setColor(0, 0, 0, 0.5)
+		lg.rectangle("fill", x, y, w, h, 3, 3)
+
+		local t = max(0, e.hp / e.maxHp)
+
+		local r, g
+
+		if t > 0.5 then
+			-- Green to Yellow
+			local p = (t - 0.5) / 0.5
+			r = 1 - p
+			g = 1
+		else
+			-- Yellow to Red
+			local p = t / 0.5
+			r = 1
+			g = p
+		end
+
+		lg.setColor(r, g, 0.15, 0.9)
+		lg.rectangle("fill", x, y, w * t, h, 3, 3)
+	end
+end
+
 local function drawEnemies()
 	for _, e in ipairs(Enemies.enemies) do
-		local bounce = sin(e.animT) * (e.slowTimer > 0 and 1 or 2)
-		local weight = sin(e.animT * 0.8) * 0.5
-		local y = e.y + bounce
-
-		-- Boss horns
-		if e.boss then
-			lg.setColor(outlineColor)
-
-			local hornW = e.radius * 0.55
-			local hornH = e.radius * 0.75
-			local hornY = y - e.radius * 1.05 -- + 3
-			local hornWob = sin(e.animT * 2.5) * 0.06
-
-			-- Left horn
-			lg.push()
-			lg.translate(e.x - e.radius * 0.46, hornY)
-			lg.rotate(-0.26 + hornWob)
-			lg.polygon("fill", 0, 0, -hornW,  hornH * 0.5, -hornW, -hornH * 0.5)
-			lg.pop()
-
-			-- Right horn
-			lg.push()
-			lg.translate(e.x + e.radius * 0.46, hornY)
-			lg.rotate(0.26 - hornWob)
-			lg.polygon("fill", 0, 0, hornW, -hornH * 0.5, hornW,  hornH * 0.5)
-			lg.pop()
-		end
-
-		local enemyAlpha = e.alpha
-		local shadowAlpha = enemyShadow[4] * (enemyAlpha ^ 1.3)
-
-		-- Shadow
-		lg.setColor(enemyShadow[1], enemyShadow[2], enemyShadow[3], shadowAlpha)
-		lg.ellipse("fill", e.x, e.y + e.radius, e.radius * 1.1, e.radius * 0.4)
-
-		-- Outline
-		lg.setLineWidth(outlineWidth)
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], enemyAlpha)
-		lg.circle("line", e.x, y, e.radius + 1 + weight)
-
-		-- Body
-		lg.setLineWidth(1)
-		lg.setColor(enemyBody[1], enemyBody[2], enemyBody[3], enemyAlpha)
-		lg.circle("fill", e.x, y, e.radius)
-
-		-- Hit flash
-		if e.hitFlash > 0 then
-			local a = min(1, e.hitFlash / 0.05)
-
-			lg.setColor(1.0, 0.95, 0.9, a * 0.35)
-			lg.circle("fill", e.x, e.y, e.radius + 1)
-		end
-
-		-- Slow
-		if e.slowTimer > 0 then
-			local pulse = 0.5 + sin(e.animT * 5) * 0.5
-			local slowAlpha = (0.18 + pulse * 0.08) * enemyAlpha
-
-			lg.setColor(colorSlow[1], colorSlow[2], colorSlow[3], slowAlpha)
-			lg.circle("fill", e.x, y, e.radius - 2)
-
-			-- inner frost ring
-			lg.setLineWidth(1)
-			lg.setColor(colorSlow[1], colorSlow[2], colorSlow[3], 0.35)
-			lg.circle("line", e.x, y, e.radius - 1)
-		end
-
-		-- Poison
-		if e.poisonStacks and e.poisonStacks > 0 then
-			local wobble = sin(e.animT * 3 + e.poisonStacks) * 0.5
-			local intensity = min(0.35, 0.15 + e.poisonStacks * 0.05)
-			local poisonAlpha = intensity * (enemyAlpha ^ 0.75)
-
-			lg.setColor(0.35, 0.85, 0.35, poisonAlpha)
-			lg.circle("fill", e.x, y + wobble, e.radius - 3)
-		end
-
-		-- Eyes
-		local eyeSep  = e.radius * 0.38
-		local eyeSize = max(1.6, e.radius * 0.16)
-		local eyeY = y - e.radius * 0.22
-
-		lg.setColor(enemyFace[1], enemyFace[2], enemyFace[3], enemyAlpha)
-
-		if e.boss and e.dying then
-			local bigR   = eyeSize + 1
-			local smallR = max(2, eyeSize - 1)
-			print(smallR)
-			local p = 1 - (e.deathT / e.deathDur)
-			local pop = 1 + (1 - (p * p)) * 0.15
-
-			lg.push()
-			lg.translate(e.x, eyeY)
-			lg.scale(pop, pop)
-
-			-- Big shocked eye (outline)
-			lg.setLineWidth(3)
-			lg.circle("line", -eyeSep, 0, bigR)
-
-			-- Small collapsed eye (fill)
-			lg.circle("fill", eyeSep, 0, smallR)
-
-			lg.setLineWidth(1)
-			lg.pop()
-		elseif e.boss then
-			-- Normal boss face
-			local browLen = eyeSize * 2.4
-			local browDrop = eyeSize * 0.85
-			local browTension = sin(e.animT * 1.8) * 0.8
-
-			lg.circle("fill", e.x - eyeSep, eyeY, eyeSize)
-			lg.circle("fill", e.x + eyeSep, eyeY, eyeSize)
-
-			lg.setLineWidth(2)
-			lg.line(e.x - eyeSep - browLen * 0.65, eyeY - browDrop, e.x - eyeSep + browLen * 0.35, eyeY - browDrop * 0.15 + browTension)
-			lg.line(e.x + eyeSep - browLen * 0.35, eyeY - browDrop * 0.15 + browTension, e.x + eyeSep + browLen * 0.65, eyeY - browDrop)
-			lg.setLineWidth(1)
-		else
-			local eyeDriftX = sin(e.animT * 1.3) * 0.6
-			local eyeDriftY = cos(e.animT * 1.1) * 0.4
-
-			lg.circle("fill", e.x - eyeSep + eyeDriftX, eyeY + eyeDriftY, eyeSize)
-			lg.circle("fill", e.x + eyeSep + eyeDriftX, eyeY + eyeDriftY, eyeSize)
-		end
-
-		-- Selection
-		if State.selectedEnemy == e then
-			lg.setColor(colorSelected[1], colorSelected[2], colorSelected[3], 0.25)
-			lg.circle("fill", e.x, y, e.radius + 4)
-
-			lg.setColor(colorSelected)
-			lg.circle("line", e.x, y, e.radius + 4)
-		end
-
-		-- Health bar
-		if not e.dying then
-			local w = e.boss and 44 or 28
-			local h = e.boss and 7 or 5
-			local x = e.x - w / 2
-			local y = e.y - e.radius - (e.boss and 18 or 12)
-
-			lg.setColor(0, 0, 0, 0.5)
-			lg.rectangle("fill", x, y, w, h, 3, 3)
-
-			local t = max(0, e.hp / e.maxHp)
-
-			local r, g
-
-			if t > 0.5 then
-				-- Green to Yellow
-				local p = (t - 0.5) / 0.5
-				r = 1 - p
-				g = 1
-			else
-				-- Yellow to Red
-				local p = t / 0.5
-				r = 1
-				g = p
-			end
-
-			lg.setColor(r, g, 0.15, 0.9)
-			lg.rectangle("fill", x, y, w * t, h, 3, 3)
-		end
+		drawEnemy(e)
 	end
 
 	for _, d in ipairs(Enemies.deathFX) do
@@ -834,7 +834,7 @@ local function drawDamageMeter()
     local padX = 8
     local panelPad = 8
 
-	local sw = lg.getDimensions()
+	local sw = Constants.SCREEN_W
     local x = sw - panelW - 12
     local y = 12
 
@@ -898,7 +898,7 @@ local function drawBossHPBar()
     local barW = 340
     local barH = 22
 
-	local sw = lg.getDimensions()
+	local sw = Constants.SCREEN_W
     local x = (sw - barW) * 0.5
     local y = 14
 
@@ -944,7 +944,8 @@ local BUTTON_H = 28
 local function drawBottomBar()
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local sw, sh = lg.getDimensions()
+	local sw = Constants.SCREEN_W
+	local sh = Constants.SCREEN_H
 	local UI_H = Constants.UI_H
 	local UI_Y = sh - UI_H
 
@@ -1003,6 +1004,8 @@ local function drawBottomBar()
 		lg.setColor(colorGood)
 		printShadow(("Prep %.1fs  (Space to start)"):format(State.prepTimer), 260, y)
 	else
+		local spawner = Waves.getSpawner()
+
 		lg.setColor(0.85, 0.85, 0.85, 0.85)
 		printShadow(("Spawning %d   Alive %d"):format(Waves.spawner.remaining, #Enemies.enemies), 260, y)
 	end
@@ -1263,4 +1266,8 @@ end
 return {
 	drawWorld = drawWorld,
 	drawUI = drawUI,
+
+	-- Only exposed for art export
+	drawTowerCore = drawTowerCore,
+	drawEnemy = drawEnemy,
 }

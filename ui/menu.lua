@@ -3,6 +3,7 @@ local Sound = require("systems.sound")
 local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
+local Save = require("core.save")
 local Maps = require("world.maps")
 
 local Menu = {}
@@ -102,26 +103,12 @@ local function drawTriangle(cx, cy, dir, size, alpha)
 end
 
 local function isMapLocked(i)
-	local maxUnlocked = State.maxUnlockedMap or State.mapIndex
-
-	return i > maxUnlocked
+    return not Save.isMapUnlocked(i, Maps[i].id)
 end
 
 function Menu.load()
 	for i, map in ipairs(Maps) do
 		mapPreviews[i] = buildMapPreview(map)
-	end
-end
-
--- Helpers
-local function drawBlurred(canvas, x, y)
-	for ox = -1, 1 do
-		for oy = -1, 1 do
-			if ox ~= 0 or oy ~= 0 then
-				lg.setColor(1, 1, 1, 0.08)
-				lg.draw(canvas, x + ox, y + oy)
-			end
-		end
 	end
 end
 
@@ -135,7 +122,6 @@ local function addCard(cards, i, from, to, mapCount)
 
 	cards[#cards + 1] = {i = i, from = from, to = to}
 end
-
 
 -- Draw
 function Menu.draw()
@@ -398,6 +384,12 @@ function Menu.keypressed(key)
 			Sound.play("uiConfirm")
 			if cursor == 1 then
 				previewAlpha = 0
+
+				-- Focus carousel on furthest unlocked map
+				State.mapIndex = math.min(Save.data.furthestIndex or 1, #Maps)
+				State.carouselDir = 0
+				State.carouselT = 1
+
 				State.mode = "campaign"
 			elseif cursor == 2 then
 				State.mode = "settings"
@@ -456,9 +448,21 @@ function Menu.keypressed(key)
 			Sound.play("uiMove")
 		elseif key == "left" or key == "right" then
 			if settingsItems[settingsCursor].key == "fullscreen" then
-				love.window.setFullscreen(not love.window.getFullscreen())
-				local w, h = lg.getDimensions()
-				require("core.camera").resize(w, h)
+				local isFullscreen = love.window.getFullscreen()
+
+				if isFullscreen then
+					-- Go WINDOWED (must set a mode)
+					--love.window.setFullscreen(false)
+					love.window.setMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1})
+				else
+					-- Go FULLSCREEN (desktop resolution)
+					--love.window.setFullscreen(true)
+					love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
+				end
+
+				-- Recalculate camera scaling
+				require("core.camera").resize()
+
 				Sound.play("uiConfirm")
 			end
 		elseif key == "return" or key == "escape" then

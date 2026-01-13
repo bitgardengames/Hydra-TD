@@ -2,41 +2,64 @@ local Constants = require("core.constants")
 
 local Camera = {}
 
+Camera.canvas = nil
 Camera.scale = 1
 Camera.ox = 0
 Camera.oy = 0
 
-function Camera.resize(winW, winH)
-    -- The world must fit above the UI
-    local viewW = winW
-    local viewH = winH - Constants.UI_H
+Camera.wx = 0
+Camera.wy = 0
+Camera.wscale = 1
 
-    -- World dimensions in pixels
-    local worldW = Constants.WORLD_W
-    local worldH = Constants.WORLD_H
+function Camera.load()
+    Camera.canvas = love.graphics.newCanvas(Constants.SCREEN_W, Constants.SCREEN_H, {msaa = 8})
 
-    -- Scale so the entire world fits
-    local sx = viewW / worldW
-    local sy = viewH / worldH
-    Camera.scale = math.min(sx, sy)
+    Camera.resize()
+end
 
-    -- Center the world in the available space
-    Camera.ox = (viewW - worldW * Camera.scale) * 0.5
-    Camera.oy = (viewH - worldH * Camera.scale) * 0.5
+function Camera.resize()
+    local winW, winH = love.graphics.getDimensions()
+
+    local sx = winW / Constants.SCREEN_W
+    local sy = winH / Constants.SCREEN_H
+	local s = math.min(sx, sy)
+
+	if s >= 1 then
+		Camera.scale = math.floor(s) -- integer upscale
+	else
+		Camera.scale = s -- fractional downscale
+	end
+
+    Camera.ox = math.floor((winW - Constants.SCREEN_W * Camera.scale) * 0.5)
+    Camera.oy = math.floor((winH - Constants.SCREEN_H * Camera.scale) * 0.5)
 end
 
 function Camera.begin()
+    love.graphics.setCanvas(Camera.canvas)
+    love.graphics.clear()
+
     love.graphics.push()
-    love.graphics.translate(Camera.ox, Camera.oy)
-    love.graphics.scale(Camera.scale, Camera.scale)
+    love.graphics.translate(-Camera.wx, -Camera.wy)
+    love.graphics.scale(Camera.wscale, Camera.wscale)
 end
 
 function Camera.finish()
     love.graphics.pop()
+    love.graphics.setCanvas()
+end
+
+function Camera.present()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(Camera.canvas, Camera.ox, Camera.oy, 0, Camera.scale, Camera.scale)
 end
 
 function Camera.screenToWorld(x, y)
-    return (x - Camera.ox) / Camera.scale, (y - Camera.oy) / Camera.scale
+    -- Window to screen
+    x = (x - Camera.ox) / Camera.scale
+    y = (y - Camera.oy) / Camera.scale
+
+    -- Screen to world
+    return (x / Camera.wscale) + Camera.wx, (y / Camera.wscale) + Camera.wy
 end
 
 return Camera

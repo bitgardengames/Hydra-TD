@@ -1,17 +1,10 @@
 local State = require("core.state")
-local Floaters = require("ui.floaters")
+local Maps = require("world.maps")
+local Enemies = require("world.enemies")
+
+local Waves = {}
 
 local bossAddTimer = 0
-
-local wavePlan = {
-	{count = 10, gap = 0.65, mix = {{type = "grunt", w = 1.0}}},
-	{count = 14, gap = 0.55, mix = {{type = "grunt", w = 0.75}, {type = "runner", w = 0.25}}},
-	{count = 16, gap = 0.55, mix = {{type = "grunt", w = 0.6}, {type = "runner", w = 0.4}}},
-	{count = 14, gap = 0.65, mix = {{type = "grunt", w = 0.55}, {type = "tank", w = 0.45}}},
-	{count = 14, gap = 0.6, mix = {{type = "grunt", w = 0.5}, {type = "splitter", w = 0.3}, {type = "runner", w = 0.2}}},
-	{count = 20, gap = 0.48, mix = {{type = "grunt", w = 0.5}, {type = "runner", w = 0.35}, {type = "tank", w = 0.15}}},
-	{count = 20, gap = 0.45, mix = {{type = "tank", w = 0.4}, {type = "splitter", w = 0.4}, {type = "runner", w = 0.2}}},
-}
 
 local spawner = {
 	active = false,
@@ -23,6 +16,7 @@ local spawner = {
 	mix = nil,
 }
 
+-- Utility
 local function pickEnemyType(mix)
 	local total = 0
 
@@ -44,58 +38,60 @@ local function pickEnemyType(mix)
 	return mix[#mix].type
 end
 
-local function startWave()
-	local Enemies = require("world.enemies")
+-- Wave start
+function Waves.startWave()
+	local map = Maps[State.mapIndex]
+	local waveData = map.waves
 
 	State.wave = State.wave + 1
-
-	local waveAnim = State.waveAnim or 0
-	State.waveAnim = waveAnim + (1 - waveAnim) * 0.6
+	State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 
 	-- Boss waves
-	if State.wave % 10 == 0 then
+	if waveData.bosses and waveData.bosses[State.wave] then
+		local boss = waveData.bosses[State.wave]
 		local bossIndex = State.wave / 10
 
 		spawner.active = true
 		spawner.remaining = 1
 		spawner.gap = 0
-		spawner.mix = {{type = "boss", w = 1.0}}
+		spawner.timer = 0
+		spawner.mix = {{type = boss.type, w = 1.0}}
 
 		if bossIndex == 1 then
-			-- Wave 10
-			spawner.hpMult = 1.35
+			spawner.hpMult = boss.hpBase
 		else
-			-- Wave 20+ ramp hard
-			spawner.hpMult = 1.35 * (3.0 ^ (bossIndex - 1)) -- 1.35 * (1.7 ^ (bossIndex - 1))
+			spawner.hpMult = boss.hpBase * (boss.hpRamp ^ (bossIndex - 1))
 		end
 
-		spawner.spdMult = 1.0 + (bossIndex - 1) * 0.08
+		spawner.spdMult = 1.0 + (bossIndex - 1) * boss.spdRamp
 		State.inPrep = false
+
 		return
 	end
 
-	local plan = wavePlan[math.min(State.wave, #wavePlan)]
+	-- Normal waves
+	local plan = waveData.normal[math.min(State.wave, #waveData.normal)]
+
 	spawner.active = true
-	spawner.remaining = plan.count + math.max(0, State.wave - #wavePlan) * 3
+	spawner.remaining = plan.count + math.max(0, State.wave - #waveData.normal) * 3
 	spawner.gap = plan.gap * math.max(0.75, 1.0 - (State.wave - 1) * 0.02)
 	spawner.timer = 0
 	spawner.mix = plan.mix
 
-	spawner.hpMult = (plan.hpMult or 1.0) * (1.0 + (State.wave - 1) * 0.22) -- 0.18
-	spawner.spdMult = (plan.spdMult or 1.0) * (1.0 + (State.wave - 1) * 0.06) -- 0.03
+	spawner.hpMult = (plan.hpMult or 1.0) * (1.0 + (State.wave - 1) * 0.22)
+	spawner.spdMult = (plan.spdMult or 1.0) * (1.0 + (State.wave - 1) * 0.06)
 
 	State.inPrep = false
 end
 
-local function updateSpawner(dt)
-	local Enemies = require("world.enemies")
-
-	-- Normal wave spawning
+-- Spawning update
+function Waves.updateSpawner(dt)
 	if spawner.active then
 		spawner.timer = spawner.timer - dt
 
 		if spawner.timer <= 0 and spawner.remaining > 0 then
 			local kind = pickEnemyType(spawner.mix)
+
 			Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
 			spawner.remaining = spawner.remaining - 1
 			spawner.timer = spawner.gap
@@ -106,46 +102,37 @@ local function updateSpawner(dt)
 		end
 	end
 
-	-- Boss add trickle
+	-- Boss add trickle (unchanged behavior)
 	if State.wave == 10 or State.wave == 20 then
-		-- check if a boss is alive
 		local bossAlive = false
+
 		for _, e in ipairs(Enemies.enemies) do
 			if e.boss then
 				bossAlive = true
+
 				break
 			end
 		end
 
 		if bossAlive then
 			bossAddTimer = bossAddTimer - dt
-			if bossAddTimer <= 0 then
-				-- reset timer
-				bossAddTimer = (State.wave == 10) and 2.0 or 1.0
 
-				-- spawn a small number of normal enemies
-				if State.wave == 10 then
-					-- light pressure
-					Enemies.spawnEnemy("runner", 1.0, 1.0)
-				else
-					-- heavier mix
-					Enemies.spawnEnemy("runner", 1.0, 1.0)
+			if bossAddTimer <= 0 then
+				bossAddTimer = (State.wave == 10) and 2.0 or 1.0
+				Enemies.spawnEnemy("runner", 1.0, 1.0)
+
+				if State.wave == 20 then
 					Enemies.spawnEnemy("grunt", 1.0, 1.0)
 				end
 			end
 		else
-			-- boss dead, stop spawning adds
 			bossAddTimer = 0
 		end
 	end
 end
 
-local function allEnemiesCleared()
-	local Enemies = require("world.enemies")
-	return #Enemies.enemies == 0 and not spawner.active
-end
-
-local function updatePrep(dt)
+-- Prep + helpers
+function Waves.updatePrep(dt)
 	if not State.inPrep then
 		return
 	end
@@ -154,25 +141,26 @@ local function updatePrep(dt)
 
 	if State.prepTimer <= 0 then
 		State.prepTimer = 0
-		startWave()
+		Waves.startWave()
 	end
 end
 
-local function resetSpawner()
+function Waves.allEnemiesCleared()
+	return #Enemies.enemies == 0 and not spawner.active
+end
+
+function Waves.resetSpawner()
 	spawner.active = false
 	spawner.remaining = 0
 	spawner.timer = 0
 	spawner.hpMult = 1.0
 	spawner.spdMult = 1.0
 	spawner.mix = nil
+	bossAddTimer = 0
 end
 
-return {
-	wavePlan = wavePlan,
-	spawner = spawner,
-	startWave = startWave,
-	updateSpawner = updateSpawner,
-	updatePrep = updatePrep,
-	allEnemiesCleared = allEnemiesCleared,
-	resetSpawner = resetSpawner,
-}
+function Waves.getSpawner()
+	return spawner
+end
+
+return Waves

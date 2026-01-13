@@ -59,7 +59,7 @@ local enemyDefs = {
 
 	boss = {
 		name = "Boss",
-		hp = 7600,
+		hp = 7, -- 7600
 		speed = 45,
 		reward = 100,
 		score = 300,

@@ -9,6 +9,22 @@ local maps = {
             {12, 6}, {18, 6},
             {18, 10}, {24, 10}, {26, 10},
         },
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
     },
 
     {
@@ -19,6 +35,22 @@ local maps = {
             {20, 11}, {6, 11},
             {6, 3}, {24, 3},
             {24, 14}, {26, 14},
+        },
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
         },
     },
 
@@ -32,6 +64,22 @@ local maps = {
             {4, 6}, {22, 6},
             {22, 10}, {26, 10},
         },
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
     },
 
 	{
@@ -44,6 +92,22 @@ local maps = {
 			{10, 12}, {18, 12},
 			{18, 8}, {26, 8},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 
 	{
@@ -55,6 +119,22 @@ local maps = {
 			{4, 10}, {22, 10},
 			{22, 13}, {26, 13},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 
 	{
@@ -66,6 +146,22 @@ local maps = {
 			{18, 11}, {8, 11},
 			{8, 8}, {26, 8},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 
 	{
@@ -77,6 +173,22 @@ local maps = {
 			{16, 13}, {10, 13},
 			{10, 8}, {26, 8},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 
 	{
@@ -89,6 +201,22 @@ local maps = {
 			{22, 10}, {4, 10},
 			{4, 12}, {26, 12},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 
 	{
@@ -99,6 +227,22 @@ local maps = {
 			{12, 10}, {20, 10},
 			{20, 4}, {26, 4},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 
 	{
@@ -110,6 +254,22 @@ local maps = {
 			{22, 13}, {6, 13},
 			{6, 7}, {26, 7},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 
 	{
@@ -121,6 +281,22 @@ local maps = {
 			{8, 12}, {22, 12},
 			{22, 8}, {26, 8},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 
 	{
@@ -132,6 +308,22 @@ local maps = {
 			{4, 8}, {20, 8},
 			{20, 12}, {26, 12},
 		},
+
+		waves = {
+            normal = {
+                {count = 10, gap = 0.65, mix = {{type="grunt", w=1.0}}},
+                {count = 14, gap = 0.55, mix = {{type="grunt", w=0.75}, {type="runner", w=0.25}}},
+                {count = 16, gap = 0.55, mix = {{type="grunt", w=0.6}, {type="runner", w=0.4}}},
+                {count = 14, gap = 0.65, mix = {{type="grunt", w=0.55}, {type="tank", w=0.45}}},
+                {count = 14, gap = 0.6, mix = {{type="grunt", w=0.5}, {type="splitter", w=0.3}, {type="runner", w=0.2}}},
+                {count = 20, gap = 0.48, mix = {{type="grunt", w=0.5}, {type="runner", w=0.35}, {type="tank", w=0.15}}},
+                {count = 20, gap = 0.45, mix = {{type="tank", w=0.4}, {type="splitter", w=0.4}, {type="runner", w=0.2}}},
+            },
+
+            bosses = {
+                [10] = {type = "boss", hpBase = 1.35, hpRamp = 3.0, spdRamp = 0.08, addTrickle = true},
+            },
+        },
 	},
 }
 

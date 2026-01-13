@@ -31,10 +31,10 @@ local towerDefs = {
 		cost = 40,
 		range = 4.2 * Constants.TILE,
 		fireRate = 2.0, -- shots/sec
-		damage = 10,
+		damage = 11,
 		recoilStrength = Constants.TILE * 0.08,
 		recoilDecay = 18,
-		projSpeed = 420,
+		projSpeed = 440,
 		turnSpeed = 15,
 		color = Theme.tower.lancer,
 		upgrade = {
@@ -53,14 +53,14 @@ local towerDefs = {
 		damage = 6,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 18,
-		projSpeed = 350,
+		projSpeed = 370,
 		turnSpeed = 10,
 		color = Theme.tower.slow,
 		onHitSlow = {factor = 0.55, dur = 1.4},
 		upgrade = {
-			cost = 60,
-			dmgMult = 1.25,
-			rangeAdd = 0.25 * Constants.TILE,
+			cost = 55,
+			dmgMult = 1.2,
+			rangeAdd = 0.2 * Constants.TILE,
 			fireMult = 1.02,
 			slowDurAdd = 0.35,
 		}
@@ -74,7 +74,7 @@ local towerDefs = {
 		damage = 20, -- high base hit
 		recoilStrength = Constants.TILE * 0.14,
 		recoilDecay = 12,
-		projSpeed = 300,
+		projSpeed = 320,
 		turnSpeed = 6,
 		color = Theme.tower.cannon,
 		splash = {
@@ -82,7 +82,7 @@ local towerDefs = {
 			falloff = 0.65, -- % damage applied at edge
 		},
 		upgrade = {
-			cost = 80,
+			cost = 82,
 			dmgMult = 1.14,
 			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.05,
@@ -106,11 +106,10 @@ local towerDefs = {
 			falloff = 0.75 -- damage multiplier per jump
 		},
 		upgrade = {
-			cost = 75,
-			dmgMult = 1.25,
-			rangeAdd = 0.2 * Constants.TILE,
+			cost = 78,
+			dmgMult = 1.22,
+			rangeAdd = 0.12 * Constants.TILE,
 			fireMult = 1.08,
-			jumpAdd = 1,
 		}
 	},
 
@@ -122,7 +121,7 @@ local towerDefs = {
 		damage = 5,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 18,
-		projSpeed = 340,
+		projSpeed = 360,
 		turnSpeed = 10,
 		color = Theme.tower.poison,
 		poison = {
@@ -131,7 +130,7 @@ local towerDefs = {
 			maxStacks = 4,
 		},
 		upgrade = {
-			cost = 70,
+			cost = 72,
 			dmgMult = 1.1,
 			rangeAdd = 0.25 * Constants.TILE,
 			fireMult = 1.02,

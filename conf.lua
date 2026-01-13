@@ -1,5 +1,6 @@
 function love.conf(t)
 	t.identity = "Hydra TD"
+	t.window.icon = "assets/tower_lancer_64.png"
 
 	t.console = true
 	
