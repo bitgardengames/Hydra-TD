@@ -2,9 +2,9 @@ local Hotkeys = {}
 
 Hotkeys.shop = {
 	lancer = "1",
-	slow   = "2",
+	slow = "2",
 	poison = "3",
-	shock  = "4",
+	shock = "4",
 	cannon = "5",
 }
 

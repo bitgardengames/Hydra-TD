@@ -12,7 +12,7 @@ Theme.terrain = {
     pathEdge = {0.10, 0.10, 0.10},
 }
 
-Theme.grid = {0.16, 0.17, 0.20, 0.1} -- 0.18
+Theme.grid = {0.16, 0.17, 0.20, 0.1}
 
 Theme.enemy = {
     body = {0.90, 0.40, 0.36},
@@ -29,7 +29,11 @@ Theme.tower = {
 }
 
 Theme.projectiles = {
-	lancer = {0.95, 0.95, 0.95},
+	lancer = {0.98, 0.98, 0.98},
+	slow = {0.7, 0.85, 1},
+	cannon = {1, 0.8, 0.4},
+	shock = {0.45, 0.78, 0.98},
+	poison = {0.6, 0.9, 0.5},
 }
 
 Theme.ui = {

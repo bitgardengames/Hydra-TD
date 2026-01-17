@@ -3,8 +3,11 @@ local Sound = require("systems.sound")
 local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
+local Util = require("core.util")
 local Save = require("core.save")
 local Maps = require("world.maps")
+local Title = require("ui.title")
+local Text = require("ui.text")
 
 local Menu = {}
 
@@ -18,6 +21,7 @@ local colorGrass = Theme.terrain.grass
 
 local lg = love.graphics
 local sin = math.sin
+local rad = math.rad
 local min = math.min
 local max = math.max
 local floor = math.floor
@@ -40,9 +44,21 @@ local menuItems = {
 local settingsCursor = 1
 local settingsItems = {
 	{label = "Music Volume", key = "music"},
-	{label = "SFX Volume",   key = "sfx"},
-	{label = "Fullscreen",  key = "fullscreen"},
+	{label = "SFX Volume", key = "sfx"},
+	{label = "Fullscreen", key = "fullscreen"},
 	{label = "Back"},
+}
+
+local HERO_ANGLE = -math.pi / 6 -- Not just any old angle
+
+local lancerIdle = {
+	angle = HERO_ANGLE,
+	from = HERO_ANGLE,
+	to = HERO_ANGLE - rad(28),
+	t = 0,
+	hold = 0,
+	dir = 1,
+	startupHold = 5,
 }
 
 local function ease(p)
@@ -55,7 +71,7 @@ end
 
 -- Map Preview Generation
 local function buildMapPreview(mapDef)
-	-- BIG hero preview
+	-- Big hero preview
 	local w, h = 520, 312
 	local canvas = lg.newCanvas(w, h)
 
@@ -77,10 +93,7 @@ local function buildMapPreview(mapDef)
 		local ax, ay = mapDef.path[i][1], mapDef.path[i][2]
 		local bx, by = mapDef.path[i + 1][1], mapDef.path[i + 1][2]
 
-		lg.line(
-			(ax - 0.5) * tileW, (ay - 0.5) * tileH,
-			(bx - 0.5) * tileW, (by - 0.5) * tileH
-		)
+		lg.line((ax - 0.5) * tileW, (ay - 0.5) * tileH, (bx - 0.5) * tileW, (by - 0.5) * tileH)
 	end
 
 	lg.setLineWidth(1)
@@ -102,14 +115,30 @@ local function drawTriangle(cx, cy, dir, size, alpha)
 	end
 end
 
-local function isMapLocked(i)
-    return not Save.isMapUnlocked(i, Maps[i].id)
+local function drawUIMeter(label, color, value, maxValue, x, y, selected)
+	local t = max(0, min(1, value / maxValue))
+
+	-- Selection caret
+	if selected then
+		Text.printShadow(">", x - 18, y)
+	end
+
+	-- Label
+	Text.printShadow(label, x, y)
+
+	-- Bar background
+	lg.setColor(0, 0, 0, 0.35)
+	lg.rectangle("fill", x + 120, y + 4, 120, 8, 4, 4)
+
+	-- Fill
+	if value > 0 then
+		lg.setColor(color[1], color[2], color[3], 1)
+		lg.rectangle("fill", x + 120, y + 4, 120 * t, 8, 4, 4)
+	end
 end
 
-function Menu.load()
-	for i, map in ipairs(Maps) do
-		mapPreviews[i] = buildMapPreview(map)
-	end
+local function isMapLocked(i)
+	return not Save.isMapUnlocked(i, Maps[i].id)
 end
 
 -- Carousel
@@ -123,35 +152,94 @@ local function addCard(cards, i, from, to, mapCount)
 	cards[#cards + 1] = {i = i, from = from, to = to}
 end
 
+function Menu.load()
+	for i, map in ipairs(Maps) do
+		mapPreviews[i] = buildMapPreview(map)
+	end
+end
+
 -- Draw
 function Menu.draw()
 	local sw, sh = lg.getDimensions()
 
 	-- Main menu
 	if State.mode == "menu" then
-		local t = love.timer.getTime()
-		local spacing = 34
+		local dt = love.timer.getDelta()
+		local t  = love.timer.getTime()
+
+		local ROTATE_TIME = 1.8
+		local HOLD_TIME   = 5.0
+
+		local spacing = 44
 		local y = floor(sh * 0.45)
 
-		Fonts.set("title")
-		lg.setColor(colorText)
-		lg.printf("Hydra TD", 0, y - 72, sw, "center")
+		-- Lancer idle update
+		if lancerIdle.startupHold > 0 then
+			-- Startup hero pose hold
+			lancerIdle.startupHold = lancerIdle.startupHold - dt
+			lancerIdle.angle = HERO_ANGLE
+		else
+			-- Normal swivel logic
+			if lancerIdle.hold > 0 then
+				lancerIdle.hold = lancerIdle.hold - dt
+			else
+				lancerIdle.t = lancerIdle.t + dt / ROTATE_TIME
 
-		Fonts.set("ui")
+				if lancerIdle.t >= 1 then
+					lancerIdle.t = 0
+					lancerIdle.hold = HOLD_TIME
+					lancerIdle.dir = -lancerIdle.dir
+				end
+			end
+
+			-- Base swivel
+			local p = lancerIdle.t
+
+			p = p * p * (3 - 2 * p)
+
+			local a, b
+
+			if lancerIdle.dir == 1 then
+				a, b = lancerIdle.from, lancerIdle.to
+			else
+				a, b = lancerIdle.to, lancerIdle.from
+			end
+
+			lancerIdle.angle = a + (b - a) * p
+
+			-- Servo while holding
+			if lancerIdle.hold > 0 then
+				local SERVO_AMPLITUDE = rad(0.35)
+				local SERVO_SPEED = 1.8
+				local fade = min(1, lancerIdle.hold / 0.6)
+
+				local servo = sin(t * SERVO_SPEED) * SERVO_AMPLITUDE * fade
+				lancerIdle.angle = lancerIdle.angle + servo
+			end
+		end
+
+		-- Draw menu
+		lg.setColor(0.31, 0.57, 0.76, 1)
+		lg.rectangle("fill", 0, 0, sw, sh)
+
+		Title.draw({x = sw * 0.5, y = y - 72, lancerScale = 3.0, angle = lancerIdle.angle, alpha = 1})
+
+		Fonts.set("menu")
+
+		y = y + spacing
 
 		for i, label in ipairs(menuItems) do
 			local pulse = (i == cursor) and (0.85 + sin(t * 4) * 0.15) or 1
 			local prefix = (i == cursor) and "> " or "  "
+
 			lg.setColor(colorText[1], colorText[2], colorText[3], pulse)
-			lg.printf(prefix .. label, 0, y, sw, "center")
+
+			Text.printfShadow(prefix .. label, 0, y, sw, "center")
+
 			y = y + spacing
 		end
-
 	-- Campaign / map select
 	elseif State.mode == "campaign" then
-		----------------------------------------------------------------
-		-- Setup & clamp animation intent
-		----------------------------------------------------------------
 		local index = State.mapIndex
 		local map   = Maps[index]
 		local mapCount = #Maps
@@ -171,34 +259,20 @@ function Menu.draw()
 
 		local offset = CAROUSEL_OFFSET
 
-		----------------------------------------------------------------
-		-- Slot targets (CENTER-ANCHORED)
-		----------------------------------------------------------------
+		-- Slot targets
 		local slots = {
-			prev = {
-				x = centerX - offset,
-				y = centerY,
-				scale = CAROUSEL_SCALE_SIDE,
-				alpha = CAROUSEL_ALPHA_SIDE
-			},
-			curr = {
-				x = centerX,
-				y = centerY,
-				scale = 1.0,
-				alpha = 1.0
-			},
-			next = {
-				x = centerX + offset,
-				y = centerY,
-				scale = CAROUSEL_SCALE_SIDE,
-				alpha = CAROUSEL_ALPHA_SIDE
-			}
+			prev = {x = centerX - offset, y = centerY, scale = CAROUSEL_SCALE_SIDE, alpha = CAROUSEL_ALPHA_SIDE},
+			curr = {x = centerX, y = centerY, scale = 1.0, alpha = 1.0},
+			next = {x = centerX + offset, y = centerY, scale = CAROUSEL_SCALE_SIDE, alpha = CAROUSEL_ALPHA_SIDE}
 		}
 
-		----------------------------------------------------------------
+		-- Draw backdrop
+		lg.setColor(0.31, 0.57, 0.76, 1)
+		lg.rectangle("fill", 0, 0, sw, sh)
+
 		-- Build carousel cards (reuse table, no allocations)
-		----------------------------------------------------------------
 		local cards = carouselCards
+
 		for i = #cards, 1, -1 do
 			cards[i] = nil
 		end
@@ -206,19 +280,11 @@ function Menu.draw()
 		if dir == 0 then
 			-- Idle / settled: always show prev, curr, next
 			addCard(cards, index - 1, slots.prev, slots.prev, mapCount)
-			addCard(cards, index,     slots.curr, slots.curr, mapCount)
+			addCard(cards, index, slots.curr, slots.curr, mapCount)
 			addCard(cards, index + 1, slots.next, slots.next, mapCount)
-
 		elseif dir == 1 then
-			-- Scrolling DOWN
-
 			-- Old previous slides out left
-			addCard(cards, index - 2, slots.prev, {
-				x = slots.prev.x - offset * 0.7,
-				y = centerY,
-				scale = CAROUSEL_SCALE_SIDE * 0.85,
-				alpha = 0
-			}, mapCount)
+			addCard(cards, index - 2, slots.prev, {x = slots.prev.x - offset * 0.7, y = centerY, scale = CAROUSEL_SCALE_SIDE * 0.85, alpha = 0}, mapCount)
 
 			-- Old current -> previous
 			addCard(cards, index - 1, slots.curr, slots.prev, mapCount)
@@ -227,23 +293,10 @@ function Menu.draw()
 			addCard(cards, index, slots.next, slots.curr, mapCount)
 
 			-- New next slides in from right
-			addCard(cards, index + 1, {
-				x = slots.next.x + offset * 0.7,
-				y = centerY,
-				scale = CAROUSEL_SCALE_SIDE * 0.85,
-				alpha = 0
-			}, slots.next, mapCount)
-
+			addCard(cards, index + 1, {x = slots.next.x + offset * 0.7, y = centerY, scale = CAROUSEL_SCALE_SIDE * 0.85, alpha = 0}, slots.next, mapCount)
 		elseif dir == -1 then
-			-- Scrolling UP
-
 			-- Old next slides out right
-			addCard(cards, index + 2, slots.next, {
-				x = slots.next.x + offset * 0.7,
-				y = centerY,
-				scale = CAROUSEL_SCALE_SIDE * 0.85,
-				alpha = 0
-			}, mapCount)
+			addCard(cards, index + 2, slots.next, {x = slots.next.x + offset * 0.7, y = centerY, scale = CAROUSEL_SCALE_SIDE * 0.85, alpha = 0}, mapCount)
 
 			-- Old current -> next
 			addCard(cards, index + 1, slots.curr, slots.next, mapCount)
@@ -252,26 +305,20 @@ function Menu.draw()
 			addCard(cards, index, slots.prev, slots.curr, mapCount)
 
 			-- New previous slides in from left
-			addCard(cards, index - 1, {
-				x = slots.prev.x - offset * 0.7,
-				y = centerY,
-				scale = CAROUSEL_SCALE_SIDE * 0.85,
-				alpha = 0
-			}, slots.prev, mapCount)
+			addCard(cards, index - 1, {x = slots.prev.x - offset * 0.7, y = centerY, scale = CAROUSEL_SCALE_SIDE * 0.85, alpha = 0}, slots.prev, mapCount)
 		end
 
-		----------------------------------------------------------------
-		-- Resolve transforms (lerp) + sort back → front
-		----------------------------------------------------------------
+		-- Resolve transforms (lerp)
 		local resolved = {}
+
 		for i = 1, #cards do
 			local c = cards[i]
 			local from, to = c.from, c.to
 
 			resolved[#resolved + 1] = {
 				i = c.i,
-				x = lerp(from.x,     to.x,     p),
-				y = lerp(from.y,     to.y,     p),
+				x = lerp(from.x, to.x, p),
+				y = lerp(from.y, to.y, p),
 				s = lerp(from.scale, to.scale, p),
 				a = lerp(from.alpha, to.alpha, p),
 			}
@@ -281,9 +328,7 @@ function Menu.draw()
 			return a.s < b.s
 		end)
 
-		----------------------------------------------------------------
-		-- Draw carousel (CENTER-ANCHORED)
-		----------------------------------------------------------------
+		-- Draw carousel
 		for i = 1, #resolved do
 			local r  = resolved[i]
 			local pv = mapPreviews[r.i]
@@ -298,9 +343,7 @@ function Menu.draw()
 			lg.pop()
 		end
 
-		----------------------------------------------------------------
 		-- Border on current card
-		----------------------------------------------------------------
 		lg.setColor(1, 1, 1, 0.75)
 		lg.setLineWidth(3)
 		lg.rectangle("line", slots.curr.x - pw * 0.5, slots.curr.y - ph * 0.5, pw, ph, 6, 6)
@@ -311,22 +354,20 @@ function Menu.draw()
 			lg.setColor(0, 0, 0, 0.45)
 			lg.rectangle("fill", slots.curr.x - pw * 0.5, slots.curr.y - ph * 0.5, pw, ph, 12, 12)
 
-			Fonts.set("menu")
+			Fonts.set("title")
 			lg.setColor(1, 1, 1, 0.85)
 			lg.printf("LOCKED", slots.curr.x - pw * 0.5, slots.curr.y - 14, pw, "center")
 		end
 
-		----------------------------------------------------------------
 		-- Text / UI
-		----------------------------------------------------------------
 		local textY = pyTop + ph + PAD_PREVIEW
 
-		Fonts.set("menu")
+		Fonts.set("title")
 		lg.setColor(colorText)
 		lg.printf(map.name, 0, textY, sw, "center")
 		textY = textY + PAD_TITLE
 
-		Fonts.set("ui")
+		Fonts.set("menu")
 		lg.setColor(1, 1, 1, 0.6)
 		lg.printf(("Map %d of %d"):format(index, mapCount), 0, textY, sw, "center")
 		textY = textY + PAD_META
@@ -334,9 +375,8 @@ function Menu.draw()
 		lg.setColor(1, 1, 1, 0.8)
 		lg.printf("[Enter] Play   [Esc] Back", 0, textY, sw, "center")
 
-		--[[ =====================================================
+		--[[
 		-- Scroll indicators (optional but helpful)
-		-- =====================================================
 		local pulse = 0.6 + sin(love.timer.getTime() * 3) * 0.2
 		local arrowX = cx + pw * 0.5
 		local arrowPad = 22
@@ -350,24 +390,50 @@ function Menu.draw()
 		end]]
 	-- Settings
 	elseif State.mode == "settings" then
-		local spacing = 32
-		local y = floor(sh * 0.45)
+		-- Backdrop
+		lg.setColor(0.31, 0.57, 0.76, 1)
+		lg.rectangle("fill", 0, 0, sw, sh)
+
+		local centerX = floor(sw * 0.5)
+		local startY = floor(sh * 0.45)
+		local lineH = 44
+
+		Fonts.set("title")
+
+		lg.setColor(1, 1, 1, 1)
+		Text.printfShadow("Settings", 0, startY - 56, sw, "center")
 
 		Fonts.set("menu")
-		lg.setColor(colorText)
-		lg.printf("Settings", 0, y - 56, sw, "center")
 
-		Fonts.set("ui")
+		-- Music
+		drawUIMeter("Music Volume", Theme.tower.shock, Save.data.settings.musicVolume, 1, centerX - 140, startY, settingsCursor == 1)
 
-		for i, item in ipairs(settingsItems) do
-			local selected = (i == settingsCursor)
-			local alpha = selected and 1 or 0.6
-			local prefix = selected and "> " or "  "
+		lg.setColor(1, 1, 1, 1)
 
-			lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-			lg.printf(prefix .. item.label, 0, y, sw, "center")
-			y = y + spacing
+		-- SFX
+		drawUIMeter("SFX Volume", Theme.tower.cannon, Save.data.settings.sfxVolume, 1, centerX - 140, startY + lineH, settingsCursor == 2)
+
+		-- Fullscreen
+		local fsY = startY + lineH * 2
+
+		lg.setColor(1, 1, 1, 1)
+
+		if settingsCursor == 3 then
+			Text.printShadow(">", centerX - 140 - 18, fsY)
 		end
+
+		Text.printfShadow("Fullscreen", 0, fsY, sw, "center")
+
+		-- Row 4: Back
+		local backY = fsY + lineH
+
+		lg.setColor(1, 1, 1, 1)
+
+		if settingsCursor == 4 then
+			Text.printShadow(">", centerX - 140 - 18, backY)
+		end
+
+		Text.printfShadow("Back", 0, backY, sw, "center")
 	end
 end
 
@@ -447,23 +513,45 @@ function Menu.keypressed(key)
 			settingsCursor = min(#settingsItems, settingsCursor + 1)
 			Sound.play("uiMove")
 		elseif key == "left" or key == "right" then
-			if settingsItems[settingsCursor].key == "fullscreen" then
+			local dir = (key == "right") and 1 or -1
+			local step = 0.10
+
+			if settingsCursor == 1 then
+				local vol = Util.clamp(Save.data.settings.musicVolume + dir * step, 0, 1)
+				vol = math.floor(vol / step + 0.5) * step
+				
+				Save.data.settings.musicVolume = vol
+				Sound.setMusicVolume(vol)
+				Sound.play("uiMove")
+				Save.flush()
+			elseif settingsCursor == 2 then
+				local vol = Util.clamp(Save.data.settings.sfxVolume + dir * step, 0, 1)
+				vol = math.floor(vol / step + 0.5) * step
+				
+				Save.data.settings.sfxVolume = vol
+				Sound.setSFXVolume(vol)
+				Sound.play("uiMove")
+				Save.flush()
+			elseif settingsCursor == 3 then
 				local isFullscreen = love.window.getFullscreen()
 
 				if isFullscreen then
-					-- Go WINDOWED (must set a mode)
+					-- Go windowed (must set a mode)
 					--love.window.setFullscreen(false)
 					love.window.setMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1})
 				else
-					-- Go FULLSCREEN (desktop resolution)
+					-- Go fullscreen (desktop resolution)
 					--love.window.setFullscreen(true)
 					love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
 				end
+
+				Save.data.settings.fullscreen = isFullscreen
 
 				-- Recalculate camera scaling
 				require("core.camera").resize()
 
 				Sound.play("uiConfirm")
+				Save.flush()
 			end
 		elseif key == "return" or key == "escape" then
 			State.mode = "menu"

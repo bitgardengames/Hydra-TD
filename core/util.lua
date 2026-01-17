@@ -1,15 +1,11 @@
 local Util = {}
 
 local sqrt = math.sqrt
+local min = math.min
+local max = math.max
 
 function Util.clamp(x, a, b)
-	if x < a then
-		return a
-	elseif x > b then
-		return b
-	else
-		return x
-	end
+	return max(a, math.min(x, b))
 end
 
 function Util.dist2(x1, y1, x2, y2)

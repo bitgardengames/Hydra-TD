@@ -19,7 +19,7 @@ local enemyDefs = {
 		name = "Grunt",
 		hp = 42,
 		speed = 70,
-		reward = 7,
+		reward = 6,
 		score = 10,
 		radius = 10,
 	},
@@ -28,7 +28,7 @@ local enemyDefs = {
 		name = "Tank",
 		hp = 120,
 		speed = 45,
-		reward = 14,
+		reward = 12,
 		score = 22,
 		radius = 12,
 	},
@@ -37,7 +37,7 @@ local enemyDefs = {
 		name = "Runner",
 		hp = 28,
 		speed = 95,
-		reward = 7,
+		reward = 6,
 		score = 12,
 		radius = 9,
 	},
@@ -46,7 +46,7 @@ local enemyDefs = {
 		name = "Splitter",
 		hp = 70,
 		speed = 60,
-		reward = 11,
+		reward = 10,
 		score = 18,
 		radius = 11,
 		split = {
@@ -59,9 +59,9 @@ local enemyDefs = {
 
 	boss = {
 		name = "Boss",
-		hp = 7, -- 7600
+		hp = 7500, -- 7600
 		speed = 45,
-		reward = 100,
+		reward = 75,
 		score = 300,
 		radius = 18,
 		boss = true,

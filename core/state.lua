@@ -47,7 +47,7 @@ local state = {
 		showDamageMeter = false,
 		damageAlpha = 0,
 		damageFadeSpeed = 14,
-	}
+	},
 }
 
 function state.addDamage(kind, dmg, isBoss)

@@ -30,7 +30,7 @@ local colorText = Theme.ui.text
 local colorBg = Theme.terrain.bg
 
 -- Artwork export, always make sure it's disabled
-DEV_EXPORT = true
+DEV_EXPORT = 0
 
 function resetGame()
     -- Clear world state
@@ -87,7 +87,7 @@ end
 function love.load()
 	Save.load()
 
-	love.window.setFullscreen(true)
+	love.window.setFullscreen(Save.data.settings.fullscreen)
 	love.window.setTitle("Hydra TD")
 
 	lg.setDefaultFilter("nearest", "nearest")
@@ -99,14 +99,12 @@ function love.load()
 	Sound.load()
 	Sound.playMusic("bg")
 
-	Projectiles.buildCaches()
-
 	lg.setBackgroundColor(colorBg)
 	love.math.setRandomSeed(os.time())
 
 	Menu.load()
 
-	if DEV_EXPORT then
+	if DEV_EXPORT == 1 then
 		require("tools.art_export").run()
 	end
 end

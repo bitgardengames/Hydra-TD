@@ -14,6 +14,11 @@ function Save.load()
             Save.data.furthestIndex = Save.data.furthestIndex or 1
             Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 
+			Save.data.settings = Save.data.settings or {}
+			Save.data.settings.musicVolume = Save.data.settings.musicVolume or 0.75
+			Save.data.settings.sfxVolume = Save.data.settings.sfxVolume or 0.60
+			Save.data.settings.fullscreen = Save.data.settings.fullscreen or false
+
             return
         end
     end
@@ -23,6 +28,11 @@ function Save.load()
         version = 1,
         furthestIndex = 1,
         unlockedMaps = {},
+		settings = {
+			musicVolume = 0.50,
+			sfxVolume = 0.50,
+			fullscreen = true,
+		},
     }
 end
 

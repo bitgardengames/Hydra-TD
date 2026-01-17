@@ -20,42 +20,6 @@ local pi = math.pi
 local tinsert = table.insert
 local tremove = table.remove
 
-local cache = {
-    bullet = nil,
-    cannon = nil,
-    slow = nil,
-}
-
-local function buildCaches()
-	-- Bullet
-    cache.bullet = lg.newCanvas(12, 12)
-    lg.setCanvas(cache.bullet)
-    lg.clear(0, 0, 0, 0)
-    lg.setColor(1, 1, 1)
-    lg.circle("fill", 6, 6, 4)
-    lg.setCanvas()
-
-	-- Cannon shell
-    cache.cannon = lg.newCanvas(26, 12)
-    lg.setCanvas(cache.cannon)
-    lg.clear(0, 0, 0, 0)
-    lg.setColor(1, 0.8, 0.4)
-    lg.rectangle("fill", 2, 2, 16, 8, 4, 4)
-    lg.setCanvas()
-
-	-- Slow diamond
-    cache.slow = lg.newCanvas(16, 16)
-    lg.setCanvas(cache.slow)
-    lg.clear(0, 0, 0, 0)
-    lg.setColor(0.7, 0.85, 1.0)
-    lg.push()
-    lg.translate(8, 8)
-    lg.rotate(pi / 4)
-    lg.rectangle("fill", -4, -4, 8, 8, 2, 2)
-    lg.pop()
-    lg.setCanvas()
-end
-
 local function spawnZapEffect(x, y, chain)
 	tinsert(zaps, {
 		x = x,
@@ -402,8 +366,6 @@ return {
 	zaps = zaps,
 	splashes = splashes,
 	explosions = explosions,
-	cache = cache,
-	buildCaches = buildCaches,
 	spawnProjectile = spawnProjectile,
 	spawnZapEffect = spawnZapEffect,
 	spawnBossDeathExplosion = spawnBossDeathExplosion,

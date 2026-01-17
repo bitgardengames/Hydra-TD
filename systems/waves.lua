@@ -46,27 +46,26 @@ function Waves.startWave()
 	State.wave = State.wave + 1
 	State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 
-	-- Boss waves
-	if waveData.bosses and waveData.bosses[State.wave] then
-		local boss = waveData.bosses[State.wave]
+	-- Boss waves (every 10th wave)
+	local isBossWave = (State.wave % 10 == 0)
+
+	if isBossWave and waveData.bosses then
 		local bossIndex = State.wave / 10
+		local boss = waveData.bosses[bossIndex]
 
-		spawner.active = true
-		spawner.remaining = 1
-		spawner.gap = 0
-		spawner.timer = 0
-		spawner.mix = {{type = boss.type, w = 1.0}}
-
-		if bossIndex == 1 then
-			spawner.hpMult = boss.hpBase
-		else
+		if boss then
+			spawner.active = true
+			spawner.remaining = 1
+			spawner.gap = 0
+			spawner.timer = 0
+			spawner.mix = {{type = boss.type, w = 1.0}}
 			spawner.hpMult = boss.hpBase * (boss.hpRamp ^ (bossIndex - 1))
+			spawner.spdMult = 1.0 + (bossIndex - 1) * boss.spdRamp
+
+			State.inPrep = false
+
+			return
 		end
-
-		spawner.spdMult = 1.0 + (bossIndex - 1) * boss.spdRamp
-		State.inPrep = false
-
-		return
 	end
 
 	-- Normal waves
@@ -103,7 +102,7 @@ function Waves.updateSpawner(dt)
 	end
 
 	-- Boss add trickle (unchanged behavior)
-	if State.wave == 10 or State.wave == 20 then
+	if State.wave % 10 == 0 then
 		local bossAlive = false
 
 		for _, e in ipairs(Enemies.enemies) do
