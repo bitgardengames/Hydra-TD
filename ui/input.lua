@@ -54,6 +54,12 @@ local function updateHover()
 end
 
 local function mousepressed(x, y, button)
+	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" then
+		Menu.mousepressed(x, y, button)
+
+		return
+	end
+
 	if State.lives <= 0 then
 		return
 	end

@@ -1,5 +1,9 @@
 local Theme = {}
 
+local function lighten(c, amt)
+    return {math.min(1, c[1] + amt), math.min(1, c[2] + amt), math.min(1, c[3] + amt), c[4] or 1}
+end
+
 Theme.outline = {
     color = {0.04, 0.04, 0.04, 1},
     width = 3,
@@ -43,6 +47,7 @@ Theme.ui = {
     warn = {0.98, 0.82, 0.30},
     panel = {0.09, 0.10, 0.12},
     panel2 = {0.12, 0.13, 0.16},
+    hovered = lighten({0.09, 0.10, 0.12}, 0.06),
     selected = {1.00, 0.88, 0.40},
 }
 

@@ -8,6 +8,8 @@ local Save = require("core.save")
 local Maps = require("world.maps")
 local Title = require("ui.title")
 local Text = require("ui.text")
+local Cursor = require("core.cursor")
+local Button = require("ui.button")
 
 local Menu = {}
 
@@ -20,6 +22,7 @@ local colorPath = Theme.terrain.path
 local colorGrass = Theme.terrain.grass
 
 local lg = love.graphics
+local lt = love.timer
 local sin = math.sin
 local rad = math.rad
 local min = math.min
@@ -27,7 +30,7 @@ local max = math.max
 local floor = math.floor
 
 local PAD_PREVIEW = 28
-local PAD_TITLE = 22
+local PAD_TITLE = 54
 local PAD_META = 18
 local PAD_ACTION = 26
 
@@ -40,6 +43,11 @@ local menuItems = {
 	"Settings",
 	"Quit",
 }
+
+local menuButtons = nil
+local pauseButtons = nil
+local campaignButtons = nil
+local settingsButtons = nil
 
 local settingsCursor = 1
 local settingsItems = {
@@ -156,6 +164,154 @@ function Menu.load()
 	for i, map in ipairs(Maps) do
 		mapPreviews[i] = buildMapPreview(map)
 	end
+
+	menuButtons = {
+		{
+			id = "play",
+			label = "Play",
+			w = 220,
+			h = 42,
+			onClick = function()
+				previewAlpha = 0
+				State.mapIndex = min(Save.data.furthestIndex or 1, #Maps)
+				State.carouselDir = 0
+				State.carouselT = 1
+				State.mode = "campaign"
+				Sound.play("uiConfirm")
+			end
+		},
+		{
+			id = "settings",
+			label = "Settings",
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.mode = "settings"
+				Sound.play("uiConfirm")
+			end
+		},
+		{
+			id = "quit",
+			label = "Quit",
+			w = 220,
+			h = 42,
+			onClick = function()
+				love.event.quit()
+			end
+		}
+	}
+
+	pauseButtons = {
+		{
+			id = "resume",
+			label = "Resume",
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.paused = false
+				State.mode = "game"
+				Sound.play("uiConfirm")
+			end
+		},
+		{
+			id = "restart",
+			label = "Restart",
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.paused = false
+				State.mode = "game"
+				resetGame()
+				Sound.play("uiConfirm")
+			end
+		},
+		{
+			id = "menu",
+			label = "Main Menu",
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.paused = false
+				State.mode = "menu"
+				Sound.play("uiConfirm")
+			end
+		}
+	}
+
+	campaignButtons = {
+		{
+			id = "play",
+			label = "Play",
+			w = 220,
+			h = 42,
+			onClick = function()
+				if isMapLocked(State.mapIndex) then
+					Sound.play("uiError")
+
+					return
+				end
+
+				Sound.play("uiConfirm")
+				State.mode = "game"
+				resetGame()
+			end
+		},
+		{
+			id = "back",
+			label = "Back",
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.mode = "menu"
+				Sound.play("uiCancel")
+			end
+		}
+	}
+
+	local fullscreen = love.window.getFullscreen()
+
+	settingsButtons = {
+		{
+			id = "fullscreen",
+			label = fullscreen and "Fullscreen: On" or "Fullscreen: Off",
+			w = 260,
+			h = 42,
+			onClick = function()
+				local wasFullscreen = love.window.getFullscreen()
+				local nowFullscreen = not wasFullscreen
+
+				if nowFullscreen then
+					-- Go fullscreen (desktop resolution)
+					--love.window.setFullscreen(true)
+					love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
+				else
+					-- Go windowed (must set a mode)
+					--love.window.setFullscreen(false)
+					love.window.setMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1})
+				end
+
+				Save.data.settings.fullscreen = nowFullscreen
+
+				settingsButtons[1].label = nowFullscreen and "Fullscreen: On" or "Fullscreen: Off"
+
+				-- Recalculate camera scaling
+				require("core.camera").resize()
+
+				Sound.play("uiConfirm")
+				Save.flush()
+			end
+		},
+		{
+			id = "back",
+			label = "Back",
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.mode = "menu"
+				Sound.play("uiCancel")
+			end
+		}
+	}
 end
 
 -- Draw
@@ -164,14 +320,14 @@ function Menu.draw()
 
 	-- Main menu
 	if State.mode == "menu" then
-		local dt = love.timer.getDelta()
-		local t  = love.timer.getTime()
+		local dt = lt.getDelta()
+		local t  = lt.getTime()
 
 		local ROTATE_TIME = 1.8
 		local HOLD_TIME   = 5.0
 
 		local spacing = 44
-		local y = floor(sh * 0.45)
+		local titleY = floor(sh * 0.32)
 
 		-- Lancer idle update
 		if lancerIdle.startupHold > 0 then
@@ -222,21 +378,12 @@ function Menu.draw()
 		lg.setColor(0.31, 0.57, 0.76, 1)
 		lg.rectangle("fill", 0, 0, sw, sh)
 
-		Title.draw({x = sw * 0.5, y = y - 72, lancerScale = 3.0, angle = lancerIdle.angle, alpha = 1})
+		Title.draw({x = sw * 0.5, y = titleY, lancerScale = 3.0, angle = lancerIdle.angle, alpha = 1})
 
 		Fonts.set("menu")
 
-		y = y + spacing
-
-		for i, label in ipairs(menuItems) do
-			local pulse = (i == cursor) and (0.85 + sin(t * 4) * 0.15) or 1
-			local prefix = (i == cursor) and "> " or "  "
-
-			lg.setColor(colorText[1], colorText[2], colorText[3], pulse)
-
-			Text.printfShadow(prefix .. label, 0, y, sw, "center")
-
-			y = y + spacing
+		for i, btn in ipairs(menuButtons) do
+			Button.draw(btn)
 		end
 	-- Campaign / map select
 	elseif State.mode == "campaign" then
@@ -344,7 +491,7 @@ function Menu.draw()
 		end
 
 		-- Border on current card
-		lg.setColor(1, 1, 1, 0.75)
+		lg.setColor(1, 1, 1, 1)
 		lg.setLineWidth(3)
 		lg.rectangle("line", slots.curr.x - pw * 0.5, slots.curr.y - ph * 0.5, pw, ph, 6, 6)
 		lg.setLineWidth(1)
@@ -355,7 +502,7 @@ function Menu.draw()
 			lg.rectangle("fill", slots.curr.x - pw * 0.5, slots.curr.y - ph * 0.5, pw, ph, 12, 12)
 
 			Fonts.set("title")
-			lg.setColor(1, 1, 1, 0.85)
+			lg.setColor(colorText)
 			lg.printf("LOCKED", slots.curr.x - pw * 0.5, slots.curr.y - 14, pw, "center")
 		end
 
@@ -367,17 +514,18 @@ function Menu.draw()
 		lg.printf(map.name, 0, textY, sw, "center")
 		textY = textY + PAD_TITLE
 
-		Fonts.set("menu")
-		lg.setColor(1, 1, 1, 0.6)
+		Fonts.set("ui")
 		lg.printf(("Map %d of %d"):format(index, mapCount), 0, textY, sw, "center")
-		textY = textY + PAD_META
 
-		lg.setColor(1, 1, 1, 0.8)
-		lg.printf("[Enter] Play   [Esc] Back", 0, textY, sw, "center")
+		Fonts.set("menu")
+
+		for _, btn in ipairs(campaignButtons) do
+			Button.draw(btn)
+		end
 
 		--[[
 		-- Scroll indicators (optional but helpful)
-		local pulse = 0.6 + sin(love.timer.getTime() * 3) * 0.2
+		local pulse = 0.6 + sin(lt.getTime() * 3) * 0.2
 		local arrowX = cx + pw * 0.5
 		local arrowPad = 22
 
@@ -413,27 +561,68 @@ function Menu.draw()
 		-- SFX
 		drawUIMeter("SFX Volume", Theme.tower.cannon, Save.data.settings.sfxVolume, 1, centerX - 140, startY + lineH, settingsCursor == 2)
 
-		-- Fullscreen
-		local fsY = startY + lineH * 2
+		Fonts.set("menu")
 
-		lg.setColor(1, 1, 1, 1)
-
-		if settingsCursor == 3 then
-			Text.printShadow(">", centerX - 140 - 18, fsY)
+		for _, btn in ipairs(settingsButtons) do
+			Button.draw(btn)
 		end
+	end
+end
 
-		Text.printfShadow("Fullscreen", 0, fsY, sw, "center")
+function Menu.update(dt)
+	Cursor.update()
 
-		-- Row 4: Back
-		local backY = fsY + lineH
+	if State.mode == "menu" then
+		local sw, sh = lg.getDimensions()
+		local cx = floor(sw * 0.5)
+		local gap = 52
+		local startY = floor(sh * 0.55)
 
-		lg.setColor(1, 1, 1, 1)
+		for i, btn in ipairs(menuButtons) do
+			btn.x = cx - btn.w * 0.5
+			btn.y = startY + (i - 1) * gap
 
-		if settingsCursor == 4 then
-			Text.printShadow(">", centerX - 140 - 18, backY)
+			Button.update(btn, Cursor.x, Cursor.y, dt)
 		end
+	end
 
-		Text.printfShadow("Back", 0, backY, sw, "center")
+	-- Campaign buttons
+	if State.mode == "campaign" then
+		local sw, sh = love.graphics.getDimensions()
+		local cx = floor(sw * 0.5)
+		local startY = floor(sh * 0.38 + 260)
+		local gap = 52
+
+		for i, btn in ipairs(campaignButtons) do
+			btn.x = cx - btn.w * 0.5
+			btn.y = startY + (i - 1) * gap
+
+			-- Disable Play if locked
+			if btn.id == "play" then
+				btn.enabled = not isMapLocked(State.mapIndex)
+			else
+				btn.enabled = true
+			end
+
+			Button.update(btn, Cursor.x, Cursor.y, dt)
+		end
+	end
+
+	-- Settings buttons
+	if State.mode == "settings" then
+		local sw, sh = love.graphics.getDimensions()
+		local cx = floor(sw * 0.5)
+
+		local startY = floor(sh * 0.45 + 88) -- below volume meters
+		local gap = 52
+
+		for i, btn in ipairs(settingsButtons) do
+			btn.x = cx - btn.w * 0.5
+			btn.y = startY + (i - 1) * gap
+			btn.enabled = true
+
+			Button.update(btn, Cursor.x, Cursor.y, dt)
+		end
 	end
 end
 
@@ -470,6 +659,7 @@ function Menu.keypressed(key)
 
 			if new < 1 then
 				Sound.play("uiError")
+
 				return
 			end
 
@@ -484,6 +674,7 @@ function Menu.keypressed(key)
 
 			if new > #Maps or isMapLocked(new) then
 				Sound.play("uiError")
+
 				return
 			end
 
@@ -495,6 +686,7 @@ function Menu.keypressed(key)
 		elseif key == "return" then
 			if isMapLocked(State.mapIndex) then
 				Sound.play("uiError")
+
 				return
 			end
 
@@ -518,16 +710,16 @@ function Menu.keypressed(key)
 
 			if settingsCursor == 1 then
 				local vol = Util.clamp(Save.data.settings.musicVolume + dir * step, 0, 1)
-				vol = math.floor(vol / step + 0.5) * step
-				
+				vol = floor(vol / step + 0.5) * step
+
 				Save.data.settings.musicVolume = vol
 				Sound.setMusicVolume(vol)
 				Sound.play("uiMove")
 				Save.flush()
 			elseif settingsCursor == 2 then
 				local vol = Util.clamp(Save.data.settings.sfxVolume + dir * step, 0, 1)
-				vol = math.floor(vol / step + 0.5) * step
-				
+				vol = floor(vol / step + 0.5) * step
+
 				Save.data.settings.sfxVolume = vol
 				Sound.setSFXVolume(vol)
 				Sound.play("uiMove")
@@ -556,6 +748,64 @@ function Menu.keypressed(key)
 		elseif key == "return" or key == "escape" then
 			State.mode = "menu"
 			Sound.play("uiBack")
+		end
+	end
+end
+
+function Menu.updatePause(dt)
+	Cursor.update()
+
+	local sw, sh = love.graphics.getDimensions()
+	local cx = floor(sw * 0.5)
+	local startY = floor(sh * 0.5 - 20)
+	local gap = 52
+
+	for i, btn in ipairs(pauseButtons) do
+		btn.x = cx - btn.w * 0.5
+		btn.y = startY + (i - 1) * gap
+
+		Button.update(btn, Cursor.x, Cursor.y, dt)
+	end
+end
+
+function Menu.drawPause()
+	for _, btn in ipairs(pauseButtons) do
+		Button.draw(btn)
+	end
+end
+
+function Menu.mousepressedPause(x, y, button)
+	for _, btn in ipairs(pauseButtons) do
+		if Button.mousepressed(btn, x, y, button) then
+			return true
+		end
+	end
+
+	return false
+end
+
+function Menu.mousepressed(x, y, button)
+	if State.mode == "menu" then
+		for _, btn in ipairs(menuButtons) do
+			if Button.mousepressed(btn, x, y, button) then
+				return
+			end
+		end
+	end
+
+	if State.mode == "campaign" then
+		for _, btn in ipairs(campaignButtons) do
+			if Button.mousepressed(btn, x, y, button) then
+				return
+			end
+		end
+	end
+
+	if State.mode == "settings" then
+		for _, btn in ipairs(settingsButtons) do
+			if Button.mousepressed(btn, x, y, button) then
+				return
+			end
 		end
 	end
 end

@@ -17,6 +17,8 @@ local TOWER_DIR = EXPORT_DIR .. "/towers"
 local ENEMY_DIR = EXPORT_DIR .. "/enemies"
 local BANNER_DIR = EXPORT_DIR .. "/banners"
 local ICON_DIR = EXPORT_DIR .. "/icons"
+local AVATAR_DIR = EXPORT_DIR .. "/avatars"
+local ANIM_DIR = EXPORT_DIR .. "/anim"
 
 -- Canonical banner reference
 local REF_W = 920
@@ -56,6 +58,8 @@ local function ensureDirs()
 	love.filesystem.createDirectory(ENEMY_DIR)
 	love.filesystem.createDirectory(BANNER_DIR)
 	love.filesystem.createDirectory(ICON_DIR)
+	love.filesystem.createDirectory(AVATAR_DIR)
+	love.filesystem.createDirectory(ANIM_DIR)
 end
 
 local function exportCanvas(canvas, path)
@@ -248,34 +252,497 @@ function Export.exportBanners()
 	end
 end
 
-function Export.exportAppIcons()
-	local size = 256
-	local canvas = lg.newCanvas(size, size, { msaa = 8 })
-	local scale = (size / REF_ICON_SIZE) * ICON_FILL
+function Export.exportSocialAvatar()
+	local sizes = {256, 512, 1024, 2048}
+	local Constants = require("core.constants")
 
-	for towerId, _ in pairs(Towers.towerDefs) do
-		lg.setCanvas(canvas)
-		lg.clear(0, 0, 0, 0)
+	local lg  = love.graphics
+	local max = math.max
+	local pi  = math.pi
 
+	local ENEMY_RADIUS_REF = Constants.TILE * 0.42
+	local OUTLINE_RATIO    = 3 / ENEMY_RADIUS_REF
+
+	for kind, data in pairs(Towers.towerDefs) do
+		for _, size in ipairs(sizes) do
+			local canvas = lg.newCanvas(size, size, {msaa = 8})
+			lg.setCanvas({canvas, stencil = true})
+			lg.clear(0, 0, 0, 0)
+
+			local cx = size * 0.5
+			local cy = size * 0.5
+			local radius = size * 0.34
+
+			-- Outline)
+			local outlinePad = radius * OUTLINE_RATIO * 1.28
+
+			--local outlineColor = Theme.enemy.body -- assertive, but nice
+			local outlineColor = data.color
+			local bodyColor = {0.05, 0.05, 0.05, 1}
+
+			-- Outline
+			lg.setColor(outlineColor)
+			lg.circle("fill", cx, cy, radius + outlinePad)
+
+			-- Body
+			lg.setColor(bodyColor)
+			lg.circle("fill", cx, cy, radius)
+
+			-- Eyes
+			local eyeSep = radius * 0.38
+			local eyeSize = max(1.6, radius * 0.16)
+			local eyeY = cy - radius * 0.24
+
+			lg.setColor(outlineColor)
+
+			-- X eyes
+			local armLen   = eyeSize * 1.8
+			local armThick = eyeSize * 0.9
+
+			local function drawX(x, y)
+				lg.push()
+				lg.translate(x, y)
+				lg.rotate(pi / 4)
+				lg.rectangle("fill", -armLen, -armThick * 0.5, armLen * 2, armThick, armThick * 0.45)
+				lg.pop()
+
+				lg.push()
+				lg.translate(x, y)
+				lg.rotate(-pi / 4)
+				lg.rectangle("fill", -armLen, -armThick * 0.5, armLen * 2, armThick, armThick * 0.45)
+				lg.pop()
+			end
+
+			drawX(cx - eyeSep, eyeY)
+			drawX(cx + eyeSep, eyeY)
+
+			-- Mouth
+			local mouthY = cy + radius * 0.32
+			local outerR = radius * 0.56
+			local innerR = outerR * 0.60
+			local lipOffset = radius * 0.07
+
+			local startAngle = -pi * 0.02
+			local endAngle =  pi * 1.02
+
+			local stretchX = 1.28
+
+			-- Mouth silhouette
+			local function drawMouthStencil()
+				lg.push()
+				lg.translate(cx, mouthY - lipOffset)
+				lg.scale(stretchX, 1.0)
+				lg.arc("fill", 0, 0, outerR, startAngle, endAngle)
+				lg.pop()
+			end
+
+			-- Draw mouth base
+			drawMouthStencil()
+
+			-- Vertical bars
+			lg.stencil(function()
+				drawMouthStencil()
+			end, "replace", 1)
+
+			lg.setStencilTest("greater", 0)
+
+			-- Bar configuration
+			local barCount   = 5      -- try 4 or 5
+			local barWidth   = radius * 0.078
+			local barHeight  = radius * 1.15
+			local barSpacing = barWidth * 3.4
+
+			-- Center bars around mouth
+			local totalWidth = (barCount - 1) * barSpacing
+			local startX = cx - totalWidth * 0.5
+
+			lg.setColor(bodyColor)
+
+			for i = 0, barCount - 1 do
+				local x = startX + i * barSpacing
+				lg.rectangle("fill", x - barWidth * 0.5, mouthY - barHeight * 0.5, barWidth, barHeight, barWidth * 0.4, barWidth * 0.4)
+			end
+
+			lg.setStencilTest()
+
+			lg.setCanvas()
+			exportCanvas(canvas, string.format("%s/social_avatar_%s_%d", AVATAR_DIR, kind, size))
+		end
+	end
+end
+
+function Export.exportCogSocialAvatar()
+	local sizes = {256, 512, 1024, 2048}
+	local Constants = require("core.constants")
+
+	local lg  = love.graphics
+	local max = math.max
+	local pi  = math.pi
+
+	local ENEMY_RADIUS_REF = Constants.TILE * 0.42
+	local OUTLINE_RATIO    = 3 / ENEMY_RADIUS_REF
+
+	-- =========================
+	-- Cog eye helper
+	-- =========================
+	local function drawCog(x, y, r, teeth, toothDepth, rotation)
 		lg.push()
-		lg.translate(size * 0.5, size * 0.5)
-		lg.scale(scale, scale)
+		lg.translate(x, y)
+		lg.rotate(rotation or 0)
 
-		Draw.drawTowerCore(towerId, 0, 0, {angle  = -math.pi / 4, alpha  = 1, shadow = false})
+		-- Core
+		lg.circle("fill", 0, 0, r)
+
+		-- Teeth
+		local toothW = (2 * pi * r) / teeth * 0.60
+
+		for i = 1, teeth do
+			local a = (i / teeth) * (2 * pi)
+
+			lg.push()
+			lg.rotate(a)
+			lg.rectangle(
+				"fill",
+				r - toothDepth * 0.45,
+				-toothW * 0.5,
+				toothDepth,
+				toothW,
+				toothW * 0.35,
+				toothW * 0.35
+			)
+			lg.pop()
+		end
 
 		lg.pop()
-		lg.setCanvas()
+	end
 
-		exportCanvas(canvas, string.format("%s/appicon_%s_%d", ICON_DIR, towerId, size))
+	for kind, data in pairs(Towers.towerDefs) do
+		for _, size in ipairs(sizes) do
+			local canvas = lg.newCanvas(size, size, { msaa = 8 })
+			lg.setCanvas({ canvas, stencil = true })
+			lg.clear(0, 0, 0, 0)
+
+			local cx = size * 0.5
+			local cy = size * 0.5
+			local radius = size * 0.34
+
+			-- Outline + body
+			local outlinePad = radius * OUTLINE_RATIO * 1.28
+			local outlineColor = data.color
+			local bodyColor = { 0.05, 0.05, 0.05, 1 }
+
+			lg.setColor(outlineColor)
+			lg.circle("fill", cx, cy, radius + outlinePad)
+
+			lg.setColor(bodyColor)
+			lg.circle("fill", cx, cy, radius)
+
+			-- Cog eyes
+			local eyeSep = radius * 0.31
+			local eyeR   = radius * 0.24
+			local hubR = eyeR * 0.42
+			local eyeY   = cy - radius * 0.24
+
+			local eyeOffset = radius * 0.06
+			local leftY  = eyeY - eyeOffset
+			local rightY = eyeY + eyeOffset
+
+			local teeth = 8
+			local toothDepth = eyeR * 0.60
+
+			lg.setColor(outlineColor)
+
+			drawCog(
+				cx - eyeSep,
+				leftY,
+				eyeR,
+				teeth,
+				toothDepth,
+				pi * 1.3
+			)
+
+			drawCog(
+				cx + eyeSep,
+				rightY,
+				eyeR,
+				teeth,
+				toothDepth,
+				(pi / teeth) * 1.55
+			)
+			
+			-- Draw inner hubs (body color)
+			lg.setColor(bodyColor)
+
+			lg.circle("fill", cx - eyeSep, leftY,  hubR)
+			--lg.circle("fill", cx + eyeSep, rightY, hubR * 0.6)
+
+			lg.setColor(outlineColor)
+
+			-- =========================
+			-- Mouth
+			-- =========================
+			local mouthY    = cy + radius * 0.32
+			local outerR    = radius * 0.56
+			local lipOffset = radius * 0.07
+
+			local startAngle = -pi * 0.02
+			local endAngle   =  pi * 1.02
+			local stretchX  = 1.28
+
+			local function drawMouthStencil()
+				lg.push()
+				lg.translate(cx, mouthY - lipOffset)
+				lg.scale(stretchX, 1.0)
+				lg.arc("fill", 0, 0, outerR, startAngle, endAngle)
+				lg.pop()
+			end
+
+			drawMouthStencil()
+
+			-- =========================
+			-- Teeth bars (stenciled)
+			-- =========================
+			lg.stencil(drawMouthStencil, "replace", 1)
+			lg.setStencilTest("greater", 0)
+
+			local barCount   = 5
+			local barWidth   = radius * 0.078
+			local barHeight  = radius * 1.15
+			local barSpacing = barWidth * 3.4
+
+			local totalWidth = (barCount - 1) * barSpacing
+			local startX = cx - totalWidth * 0.5
+
+			lg.setColor(bodyColor)
+
+			for i = 0, barCount - 1 do
+				local x = startX + i * barSpacing
+				lg.rectangle(
+					"fill",
+					x - barWidth * 0.5,
+					mouthY - barHeight * 0.5,
+					barWidth,
+					barHeight,
+					barWidth * 0.4,
+					barWidth * 0.4
+				)
+			end
+
+			lg.setStencilTest()
+			lg.setCanvas()
+
+			exportCanvas(
+				canvas,
+				string.format("%s/cog_avatar_%s_%d", AVATAR_DIR, kind, size)
+			)
+		end
+	end
+end
+
+function Export.exportCogSocialAvatarAnim()
+	--local sizes = {256, 512, 1024}
+	local sizes = {256}
+	local Constants = require("core.constants")
+
+	local lg  = love.graphics
+	local max = math.max
+	local pi  = math.pi
+
+	local ENEMY_RADIUS_REF = Constants.TILE * 0.42
+	local OUTLINE_RATIO    = 3 / ENEMY_RADIUS_REF
+
+	-- =========================
+	-- Animation settings
+	-- =========================
+	local FRAMES = 24          -- number of slices
+	local TEETH  = 8           -- must match cog teeth
+	local LOOP_ANGLE = (2 * pi) / TEETH
+	local MESH_OFFSET = LOOP_ANGLE
+	-- one tooth step = perfect loop
+
+	-- =========================
+	-- Cog eye helper
+	-- =========================
+	local function drawCog(x, y, r, teeth, toothDepth, rotation)
+		lg.push()
+		lg.translate(x, y)
+		lg.rotate(rotation or 0)
+
+		-- Core
+		lg.circle("fill", 0, 0, r)
+
+		-- Teeth
+		local toothW = (2 * pi * r) / teeth * 0.60
+		local embed  = 0.45
+
+		for i = 1, teeth do
+			local a = (i / teeth) * (2 * pi)
+
+			lg.push()
+			lg.rotate(a)
+			lg.rectangle(
+				"fill",
+				r - toothDepth * embed,
+				-toothW * 0.5,
+				toothDepth,
+				toothW,
+				toothW * 0.35,
+				toothW * 0.35
+			)
+			lg.pop()
+		end
+
+		lg.pop()
+	end
+
+	for kind, data in pairs(Towers.towerDefs) do
+		for _, size in ipairs(sizes) do
+			for frame = 0, FRAMES - 1 do
+				local t   = frame / FRAMES
+				local rot = t * LOOP_ANGLE
+
+				local canvas = lg.newCanvas(size, size, { msaa = 8 })
+				lg.setCanvas({ canvas, stencil = true })
+				lg.clear(0, 0, 0, 0)
+
+				local cx = size * 0.5
+				local cy = size * 0.5
+				local radius = size * 0.34
+
+				-- =========================
+				-- Outline + body
+				-- =========================
+				local outlinePad   = radius * OUTLINE_RATIO * 1.28
+				local outlineColor = data.color
+				local bodyColor    = { 0.05, 0.05, 0.05, 1 }
+
+				lg.setColor(outlineColor)
+				lg.circle("fill", cx, cy, radius + outlinePad)
+
+				lg.setColor(bodyColor)
+				lg.circle("fill", cx, cy, radius)
+
+				-- =========================
+				-- Cog eyes ⚙️
+				-- =========================
+				local eyeSep = radius * 0.31
+				local eyeR   = radius * 0.24
+				local hubR   = eyeR * 0.42
+				local eyeY   = cy - radius * 0.24
+
+				local eyeOffset = radius * 0.06
+				local leftY  = eyeY - eyeOffset
+				local rightY = eyeY + eyeOffset
+
+				local toothDepth = eyeR * 0.60
+
+				lg.setColor(outlineColor)
+
+				-- Left cog
+				drawCog(
+					cx - eyeSep,
+					leftY,
+					eyeR,
+					TEETH,
+					toothDepth,
+					rot
+				)
+
+				-- Right cog (meshed, opposite direction)
+				drawCog(
+					cx + eyeSep,
+					rightY,
+					eyeR,
+					TEETH,
+					toothDepth,
+					-rot + MESH_OFFSET
+				)
+
+				-- Inner hubs
+				lg.setColor(bodyColor)
+				lg.circle("fill", cx - eyeSep, leftY,  hubR)
+				-- optional second hub:
+				-- lg.circle("fill", cx + eyeSep, rightY, hubR)
+
+				lg.setColor(outlineColor)
+
+				-- =========================
+				-- Mouth
+				-- =========================
+				local mouthY    = cy + radius * 0.32
+				local outerR    = radius * 0.56
+				local lipOffset = radius * 0.07
+
+				local startAngle = -pi * 0.02
+				local endAngle   =  pi * 1.02
+				local stretchX  = 1.28
+
+				local function drawMouthStencil()
+					lg.push()
+					lg.translate(cx, mouthY - lipOffset)
+					lg.scale(stretchX, 1.0)
+					lg.arc("fill", 0, 0, outerR, startAngle, endAngle)
+					lg.pop()
+				end
+
+				drawMouthStencil()
+
+				-- =========================
+				-- Teeth bars (stenciled)
+				-- =========================
+				lg.stencil(drawMouthStencil, "replace", 1)
+				lg.setStencilTest("greater", 0)
+
+				local barCount   = 5
+				local barWidth   = radius * 0.078
+				local barHeight  = radius * 1.15
+				local barSpacing = barWidth * 3.4
+
+				local totalWidth = (barCount - 1) * barSpacing
+				local startX = cx - totalWidth * 0.5
+
+				lg.setColor(bodyColor)
+
+				for i = 0, barCount - 1 do
+					local x = startX + i * barSpacing
+					lg.rectangle(
+						"fill",
+						x - barWidth * 0.5,
+						mouthY - barHeight * 0.5,
+						barWidth,
+						barHeight,
+						barWidth * 0.4,
+						barWidth * 0.4
+					)
+				end
+
+				lg.setStencilTest()
+				lg.setCanvas()
+
+				exportCanvas(
+					canvas,
+					string.format(
+						"%s/cog_avatar_%s_%d_f%02d",
+						ANIM_DIR,
+						kind,
+						size,
+						frame
+					)
+				)
+			end
+		end
 	end
 end
 
 function Export.run()
 	ensureDirs()
-	Export.exportTowers()
-	Export.exportEnemies()
-	Export.exportBanners()
-	Export.exportAppIcons()
+	--Export.exportTowers()
+	--Export.exportEnemies()
+	--Export.exportBanners()
+	--Export.exportAppIcons()
+	--Export.exportSocialAvatar()
+	--Export.exportCogSocialAvatar()
+	Export.exportCogSocialAvatarAnim()
 	love.event.quit()
 end
 

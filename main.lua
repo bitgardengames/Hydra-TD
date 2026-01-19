@@ -30,7 +30,7 @@ local colorText = Theme.ui.text
 local colorBg = Theme.terrain.bg
 
 -- Artwork export, always make sure it's disabled
-DEV_EXPORT = 0
+DEV_EXPORT = 1
 
 function resetGame()
     -- Clear world state
@@ -110,10 +110,21 @@ function love.load()
 end
 
 function love.update(dt)
-	local target = (State.mode == "pause") and 1 or 0
+	local mode = State.mode
+	local target = (mode == "pause") and 1 or 0
 	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
 
-	if State.mode == "campaign" then
+	if mode == "pause" then
+		Menu.updatePause(dt)
+
+		return
+	end
+
+	if mode == "menu" or mode == "campaign" or mode == "settings" then
+		Menu.update(dt)
+	end
+
+	if mode == "campaign" then
 		State.carouselT = math.min(1, State.carouselT + dt * 7)
 
 		if State.carouselT >= 1 then
@@ -121,7 +132,7 @@ function love.update(dt)
 		end
 	end
 
-	if State.mode ~= "game" then
+	if mode ~= "game" then
 		return
 	end
 
@@ -211,7 +222,6 @@ function love.draw()
 
 		Camera.present()
 
-		-- Pause overlay on top
 		if State.mode == "pause" then
 			local t = State.pauseT
 			local ease = t * t * (3 - 2 * t)
@@ -225,8 +235,12 @@ function love.draw()
 			local alpha = ease
 
 			-- Text
+			Fonts.set("menu")
+			
 			lg.setColor(colorText[1], colorText[2], colorText[3], ease)
-			lg.printf("PAUSED\n\n[P] Resume\n[R] Restart\n[M] Menu", 0, sh * 0.5 - 70 + drop, sw, "center")
+			lg.printf("PAUSED", 0, sh * 0.5 - 70 + drop, sw, "center")
+
+			Menu.drawPause()
 		elseif State.gameOver then
 			local t = State.endT
 			local ease = t * t * (3 - 2 * t)
@@ -274,6 +288,12 @@ function love.draw()
 end
 
 function love.mousepressed(x, y, button)
+	if State.mode == "pause" then
+		if Menu.mousepressedPause(x, y, button) then
+			return
+		end
+	end
+
 	Input.mousepressed(x, y, button)
 end
 
