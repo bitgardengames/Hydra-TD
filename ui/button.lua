@@ -20,18 +20,8 @@ local function lerp(a, b, t)
 end
 
 local function lerpColor(c1, c2, t)
-	return {
-		lerp(c1[1], c2[1], t),
-		lerp(c1[2], c2[2], t),
-		lerp(c1[3], c2[3], t),
-		lerp(c1[4] or 1, c2[4] or 1, t),
-	}
+	return {lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t), lerp(c1[3], c2[3], t), lerp(c1[4] or 1, c2[4] or 1, t)}
 end
-
-local function elasticOut(t)
-	return math.sin(-13 * math.pi * 0.5 * (t + 1)) * math.pow(2, -10 * t) + 1
-end
-
 
 local function ensureAnim(btn)
 	if not btn.anim then
@@ -56,21 +46,23 @@ function Button.update(btn, mx, my, dt)
 	local anim = ensureAnim(btn)
 	local hovered = pointInRect(mx, my, btn.x, btn.y, btn.w, btn.h)
 
-	-- Detect hover enter / leave
 	if hovered ~= anim.hovered then
-		anim.t = 0
 		anim.active = true
 	end
 
 	anim.hovered = hovered
 	btn.hovered = hovered
 
-	-- Advance hover animation
 	if anim.active then
-		anim.t = anim.t + dt * 10  -- slightly snappier for elastic
+		local speed = dt * 10
 
-		if anim.t >= 1 then
-			anim.t = 1
+		if anim.hovered then
+			anim.t = math.min(1, anim.t + speed)
+		else
+			anim.t = math.max(0, anim.t - speed)
+		end
+
+		if anim.t == 0 or anim.t == 1 then
 			anim.active = false
 		end
 	end
@@ -79,27 +71,14 @@ end
 function Button.draw(btn)
 	local x, y, w, h = btn.x, btn.y, btn.w, btn.h
 	local anim = btn.anim
-	local bumpPad = 0
-	local bg = colorBase
-	local fade = 0
+	local t = anim and anim.t or 0
 
-	if anim then
-		local p = anim.t
-		local dir = anim.hovered and 1 or -1
+	-- Smoothstep
+	local ease = t * t * (3 - 2 * t)
 
-		local ease
-		if anim.hovered then
-			ease = elasticOut(p)       -- pop on enter
-		else
-			ease = p * p * (3 - 2 * p)  -- clean settle on leave
-		end
-
-		fade = anim.hovered and ease or (1 - ease)
-		bumpPad = ease * dir * 2.5     -- 🔴 IMPORTANT: larger amplitude
-	end
-
-	-- Fade background color
-	bg = lerpColor(colorBase, colorHover, fade)
+	-- Size + color
+	local bumpPad = ease * 2
+	local bg = lerpColor(colorBase, colorHover, ease)
 
 	-- Background
 	lg.setColor(bg)
@@ -111,7 +90,6 @@ function Button.draw(btn)
 	lg.setColor(colorText)
 	Text.printfShadow(btn.label, x, ty, w, "center")
 end
-
 
 function Button.mousepressed(btn, x, y, button)
 	if button ~= 1 then

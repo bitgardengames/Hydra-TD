@@ -20,6 +20,7 @@ local mapPreviews = {}
 local colorText = Theme.ui.text
 local colorPath = Theme.terrain.path
 local colorGrass = Theme.terrain.grass
+local colorPanel = Theme.ui.panel
 
 local lg = love.graphics
 local lt = love.timer
@@ -170,7 +171,7 @@ function Menu.load()
 			id = "play",
 			label = "Play",
 			w = 220,
-			h = 42,
+			h = 46,
 			onClick = function()
 				previewAlpha = 0
 				State.mapIndex = min(Save.data.furthestIndex or 1, #Maps)
@@ -184,7 +185,7 @@ function Menu.load()
 			id = "settings",
 			label = "Settings",
 			w = 220,
-			h = 42,
+			h = 46,
 			onClick = function()
 				State.mode = "settings"
 				Sound.play("uiConfirm")
@@ -194,7 +195,7 @@ function Menu.load()
 			id = "quit",
 			label = "Quit",
 			w = 220,
-			h = 42,
+			h = 46,
 			onClick = function()
 				love.event.quit()
 			end
@@ -327,7 +328,7 @@ function Menu.draw()
 		local HOLD_TIME   = 5.0
 
 		local spacing = 44
-		local titleY = floor(sh * 0.32)
+		local titleY = floor(sh * 0.30)
 
 		-- Lancer idle update
 		if lancerIdle.startupHold > 0 then
@@ -491,7 +492,7 @@ function Menu.draw()
 		end
 
 		-- Border on current card
-		lg.setColor(1, 1, 1, 1)
+		lg.setColor(colorPanel)
 		lg.setLineWidth(3)
 		lg.rectangle("line", slots.curr.x - pw * 0.5, slots.curr.y - ph * 0.5, pw, ph, 6, 6)
 		lg.setLineWidth(1)
@@ -570,13 +571,11 @@ function Menu.draw()
 end
 
 function Menu.update(dt)
-	Cursor.update()
-
 	if State.mode == "menu" then
 		local sw, sh = lg.getDimensions()
 		local cx = floor(sw * 0.5)
 		local gap = 52
-		local startY = floor(sh * 0.55)
+		local startY = floor(sh * 0.53)
 
 		for i, btn in ipairs(menuButtons) do
 			btn.x = cx - btn.w * 0.5
@@ -753,8 +752,6 @@ function Menu.keypressed(key)
 end
 
 function Menu.updatePause(dt)
-	Cursor.update()
-
 	local sw, sh = love.graphics.getDimensions()
 	local cx = floor(sw * 0.5)
 	local startY = floor(sh * 0.5 - 20)
@@ -806,6 +803,24 @@ function Menu.mousepressed(x, y, button)
 			if Button.mousepressed(btn, x, y, button) then
 				return
 			end
+		end
+	end
+end
+
+function Menu.gamepadConfirm()
+	local x, y = Cursor.x, Cursor.y
+
+	if State.mode == "menu" then
+		for _, btn in ipairs(menuButtons) do
+			if Button.mousepressed(btn, x, y, 1) then return end
+		end
+	elseif State.mode == "campaign" then
+		for _, btn in ipairs(campaignButtons) do
+			if Button.mousepressed(btn, x, y, 1) then return end
+		end
+	elseif State.mode == "settings" then
+		for _, btn in ipairs(settingsButtons) do
+			if Button.mousepressed(btn, x, y, 1) then return end
 		end
 	end
 end

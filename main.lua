@@ -1,5 +1,6 @@
 local Constants = require("core.constants")
 local Camera = require("core.camera")
+local Cursor = require("core.cursor")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local Fonts = require("core.fonts")
@@ -16,6 +17,7 @@ local Draw = require("ui.draw")
 local Input = require("ui.input")
 local Menu = require("ui.menu")
 local Hotkeys = require("core.hotkeys")
+local Rumble = require("systems.rumble")
 
 local lg = love.graphics
 local lk = love.keyboard
@@ -30,7 +32,7 @@ local colorText = Theme.ui.text
 local colorBg = Theme.terrain.bg
 
 -- Artwork export, always make sure it's disabled
-DEV_EXPORT = 1
+DEV_EXPORT = 0
 
 function resetGame()
     -- Clear world state
@@ -85,6 +87,8 @@ function resetGame()
 end
 
 function love.load()
+	love.mouse.setVisible(false)
+
 	Save.load()
 
 	love.window.setFullscreen(Save.data.settings.fullscreen)
@@ -113,6 +117,9 @@ function love.update(dt)
 	local mode = State.mode
 	local target = (mode == "pause") and 1 or 0
 	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
+
+	Cursor.update(dt)
+	Rumble.update(dt)
 
 	if mode == "pause" then
 		Menu.updatePause(dt)
@@ -236,7 +243,7 @@ function love.draw()
 
 			-- Text
 			Fonts.set("menu")
-			
+
 			lg.setColor(colorText[1], colorText[2], colorText[3], ease)
 			lg.printf("PAUSED", 0, sh * 0.5 - 70 + drop, sw, "center")
 
@@ -282,8 +289,12 @@ function love.draw()
 				end
 			end
 		end
+		
+		Cursor.draw()
 	else
 		Menu.draw()
+		
+		Cursor.draw()
 	end
 end
 
@@ -331,6 +342,19 @@ function love.keypressed(key)
 	end
 
 	Input.keypressed(key)
+end
+
+function love.gamepadpressed(_, button)
+	Cursor.enableVirtual()
+
+	-- Confirm / click
+	if button == "a" then
+		Menu.gamepadConfirm()
+	end
+end
+
+function love.mousemoved(x, y)
+	Cursor.mousemoved(x, y)
 end
 
 function love.resize(w, h)

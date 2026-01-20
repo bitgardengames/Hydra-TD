@@ -1,4 +1,5 @@
 local Constants = require("core.constants")
+local Cursor = require("core.cursor")
 local Theme = require("core.theme")
 local Hotkeys = require("core.hotkeys")
 local Util = require("core.util")

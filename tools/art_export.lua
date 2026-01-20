@@ -39,10 +39,13 @@ local BANNERS = {
 
 	-- Social banners
 	youtube_banner = {w = 2048, h = 1152},
+	x_banner = {w = 1500, h = 500},
 
 	-- Desktop
 	desktop = {w = 1920, h = 1080},
 }
+
+-- Could also do a promo banner asset variation, with call to action like "Wishlist on steam {steam icon}" etc.
 
 local TRANSPARENT_BANNERS = {
 	store_main = true,
@@ -296,7 +299,7 @@ function Export.exportSocialAvatar()
 			lg.setColor(outlineColor)
 
 			-- X eyes
-			local armLen   = eyeSize * 1.8
+			local armLen   = eyeSize * 1.9
 			local armThick = eyeSize * 0.9
 
 			local function drawX(x, y)
@@ -394,7 +397,7 @@ function Export.exportCogSocialAvatar()
 		lg.circle("fill", 0, 0, r)
 
 		-- Teeth
-		local toothW = (2 * pi * r) / teeth * 0.60
+		local toothW = (2 * pi * r) / teeth * 0.54
 
 		for i = 1, teeth do
 			local a = (i / teeth) * (2 * pi)
@@ -418,7 +421,7 @@ function Export.exportCogSocialAvatar()
 
 	for kind, data in pairs(Towers.towerDefs) do
 		for _, size in ipairs(sizes) do
-			local canvas = lg.newCanvas(size, size, { msaa = 8 })
+			local canvas = lg.newCanvas(size, size, { msaa = 8, format = "rgba8"})
 			lg.setCanvas({ canvas, stencil = true })
 			lg.clear(0, 0, 0, 0)
 
@@ -438,17 +441,17 @@ function Export.exportCogSocialAvatar()
 			lg.circle("fill", cx, cy, radius)
 
 			-- Cog eyes
-			local eyeSep = radius * 0.31
-			local eyeR   = radius * 0.24
-			local hubR = eyeR * 0.42
-			local eyeY   = cy - radius * 0.24
+			local eyeSep = radius * 0.30
+			local eyeR   = radius * 0.25
+			local hubR = eyeR * 0.44
+			local eyeY   = cy - radius * 0.28
 
 			local eyeOffset = radius * 0.06
 			local leftY  = eyeY - eyeOffset
 			local rightY = eyeY + eyeOffset
 
 			local teeth = 8
-			local toothDepth = eyeR * 0.60
+			local toothDepth = eyeR * 0.64
 
 			lg.setColor(outlineColor)
 
@@ -469,12 +472,12 @@ function Export.exportCogSocialAvatar()
 				toothDepth,
 				(pi / teeth) * 1.55
 			)
-			
+
 			-- Draw inner hubs (body color)
 			lg.setColor(bodyColor)
 
-			lg.circle("fill", cx - eyeSep, leftY,  hubR)
-			--lg.circle("fill", cx + eyeSep, rightY, hubR * 0.6)
+			lg.circle("fill", cx - eyeSep, leftY,  hubR * 1.20)
+			lg.circle("fill", cx + eyeSep, rightY, hubR * 0.80)
 
 			lg.setColor(outlineColor)
 
@@ -540,8 +543,8 @@ function Export.exportCogSocialAvatar()
 end
 
 function Export.exportCogSocialAvatarAnim()
-	--local sizes = {256, 512, 1024}
 	local sizes = {256}
+	--local sizes = {256, 512, 1024}
 	local Constants = require("core.constants")
 
 	local lg  = love.graphics
@@ -572,7 +575,7 @@ function Export.exportCogSocialAvatarAnim()
 		lg.circle("fill", 0, 0, r)
 
 		-- Teeth
-		local toothW = (2 * pi * r) / teeth * 0.60
+		local toothW = (2 * pi * r) / teeth * 0.54
 		local embed  = 0.45
 
 		for i = 1, teeth do
@@ -625,16 +628,16 @@ function Export.exportCogSocialAvatarAnim()
 				-- =========================
 				-- Cog eyes ⚙️
 				-- =========================
-				local eyeSep = radius * 0.31
-				local eyeR   = radius * 0.24
-				local hubR   = eyeR * 0.42
-				local eyeY   = cy - radius * 0.24
+				local eyeSep = radius * 0.30
+				local eyeR   = radius * 0.25
+				local hubR   = eyeR * 0.44
+				local eyeY   = cy - radius * 0.28
 
 				local eyeOffset = radius * 0.06
 				local leftY  = eyeY - eyeOffset
 				local rightY = eyeY + eyeOffset
 
-				local toothDepth = eyeR * 0.60
+				local toothDepth = eyeR * 0.64
 
 				lg.setColor(outlineColor)
 
@@ -660,9 +663,8 @@ function Export.exportCogSocialAvatarAnim()
 
 				-- Inner hubs
 				lg.setColor(bodyColor)
-				lg.circle("fill", cx - eyeSep, leftY,  hubR)
-				-- optional second hub:
-				-- lg.circle("fill", cx + eyeSep, rightY, hubR)
+				lg.circle("fill", cx - eyeSep, leftY,  hubR * 1.20)
+				lg.circle("fill", cx + eyeSep, rightY, hubR * 0.80)
 
 				lg.setColor(outlineColor)
 
@@ -741,7 +743,7 @@ function Export.run()
 	--Export.exportBanners()
 	--Export.exportAppIcons()
 	--Export.exportSocialAvatar()
-	--Export.exportCogSocialAvatar()
+	Export.exportCogSocialAvatar()
 	Export.exportCogSocialAvatarAnim()
 	love.event.quit()
 end

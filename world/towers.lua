@@ -5,6 +5,7 @@ local Sound = require("systems.sound")
 local State = require("core.state")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
+local Rumble = require("systems.rumble")
 
 local towers = {}
 
@@ -193,6 +194,8 @@ local function addTower(kind, gx, gy)
 
 	Sound.play("towerPlaced")
 
+	Rumble.pulse(0.32, 0.055)
+
 	return true
 end
 
@@ -249,6 +252,8 @@ local function upgradeTower(t)
 	t.levelUpAnim = 1
 
 	Floaters.addFloater(t.x, t.y - 10, "Upgrade!", colorGood[1], colorGood[2], colorGood[3])
+
+	Rumble.pulse(0.22, 0.045)
 end
 
 local function sellTower(t)
@@ -269,6 +274,8 @@ local function sellTower(t)
 
 	Floaters.addFloater(t.x, t.y - 10, "+"..t.sellValue, colorGood[1], colorGood[2], colorGood[3])
 	State.selectedTower = nil
+
+	Rumble.pulse(0.18, 0.04)
 end
 
 local function findTowerAt(gx, gy)
