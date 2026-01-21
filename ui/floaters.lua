@@ -33,7 +33,7 @@ local function updateFloaters(dt)
 	end
 end
 
-local function clear()
+function clear()
 	for i = #floaters, 1, -1 do
 		floaters[i] = nil
 	end

@@ -6,6 +6,7 @@ local State = require("core.state")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
 local Rumble = require("systems.rumble")
+local L = require("core.localization")
 
 local towers = {}
 
@@ -28,7 +29,7 @@ local shopOrder = {
 
 local towerDefs = {
 	lancer = {
-		name = "Lancer",
+		nameKey = "tower.lancer",
 		cost = 40,
 		range = 4.2 * Constants.TILE,
 		fireRate = 2.0, -- shots/sec
@@ -47,7 +48,7 @@ local towerDefs = {
 	},
 
 	slow = {
-		name = "Slow",
+		nameKey = "tower.slow",
 		cost = 50,
 		range = 3.8 * Constants.TILE,
 		fireRate = 1.4,
@@ -68,11 +69,11 @@ local towerDefs = {
 	},
 
 	cannon = {
-		name = "Cannon",
+		nameKey = "tower.cannon",
 		cost = 70,
 		range = 3.2 * Constants.TILE,
-		fireRate = 0.8, -- slow
-		damage = 20, -- high base hit
+		fireRate = 0.8,
+		damage = 20,
 		recoilStrength = Constants.TILE * 0.14,
 		recoilDecay = 12,
 		projSpeed = 320,
@@ -92,7 +93,7 @@ local towerDefs = {
 	},
 
 	shock = {
-		name = "Shock",
+		nameKey = "tower.shock",
 		cost = 65,
 		range = 3.6 * Constants.TILE,
 		fireRate = 1.2,
@@ -115,7 +116,7 @@ local towerDefs = {
 	},
 
 	poison = {
-		name = "Poison",
+		nameKey = "tower.poison",
 		cost = 60,
 		range = 3.8 * Constants.TILE,
 		fireRate = 1.6,
@@ -190,7 +191,8 @@ local function addTower(kind, gx, gy)
 	State.money = State.money - def.cost
 	MapMod.map.blocked[MapMod.makeKey(gx, gy)] = true
 	table.insert(towers, t)
-	Floaters.addFloater(x,y - 10, "-"..def.cost, colorWarn[1], colorWarn[2], colorWarn[3])
+
+	Floaters.addFloater(x, y - 10, "-" .. def.cost, colorWarn[1], colorWarn[2], colorWarn[3])
 
 	Sound.play("towerPlaced")
 
@@ -251,7 +253,7 @@ local function upgradeTower(t)
 
 	t.levelUpAnim = 1
 
-	Floaters.addFloater(t.x, t.y - 10, "Upgrade!", colorGood[1], colorGood[2], colorGood[3])
+	Floaters.addFloater(t.x, t.y - 10, L("floater.upgrade"), colorGood[1], colorGood[2], colorGood[3])
 
 	Rumble.pulse(0.22, 0.045)
 end
@@ -272,7 +274,7 @@ local function sellTower(t)
 		end
 	end
 
-	Floaters.addFloater(t.x, t.y - 10, "+"..t.sellValue, colorGood[1], colorGood[2], colorGood[3])
+	Floaters.addFloater(t.x, t.y - 10, "+" .. t.sellValue, colorGood[1], colorGood[2], colorGood[3])
 	State.selectedTower = nil
 
 	Rumble.pulse(0.18, 0.04)

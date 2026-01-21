@@ -9,6 +9,7 @@ local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Maps = require("world.maps")
 local Menu = require("ui.menu")
+local L = require("core.localization")
 
 local lm = love.mouse
 local floor = math.floor
@@ -92,9 +93,9 @@ local function mousepressed(x, y, button)
 
 				if not ok then
 					if why == "path" or why == "occupied" then
-						Floaters.addFloater(wx, wy, "Can't", colorBad[1], colorBad[2], colorBad[3])
+						Floaters.addFloater(wx, wy, L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 					elseif why == "money" then
-						Floaters.addFloater(wx, wy, "Need $", colorBad[1], colorBad[2], colorBad[3])
+						Floaters.addFloater(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
 					end
 				end
 			end

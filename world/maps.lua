@@ -1,7 +1,7 @@
 local maps = {
     {
         id = "alpha",
-        name = "Alpha Bend",
+        nameKey = "map.alpha",
         path = {
             {1, 8}, {10, 8},
             {10, 4}, {16, 4},
@@ -30,7 +30,7 @@ local maps = {
 
     {
         id = "zigzag",
-        name = "Zig-Zag",
+        nameKey = "map.zigzag",
         path = {
             {1, 5}, {20, 5},
             {20, 11}, {6, 11},
@@ -58,7 +58,7 @@ local maps = {
 
     {
         id = "spiral",
-        name = "Spiral Run",
+        nameKey = "map.spiral",
         path = {
             {1, 8}, {8, 8},
             {8, 3}, {18, 3},
@@ -87,7 +87,7 @@ local maps = {
 
 	{
 		id = "figure8",
-		name = "Figure Eight",
+		nameKey = "map.figure8",
 		path = {
 			{1, 8}, {10, 8},
 			{10, 4}, {18, 4},
@@ -116,7 +116,7 @@ local maps = {
 
 	{
 		id = "hairpins",
-		name = "Hairpins",
+		nameKey = "map.hairpins",
 		path = {
 			{1, 4}, {22, 4},
 			{22, 7}, {4, 7},
@@ -144,7 +144,7 @@ local maps = {
 
 	{
 		id = "gauntlet",
-		name = "The Gauntlet",
+		nameKey = "map.gauntlet",
 		path = {
 			{1, 8}, {8, 8},
 			{8, 5}, {18, 5},
@@ -172,7 +172,7 @@ local maps = {
 
 	{
 		id = "centerpull",
-		name = "Center Pull",
+		nameKey = "map.centerpull",
 		path = {
 			{1, 8}, {10, 8},
 			{10, 3}, {16, 3},
@@ -200,7 +200,7 @@ local maps = {
 
 	{
 		id = "snakepit",
-		name = "Snake Pit",
+		nameKey = "map.snakepit",
 		path = {
 			{1, 4}, {22, 4},
 			{22, 6}, {4, 6},
@@ -229,7 +229,7 @@ local maps = {
 
 	{
 		id = "doublebend",
-		name = "Double Bend",
+		nameKey = "map.doublebend",
 		path = {
 			{1, 6}, {12, 6},
 			{12, 10}, {20, 10},
@@ -256,7 +256,7 @@ local maps = {
 
 	{
 		id = "offsetloop",
-		name = "Offset Loop",
+		nameKey = "map.offsetloop",
 		path = {
 			{1, 7}, {14, 7},
 			{14, 3}, {22, 3},
@@ -284,7 +284,7 @@ local maps = {
 
 	{
 		id = "sidewinder",
-		name = "Sidewinder",
+		nameKey = "map.sidewinder",
 		path = {
 			{1, 4}, {20, 4},
 			{20, 8}, {8, 8},
@@ -312,7 +312,7 @@ local maps = {
 
 	{
 		id = "crosscurrent",
-		name = "Crosscurrent",
+		nameKey = "map.crosscurrent",
 		path = {
 			{1, 6}, {24, 6},
 			{24, 10}, {4, 10},

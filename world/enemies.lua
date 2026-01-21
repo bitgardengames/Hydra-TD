@@ -5,6 +5,7 @@ local Util = require("core.util")
 local State = require("core.state")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
+local L = require("core.localization")
 
 local enemies = {}
 local deathFX = {}
@@ -16,7 +17,7 @@ local tick = 0.5 -- seconds per poison tick
 
 local enemyDefs = {
 	grunt = {
-		name = "Grunt",
+		nameKey = "enemy.grunt",
 		hp = 42,
 		speed = 70,
 		reward = 6,
@@ -25,7 +26,7 @@ local enemyDefs = {
 	},
 
 	tank = {
-		name = "Tank",
+		nameKey = "enemy.tank",
 		hp = 120,
 		speed = 45,
 		reward = 12,
@@ -34,7 +35,7 @@ local enemyDefs = {
 	},
 
 	runner = {
-		name = "Runner",
+		nameKey = "enemy.runner",
 		hp = 28,
 		speed = 95,
 		reward = 6,
@@ -43,7 +44,7 @@ local enemyDefs = {
 	},
 
 	splitter = {
-		name = "Splitter",
+		nameKey = "enemy.splitter",
 		hp = 70,
 		speed = 60,
 		reward = 10,
@@ -58,7 +59,7 @@ local enemyDefs = {
 	},
 
 	boss = {
-		name = "Boss",
+		nameKey = "enemy.boss",
 		hp = 7500, -- 7600
 		speed = 45,
 		reward = 75,
@@ -333,11 +334,11 @@ local function updateEnemies(dt)
 
 					State.endT = 0
 					State.endReady = false
-					State.endTitle  = "GAME OVER"
-					State.endReason = "Boss breach"
+					State.endTitle = L("game.gameOver")
+					State.endReason = L("game.bossBreach")
 
 					Sound.play("gameOver")
-					Floaters.addFloater(e.x, e.y - 14, "BOSS BREACH!", colorBad[1], colorBad[2], colorBad[3])
+					Floaters.addFloater(e.x, e.y - 14, L("floater.bossBreach"), colorBad[1], colorBad[2], colorBad[3])
 
 					return
 				end
@@ -357,8 +358,8 @@ local function updateEnemies(dt)
 
 					State.endT = 0
 					State.endReady = false
-					State.endTitle  = "GAME OVER"
-					State.endReason = "Out of lives"
+					State.endTitle = L("game.gameOver")
+					State.endReason = L("game.outOfLives")
 
 					Sound.play("gameOver")
 				end

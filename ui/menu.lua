@@ -10,6 +10,9 @@ local Title = require("ui.title")
 local Text = require("ui.text")
 local Cursor = require("core.cursor")
 local Button = require("ui.button")
+local L = require("core.localization")
+
+-- Note, some strings are still using lg.printf instead of Text.printfShadow
 
 local Menu = {}
 
@@ -40,9 +43,9 @@ local CAROUSEL_SCALE_SIDE = 0.82
 local CAROUSEL_ALPHA_SIDE = 0.35
 
 local menuItems = {
-	"Play",
-	"Settings",
-	"Quit",
+	L("menu.play"),
+	L("menu.settings"),
+	L("menu.quit"),
 }
 
 local menuButtons = nil
@@ -52,11 +55,19 @@ local settingsButtons = nil
 
 local settingsCursor = 1
 local settingsItems = {
-	{label = "Music Volume", key = "music"},
-	{label = "SFX Volume", key = "sfx"},
-	{label = "Fullscreen", key = "fullscreen"},
-	{label = "Back"},
+	{label = L("settings.music"), key = "music"},
+	{label = L("settings.sfx"), key = "sfx"},
+	{label = L("settings.fullscreen"), key = "fullscreen"},
+	{label = L("menu.back")},
 }
+
+--[[
+	Maybe a language setting
+
+	Save.data.settings.language = "deDE"
+	Save.flush()
+	Localization.set("deDE")
+--]]
 
 local HERO_ANGLE = -math.pi / 6 -- Not just any old angle
 
@@ -169,7 +180,7 @@ function Menu.load()
 	menuButtons = {
 		{
 			id = "play",
-			label = "Play",
+			label = L("menu.play"),
 			w = 220,
 			h = 46,
 			onClick = function()
@@ -183,7 +194,7 @@ function Menu.load()
 		},
 		{
 			id = "settings",
-			label = "Settings",
+			label = L("menu.settings"),
 			w = 220,
 			h = 46,
 			onClick = function()
@@ -193,7 +204,7 @@ function Menu.load()
 		},
 		{
 			id = "quit",
-			label = "Quit",
+			label = L("menu.quit"),
 			w = 220,
 			h = 46,
 			onClick = function()
@@ -205,7 +216,7 @@ function Menu.load()
 	pauseButtons = {
 		{
 			id = "resume",
-			label = "Resume",
+			label = L("pause.resume"),
 			w = 220,
 			h = 42,
 			onClick = function()
@@ -216,7 +227,7 @@ function Menu.load()
 		},
 		{
 			id = "restart",
-			label = "Restart",
+			label = L("pause.restart"),
 			w = 220,
 			h = 42,
 			onClick = function()
@@ -228,7 +239,7 @@ function Menu.load()
 		},
 		{
 			id = "menu",
-			label = "Main Menu",
+			label = L("pause.mainMenu"),
 			w = 220,
 			h = 42,
 			onClick = function()
@@ -242,7 +253,7 @@ function Menu.load()
 	campaignButtons = {
 		{
 			id = "play",
-			label = "Play",
+			label = L("menu.play"),
 			w = 220,
 			h = 42,
 			onClick = function()
@@ -259,7 +270,7 @@ function Menu.load()
 		},
 		{
 			id = "back",
-			label = "Back",
+			label = L("menu.back"),
 			w = 220,
 			h = 42,
 			onClick = function()
@@ -274,7 +285,7 @@ function Menu.load()
 	settingsButtons = {
 		{
 			id = "fullscreen",
-			label = fullscreen and "Fullscreen: On" or "Fullscreen: Off",
+			label = fullscreen and L("settings.fullscreenOn") or L("settings.fullscreenOff"),
 			w = 260,
 			h = 42,
 			onClick = function()
@@ -293,7 +304,7 @@ function Menu.load()
 
 				Save.data.settings.fullscreen = nowFullscreen
 
-				settingsButtons[1].label = nowFullscreen and "Fullscreen: On" or "Fullscreen: Off"
+				settingsButtons[1].label = nowFullscreen and L("settings.fullscreenOn") or L("settings.fullscreenOff") -- This is a hair more hacky than I like, revisit it
 
 				-- Recalculate camera scaling
 				require("core.camera").resize()
@@ -304,7 +315,7 @@ function Menu.load()
 		},
 		{
 			id = "back",
-			label = "Back",
+			label = L("menu.back"),
 			w = 220,
 			h = 42,
 			onClick = function()
@@ -504,7 +515,7 @@ function Menu.draw()
 
 			Fonts.set("title")
 			lg.setColor(colorText)
-			lg.printf("LOCKED", slots.curr.x - pw * 0.5, slots.curr.y - 14, pw, "center")
+			lg.printf(L("campaign.locked"), slots.curr.x - pw * 0.5, slots.curr.y - 14, pw, "center")
 		end
 
 		-- Text / UI
@@ -512,11 +523,11 @@ function Menu.draw()
 
 		Fonts.set("title")
 		lg.setColor(colorText)
-		lg.printf(map.name, 0, textY, sw, "center")
+		lg.printf(L(map.nameKey), 0, textY, sw, "center")
 		textY = textY + PAD_TITLE
 
 		Fonts.set("ui")
-		lg.printf(("Map %d of %d"):format(index, mapCount), 0, textY, sw, "center")
+		lg.printf(L("campaign.mapOf", index, mapCount), 0, textY, sw, "center")
 
 		Fonts.set("menu")
 
@@ -550,17 +561,17 @@ function Menu.draw()
 		Fonts.set("title")
 
 		lg.setColor(1, 1, 1, 1)
-		Text.printfShadow("Settings", 0, startY - 56, sw, "center")
+		Text.printfShadow(L("settings.title"), 0, startY - 56, sw, "center")
 
 		Fonts.set("menu")
 
 		-- Music
-		drawUIMeter("Music Volume", Theme.tower.shock, Save.data.settings.musicVolume, 1, centerX - 140, startY, settingsCursor == 1)
+		drawUIMeter(L("settings.music"), Theme.tower.shock, Save.data.settings.musicVolume, 1, centerX - 140, startY, settingsCursor == 1)
 
 		lg.setColor(1, 1, 1, 1)
 
 		-- SFX
-		drawUIMeter("SFX Volume", Theme.tower.cannon, Save.data.settings.sfxVolume, 1, centerX - 140, startY + lineH, settingsCursor == 2)
+		drawUIMeter(L("settings.sfx"), Theme.tower.cannon, Save.data.settings.sfxVolume, 1, centerX - 140, startY + lineH, settingsCursor == 2)
 
 		Fonts.set("menu")
 

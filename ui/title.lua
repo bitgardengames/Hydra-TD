@@ -20,6 +20,33 @@ local function deriveTitleFont(lancerScale)
 	return love.graphics.newFont("assets/fonts/PTSans.ttf", fontPx)
 end
 
+function Title.computeLancerIdleAngle(t, opts)
+    opts = opts or {}
+
+    local baseAngle = opts.baseAngle or (-pi / 6)
+
+    -- Swivel
+    local ROTATE_TIME = opts.rotateTime or 1.8
+    local SWIVEL_AMPL = opts.swivelAmplitude or rad(6)
+
+    local p = (t / ROTATE_TIME) % 2
+    if p > 1 then
+        p = 2 - p
+    end
+
+    p = p * p * (3 - 2 * p)
+
+    local swivel = -SWIVEL_AMPL + (SWIVEL_AMPL * 2) * p
+
+    -- Servo
+    local SERVO_AMPL = opts.servoAmplitude or rad(0.35)
+    local SERVO_SPEED = opts.servoSpeed or 1.8
+
+    local servo = math.sin(t * SERVO_SPEED) * SERVO_AMPL
+
+    return baseAngle + swivel + servo
+end
+
 function Title.draw(opts)
 	opts = opts or {}
 
@@ -146,6 +173,14 @@ function Title.drawBannerStyle(w, h, opts)
 
 	lg.setColor(Theme.tower.lancer[1], Theme.tower.lancer[2], Theme.tower.lancer[3], alpha)
 	lg.print(text, baseX + lancerVisualW + GAP, anchorY - textH * 0.5 + TEXT_BASELINE_BIAS)
+end
+
+function Title.drawAnimatedBannerStyle(w, h, t, opts)
+    opts = opts or {}
+
+    local angle = Title.computeLancerIdleAngle(t, opts) -- What's the angle, anyhow?
+
+    Title.drawBannerStyle(w, h, {alpha = opts.alpha or 1, angle = angle})
 end
 
 return Title

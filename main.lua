@@ -18,6 +18,7 @@ local Input = require("ui.input")
 local Menu = require("ui.menu")
 local Hotkeys = require("core.hotkeys")
 local Rumble = require("systems.rumble")
+local Localization = require("core.localization")
 
 local lg = love.graphics
 local lk = love.keyboard
@@ -33,6 +34,7 @@ local colorBg = Theme.terrain.bg
 
 -- Artwork export, always make sure it's disabled
 DEV_EXPORT = 0
+DEV_TRAILER = 1
 
 function resetGame()
     -- Clear world state
@@ -91,10 +93,21 @@ function love.load()
 
 	Save.load()
 
-	love.window.setFullscreen(Save.data.settings.fullscreen)
+				--[[if isFullscreen then
+					-- Go windowed (must set a mode)
+					--love.window.setFullscreen(false)
+					love.window.setMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1})
+				else
+					-- Go fullscreen (desktop resolution)
+					--love.window.setFullscreen(true)
+					love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
+				end]]
 	love.window.setTitle("Hydra TD")
+	--love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
 
 	lg.setDefaultFilter("nearest", "nearest")
+
+	Localization.load(Save.data.settings.language or "enUS")
 
 	Fonts.load()
 
@@ -104,9 +117,16 @@ function love.load()
 	Sound.playMusic("bg")
 
 	lg.setBackgroundColor(colorBg)
-	love.math.setRandomSeed(os.time())
+	--love.math.setRandomSeed(os.time())
 
 	Menu.load()
+
+	-- Remove for public release
+    if DEV_TRAILER == 1 then
+        require("tools.trailer.main").run()
+
+        return
+    end
 
 	if DEV_EXPORT == 1 then
 		require("tools.art_export").run()
@@ -289,11 +309,11 @@ function love.draw()
 				end
 			end
 		end
-		
+
 		Cursor.draw()
 	else
 		Menu.draw()
-		
+
 		Cursor.draw()
 	end
 end

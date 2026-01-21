@@ -12,6 +12,7 @@ local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Fonts = require("core.fonts")
 local Text = require("ui.text")
+local L = require("core.localization")
 
 local lg = love.graphics
 local lmr = love.math.random
@@ -71,17 +72,21 @@ local BAR_H = 8
 local LABEL_W = 44
 
 local function drawStatusBar(label, color, timeLeft, duration, x, y)
-	-- Safety guards
-	if not timeLeft or timeLeft <= 0 then return end
-	if not duration or duration <= 0 then return end
+	if not timeLeft or timeLeft <= 0 then
+		return
+	end
 
-	local t = math.max(0, math.min(1, timeLeft / duration))
+	if not duration or duration <= 0 then
+		return
+	end
+
+	local t = max(0, min(1, timeLeft / duration))
 
 	-- Subtle pulse near expiration
 	local pulse = 1
 
 	if t < 0.25 then
-		pulse = 0.85 + math.sin(love.timer.getTime() * 10) * 0.15
+		pulse = 0.85 + sin(love.timer.getTime() * 10) * 0.15
 	end
 
 	-- Label
@@ -96,9 +101,9 @@ local function drawStatusBar(label, color, timeLeft, duration, x, y)
 	lg.setColor(color[1] * pulse, color[2] * pulse, color[3] * pulse, 1)
 	lg.rectangle("fill", x + LABEL_W, y + 4, BAR_W * t, BAR_H, 4, 4)
 
-	-- Optional time text (kept subtle)
+	-- Timer
 	lg.setColor(1, 1, 1, 0.85)
-	Text.printShadow(string.format("%.1fs", timeLeft), x + LABEL_W + BAR_W + 6, y)
+	Text.printShadow(L("ui.seconds", timeLeft), x + LABEL_W + BAR_W + 6, y)
 end
 
 local function formatModifier(label, value, suffix)
@@ -678,7 +683,7 @@ local function drawProjectiles()
 
 		if p.splash then
 			lg.setColor(1, 0.8, 0.4, a)
-		
+
 			lg.push()
 			lg.translate(p.x, p.y)
 			lg.rotate(rotation)
@@ -868,7 +873,7 @@ local function drawDamageMeter()
 
     -- Header
     lg.setColor(colorText)
-    Text.printShadow(isBossView and "Boss Damage" or "Damage", x, y)
+    Text.printShadow(isBossView and L("damage.boss") or L("damage.normal"), x, y)
 
     y = y + 20
 
@@ -902,7 +907,7 @@ local function drawDamageMeter()
     -- Empty boss damage
     if isBossView and total <= 0 then
         lg.setColor(1, 1, 1, 0.6)
-        Text.printShadow("No boss damage yet", x, y + 4)
+        Text.printShadow(L("damage.noneBoss"), x, y + 4)
     end
 end
 
@@ -1006,10 +1011,9 @@ local function drawBottomBar()
 
 	-- Lives text
 	local livesX = 90
-	local livesText = "Lives " .. State.lives
 
 	lg.setColor(1, 1 - livesFlash * 0.6, 1 - livesFlash * 0.6, 1)
-	Text.printShadow(livesText, livesX, y + livesDrop)
+	Text.printShadow(L("hud.lives", State.lives), livesX, y + livesDrop)
 
 	-- Wave text
 	local base = 0.85
@@ -1017,16 +1021,16 @@ local function drawBottomBar()
 	local waveColor = min(1, base + boost) -- Bass boosted wub wub
 
 	lg.setColor(waveColor, waveColor, waveColor, 0.85)
-	Text.printShadow("Wave " .. State.wave, 170, y - waveLift)
+	Text.printShadow(L("hud.wave", State.wave), 170, y - waveLift)
 
 	if State.inPrep then
 		lg.setColor(colorGood)
-		Text.printShadow(("Prep %.1fs  (Space to start)"):format(State.prepTimer), 260, y)
+		Text.printShadow(L("hud.prep", State.prepTimer), 260, y)
 	else
 		local spawner = Waves.getSpawner()
 
 		lg.setColor(0.85, 0.85, 0.85, 0.85)
-		Text.printShadow(("Spawning %d   Alive %d"):format(spawner.remaining, #Enemies.enemies), 260, y)
+		Text.printShadow(L("hud.spawning", spawner.remaining, #Enemies.enemies), 260, y)
 	end
 
 	-- Tower shop
@@ -1139,7 +1143,7 @@ local function drawBottomBar()
 
 		-- Name and level
 		lg.setColor(colorText)
-		Text.printShadow(("%s level %d"):format(t.def.name, t.level), inspectX, inspectY)
+		Text.printShadow(L("inspect.towerTitle", t.def.name, t.level), inspectX, inspectY)
 
 		-- Divider
 		lg.setColor(1, 1, 1, 0.15)
@@ -1147,8 +1151,8 @@ local function drawBottomBar()
 
 		-- Stats
 		lg.setColor(colorText)
-		Text.printShadow(("Damage: %s"):format(formatNum(t.damageDealt)), inspectX, statsY)
-		Text.printShadow(("Kills: %d"):format(t.kills), inspectX, statsY + lineH)
+		Text.printShadow(L("inspect.damage", formatNum(t.damageDealt)), inspectX, statsY)
+		Text.printShadow(L("inspect.kills", t.kills), inspectX, statsY + lineH)
 
 		-- Upgrade Button
 		local upgradeCost = Towers.towerUpgradeCost(t)
@@ -1174,10 +1178,10 @@ local function drawBottomBar()
 			-- Label
 			local hkW = lg.getFont():getWidth(hkText .. " ")
 			lg.setColor(colorUpgrade)
-			Text.printShadow("Upgrade", ux + hkW, tyBtn)
+			Text.printShadow(L("actions.upgrade"), ux + hkW, tyBtn)
 		else
 			lg.setColor(colorUpgrade)
-			Text.printShadow("Upgrade", ux, tyBtn)
+			Text.printShadow(L("actions.upgrade"), ux, tyBtn)
 		end
 
 		-- Cost
@@ -1204,10 +1208,10 @@ local function drawBottomBar()
 			-- Label
 			local hkW = lg.getFont():getWidth(hkText .. " ")
 			lg.setColor(colorGood)
-			Text.printShadow("Sell", sx + hkW, tyBtn)
+			Text.printShadow(L("actions.sell"), sx + hkW, tyBtn)
 		else
 			lg.setColor(colorGood)
-			Text.printShadow("Sell", sx, tyBtn)
+			Text.printShadow(L("actions.sell"), sx, tyBtn)
 		end
 
 		-- Value
@@ -1221,42 +1225,46 @@ local function drawBottomBar()
 
 		-- Name
 		lg.setColor(colorText)
-		Text.printShadow(e.def.name, inspectX, inspectY)
+		Text.printShadow(L(e.def.nameKey), inspectX, inspectY)
 
 		-- Divider
 		lg.setColor(1, 1, 1, 0.15)
 		lg.line(inspectX, inspectY + 16, inspectX + 220, inspectY + 16)
 
 		lg.setColor(colorText)
-		Text.printShadow(("HP: %s / %s"):format(formatNum(e.hp), formatNum(e.maxHp)), inspectX, hpY)
+		Text.printShadow(L("inspect.hp", formatNum(e.hp), formatNum(e.maxHp)), inspectX, hpY)
 
 		-- Status effects
 		local statusY = hpY + 16
 
 		if e.slowTimer and e.slowTimer > 0 then
-			drawStatusBar("Slow", Theme.tower.slow, e.slowTimer, e.slowDuration, inspectX, statusY)
+			drawStatusBar(L("status.slow"), Theme.tower.slow, e.slowTimer, e.slowDuration, inspectX, statusY)
 			statusY = statusY + 16
 		end
 
 		if e.poisonStacks and e.poisonStacks > 0 then
-			drawStatusBar("Poison", Theme.tower.poison, e.poisonTimer, e.poisonDuration, inspectX, statusY)
+			drawStatusBar(L("status.poison"), Theme.tower.poison, e.poisonTimer, e.poisonDuration, inspectX, statusY)
 			statusY = statusY + 16
 		end
 
 		-- Modifiers (resistances / vulnerabilities)
 		if e.modifiers then
 			local modLines = {}
+			local slowLine = formatModifier(L("status.slow"), e.modifiers.slow, L("modifier.effect"))
+			local poisonLine = formatModifier(L("status.poison"), e.modifiers.poison, L("modifier.damage"))
 
-			local slowLine = formatModifier("Slow",e.modifiers.slow, "effect")
-			local poisonLine = formatModifier("Poison", e.modifiers.poison, "damage")
+			if slowLine then
+				tinsert(modLines, slowLine)
+			end
 
-			if slowLine then   tinsert(modLines, slowLine) end
-			if poisonLine then tinsert(modLines, poisonLine) end
+			if poisonLine then
+				tinsert(modLines, poisonLine)
+			end
 
 			lg.setColor(colorText)
 
 			if #modLines > 0 then
-				Text.printShadow("Modifiers:", rightColX, hpY)
+				Text.printShadow(L("inspect.modifiers"), rightColX, hpY)
 
 				for i, line in ipairs(modLines) do
 					Text.printShadow(line, rightColX, hpY + i * 16)
