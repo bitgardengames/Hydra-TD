@@ -11,9 +11,10 @@ return {
 			{ kind = "poison", gx = 9,  gy = 9 },
 			{ kind = "shock",  gx = 8, gy = 9 },
 			{ kind = "lancer",  gx = 12, gy = 8 },
+			{ kind = "slow",  gx = 12, gy = 11 },
 		},
 		wave = {
-			wave = 11,
+			index = 6,
 			start = true,
 			warmup = 33,
 		},
@@ -28,7 +29,7 @@ return {
 
 	camera = Camera.pan({
 		from = { x = 80,  y = 80, zoom = 1.25 },
-		to   = { x = 160, y = 80, zoom = 1.25 },
+		to   = { x = 0, y = 80, zoom = 1.25 },
 		duration = 4.0,
 	}),
 

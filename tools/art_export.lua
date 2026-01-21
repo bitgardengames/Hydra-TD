@@ -299,8 +299,8 @@ function Export.exportSocialAvatar()
 			lg.setColor(outlineColor)
 
 			-- X eyes
-			local armLen   = eyeSize * 1.9
-			local armThick = eyeSize * 0.9
+			local armLen   = eyeSize * 2.1
+			local armThick = eyeSize * 1
 
 			local function drawX(x, y)
 				lg.push()
@@ -742,9 +742,9 @@ function Export.run()
 	--Export.exportEnemies()
 	--Export.exportBanners()
 	--Export.exportAppIcons()
-	--Export.exportSocialAvatar()
-	Export.exportCogSocialAvatar()
-	Export.exportCogSocialAvatarAnim()
+	Export.exportSocialAvatar()
+	--Export.exportCogSocialAvatar()
+	--Export.exportCogSocialAvatarAnim()
 	love.event.quit()
 end
 

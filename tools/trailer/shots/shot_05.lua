@@ -3,7 +3,7 @@ local Actions = require("tools.trailer.actions")
 
 return {
     map = 7,
-    duration = 8.0,
+    duration = 9.0,
 	next = "shot_06",
 
     scene = {
@@ -26,17 +26,17 @@ return {
 
     actions = {
         { t = 0, fn = Actions.upgradeTowerAt(12, 7, 4) },
-        { t = 0, fn = Actions.upgradeTowerAt(12, 9, 3) },
+        { t = 0, fn = Actions.upgradeTowerAt(12, 9, 4) },
         { t = 0, fn = Actions.upgradeTowerAt(14, 8, 4) },
-        { t = 0, fn = Actions.upgradeTowerAt(12, 6, 2) },
+        { t = 0, fn = Actions.upgradeTowerAt(12, 6, 3) },
         { t = 0, fn = Actions.upgradeTowerAt(16, 7, 2) },
-        { t = 0, fn = Actions.upgradeTowerAt(14, 7, 3) },
+        { t = 0, fn = Actions.upgradeTowerAt(14, 7, 4) },
     },
 
     camera = Camera.pan({
         from = { x = 160, y = 0, zoom = 1.3 },
-        to = { x = 160, y = 0, zoom = 1.6 },
-        duration = 6.0,
+        to = { x = 600, y = 0, zoom = 2.2 },
+        duration = 8.0,
     }),
 
 	text = {

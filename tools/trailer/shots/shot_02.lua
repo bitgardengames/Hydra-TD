@@ -7,6 +7,7 @@ return {
 
     scene = {
         towers = {
+            { kind = "lancer",   gx = 10, gy = 7 },
             { kind = "slow",   gx = 12, gy = 7 },
             { kind = "cannon", gx = 12, gy = 4 },
         },
@@ -19,8 +20,8 @@ return {
 
     camera = Camera.pan({
         from = { x = 120, y = 0, zoom = 1.3 },
-        to   = { x = 220, y = 0, zoom = 1.3 },
-        duration = 4.5,
+        to   = { x = 120, y = -40, zoom = 1.3 },
+        duration = 5.0,
     }),
 	
 	text = {

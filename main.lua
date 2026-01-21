@@ -34,7 +34,7 @@ local colorBg = Theme.terrain.bg
 
 -- Artwork export, always make sure it's disabled
 DEV_EXPORT = 0
-DEV_TRAILER = 1
+DEV_TRAILER = 0
 
 function resetGame()
     -- Clear world state
@@ -117,7 +117,7 @@ function love.load()
 	Sound.playMusic("bg")
 
 	lg.setBackgroundColor(colorBg)
-	--love.math.setRandomSeed(os.time())
+	--love.math.setRandomSeed(123456) -- Lock determinism
 
 	Menu.load()
 

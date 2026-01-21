@@ -116,10 +116,49 @@ local function formatModifier(label, value, suffix)
     return ("%s%d%% %s %s"):format(sign, pct, label, suffix)
 end
 
+local colorScatterDark = {colorGrass[1] * 0.78, colorGrass[2] * 0.78, colorGrass[3] * 0.78, 0.2}
+local colorScatterLight = {colorGrass[1] * 1.12, colorGrass[2] * 1.12, colorGrass[3] * 1.12, 0.2}
+
+local function drawGrassScatter()
+	for y = 1, gridH do
+		for x = 1, gridW do
+			local k = MapMod.makeKey(x, y)
+
+			if not MapMod.map.isPath[k] then
+				-- Deterministic hash
+				local seed = (x * 127 + y * 331) % 997
+				local r = seed % 4
+
+				if r == 0 then
+					-- Choose light or dark deterministically
+					local useLight = (seed % 7) < 3
+					lg.setColor(useLight and colorScatterLight or colorScatterDark)
+
+					for i = 1, 2 do
+						local ox = (seed * (13 + i * 17)) % (tile - 8) + 4
+						local oy = (seed * (29 + i * 23)) % (tile - 8) + 4
+
+						lg.rectangle(
+							"fill",
+							(x - 1) * tile + ox,
+							(y - 1) * tile + oy,
+							6,
+							6,
+							2
+						)
+					end
+				end
+			end
+		end
+	end
+end
 local function drawGrid()
 	lg.setColor(colorGrass)
 	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
 
+	drawGrassScatter()
+
+	-- Path tiles
 	for y = 1, gridH do
 		for x = 1, gridW do
 			local k = MapMod.makeKey(x, y)
@@ -131,7 +170,9 @@ local function drawGrid()
 		end
 	end
 
-	lg.setColor(Theme.grid)
+	-- Could add context awareness, animate the grid up when we're in placement mode, fade it out after
+
+	lg.setColor(colorGrid)
 
 	for x = 0, gridW do
 		lg.line(x * tile, 0, x * tile, gridH * tile)
@@ -392,13 +433,14 @@ local function drawShockFX(t)
     -- Wind-up normalization (0 → 1)
     local windDur = 0.08
     local p = 1 - (w / windDur)
+
     if p < 0 then p = 0 end
     if p > 1 then p = 1 end
 
     -- Ring geometry
-    local stroke = 2                -- 1–2px as requested
-    local startR = bodyR - stroke   -- inside edge of body
-    local endR   = 1                -- collapse to center dot
+    local stroke = 2 -- 1–2px
+    local startR = bodyR - stroke -- inside edge of body
+    local endR = 1 -- collapse to center dot
 
     local r = startR + (endR - startR) * p
 
@@ -477,7 +519,7 @@ local function drawTowerCore(kind, cx, cy, opts)
 	-- Shadow
 	if shadow then
 		lg.setColor(0, 0, 0, 0.35 * alpha)
-		lg.ellipse("fill", cx, cy + size * 0.5, size, size * 0.45)
+		lg.ellipse("fill", cx, cy + size * 0.42, size * 0.85, size * 0.30)
 	end
 
 	-- Base

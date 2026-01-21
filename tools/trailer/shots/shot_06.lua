@@ -3,20 +3,20 @@ local Actions = require("tools.trailer.actions")
 
 return {
     type = "logo",
-    duration = 9.0,
+    duration = 10.0,
 
 	logo = {
 		t = 0.0,
-		dur = 9.25,
+		dur = 10.25,
 		fadeIn = 0.25,
 		fadeOut = 0.0,
 	},
 
     text = {
         {
-            t = 1.8,
+            t = 2.2,
             text = "Wishlist on Steam",
-            dur = 9,
+            dur = 10.25,
             fadeIn = 0.25,
             fadeOut = 0.25,
         },

@@ -16,7 +16,7 @@ Theme.terrain = {
     pathEdge = {0.10, 0.10, 0.10},
 }
 
-Theme.grid = {0.16, 0.17, 0.20, 0.1}
+Theme.grid = {0.16, 0.17, 0.20, 0}
 
 Theme.enemy = {
     body = {0.90, 0.40, 0.36},

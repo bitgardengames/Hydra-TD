@@ -13,7 +13,7 @@ local min = math.min
 
 local lg = love.graphics
 
-local FONT = lg.newFont("assets/fonts/PTSans.ttf", 82)
+local FONT = lg.newFont("assets/fonts/PTSans.ttf", 90)
 
 local Director = {
 	t = 0,
@@ -35,6 +35,18 @@ local Director = {
 
 	activeLogo = false,
 	logoT = 0,
+}
+
+local HERO_ANGLE = -math.pi / 6
+
+Director.lancerIdle = {
+    t = 0,
+    hold = 0,
+    dir = 1,
+    from = HERO_ANGLE,
+    to = HERO_ANGLE - math.rad(28),
+    angle = HERO_ANGLE,
+    startupHold = 0.4,
 }
 
 function Director.buildScene(scene)
@@ -160,6 +172,8 @@ function Director.update(dt)
 	if Director.activeLogo then
 		Director.logoT = Director.logoT + dt
 
+		Title.updateLancerIdle(Director.lancerIdle, dt, Director.logoT)
+
 		if Director.logoT >= logo.dur then
 			Director.activeLogo = false
 		end
@@ -270,7 +284,7 @@ function Director.draw()
 		local h = lg.getHeight()
 
 		-- Base layout
-		local yBase = h * 0.65
+		local yBase = h * 0.60
 		local drift = 10 -- pixels of vertical motion
 		local y = yBase
 
@@ -327,53 +341,36 @@ function Director.draw()
 
 	-- Logo
 	if Director.activeLogo then
-		local logo = Director.shot.logo
-		local t = Director.logoT
-
 		local screenW = lg.getWidth()
 		local screenH = lg.getHeight()
 
-		-- Timing
-		local inDur = logo.fadeIn or 0.6
+		local fadeDur = 0.15
+		local alphaStart = 0.88
 
+		-- Fixed banner scale
+		local baseScale = 0.56
+		local w = math.floor(screenW * baseScale)
+		local h = math.floor(screenH * baseScale)
+
+		-- Centered position, then nudged upward
+		local centerX = math.floor((screenW - w) * 0.5)
+		local centerY = math.floor((screenH - h) * 0.5) - 120
+
+		-- Subtle alpha settle
 		local p = 1
-		if t < inDur then
-			local x = t / inDur
-			p = x * x * (3 - 2 * x) -- smoothstep
+
+		if Director.logoT < fadeDur then
+			p = Director.logoT / fadeDur
+			p = p * p * (3 - 2 * p) -- smoothstep
 		end
 
-		-- Alpha (very light)
-		local alpha = 0.9 + 0.1 * p
+		local alpha = alphaStart + (1 - alphaStart) * p
 
-		-- Virtual banner size
-		local baseScale = 0.66
-		local scale = baseScale * (0.97 + 0.03 * p)
-
-		local w = math.floor(screenW * scale)
-		local h = math.floor(screenH * scale)
-
-		-- Position (settle upward)
-		local centerX = math.floor((screenW - w) * 0.5)
-
-		local settleUp = 120   -- final upward bias
-		local slide    = 24    -- intro motion distance
-
-		local centerY =
-			math.floor((screenH - h) * 0.5)
-			- settleUp
-			+ math.floor((1 - p) * slide)
-
-		-- Draw
 		lg.push()
 		lg.translate(centerX, centerY)
 
 		lg.setColor(1, 1, 1, alpha)
-		Title.drawAnimatedBannerStyle(w, h, Director.logoT, {
-			alpha = alpha,
-			baseAngle = -math.pi / 6,
-			swivelAmplitude = math.rad(4.5), -- slightly calmer than menu
-			servoAmplitude  = math.rad(0.25),
-		})
+		Title.drawBannerStyle(w, h, {alpha = 1, angle = Director.lancerIdle.angle})
 
 		lg.pop()
 

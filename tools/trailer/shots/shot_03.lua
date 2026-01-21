@@ -3,7 +3,7 @@ local Actions = require("tools.trailer.actions")
 
 return {
     map = 4,
-    duration = 4,
+    duration = 5.0,
     next = "shot_04",
 
     scene = {
@@ -22,8 +22,8 @@ return {
 
     camera = Camera.pan({
         from = { x = 200, y = 40, zoom = 1.4 },
-        to = { x = 200, y = 40, zoom = 1.7 },
-        duration = 3.5,
+        to = { x = 280, y = 40, zoom = 1.6 },
+        duration = 5.0,
     }),
 
     actions = {
@@ -31,6 +31,7 @@ return {
         { t = 0.3, fn = Actions.startWave() },
         { t = 1.35, fn = Actions.placeTower("lancer", 14, 6) },
         { t = 2.0, fn = Actions.placeTower("poison", 15, 7) },
+        { t = 2.65, fn = Actions.placeTower("cannon", 12, 7) },
     },
 
 	text = {

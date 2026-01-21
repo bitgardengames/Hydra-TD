@@ -8,11 +8,21 @@ local lg = love.graphics
 local pi = math.pi
 local min = math.min
 local max = math.max
+local rad = math.rad
 local floor = math.floor
 
 local BASE_LANCER_VISUAL_W = 50
 local FONT_RATIO = 0.72
 local BANNER_LANCER_SCALE_FACTOR = 0.0048
+
+local ROTATE_TIME = 1.8
+local HOLD_TIME = 5.0
+
+local SERVO_AMPLITUDE = rad(0.35)
+local SERVO_SPEED = 1.8
+local LANCER_FROM = rad(-28)
+local LANCER_TO = rad(-14)
+local HERO_ANGLE = (-pi / 6)
 
 local function deriveTitleFont(lancerScale)
 	local fontPx = floor(BASE_LANCER_VISUAL_W * lancerScale * FONT_RATIO)
@@ -20,31 +30,51 @@ local function deriveTitleFont(lancerScale)
 	return love.graphics.newFont("assets/fonts/PTSans.ttf", fontPx)
 end
 
-function Title.computeLancerIdleAngle(t, opts)
-    opts = opts or {}
+function Title.updateLancerIdle(state, dt, timeNow)
+    local ROTATE_TIME = 1.8
+    local HOLD_TIME   = 5.0
 
-    local baseAngle = opts.baseAngle or (-pi / 6)
-
-    -- Swivel
-    local ROTATE_TIME = opts.rotateTime or 1.8
-    local SWIVEL_AMPL = opts.swivelAmplitude or rad(6)
-
-    local p = (t / ROTATE_TIME) % 2
-    if p > 1 then
-        p = 2 - p
+    if state.startupHold > 0 then
+        state.startupHold = state.startupHold - dt
+        state.angle = -math.pi / 6
+        return
     end
 
+    if state.hold > 0 then
+        state.hold = state.hold - dt
+    else
+        state.t = state.t + dt / ROTATE_TIME
+
+        if state.t >= 1 then
+            state.t = 0
+            state.hold = HOLD_TIME
+            state.dir = -state.dir
+        end
+    end
+
+    local p = state.t
     p = p * p * (3 - 2 * p)
 
-    local swivel = -SWIVEL_AMPL + (SWIVEL_AMPL * 2) * p
+    local a, b
+    if state.dir == 1 then
+        a, b = state.from, state.to
+    else
+        a, b = state.to, state.from
+    end
 
-    -- Servo
-    local SERVO_AMPL = opts.servoAmplitude or rad(0.35)
-    local SERVO_SPEED = opts.servoSpeed or 1.8
+    state.angle = a + (b - a) * p
 
-    local servo = math.sin(t * SERVO_SPEED) * SERVO_AMPL
+    if state.hold > 0 then
+        local SERVO_AMPLITUDE = math.rad(0.35)
+        local SERVO_SPEED = 1.8
+        local fade = math.min(1, state.hold / 0.6)
 
-    return baseAngle + swivel + servo
+        local servo = math.sin(timeNow * SERVO_SPEED)
+            * SERVO_AMPLITUDE
+            * fade
+
+        state.angle = state.angle + servo
+    end
 end
 
 function Title.draw(opts)
@@ -175,12 +205,12 @@ function Title.drawBannerStyle(w, h, opts)
 	lg.print(text, baseX + lancerVisualW + GAP, anchorY - textH * 0.5 + TEXT_BASELINE_BIAS)
 end
 
-function Title.drawAnimatedBannerStyle(w, h, t, opts)
+function Title.drawMenuAnimatedBannerStyle(w, h, t, opts)
     opts = opts or {}
 
-    local angle = Title.computeLancerIdleAngle(t, opts) -- What's the angle, anyhow?
+    local angle = Title.computeLancerAngle(t, opts)
 
-    Title.drawBannerStyle(w, h, {alpha = opts.alpha or 1, angle = angle})
+    Title.drawBannerStyle(w, h, {alpha = opts.alpha, angle = angle})
 end
 
 return Title
