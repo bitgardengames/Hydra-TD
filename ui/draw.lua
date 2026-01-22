@@ -900,7 +900,7 @@ local function drawDamageMeter()
     local padX = 8
     local panelPad = 8
 
-	local sw = Constants.SCREEN_W
+	local sw = love.graphics.getDimensions()
     local x = sw - panelW - 12
     local y = 12
 
@@ -965,7 +965,7 @@ local function drawBossHPBar()
     local barW = 340
     local barH = 22
 
-	local sw = Constants.SCREEN_W
+	local sw = love.graphics.getDimensions()
     local x = (sw - barW) * 0.5
     local y = 14
 
@@ -1011,8 +1011,7 @@ local BUTTON_H = 28
 local function drawBottomBar()
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local sw = Constants.SCREEN_W
-	local sh = Constants.SCREEN_H
+	local sw, sh = love.graphics.getDimensions()
 	local UI_H = Constants.UI_H
 	local UI_Y = sh - UI_H
 

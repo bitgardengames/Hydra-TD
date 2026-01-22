@@ -20,7 +20,7 @@ return {
 
     camera = Camera.pan({
         from = { x = 120, y = 0, zoom = 1.3 },
-        to   = { x = 120, y = -40, zoom = 1.3 },
+        to   = { x = 110, y = -40, zoom = 1.3 },
         duration = 5.0,
     }),
 	

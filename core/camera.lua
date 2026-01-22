@@ -3,63 +3,94 @@ local Constants = require("core.constants")
 local Camera = {}
 
 Camera.canvas = nil
-Camera.scale = 1
 Camera.ox = 0
 Camera.oy = 0
 
 Camera.wx = 0
 Camera.wy = 0
-Camera.wscale = 1
+Camera.wscale = 1.0
+
+-- Authoring baseline
+local REF_W = 1920
+local REF_H = 1080
+
+local AUTHORED_ZOOM = 1.25
+
+-- Safety rails
+local MIN_ZOOM = 0.72
+local MAX_ZOOM = 1.30
+
+local lg = love.graphics
+local min = math.min
+local max = math.max
+
+local function computeAdaptiveZoom()
+    local sw, sh = lg.getDimensions()
+
+    local scaleX = sw / REF_W
+    local scaleY = sh / REF_H
+
+    -- Preserve framing by using the limiting axis
+    local resolutionFactor = min(scaleX, scaleY)
+
+    -- Optional softening (feels nicer than linear)
+    resolutionFactor = resolutionFactor ^ 0.85
+
+    local z = AUTHORED_ZOOM * resolutionFactor
+
+    return max(MIN_ZOOM, min(MAX_ZOOM, z))
+end
 
 function Camera.load()
-    Camera.canvas = love.graphics.newCanvas(Constants.SCREEN_W, Constants.SCREEN_H, {msaa = 8})
-
     Camera.resize()
+	Camera.setLensZoom(computeAdaptiveZoom())
+end
+
+function Camera.setLensZoom(z)
+    Camera.wscale = z
+
+    local sw, sh = lg.getDimensions()
+
+    -- Keep screen center fixed while zooming
+    Camera.wx = (sw * (z - 1)) / (2 * z)
+    Camera.wy = (sh * (z - 1)) / (2 * z)
 end
 
 function Camera.resize()
-    local winW, winH = love.graphics.getDimensions()
+    local winW, winH = lg.getDimensions()
 
-    local sx = winW / Constants.SCREEN_W
-    local sy = winH / Constants.SCREEN_H
-	local s = math.min(sx, sy)
+    Camera.canvas = lg.newCanvas(winW, winH, { msaa = 8 })
+    --Camera.canvas:setFilter("nearest", "nearest")
 
-	if s >= 1 then
-		Camera.scale = math.floor(s) -- integer upscale
-	else
-		Camera.scale = s -- fractional downscale
-	end
+    Camera.ox = 0
+    Camera.oy = 0
 
-    Camera.ox = math.floor((winW - Constants.SCREEN_W * Camera.scale) * 0.5)
-    Camera.oy = math.floor((winH - Constants.SCREEN_H * Camera.scale) * 0.5)
+	Camera.setLensZoom(computeAdaptiveZoom())
 end
 
 function Camera.begin()
-    love.graphics.setCanvas(Camera.canvas)
-    love.graphics.clear()
+    lg.setCanvas(Camera.canvas)
+    lg.clear()
 
-    love.graphics.push()
-    love.graphics.translate(-Camera.wx, -Camera.wy)
-    love.graphics.scale(Camera.wscale, Camera.wscale)
+    lg.push()
+    lg.scale(Camera.wscale, Camera.wscale)
+    lg.translate(-Camera.wx, -Camera.wy)
 end
 
 function Camera.finish()
-    love.graphics.pop()
-    love.graphics.setCanvas()
+    lg.pop()
+    lg.setCanvas()
 end
 
 function Camera.present()
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.draw(Camera.canvas, Camera.ox, Camera.oy, 0, Camera.scale, Camera.scale)
+    lg.setColor(1, 1, 1)
+    lg.draw(Camera.canvas, 0, 0)
 end
 
 function Camera.screenToWorld(x, y)
-    -- Window to screen
-    x = (x - Camera.ox) / Camera.scale
-    y = (y - Camera.oy) / Camera.scale
-
-    -- Screen to world
-    return (x / Camera.wscale) + Camera.wx, (y / Camera.wscale) + Camera.wy
+    return
+        (x / Camera.wscale) + Camera.wx,
+        (y / Camera.wscale) + Camera.wy
 end
 
 return Camera

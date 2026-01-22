@@ -247,10 +247,10 @@ function love.draw()
 	if State.mode == "game" or State.mode == "pause" then
 		Camera.begin()
 		Draw.drawWorld()
-		Draw.drawUI()
 		Camera.finish()
-
 		Camera.present()
+
+		Draw.drawUI()
 
 		if State.mode == "pause" then
 			local t = State.pauseT

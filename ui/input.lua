@@ -9,6 +9,7 @@ local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Maps = require("world.maps")
 local Menu = require("ui.menu")
+local Cursor = require("core.cursor")
 local L = require("core.localization")
 
 local lm = love.mouse
@@ -20,13 +21,6 @@ local colorBad = Theme.ui.bad
 
 local function worldToGrid(wx, wy)
 	if wx < 0 or wy < 0 then
-		return nil, nil
-	end
-
-	local worldW = Constants.GRID_W * Constants.TILE
-	local worldH = Constants.GRID_H * Constants.TILE
-
-	if wx >= worldW or wy >= worldH then
 		return nil, nil
 	end
 
@@ -49,9 +43,7 @@ local function cancelPlacement()
 end
 
 local function updateHover()
-	local mx, my = lm.getPosition()
-
-	State.hoverGX, State.hoverGY = screenToGrid(mx, my)
+	State.hoverGX, State.hoverGY = screenToGrid(Cursor.x, Cursor.y)
 end
 
 local function mousepressed(x, y, button)
