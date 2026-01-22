@@ -34,6 +34,7 @@ return {
 
 	ui = {
 		seconds = "%.1fs",
+		hotkey = "[%s] ",
 	},
 
 	status = {
@@ -66,8 +67,8 @@ return {
 	hud = {
 		lives = "Lives %d",
 		wave = "Wave %d",
-		prep = "Prep %.1fs  (Space to start)",
-		spawning = "Spawning %d   Alive %d",
+		prep = "Prep %.1fs (Space to start)",
+		spawning = "Spawning %d - Alive %d",
 	},
 
 	inspect = {

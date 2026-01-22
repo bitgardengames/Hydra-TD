@@ -1,6 +1,6 @@
 local state = {
-	money = 120,
-	moneyLerp = 120,
+	money = 100,
+	moneyLerp = 100,
 	lives = 20,
 	livesAnim = 0,
 	score = 0,

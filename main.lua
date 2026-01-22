@@ -15,6 +15,7 @@ local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Draw = require("ui.draw")
 local Input = require("ui.input")
+local Difficulty = require("systems.difficulty")
 local Menu = require("ui.menu")
 local Hotkeys = require("core.hotkeys")
 local Rumble = require("systems.rumble")
@@ -47,10 +48,12 @@ function resetGame()
     MapMod.clearBlocked()
     MapMod.buildPath(Maps[State.mapIndex])
 
+	local diff = Difficulty.get()
+
     -- Core game state
-    State.money = 120
+    State.money = diff.startMoney
     State.moneyLerp = State.money
-    State.lives = 20
+    State.lives = diff.startLives
     State.score = 0
     State.wave = 0
 

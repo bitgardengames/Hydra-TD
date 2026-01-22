@@ -1,10 +1,14 @@
 local State = require("core.state")
 local Maps = require("world.maps")
 local Enemies = require("world.enemies")
+local Difficulty = require("systems.difficulty")
 
 local Waves = {}
 
 local bossAddTimer = 0
+
+local min = math.min
+local max = math.max
 
 local spawner = {
 	active = false,
@@ -40,6 +44,7 @@ end
 
 -- Wave start
 function Waves.startWave()
+	local diff = Difficulty.get()
 	local map = Maps[State.mapIndex]
 	local waveData = map.waves
 
@@ -56,11 +61,19 @@ function Waves.startWave()
 		if boss then
 			spawner.active = true
 			spawner.remaining = 1
-			spawner.gap = 0
 			spawner.timer = 0
+			spawner.gap = 0
 			spawner.mix = {{type = boss.type, w = 1.0}}
-			spawner.hpMult = boss.hpBase * (boss.hpRamp ^ (bossIndex - 1))
-			spawner.spdMult = 1.0 + (bossIndex - 1) * boss.spdRamp
+
+			-- Boss HP
+			local baseHp = boss.hpBase * (boss.hpRamp ^ (bossIndex - 1))
+
+			spawner.hpMult = baseHp * diff.bossHp
+
+			-- Boss Speed
+			local baseSpeed = 1.0 + (bossIndex - 1) * boss.spdRamp
+
+			spawner.spdMult = baseSpeed * diff.enemySpeed
 
 			State.inPrep = false
 
@@ -69,16 +82,27 @@ function Waves.startWave()
 	end
 
 	-- Normal waves
-	local plan = waveData.normal[math.min(State.wave, #waveData.normal)]
+	local plan = waveData.normal[min(State.wave, #waveData.normal)]
 
 	spawner.active = true
-	spawner.remaining = plan.count + math.max(0, State.wave - #waveData.normal) * 3
-	spawner.gap = plan.gap * math.max(0.75, 1.0 - (State.wave - 1) * 0.02)
 	spawner.timer = 0
 	spawner.mix = plan.mix
 
-	spawner.hpMult = (plan.hpMult or 1.0) * (1.0 + (State.wave - 1) * 0.22)
-	spawner.spdMult = (plan.spdMult or 1.0) * (1.0 + (State.wave - 1) * 0.06)
+	-- Count (unchanged by difficulty)
+	spawner.remaining = plan.count + max(0, State.wave - #waveData.normal) * 3
+
+	-- Spawn gap
+	spawner.gap = plan.gap * max(0.75, 1.0 - (State.wave - 1) * 0.02)
+
+	-- HP scaling
+	local baseHp = (plan.hpMult or 1.0) * (1.15 + (State.wave - 1) * 0.20)
+
+	spawner.hpMult = baseHp * diff.enemyHp
+
+	-- Speed scaling
+	local baseSpeed = (plan.spdMult or 1.0) * (1.0 + (State.wave - 1) * 0.06)
+
+	spawner.spdMult = baseSpeed * diff.enemySpeed
 
 	State.inPrep = false
 end

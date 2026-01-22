@@ -12,8 +12,6 @@ local Cursor = require("core.cursor")
 local Button = require("ui.button")
 local L = require("core.localization")
 
--- Note, some strings are still using lg.printf instead of Text.printfShadow
-
 local Menu = {}
 
 local cursor = 1
@@ -42,24 +40,14 @@ local CAROUSEL_OFFSET = 90
 local CAROUSEL_SCALE_SIDE = 0.82
 local CAROUSEL_ALPHA_SIDE = 0.35
 
-local menuItems = {
-	L("menu.play"),
-	L("menu.settings"),
-	L("menu.quit"),
-}
-
+local menuItems = nil
 local menuButtons = nil
 local pauseButtons = nil
 local campaignButtons = nil
 local settingsButtons = nil
 
 local settingsCursor = 1
-local settingsItems = {
-	{label = L("settings.music"), key = "music"},
-	{label = L("settings.sfx"), key = "sfx"},
-	{label = L("settings.fullscreen"), key = "fullscreen"},
-	{label = L("menu.back")},
-}
+local settingsItems = nil
 
 --[[
 	Maybe a language setting
@@ -176,6 +164,19 @@ function Menu.load()
 	for i, map in ipairs(Maps) do
 		mapPreviews[i] = buildMapPreview(map)
 	end
+
+	menuItems = {
+		L("menu.play"),
+		L("menu.settings"),
+		L("menu.quit"),
+	}
+
+	settingsItems = {
+		{label = L("settings.music"), key = "music"},
+		{label = L("settings.sfx"), key = "sfx"},
+		{label = L("settings.fullscreen"), key = "fullscreen"},
+		{label = L("menu.back")},
+	}
 
 	menuButtons = {
 		{
@@ -515,7 +516,7 @@ function Menu.draw()
 
 			Fonts.set("title")
 			lg.setColor(colorText)
-			lg.printf(L("campaign.locked"), slots.curr.x - pw * 0.5, slots.curr.y - 14, pw, "center")
+			Text.printfShadow(L("campaign.locked"), slots.curr.x - pw * 0.5, slots.curr.y - 14, pw, "center")
 		end
 
 		-- Text / UI
@@ -523,11 +524,11 @@ function Menu.draw()
 
 		Fonts.set("title")
 		lg.setColor(colorText)
-		lg.printf(L(map.nameKey), 0, textY, sw, "center")
+		Text.printfShadow(L(map.nameKey), 0, textY, sw, "center")
 		textY = textY + PAD_TITLE
 
 		Fonts.set("ui")
-		lg.printf(L("campaign.mapOf", index, mapCount), 0, textY, sw, "center")
+		Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY, sw, "center")
 
 		Fonts.set("menu")
 

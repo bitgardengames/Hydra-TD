@@ -6,6 +6,7 @@ local State = require("core.state")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
 local Rumble = require("systems.rumble")
+local Difficulty = require("systems.difficulty")
 local L = require("core.localization")
 
 local towers = {}
@@ -97,14 +98,14 @@ local towerDefs = {
 		cost = 65,
 		range = 3.6 * Constants.TILE,
 		fireRate = 1.2,
-		damage = 9,
+		damage = 10,
 		recoilStrength = 0,
 		recoilDecay = 0,
 		turnSpeed = 20,
 		color = Theme.tower.shock,
 		chain = {
 			jumps = 3, -- number of additional enemies
-			radius = 48, -- max distance between jumps
+			radius = 56, -- max distance between jumps
 			falloff = 0.75 -- damage multiplier per jump
 		},
 		upgrade = {
@@ -216,6 +217,8 @@ local function upgradeTower(t)
 		return
 	end
 
+	local diff = Difficulty.get()
+
 	State.money = State.money - cost
 
 	t.level = t.level + 1
@@ -223,7 +226,7 @@ local function upgradeTower(t)
 	t.range = t.range + t.def.upgrade.rangeAdd
 	t.recoil = t.def.upgrade.recoil or 0
 	t.fireRate = t.fireRate * t.def.upgrade.fireMult
-	t.sellValue = t.sellValue + math.floor(cost * 0.6)
+	t.sellValue = t.sellValue + math.floor(cost * diff.sellRefund)
 
 	if t.slow and t.def.upgrade.slowDurAdd then
 		t.slow.dur = t.slow.dur + t.def.upgrade.slowDurAdd

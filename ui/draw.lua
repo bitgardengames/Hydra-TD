@@ -927,8 +927,9 @@ local function drawDamageMeter()
         local def = Towers.towerDefs[entry.kind]
 
         if def then
+			local name = L(def.nameKey)
             local pct = (total > 0) and (entry.dmg / total) or 0
-            local text = format("%s  %s (%.0f%%)", def.name, formatNum(entry.dmg), pct * 100)
+            local text = format("%s  %s (%.0f%%)", name, formatNum(entry.dmg), pct * 100)
 
             -- Bar background (full width inside panel)
             lg.setColor(def.color[1], def.color[2], def.color[3], 0.25)
@@ -1142,6 +1143,7 @@ local function drawBottomBar()
 		local ty = y + (btnH - textH) * 0.5
 
 		-- Name
+		local towerName = L(def.nameKey)
 		local textX = x + PAD
 		local colorAfford = canAfford and colorText or colorBad
 
@@ -1156,11 +1158,11 @@ local function drawBottomBar()
 			local hkW = lg.getFont():getWidth(hkText .. " ")
 
 			lg.setColor(colorAfford)
-			Text.printShadow(def.name, textX + hkW, ty)
+			Text.printShadow(towerName, textX + hkW, ty)
 		else
 			-- Name only
 			lg.setColor(colorAfford)
-			Text.printShadow(def.name, textX, ty)
+			Text.printShadow(towerName, textX, ty)
 		end
 
 		-- Cost
@@ -1182,10 +1184,11 @@ local function drawBottomBar()
 
 	if State.selectedTower then
 		local t = State.selectedTower
+		local towerName = L(t.def.nameKey)
 
 		-- Name and level
 		lg.setColor(colorText)
-		Text.printShadow(L("inspect.towerTitle", t.def.name, t.level), inspectX, inspectY)
+		Text.printShadow(L("inspect.towerTitle", towerName, t.level), inspectX, inspectY)
 
 		-- Divider
 		lg.setColor(1, 1, 1, 0.15)
@@ -1211,7 +1214,7 @@ local function drawBottomBar()
 		local ux = actionX + PAD
 
 		if upgradeKey then
-			local hkText = "[" .. upgradeKey:upper() .. "] "
+			local hkText = L("ui.hotkey", upgradeKey:upper())
 
 			-- Hotkey
 			lg.setColor(colorUpgrade[1], colorUpgrade[2], colorUpgrade[3], 0.85)
