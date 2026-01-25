@@ -340,7 +340,7 @@ function Menu.draw()
 		local HOLD_TIME   = 5.0
 
 		local spacing = 44
-		local titleY = floor(sh * 0.30)
+		local titleY = floor(sh * 0.31)
 
 		-- Lancer idle update
 		if lancerIdle.startupHold > 0 then
@@ -391,7 +391,7 @@ function Menu.draw()
 		lg.setColor(0.31, 0.57, 0.76, 1)
 		lg.rectangle("fill", 0, 0, sw, sh)
 
-		Title.draw({x = sw * 0.5, y = titleY, lancerScale = 3.0, angle = lancerIdle.angle, alpha = 1})
+		Title.draw({x = sw * 0.5, y = titleY, lancerScale = 3.5, angle = lancerIdle.angle, alpha = 1})
 
 		Fonts.set("menu")
 
@@ -815,24 +815,6 @@ function Menu.mousepressed(x, y, button)
 			if Button.mousepressed(btn, x, y, button) then
 				return
 			end
-		end
-	end
-end
-
-function Menu.gamepadConfirm()
-	local x, y = Cursor.x, Cursor.y
-
-	if State.mode == "menu" then
-		for _, btn in ipairs(menuButtons) do
-			if Button.mousepressed(btn, x, y, 1) then return end
-		end
-	elseif State.mode == "campaign" then
-		for _, btn in ipairs(campaignButtons) do
-			if Button.mousepressed(btn, x, y, 1) then return end
-		end
-	elseif State.mode == "settings" then
-		for _, btn in ipairs(settingsButtons) do
-			if Button.mousepressed(btn, x, y, 1) then return end
 		end
 	end
 end

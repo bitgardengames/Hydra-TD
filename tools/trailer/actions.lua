@@ -10,13 +10,15 @@ function Actions.placeTower(kind, gx, gy)
     end
 end
 
-
 function Actions.upgradeTowerAt(gx, gy, times)
     times = times or 1
 
     return function()
         local t = Towers.findTowerAt(gx, gy)
-        if not t then return end
+
+        if not t then
+			return
+		end
 
         for i = 1, times do
             Towers.upgradeTower(t)

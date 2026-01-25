@@ -89,6 +89,10 @@ end
 
 -- Call this when a gamepad is used
 function Cursor.enableVirtual()
+	if Cursor.usingVirtual then
+		return
+	end
+
 	local x, y = love.mouse.getPosition()
 	local sw, sh = lg.getDimensions()
 

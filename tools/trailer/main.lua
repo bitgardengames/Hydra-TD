@@ -18,6 +18,8 @@ function Trailer.run()
     love.math.setRandomSeed(123456)
 
 	Recorder.fixedDt = FIXED_DT
+	
+	--Recorder.enabled = false -- Flip back after recording audio
 
     -- Force fixed timestep
     love.timer.step()

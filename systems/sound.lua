@@ -6,6 +6,8 @@ local Sound = {}
 Sound.sfx = {}
 Sound.music = {}
 
+Sound.supressed = false
+
 local lastPlayTime = {}
 
 local la = love.audio
@@ -17,6 +19,10 @@ end
 
 -- Play a sound effect
 function Sound.play(name)
+	if Sound.suppressed then
+		return
+	end
+
     local entry = Sound.sfx[name]
 
     if not entry then

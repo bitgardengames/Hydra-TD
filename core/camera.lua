@@ -14,15 +14,24 @@ Camera.wscale = 1.0
 local REF_W = 1920
 local REF_H = 1080
 
-local AUTHORED_ZOOM = 1.25
+local AUTHORED_ZOOM = 1.28
 
 -- Safety rails
 local MIN_ZOOM = 0.72
-local MAX_ZOOM = 1.30
+local MAX_ZOOM = 1.40
 
 local lg = love.graphics
 local min = math.min
 local max = math.max
+
+function Camera.centerOn(cx, cy, z)
+	Camera.wscale = z or Camera.wscale
+
+	local sw, sh = lg.getDimensions()
+
+	Camera.wx = cx - (sw / (2 * Camera.wscale))
+	Camera.wy = cy - (sh / (2 * Camera.wscale))
+end
 
 local function computeAdaptiveZoom()
     local sw, sh = lg.getDimensions()
@@ -51,9 +60,14 @@ function Camera.setLensZoom(z)
 
     local sw, sh = lg.getDimensions()
 
-    -- Keep screen center fixed while zooming
-    Camera.wx = (sw * (z - 1)) / (2 * z)
-    Camera.wy = (sh * (z - 1)) / (2 * z)
+    local mapW = Constants.GRID_W * Constants.TILE
+    local mapH = Constants.GRID_H * Constants.TILE
+
+    local mapCX = mapW * 0.5
+    local mapCY = mapH * 0.5
+
+    Camera.wx = mapCX - (sw / (2 * z))
+    Camera.wy = mapCY - (sh / (2 * z))
 end
 
 function Camera.resize()
@@ -88,9 +102,11 @@ function Camera.present()
 end
 
 function Camera.screenToWorld(x, y)
-    return
-        (x / Camera.wscale) + Camera.wx,
-        (y / Camera.wscale) + Camera.wy
+	return (x / Camera.wscale) + Camera.wx, (y / Camera.wscale) + Camera.wy
+end
+
+function Camera.worldToScreen(wx, wy)
+	return (wx - Camera.wx) * Camera.wscale, (wy - Camera.wy) * Camera.wscale
 end
 
 return Camera

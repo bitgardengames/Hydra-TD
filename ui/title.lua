@@ -20,9 +20,6 @@ local HOLD_TIME = 5.0
 
 local SERVO_AMPLITUDE = rad(0.35)
 local SERVO_SPEED = 1.8
-local LANCER_FROM = rad(-28)
-local LANCER_TO = rad(-14)
-local HERO_ANGLE = (-pi / 6)
 
 local function deriveTitleFont(lancerScale)
 	local fontPx = floor(BASE_LANCER_VISUAL_W * lancerScale * FONT_RATIO)

@@ -24,18 +24,22 @@ local Localization = require("core.localization")
 local lg = love.graphics
 local lk = love.keyboard
 local lm = love.mouse
+local getTime = love.timer.getTime
 
 local max = math.max
 local min = math.min
+local abs = math.abs
 
 local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
 local colorBg = Theme.terrain.bg
 
+local MAX_DT = 1 / 60
+
 -- Artwork export, always make sure it's disabled
-DEV_EXPORT = 0
-DEV_TRAILER = 0
+local DEV_EXPORT = 0
+local DEV_TRAILER = 0
 
 function resetGame()
     -- Clear world state
@@ -92,19 +96,22 @@ function resetGame()
 end
 
 function love.load()
+	-- Remove for public release
+	if DEV_EXPORT == 1 then
+		require("tools.art_export").run()
+
+		return
+	end
+
 	love.mouse.setVisible(false)
+
+	-- If a joystick exists at boot, assume controller-first until mouse movement is received
+	if #love.joystick.getJoysticks() > 0 then
+		Cursor.enableVirtual()
+	end
 
 	Save.load()
 
-				--[[if isFullscreen then
-					-- Go windowed (must set a mode)
-					--love.window.setFullscreen(false)
-					love.window.setMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1})
-				else
-					-- Go fullscreen (desktop resolution)
-					--love.window.setFullscreen(true)
-					love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
-				end]]
 	love.window.setTitle("Hydra TD")
 	--love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
 
@@ -117,23 +124,19 @@ function love.load()
 	Camera.load()
 
 	Sound.load()
+
+	if DEV_TRAILER == 1 then
+		require("tools.trailer.main").run()
+
+		return
+	end
+
 	Sound.playMusic("bg")
 
 	lg.setBackgroundColor(colorBg)
 	--love.math.setRandomSeed(123456) -- Lock determinism
 
 	Menu.load()
-
-	-- Remove for public release
-    if DEV_TRAILER == 1 then
-        require("tools.trailer.main").run()
-
-        return
-    end
-
-	if DEV_EXPORT == 1 then
-		require("tools.art_export").run()
-	end
 end
 
 function love.update(dt)
@@ -188,7 +191,8 @@ function love.update(dt)
 		return
 	end
 
-	dt = min(dt, 1 / 30) -- never simulate more than ~33ms
+	dt = min(dt, MAX_DT)
+	--dt = min(dt * State.speed, MAX_DT)
 	dt = dt * State.speed
 
 	State.livesAnim = max(0, State.livesAnim - dt * 4.5)
@@ -247,6 +251,21 @@ function love.draw()
 	if State.mode == "game" or State.mode == "pause" then
 		Camera.begin()
 		Draw.drawWorld()
+
+		--[[ Debug draw map center
+		local mapCX = Constants.GRID_W * Constants.TILE * 0.5
+		local mapCY = Constants.GRID_H * Constants.TILE * 0.5
+
+		lg.setColor(1, 0, 0)
+		lg.circle("fill", mapCX, mapCY, 6)
+
+		-- draw screen center in world space
+		local sw, sh = lg.getDimensions()
+		local wx, wy = Camera.screenToWorld(sw/2, sh/2)
+
+		lg.setColor(0, 1, 0)
+		lg.circle("fill", wx, wy, 4)]]
+
 		Camera.finish()
 		Camera.present()
 
@@ -367,16 +386,28 @@ function love.keypressed(key)
 	Input.keypressed(key)
 end
 
+local lastPadClick = 0
+
 function love.gamepadpressed(_, button)
 	Cursor.enableVirtual()
 
-	-- Confirm / click
+	local now = getTime()
+
 	if button == "a" then
-		Menu.gamepadConfirm()
+		if now - lastPadClick > 0.12 then
+			love.mousepressed(Cursor.x, Cursor.y, 1)
+			lastPadClick = now
+		end
+	elseif button == "b" then
+		love.mousepressed(Cursor.x, Cursor.y, 2)
 	end
 end
 
-function love.mousemoved(x, y)
+function love.mousemoved(x, y, dx, dy)
+	if abs(dx) + abs(dy) > 2 then
+		Cursor.disableVirtual()
+	end
+
 	Cursor.mousemoved(x, y)
 end
 

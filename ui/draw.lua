@@ -1,6 +1,7 @@
 local Constants = require("core.constants")
 local Cursor = require("core.cursor")
 local Theme = require("core.theme")
+local Camera = require("core.camera")
 local Hotkeys = require("core.hotkeys")
 local Util = require("core.util")
 local State = require("core.state")
@@ -15,16 +16,19 @@ local Text = require("ui.text")
 local L = require("core.localization")
 
 local lg = love.graphics
-local lmr = love.math.random
+local random = love.math.random
+local getTime = love.timer.getTime
 local pi = math.pi
 local min = math.min
 local max = math.max
 local sin = math.sin
 local cos = math.cos
+local abs = math.abs
 local ceil = math.ceil
 local floor = math.floor
 local atan2 = math.atan2
 local format = string.format
+local tostring = tostring
 local tinsert = table.insert
 local tsort = table.sort
 local ipairs = ipairs
@@ -46,6 +50,7 @@ local colorBad = Theme.ui.bad
 local colorPanel = Theme.ui.panel
 local colorPanel2 = Theme.ui.panel2
 local colorSelected = Theme.ui.selected
+local colorHovered = Theme.ui.hovered
 
 local zapJitter = 2 -- jitter strength
 
@@ -53,10 +58,33 @@ local tile = Constants.TILE
 local gridW = Constants.GRID_W
 local gridH = Constants.GRID_H
 
-local shopBumps = {} -- Tower shop affordability animations
+local bottomBarButtons = {}
+local shopButtons = {}
+local shopBumps = {}
+local shopAnims = {}
+
+local function ensureShopAnim(kind)
+	if not shopAnims[kind] then
+		shopAnims[kind] = {
+			hovered = false,
+			active = false,
+			t = 0,
+		}
+	end
+
+	return shopAnims[kind]
+end
+
+local function lerp(a, b, t)
+	return a + (b - a) * t
+end
+
+local function lerpColor(c1, c2, t)
+	return {lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t), lerp(c1[3], c2[3], t), lerp(c1[4] or 1, c2[4] or 1, t)}
+end
 
 local function jitter(amount)
-	return (lmr() * 2 - 1) * amount
+	return (random() * 2 - 1) * amount
 end
 
 local function wobble(t, amp)
@@ -86,7 +114,7 @@ local function drawStatusBar(label, color, timeLeft, duration, x, y)
 	local pulse = 1
 
 	if t < 0.25 then
-		pulse = 0.85 + sin(love.timer.getTime() * 10) * 0.15
+		pulse = 0.85 + sin(getTime() * 10) * 0.15
 	end
 
 	-- Label
@@ -107,11 +135,13 @@ local function drawStatusBar(label, color, timeLeft, duration, x, y)
 end
 
 local function formatModifier(label, value, suffix)
-    if not value or value == 1 then return nil end
+    if not value or value == 1 then
+		return nil
+	end
 
     local delta = (value - 1) * 100
     local sign = delta > 0 and "+" or "-"
-    local pct = math.abs(math.floor(delta + 0.5))
+    local pct = abs(floor(delta + 0.5))
 
     return ("%s%d%% %s %s"):format(sign, pct, label, suffix)
 end
@@ -119,7 +149,10 @@ end
 local colorScatterDark = {colorGrass[1] * 0.78, colorGrass[2] * 0.78, colorGrass[3] * 0.78, 0.2}
 local colorScatterLight = {colorGrass[1] * 1.12, colorGrass[2] * 1.12, colorGrass[3] * 1.12, 0.2}
 
-local function drawGrassScatter()
+local function drawGrass()
+	lg.setColor(colorGrass)
+	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
+
 	for y = 1, gridH do
 		for x = 1, gridW do
 			local k = MapMod.makeKey(x, y)
@@ -138,41 +171,107 @@ local function drawGrassScatter()
 						local ox = (seed * (13 + i * 17)) % (tile - 8) + 4
 						local oy = (seed * (29 + i * 23)) % (tile - 8) + 4
 
-						lg.rectangle(
-							"fill",
-							(x - 1) * tile + ox,
-							(y - 1) * tile + oy,
-							6,
-							6,
-							2
-						)
+						lg.rectangle("fill", (x - 1) * tile + ox, (y - 1) * tile + oy, 6, 6, 2)
 					end
 				end
 			end
 		end
 	end
 end
-local function drawGrid()
-	lg.setColor(colorGrass)
-	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
 
-	drawGrassScatter()
+local function drawPath()
+	-- Draw path segments as strips
+	local pathThickness = tile
+	local half = pathThickness * 0.5
 
-	-- Path tiles
-	for y = 1, gridH do
-		for x = 1, gridW do
-			local k = MapMod.makeKey(x, y)
+	for i = 1, #MapMod.map.path - 1 do
+		local a = MapMod.map.path[i]
+		local b = MapMod.map.path[i + 1]
 
-			if MapMod.map.isPath[k] then
-				lg.setColor(colorPath)
-				lg.rectangle("fill", (x - 1) * tile, (y - 1) * tile, tile, tile)
-			end
+		local ax, ay = MapMod.gridToCenter(a[1], a[2])
+		local bx, by = MapMod.gridToCenter(b[1], b[2])
+
+		local dx = b[1] - a[1]
+		local dy = b[2] - a[2]
+
+		-- Check if either end is a corner
+		local trimA = false
+		local trimB = false
+
+		if i > 1 then
+			local p = MapMod.map.path[i - 1]
+			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
+		end
+
+		if i < #MapMod.map.path - 1 then
+			local n = MapMod.map.path[i + 2]
+			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
+		end
+
+		lg.setColor(colorPath)
+
+		if dx ~= 0 then
+			-- Horizontal
+			local x1 = math.min(ax, bx)
+			local w  = math.abs(bx - ax)
+
+			if trimA then x1 = x1 + half; w = w - half end
+			if trimB then w  = w - half end
+
+			lg.rectangle(
+				"fill",
+				x1,
+				ay - half,
+				w,
+				pathThickness
+			)
+		else
+			-- Vertical
+			local y1 = math.min(ay, by)
+			local h  = math.abs(by - ay)
+
+			if trimA then y1 = y1 + half; h = h - half end
+			if trimB then h  = h - half end
+
+			lg.rectangle(
+				"fill",
+				ax - half,
+				y1,
+				pathThickness,
+				h
+			)
 		end
 	end
 
-	-- Could add context awareness, animate the grid up when we're in placement mode, fade it out after
+	-- Rounded path corners (additive joins)
+	for i = 2, #MapMod.map.path - 1 do
+		local prev = MapMod.map.path[i - 1]
+		local cur  = MapMod.map.path[i]
+		local next = MapMod.map.path[i + 1]
 
-	lg.setColor(colorGrid)
+		local dx1 = cur[1] - prev[1]
+		local dy1 = cur[2] - prev[2]
+		local dx2 = next[1] - cur[1]
+		local dy2 = next[2] - cur[2]
+
+		if dx1 ~= dx2 or dy1 ~= dy2 then
+			local cx, cy = MapMod.gridToCenter(cur[1], cur[2])
+
+			lg.setColor(colorPath)
+			lg.circle("fill", cx, cy, half)
+		end
+	end
+end
+
+local function drawGrid()
+	-- Context aware grid
+	local fade = State.placingFade or 0
+
+	if fade == 0 then
+		return
+	end
+
+	lg.setColor(colorGrid[1], colorGrid[2], colorGrid[3], colorGrid[4] * fade)
 
 	for x = 0, gridW do
 		lg.line(x * tile, 0, x * tile, gridH * tile)
@@ -184,9 +283,9 @@ local function drawGrid()
 end
 
 local function drawEnemy(e)
-	--local bounce = sin(e.animT) * (e.slowTimer > 0 and 1 or 2)
-	--local y = e.y + bounce
-	local y = e.y
+	local bounce = sin(e.animT) * (e.slowTimer > 0 and 1 or 2)
+	local y = e.y + bounce
+	--local y = e.y
 
 	-- Boss horns
 	if e.boss then
@@ -307,6 +406,26 @@ local function drawEnemy(e)
 			e.x + eyeSep + browLen * 0.65 - browIn,
 			eyeY - browDrop - browLift
 		)
+
+		--[[ Boss mouth: grin ↔ laugh animation
+		local t = 0.5 + sin(e.animT * 1.2) * 0.5
+
+		local mouthYThin = e.y + e.radius * 0.36
+		local mouthYThick = e.y + e.radius * 0.28
+		local mouthY = mouthYThin + (mouthYThick - mouthYThin) * t
+		local thin = 1 - t
+		local thinBias = e.radius * 0.035 * thin * thin
+		local outerR = e.radius * 0.56
+		local lipOffset = e.radius * 0.10
+		local squashY = 0.45 + (0.85 - 0.45) * t
+
+		mouthY = mouthY + thinBias
+
+		lg.push()
+		lg.translate(e.x, mouthY - lipOffset)
+		lg.scale(1.0, squashY)
+		lg.arc("fill", 0, 0, outerR, -pi * 0.02, pi * 1.02)
+		lg.pop()]]
 	else
 		local eyeDriftX = sin(e.animT * 1.3) * 0.6
 		local eyeDriftY = cos(e.animT * 1.1) * 0.4
@@ -350,6 +469,9 @@ local function drawEnemy(e)
 			g = p
 		end
 
+		r = r * 0.9 + 0.05
+		g = g * 0.9 + 0.05
+
 		lg.setColor(r, g, 0.15, 0.9)
 		lg.rectangle("fill", x, y, w * t, h, 3, 3)
 	end
@@ -389,7 +511,7 @@ local function drawLancerFX(t)
 end
 
 local function drawSlowFX(t)
-    local time = love.timer.getTime()
+    local time = getTime()
     local pulse = 0.5 + sin(time * 2) * 0.5
 
     local r = tile * (0.45 + pulse * 0.08)
@@ -407,7 +529,7 @@ local function drawSlowFX(t)
 end
 
 local function drawPoisonFX(t)
-    local time = love.timer.getTime()
+    local time = getTime()
     local wobble = sin(time * 4 + t.x) * 3
 
     lg.setColor(
@@ -426,7 +548,7 @@ local function drawShockFX(t)
     local w = t.windUp
     if not w or w <= 0 then return end
 
-    -- This MUST match drawTowerCore
+    -- This must match drawTowerCore
     local size = tile * 0.42
     local bodyR = size * 0.36
 
@@ -444,12 +566,7 @@ local function drawShockFX(t)
 
     local r = startR + (endR - startR) * p
 
-    lg.setColor(
-        Theme.tower.shock[1],
-        Theme.tower.shock[2],
-        Theme.tower.shock[3],
-        1
-    )
+    lg.setColor(Theme.tower.shock[1], Theme.tower.shock[2], Theme.tower.shock[3], 1)
 
     if r > endR + 0.5 then
         lg.setLineWidth(stroke)
@@ -665,6 +782,31 @@ local function drawTowers()
 
 	-- Towers
 	for _, t in ipairs(Towers.towers) do
+		-- Upgrade pips
+		local pips = min(8, t.level)
+		local anim = t.levelUpAnim or 0
+
+		local pipW, pipH = 3, 4
+		local baseY = (t.gy - 1) * tile + tile - 11
+
+		for i = 1, pips do
+			local isNew = (i == pips) and anim > 0
+
+			local a = 1
+			local y = baseY
+
+			if isNew then
+				local p = 1 - anim
+				local ease = p * p * (3 - 2 * p)
+
+				a = ease
+				y = baseY + (1 - ease) * pipH
+			end
+
+			lg.setColor(0.92, 0.92, 0.92, a)
+			lg.rectangle("fill", (t.gx - 1) * tile + 10 + (i - 1) * 4, y, pipW, pipH)
+		end
+
 		local cx = t.x
 		local cy = t.y
 		local size = tile * 0.42
@@ -673,6 +815,7 @@ local function drawTowers()
 		if t.target then
 			dx = t.target.x - cx
 			dy = t.target.y - cy
+
 			dx, dy = Util.norm(dx, dy)
 		end
 
@@ -686,17 +829,9 @@ local function drawTowers()
 			alpha = 1,
 		})
 
-		-- Upgrade pips
-		local pips = min(8, t.level)
-		lg.setColor(0.92, 0.92, 0.92, 1)
-
-		for i = 1, pips do
-			lg.rectangle("fill", (t.gx - 1) * tile + 10 + (i - 1) * 4, (t.gy - 1) * tile + tile - 11, 3, 4)
-		end
-
 		-- Level-up pulse
-		if t.levelUpAnim and t.levelUpAnim > 0 then
-			local a = t.levelUpAnim
+		if anim > 0 then
+			local a = anim
 
 			lg.setColor(1, 1, 1, a * 0.4)
 			lg.circle("line", cx, cy, size * (1 + (1 - a)))
@@ -729,7 +864,7 @@ local function drawProjectiles()
 			lg.push()
 			lg.translate(p.x, p.y)
 			lg.rotate(rotation)
-			lg.rectangle("fill", -8, -4, 16, 8, 4, 4)
+			lg.rectangle("fill", -8, -4, 14, 8, 4, 4)
 			lg.pop()
 		elseif p.slow then
 			--local speedStretch = min(1.25, 1 + (p.speed or 300) / 600)
@@ -797,7 +932,7 @@ local function drawProjectiles()
 			local t = (i - 1) / count
 			local radius = 2 * (1 - t) + 1
 
-			lg.setColor(0.97, 0.97, 0.97, 0.8)
+			lg.setColor(0.6, 0.9, 1, 0.9)
 			lg.circle("fill", seg.to.x, seg.to.y, radius) -- Note: Should I jitter this too?
 
 			lg.setLineWidth(2 * (1 - t) + 1)
@@ -821,23 +956,22 @@ local function drawFloaters()
 	for _, f in ipairs(Floaters.floaters) do
 		local p = f.t / f.life
 
-		-- Ease out upward motion
 		local rise = (1 - p) * 10
-
-		-- Alpha curve
 		local alpha = (p < 0.2) and 1 or (1 - (p - 0.2) / 0.8)
 
-		-- Pixel snap
-		local x = floor(f.x + 0.5)
-		local y = floor(f.y - rise + 0.5)
+		-- Convert world to screen
+		local sx, sy = Camera.worldToScreen(f.x, f.y - rise)
+
+		-- Snap after conversion
+		sx = floor(sx + 0.5)
+		sy = floor(sy + 0.5)
 
 		local text = f.text
-		local textW = lg.getFont():getWidth(text)
-		local tx = x - textW / 2
+		local font = love.graphics.getFont()
+		local textW = font:getWidth(text)
 
-		-- Main text
-		lg.setColor(f.r, f.g, f.b, alpha)
-		Text.printShadow(text, tx, y)
+		love.graphics.setColor(f.r, f.g, f.b, alpha)
+		Text.printShadow(text, sx - textW * 0.5, sy)
 	end
 end
 
@@ -1083,6 +1217,8 @@ local function drawBottomBar()
 	local cols = floor((SHOP_W - PAD * 2) / (btnW + GAP))
 	local i = 0
 
+	shopButtons = {}
+
 	for _, key in ipairs(Towers.shopOrder) do
 		local def = Towers.towerDefs[key]
 		local hotkey = Hotkeys.getShopKey(key)
@@ -1095,8 +1231,16 @@ local function drawBottomBar()
 
 		local selected = State.placing == key
 		local canAfford = State.money >= def.cost
-		local pulse = selected and (0.9 + sin(love.timer.getTime() * 6) * 0.1) or 1
-		local base = selected and colorSelected or colorGrid
+		local pulse = selected and (0.9 + sin(getTime() * 6) * 0.1) or 1
+
+		shopButtons[#shopButtons + 1] = {
+			kind = key,
+			x = x,
+			y = y,
+			w = btnW,
+			h = btnH,
+			canAfford = canAfford,
+		}
 
 		-- Detect transition: unaffordable -> affordable
 		local bump = shopBumps[key]
@@ -1130,7 +1274,35 @@ local function drawBottomBar()
 			bumpPad = ease * 1 -- 1px per edge
 		end
 
-		lg.setColor(base[1] * pulse, base[2] * pulse, base[3] * pulse, 1)
+		local mx, my = Cursor.x, Cursor.y
+		local hovered = mx >= x and mx <= x + btnW and my >= y and my <= y + btnH
+
+		local anim = ensureShopAnim(key)
+
+		if hovered ~= anim.hovered then
+			anim.active = true
+		end
+
+		anim.hovered = hovered
+
+		if anim.active then
+			local speed = love.timer.getDelta() * 10
+
+			if anim.hovered then
+				anim.t = math.min(1, anim.t + speed)
+			else
+				anim.t = math.max(0, anim.t - speed)
+			end
+
+			if anim.t == 0 or anim.t == 1 then
+				anim.active = false
+			end
+		end
+
+		local ease = anim.t * anim.t * (3 - 2 * anim.t)
+		local bg = lerpColor(colorPanel2, colorHovered, ease)
+
+		lg.setColor(bg[1] * pulse, bg[2] * pulse, bg[3] * pulse, 1)
 		lg.rectangle("fill", x - bumpPad, y - bumpPad, btnW + bumpPad * 2, btnH + bumpPad * 2, 6 + bumpPad, 6 + bumpPad)
 
 		-- Disabled overlay if unaffordable
@@ -1181,6 +1353,10 @@ local function drawBottomBar()
 	local actionY = statsY + lineH * 2 + 14
 	local sellX = actionX + BUTTON_W + GAP
 
+	-- Clear exposed buttons every frame
+	bottomBarButtons.upgrade = nil
+	bottomBarButtons.sell = nil
+
 	if State.selectedTower then
 		local t = State.selectedTower
 		local towerName = L(t.def.nameKey)
@@ -1198,28 +1374,63 @@ local function drawBottomBar()
 		Text.printShadow(L("inspect.damage", formatNum(t.damageDealt)), inspectX, statsY)
 		Text.printShadow(L("inspect.kills", t.kills), inspectX, statsY + lineH)
 
-		-- Upgrade Button
+		----------------------------------------------------------------
+		-- Upgrade button (shop-style hover animation)
+		----------------------------------------------------------------
 		local upgradeCost = Towers.towerUpgradeCost(t)
 		local canUpgrade = State.money >= upgradeCost
 		local upgradeKey = Hotkeys.getActionKey("upgrade")
-		local colorUpgrade = canUpgrade and colorText or colorBad
 		local tyBtn = actionY + (BUTTON_H - textH) * 0.5
 
-		-- Background
-		lg.setColor(colorGrid)
+		local mx, my = Cursor.x, Cursor.y
+		local hoveredUpgrade =
+			mx >= actionX and mx <= actionX + BUTTON_W and
+			my >= actionY and my <= actionY + BUTTON_H
+
+		local animU = ensureShopAnim("inspect_upgrade")
+
+		if hoveredUpgrade ~= animU.hovered then
+			animU.active = true
+		end
+
+		animU.hovered = hoveredUpgrade and canUpgrade
+
+		if animU.active then
+			local speed = love.timer.getDelta() * 10
+
+			if animU.hovered then
+				animU.t = math.min(1, animU.t + speed)
+			else
+				animU.t = math.max(0, animU.t - speed)
+			end
+
+			if animU.t == 0 or animU.t == 1 then
+				animU.active = false
+			end
+		end
+
+		local easeU = animU.t * animU.t * (3 - 2 * animU.t)
+		local bgU = lerpColor(colorPanel2, colorHovered, easeU)
+
+		lg.setColor(bgU)
 		lg.rectangle("fill", actionX, actionY, BUTTON_W, BUTTON_H, 6, 6)
+
+		-- Disabled overlay
+		if not canUpgrade then
+			lg.setColor(0, 0, 0, 0.35)
+			lg.rectangle("fill", actionX, actionY, BUTTON_W, BUTTON_H, 6, 6)
+		end
 
 		-- Text
 		local ux = actionX + PAD
+		local colorUpgrade = canUpgrade and colorText or colorBad
 
 		if upgradeKey then
 			local hkText = L("ui.hotkey", upgradeKey:upper())
 
-			-- Hotkey
 			lg.setColor(colorUpgrade[1], colorUpgrade[2], colorUpgrade[3], 0.85)
 			Text.printShadow(hkText, ux, tyBtn)
 
-			-- Label
 			local hkW = lg.getFont():getWidth(hkText .. " ")
 			lg.setColor(colorUpgrade)
 			Text.printShadow(L("actions.upgrade"), ux + hkW, tyBtn)
@@ -1228,28 +1439,65 @@ local function drawBottomBar()
 			Text.printShadow(L("actions.upgrade"), ux, tyBtn)
 		end
 
-		-- Cost
 		lg.setColor(colorUpgrade)
 		Text.printfShadow("$" .. upgradeCost, actionX + PAD, tyBtn, BUTTON_W - PAD2, "right")
 
-		-- Sell Button
+		if canUpgrade then
+			bottomBarButtons.upgrade = {
+				x = actionX,
+				y = actionY,
+				w = BUTTON_W,
+				h = BUTTON_H,
+			}
+		end
+
+		----------------------------------------------------------------
+		-- Sell button (shop-style hover animation)
+		----------------------------------------------------------------
 		local sellKey = Hotkeys.getActionKey("sell")
 		local sellValue = t.sellValue or 0
-		local sx = sellX + PAD
 
-		-- Background
-		lg.setColor(colorGrid)
+		local hoveredSell =
+			mx >= sellX and mx <= sellX + BUTTON_W and
+			my >= actionY and my <= actionY + BUTTON_H
+
+		local animS = ensureShopAnim("inspect_sell")
+
+		if hoveredSell ~= animS.hovered then
+			animS.active = true
+		end
+
+		animS.hovered = hoveredSell
+
+		if animS.active then
+			local speed = love.timer.getDelta() * 10
+
+			if animS.hovered then
+				animS.t = math.min(1, animS.t + speed)
+			else
+				animS.t = math.max(0, animS.t - speed)
+			end
+
+			if animS.t == 0 or animS.t == 1 then
+				animS.active = false
+			end
+		end
+
+		local easeS = animS.t * animS.t * (3 - 2 * animS.t)
+		local bgS = lerpColor(colorPanel2, colorHovered, easeS)
+
+		lg.setColor(bgS)
 		lg.rectangle("fill", sellX, actionY, BUTTON_W, BUTTON_H, 6, 6)
 
 		-- Text
+		local sx = sellX + PAD
+
 		if sellKey then
 			local hkText = "[" .. sellKey:upper() .. "] "
 
-			-- Hotkey
 			lg.setColor(colorGood[1], colorGood[2], colorGood[3], 0.85)
 			Text.printShadow(hkText, sx, tyBtn)
 
-			-- Label
 			local hkW = lg.getFont():getWidth(hkText .. " ")
 			lg.setColor(colorGood)
 			Text.printShadow(L("actions.sell"), sx + hkW, tyBtn)
@@ -1258,9 +1506,15 @@ local function drawBottomBar()
 			Text.printShadow(L("actions.sell"), sx, tyBtn)
 		end
 
-		-- Value
 		lg.setColor(colorGood)
 		Text.printfShadow("+$" .. sellValue, sellX + PAD, tyBtn, BUTTON_W - PAD2, "right")
+
+		bottomBarButtons.sell = {
+			x = sellX,
+			y = actionY,
+			w = BUTTON_W,
+			h = BUTTON_H,
+		}
 	elseif State.selectedEnemy then
 		local e = State.selectedEnemy
 
@@ -1319,16 +1573,14 @@ local function drawBottomBar()
 end
 
 local function drawWorld()
+	drawGrass()
 	drawGrid()
+	drawPath()
 	drawTowerGhost()
 	drawTowers()
 	drawEnemies()
 	drawProjectiles()
 	drawExplosions()
-
-	Fonts.set("floaters")
-
-	drawFloaters()
 end
 
 local function drawUI()
@@ -1337,13 +1589,29 @@ local function drawUI()
 	drawBottomBar()
 	drawBossHPBar()
 	drawDamageMeter()
+
+	Fonts.set("floaters")
+
+	drawFloaters()
+end
+
+local getShopButtons = function()
+	return shopButtons
+end
+
+local getBottomBarButtons = function()
+	return bottomBarButtons
 end
 
 return {
 	drawWorld = drawWorld,
 	drawUI = drawUI,
 
+	getShopButtons = getShopButtons,
+	getBottomBarButtons = getBottomBarButtons,
+
 	-- Only exposed for art export
 	drawTowerCore = drawTowerCore,
 	drawEnemy = drawEnemy,
+	drawFloaters = drawFloaters,
 }

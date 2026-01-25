@@ -255,16 +255,42 @@ function Export.exportBanners()
 	end
 end
 
+function Export.exportAppIcons()
+	local sizes = {16, 32, 48, 256}
+
+	for _, size in ipairs(sizes) do
+		local samples = size > 32 and 8 or 0
+		local canvas = lg.newCanvas(size, size, { msaa = samples })
+		local scale = (size / REF_ICON_SIZE) * ICON_FILL
+
+		for towerId, _ in pairs(Towers.towerDefs) do
+			lg.setCanvas(canvas)
+			lg.clear(0, 0, 0, 0)
+			lg.setColor(1, 1, 1, 1)
+			lg.push()
+			lg.translate(size * 0.5, size * 0.5)
+			lg.scale(scale, scale)
+
+			Draw.drawTowerCore(towerId, 0, 0, {angle  = -math.pi / 4, alpha  = 1, shadow = false})
+
+			lg.pop()
+			lg.setCanvas()
+
+			exportCanvas(canvas, string.format("%s/appicon_%s_%d", ICON_DIR, towerId, size))
+		end
+	end
+end
+
 function Export.exportSocialAvatar()
 	local sizes = {256, 512, 1024, 2048}
 	local Constants = require("core.constants")
 
-	local lg  = love.graphics
+	local lg = love.graphics
 	local max = math.max
-	local pi  = math.pi
+	local pi = math.pi
 
 	local ENEMY_RADIUS_REF = Constants.TILE * 0.42
-	local OUTLINE_RATIO    = 3 / ENEMY_RADIUS_REF
+	local OUTLINE_RATIO = 3 / ENEMY_RADIUS_REF
 
 	for kind, data in pairs(Towers.towerDefs) do
 		for _, size in ipairs(sizes) do
@@ -741,8 +767,8 @@ function Export.run()
 	--Export.exportTowers()
 	--Export.exportEnemies()
 	--Export.exportBanners()
-	--Export.exportAppIcons()
-	Export.exportSocialAvatar()
+	Export.exportAppIcons()
+	--Export.exportSocialAvatar()
 	--Export.exportCogSocialAvatar()
 	--Export.exportCogSocialAvatarAnim()
 	love.event.quit()

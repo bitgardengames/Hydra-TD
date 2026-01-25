@@ -124,34 +124,6 @@ function Waves.updateSpawner(dt)
 			spawner.active = false
 		end
 	end
-
-	-- Boss add trickle (unchanged behavior)
-	if State.wave % 10 == 0 then
-		local bossAlive = false
-
-		for _, e in ipairs(Enemies.enemies) do
-			if e.boss then
-				bossAlive = true
-
-				break
-			end
-		end
-
-		if bossAlive then
-			bossAddTimer = bossAddTimer - dt
-
-			if bossAddTimer <= 0 then
-				bossAddTimer = (State.wave == 10) and 2.0 or 1.0
-				Enemies.spawnEnemy("runner", 1.0, 1.0)
-
-				if State.wave == 20 then
-					Enemies.spawnEnemy("grunt", 1.0, 1.0)
-				end
-			end
-		else
-			bossAddTimer = 0
-		end
-	end
 end
 
 -- Prep + helpers

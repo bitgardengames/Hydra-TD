@@ -1,9 +1,13 @@
 local Camera = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
+local Constants = require("core.constants")
+
+local mapCX = Constants.GRID_W * Constants.TILE * 0.5
+local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
 return {
 	map = 5,
-	duration = 4.0,
+	duration = 6.0,
 	next = "shot_05",
 
 	scene = {
@@ -16,21 +20,20 @@ return {
 		wave = {
 			index = 6,
 			start = true,
-			warmup = 33,
+			warmup = 26,
 		},
 	},
 
 	actions = {
-		-- Upgrades happen on-screen shortly after the word appears
-		{ t = 1.05, fn = Actions.upgradeTowerAt(9,  9, 1) },  -- poison +1
-		{ t = 1.65, fn = Actions.upgradeTowerAt(12, 8, 1) }, -- lancer +1 -- Optionally do 2 to show a harder power spike
-		{ t = 2.25, fn = Actions.upgradeTowerAt(8,  9, 1) },  -- shock +1
+		{ t = 1.55, fn = Actions.upgradeTowerAt(8,  9, 1) }, -- shock +1
+		{ t = 2.55, fn = Actions.upgradeTowerAt(12, 8, 1) }, -- lancer +1
+		{ t = 3.55, fn = Actions.upgradeTowerAt(9,  9, 1) }, -- poison +1
 	},
 
 	camera = Camera.pan({
-		from = { x = 80,  y = 80, zoom = 1.25 },
-		to   = { x = 0, y = 80, zoom = 1.25 },
-		duration = 4.0,
+		duration = 6.0,
+		from = {x = mapCX, y = mapCY, zoom = 1.28},
+		to = {x = mapCX, y = mapCY, zoom = 1.28}
 	}),
 
 	text = {
@@ -38,8 +41,8 @@ return {
 			t = 0.8,
 			text = "Upgrade",
 			dur = 3,
-			fadeIn = 0.2,
-			fadeOut = 0.3,
+			fadeIn = 0.25,
+			fadeOut = 0.4,
 		},
 	},
 }

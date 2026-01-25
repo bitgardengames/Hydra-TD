@@ -8,17 +8,25 @@ local Shots = require("tools.trailer.shots")
 local Sim = require("tools.trailer.sim")
 local Recorder = require("tools.trailer.recorder")
 local Title = require("ui.title")
+local Fonts = require("core.fonts")
+local Enemies = require("world.enemies")
+local Sound = require("systems.sound")
 
+local pi = math.pi
 local min = math.min
+local max = math.max
+local sin = math.sin
 
 local lg = love.graphics
 
-local FONT = lg.newFont("assets/fonts/PTSans.ttf", 90)
+local FONT_HERO = lg.newFont("assets/fonts/PTSans.ttf", 112)
+local FONT_CTA = lg.newFont("assets/fonts/PTSans.ttf", 82)
 
 local Director = {
 	t = 0,
 	shot = nil,
 	nextShot = nil,
+	activeCamera = nil,
 
 	transition = nil, -- "out", "hold", "in"
 	transitionT = 0,
@@ -35,6 +43,8 @@ local Director = {
 
 	activeLogo = false,
 	logoT = 0,
+
+	ctx = nil,
 }
 
 local HERO_ANGLE = -math.pi / 6
@@ -95,6 +105,10 @@ function Director.load(name)
 
 	Director.t = 0
 
+	Director.ctx = {
+		firstEnemy = nil,
+	}
+
 	-- Logo-only shot, no world setup
 	if Director.shot.type == "logo" then
 		return
@@ -121,7 +135,18 @@ function Director.load(name)
 	State.mode = "game"
 	resetGame()
 
+	Sound.suppressed = true
+
 	Director.buildScene(Director.shot.scene)
+
+	Sound.suppressed = false
+
+	-- Resolve camera (function or static)
+	if type(Director.shot.camera) == "function" then
+		Director.activeCamera = Director.shot.camera(Director.ctx)
+	else
+		Director.activeCamera = Director.shot.camera
+	end
 end
 
 function Director.update(dt)
@@ -131,8 +156,19 @@ function Director.update(dt)
 	if Director.shot.type ~= "logo" then
 		Sim.update(dt)
 
-		-- Camera (absolute time)
-		Director.shot.camera.update(Director.t)
+		-- Capture first enemy once
+		if not Director.ctx.firstEnemy then
+			local enemies = Enemies.enemies
+
+			if enemies and enemies[1] then
+				Director.ctx.firstEnemy = enemies[1]
+			end
+		end
+
+		-- Camera
+		if Director.activeCamera then
+			Director.activeCamera.update(Director.t)
+		end
 	end
 
     -- Run scheduled actions
@@ -185,6 +221,7 @@ function Director.update(dt)
 			-- Stop immediately after this shot
 			Recorder.enabled = false
 			love.event.quit()
+
 			return
 		end
 
@@ -236,6 +273,10 @@ function Director.draw()
 		Draw.drawWorld()
 		Camera.finish()
 		Camera.present()
+
+		Fonts.set("floaters")
+
+		Draw.drawFloaters()
 	else
 		-- Clear to black for logo cards
 		lg.clear(0, 0, 0, 1)
@@ -246,33 +287,6 @@ function Director.draw()
 
 		lg.setColor(0.31, 0.57, 0.76, 1)
 		lg.rectangle("fill", 0, 0, sw, sh)
-	end
-
-	if Director.transition then
-		local alpha = 1
-
-		if Director.transition == "out" then
-			local t = min(1, Director.transitionT / Director.transitionDur)
-
-			t = t * t * (3 - 2 * t) -- smoothstep
-			alpha = t
-		elseif Director.transition == "hold" then
-			alpha = 1
-		elseif Director.transition == "in" then
-			local t = min(1, Director.transitionT / Director.transitionDur)
-
-			t = t * t * (3 - 2 * t)
-			alpha = 1 - t
-		end
-
-		lg.setColor(0, 0, 0, alpha)
-		lg.rectangle(
-			"fill",
-			0, 0,
-			lg.getWidth(),
-			lg.getHeight()
-		)
-		lg.setColor(1, 1, 1, 1)
 	end
 
 	-- Text beat
@@ -297,44 +311,38 @@ function Director.draw()
 			alpha = (tb.dur - t) / tb.fadeOut
 		end
 
-		alpha = math.max(0, math.min(1, alpha))
-		alpha = alpha * alpha * (3 - 2 * alpha) -- smoothstep
+		alpha = max(0, min(1, alpha))
+		alpha = alpha * alpha * (3 - 2 * alpha)
 
 		-- Vertical motion
 		if tb.fadeIn > 0 and t < tb.fadeIn then
 			local p = t / tb.fadeIn
 			p = p * p * (3 - 2 * p)
-			y = yBase + drift * (1 - p)
 
+			y = yBase + drift * (1 - p)
 		elseif tb.fadeOut > 0 and t > tb.dur - tb.fadeOut then
 			local p = (tb.dur - t) / tb.fadeOut
 			p = p * p * (3 - 2 * p)
+
 			y = yBase - drift * (1 - p)
 		end
 
 		-- Draw
-		lg.setFont(FONT)
+		if tb.smallText then
+			lg.setFont(FONT_CTA)
+		else
+			lg.setFont(FONT_HERO)
+		end
+
 		lg.setColor(1, 1, 1, alpha)
 
 		-- Shadow
 		lg.setColor(0, 0, 0, alpha * 0.35)
-		lg.printf(
-			tb.text,
-			3,
-			y + 3,
-			w,
-			"center"
-		)
+		lg.printf(tb.text, 3, y + 3, w, "center")
 
 		-- Main text
 		lg.setColor(1, 1, 1, alpha)
-		lg.printf(
-			tb.text,
-			0,
-			y,
-			w,
-			"center"
-		)
+		lg.printf(tb.text, 0, y, w, "center")
 
 		lg.setColor(1, 1, 1, 1)
 	end
@@ -345,7 +353,7 @@ function Director.draw()
 		local screenH = lg.getHeight()
 
 		local fadeDur = 0.15
-		local alphaStart = 0.88
+		local alphaStart = 0.60
 
 		-- Fixed banner scale
 		local baseScale = 0.56
@@ -374,6 +382,33 @@ function Director.draw()
 
 		lg.pop()
 
+		lg.setColor(1, 1, 1, 1)
+	end
+
+	if Director.transition then
+		local alpha = 1
+
+		if Director.transition == "out" then
+			local t = min(1, Director.transitionT / Director.transitionDur)
+
+			t = t * t * (3 - 2 * t) -- smoothstep
+			alpha = t
+		elseif Director.transition == "hold" then
+			alpha = 1
+		elseif Director.transition == "in" then
+			local t = min(1, Director.transitionT / Director.transitionDur)
+
+			t = t * t * (3 - 2 * t)
+			alpha = 1 - t
+		end
+
+		lg.setColor(0, 0, 0, alpha)
+		lg.rectangle(
+			"fill",
+			0, 0,
+			lg.getWidth(),
+			lg.getHeight()
+		)
 		lg.setColor(1, 1, 1, 1)
 	end
 end

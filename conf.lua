@@ -1,5 +1,5 @@
 function love.conf(t)
-	t.identity = "Hydra TD"
+	t.identity = "HydraTD"
 	t.window.icon = "assets/appicon_256.png"
 
 	t.console = true

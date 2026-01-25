@@ -15,6 +15,11 @@ local colorBad = Theme.ui.bad
 
 local tick = 0.5 -- seconds per poison tick
 
+local min = math.min
+local sin = math.sin
+local cos = math.cos
+local ipairs = ipairs
+
 local enemyDefs = {
 	grunt = {
 		nameKey = "enemy.grunt",
@@ -87,7 +92,22 @@ local function findEnemyAt(x, y)
 	return nil
 end
 
-local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex)
+-- entering from dx1/dy1, exiting to dx2/dy2
+-- returns offset from tile center
+local function cornerOffset(dx1, dy1, dx2, dy2, r)
+	if dx1 == 1 and dy2 == 1 then return  r,  r end -- Right > Down
+	if dy1 == 1 and dx2 == -1 then return -r,  r end -- Down > Left
+	if dx1 == -1 and dy2 == -1 then return -r, -r end -- Left > Up
+	if dy1 == -1 and dx2 == 1 then return  r, -r end -- Up > Right
+	if dx1 == 1 and dy2 == -1 then return  r, -r end -- Right > Up
+	if dy1 == -1 and dx2 == -1 then return -r, -r end -- Up > Left
+	if dx1 == -1 and dy2 == 1 then return -r,  r end -- Left > Down
+	if dy1 == 1 and dx2 == 1 then return  r,  r end -- Down > Right
+
+	return 0, 0
+end
+
+local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex, opts)
 	local def = enemyDefs[kind]
 
 	local x, y, idx
@@ -97,6 +117,7 @@ local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex)
 		idx = pathIndex
 	else
 		local startGX, startGY = MapMod.map.path[1][1], MapMod.map.path[1][2]
+
 		x, y = MapMod.gridToCenter(startGX, startGY)
 		idx = 1
 	end
@@ -130,6 +151,10 @@ local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex)
 		poisonStacks = 0,
 		poisonTimer = 0,
 		poisonDPS = 0,
+
+		impulseVX = opts and opts.impulseAngle and cos(opts.impulseAngle) * (opts.impulseStrength or 0) or 0,
+		impulseVY = opts and opts.impulseAngle and sin(opts.impulseAngle) * (opts.impulseStrength or 0) or 0,
+		impulseT = opts and opts.impulseTime or 0,
 	}
 
 	if e.boss then
@@ -140,6 +165,8 @@ local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex)
 end
 
 local function updateEnemies(dt)
+	local currentPath = MapMod.map.path
+
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
 		local isBoss = e.boss
@@ -167,7 +194,7 @@ local function updateEnemies(dt)
 			alphaOut = e.exitFade / 0.10
 		end
 
-		e.alpha = math.min(alphaIn, alphaOut)
+		e.alpha = min(alphaIn, alphaOut)
 
 		-- Poison ticks
 		if e.poisonStacks > 0 then
@@ -214,12 +241,7 @@ local function updateEnemies(dt)
 
 				Floaters.addFloater(e.x, e.y - 10, "+" .. e.reward, colorGood[1], colorGood[2], colorGood[3])
 
-				table.insert(deathFX, {
-					x = e.x,
-					y = e.y,
-					r = e.radius,
-					t = 0,
-				})
+				table.insert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
 				State.activeBoss = nil
 				require("world.projectiles").spawnBossDeathExplosion(e.x, e.y, e.radius)
@@ -257,7 +279,7 @@ local function updateEnemies(dt)
 
 			if e.split then
 				for j = 1, e.split.count do
-					spawnEnemy(e.split.child, e.split.childHpMult or 1.0, e.split.childSpdMult or 1.0, e.x, e.y, e.pathIndex)
+					spawnEnemy(e.split.child, e.split.childHpMult or 1.0, e.split.childSpdMult or 1.0, e.x, e.y, e.pathIndex, {impulseAngle = angle, impulseStrength = 60, impulseTime = 0.12})
 				end
 			end
 
@@ -266,12 +288,7 @@ local function updateEnemies(dt)
 
 			Floaters.addFloater(e.x, e.y - 10, "+" .. e.reward, colorGood[1], colorGood[2], colorGood[3])
 
-			table.insert(deathFX, {
-				x = e.x,
-				y = e.y,
-				r = e.radius,
-				t = 0,
-			})
+			table.insert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
 			table.remove(enemies, i)
 
@@ -281,6 +298,7 @@ local function updateEnemies(dt)
 		-- Slow
 		if e.slowTimer > 0 then
 			e.slowTimer = e.slowTimer - dt
+
 			if e.slowTimer <= 0 then
 				e.slowTimer = 0
 				e.slowDuration = 0
@@ -293,32 +311,55 @@ local function updateEnemies(dt)
 		-- Hit flash
 		if e.hitFlash > 0 then
 			e.hitFlash = e.hitFlash - dt
-			if e.hitFlash < 0 then e.hitFlash = 0 end
+
+			if e.hitFlash < 0 then
+				e.hitFlash = 0
+			end
+		end
+
+		if e.impulseT and e.impulseT > 0 then
+			local p = e.impulseT / 0.12
+			local ease = p * p * (3 - 2 * p)
+
+			e.x = e.x + e.impulseVX * dt * ease
+			e.y = e.y + e.impulseVY * dt * ease
+
+			e.impulseT = e.impulseT - dt
+
+			goto continue
 		end
 
 		-- Path movement
-		local nextIndex = math.min(e.pathIndex + 1, #MapMod.map.path)
-		local gx, gy = MapMod.map.path[nextIndex][1], MapMod.map.path[nextIndex][2]
-		local tx, ty = MapMod.gridToCenter(gx, gy)
-		local dx, dy = tx - e.x, ty - e.y
-		local d = Util.len(dx, dy)
+		local remaining = e.speed * dt
+		local path = currentPath
+		local pathLen = #path
 
-		if d < 1e-6 then
-			e.pathIndex = nextIndex
-		else
-			local step = e.speed * dt
+		while remaining > 0 and e.pathIndex < pathLen do
+			local nextIndex = e.pathIndex + 1
+			local gx, gy = path[nextIndex][1], path[nextIndex][2]
+			local tx, ty = MapMod.gridToCenter(gx, gy)
 
-			if step >= d then
-				e.x, e.y = tx, ty
+			local dx = tx - e.x
+			local dy = ty - e.y
+			local d  = Util.len(dx, dy)
+
+			if d < 0.001 then
 				e.pathIndex = nextIndex
 			else
-				e.x = e.x + (dx / d) * step
-				e.y = e.y + (dy / d) * step
+				if remaining >= d then
+					e.x, e.y = tx, ty
+					e.pathIndex = nextIndex
+					remaining = remaining - d
+				else
+					e.x = e.x + (dx / d) * remaining
+					e.y = e.y + (dy / d) * remaining
+					remaining = 0
+				end
 			end
 		end
 
 		-- Reached end
-		if e.pathIndex >= #MapMod.map.path then
+		if e.pathIndex >= #currentPath then
 			if not e.exitFade then
 				e.exitFade = 0.10
 				e.speed = 0

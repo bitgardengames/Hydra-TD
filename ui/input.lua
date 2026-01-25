@@ -9,11 +9,13 @@ local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Maps = require("world.maps")
 local Menu = require("ui.menu")
+local Draw = require("ui.draw")
 local Cursor = require("core.cursor")
 local L = require("core.localization")
 
 local lm = love.mouse
 local floor = math.floor
+local min = math.min
 
 local findEnemyAt = Enemies.findEnemyAt
 
@@ -59,6 +61,62 @@ local function mousepressed(x, y, button)
 
 	local wx, wy = Camera.screenToWorld(x, y)
 
+	-- Shop click
+	if button == 1 and State.mode == "game" then
+		-- Tower shop
+		local buttons = Draw.getShopButtons()
+
+		if buttons then
+			for _, b in ipairs(buttons) do
+				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+					if b.canAfford then
+						State.placing = b.kind
+						State.selectedTower = nil
+
+						--Sound.play("ui_click")
+					else
+						--Sound.play("ui_deny")
+					end
+
+					return
+				end
+			end
+		end
+
+		-- Inspect panel (upgrade and sell)
+		local btns = Draw.getBottomBarButtons()
+
+		if btns then
+			-- Upgrade
+			if btns.upgrade then
+				local b = btns.upgrade
+
+				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+					if State.selectedTower then
+						Towers.upgradeTower(State.selectedTower)
+						--Sound.play("ui_click")
+					end
+
+					return
+				end
+			end
+
+			-- Sell
+			if btns.sell then
+				local b = btns.sell
+
+				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+					if State.selectedTower then
+						Towers.sellTower(State.selectedTower)
+						--Sound.play("ui_sell")
+					end
+
+					return
+				end
+			end
+		end
+	end
+
 	if button == 1 then
 		-- Try enemy selection
 		local enemy = findEnemyAt(wx, wy)
@@ -70,12 +128,6 @@ local function mousepressed(x, y, button)
 			return
 		end
 
-        if wy >= Constants.GRID_H * Constants.TILE then
-            deselect()
-
-            return
-        end
-
         local gx, gy = worldToGrid(wx, wy)
 
 		-- Placement mode
@@ -83,7 +135,10 @@ local function mousepressed(x, y, button)
 			if gx then
 				local ok, why = Towers.addTower(State.placing, gx, gy)
 
-				if not ok then
+				if ok then
+					cancelPlacement()
+					deselect()
+				else
 					if why == "path" or why == "occupied" then
 						Floaters.addFloater(wx, wy, L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 					elseif why == "money" then
@@ -128,7 +183,7 @@ local function keypressed(key)
 			return
 		elseif key == Hotkeys.actions.nextMap then
 			-- Advance campaign
-			State.mapIndex = math.min(State.mapIndex + 1, #Maps)
+			State.mapIndex = min(State.mapIndex + 1, #Maps)
 
 			-- Clear victory state
 			State.endless = false

@@ -1,9 +1,13 @@
 local Camera  = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
+local Constants = require("core.constants")
+
+local mapCX = Constants.GRID_W * Constants.TILE * 0.5
+local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
 return {
     map = 4,
-    duration = 5.0,
+    duration = 7.0,
     next = "shot_04",
 
     scene = {
@@ -14,24 +18,25 @@ return {
         },
 
         wave = {
-			index = 7,
+			index = 6,
             start = true,
-            warmup = 8.0,
+            warmup = 5.0,
         },
     },
 
-    camera = Camera.pan({
-        from = { x = 200, y = 40, zoom = 1.4 },
-        to = { x = 280, y = 40, zoom = 1.6 },
-        duration = 5.0,
-    }),
+	camera = Camera.pan({
+		duration = 7.0,
+		from = {x = mapCX, y = mapCY, zoom = 1.28},
+		to = {x = mapCX, y = mapCY, zoom = 1.28}
+	}),
 
     actions = {
 		{ t = 0, fn = Actions.upgradeTowerAt(9, 9, 2)},
         { t = 0.3, fn = Actions.startWave() },
-        { t = 1.35, fn = Actions.placeTower("lancer", 14, 6) },
-        { t = 2.0, fn = Actions.placeTower("poison", 15, 7) },
-        { t = 2.65, fn = Actions.placeTower("cannon", 12, 7) },
+
+		{ t = 2.55, fn = Actions.placeTower("cannon", 12, 7) },
+		{ t = 3.55, fn = Actions.placeTower("lancer", 14, 7) },
+        { t = 4.55, fn = Actions.placeTower("poison", 12, 9) },
     },
 
 	text = {
@@ -39,8 +44,8 @@ return {
 			t = 0.8,
 			text = "Build",
 			dur = 3,
-			fadeIn = 0.2,
-			fadeOut = 0.3,
+			fadeIn = 0.25,
+			fadeOut = 0.4,
 		},
 	}
 }

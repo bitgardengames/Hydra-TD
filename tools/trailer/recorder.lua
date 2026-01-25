@@ -6,13 +6,13 @@ local recorder = {
 local format = string.format
 
 function recorder.capture()
-    if not recorder.enabled then
+	if not recorder.enabled then
 		return
 	end
 
-    recorder.frame = recorder.frame + 1
+	recorder.frame = recorder.frame + 1
 
-    love.graphics.captureScreenshot(format("trailer/frames/frame_%05d.png", recorder.frame))
+	love.graphics.captureScreenshot(format("trailer/frames/frame_%05d.png", recorder.frame))
 end
 
 return recorder
