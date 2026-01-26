@@ -7,9 +7,10 @@ local Fonts = require("core.fonts")
 local State = require("core.state")
 local Save = require("core.save")
 local MapMod = require("world.map")
-local Maps = require("world.maps")
+local Maps = require("world.map_defs")
 local Enemies = require("world.enemies")
 local Towers = require("world.towers")
+local Effects = require("world.effects")
 local Projectiles = require("world.projectiles")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
@@ -38,14 +39,15 @@ local colorBg = Theme.terrain.bg
 local MAX_DT = 1 / 60
 
 -- Artwork export, always make sure it's disabled
-local DEV_EXPORT = 0
-local DEV_TRAILER = 0
+local ART_EXPORT = 0
+local TRAILER_EXPORT = 0
 
 function resetGame()
     -- Clear world state
     Enemies.clear()
     Towers.clear()
     Projectiles.clear()
+    Effects.clear()
     Floaters.clear()
 
     -- Map state
@@ -97,7 +99,7 @@ end
 
 function love.load()
 	-- Remove for public release
-	if DEV_EXPORT == 1 then
+	if ART_EXPORT == 1 then
 		require("tools.art_export").run()
 
 		return
@@ -125,7 +127,7 @@ function love.load()
 
 	Sound.load()
 
-	if DEV_TRAILER == 1 then
+	if TRAILER_EXPORT == 1 then
 		require("tools.trailer.main").run()
 
 		return
@@ -212,8 +214,9 @@ function love.update(dt)
 	Waves.updateSpawner(dt)
 	Enemies.updateEnemies(dt)
 	Towers.updateTowers(dt)
-	Projectiles.updateProjectiles(dt)
-	Floaters.updateFloaters(dt)
+	Projectiles.update(dt)
+	Effects.update(dt)
+	Floaters.update(dt)
 
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
@@ -232,7 +235,7 @@ function love.update(dt)
 			State.endReason = "Wave 20 cleared"
 
 			Sound.play("victory")
-			--Floaters.addFloater(Constants.SCREEN_W / 2 - 40, Constants.SCREEN_H / 2 - 40, "VICTORY!", colorGood[1], colorGood[2], colorGood[3])
+			--Floaters.add(Constants.SCREEN_W / 2 - 40, Constants.SCREEN_H / 2 - 40, "VICTORY!", colorGood[1], colorGood[2], colorGood[3])
 
 			return
 		end
@@ -241,7 +244,7 @@ function love.update(dt)
 		State.inPrep = true
 		State.prepTimer = 6.0
 		-- Note, move these floaters or signal the message elsewhere. Floaters are for game messaging, not UI messaging
-		--Floaters.addFloater(20, 20, "Wave cleared!", colorGood[1], colorGood[2], colorGood[3])
+		--Floaters.add(20, 20, "Wave cleared!", colorGood[1], colorGood[2], colorGood[3])
 	end
 end
 

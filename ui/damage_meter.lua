@@ -1,0 +1,115 @@
+local Theme = require("core.theme")
+local State = require("core.state")
+local Text = require("ui.text")
+local Towers = require("world.towers")
+local L = require("core.localization")
+
+local lg = love.graphics
+local floor = math.floor
+local format = string.format
+local tostring = tostring
+local tinsert = table.insert
+local tsort = table.sort
+
+local colorText = Theme.ui.text
+
+local DamageMeter = {}
+
+local function formatNum(n)
+    return tostring(floor(n + 0.5)):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+end
+
+function DamageMeter.draw()
+    if not State.stats or not State.stats.showDamageMeter then
+        return
+    end
+
+    local stats = State.stats
+    local isBossView = (stats.damageView == 1)
+
+    local dmgTable = isBossView and stats.bossDamageByTower or stats.damageByTower
+    local total = isBossView and stats.bossTotalDamage  or stats.totalDamage
+
+    if not dmgTable then
+        return
+    end
+
+	-- Sort list
+    local list = {}
+
+    for kind, dmg in pairs(dmgTable) do
+        if dmg > 0 then
+            tinsert(list, {kind = kind, dmg = dmg})
+        end
+    end
+
+    if #list == 0 then
+        return
+    end
+
+    tsort(list, function(a, b)
+        return a.dmg > b.dmg
+    end)
+
+	-- Layout
+    local panelW = 200
+    local barH = 16
+    local lineH = 22
+    local padX = 8
+    local panelPad = 8
+
+	local sw = lg.getDimensions()
+    local x = sw - panelW - 12
+    local y = 12
+
+    local panelH = 32 + (#list * lineH)
+
+    -- Bar width is constrained by panel width
+    local maxBarW = panelW - (padX * 2)
+
+	-- Panel background
+    lg.setColor(0, 0, 0, 0.6)
+    lg.rectangle("fill", x - panelPad, y - panelPad, panelW + panelPad * 2, panelH, 8, 8)
+
+    -- Header
+    lg.setColor(colorText)
+    Text.printShadow(isBossView and L("damage.boss") or L("damage.normal"), x, y)
+
+    y = y + 20
+
+    -- Bars
+    local font  = lg.getFont()
+    local textH = font:getHeight()
+
+    for _, entry in ipairs(list) do
+        local def = Towers.TowerDefs[entry.kind]
+
+        if def then
+			local name = L(def.nameKey)
+            local pct = (total > 0) and (entry.dmg / total) or 0
+            local text = format("%s  %s (%.0f%%)", name, formatNum(entry.dmg), pct * 100)
+
+            -- Bar background (full width inside panel)
+            lg.setColor(def.color[1], def.color[2], def.color[3], 0.25)
+            lg.rectangle("fill", x, y, maxBarW, barH, 6, 6)
+
+            -- Filled portion
+            lg.setColor(def.color[1], def.color[2], def.color[3], 0.6)
+            lg.rectangle("fill", x, y, maxBarW * pct, barH, 6, 6)
+
+            -- Text centered inside bar
+            lg.setColor(1, 1, 1, 0.95)
+            Text.printShadow(text, x + padX, y + (barH - textH) * 0.5)
+
+            y = y + lineH
+        end
+    end
+
+    -- Empty boss damage
+    if isBossView and total <= 0 then
+        lg.setColor(1, 1, 1, 0.6)
+        Text.printShadow(L("damage.noneBoss"), x, y + 4)
+    end
+end
+
+return DamageMeter

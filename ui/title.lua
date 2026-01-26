@@ -1,6 +1,5 @@
--- Canonical Hydra TD title renderer (used by menu + export)
 local Theme = require("core.theme")
-local Draw = require("ui.draw")
+local Entities = require("ui.draw_entities")
 
 local Title = {}
 
@@ -111,7 +110,7 @@ function Title.draw(opts)
 	lg.translate(baseX + lancerVisualW * 0.5, LANCER_Y_OFFSET)
 	lg.scale(LANCER_SCALE, LANCER_SCALE)
 
-	Draw.drawTowerCore("lancer", 0, 0, {angle  = angle, alpha  = alpha, shadow = false})
+	Entities.drawTowerCore("lancer", 0, 0, {angle  = angle, alpha  = alpha, shadow = false})
 
 	lg.pop()
 
@@ -183,7 +182,7 @@ function Title.drawBannerStyle(w, h, opts)
 	lg.translate(baseX + lancerVisualW * 0.5, anchorY)
 	lg.scale(LANCER_SCALE, LANCER_SCALE)
 
-	Draw.drawTowerCore("lancer", 0, 0, {angle  = angle, alpha  = alpha, shadow = false})
+	Entities.drawTowerCore("lancer", 0, 0, {angle  = angle, alpha  = alpha, shadow = false})
 
 	lg.pop()
 

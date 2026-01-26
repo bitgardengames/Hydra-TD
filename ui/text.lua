@@ -1,6 +1,7 @@
 local Text = {}
 
 local lg = love.graphics
+local getColor = lg.getColor
 
 function Text.printShadow(text, x, y, opts)
 	opts = opts or {}
@@ -10,7 +11,7 @@ function Text.printShadow(text, x, y, opts)
 	local alphaMul = opts.alpha or 0.4
 	local shadowColor = opts.shadowColor or {0, 0, 0}
 
-	local r, g, b, a = lg.getColor()
+	local r, g, b, a = getColor()
 
 	-- Shadow
 	lg.setColor(shadowColor[1], shadowColor[2], shadowColor[3], a * alphaMul)
@@ -29,7 +30,7 @@ function Text.printfShadow(text, x, y, w, align, opts)
 	local alphaMul = opts.alpha or 0.4
 	local shadowColor = opts.shadowColor or {0, 0, 0}
 
-	local r, g, b, a = lg.getColor()
+	local r, g, b, a = getColor()
 
 	-- Shadow
 	lg.setColor(shadowColor[1], shadowColor[2], shadowColor[3], a * alphaMul)

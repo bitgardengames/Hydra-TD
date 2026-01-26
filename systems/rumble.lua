@@ -1,4 +1,4 @@
-local Rumble = {}
+local Rumble = {} -- in the jungle
 
 Rumble.enabled = true
 Rumble.globalStrength = 1.0

@@ -1,60 +1,26 @@
-local Util = require("core.util")
 local State = require("core.state")
-local Floaters = require("ui.floaters")
 local Sound = require("systems.sound")
+local Effects = require("world.effects")
 
 local projectiles = {}
-local zaps = {}
-local splashes = {}
-local explosions = {}
 
 local lg = love.graphics
-local lmr = love.math.random
 
+local pi = math.pi
 local sqrt = math.sqrt
+local atan2 = math.atan2
 local min = math.min
 local max = math.max
 local sin = math.sin
 local cos = math.cos
-local pi = math.pi
 local tinsert = table.insert
 local tremove = table.remove
 
-local function spawnZapEffect(x, y, chain)
-	tinsert(zaps, {
-		x = x,
-		y = y,
-		chain = chain,
-		t = 0,
-		life = 0.15,
-	})
-
-	Sound.play("shock")
+local function wobble(t, amp)
+	return sin(t * 6.0) * amp, cos(t * 4.5) * amp
 end
 
-local function updateZaps(dt)
-	for i = #zaps, 1, -1 do
-		local z = zaps[i]
-		z.t = z.t + dt
-
-		if z.t >= z.life then
-			tremove(zaps, i)
-		end
-	end
-end
-
-local function updateSplashes(dt)
-    for i = #splashes, 1, -1 do
-        local s = splashes[i]
-        s.t = s.t + dt
-
-        if s.t >= s.life then
-            tremove(splashes, i)
-        end
-    end
-end
-
-local function spawnProjectile(fromTower, targetEnemy)
+local function spawn(fromTower, targetEnemy)
     local isCannon = fromTower.splash ~= nil
 
     local tx, ty = targetEnemy.x, targetEnemy.y
@@ -123,63 +89,8 @@ local function spawnProjectile(fromTower, targetEnemy)
     tinsert(projectiles, p)
 end
 
-local function spawnBossDeathExplosion(x, y, radius)
-    local count = 28
-
-    -- Core flash + shock ring
-    tinsert(explosions, {
-        x = x,
-        y = y,
-        r = radius,
-        t = 0,
-        life = 0.35,
-        type = "ring",
-    })
-
-    -- Radial particles
-    for i = 1, count do
-        local a = (i / count) * pi * 2
-        local speed = lmr(120, 220)
-
-        tinsert(explosions, {
-            x = x,
-            y = y,
-            vx = cos(a) * speed,
-            vy = sin(a) * speed,
-            r = lmr(2, 4),
-            t = 0,
-            life = lmr() * 0.15 + 0.35,
-            type = "particle",
-        })
-    end
-end
-
-local function updateExplosions(dt)
-    for i = #explosions, 1, -1 do
-        local e = explosions[i]
-        e.t = e.t + dt
-
-        if e.type == "particle" then
-            e.x = e.x + e.vx * dt
-            e.y = e.y + e.vy * dt
-
-            -- slight damping
-            e.vx = e.vx * 0.96
-            e.vy = e.vy * 0.96
-        end
-
-        if e.t >= e.life then
-            tremove(explosions, i)
-        end
-    end
-end
-
-local function updateProjectiles(dt)
+local function update(dt)
 	local Enemies = require("world.enemies")
-
-	updateZaps(dt)
-	updateSplashes(dt)
-	updateExplosions(dt)
 
 	for i = #projectiles, 1, -1 do
 		local p = projectiles[i]
@@ -192,9 +103,7 @@ local function updateProjectiles(dt)
 			goto continue
 		end
 
-		-- =====================================================
 		-- Homing projectiles (Lancer / Slow / Poison)
-		-- =====================================================
 		if p.mode == "homing" then
 			local tx, ty
 			local speed = p.speed
@@ -210,7 +119,10 @@ local function updateProjectiles(dt)
 			local dx = tx - p.x
 			local dy = ty - p.y
 			local dist = sqrt(dx * dx + dy * dy)
-			if dist < 0.001 then dist = 0.001 end
+
+			if dist < 0.001 then
+				dist = 0.001
+			end
 
 			-- Acceleration ramp (Slow tower)
 			if p.minSpeed then
@@ -228,7 +140,7 @@ local function updateProjectiles(dt)
 			-- Slow projectile, wave
 			if p.slow then
 				-- Subtle speed wave along forward direction
-				local wave = sin(p.t * 10) * 0.18 -- ±18% speed modulation
+				local wave = sin(p.t * 10) * 0.18 -- +/-18% speed modulation
 				local waveStep = step * (1 + wave)
 
 				p.x = p.x + nx * waveStep
@@ -241,7 +153,8 @@ local function updateProjectiles(dt)
 
 			-- Hit check
 			local rr = p.r + p.target.radius
-			if (p.x - p.target.x)^2 + (p.y - p.target.y)^2 <= rr * rr then
+
+			if (p.x - p.target.x) ^ 2 + (p.y - p.target.y) ^ 2 <= rr * rr then
 				local dmg = p.damage
 				p.target.hp = p.target.hp - dmg
 
@@ -290,14 +203,15 @@ local function updateProjectiles(dt)
 			end
 		end
 
-		-- =====================================================
 		-- Ground projectiles (Cannon)
-		-- =====================================================
 		if p.mode == "ground" then
 			local dx = p.tx - p.x
 			local dy = p.ty - p.y
 			local dist = sqrt(dx * dx + dy * dy)
-			if dist < 0.001 then dist = 0.001 end
+
+			if dist < 0.001 then
+				dist = 0.001
+			end
 
 			local step = min(p.speed * dt, dist)
 			p.x = p.x + (dx / dist) * step
@@ -326,7 +240,7 @@ local function updateProjectiles(dt)
 					end
 				end
 
-				tinsert(splashes, {
+				tinsert(Effects.splashes, {
 					x = p.x,
 					y = p.y,
 					r = p.splash.radius,
@@ -343,32 +257,66 @@ local function updateProjectiles(dt)
 	end
 end
 
+local function draw()
+	for _, p in ipairs(projectiles) do
+		local rotation = 0
+		local a = min(1, p.t * 10)
+
+		-- Homing: aim at target (or last known)
+		if p.mode == "homing" then
+			local dx = (p.lastTX or p.x) - p.x
+			local dy = (p.lastTY or p.y) - p.y
+
+			rotation = atan2(dy, dx)
+		-- Ground (Cannon): aim at targetted impact point
+		elseif p.mode == "ground" then
+			local dx = (p.tx or p.x) - p.x
+			local dy = (p.ty or p.y) - p.y
+
+			rotation = atan2(dy, dx)
+		end
+
+		if p.splash then
+			lg.setColor(1, 0.8, 0.4, a)
+
+			lg.push()
+			lg.translate(p.x, p.y)
+			lg.rotate(rotation)
+			lg.rectangle("fill", -8, -4, 14, 8, 4, 4)
+			lg.pop()
+		elseif p.slow then
+			--local speedStretch = min(1.25, 1 + (p.speed or 300) / 600)
+
+			lg.setColor(0.7, 0.85, 1, a)
+			lg.push()
+			lg.translate(p.x, p.y)
+			lg.rotate(rotation + pi / 4)
+			lg.rectangle("fill", -4, -4, 8, 8, 2, 2)
+			lg.pop()
+		elseif p.poison then
+			local wx, wy = wobble(p.t or 0, 1.5)
+
+			lg.setColor(0.6, 0.9, 0.5, a)
+			lg.circle("fill", p.x + wx, p.y + wy, p.r + 1.5)
+		else
+			--local speedStretch = min(1.25, 1 + (p.speed or 300) / 600)
+
+			lg.setColor(1, 1, 1, a)
+			lg.circle("fill", p.x, p.y, 4)
+		end
+	end
+end
+
 local function clear()
 	for i = #projectiles, 1, -1 do
 		projectiles[i] = nil
-	end
-
-	for i = #zaps, 1, -1 do
-		zaps[i] = nil
-	end
-
-	for i = #splashes, 1, -1 do
-		splashes[i] = nil
-	end
-
-	for i = #explosions, 1, -1 do
-		explosions[i] = nil
 	end
 end
 
 return {
 	projectiles = projectiles,
-	zaps = zaps,
-	splashes = splashes,
-	explosions = explosions,
-	spawnProjectile = spawnProjectile,
-	spawnZapEffect = spawnZapEffect,
-	spawnBossDeathExplosion = spawnBossDeathExplosion,
-	updateProjectiles = updateProjectiles,
+	spawn = spawn,
+	update = update,
+	draw = draw,
 	clear = clear,
 }

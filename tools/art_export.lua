@@ -2,6 +2,7 @@ local Towers = require("world.towers")
 local Theme = require("core.theme")
 local Enemies = require("world.enemies")
 local Draw = require("ui.draw")
+local DrawEntities = require("ui.draw_entities")
 local Title = require("ui.title")
 
 local Export = {}
@@ -92,7 +93,7 @@ function Export.exportTowers()
 				lg.translate(size * 0.5, size * 0.5)
 				lg.scale(scale, scale)
 
-				Draw.drawTowerCore(kind, 0, 0, {angle = angle, alpha = 1, shadow = false})
+				DrawEntities.drawTowerCore(kind, 0, 0, {angle = angle, alpha = 1, shadow = false})
 
 				lg.pop()
 				lg.setCanvas()
@@ -155,7 +156,7 @@ function Export.exportEnemies()
 					poisonDPS = 0,
 				}
 
-				Draw.drawEnemy(enemy)
+				DrawEntities.drawEnemy(enemy)
 
 				lg.pop()
 				lg.setCanvas()
@@ -271,7 +272,7 @@ function Export.exportAppIcons()
 			lg.translate(size * 0.5, size * 0.5)
 			lg.scale(scale, scale)
 
-			Draw.drawTowerCore(towerId, 0, 0, {angle  = -math.pi / 4, alpha  = 1, shadow = false})
+			DrawEntities.drawTowerCore(towerId, 0, 0, {angle  = -math.pi / 4, alpha  = 1, shadow = false})
 
 			lg.pop()
 			lg.setCanvas()
@@ -325,7 +326,7 @@ function Export.exportSocialAvatar()
 			lg.setColor(outlineColor)
 
 			-- X eyes
-			local armLen   = eyeSize * 2.1
+			local armLen = eyeSize * 2.1
 			local armThick = eyeSize * 1
 
 			local function drawX(x, y)

@@ -10,6 +10,7 @@ local Recorder = require("tools.trailer.recorder")
 local Title = require("ui.title")
 local Fonts = require("core.fonts")
 local Enemies = require("world.enemies")
+local Floaters = require("ui.floaters")
 local Sound = require("systems.sound")
 
 local pi = math.pi
@@ -276,7 +277,7 @@ function Director.draw()
 
 		Fonts.set("floaters")
 
-		Draw.drawFloaters()
+		Floaters.draw()
 	else
 		-- Clear to black for logo cards
 		lg.clear(0, 0, 0, 1)

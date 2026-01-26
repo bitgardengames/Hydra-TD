@@ -5,7 +5,7 @@ local Theme = require("core.theme")
 local State = require("core.state")
 local Util = require("core.util")
 local Save = require("core.save")
-local Maps = require("world.maps")
+local Maps = require("world.map_defs")
 local Title = require("ui.title")
 local Text = require("ui.text")
 local Cursor = require("core.cursor")
@@ -391,7 +391,7 @@ function Menu.draw()
 		lg.setColor(0.31, 0.57, 0.76, 1)
 		lg.rectangle("fill", 0, 0, sw, sh)
 
-		Title.draw({x = sw * 0.5, y = titleY, lancerScale = 3.5, angle = lancerIdle.angle, alpha = 1})
+		Title.draw({x = sw * 0.5, y = titleY, lancerScale = 3.6, angle = lancerIdle.angle, alpha = 1})
 
 		Fonts.set("menu")
 

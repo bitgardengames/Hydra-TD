@@ -1,12 +1,17 @@
-local Constants = require("core.constants")
 local Theme = require("core.theme")
+local TowerDefs = require("world.tower_defs")
 local Util = require("core.util")
 local Sound = require("systems.sound")
 local State = require("core.state")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
 local Rumble = require("systems.rumble")
+local Targeting = require("world.targeting")
 local Difficulty = require("systems.difficulty")
+local Enemies = require("world.enemies")
+local Effects = require("world.effects")
+local Projectiles = require("world.projectiles")
+local Shock = require("world.shock")
 local L = require("core.localization")
 
 local towers = {}
@@ -20,6 +25,8 @@ local max = math.max
 local colorGood = Theme.ui.good
 local colorWarn = Theme.ui.warn
 
+local findTarget = Targeting.findProgressTarget
+
 local shopOrder = {
 	"lancer",
 	"slow",
@@ -28,124 +35,8 @@ local shopOrder = {
 	"cannon",
 }
 
-local towerDefs = {
-	lancer = {
-		nameKey = "tower.lancer",
-		cost = 40,
-		range = 4.2 * Constants.TILE,
-		fireRate = 2.0, -- shots/sec
-		damage = 11,
-		recoilStrength = Constants.TILE * 0.08,
-		recoilDecay = 18,
-		projSpeed = 460,
-		turnSpeed = 15,
-		color = Theme.tower.lancer,
-		upgrade = {
-			cost = 60,
-			dmgMult = 1.15,
-			rangeAdd = 0.30 * Constants.TILE,
-			fireMult = 1.02,
-		}
-	},
-
-	slow = {
-		nameKey = "tower.slow",
-		cost = 50,
-		range = 3.8 * Constants.TILE,
-		fireRate = 1.4,
-		damage = 6,
-		recoilStrength = Constants.TILE * 0.06,
-		recoilDecay = 18,
-		projSpeed = 370,
-		turnSpeed = 10,
-		color = Theme.tower.slow,
-		onHitSlow = {factor = 0.55, dur = 1.4},
-		upgrade = {
-			cost = 55,
-			dmgMult = 1.2,
-			rangeAdd = 0.2 * Constants.TILE,
-			fireMult = 1.02,
-			slowDurAdd = 0.35,
-		}
-	},
-
-	cannon = {
-		nameKey = "tower.cannon",
-		cost = 70,
-		range = 3.2 * Constants.TILE,
-		fireRate = 0.8,
-		damage = 20,
-		recoilStrength = Constants.TILE * 0.14,
-		recoilDecay = 12,
-		projSpeed = 320,
-		turnSpeed = 6,
-		color = Theme.tower.cannon,
-		splash = {
-			radius = 42, -- AoE radius in pixels
-			falloff = 0.65, -- % damage applied at edge
-		},
-		upgrade = {
-			cost = 82,
-			dmgMult = 1.14,
-			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.05,
-			splashAdd = 4, -- increase AoE radius per upgrade
-		}
-	},
-
-	shock = {
-		nameKey = "tower.shock",
-		cost = 65,
-		range = 3.6 * Constants.TILE,
-		fireRate = 1.2,
-		damage = 10,
-		recoilStrength = 0,
-		recoilDecay = 0,
-		turnSpeed = 20,
-		color = Theme.tower.shock,
-		chain = {
-			jumps = 3, -- number of additional enemies
-			radius = 56, -- max distance between jumps
-			falloff = 0.75 -- damage multiplier per jump
-		},
-		upgrade = {
-			cost = 78,
-			dmgMult = 1.22,
-			rangeAdd = 0.12 * Constants.TILE,
-			fireMult = 1.08,
-		}
-	},
-
-	poison = {
-		nameKey = "tower.poison",
-		cost = 60,
-		range = 3.8 * Constants.TILE,
-		fireRate = 1.6,
-		damage = 5,
-		recoilStrength = Constants.TILE * 0.06,
-		recoilDecay = 18,
-		projSpeed = 360,
-		turnSpeed = 10,
-		color = Theme.tower.poison,
-		poison = {
-			dps = 8, -- damage per second per stack
-			dur = 4, -- duration per application
-			maxStacks = 4,
-		},
-		upgrade = {
-			cost = 72,
-			dmgMult = 1.1,
-			rangeAdd = 0.25 * Constants.TILE,
-			fireMult = 1.02,
-			poisonDurAdd = 0.35,
-			poisonDpsMult = 1.08,
-			stackAdd = 1,
-		}
-	},
-}
-
 local function addTower(kind, gx, gy)
-	local def = towerDefs[kind]
+	local def = TowerDefs[kind]
 
 	if State.money < def.cost then
 		return false, "money"
@@ -193,7 +84,7 @@ local function addTower(kind, gx, gy)
 	MapMod.map.blocked[MapMod.makeKey(gx, gy)] = true
 	table.insert(towers, t)
 
-	Floaters.addFloater(x, y - 10, "-" .. def.cost, colorWarn[1], colorWarn[2], colorWarn[3])
+	Floaters.add(x, y - 10, "-" .. def.cost, colorWarn[1], colorWarn[2], colorWarn[3])
 
 	Sound.play("towerPlaced")
 
@@ -256,7 +147,7 @@ local function upgradeTower(t)
 
 	t.levelUpAnim = 1
 
-	Floaters.addFloater(t.x, t.y - 10, L("floater.upgrade"), colorGood[1], colorGood[2], colorGood[3])
+	Floaters.add(t.x, t.y - 10, L("floater.upgrade"), colorGood[1], colorGood[2], colorGood[3])
 
 	Rumble.pulse(0.22, 0.045)
 end
@@ -277,7 +168,7 @@ local function sellTower(t)
 		end
 	end
 
-	Floaters.addFloater(t.x, t.y - 10, "+" .. t.sellValue, colorGood[1], colorGood[2], colorGood[3])
+	Floaters.add(t.x, t.y - 10, "+" .. t.sellValue, colorGood[1], colorGood[2], colorGood[3])
 	State.selectedTower = nil
 
 	Rumble.pulse(0.18, 0.04)
@@ -293,81 +184,7 @@ local function findTowerAt(gx, gy)
 	return nil
 end
 
-local function findTarget(tower, enemies)
-	local best = nil
-	local bestProg = -1
-	local r2 = tower.range * tower.range
-
-	for _, e in ipairs(enemies) do
-		local d = Util.dist2(tower.x, tower.y, e.x, e.y)
-
-		if d <= r2 then
-			local prog = e.pathIndex + (1.0 - (e.slowTimer > 0 and 0.1 or 0.0))
-
-			if prog > bestProg then
-				bestProg = prog
-				best = e
-			end
-		end
-	end
-
-	return best
-end
-
-local function zapChain(target, enemies, chain, baseDamage, tower)
-	local hit = {}
-	local order = {}
-
-	local function zapEnemy(e, dmg)
-		e.hp = e.hp - dmg
-		table.insert(order, {from = target, to = e})
-		hit[e] = true
-
-		-- attribute damage
-		tower.damageDealt = tower.damageDealt + dmg
-		e.lastHitTower = tower
-
-		-- Track damage
-		State.addDamage("shock", dmg, e.boss == true)
-	end
-
-	-- first hit
-	zapEnemy(target, baseDamage)
-
-	local last = target
-	local damage = baseDamage
-
-	for i = 1, chain.jumps do
-		damage = damage * chain.falloff
-		local best = nil
-		local bestDist = chain.radius * chain.radius
-
-		for _, e in ipairs(enemies) do
-			if not hit[e] and e.hp > 0 then
-				local d = Util.dist2(last.x, last.y, e.x, e.y)
-
-				if d <= bestDist then
-					bestDist = d
-					best = e
-				end
-			end
-		end
-
-		if not best then
-			break
-		end
-
-		zapEnemy(best, damage)
-		last = best
-	end
-
-	return order
-end
-
 local function updateTowers(dt)
-	local Enemies = require("world.enemies")
-	local Projectiles = require("world.projectiles")
-
 	for _, t in ipairs(towers) do
 		local target = findTarget(t, Enemies.enemies)
 		local decay = t.def.recoilDecay or 18
@@ -389,7 +206,8 @@ local function updateTowers(dt)
 		-- Charge builds as we approach next shot
 		if t.cooldown > 0 then
 			local pct = 1 - (t.cooldown * t.fireRate)
-			t.charge = math.max(0, math.min(1, pct))
+
+			t.charge = max(0, min(1, pct))
 		else
 			t.charge = 1
 		end
@@ -414,10 +232,13 @@ local function updateTowers(dt)
 			if t.windUp <= 0 and t.target then
 				-- Pew
 				if t.chain then
-					local zapOrder = zapChain(t.target, Enemies.enemies, t.chain, t.damage, t)
-					Projectiles.spawnZapEffect(t.x, t.y, zapOrder)
+					local zapOrder = Shock.fire(t, t.target, Enemies.enemies)
+
+					if zapOrder then
+						Effects.spawnZapEffect(t.x, t.y, zapOrder)
+					end
 				else
-					Projectiles.spawnProjectile(t, t.target)
+					Projectiles.spawn(t, t.target)
 				end
 
 				t.fireAnim = 1
@@ -441,7 +262,7 @@ end
 return {
 	towers = towers,
 	shopOrder = shopOrder,
-	towerDefs = towerDefs,
+	TowerDefs = TowerDefs,
 	addTower = addTower,
 	towerUpgradeCost = towerUpgradeCost,
 	upgradeTower = upgradeTower,

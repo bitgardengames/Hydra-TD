@@ -1,5 +1,5 @@
 local State = require("core.state")
-local Maps = require("world.maps")
+local Maps = require("world.map_defs")
 local Enemies = require("world.enemies")
 local Difficulty = require("systems.difficulty")
 

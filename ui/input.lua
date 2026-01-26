@@ -7,9 +7,9 @@ local Towers = require("world.towers")
 local Enemies = require("world.enemies")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
-local Maps = require("world.maps")
+local Maps = require("world.map_defs")
 local Menu = require("ui.menu")
-local Draw = require("ui.draw")
+local BottomBar = require("ui.bottom_bar")
 local Cursor = require("core.cursor")
 local L = require("core.localization")
 
@@ -21,12 +21,14 @@ local findEnemyAt = Enemies.findEnemyAt
 
 local colorBad = Theme.ui.bad
 
+local TILE = Constants.TILE
+
 local function worldToGrid(wx, wy)
 	if wx < 0 or wy < 0 then
 		return nil, nil
 	end
 
-	return floor(wx / Constants.TILE) + 1, floor(wy / Constants.TILE) + 1
+	return floor(wx / TILE) + 1, floor(wy / TILE) + 1
 end
 
 local function screenToGrid(sx, sy)
@@ -64,7 +66,7 @@ local function mousepressed(x, y, button)
 	-- Shop click
 	if button == 1 and State.mode == "game" then
 		-- Tower shop
-		local buttons = Draw.getShopButtons()
+		local buttons = BottomBar.getShopButtons()
 
 		if buttons then
 			for _, b in ipairs(buttons) do
@@ -84,7 +86,7 @@ local function mousepressed(x, y, button)
 		end
 
 		-- Inspect panel (upgrade and sell)
-		local btns = Draw.getBottomBarButtons()
+		local btns = BottomBar.getBottomBarButtons()
 
 		if btns then
 			-- Upgrade
@@ -140,9 +142,9 @@ local function mousepressed(x, y, button)
 					deselect()
 				else
 					if why == "path" or why == "occupied" then
-						Floaters.addFloater(wx, wy, L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
+						Floaters.add(wx, wy, L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 					elseif why == "money" then
-						Floaters.addFloater(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
+						Floaters.add(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
 					end
 				end
 			end

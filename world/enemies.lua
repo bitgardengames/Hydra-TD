@@ -1,9 +1,10 @@
-local Constants = require("core.constants")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local Util = require("core.util")
 local State = require("core.state")
+local Effects = require("world.effects")
 local MapMod = require("world.map")
+local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
 local L = require("core.localization")
 
@@ -15,69 +16,11 @@ local colorBad = Theme.ui.bad
 
 local tick = 0.5 -- seconds per poison tick
 
+local pi = math.pi
 local min = math.min
 local sin = math.sin
 local cos = math.cos
-local ipairs = ipairs
-
-local enemyDefs = {
-	grunt = {
-		nameKey = "enemy.grunt",
-		hp = 42,
-		speed = 70,
-		reward = 6,
-		score = 10,
-		radius = 10,
-	},
-
-	tank = {
-		nameKey = "enemy.tank",
-		hp = 120,
-		speed = 45,
-		reward = 12,
-		score = 22,
-		radius = 12,
-	},
-
-	runner = {
-		nameKey = "enemy.runner",
-		hp = 28,
-		speed = 95,
-		reward = 6,
-		score = 12,
-		radius = 9,
-	},
-
-	splitter = {
-		nameKey = "enemy.splitter",
-		hp = 70,
-		speed = 60,
-		reward = 10,
-		score = 18,
-		radius = 11,
-		split = {
-			count = 2,
-			child = "runner",
-			childHpMult = 0.6,
-			childSpdMult = 1.1,
-		}
-	},
-
-	boss = {
-		nameKey = "enemy.boss",
-		hp = 7500, -- 7600
-		speed = 45,
-		reward = 75,
-		score = 300,
-		radius = 18,
-		boss = true,
-
-		modifiers = {
-			slow = 0.5, -- 50% slow effectiveness (movement speed)
-			poison = 1.25, -- +25% poison damage taken
-		}
-	},
-}
+local atan2 = math.atan2
 
 local function findEnemyAt(x, y)
 	for _, e in ipairs(enemies) do
@@ -92,23 +35,8 @@ local function findEnemyAt(x, y)
 	return nil
 end
 
--- entering from dx1/dy1, exiting to dx2/dy2
--- returns offset from tile center
-local function cornerOffset(dx1, dy1, dx2, dy2, r)
-	if dx1 == 1 and dy2 == 1 then return  r,  r end -- Right > Down
-	if dy1 == 1 and dx2 == -1 then return -r,  r end -- Down > Left
-	if dx1 == -1 and dy2 == -1 then return -r, -r end -- Left > Up
-	if dy1 == -1 and dx2 == 1 then return  r, -r end -- Up > Right
-	if dx1 == 1 and dy2 == -1 then return  r, -r end -- Right > Up
-	if dy1 == -1 and dx2 == -1 then return -r, -r end -- Up > Left
-	if dx1 == -1 and dy2 == 1 then return -r,  r end -- Left > Down
-	if dy1 == 1 and dx2 == 1 then return  r,  r end -- Down > Right
-
-	return 0, 0
-end
-
 local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex, opts)
-	local def = enemyDefs[kind]
+	local def = EnemyDefs[kind]
 
 	local x, y, idx
 
@@ -239,12 +167,12 @@ local function updateEnemies(dt)
 				State.money = State.money + e.reward
 				State.score = State.score + e.score
 
-				Floaters.addFloater(e.x, e.y - 10, "+" .. e.reward, colorGood[1], colorGood[2], colorGood[3])
+				Floaters.add(e.x, e.y - 10, "+" .. e.reward, colorGood[1], colorGood[2], colorGood[3])
 
 				table.insert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
 				State.activeBoss = nil
-				require("world.projectiles").spawnBossDeathExplosion(e.x, e.y, e.radius)
+				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
 
 				table.remove(enemies, i)
 			end
@@ -279,14 +207,21 @@ local function updateEnemies(dt)
 
 			if e.split then
 				for j = 1, e.split.count do
-					spawnEnemy(e.split.child, e.split.childHpMult or 1.0, e.split.childSpdMult or 1.0, e.x, e.y, e.pathIndex, {impulseAngle = angle, impulseStrength = 60, impulseTime = 0.12})
+					-- derive movement direction
+					local px, py = MapMod.gridToCenter(currentPath[e.pathIndex][1], currentPath[e.pathIndex][2])
+					local baseAngle = atan2(e.y - py, e.x - px)
+
+					-- add slight spread
+					local spread = (j - (e.split.count + 1) / 2) * 0.35
+
+					spawnEnemy(e.split.child, e.split.childHpMult or 1.0, e.split.childSpdMult or 1.0, e.x, e.y, e.pathIndex, {impulseAngle = baseAngle + spread, impulseStrength = 60, impulseTime = 0.12})
 				end
 			end
 
 			State.money = State.money + e.reward
 			State.score = State.score + e.score
 
-			Floaters.addFloater(e.x, e.y - 10, "+" .. e.reward, colorGood[1], colorGood[2], colorGood[3])
+			Floaters.add(e.x, e.y - 10, "+" .. e.reward, colorGood[1], colorGood[2], colorGood[3])
 
 			table.insert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
@@ -379,7 +314,7 @@ local function updateEnemies(dt)
 					State.endReason = L("game.bossBreach")
 
 					Sound.play("gameOver")
-					Floaters.addFloater(e.x, e.y - 14, L("floater.bossBreach"), colorBad[1], colorBad[2], colorBad[3])
+					Floaters.add(e.x, e.y - 14, L("floater.bossBreach"), colorBad[1], colorBad[2], colorBad[3])
 
 					return
 				end
@@ -388,7 +323,7 @@ local function updateEnemies(dt)
 				local livesAnim = State.livesAnim or 0
 				State.livesAnim = livesAnim + (1 - livesAnim) * 0.6
 
-				Floaters.addFloater(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
+				Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
 
 				table.remove(enemies, i)
 
@@ -432,7 +367,7 @@ end
 return {
 	enemies = enemies,
 	deathFX = deathFX,
-	enemyDefs = enemyDefs,
+	EnemyDefs = EnemyDefs,
 	findEnemyAt = findEnemyAt,
 	spawnEnemy = spawnEnemy,
 	updateEnemies = updateEnemies,

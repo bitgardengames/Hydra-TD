@@ -4,6 +4,7 @@ local Projectiles = require("world.projectiles")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local State = require("core.state")
+local Effects = require("world.effects")
 
 local Sim = {}
 
@@ -17,8 +18,9 @@ function Sim.update(dt)
 	Waves.updateSpawner(dt)
 	Enemies.updateEnemies(dt)
 	Towers.updateTowers(dt)
-	Projectiles.updateProjectiles(dt)
-	Floaters.updateFloaters(dt)
+	Projectiles.update(dt)
+	Effects.update(dt)
+	Floaters.update(dt)
 end
 
 return Sim
