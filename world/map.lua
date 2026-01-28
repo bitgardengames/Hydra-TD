@@ -4,12 +4,17 @@ local map = {
 	blocked = {},
 	isPath = {},
 	path = {},
+	pathWorld = {},
 }
 
 local currentMap = nil
 
 local function makeKey(gx, gy)
 	return gx .. "," .. gy
+end
+
+local function gridToCenter(gx, gy)
+	return (gx - 0.5) * Constants.TILE, (gy - 0.5) * Constants.TILE
 end
 
 local function loadPath(points)
@@ -21,8 +26,8 @@ local function loadPath(points)
 		local bx, by = points[i + 1][1], points[i + 1][2]
         local dx = (bx > ax) and 1 or (bx < ax and -1 or 0)
         local dy = (by > ay) and 1 or (by < ay and -1 or 0)
-
         local x, y = ax, ay
+
         table.insert(map.path, {x, y})
         map.isPath[makeKey(x, y)] = true
 
@@ -33,6 +38,15 @@ local function loadPath(points)
             map.isPath[makeKey(x, y)] = true
         end
     end
+
+	-- Build world-space path points
+	map.pathWorld = {}
+
+	for i, p in ipairs(map.path) do
+		local x, y = gridToCenter(p[1], p[2])
+
+		map.pathWorld[i] = {x, y}
+	end
 end
 
 local function buildPath(mapDef)
@@ -54,10 +68,6 @@ local function canPlaceAt(gx, gy)
 	end
 
 	return true
-end
-
-local function gridToCenter(gx, gy)
-	return (gx - 0.5) * Constants.TILE, (gy - 0.5) * Constants.TILE
 end
 
 local function clearBlocked()

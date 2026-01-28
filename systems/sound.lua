@@ -14,7 +14,7 @@ local la = love.audio
 local lmr = love.math.random
 
 local function clampHalf(v)
-	return v * 0.5
+	return v * 0.25
 end
 
 -- Play a sound effect
@@ -135,6 +135,15 @@ function Sound.load()
 			la.newSource("assets/sounds/Shadow Punch 2.ogg", "static"),
 		},
 		jitter = true,
+	}
+
+	-- NYI
+    Sound.sfx.towerUpgraded = {
+		source = la.newSource("assets/sounds/sell.wav", "static"),
+	}
+
+    Sound.sfx.towerSold = {
+		source = la.newSource("assets/sounds/sell.wav", "static"),
 	}
 
     Sound.sfx.lancer = {

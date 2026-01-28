@@ -51,6 +51,8 @@ Theme.ui = {
     selected = {1.00, 0.88, 0.40},
 }
 
+Theme.menu = {0.31, 0.57, 0.76, 1}
+
 Theme.towerShadow = {0, 0, 0, 0.35}
 
 Theme.text = {}

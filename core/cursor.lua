@@ -16,13 +16,15 @@ local abs = math.abs
 
 -- Call every frame
 function Cursor.update(dt)
-	Cursor.pollJoystick(dt)
+	local js = love.joystick.getJoysticks()[1]
 
-	if Cursor.usingVirtual then
+	if js then
 		Cursor.updateVirtual(dt)
+	elseif not Cursor.usingVirtual then
+		Cursor.x, Cursor.y = love.mouse.getPosition()
 	end
 
-	-- Clamp to screen
+	-- Clamp
 	local sw, sh = lg.getDimensions()
 
 	Cursor.x = max(0, min(sw, Cursor.x))
@@ -86,7 +88,6 @@ function Cursor.updateVirtual(dt)
 	Cursor.x = Cursor.x + ax * Cursor.speed * dt
 	Cursor.y = Cursor.y + ay * Cursor.speed * dt
 end
-
 -- Call this when a gamepad is used
 function Cursor.enableVirtual()
 	if Cursor.usingVirtual then
@@ -118,21 +119,6 @@ function Cursor.disableVirtual()
 	end
 
 	Cursor.usingVirtual = false
-end
-
-function Cursor.pollJoystick(dt)
-	local js = love.joystick.getJoysticks()[1]
-
-	if not js then
-		return
-	end
-
-	local ax = js:getAxis(1)
-	local ay = js:getAxis(2)
-
-	if abs(ax) > Cursor.deadzone or abs(ay) > Cursor.deadzone then
-		Cursor.enableVirtual()
-	end
 end
 
 function Cursor.mousemoved(x, y)

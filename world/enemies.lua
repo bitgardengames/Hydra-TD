@@ -16,18 +16,19 @@ local colorBad = Theme.ui.bad
 
 local tick = 0.5 -- seconds per poison tick
 
-local pi = math.pi
 local min = math.min
+local max = math.max
 local sin = math.sin
 local cos = math.cos
 local atan2 = math.atan2
+local sqrt = math.sqrt
 
 local function findEnemyAt(x, y)
 	for _, e in ipairs(enemies) do
 		local dx = x - e.x
 		local dy = y - e.y
 
-		if dx * dx + dy * dy <= e.radius * e.radius then
+		if dx * dx + dy * dy <= e.radius2 then
 			return e
 		end
 	end
@@ -63,6 +64,7 @@ local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex, opts
 		reward = def.reward,
 		score = def.score,
 		radius = def.radius,
+		radius2 = def.radius * def.radius,
 		split = def.split,
 		hitFlash = 0,
 		dying = false,
@@ -93,7 +95,9 @@ local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex, opts
 end
 
 local function updateEnemies(dt)
-	local currentPath = MapMod.map.path
+	local path = MapMod.map.path
+	local pathWorld = MapMod.map.pathWorld
+	local pathLen = #path
 
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
@@ -208,7 +212,9 @@ local function updateEnemies(dt)
 			if e.split then
 				for j = 1, e.split.count do
 					-- derive movement direction
-					local px, py = MapMod.gridToCenter(currentPath[e.pathIndex][1], currentPath[e.pathIndex][2])
+					local node = pathWorld[e.pathIndex]
+					local px = node[1]
+					local py = node[2]
 					local baseAngle = atan2(e.y - py, e.x - px)
 
 					-- add slight spread
@@ -266,35 +272,41 @@ local function updateEnemies(dt)
 
 		-- Path movement
 		local remaining = e.speed * dt
-		local path = currentPath
-		local pathLen = #path
 
 		while remaining > 0 and e.pathIndex < pathLen do
 			local nextIndex = e.pathIndex + 1
-			local gx, gy = path[nextIndex][1], path[nextIndex][2]
-			local tx, ty = MapMod.gridToCenter(gx, gy)
+			local node = pathWorld[nextIndex]
+			local tx, ty = node[1], node[2]
 
 			local dx = tx - e.x
 			local dy = ty - e.y
-			local d  = Util.len(dx, dy)
+			local d2 = dx * dx + dy * dy
 
-			if d < 0.001 then
+			if d2 < 0.001 then
+				-- Snap to node
+				e.x, e.y = tx, ty
 				e.pathIndex = nextIndex
 			else
+				local d = sqrt(d2)
+
 				if remaining >= d then
+					-- Consume entire segment
 					e.x, e.y = tx, ty
 					e.pathIndex = nextIndex
 					remaining = remaining - d
 				else
-					e.x = e.x + (dx / d) * remaining
-					e.y = e.y + (dy / d) * remaining
+					-- Partial move
+					local inv = remaining / d
+					
+					e.x = e.x + dx * inv
+					e.y = e.y + dy * inv
 					remaining = 0
 				end
 			end
 		end
 
-		-- Reached end
-		if e.pathIndex >= #currentPath then
+		-- Reached end of path
+		if e.pathIndex >= pathLen then
 			if not e.exitFade then
 				e.exitFade = 0.10
 				e.speed = 0
@@ -314,7 +326,8 @@ local function updateEnemies(dt)
 					State.endReason = L("game.bossBreach")
 
 					Sound.play("gameOver")
-					Floaters.add(e.x, e.y - 14, L("floater.bossBreach"), colorBad[1], colorBad[2], colorBad[3])
+					Floaters.add(e.x, e.y - 14, L("floater.bossBreach"),
+						colorBad[1], colorBad[2], colorBad[3])
 
 					return
 				end
@@ -323,7 +336,8 @@ local function updateEnemies(dt)
 				local livesAnim = State.livesAnim or 0
 				State.livesAnim = livesAnim + (1 - livesAnim) * 0.6
 
-				Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
+				Floaters.add(e.x, e.y - 10, "-1",
+					colorBad[1], colorBad[2], colorBad[3])
 
 				table.remove(enemies, i)
 

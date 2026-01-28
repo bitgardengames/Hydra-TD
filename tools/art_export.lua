@@ -1,6 +1,8 @@
 local Towers = require("world.towers")
+local TowersDefs = require("world.tower_defs")
 local Theme = require("core.theme")
 local Enemies = require("world.enemies")
+local EnemyDefs = require("world.enemy_defs")
 local Draw = require("ui.draw")
 local DrawEntities = require("ui.draw_entities")
 local Title = require("ui.title")
@@ -8,6 +10,8 @@ local Title = require("ui.title")
 local Export = {}
 
 local lg = love.graphics
+
+local colorMenu = Theme.menu
 
 local SIZES = {64, 128, 256, 512, 1024}
 local REF_ICON_SIZE = 64
@@ -49,9 +53,9 @@ local BANNERS = {
 -- Could also do a promo banner asset variation, with call to action like "Wishlist on steam {steam icon}" etc.
 
 local TRANSPARENT_BANNERS = {
-	store_main = true,
-	store_header = true,
-	store_small = true,
+	main_capsule = true,
+	header_capsule = true,
+	small_capsule = true,
 	desktop  = true,
 }
 
@@ -80,7 +84,7 @@ function Export.exportTowers()
 		action = -math.pi / 4, -- acrtion
 	}
 
-	for kind in pairs(Towers.towerDefs) do
+	for kind in pairs(TowersDefs) do
 		for poseName, angle in pairs(POSES) do
 			for _, size in ipairs(SIZES) do
 				local canvas = lg.newCanvas(size, size, {msaa = 8})
@@ -106,7 +110,7 @@ end
 
 -- Enemy export (alive + dead)
 function Export.exportEnemies()
-	for kind, def in pairs(Enemies.enemyDefs) do
+	for kind, def in pairs(EnemyDefs) do
 		for _, size in ipairs(SIZES) do
 			for _, isDead in ipairs({false, true}) do
 				local canvas = lg.newCanvas(size, size, {msaa = 8})
@@ -196,7 +200,7 @@ local function drawOutlinedText(text, x, y, font, opts)
 end
 
 local function drawBannerBackground(w, h)
-	lg.setColor(0.31, 0.57, 0.76) -- soft arcade
+	lg.setColor(Theme.menu) -- soft arcade
 	lg.rectangle("fill", 0, 0, w, h)
 
 	lg.setBlendMode("alpha")
@@ -220,6 +224,7 @@ end
 
 -- Banner group
 local function drawBannerGroup(w, h)
+	Title.invalidateCache()
 	Title.drawBannerStyle(w, h, { angle = -math.pi / 6 })
 end
 
@@ -264,7 +269,7 @@ function Export.exportAppIcons()
 		local canvas = lg.newCanvas(size, size, { msaa = samples })
 		local scale = (size / REF_ICON_SIZE) * ICON_FILL
 
-		for towerId, _ in pairs(Towers.towerDefs) do
+		for towerId, _ in pairs(TowersDefs) do
 			lg.setCanvas(canvas)
 			lg.clear(0, 0, 0, 0)
 			lg.setColor(1, 1, 1, 1)
@@ -293,7 +298,7 @@ function Export.exportSocialAvatar()
 	local ENEMY_RADIUS_REF = Constants.TILE * 0.42
 	local OUTLINE_RATIO = 3 / ENEMY_RADIUS_REF
 
-	for kind, data in pairs(Towers.towerDefs) do
+	for kind, data in pairs(TowersDefs) do
 		for _, size in ipairs(sizes) do
 			local canvas = lg.newCanvas(size, size, {msaa = 8})
 			lg.setCanvas({canvas, stencil = true})
@@ -446,7 +451,7 @@ function Export.exportCogSocialAvatar()
 		lg.pop()
 	end
 
-	for kind, data in pairs(Towers.towerDefs) do
+	for kind, data in pairs(TowersDefs) do
 		for _, size in ipairs(sizes) do
 			local canvas = lg.newCanvas(size, size, { msaa = 8, format = "rgba8"})
 			lg.setCanvas({ canvas, stencil = true })
@@ -625,7 +630,7 @@ function Export.exportCogSocialAvatarAnim()
 		lg.pop()
 	end
 
-	for kind, data in pairs(Towers.towerDefs) do
+	for kind, data in pairs(TowersDefs) do
 		for _, size in ipairs(sizes) do
 			for frame = 0, FRAMES - 1 do
 				local t   = frame / FRAMES
@@ -767,8 +772,8 @@ function Export.run()
 	ensureDirs()
 	--Export.exportTowers()
 	--Export.exportEnemies()
-	--Export.exportBanners()
-	Export.exportAppIcons()
+	Export.exportBanners()
+	--Export.exportAppIcons()
 	--Export.exportSocialAvatar()
 	--Export.exportCogSocialAvatar()
 	--Export.exportCogSocialAvatarAnim()

@@ -18,6 +18,17 @@ local dist2 = Util.dist2
 	t.targetMode = Targeting.MODES.PROGRESS
 --]]
 
+function Targeting.isValidTarget(tower, e)
+	if not e or e.hp <= 0 or e.dying then
+		return false
+	end
+
+	local dx = e.x - tower.x
+	local dy = e.y - tower.y
+
+	return dx * dx + dy * dy <= tower.range2
+end
+
 -- Target enemy furthest along the path (primary TD heuristic)
 function Targeting.findProgressTarget(tower, enemies)
     local best = nil

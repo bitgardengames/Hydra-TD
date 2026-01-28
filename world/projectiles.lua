@@ -1,6 +1,8 @@
 local State = require("core.state")
 local Sound = require("systems.sound")
 local Effects = require("world.effects")
+local Enemies = require("world.enemies")
+local WorldMap = require("world.map")
 
 local projectiles = {}
 
@@ -26,8 +28,6 @@ local function spawn(fromTower, targetEnemy)
     local tx, ty = targetEnemy.x, targetEnemy.y
 
 	if isCannon then
-		local WorldMap = require("world.map")
-
 		-- base lead scaled by enemy speed
 		local speedFactor = min(targetEnemy.speed / 120, 0.18)
 		local lead = 0.28 + speedFactor
@@ -66,6 +66,9 @@ local function spawn(fromTower, targetEnemy)
 		poison = fromTower.poison and {dps = fromTower.poison.dps, dur = fromTower.poison.dur, maxStacks = fromTower.poison.maxStacks} or nil,
     }
 
+	p.hitRadius = p.r + targetEnemy.radius
+	p.hitRadius2 = p.hitRadius * p.hitRadius
+
 	if fromTower.slow then
 		-- start very slow, ramp deliberately
 		p.minSpeed = fromTower.projSpeed * 0.30
@@ -90,8 +93,6 @@ local function spawn(fromTower, targetEnemy)
 end
 
 local function update(dt)
-	local Enemies = require("world.enemies")
-
 	for i = #projectiles, 1, -1 do
 		local p = projectiles[i]
 
@@ -103,25 +104,20 @@ local function update(dt)
 			goto continue
 		end
 
-		-- Homing projectiles (Lancer / Slow / Poison)
+		----------------------------------------------------------------
+		-- HOMING PROJECTILES (Lancer / Slow / Poison)
+		----------------------------------------------------------------
 		if p.mode == "homing" then
-			local tx, ty
 			local speed = p.speed
 			local e = p.target
 
-			if p.target and p.target.hp > 0 then
-				tx, ty = p.target.x, p.target.y
+			-- Target tracking
+			local tx, ty
+			if e and e.hp > 0 then
+				tx, ty = e.x, e.y
 				p.lastTX, p.lastTY = tx, ty
 			else
 				tx, ty = p.lastTX, p.lastTY
-			end
-
-			local dx = tx - p.x
-			local dy = ty - p.y
-			local dist = sqrt(dx * dx + dy * dy)
-
-			if dist < 0.001 then
-				dist = 0.001
 			end
 
 			-- Acceleration ramp (Slow tower)
@@ -132,35 +128,38 @@ local function update(dt)
 				speed = p.minSpeed + (p.maxSpeed - p.minSpeed) * t
 			end
 
-			-- Base forward step
-			local step = min(speed * dt, dist)
-			local nx = dx / dist
-			local ny = dy / dist
+			-- Direction + distance
+			local dx = tx - p.x
+			local dy = ty - p.y
+			local d2 = dx * dx + dy * dy
 
-			-- Slow projectile, wave
-			if p.slow then
-				-- Subtle speed wave along forward direction
-				local wave = sin(p.t * 10) * 0.18 -- +/-18% speed modulation
-				local waveStep = step * (1 + wave)
-
-				p.x = p.x + nx * waveStep
-				p.y = p.y + ny * waveStep
-			-- Normal homing
-			else
-				p.x = p.x + nx * step
-				p.y = p.y + ny * step
+			if d2 < 0.000001 then
+				d2 = 0.000001
 			end
 
-			-- Hit check
-			local rr = p.r + p.target.radius
+			local invDist = 1 / sqrt(d2)
+			local nx = dx * invDist
+			local ny = dy * invDist
+			local dist = d2 * invDist
 
-			if (p.x - p.target.x) ^ 2 + (p.y - p.target.y) ^ 2 <= rr * rr then
+			-- Slow projectile wave modulation
+			local wave = p.slow and (1 + sin(p.t * 10) * 0.18) or 1
+			local step = min(speed * dt * wave, dist)
+
+			p.x = p.x + nx * step
+			p.y = p.y + ny * step
+
+			-- Hit check (squared)
+			local dxh = p.x - e.x
+			local dyh = p.y - e.y
+
+			if dxh * dxh + dyh * dyh <= p.hitRadius2 then
 				local dmg = p.damage
-				p.target.hp = p.target.hp - dmg
+				e.hp = e.hp - dmg
 
-				-- Attribute damage
+				-- Attribution
 				p.sourceTower.damageDealt = p.sourceTower.damageDealt + dmg
-				p.target.lastHitTower = p.sourceTower
+				e.lastHitTower = p.sourceTower
 
 				-- Slow application
 				if p.slow then
@@ -193,42 +192,57 @@ local function update(dt)
 					e.poisonSource = p.sourceTower
 				end
 
-				if p.target.hitFlash <= 0 then
-					p.target.hitFlash = 0.05
+				if e.hitFlash <= 0 then
+					e.hitFlash = 0.05
 				end
 
-				State.addDamage(p.sourceKind, dmg, p.target.boss == true)
+				State.addDamage(p.sourceKind, dmg, e.boss == true)
 				tremove(projectiles, i)
 				goto continue
 			end
 		end
 
-		-- Ground projectiles (Cannon)
+		----------------------------------------------------------------
+		-- GROUND PROJECTILES (Cannon)
+		----------------------------------------------------------------
 		if p.mode == "ground" then
 			local dx = p.tx - p.x
 			local dy = p.ty - p.y
-			local dist = sqrt(dx * dx + dy * dy)
+			local d2 = dx * dx + dy * dy
 
-			if dist < 0.001 then
-				dist = 0.001
+			if d2 < 0.000001 then
+				d2 = 0.000001
 			end
 
+			local invDist = 1 / sqrt(d2)
+			local nx = dx * invDist
+			local ny = dy * invDist
+			local dist = d2 * invDist
+
 			local step = min(p.speed * dt, dist)
-			p.x = p.x + (dx / dist) * step
-			p.y = p.y + (dy / dist) * step
 
-			if dist <= p.r + 1 then
+			p.x = p.x + nx * step
+			p.y = p.y + ny * step
+
+			-- Impact check (squared)
+			local hitR = p.r + 1
+			if d2 <= hitR * hitR then
 				local falloff = p.splash.falloff
+				local enemies = Enemies.enemies
+				local r = p.splash.radius
+				local r2 = r * r
 
-				for j = #Enemies.enemies, 1, -1 do
-					local e = Enemies.enemies[j]
+				for j = #enemies, 1, -1 do
+					local e = enemies[j]
 					local dx2 = e.x - p.x
 					local dy2 = e.y - p.y
-					local d2 = dx2 * dx2 + dy2 * dy2
-					local r = p.splash.radius
+					local ed2 = dx2 * dx2 + dy2 * dy2
 
-					if d2 <= r * r then
-						local t = max(0, 1 - sqrt(d2) / r)
+					if ed2 <= r2 then
+						-- Squared falloff (no sqrt)
+						local t = 1 - (ed2 / r2)
+						if t < 0 then t = 0 end
+
 						local dmg = p.damage * (falloff + (1 - falloff) * t)
 						e.hp = e.hp - dmg
 

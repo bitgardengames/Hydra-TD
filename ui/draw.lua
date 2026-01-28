@@ -9,12 +9,13 @@ local Floaters = require("ui.floaters")
 local Fonts = require("core.fonts")
 
 local function drawWorld()
-	DrawWorld.drawGrass()
+	DrawWorld.drawWorld()
 	DrawWorld.drawGrid()
-	DrawWorld.drawPath()
+
 	DrawEntities.drawTowerGhost()
 	DrawEntities.drawTowers()
 	DrawEntities.drawEnemies()
+
 	Projectiles.draw()
 	Effects.draw()
 end

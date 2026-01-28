@@ -15,9 +15,10 @@ local Projectiles = require("world.projectiles")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Draw = require("ui.draw")
+local DrawWorld = require("ui.draw_world")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
-local Menu = require("ui.menu")
+local Menu = require("ui.menu.menu")
 local Hotkeys = require("core.hotkeys")
 local Rumble = require("systems.rumble")
 local Localization = require("core.localization")
@@ -53,6 +54,7 @@ function resetGame()
     -- Map state
     MapMod.clearBlocked()
     MapMod.buildPath(Maps[State.mapIndex])
+	DrawWorld.rebuild()
 
 	local diff = Difficulty.get()
 
@@ -235,7 +237,6 @@ function love.update(dt)
 			State.endReason = "Wave 20 cleared"
 
 			Sound.play("victory")
-			--Floaters.add(Constants.SCREEN_W / 2 - 40, Constants.SCREEN_H / 2 - 40, "VICTORY!", colorGood[1], colorGood[2], colorGood[3])
 
 			return
 		end
@@ -243,8 +244,6 @@ function love.update(dt)
 		-- Otherwise continue as normal
 		State.inPrep = true
 		State.prepTimer = 6.0
-		-- Note, move these floaters or signal the message elsewhere. Floaters are for game messaging, not UI messaging
-		--Floaters.add(20, 20, "Wave cleared!", colorGood[1], colorGood[2], colorGood[3])
 	end
 end
 
@@ -353,6 +352,10 @@ function love.mousepressed(x, y, button)
 	Input.mousepressed(x, y, button)
 end
 
+function love.mousereleased(x, y, button)
+	Input.mousereleased(x, y, button)
+end
+
 function love.keypressed(key)
 	if key == Hotkeys.actions.screenshot then
 		local time = os.date("%Y-%m-%d_%H-%M-%S")
@@ -404,6 +407,10 @@ function love.gamepadpressed(_, button)
 	elseif button == "b" then
 		love.mousepressed(Cursor.x, Cursor.y, 2)
 	end
+end
+
+function love.gamepadreleased(_, button)
+	Input.mousereleased(x, y, button)
 end
 
 function love.mousemoved(x, y, dx, dy)

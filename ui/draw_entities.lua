@@ -359,8 +359,6 @@ local function drawTowerCore(kind, cx, cy, opts)
 	local size = TILE * 0.42
 	local color = def.color
 	local angle = opts.angle or -math.pi / 2
-	local rx = opts.rx or 0
-	local ry = opts.ry or 0
 	local alpha = opts.alpha or 1
 	local tintR = opts.tintR or 1
 	local tintG = opts.tintG or 1
@@ -391,8 +389,14 @@ local function drawTowerCore(kind, cx, cy, opts)
 
 	-- Body + Barrel
 	lg.push()
-	lg.translate(cx + rx, cy + ry)
-	lg.rotate(angle)
+	lg.translate(cx, cy)
+
+	if def.canRotate then
+		lg.rotate(angle)
+	end
+
+	-- recoil is now stable and cannot "slide"
+	lg.translate(-(opts.recoil or 0), 0)
 
 	-- Cannon
 	if kind == "cannon" then
@@ -488,13 +492,7 @@ local function drawTowerGhost()
 	lg.setColor(ok and colorGood[1] or colorBad[1], ok and colorGood[2] or colorBad[2], ok and colorGood[3] or colorBad[3], 0.45 * fade)
 	lg.circle("line", cx, cy, def.range)
 
-	drawTowerCore(State.placing, cx, cy, {
-		alpha = (ok and 0.45 or 0.25) * fade,
-		tintR = 1,
-		tintG = ok and 1 or 0.4,
-		tintB = ok and 1 or 0.4,
-		shadow = false,
-	})
+	drawTowerCore(State.placing, cx, cy, {alpha = (ok and 0.45 or 0.25) * fade, tintR = 1, tintG = ok and 1 or 0.4, tintB = ok and 1 or 0.4, shadow = false})
 end
 
 local function drawTowers()
@@ -511,15 +509,7 @@ local function drawTowers()
 		lg.circle("line", selected.x, selected.y, selected.range)
 
 		lg.setLineWidth(2)
-		lg.rectangle(
-			"line",
-			selected.x - size * 0.6 - pad,
-			selected.y - size * 0.6 - pad,
-			size * 1.2 + pad * 2,
-			size * 1.2 + pad * 2,
-			6 + pad,
-			6 + pad
-		)
+		lg.rectangle("line", selected.x - size * 0.6 - pad, selected.y - size * 0.6 - pad, size * 1.2 + pad * 2, size * 1.2 + pad * 2, 6 + pad, 6 + pad)
 		lg.setLineWidth(1)
 	end
 
@@ -538,6 +528,7 @@ local function drawTowers()
 			if isNew then
 				local p = 1 - anim
 				local ease = p * p * (3 - 2 * p)
+
 				a = ease
 				y = baseY + (1 - ease) * pipH
 			end
@@ -547,23 +538,8 @@ local function drawTowers()
 		end
 
 		local cx, cy = t.x, t.y
-		local dx, dy = 0, -1
 
-		if t.target then
-			dx = t.target.x - cx
-			dy = t.target.y - cy
-			dx, dy = Util.norm(dx, dy)
-		end
-
-		local rx = -dx * t.recoil
-		local ry = -dy * t.recoil
-
-		drawTowerCore(t.kind, cx, cy, {
-			angle = t.angle,
-			rx = rx,
-			ry = ry,
-			alpha = 1,
-		})
+		drawTowerCore(t.kind, cx, cy, {angle = t.angle, recoil = t.recoil, alpha = 1})
 
 		if anim > 0 then
 			local a = anim

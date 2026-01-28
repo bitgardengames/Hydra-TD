@@ -8,7 +8,8 @@ local Enemies = require("world.enemies")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Maps = require("world.map_defs")
-local Menu = require("ui.menu")
+local Menu = require("ui.menu.menu")
+local Settings = require("ui.menu.screens.settings")
 local BottomBar = require("ui.bottom_bar")
 local Cursor = require("core.cursor")
 local L = require("core.localization")
@@ -51,10 +52,18 @@ local function updateHover()
 end
 
 local function mousepressed(x, y, button)
+	-- Menu screens
 	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" then
 		Menu.mousepressed(x, y, button)
 
 		return
+	end
+
+	-- Pause overlay
+	if State.paused then
+		if Menu.mousepressedPause(x, y, button) then
+			return
+		end
 	end
 
 	if State.lives <= 0 then
@@ -63,7 +72,7 @@ local function mousepressed(x, y, button)
 
 	local wx, wy = Camera.screenToWorld(x, y)
 
-	-- Shop click
+	-- Shop UI
 	if button == 1 and State.mode == "game" then
 		-- Tower shop
 		local buttons = BottomBar.getShopButtons()
@@ -74,7 +83,6 @@ local function mousepressed(x, y, button)
 					if b.canAfford then
 						State.placing = b.kind
 						State.selectedTower = nil
-
 						--Sound.play("ui_click")
 					else
 						--Sound.play("ui_deny")
@@ -85,14 +93,13 @@ local function mousepressed(x, y, button)
 			end
 		end
 
-		-- Inspect panel (upgrade and sell)
+		-- Inspect panel (upgrade / sell)
 		local btns = BottomBar.getBottomBarButtons()
 
 		if btns then
 			-- Upgrade
 			if btns.upgrade then
 				local b = btns.upgrade
-
 				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
 					if State.selectedTower then
 						Towers.upgradeTower(State.selectedTower)
@@ -106,7 +113,6 @@ local function mousepressed(x, y, button)
 			-- Sell
 			if btns.sell then
 				local b = btns.sell
-
 				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
 					if State.selectedTower then
 						Towers.sellTower(State.selectedTower)
@@ -119,8 +125,9 @@ local function mousepressed(x, y, button)
 		end
 	end
 
+	-- WORLD INTERACTION
 	if button == 1 then
-		-- Try enemy selection
+		-- Enemy selection
 		local enemy = findEnemyAt(wx, wy)
 
 		if enemy then
@@ -130,7 +137,7 @@ local function mousepressed(x, y, button)
 			return
 		end
 
-        local gx, gy = worldToGrid(wx, wy)
+		local gx, gy = worldToGrid(wx, wy)
 
 		-- Placement mode
 		if State.placing then
@@ -152,7 +159,7 @@ local function mousepressed(x, y, button)
 			return
 		end
 
-		-- Try tower selection
+		-- Tower selection
 		if gx then
 			local t = Towers.findTowerAt(gx, gy)
 
@@ -173,7 +180,21 @@ local function mousepressed(x, y, button)
 	end
 end
 
+local function mousereleased(x, y, button)
+	if Menu.mousereleased then
+		Menu.mousereleased(x, y, button)
+	end
+end
+
 local function keypressed(key)
+	-- Menu screens
+	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" then
+		Menu.keypressed(key)
+		
+		return
+	end
+
+	-- Victory / game over
 	if State.gameOver and State.victory then
 		if key == Hotkeys.actions.endless then
 			State.gameOver = false
@@ -181,24 +202,33 @@ local function keypressed(key)
 			State.endless = true
 			State.inPrep = true
 			State.prepTimer = 6.0
-
 			return
 		elseif key == Hotkeys.actions.nextMap then
-			-- Advance campaign
 			State.mapIndex = min(State.mapIndex + 1, #Maps)
 
-			-- Clear victory state
 			State.endless = false
 			State.gameOver = false
 			State.victory = false
-
-			-- Return to campaign screen
 			State.mode = "campaign"
-
 			return
 		end
 	end
 
+	-- Pause toggle
+	if key == Hotkeys.actions.pause then
+		State.paused = not State.paused
+		
+		return
+	end
+
+	-- Pause overlay
+	if State.paused then
+		Menu.keypressed(key)
+		
+		return
+	end
+
+	-- Gameplay hotkeys
 	if key == Hotkeys.actions.deselect then
 		cancelPlacement()
 		deselect()
@@ -217,8 +247,6 @@ local function keypressed(key)
 	elseif key == Hotkeys.shop.poison then
 		State.placing = "poison"
 		deselect()
-	elseif key == Hotkeys.actions.pause then
-		State.paused = not State.paused
 	elseif key == Hotkeys.actions.fastForward then
 		State.speed = (State.speed == 1) and 4 or 1
 	elseif key == Hotkeys.actions.skipPrep then
@@ -246,5 +274,6 @@ end
 return {
 	updateHover = updateHover,
 	mousepressed = mousepressed,
+	mousereleased = mousereleased,
 	keypressed = keypressed,
 }

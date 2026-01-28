@@ -5,7 +5,7 @@ return {
 	lancer = {
 		nameKey = "tower.lancer",
 		cost = 40,
-		range = 4.2 * Constants.TILE,
+		range = 4.0 * Constants.TILE,
 		fireRate = 2.0, -- shots/sec
 		damage = 11,
 		recoilStrength = Constants.TILE * 0.08,
@@ -13,6 +13,7 @@ return {
 		projSpeed = 460,
 		turnSpeed = 15,
 		color = Theme.tower.lancer,
+		canRotate = true,
 		upgrade = {
 			cost = 60,
 			dmgMult = 1.15,
@@ -28,10 +29,11 @@ return {
 		fireRate = 1.4,
 		damage = 6,
 		recoilStrength = Constants.TILE * 0.06,
-		recoilDecay = 18,
+		recoilDecay = 10,
 		projSpeed = 370,
 		turnSpeed = 10,
 		color = Theme.tower.slow,
+		canRotate = true,
 		onHitSlow = {factor = 0.55, dur = 1.4},
 		upgrade = {
 			cost = 55,
@@ -48,14 +50,15 @@ return {
 		range = 3.2 * Constants.TILE,
 		fireRate = 0.8,
 		damage = 20,
-		recoilStrength = Constants.TILE * 0.14,
-		recoilDecay = 12,
+		recoilStrength = Constants.TILE * 0.12,
+		recoilDecay = 14,
 		projSpeed = 320,
-		turnSpeed = 6,
+		turnSpeed = 8,
 		color = Theme.tower.cannon,
+		canRotate = true,
 		splash = {
 			radius = 42, -- AoE radius in pixels
-			falloff = 0.65, -- % damage applied at edge
+			falloff = 0.45, -- % damage applied at edge
 		},
 		upgrade = {
 			cost = 82,
@@ -76,6 +79,7 @@ return {
 		recoilDecay = 0,
 		turnSpeed = 20,
 		color = Theme.tower.shock,
+		canRotate = false,
 		chain = {
 			jumps = 3, -- number of additional enemies
 			radius = 56, -- max distance between jumps
@@ -96,10 +100,11 @@ return {
 		fireRate = 1.6,
 		damage = 5,
 		recoilStrength = Constants.TILE * 0.06,
-		recoilDecay = 18,
+		recoilDecay = 16,
 		projSpeed = 360,
 		turnSpeed = 10,
 		color = Theme.tower.poison,
+		canRotate = true,
 		poison = {
 			dps = 8, -- damage per second per stack
 			dur = 4, -- duration per application
