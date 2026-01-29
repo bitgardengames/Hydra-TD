@@ -15,6 +15,7 @@ local function drawWorld()
 	DrawEntities.drawTowerGhost()
 	DrawEntities.drawTowers()
 	DrawEntities.drawEnemies()
+	DrawEntities.drawEnemyOverlays()
 
 	Projectiles.draw()
 	Effects.draw()

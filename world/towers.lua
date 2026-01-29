@@ -278,10 +278,15 @@ local function updateTowers(dt)
 
 				if canFire then
 					-- Fire
-					if t.chain then
+					if t.chain and target and target.hp > 0 then
 						local zapOrder = Shock.fire(t, target, enemies)
-						if zapOrder then
+
+						-- Always show feedback for a Shock fire
+						if zapOrder and #zapOrder > 0 then
 							Effects.spawnZapEffect(t.x, t.y, zapOrder)
+						else
+							-- Fallback: single-target zap
+							Effects.spawnZapEffect(t.x, t.y, {{from = t, to = target}})
 						end
 					else
 						Projectiles.spawn(t, target)

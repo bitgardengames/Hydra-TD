@@ -24,10 +24,45 @@ local function jitter(amount)
 end
 
 function Effects.spawnZapEffect(x, y, chain)
-	tinsert(Effects.zaps, {
+	-- Snapshot the chain into immutable segments so visuals are not dependent
+	-- on enemy hp / removal after damage is applied.
+	local segs = {}
+
+	if chain then
+		for i = 1, #chain do
+			local seg = chain[i]
+			local from = seg.from
+			local to   = seg.to
+
+			-- "to" must exist to draw a segment
+			if to and to.x and to.y then
+				-- IMPORTANT: first hop may have from == nil; anchor it to the tower origin.
+				local x1, y1
+				if from and from.x and from.y then
+					x1, y1 = from.x, from.y
+				else
+					x1, y1 = x, y
+				end
+
+				segs[#segs + 1] = {
+					x1 = x1,
+					y1 = y1,
+					x2 = to.x,
+					y2 = to.y,
+				}
+			end
+		end
+	end
+
+	-- Fallback: if somehow no segments were recorded, at least draw a tiny pop at origin
+	if #segs == 0 then
+		segs[1] = { x1 = x, y1 = y, x2 = x, y2 = y }
+	end
+
+	table.insert(Effects.zaps, {
 		x = x,
 		y = y,
-		chain = chain,
+		segs = segs,
 		t = 0,
 		life = 0.12,
 	})
@@ -170,34 +205,27 @@ function Effects.draw()
 
 	for i = 1, #zaps do
 		local z = zaps[i]
-		local chain = z.chain
+		local segs = z.segs
 
-		if not chain then
-			goto continueZap
-		end
+		if segs then
+			local count = #segs
+			local u = math.min(1, z.t / z.life)
+			local a = 1.0 - 0.3 * u
 
-		local px, py = z.x, z.y
-		local count = #chain
+			for s = 1, count do
+				local seg = segs[s]
+				local x1, y1 = seg.x1, seg.y1
+				local x2, y2 = seg.x2, seg.y2
 
-		local u = z.t / z.life
-		local a = 1.0 - 0.3 * u
-
-		for i = 1, count do
-			local seg = chain[i]
-			local e = seg.to
-
-			if e and e.hp and e.hp > 0 then
-				local x, y = e.x, e.y
-
-				local t = (i - 1) / max(1, count)
-				local jumpA = 1.0 - 0.1 * (i - 1)
+				local t = (s - 1) / math.max(1, count)
+				local jumpA = 1.0 - 0.1 * (s - 1)
 				local radius = 2 * (1 - t) + 1
 
 				local jx = jitter(halfJitter)
 				local jy = jitter(halfJitter)
 
 				lg.setColor(0.6, 0.9, 1.0, 0.6 * a * jumpA)
-				lg.circle("fill", x + jx, y + jy, radius)
+				lg.circle("fill", x2 + jx, y2 + jy, radius)
 
 				local w = (2 * (1 - t) + 1) * (0.8 - 0.4 * u)
 				lg.setLineWidth(w)
@@ -208,19 +236,15 @@ function Effects.draw()
 				local jy2 = jitter(zapJitter)
 
 				lg.setColor(0.6, 0.9, 1.0, a * jumpA)
-				lg.line(px + jx1, py + jy1, x + jx2, y + jy2)
+				lg.line(x1 + jx1, y1 + jy1, x2 + jx2, y2 + jy2)
 
 				lg.setColor(0.9, 0.9, 1.0, 0.35 * a * jumpA)
-				lg.line(px + jx2, py + jy2, x + jx1, y + jy1)
-
-				px, py = x, y
+				lg.line(x1 + jx2, y1 + jy2, x2 + jx1, y2 + jy1)
 			end
+
+			lg.setLineWidth(1)
 		end
-
-		::continueZap::
 	end
-
-	lg.setLineWidth(1)
 end
 
 function Effects.clear()

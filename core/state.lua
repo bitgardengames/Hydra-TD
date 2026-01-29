@@ -63,6 +63,8 @@ function state.addDamage(kind, dmg, isBoss)
         stats.bossDamageByTower[kind] = (stats.bossDamageByTower[kind] or 0) + dmg
         stats.bossTotalDamage = (stats.bossTotalDamage or 0) + dmg
     end
+
+	stats.damageDirty = true
 end
 
 state.stats.damageByTower.lancer = 0

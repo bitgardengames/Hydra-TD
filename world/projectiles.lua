@@ -79,15 +79,7 @@ local function spawn(fromTower, targetEnemy)
 
 	local kind = fromTower.kind
 
-	if kind == "lancer" then
-		Sound.play("lancer")
-	elseif kind == "slow" then
-		Sound.play("slow")
-	elseif kind == "cannon" then
-		Sound.play("cannon")
-	elseif kind == "poison" then
-		Sound.play("poison")
-	end
+	Sound.play(kind)
 
     tinsert(projectiles, p)
 end
@@ -101,12 +93,11 @@ local function update(dt)
 
 		if p.life <= 0 then
 			tremove(projectiles, i)
+
 			goto continue
 		end
 
-		----------------------------------------------------------------
-		-- HOMING PROJECTILES (Lancer / Slow / Poison)
-		----------------------------------------------------------------
+		-- Homing projectiles (Lancer / Slow / Poison)
 		if p.mode == "homing" then
 			local speed = p.speed
 			local e = p.target
@@ -155,6 +146,7 @@ local function update(dt)
 
 			if dxh * dxh + dyh * dyh <= p.hitRadius2 then
 				local dmg = p.damage
+
 				e.hp = e.hp - dmg
 
 				-- Attribution
@@ -193,18 +185,17 @@ local function update(dt)
 				end
 
 				if e.hitFlash <= 0 then
-					e.hitFlash = 0.05
+					e.hitFlash = 0.03
 				end
 
 				State.addDamage(p.sourceKind, dmg, e.boss == true)
+
 				tremove(projectiles, i)
 				goto continue
 			end
 		end
 
-		----------------------------------------------------------------
-		-- GROUND PROJECTILES (Cannon)
-		----------------------------------------------------------------
+		-- Ground projectiles (Cannon)
 		if p.mode == "ground" then
 			local dx = p.tx - p.x
 			local dy = p.ty - p.y
@@ -239,16 +230,19 @@ local function update(dt)
 					local ed2 = dx2 * dx2 + dy2 * dy2
 
 					if ed2 <= r2 then
-						-- Squared falloff (no sqrt)
+						-- Squared falloff
 						local t = 1 - (ed2 / r2)
-						if t < 0 then t = 0 end
+
+						if t < 0 then
+							t = 0
+						end
 
 						local dmg = p.damage * (falloff + (1 - falloff) * t)
+
 						e.hp = e.hp - dmg
 
 						p.sourceTower.damageDealt = p.sourceTower.damageDealt + dmg
 						e.lastHitTower = p.sourceTower
-						e.hitFlash = max(e.hitFlash, 0.03)
 
 						State.addDamage(p.sourceKind, dmg, e.boss == true)
 					end
@@ -263,6 +257,7 @@ local function update(dt)
 				})
 
 				tremove(projectiles, i)
+
 				goto continue
 			end
 		end

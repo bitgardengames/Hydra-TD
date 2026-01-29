@@ -13,10 +13,24 @@ local tsort = table.sort
 
 local colorText = Theme.ui.text
 
+local meterCache = {
+	list = {},
+	dirty = true,
+	total = 0,
+	isBoss = false,
+	headerText = nil,
+}
+
+local nameCache = {}
+
 local DamageMeter = {}
 
 local function formatNum(n)
     return tostring(floor(n + 0.5)):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+end
+
+local function sorter(a, b)
+	return a.dmg > b.dmg
 end
 
 function DamageMeter.draw()
@@ -35,21 +49,33 @@ function DamageMeter.draw()
     end
 
 	-- Sort list
-    local list = {}
+	if meterCache.dirty or meterCache.total ~= total or meterCache.isBoss ~= isBossView then
+		meterCache.total = total
+		meterCache.isBoss = isBossView
+		meterCache.dirty = false
+		meterCache.headerText = nil
 
-    for kind, dmg in pairs(dmgTable) do
-        if dmg > 0 then
-            tinsert(list, {kind = kind, dmg = dmg})
-        end
-    end
+		-- Rebuild list
+		local list = meterCache.list
 
-    if #list == 0 then
-        return
-    end
+		for i = #list, 1, -1 do
+			list[i] = nil
+		end
 
-    tsort(list, function(a, b)
-        return a.dmg > b.dmg
-    end)
+		for kind, dmg in pairs(dmgTable) do
+			if dmg > 0 then
+				list[#list + 1] = {kind = kind, dmg = dmg, text = nil}
+			end
+		end
+
+		tsort(list, sorter)
+	end
+
+	local list = meterCache.list
+
+	if #list == 0 then
+		return
+	end
 
 	-- Layout
     local panelW = 200
@@ -58,7 +84,7 @@ function DamageMeter.draw()
     local padX = 8
     local panelPad = 8
 
-	local sw = lg.getDimensions()
+	local sw, _ = lg.getDimensions()
     local x = sw - panelW - 12
     local y = 12
 
@@ -72,22 +98,36 @@ function DamageMeter.draw()
     lg.rectangle("fill", x - panelPad, y - panelPad, panelW + panelPad * 2, panelH, 8, 8)
 
     -- Header
-    lg.setColor(colorText)
-    Text.printShadow(isBossView and L("damage.boss") or L("damage.normal"), x, y)
+	lg.setColor(colorText)
+
+	if not meterCache.headerText then
+		meterCache.headerText = isBossView and L("damage.boss") or L("damage.normal")
+	end
+
+	Text.printShadow(meterCache.headerText, x, y)
 
     y = y + 20
 
     -- Bars
-    local font  = lg.getFont()
+    local font = lg.getFont()
     local textH = font:getHeight()
 
     for _, entry in ipairs(list) do
         local def = Towers.TowerDefs[entry.kind]
 
         if def then
-			local name = L(def.nameKey)
+			local name = nameCache[entry.kind]
+
+			if not name then
+				name = L(def.nameKey)
+				nameCache[entry.kind] = name
+			end
+
             local pct = (total > 0) and (entry.dmg / total) or 0
-            local text = format("%s  %s (%.0f%%)", name, formatNum(entry.dmg), pct * 100)
+
+			if not entry.text then
+				entry.text = format("%s %s (%.0f%%)", name, formatNum(entry.dmg), pct * 100)
+			end
 
             -- Bar background (full width inside panel)
             lg.setColor(def.color[1], def.color[2], def.color[3], 0.25)
@@ -99,7 +139,7 @@ function DamageMeter.draw()
 
             -- Text centered inside bar
             lg.setColor(1, 1, 1, 0.95)
-            Text.printShadow(text, x + padX, y + (barH - textH) * 0.5)
+            Text.printShadow(entry.text, x + padX, y + (barH - textH) * 0.5)
 
             y = y + lineH
         end

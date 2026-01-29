@@ -93,7 +93,6 @@ return {
 		upgrade = "Upgrade!",
 		cannotPlace = "Can't",
 		needMoney = "Need $",
-		bossBreach = "BOSS BREACH!",
 	},
 
 	game = {

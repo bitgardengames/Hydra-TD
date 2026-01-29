@@ -22,6 +22,8 @@ local sin = math.sin
 local cos = math.cos
 local atan2 = math.atan2
 local sqrt = math.sqrt
+local tinsert = table.insert
+local tremove = table.remove
 
 local function findEnemyAt(x, y)
 	for _, e in ipairs(enemies) do
@@ -91,7 +93,7 @@ local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex, opts
 		State.activeBoss = e
 	end
 
-	table.insert(enemies, e)
+	tinsert(enemies, e)
 end
 
 local function updateEnemies(dt)
@@ -138,6 +140,7 @@ local function updateEnemies(dt)
 
 				local poisonMult = (e.modifiers and e.modifiers.poison) or 1.0
 				local dmg = e.poisonDPS * e.poisonStacks * poisonMult * tick
+
 				e.hp = e.hp - dmg
 
 				if e.poisonSource then
@@ -146,6 +149,7 @@ local function updateEnemies(dt)
 				end
 
 				e.hitFlash = 0.03
+
 				State.addDamage("poison", dmg, e.boss == true)
 			end
 
@@ -171,14 +175,12 @@ local function updateEnemies(dt)
 				State.money = State.money + e.reward
 				State.score = State.score + e.score
 
-				Floaters.add(e.x, e.y - 10, "+" .. e.reward, colorGood[1], colorGood[2], colorGood[3])
-
-				table.insert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
+				tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
 				State.activeBoss = nil
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
 
-				table.remove(enemies, i)
+				tremove(enemies, i)
 			end
 
 			goto continue
@@ -227,11 +229,9 @@ local function updateEnemies(dt)
 			State.money = State.money + e.reward
 			State.score = State.score + e.score
 
-			Floaters.add(e.x, e.y - 10, "+" .. e.reward, colorGood[1], colorGood[2], colorGood[3])
+			tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
-			table.insert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
-
-			table.remove(enemies, i)
+			tremove(enemies, i)
 
 			goto continue
 		end
@@ -297,7 +297,7 @@ local function updateEnemies(dt)
 				else
 					-- Partial move
 					local inv = remaining / d
-					
+
 					e.x = e.x + dx * inv
 					e.y = e.y + dy * inv
 					remaining = 0
@@ -326,8 +326,6 @@ local function updateEnemies(dt)
 					State.endReason = L("game.bossBreach")
 
 					Sound.play("gameOver")
-					Floaters.add(e.x, e.y - 14, L("floater.bossBreach"),
-						colorBad[1], colorBad[2], colorBad[3])
 
 					return
 				end
@@ -336,10 +334,9 @@ local function updateEnemies(dt)
 				local livesAnim = State.livesAnim or 0
 				State.livesAnim = livesAnim + (1 - livesAnim) * 0.6
 
-				Floaters.add(e.x, e.y - 10, "-1",
-					colorBad[1], colorBad[2], colorBad[3])
+				Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
 
-				table.remove(enemies, i)
+				tremove(enemies, i)
 
 				if State.lives <= 0 then
 					State.lives = 0
@@ -367,7 +364,7 @@ local function updateEnemies(dt)
 		d.t = d.t + dt
 
 		if d.t > 0.12 then
-			table.remove(deathFX, i)
+			tremove(deathFX, i)
 		end
 	end
 end

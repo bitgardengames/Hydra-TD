@@ -189,34 +189,6 @@ local function drawEnemy(e)
 		lg.setColor(colorSelected)
 		lg.circle("line", e.x, y, e.radius + 4)
 	end
-
-	-- Health bar
-	if e.hp > 0 then
-		local w = e.boss and 44 or 28
-		local h = e.boss and 7 or 5
-		local bx = e.x - w / 2
-		local by = e.y - e.radius - (e.boss and 18 or 12)
-
-		lg.setColor(0, 0, 0, 0.5)
-		lg.rectangle("fill", bx, by, w, h, 3, 3)
-
-		local t = max(0, e.hp / e.maxHp)
-
-		local r, g
-
-		if t > 0.5 then
-			local p = (t - 0.5) / 0.5
-
-			r, g = 1 - p, 1
-		else
-			local p = t / 0.5
-
-			r, g = 1, p
-		end
-
-		lg.setColor(r * 0.9 + 0.05, g * 0.9 + 0.05, 0.15, 0.9)
-		lg.rectangle("fill", bx, by, w * t, h, 3, 3)
-	end
 end
 
 -- Draw all enemies + death FX
@@ -235,6 +207,43 @@ local function drawEnemies()
 
 		lg.setColor(1, 1, 1, alpha * 0.2)
 		lg.circle("fill", d.x, d.y, d.r * scale)
+	end
+end
+
+local function drawEnemyHealth(e)
+    if e.hp <= 0 then
+		return
+	end
+
+    local w = e.boss and 44 or 28
+    local h = e.boss and 7 or 5
+    local bx = e.x - w / 2
+    local by = e.y - e.radius - (e.boss and 18 or 12)
+
+    -- Background
+    lg.setColor(0, 0, 0, 0.5)
+    lg.rectangle("fill", bx, by, w, h, 3, 3)
+
+    local t = max(0, e.hp / e.maxHp)
+
+    local r, g
+    if t > 0.5 then
+        local p = (t - 0.5) / 0.5
+
+        r, g = 1 - p, 1
+    else
+        local p = t / 0.5
+
+        r, g = 1, p
+    end
+
+    lg.setColor(r * 0.9 + 0.05, g * 0.9 + 0.05, 0.15, 0.9)
+    lg.rectangle("fill", bx, by, w * t, h, 3, 3)
+end
+
+local function drawEnemyOverlays()
+	for _, e in ipairs(Enemies.enemies) do
+		drawEnemyHealth(e)
 	end
 end
 
@@ -554,6 +563,7 @@ end
 return {
 	drawEnemy = drawEnemy,
 	drawEnemies = drawEnemies,
+	drawEnemyOverlays = drawEnemyOverlays,
 	drawTowerCore = drawTowerCore,
 	drawTowerGhost = drawTowerGhost,
 	drawTowers = drawTowers,

@@ -38,7 +38,7 @@ function Shock.fire(sourceTower, initialTarget, enemies)
 	-- First hit
 	local damage = sourceTower.damage
 
-	zapEnemy(ctx, initialTarget, initialTarget, damage)
+	zapEnemy(ctx, sourceTower, initialTarget, damage)
 
 	local last = initialTarget
 

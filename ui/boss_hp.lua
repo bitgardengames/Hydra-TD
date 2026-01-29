@@ -10,6 +10,13 @@ local format = string.format
 
 local colorText = Theme.ui.text
 
+local hpCache = {
+	hpValue = nil,
+	maxText = nil,
+	text = nil,
+	textW = 0,
+}
+
 local BossHP = {}
 
 local function formatNum(n)
@@ -17,17 +24,26 @@ local function formatNum(n)
 end
 
 function BossHP.draw()
-    local boss = State.activeBoss
+	local boss = State.activeBoss
 
-    if not boss or boss.hp <= 0 then
-        return
-    end
+	if not boss or boss.hp <= 0 then
+		-- Reset cache when boss disappears
+		hpCache.hpValue = nil
+		hpCache.maxText = nil
+		hpCache.text = nil
+
+		return
+	end
+
+	if hpCache.maxText == nil then
+		hpCache.maxText = formatNum(boss.maxHp)
+	end
 
     -- Layout
     local barW = 340
     local barH = 22
 
-	local sw = lg.getDimensions()
+	local sw, _ = lg.getDimensions()
     local x = (sw - barW) * 0.5
     local y = 14
 
@@ -45,14 +61,23 @@ function BossHP.draw()
     lg.rectangle("fill", x, y, barW * hpFrac, barH, radius - 4, radius - 4)
 
     -- Text
-	local hpText = format("%s / %s", formatNum(ceil(boss.hp)), formatNum(boss.maxHp))
+	local hpInt = ceil(boss.hp)
 
-    local font = lg.getFont()
-    local textW = font:getWidth(hpText)
-    local textH = font:getHeight()
+	if hpCache.hpValue ~= hpInt then
+		hpCache.hpValue = hpInt
+
+		local hpText = format("%s / %s", formatNum(hpInt), hpCache.maxText)
+		hpCache.text = hpText
+
+		local font = lg.getFont()
+		hpCache.textW = font:getWidth(hpText)
+	end
+
+	local font = lg.getFont()
+	local textH = font:getHeight()
 
     lg.setColor(colorText)
-    Text.printShadow(hpText, x + (barW - textW) * 0.5, y + (barH - textH) * 0.5)
+	Text.printShadow(hpCache.text, x + (barW - hpCache.textW) * 0.5, y + (barH - textH) * 0.5)
 end
 
 return BossHP
