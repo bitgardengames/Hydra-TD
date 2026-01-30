@@ -5,8 +5,8 @@ local Button = {}
 
 local lg = love.graphics
 
-local colorBase = Theme.ui.panel2
-local colorHover = Theme.ui.hovered
+local colorBase = Theme.ui.button
+local colorHover = Theme.ui.buttonHover
 local colorText = Theme.ui.text
 
 local RADIUS = 8

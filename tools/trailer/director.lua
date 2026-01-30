@@ -20,8 +20,8 @@ local sin = math.sin
 
 local lg = love.graphics
 
-local FONT_HERO = lg.newFont("assets/fonts/PTSans.ttf", 112)
-local FONT_CTA = lg.newFont("assets/fonts/PTSans.ttf", 82)
+local FONT_HERO = lg.newFont("assets/fonts/PTSans.ttf", 142) -- 112
+local FONT_CTA = lg.newFont("assets/fonts/PTSans.ttf", 92) -- 82
 
 local Director = {
 	t = 0,
@@ -112,6 +112,8 @@ function Director.load(name)
 
 	-- Logo-only shot, no world setup
 	if Director.shot.type == "logo" then
+		Title.invalidateCache()
+
 		return
 	end
 
@@ -275,13 +277,16 @@ function Director.draw()
 		Camera.finish()
 		Camera.present()
 
-		Fonts.set("floaters")
+		if Config.showUI then
+			Draw.drawUI()
+		else
+			Fonts.set("floaters")
 
-		Floaters.draw()
+			Floaters.draw()
+		end
 	else
 		-- Clear to black for logo cards
 		lg.clear(0, 0, 0, 1)
-
 
 		-- Backdrop
 		local sw, sh = lg.getDimensions()
@@ -350,38 +355,30 @@ function Director.draw()
 
 	-- Logo
 	if Director.activeLogo then
-		local screenW = lg.getWidth()
-		local screenH = lg.getHeight()
+		local sw = lg.getWidth()
+		local sh = lg.getHeight()
 
 		local fadeDur = 0.15
 		local alphaStart = 0.60
 
-		-- Fixed banner scale
 		local baseScale = 0.56
-		local w = math.floor(screenW * baseScale)
-		local h = math.floor(screenH * baseScale)
+		local w = math.floor(sw * baseScale)
+		local h = math.floor(sh * baseScale)
 
-		-- Centered position, then nudged upward
-		local centerX = math.floor((screenW - w) * 0.5)
-		local centerY = math.floor((screenH - h) * 0.5) - 120
-
-		-- Subtle alpha settle
 		local p = 1
-
 		if Director.logoT < fadeDur then
 			p = Director.logoT / fadeDur
-			p = p * p * (3 - 2 * p) -- smoothstep
+			p = p * p * (3 - 2 * p)
 		end
 
 		local alpha = alphaStart + (1 - alphaStart) * p
 
-		lg.push()
-		lg.translate(centerX, centerY)
+		-- Banner top-left position
+		local x = math.floor(sw * 0.5)
+		local y = math.floor(sh * 0.5) - 120
 
 		lg.setColor(1, 1, 1, alpha)
-		Title.drawBannerStyle(w, h, {alpha = 1, angle = Director.lancerIdle.angle})
-
-		lg.pop()
+		Title.draw({x = x, y = y, alpha = 1, lancerScale = 5.2, angle = Director.lancerIdle.angle})
 
 		lg.setColor(1, 1, 1, 1)
 	end

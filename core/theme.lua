@@ -49,6 +49,10 @@ Theme.ui = {
     panel2 = {0.12, 0.13, 0.16},
     hovered = lighten({0.09, 0.10, 0.12}, 0.06),
     selected = {1.00, 0.88, 0.40},
+
+	button = {0.18, 0.19, 0.22, 1},
+	buttonHover = {0.22, 0.24, 0.28, 1},
+	buttonSelected = {0.30, 0.42, 0.62, 1},
 }
 
 Theme.menu = {0.31, 0.57, 0.76, 1}

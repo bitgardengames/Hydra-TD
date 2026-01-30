@@ -182,10 +182,7 @@ function Title.draw(opts)
 	lg.pop()
 end
 
--- =========================================================
 -- Banner draw (also identical)
--- =========================================================
-
 function Title.drawBannerStyle(w, h, opts)
 	opts = opts or {}
 

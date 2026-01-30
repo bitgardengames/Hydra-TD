@@ -8,7 +8,6 @@ Difficulty.defs = {
 		enemySpeed = 0.90,
 
 		bossHp = 0.85,
-		bossAdds = 0.80,
 
 		startMoney = 140,
 		startLives = 25,
@@ -22,7 +21,6 @@ Difficulty.defs = {
 		enemySpeed = 1.0,
 
 		bossHp = 1.0,
-		bossAdds = 1.0,
 
 		startMoney = 120,
 		startLives = 20,
@@ -36,7 +34,6 @@ Difficulty.defs = {
 		enemySpeed = 1.10,
 
 		bossHp = 1.15,
-		bossAdds = 1.20,
 
 		startMoney = 110,
 		startLives = 15,

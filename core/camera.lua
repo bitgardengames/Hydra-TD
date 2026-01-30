@@ -1,4 +1,5 @@
 local Constants = require("core.constants")
+local Scale = require("core.scale")
 
 local Camera = {}
 
@@ -14,11 +15,11 @@ Camera.wscale = 1.0
 local REF_W = 1920
 local REF_H = 1080
 
-local AUTHORED_ZOOM = 1.28
+local AUTHORED_ZOOM = 1.30
 
--- Safety rails
-local MIN_ZOOM = 0.72
-local MAX_ZOOM = 1.40
+-- Clamps
+local MIN_ZOOM = 0.64
+local MAX_ZOOM = 2.0
 
 local lg = love.graphics
 local min = math.min
@@ -43,7 +44,7 @@ local function computeAdaptiveZoom()
     local resolutionFactor = min(scaleX, scaleY)
 
     -- Optional softening (feels nicer than linear)
-    resolutionFactor = resolutionFactor ^ 0.85
+    resolutionFactor = resolutionFactor
 
     local z = AUTHORED_ZOOM * resolutionFactor
 
@@ -52,10 +53,10 @@ end
 
 function Camera.load()
     Camera.resize()
-	Camera.setLensZoom(computeAdaptiveZoom())
+	Camera.setZoom(computeAdaptiveZoom())
 end
 
-function Camera.setLensZoom(z)
+function Camera.setZoom(z)
     Camera.wscale = z
 
     local sw, sh = lg.getDimensions()
@@ -73,13 +74,14 @@ end
 function Camera.resize()
     local winW, winH = lg.getDimensions()
 
-    Camera.canvas = lg.newCanvas(winW, winH, { msaa = 8 })
-    --Camera.canvas:setFilter("nearest", "nearest")
+	local msaa = Scale.suggestMSAA(winW, winH)
+
+    Camera.canvas = lg.newCanvas(winW, winH, {msaa = msaa})
 
     Camera.ox = 0
     Camera.oy = 0
 
-	Camera.setLensZoom(computeAdaptiveZoom())
+	Camera.setZoom(computeAdaptiveZoom())
 end
 
 function Camera.begin()

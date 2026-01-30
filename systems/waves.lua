@@ -2,6 +2,9 @@ local State = require("core.state")
 local Maps = require("world.map_defs")
 local Enemies = require("world.enemies")
 local Difficulty = require("systems.difficulty")
+local WaveDefs = require("systems.wave_defs")
+local WaveBuilder = require("systems.wave_builder")
+local WaveEndless = require("systems.wave_endless")
 
 local Waves = {}
 
@@ -10,6 +13,7 @@ local bossAddTimer = 0
 local min = math.min
 local max = math.max
 
+-- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
 local spawner = {
 	active = false,
 	remaining = 0,
@@ -17,29 +21,55 @@ local spawner = {
 	timer = 0,
 	hpMult = 1.0,
 	spdMult = 1.0,
+
+	-- Legacy field (kept for compatibility; no longer used)
 	mix = nil,
+
+	-- New deterministic spawn list
+	spawnList = nil,
+	spawnIndex = 1,
 }
 
--- Utility
-local function pickEnemyType(mix)
-	local total = 0
+-- Deterministic spawn order (feel free to tweak)
+--local SPAWN_ORDER = {"tank", "splitter", "grunt", "runner"}
+local SPAWN_ORDER = {"runner", "grunt", "splitter", "tank"}
 
-	for _, m in ipairs(mix) do
-		total = total + m.w
-	end
+local function getCount(tbl, key)
+	if not tbl then return 0 end
+	return tbl[key] or 0
+end
 
-	local r = love.math.random() * total
-	local acc = 0
+local function buildSpawnList(enemies)
+	local list = {}
+	local n = 0
 
-	for _, m in ipairs(mix) do
-		acc = acc + m.w
+	for _, kind in ipairs(SPAWN_ORDER) do
+		local count = getCount(enemies, kind)
 
-		if r <= acc then
-			return m.type
+		for i = 1, count do
+			n = n + 1
+			list[n] = kind
 		end
 	end
 
-	return mix[#mix].type
+	return list
+end
+
+local function beginSpawner(list, gap, hpMult, spdMult)
+	spawner.active = true
+	spawner.timer = 0
+	spawner.gap = gap or 0.6
+	spawner.hpMult = hpMult or 1.0
+	spawner.spdMult = spdMult or 1.0
+
+	spawner.spawnList = list
+	spawner.spawnIndex = 1
+	spawner.remaining = list and #list or 0
+
+	-- Legacy (unused now)
+	spawner.mix = nil
+
+	State.inPrep = false
 end
 
 -- Wave start
@@ -54,75 +84,77 @@ function Waves.startWave()
 	-- Boss waves (every 10th wave)
 	local isBossWave = (State.wave % 10 == 0)
 
-	if isBossWave and waveData.bosses then
+	if isBossWave and waveData and waveData.bosses then
 		local bossIndex = State.wave / 10
 		local boss = waveData.bosses[bossIndex]
 
 		if boss then
-			spawner.active = true
-			spawner.remaining = 1
-			spawner.timer = 0
-			spawner.gap = 0
-			spawner.mix = {{type = boss.type, w = 1.0}}
-
 			-- Boss HP
 			local baseHp = boss.hpBase * (boss.hpRamp ^ (bossIndex - 1))
-
-			spawner.hpMult = baseHp * diff.bossHp
+			local hpMult = baseHp * diff.bossHp
 
 			-- Boss Speed
 			local baseSpeed = 1.0 + (bossIndex - 1) * boss.spdRamp
+			local spdMult = baseSpeed * diff.enemySpeed
 
-			spawner.spdMult = baseSpeed * diff.enemySpeed
-
-			State.inPrep = false
-
+			-- Deterministic single spawn
+			beginSpawner({ boss.type }, 0, hpMult, spdMult)
 			return
 		end
 	end
 
-	-- Normal waves
-	local plan = waveData.normal[min(State.wave, #waveData.normal)]
+	-- Normal waves: authored + deterministic
+	-- Build base wave from anchors/interpolation
+	local wave = WaveBuilder.build(State.wave)
 
-	spawner.active = true
-	spawner.timer = 0
-	spawner.mix = plan.mix
+	-- Apply endless scaling automatically past last anchor, OR if State.endless is enabled
+	if State.wave > WaveDefs.LAST_ANCHOR or State.endless then
+		local depth = max(0, State.wave - WaveDefs.LAST_ANCHOR)
+		WaveEndless.apply(wave, depth)
+	end
 
-	-- Count (unchanged by difficulty)
-	spawner.remaining = plan.count + max(0, State.wave - #waveData.normal) * 3
+	-- Convert wave to spawner settings
+	local gap = wave.gap or 0.6
 
-	-- Spawn gap
-	spawner.gap = plan.gap * max(0.75, 1.0 - (State.wave - 1) * 0.02)
+	-- Ramps are explicit now, then difficulty multiplies on top
+	local hpMult = (wave.ramps and wave.ramps.hp or 1.0) * diff.enemyHp
+	local spdMult = (wave.ramps and wave.ramps.speed or 1.0) * diff.enemySpeed
 
-	-- HP scaling
-	local baseHp = (plan.hpMult or 1.0) * (1.15 + (State.wave - 1) * 0.20)
+	-- Build deterministic spawn list (no RNG)
+	local list = buildSpawnList(wave.enemies)
 
-	spawner.hpMult = baseHp * diff.enemyHp
-
-	-- Speed scaling
-	local baseSpeed = (plan.spdMult or 1.0) * (1.0 + (State.wave - 1) * 0.06)
-
-	spawner.spdMult = baseSpeed * diff.enemySpeed
-
-	State.inPrep = false
+	beginSpawner(list, gap, hpMult, spdMult)
 end
 
 -- Spawning update
 function Waves.updateSpawner(dt)
-	if spawner.active then
-		spawner.timer = spawner.timer - dt
+	if not spawner.active then
+		return
+	end
 
-		if spawner.timer <= 0 and spawner.remaining > 0 then
-			local kind = pickEnemyType(spawner.mix)
+	spawner.timer = spawner.timer - dt
 
-			Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
-			spawner.remaining = spawner.remaining - 1
-			spawner.timer = spawner.gap
-		end
+	if spawner.timer <= 0 and spawner.remaining > 0 then
+		local list = spawner.spawnList
 
-		if spawner.remaining <= 0 then
+		-- Safety
+		if not list or spawner.spawnIndex > #list then
+			spawner.remaining = 0
 			spawner.active = false
+			return
 		end
+
+		local kind = list[spawner.spawnIndex]
+
+		Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
+
+		spawner.spawnIndex = spawner.spawnIndex + 1
+		spawner.remaining = spawner.remaining - 1
+		spawner.timer = spawner.gap
+	end
+
+	if spawner.remaining <= 0 then
+		spawner.active = false
 	end
 end
 
@@ -147,10 +179,15 @@ end
 function Waves.resetSpawner()
 	spawner.active = false
 	spawner.remaining = 0
+	spawner.gap = 0.6
 	spawner.timer = 0
 	spawner.hpMult = 1.0
 	spawner.spdMult = 1.0
 	spawner.mix = nil
+
+	spawner.spawnList = nil
+	spawner.spawnIndex = 1
+
 	bossAddTimer = 0
 end
 

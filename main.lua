@@ -1,4 +1,5 @@
 local Constants = require("core.constants")
+local Scale = require("core.scale")
 local Camera = require("core.camera")
 local Cursor = require("core.cursor")
 local Theme = require("core.theme")
@@ -44,6 +45,9 @@ local ART_EXPORT = 0
 local TRAILER_EXPORT = 0
 
 function resetGame()
+	-- Remove! Just testing. Brute force.
+	--State.mapIndex = 2
+
     -- Clear world state
     Enemies.clear()
     Towers.clear()
@@ -54,7 +58,6 @@ function resetGame()
     -- Map state
     MapMod.clearBlocked()
     MapMod.buildPath(Maps[State.mapIndex])
-	DrawWorld.rebuild()
 
 	local diff = Difficulty.get()
 
@@ -119,12 +122,21 @@ function love.load()
 	love.window.setTitle("Hydra TD")
 	--love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
 
+	-- Testing resolution scaling
+	--love.window.setMode(2560, 1440, {fullscreen = false, resizable = false}) -- 1440p
+	--love.window.setMode(1920, 1080, {fullscreen = false, resizable = false}) -- 1080
+	--love.window.setMode(1280, 720, {fullscreen = false, resizable = false}) -- 720p testing
+	--love.window.setMode(1366, 768, {fullscreen = false, resizable = false}) -- laptops
+	--love.window.setMode(1280, 800, {fullscreen = false, resizable = false}) -- steam deck
+	--love.window.setMode(1024, 768, {fullscreen = false, resizable = false}) -- torture test
+
 	lg.setDefaultFilter("nearest", "nearest")
 
 	Localization.load(Save.data.settings.language or "enUS")
 
 	Fonts.load()
 
+	Scale.update()
 	Camera.load()
 
 	Sound.load()
@@ -251,26 +263,14 @@ function love.draw()
 	local sw, sh = lg.getDimensions()
 
 	if State.mode == "game" or State.mode == "pause" then
+		-- World
 		Camera.begin()
 		Draw.drawWorld()
-
-		--[[ Debug draw map center
-		local mapCX = Constants.GRID_W * Constants.TILE * 0.5
-		local mapCY = Constants.GRID_H * Constants.TILE * 0.5
-
-		lg.setColor(1, 0, 0)
-		lg.circle("fill", mapCX, mapCY, 6)
-
-		-- draw screen center in world space
-		local sw, sh = lg.getDimensions()
-		local wx, wy = Camera.screenToWorld(sw/2, sh/2)
-
-		lg.setColor(0, 1, 0)
-		lg.circle("fill", wx, wy, 4)]]
 
 		Camera.finish()
 		Camera.present()
 
+		-- UI
 		Draw.drawUI()
 
 		if State.mode == "pause" then
@@ -422,5 +422,6 @@ function love.mousemoved(x, y, dx, dy)
 end
 
 function love.resize(w, h)
+	Scale.update()
 	Camera.resize(w, h)
 end

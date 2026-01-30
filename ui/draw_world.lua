@@ -17,11 +17,9 @@ local colorGrid = Theme.grid
 
 local gridToCenter = MapMod.gridToCenter
 
-local worldCanvas = nil
-
 -- Precomputed scatter colors
-local colorScatterDark  = {colorGrass[1] * 0.78, colorGrass[2] * 0.78, colorGrass[3] * 0.78, 0.2}
-local colorScatterLight = {colorGrass[1] * 1.12, colorGrass[2] * 1.12, colorGrass[3] * 1.12, 0.2}
+local colorScatterDark  = {colorGrass[1] * 0.94, colorGrass[2] * 0.94, colorGrass[3] * 0.94, 1}
+local colorScatterLight = {colorGrass[1] * 1.06, colorGrass[2] * 1.06, colorGrass[3] * 1.06, 1}
 
 -- Static world drawing
 local function drawGrass()
@@ -38,6 +36,7 @@ local function drawGrass()
 
 				if r == 0 then
 					local useLight = (seed % 7) < 3
+
 					lg.setColor(useLight and colorScatterLight or colorScatterDark)
 
 					for i = 1, 2 do
@@ -53,77 +52,89 @@ local function drawGrass()
 end
 
 local function drawPath()
-	-- Path visual thickness
-	local thickness = tile
-	local radius = thickness * 0.5
+	local pathThickness = tile
+	local half = pathThickness * 0.5
 
-	local path = MapMod.map.path
-	local count = #path
+	for i = 1, #MapMod.map.path - 1 do
+		local a = MapMod.map.path[i]
+		local b = MapMod.map.path[i + 1]
 
-	lg.setColor(colorPath)
+		local ax, ay = MapMod.gridToCenter(a[1], a[2])
+		local bx, by = MapMod.gridToCenter(b[1], b[2])
 
-	for i = 1, count - 1 do
-		local a = path[i]
-		local b = path[i + 1]
+		local dx = b[1] - a[1]
+		local dy = b[2] - a[2]
 
-		-- World-space centers
-		local ax, ay = gridToCenter(a[1], a[2])
-		local bx, by = gridToCenter(b[1], b[2])
+		local trimA, trimB = false, false
 
-		-- Snap once for clean rasterization
-		ax = math.floor(ax + 0.5)
-		ay = math.floor(ay + 0.5)
-		bx = math.floor(bx + 0.5)
-		by = math.floor(by + 0.5)
+		if i > 1 then
+			local p = MapMod.map.path[i - 1]
 
-		if ax ~= bx then
-			-- Horizontal segment
-			local x = math.min(ax, bx) - radius
-			local y = ay - radius
-			local w = math.abs(bx - ax) + thickness
-			local h = thickness
+			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
+		end
 
-			lg.rectangle("fill", x, y, w, h, radius, radius)
+		if i < #MapMod.map.path - 1 then
+			local n = MapMod.map.path[i + 2]
+
+			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
+		end
+
+		lg.setColor(colorPath)
+
+		if dx ~= 0 then
+			local x1 = min(ax, bx)
+			local w  = abs(bx - ax)
+
+			if trimA then
+				x1 = x1 + half
+				w = w - half
+			end
+
+			if trimB then
+				w  = w - half
+			end
+
+			lg.rectangle("fill", x1, ay - half, w, pathThickness)
 		else
-			-- Vertical segment
-			local x = ax - radius
-			local y = math.min(ay, by) - radius
-			local w = thickness
-			local h = math.abs(by - ay) + thickness
+			local y1 = min(ay, by)
+			local h  = abs(by - ay)
 
-			lg.rectangle("fill", x, y, w, h, radius, radius)
+			if trimA then
+				y1 = y1 + half
+				h = h - half
+			end
+
+			if trimB then
+				h  = h - half
+			end
+
+			lg.rectangle("fill", ax - half, y1, pathThickness, h)
+		end
+	end
+
+	-- Rounded corners
+	for i = 2, #MapMod.map.path - 1 do
+		local prev = MapMod.map.path[i - 1]
+		local cur = MapMod.map.path[i]
+		local next = MapMod.map.path[i + 1]
+
+		local dx1 = cur[1] - prev[1]
+		local dy1 = cur[2] - prev[2]
+		local dx2 = next[1] - cur[1]
+		local dy2 = next[2] - cur[2]
+
+		if dx1 ~= dx2 or dy1 ~= dy2 then
+			local cx, cy = MapMod.gridToCenter(cur[1], cur[2])
+
+			lg.setColor(colorPath)
+			lg.circle("fill", cx, cy, half)
 		end
 	end
 end
 
-local function rebuildWorld()
-	local w = gridW * tile
-	local h = gridH * tile
-
-	if worldCanvas then
-		worldCanvas:release()
-	end
-
-	worldCanvas = lg.newCanvas(w, h, {msaa = 8})
-
-	lg.push()
-	lg.setCanvas(worldCanvas)
-	lg.clear(0, 0, 0, 0)
-
+local function drawWorld()
 	drawGrass()
 	drawPath()
-
-	lg.setCanvas()
-	lg.pop()
-end
-
-local function drawWorld()
-	if not worldCanvas then
-		rebuildWorld()
-	end
-
-	lg.setColor(1, 1, 1, 1)
-	lg.draw(worldCanvas, 0, 0)
 end
 
 -- Grid
