@@ -6,43 +6,65 @@ local mapCX = Constants.GRID_W * Constants.TILE * 0.5
 local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
 return {
-	map = 5,
-	duration = 6.0,
+    map = 7,
+    duration = 10.0,
 	next = "shot_05",
 
-	scene = {
-		towers = {
-			{ kind = "poison", gx = 9,  gy = 9 },
-			{ kind = "shock",  gx = 8, gy = 9 },
-			{ kind = "lancer",  gx = 12, gy = 8 },
-			{ kind = "slow",  gx = 12, gy = 11 },
-		},
-		wave = {
-			index = 6,
-			start = true,
-			warmup = 26,
-		},
-	},
+    scene = {
+        towers = {
+            { kind = "slow",   gx = 11, gy = 7 },
+            { kind = "slow",   gx = 17, gy = 5 },
+            { kind = "lancer", gx = 12, gy = 7 },
+            { kind = "lancer", gx = 12, gy = 9 },
+            { kind = "poison", gx = 14, gy = 7 },
+            { kind = "shock", gx = 16, gy = 7 },
+            { kind = "cannon", gx = 12, gy = 6 },
+        },
 
-	actions = {
-		{ t = 1.55, fn = Actions.upgradeTowerAt(8,  9, 1) }, -- shock +1
-		{ t = 2.55, fn = Actions.upgradeTowerAt(12, 8, 1) }, -- lancer +1
-		{ t = 3.55, fn = Actions.upgradeTowerAt(9,  9, 1) }, -- poison +1
-	},
+        wave = {
+			index = 10,
+            start = true,
+            warmup = 8, -- boss already visible
+        },
+    },
 
-	camera = Camera.pan({
-		duration = 6.0,
-		from = {x = mapCX, y = mapCY, zoom = 1.28},
-		to = {x = mapCX, y = mapCY, zoom = 1.28}
-	}),
+    actions = {
+        { t = 0, fn = Actions.upgradeTowerAt(12, 7, 1) },
+        { t = 0, fn = Actions.upgradeTowerAt(12, 9, 1) },
+        { t = 0, fn = Actions.upgradeTowerAt(14, 8, 2) },
+        { t = 0, fn = Actions.upgradeTowerAt(12, 6, 2) },
+        { t = 0, fn = Actions.upgradeTowerAt(16, 7, 1) },
+        { t = 0, fn = Actions.upgradeTowerAt(14, 7, 1) },
+    },
+
+	camera = function(ctx)
+		return Camera.follow{
+			getTarget = function()
+				return ctx.firstEnemy
+			end,
+
+			-- Track immediately
+			trackFrom = 0,
+			acquireDur = 0,
+
+			lag = 7,
+			offset = {y = -6},
+
+			-- Optional cinematic zoom over the whole shot
+			zoomFrom = 3.4,
+			zoomTo   = 8.0,
+			zoomDelay = 0,
+			zoomDur  = 10.0,
+		}
+	end,
 
 	text = {
 		{
 			t = 0.8,
-			text = "Upgrade",
+			text = "SURVIVE",
 			dur = 3,
 			fadeIn = 0.25,
 			fadeOut = 0.4,
 		},
-	},
+	}
 }

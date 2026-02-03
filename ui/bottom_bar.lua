@@ -30,6 +30,10 @@ local colorSelected = Theme.ui.selected
 local colorHovered = Theme.ui.hovered
 local colorButton = Theme.ui.button
 local colorButtonHover = Theme.ui.buttonHover
+local colorDisabled = Theme.ui.buttonDisabled
+local colorMoney = Theme.ui.money
+local colorLives = Theme.ui.lives
+local colorWave = Theme.ui.wave
 
 local BottomBar = {}
 
@@ -57,6 +61,8 @@ local function ensureShopAnim(kind)
 
 	return shopAnims[kind]
 end
+
+local inspectAnim = 0
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
@@ -126,12 +132,13 @@ local PAD2 = PAD * 2
 local GAP = PAD
 
 -- Content sizing
+local UI_H = Constants.UI_H
 local SHOP_BTN_W = 124
 local SHOP_BTN_H = 32
 local SHOP_COLS = 3
 local SHOP_CONTENT_W = (SHOP_BTN_W * SHOP_COLS) + (GAP * (SHOP_COLS - 1))
 local SHOP_W = SHOP_CONTENT_W + PAD * 2
-local INSPECT_W = 260 -- right panel content width (new: constrains total panel width)
+local INSPECT_W = 260 -- right panel content width
 local COL_W = 120
 local HUD_H = 28 -- top strip height
 
@@ -140,40 +147,36 @@ local BUTTON_W = (ACTION_W - GAP) / 2
 local BUTTON_H = 28
 
 -- Floating panel styling
-local PANEL_LIFT = 12     -- lift from bottom of screen
-local PANEL_INSET = 12    -- nudge right from left edge
+local PANEL_LIFT = 12 -- lift from bottom of screen
+local PANEL_INSET = 12 -- nudge right from left edge
 
 function BottomBar.draw()
 	local font = lg.getFont()
 	local textH = font:getHeight()
 	local sw, sh = lg.getDimensions()
-	local UI_H = Constants.UI_H
+	local hasInspect = State.selectedTower ~= nil or State.selectedEnemy ~= nil
 
-	-- PANEL METRICS (authoritative layout)
+	-- Panel layout
 	local OUTER_PAD = 10
 	local PANEL_GAP = 10
-	local OUTER_R  = 12
-	local INNER_R  = 8
+	local OUTER_R = 12
+	local INNER_R = 8
 
 	local INFO_H = HUD_H
 	local SHOP_PANEL_W = SHOP_W
 	local INSPECT_PANEL_W = INSPECT_W + PAD * 2
 
-	local outerW =
-		OUTER_PAD * 2 +
-		SHOP_PANEL_W +
-		PANEL_GAP +
-		INSPECT_PANEL_W
-
+	local baseW = OUTER_PAD * 2 + SHOP_PANEL_W
+	local outerW = baseW
 	local outerH = UI_H
 	local outerX = PANEL_INSET
 	local outerY = sh - outerH - PANEL_LIFT
 
-	-- OUTER PANEL
+	-- Outer backdrop
 	lg.setColor(colorPanel)
 	lg.rectangle("fill", outerX, outerY, outerW, outerH, OUTER_R, OUTER_R)
 
-	-- INFO PANEL
+	-- Info panel
 	local infoX = outerX + OUTER_PAD
 	local infoY = outerY + OUTER_PAD
 	local infoW = outerW - OUTER_PAD * 2
@@ -181,8 +184,8 @@ function BottomBar.draw()
 
 	lg.setColor(colorPanel2)
 	lg.rectangle("fill", infoX, infoY, infoW, infoH, INNER_R, INNER_R)
-	
-	-- SHOP PANEL
+
+	-- Shop panel
 	local shopPanelX = outerX + OUTER_PAD
 	local shopPanelY = infoY + infoH + PANEL_GAP
 	local shopPanelW = SHOP_PANEL_W
@@ -191,16 +194,7 @@ function BottomBar.draw()
 	lg.setColor(colorPanel2)
 	lg.rectangle("fill", shopPanelX, shopPanelY, shopPanelW, shopPanelH, INNER_R, INNER_R)
 
-	-- INSPECT PANEL
-	local inspectPanelX = shopPanelX + shopPanelW + PANEL_GAP
-	local inspectPanelY = shopPanelY
-	local inspectPanelW = INSPECT_PANEL_W
-	local inspectPanelH = shopPanelH
-
-	lg.setColor(colorPanel2)
-	lg.rectangle("fill", inspectPanelX, inspectPanelY, inspectPanelW, inspectPanelH, INNER_R, INNER_R)
-
-	-- INFO CONTENT
+	-- Info strip content
 	local y = infoY + floor((INFO_H - textH) * 0.5 + 0.5)
 
 	State.moneyLerp = State.moneyLerp + (State.money - State.moneyLerp) * 0.25
@@ -212,23 +206,27 @@ function BottomBar.draw()
 		moneyCache.text = "$" .. formatNum(moneyRounded)
 	end
 
-	lg.setColor(colorText)
+	lg.setColor(colorMoney)
 	Text.printShadow(moneyCache.text, infoX + 12, y)
 
 	local livesCache = hudCache.lives
+
 	if livesCache.value ~= State.lives then
 		livesCache.value = State.lives
 		livesCache.text = L("hud.lives", State.lives)
 	end
 
+	lg.setColor(colorLives)
 	Text.printShadow(livesCache.text, infoX + 90, y)
 
 	local waveCache = hudCache.wave
+
 	if waveCache.value ~= State.wave then
 		waveCache.value = State.wave
 		waveCache.text = L("hud.wave", State.wave)
 	end
 
+	lg.setColor(colorText)
 	Text.printShadow(waveCache.text, infoX + 170, y)
 
 	if State.inPrep then
@@ -258,7 +256,7 @@ function BottomBar.draw()
 		Text.printShadow(spawnCache.text, infoX + 260, y)
 	end
 
-	-- SHOP CONTENT
+	-- Shop content
 	local shopX = shopPanelX + PAD
 	local shopY = shopPanelY + PAD
 
@@ -267,6 +265,7 @@ function BottomBar.draw()
 	end
 
 	local i = 0
+
 	for _, key in ipairs(Towers.shopOrder) do
 		local def = Towers.TowerDefs[key]
 		local hotkey = Hotkeys.getShopKey(key)
@@ -307,12 +306,15 @@ function BottomBar.draw()
 
 		if bump.active then
 			bump.t = bump.t + getDelta() * 8
+
 			if bump.t >= 1 then
 				bump.t = 1
 				bump.active = false
 			end
+
 			local p = bump.t
 			local ease = p * p * (3 - 2 * p)
+
 			bumpPad = ease
 		end
 
@@ -320,60 +322,107 @@ function BottomBar.draw()
 		local hovered = mx >= x and mx <= x + SHOP_BTN_W and my >= yb and my <= yb + SHOP_BTN_H
 
 		local anim = ensureShopAnim(key)
-		if hovered ~= anim.hovered then anim.active = true end
+
+		if hovered ~= anim.hovered then
+			anim.active = true
+		end
+
 		anim.hovered = hovered
 
 		if anim.active then
 			local speed = getDelta() * 10
+
 			anim.t = hovered and min(1, anim.t + speed) or max(0, anim.t - speed)
-			if anim.t == 0 or anim.t == 1 then anim.active = false end
+
+			if anim.t == 0 or anim.t == 1 then
+				anim.active = false
+			end
 		end
 
 		local ease = anim.t * anim.t * (3 - 2 * anim.t)
 		local bg = lerpColor(colorButton, colorButtonHover, ease)
 
 		lg.setColor(bg[1] * pulse, bg[2] * pulse, bg[3] * pulse, 1)
-		lg.rectangle("fill", x - bumpPad, yb - bumpPad,
-			SHOP_BTN_W + bumpPad * 2, SHOP_BTN_H + bumpPad * 2, 6, 6)
+		lg.rectangle("fill", x - bumpPad, yb - bumpPad, SHOP_BTN_W + bumpPad * 2, SHOP_BTN_H + bumpPad * 2, 6, 6)
 
 		if not canAfford then
-			lg.setColor(0, 0, 0, 0.35)
+			lg.setColor(colorDisabled)
 			lg.rectangle("fill", x, yb, SHOP_BTN_W, SHOP_BTN_H, 6, 6)
 		end
 
 		local ty = yb + (SHOP_BTN_H - textH) * 0.5
 		local colorAfford = canAfford and colorText or colorBad
-		lg.setColor(colorAfford)
+		local nameAlpha = canAfford and 1 or 0.55
+
+		lg.setColor(colorText[1], colorText[2], colorText[3], nameAlpha)
 		Text.printShadow(L(def.nameKey), x + PAD, ty)
+
+		lg.setColor(colorAfford)
 		Text.printfShadow("$" .. def.cost, x + PAD, ty, SHOP_BTN_W - PAD2, "right")
 
 		i = i + 1
 	end
 
-	-- INSPECT CONTENT
-	local inspectX = inspectPanelX + PAD
-	local inspectY = inspectPanelY + PAD
-	local rightColX = inspectX + COL_W + 32
-	local lineH = 16
+	if hasInspect then
+		inspectAnim = inspectAnim + ((hasInspect and 1 or 0) - inspectAnim) * getDelta() * 10
+		local slide = (1 - inspectAnim) * 16
 
-	bottomBarButtons.upgrade = nil
-	bottomBarButtons.sell = nil
+		--local inspectPanelX = outerX + outerW + PANEL_GAP
+		local inspectPanelX = outerX + outerW + PANEL_GAP + slide
+		local inspectPanelY = outerY
+		local inspectPanelW = INSPECT_PANEL_W
+		local inspectPanelH = outerH
 
-	if State.selectedTower then
-		local t = State.selectedTower
+		-- Outer panel
+		lg.setColor(colorPanel)
+		lg.rectangle("fill", inspectPanelX, inspectPanelY, inspectPanelW, inspectPanelH, OUTER_R, OUTER_R)
+
+		-- Inspect top strip
+		local inspectInfoX = inspectPanelX + OUTER_PAD
+		local inspectInfoY = inspectPanelY + OUTER_PAD
+		local inspectInfoW = inspectPanelW - OUTER_PAD * 2
+		local inspectInfoH = HUD_H
+
+		lg.setColor(colorPanel2)
+		lg.rectangle("fill", inspectInfoX, inspectInfoY, inspectInfoW, inspectInfoH, INNER_R, INNER_R)
+
+		-- Inspect content panel
+		local inspectContentX = inspectPanelX + OUTER_PAD
+		local inspectContentY = inspectInfoY + inspectInfoH + PANEL_GAP
+		local inspectContentW = inspectPanelW - OUTER_PAD * 2
+		local inspectContentH = shopPanelH
+
+		lg.setColor(colorPanel2)
+		lg.rectangle("fill", inspectContentX, inspectContentY, inspectContentW, inspectContentH, INNER_R, INNER_R)
+
+		-- Inspect text anchors
+		local inspectTitleX = inspectInfoX + PAD
+		local inspectTitleY = inspectInfoY + floor((inspectInfoH - textH) * 0.5 + 0.5)
+
+		local inspectBodyX = inspectContentX + PAD
+		local inspectBodyY = inspectContentY + PAD
+
+		local lineH = 16
 
 		lg.setColor(colorText)
-		Text.printShadow(L("inspect.towerTitle", L(t.def.nameKey), t.level), inspectX, inspectY)
 
-		local statsY = inspectY + 18
-		Text.printShadow(L("inspect.damage", formatNum(t.damageDealt)), inspectX, statsY)
-		Text.printShadow(L("inspect.kills", t.kills), inspectX, statsY + lineH)
+		if State.selectedTower then
+			local t = State.selectedTower
 
-	elseif State.selectedEnemy then
-		local e = State.selectedEnemy
-		lg.setColor(colorText)
-		Text.printShadow(L(e.def.nameKey), inspectX, inspectY)
-		Text.printShadow(L("inspect.hp", formatNum(e.hp), formatNum(e.maxHp)), inspectX, inspectY + 18)
+			-- Title (top strip)
+			Text.printShadow(L("inspect.towerTitle", L(t.def.nameKey), t.level), inspectTitleX, inspectTitleY)
+
+			-- Body
+			Text.printShadow(L("inspect.damage", formatNum(t.damageDealt)), inspectBodyX, inspectBodyY)
+
+			Text.printShadow(L("inspect.kills", t.kills), inspectBodyX, inspectBodyY + 16)
+		elseif State.selectedEnemy then
+			local e = State.selectedEnemy
+
+			Text.printShadow(L(e.def.nameKey), inspectTitleX, inspectTitleY)
+
+			Text.printShadow(L("inspect.hp", formatNum(e.hp), formatNum(e.maxHp)), inspectBodyX, inspectBodyY)
+		end
 	end
 end
 

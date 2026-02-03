@@ -16,7 +16,7 @@ return {
 		canRotate = true,
 		upgrade = {
 			cost = 60,
-			dmgMult = 1.15,
+			dmgMult = 1.50,
 			rangeAdd = 0.30 * Constants.TILE,
 			fireMult = 1.02,
 		}
@@ -27,7 +27,7 @@ return {
 		cost = 50,
 		range = 3.8 * Constants.TILE,
 		fireRate = 1.4,
-		damage = 6,
+		damage = 5,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 10,
 		projSpeed = 370,
@@ -37,9 +37,9 @@ return {
 		onHitSlow = {factor = 0.55, dur = 1.4},
 		upgrade = {
 			cost = 55,
-			dmgMult = 1.2,
+			dmgMult = 1.45,
 			rangeAdd = 0.2 * Constants.TILE,
-			fireMult = 1.02,
+			fireMult = 1.04,
 			slowDurAdd = 0.35,
 		}
 	},
@@ -49,7 +49,7 @@ return {
 		cost = 70,
 		range = 3.2 * Constants.TILE,
 		fireRate = 0.8,
-		damage = 20,
+		damage = 18,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
 		projSpeed = 320,
@@ -62,9 +62,9 @@ return {
 		},
 		upgrade = {
 			cost = 82,
-			dmgMult = 1.14,
+			dmgMult = 1.48,
 			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.05,
+			fireMult = 1.06,
 			splashAdd = 4, -- increase AoE radius per upgrade
 		}
 	},
@@ -87,7 +87,7 @@ return {
 		},
 		upgrade = {
 			cost = 78,
-			dmgMult = 1.22,
+			dmgMult = 1.55,
 			rangeAdd = 0.12 * Constants.TILE,
 			fireMult = 1.08,
 		}
@@ -106,17 +106,17 @@ return {
 		color = Theme.tower.poison,
 		canRotate = true,
 		poison = {
-			dps = 8, -- damage per second per stack
+			dps = 6, -- damage per second per stack
 			dur = 4, -- duration per application
 			maxStacks = 4,
 		},
 		upgrade = {
 			cost = 72,
-			dmgMult = 1.1,
+			dmgMult = 1.40,
 			rangeAdd = 0.25 * Constants.TILE,
 			fireMult = 1.02,
 			poisonDurAdd = 0.35,
-			poisonDpsMult = 1.08,
+			poisonDpsMult = 1.15,
 			stackAdd = 1,
 		}
 	},

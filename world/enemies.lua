@@ -320,6 +320,8 @@ local function updateEnemies(dt)
 					State.gameOver = true
 					State.victory = false
 
+					State.mode = "game_over"
+
 					State.endT = 0
 					State.endReady = false
 					State.endTitle = L("game.gameOver")
@@ -342,6 +344,8 @@ local function updateEnemies(dt)
 					State.lives = 0
 					State.gameOver = true
 					State.victory = false
+
+					State.mode = "game_over"
 
 					State.endT = 0
 					State.endReady = false

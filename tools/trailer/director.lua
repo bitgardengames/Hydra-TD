@@ -7,6 +7,7 @@ local Waves = require("systems.waves")
 local Shots = require("tools.trailer.shots")
 local Sim = require("tools.trailer.sim")
 local Recorder = require("tools.trailer.recorder")
+local HeroExport = require("tools.trailer.hero_export")
 local Title = require("ui.title")
 local Fonts = require("core.fonts")
 local Enemies = require("world.enemies")
@@ -20,8 +21,11 @@ local sin = math.sin
 
 local lg = love.graphics
 
-local FONT_HERO = lg.newFont("assets/fonts/PTSans.ttf", 142) -- 112
-local FONT_CTA = lg.newFont("assets/fonts/PTSans.ttf", 92) -- 82
+local HERO_FONT_SIZE = 168
+local CTA_FONT_SIZE = 120
+
+local FONT_HERO = lg.newFont("assets/fonts/PTSans.ttf", HERO_FONT_SIZE)
+local FONT_CTA = lg.newFont("assets/fonts/PTSans.ttf", CTA_FONT_SIZE)
 
 local Director = {
 	t = 0,
@@ -116,6 +120,8 @@ function Director.load(name)
 
 		return
 	end
+
+	HeroExport.init()
 
 	-- Reset action flags
 	Director.warmupActions = {}
@@ -270,8 +276,48 @@ function Director.update(dt)
 	end
 end
 
+local function drawFadedBannerForText(text, font, y, alpha)
+	local screenW = lg.getWidth()
+
+	-- Visual tuning knobs
+	local fade = 120
+	local paddingX = 14
+	local featherY = 8
+
+	lg.setFont(font)
+
+	-- Width tracks the actual string
+	local textW = font:getWidth(text)
+	local totalW = textW + paddingX * 2
+	local x0 = (screenW - totalW) * 0.5
+
+	-- Height is FIXED relative to font size (not string content)
+	local bannerHeight = font:getAscent() * 1.15
+
+	-- Slight upward optical bias (feels centered)
+	local y0 = y + font:getAscent() * 0.10
+
+	------------------------------------------------------------
+	-- Solid center slab
+	------------------------------------------------------------
+	lg.setColor(0, 0, 0, alpha)
+	lg.rectangle("fill", x0, y0, totalW, bannerHeight)
+
+	------------------------------------------------------------
+	-- Horizontal fades
+	------------------------------------------------------------
+	for i = 1, fade do
+		local a = alpha * (1 - i / fade)
+		if a <= 0 then break end
+
+		lg.setColor(0, 0, 0, a)
+		lg.rectangle("fill", x0 - i, y0, 1, bannerHeight)
+		lg.rectangle("fill", x0 + totalW + i - 1, y0, 1, bannerHeight)
+	end
+end
+
 function Director.draw()
-	if Director.shot.type ~= "logo" then
+	--[[if Director.shot.type ~= "logo" then
 		Camera.begin()
 		Draw.drawWorld()
 		Camera.finish()
@@ -283,7 +329,26 @@ function Director.draw()
 			Fonts.set("floaters")
 
 			Floaters.draw()
+		end]]
+
+	if Director.shot.type ~= "logo" then
+
+		if HeroExport.draw(function()
+			--Camera.begin()
+			Draw.drawWorld()
+		end) then
+			return -- skip normal draw this frame
 		end
+
+		Camera.begin()
+		Draw.drawWorld()
+		Camera.finish()
+		Camera.present()
+
+		Fonts.set("title")
+
+		Floaters.draw()
+
 	else
 		-- Clear to black for logo cards
 		lg.clear(0, 0, 0, 1)
@@ -304,7 +369,7 @@ function Director.draw()
 		local h = lg.getHeight()
 
 		-- Base layout
-		local yBase = h * 0.60
+		local yBase = h * 0.65
 		local drift = 10 -- pixels of vertical motion
 		local y = yBase
 
@@ -337,6 +402,14 @@ function Director.draw()
 		if tb.smallText then
 			lg.setFont(FONT_CTA)
 		else
+			-- Banner backdrop
+			drawFadedBannerForText(
+				tb.text,
+				FONT_HERO,
+				y - 10,
+				alpha * 0.4
+			)
+
 			lg.setFont(FONT_HERO)
 		end
 
@@ -378,7 +451,7 @@ function Director.draw()
 		local y = math.floor(sh * 0.5) - 120
 
 		lg.setColor(1, 1, 1, alpha)
-		Title.draw({x = x, y = y, alpha = 1, lancerScale = 5.2, angle = Director.lancerIdle.angle})
+		Title.draw({x = x, y = y, alpha = 1, lancerScale = 7.0, angle = Director.lancerIdle.angle})
 
 		lg.setColor(1, 1, 1, 1)
 	end
@@ -408,6 +481,12 @@ function Director.draw()
 			lg.getHeight()
 		)
 		lg.setColor(1, 1, 1, 1)
+	end
+end
+
+function love.keypressed(key)
+	if key == "f9" then
+		HeroExport.capture()
 	end
 end
 

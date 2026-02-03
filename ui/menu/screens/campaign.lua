@@ -1,4 +1,3 @@
--- ui/menu/screens/campaign.lua
 local Constants = require("core.constants")
 local Sound = require("systems.sound")
 local Fonts = require("core.fonts")
@@ -12,42 +11,50 @@ local Button = require("ui.button")
 local L = require("core.localization")
 
 local lg = love.graphics
-local sin = math.sin
-local min = math.min
-local max = math.max
 local floor = math.floor
 
 local Screen = {}
 
-local colorText = Theme.ui.text
-local colorPath = Theme.terrain.path
+-- Colors
+local colorText  = Theme.ui.text
+local colorPath  = Theme.terrain.path
 local colorGrass = Theme.terrain.grass
 local colorPanel = Theme.ui.panel
-local colorMenu = Theme.menu
+local colorMenu  = Theme.menu
 
+-- Layout
 local PAD_PREVIEW = 28
 local PAD_TITLE   = 54
 local PAD_META    = 18
 local PAD_ACTION  = 26
 
-local CAROUSEL_OFFSET      = 90
-local CAROUSEL_SCALE_SIDE = 0.82
-local CAROUSEL_ALPHA_SIDE = 0.35
+local PREVIEW_ZOOM = 1.3
 
+-- Arrow navigation
+local ARROW_SIZE   = 26
+local ARROW_OFFSET = 48
+local ARROW_ALPHA  = 0.85
+local ARROW_HOVER  = 1.0
+
+-- State
 local mapPreviews = {}
-local carouselCards = {}
 local campaignButtons = {}
 
-local function ease(p)
-	return p * p * (3 - 2 * p)
-end
-
-local function lerp(a, b, t)
-	return a + (b - a) * t
-end
-
+-- Helpers
 local function isMapLocked(i)
 	return not Save.isMapUnlocked(i, Maps[i].id)
+end
+
+local function pointInTriangle(px, py, ax, ay, bx, by, cx, cy)
+	local function sign(px, py, ax, ay, bx, by)
+		return (px - bx) * (ay - by) - (ax - bx) * (py - by)
+	end
+
+	local b1 = sign(px, py, ax, ay, bx, by) < 0
+	local b2 = sign(px, py, bx, by, cx, cy) < 0
+	local b3 = sign(px, py, cx, cy, ax, ay) < 0
+
+	return (b1 == b2) and (b2 == b3)
 end
 
 -- Map preview generation
@@ -58,20 +65,26 @@ local function buildMapPreview(mapDef)
 	lg.setCanvas(canvas)
 	lg.clear(0, 0, 0, 0)
 
-	local tileW = w / Constants.GRID_W
-	local tileH = h / Constants.GRID_H
+	local tileW = w / Constants.GRID_W * PREVIEW_ZOOM
+	local tileH = h / Constants.GRID_H * PREVIEW_ZOOM
+
+	local mapW = Constants.GRID_W * tileW
+	local mapH = Constants.GRID_H * tileH
+
+	local offsetX = (w - mapW) * 0.5
+	local offsetY = (h - mapH) * 0.5
 
 	lg.setColor(colorGrass)
-	lg.rectangle("fill", 0, 0, w, h)
+	lg.rectangle("fill", offsetX, offsetY, mapW, mapH)
 
 	lg.setColor(colorPath)
-	lg.setLineWidth(4)
+	lg.setLineWidth(4 * PREVIEW_ZOOM)
 
 	for i = 1, #mapDef.path - 1 do
 		local ax, ay = mapDef.path[i][1], mapDef.path[i][2]
 		local bx, by = mapDef.path[i + 1][1], mapDef.path[i + 1][2]
 
-		lg.line((ax - 0.5) * tileW, (ay - 0.5) * tileH, (bx - 0.5) * tileW, (by - 0.5) * tileH)
+		lg.line(offsetX + (ax - 0.5) * tileW, offsetY + (ay - 0.5) * tileH, offsetX + (bx - 0.5) * tileW, offsetY + (by - 0.5) * tileH)
 	end
 
 	lg.setLineWidth(1)
@@ -80,11 +93,9 @@ local function buildMapPreview(mapDef)
 	return canvas
 end
 
-local function addCard(cards, i, from, to, mapCount)
-	if i < 1 or i > mapCount then return end
-	cards[#cards + 1] = { i = i, from = from, to = to }
-end
-
+-- =====================================================
+-- Load
+-- =====================================================
 function Screen.load()
 	-- Build previews once
 	if #mapPreviews == 0 then
@@ -123,6 +134,9 @@ function Screen.load()
 	}
 end
 
+-- =====================================================
+-- Update
+-- =====================================================
 function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
@@ -138,123 +152,168 @@ function Screen.update(dt)
 	end
 end
 
+-- =====================================================
+-- Draw
+-- =====================================================
 function Screen.draw()
 	local sw, sh = lg.getDimensions()
 
 	lg.setColor(colorMenu)
 	lg.rectangle("fill", 0, 0, sw, sh)
 
-	local index = State.mapIndex
-	local map = Maps[index]
+	local index    = State.mapIndex
+	local map      = Maps[index]
 	local mapCount = #Maps
 
-	local dir = State.carouselDir or 0
-	local p = ease(State.carouselT or 1)
-
 	local preview = mapPreviews[index]
-	local pw, ph = preview:getWidth(), preview:getHeight()
+	local pw, ph  = preview:getWidth(), preview:getHeight()
 
 	local centerX = floor(sw * 0.5)
-	local blockH = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + PAD_ACTION
-	local pyTop = floor(sh * 0.38 - blockH * 0.5)
+	local blockH  = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + PAD_ACTION
+	local pyTop   = floor(sh * 0.38 - blockH * 0.5)
 	local centerY = pyTop + ph * 0.5
 
-	local slots = {
-		prev = { x = centerX - CAROUSEL_OFFSET, y = centerY, scale = CAROUSEL_SCALE_SIDE, alpha = CAROUSEL_ALPHA_SIDE },
-		curr = { x = centerX, y = centerY, scale = 1.0, alpha = 1.0 },
-		next = { x = centerX + CAROUSEL_OFFSET, y = centerY, scale = CAROUSEL_SCALE_SIDE, alpha = CAROUSEL_ALPHA_SIDE },
-	}
+	-- Preview
+	local locked = isMapLocked(index)
+	local alpha  = locked and 0.35 or 1.0
 
-	for i = #carouselCards, 1, -1 do carouselCards[i] = nil end
+	lg.setColor(1, 1, 1, alpha)
+	lg.draw(preview, centerX - pw * 0.5, centerY - ph * 0.5)
 
-	if dir == 0 then
-		addCard(carouselCards, index - 1, slots.prev, slots.prev, mapCount)
-		addCard(carouselCards, index,     slots.curr, slots.curr, mapCount)
-		addCard(carouselCards, index + 1, slots.next, slots.next, mapCount)
-	end
-
-	local resolved = {}
-
-	for _, c in ipairs(carouselCards) do
-		local from, to = c.from, c.to
-
-		resolved[#resolved + 1] = {
-			i = c.i,
-			x = lerp(from.x, to.x, p),
-			y = lerp(from.y, to.y, p),
-			s = lerp(from.scale, to.scale, p),
-			a = lerp(from.alpha, to.alpha, p),
-		}
-	end
-
-	table.sort(resolved, function(a, b) return a.s < b.s end)
-
-	for _, r in ipairs(resolved) do
-		local pv = mapPreviews[r.i]
-		local locked = isMapLocked(r.i)
-		local alpha = locked and (r.a * 0.35) or r.a
-
-		lg.setColor(1, 1, 1, alpha)
-		lg.push()
-		lg.translate(r.x, r.y)
-		lg.scale(r.s, r.s)
-		lg.draw(pv, -pw * 0.5, -ph * 0.5)
-		lg.pop()
-	end
-
+	-- Frame
 	lg.setColor(colorPanel)
-	lg.rectangle("line", centerX - pw * 0.5, centerY - ph * 0.5, pw, ph, 6, 6)
+	lg.rectangle(
+		"line",
+		centerX - pw * 0.5,
+		centerY - ph * 0.5,
+		pw, ph,
+		6, 6
+	)
 
-	if isMapLocked(index) then
+	-- Locked overlay
+	if locked then
 		lg.setColor(0, 0, 0, 0.45)
-		lg.rectangle("fill", centerX - pw * 0.5, centerY - ph * 0.5, pw, ph, 12, 12)
+		lg.rectangle(
+			"fill",
+			centerX - pw * 0.5,
+			centerY - ph * 0.5,
+			pw, ph,
+			12, 12
+		)
 
 		lg.setColor(colorText)
-
 		Fonts.set("title")
-		Text.printfShadow(L("campaign.locked"), centerX - pw * 0.5, centerY - 14, pw, "center")
+		Text.printfShadow(
+			L("campaign.locked"),
+			centerX - pw * 0.5,
+			centerY - 14,
+			pw,
+			"center"
+		)
 	end
 
+	-- =====================================================
+	-- Navigation arrows
+	-- =====================================================
+	local leftEnabled  = State.mapIndex > 1
+	local rightEnabled = State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1)
+
+	local arrowY = centerY
+	local size   = ARROW_SIZE
+
+	-- Left arrow
+	do
+		local cx = centerX - pw * 0.5 - ARROW_OFFSET
+		local a = leftEnabled and ARROW_ALPHA or 0.25
+
+		if leftEnabled and Cursor.x then
+			if pointInTriangle(
+				Cursor.x, Cursor.y,
+				cx + size * 0.5, arrowY - size,
+				cx - size * 0.5, arrowY,
+				cx + size * 0.5, arrowY + size
+			) then
+				a = ARROW_HOVER
+			end
+		end
+
+		lg.setColor(colorText[1], colorText[2], colorText[3], a)
+		lg.polygon(
+			"fill",
+			cx + size * 0.5, arrowY - size,
+			cx - size * 0.5, arrowY,
+			cx + size * 0.5, arrowY + size
+		)
+	end
+
+	-- Right arrow
+	do
+		local cx = centerX + pw * 0.5 + ARROW_OFFSET
+		local a = rightEnabled and ARROW_ALPHA or 0.25
+
+		if rightEnabled and Cursor.x then
+			if pointInTriangle(
+				Cursor.x, Cursor.y,
+				cx - size * 0.5, arrowY - size,
+				cx + size * 0.5, arrowY,
+				cx - size * 0.5, arrowY + size
+			) then
+				a = ARROW_HOVER
+			end
+		end
+
+		lg.setColor(colorText[1], colorText[2], colorText[3], a)
+		lg.polygon(
+			"fill",
+			cx - size * 0.5, arrowY - size,
+			cx + size * 0.5, arrowY,
+			cx - size * 0.5, arrowY + size
+		)
+	end
+
+	-- Text
 	local textY = pyTop + ph + PAD_PREVIEW
 
 	lg.setColor(colorText)
-
 	Fonts.set("title")
 	Text.printfShadow(L(map.nameKey), 0, textY, sw, "center")
 
-	lg.setColor(colorText)
-
 	Fonts.set("ui")
-	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
+	Text.printfShadow(
+		L("campaign.mapOf", index, mapCount),
+		0,
+		textY + PAD_TITLE,
+		sw,
+		"center"
+	)
 
+	-- Buttons
 	Fonts.set("menu")
 	for _, btn in ipairs(campaignButtons) do
 		Button.draw(btn)
 	end
 end
 
--- ================================
+-- =====================================================
 -- Input
--- ================================
+-- =====================================================
 function Screen.keypressed(key)
 	if key == "left" then
 		if State.mapIndex > 1 then
 			State.mapIndex = State.mapIndex - 1
-			State.carouselDir = -1
-			State.carouselT = 0
 			Sound.play("uiMove")
 		else
 			Sound.play("uiError")
 		end
+
 	elseif key == "right" then
 		if State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1) then
 			State.mapIndex = State.mapIndex + 1
-			State.carouselDir = 1
-			State.carouselT = 0
 			Sound.play("uiMove")
 		else
 			Sound.play("uiError")
 		end
+
 	elseif key == "escape" then
 		State.mode = "menu"
 		Sound.play("uiBack")
@@ -262,6 +321,50 @@ function Screen.keypressed(key)
 end
 
 function Screen.mousepressed(x, y, button)
+	if button == 1 then
+		local sw, sh = lg.getDimensions()
+		local index = State.mapIndex
+		local preview = mapPreviews[index]
+		local pw, ph = preview:getWidth(), preview:getHeight()
+
+		local centerX = floor(sw * 0.5)
+		local blockH  = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + PAD_ACTION
+		local pyTop   = floor(sh * 0.38 - blockH * 0.5)
+		local centerY = pyTop + ph * 0.5
+		local size    = ARROW_SIZE
+
+		-- Left arrow click
+		if index > 1 then
+			local cx = centerX - pw * 0.5 - ARROW_OFFSET
+			if pointInTriangle(
+				x, y,
+				cx + size * 0.5, centerY - size,
+				cx - size * 0.5, centerY,
+				cx + size * 0.5, centerY + size
+			) then
+				State.mapIndex = index - 1
+				Sound.play("uiMove")
+				return true
+			end
+		end
+
+		-- Right arrow click
+		if index < #Maps and not isMapLocked(index + 1) then
+			local cx = centerX + pw * 0.5 + ARROW_OFFSET
+			if pointInTriangle(
+				x, y,
+				cx - size * 0.5, centerY - size,
+				cx + size * 0.5, centerY,
+				cx - size * 0.5, centerY + size
+			) then
+				State.mapIndex = index + 1
+				Sound.play("uiMove")
+				return true
+			end
+		end
+	end
+
+	-- Buttons
 	for _, btn in ipairs(campaignButtons) do
 		if Button.mousepressed(btn, x, y, button) then
 			return true

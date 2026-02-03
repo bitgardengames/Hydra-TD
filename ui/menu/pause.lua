@@ -2,47 +2,51 @@ local Button = require("ui.button")
 local Cursor = require("core.cursor")
 local State = require("core.state")
 local Sound = require("systems.sound")
+local L = require("core.localization")
 
 local Page = {}
+local buttons = nil
 
 local floor = math.floor
 
-local pauseButtons = {
-	{
-		id = "resume",
-		label = "Resume",
-		w = 220,
-		h = 42,
-		onClick = function()
-			State.paused = false
-			State.mode = "game"
-			Sound.play("uiConfirm")
-		end
-	},
-	{
-		id = "restart",
-		label = "Restart",
-		w = 220,
-		h = 42,
-		onClick = function()
-			State.paused = false
-			State.mode = "game"
-			resetGame()
-			Sound.play("uiConfirm")
-		end
-	},
-	{
-		id = "menu",
-		label = "Main Menu",
-		w = 220,
-		h = 42,
-		onClick = function()
-			State.paused = false
-			State.mode = "menu"
-			Sound.play("uiConfirm")
-		end
-	},
-}
+function Page.load()
+	buttons = {
+		{
+			id = "resume",
+			label = L("menu.resume"),
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.paused = false
+				State.mode = "game"
+				Sound.play("uiConfirm")
+			end
+		},
+		{
+			id = "restart",
+			label = L("menu.restart"),
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.paused = false
+				State.mode = "game"
+				resetGame()
+				Sound.play("uiConfirm")
+			end
+		},
+		{
+			id = "menu",
+			label = L("menu.mainMenu"),
+			w = 220,
+			h = 42,
+			onClick = function()
+				State.paused = false
+				State.mode = "menu"
+				Sound.play("uiConfirm")
+			end
+		},
+	}
+end
 
 function Page.update(dt)
 	local sw, sh = love.graphics.getDimensions()
@@ -50,7 +54,7 @@ function Page.update(dt)
 	local startY = floor(sh * 0.5 - 20)
 	local gap = 52
 
-	for i, btn in ipairs(pauseButtons) do
+	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = startY + (i - 1) * gap
 
@@ -59,13 +63,13 @@ function Page.update(dt)
 end
 
 function Page.draw()
-	for _, btn in ipairs(pauseButtons) do
+	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
 end
 
 function Page.mousepressed(x, y, button)
-	for _, btn in ipairs(pauseButtons) do
+	for _, btn in ipairs(buttons) do
 		if Button.mousepressed(btn, x, y, button) then
 			return true
 		end

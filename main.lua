@@ -23,6 +23,8 @@ local Menu = require("ui.menu.menu")
 local Hotkeys = require("core.hotkeys")
 local Rumble = require("systems.rumble")
 local Localization = require("core.localization")
+local Victory = require("ui.menu.screens.victory")
+local GameOver = require("ui.menu.screens.game_over")
 
 local lg = love.graphics
 local lk = love.keyboard
@@ -85,14 +87,7 @@ function resetGame()
     State.activeBoss = nil
 
     -- Reset damage stats
-    State.stats.damageByTower = {
-		lancer = 0,
-		slow = 0,
-		cannon = 0,
-        shock = 0,
-        poison = 0,
-    }
-
+    State.stats.damageByTower = {}
     State.stats.bossDamageByTower = {}
     State.stats.totalDamage = 0
     State.stats.bossTotalDamage = 0
@@ -103,7 +98,6 @@ function resetGame()
 end
 
 function love.load()
-	-- Remove for public release
 	if ART_EXPORT == 1 then
 		require("tools.art_export").run()
 
@@ -132,6 +126,8 @@ function love.load()
 
 	lg.setDefaultFilter("nearest", "nearest")
 
+	Difficulty.set(Save.data.settings.difficulty)
+
 	Localization.load(Save.data.settings.language or "enUS")
 
 	Fonts.load()
@@ -141,13 +137,13 @@ function love.load()
 
 	Sound.load()
 
+	Sound.playMusic("bg")
+
 	if TRAILER_EXPORT == 1 then
 		require("tools.trailer.main").run()
 
 		return
 	end
-
-	Sound.playMusic("bg")
 
 	lg.setBackgroundColor(colorBg)
 	--love.math.setRandomSeed(123456) -- Lock determinism
@@ -158,6 +154,7 @@ end
 function love.update(dt)
 	local mode = State.mode
 	local target = (mode == "pause") and 1 or 0
+
 	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
 
 	Cursor.update(dt)
@@ -169,7 +166,8 @@ function love.update(dt)
 		return
 	end
 
-	if mode == "menu" or mode == "campaign" or mode == "settings" then
+	--if mode == "menu" or mode == "campaign" or mode == "settings" or mode == "game_over" or mode == "victory" then
+	if mode ~= "game" then -- Pause already bailed right there ^
 		Menu.update(dt)
 	end
 
@@ -182,22 +180,6 @@ function love.update(dt)
 	end
 
 	if mode ~= "game" then
-		return
-	end
-
-	-- Game over: simple restart on click
-	if State.gameOver then
-		State.endT = min(1, State.endT + dt * 2.8)
-
-		if State.endT > 0.85 then
-			State.endReady = true
-		end
-
-		-- Restart only after settle, and only on defeat
-		if State.endReady and not State.victory and lm.isDown(1) then
-			resetGame()
-		end
-
 		return
 	end
 
@@ -232,6 +214,18 @@ function love.update(dt)
 	Effects.update(dt)
 	Floaters.update(dt)
 
+	-- Loss condition
+	if State.lives <= 0 and not State.gameOver then
+		State.gameOver = true
+		State.victory = false
+
+		State.mode = "game_over"
+
+		Sound.play("gameOver")
+
+		return
+	end
+
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
@@ -243,10 +237,7 @@ function love.update(dt)
 			State.gameOver = true
 			State.victory = true
 
-			State.endT = 0
-			State.endReady = false
-			State.endTitle  = "VICTORY"
-			State.endReason = "Wave 20 cleared"
+			State.mode = "victory"
 
 			Sound.play("victory")
 
@@ -262,7 +253,7 @@ end
 function love.draw()
 	local sw, sh = lg.getDimensions()
 
-	if State.mode == "game" or State.mode == "pause" then
+	if State.mode == "game" or State.mode == "pause" or State.mode == "game_over" or State.mode == "victory" then
 		-- World
 		Camera.begin()
 		Draw.drawWorld()
@@ -292,46 +283,10 @@ function love.draw()
 			lg.printf("PAUSED", 0, sh * 0.5 - 70 + drop, sw, "center")
 
 			Menu.drawPause()
-		elseif State.gameOver then
-			local t = State.endT
-			local ease = t * t * (3 - 2 * t)
+		end
 
-			-- Overlay
-			local overlayA = 0.78 * ease
-			lg.setColor(0, 0, 0, overlayA)
-			lg.rectangle("fill", 0, 0, sw, sh)
-
-			-- Text motion
-			local drop = (1 - ease) * 8
-			local textY = sh / 2 - 36 + drop
-			local titleY  = textY
-			local reasonY = titleY + 32
-			local actionY = reasonY + 52
-
-			-- Color
-			local color = State.victory and colorGood or colorBad
-			lg.setColor(color[1], color[2], color[3], ease)
-
-			-- Title
-			lg.setColor(color[1], color[2], color[3], ease)
-			lg.printf(State.endTitle, 0, titleY, sw, "center")
-
-			-- Reason
-			if State.endReason and State.endT > 0.25 then
-				lg.setColor(1, 1, 1, 0.55 * ease)
-				lg.printf(State.endReason, 0, reasonY, sw, "center")
-			end
-
-			-- Actions
-			lg.setColor(1, 1, 1, 0.65 * ease)
-
-			if State.endReady then
-				if State.victory then
-					lg.printf("[N] Next Map    [E] Endless", 0, actionY, sw, "center")
-				else
-					lg.printf("Click to Restart", 0, actionY, sw, "center")
-				end
-			end
+		if State.mode == "game_over" or State.mode == "victory" then
+			Menu.draw()
 		end
 
 		Cursor.draw()

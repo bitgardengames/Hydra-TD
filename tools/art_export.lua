@@ -42,6 +42,8 @@ local BANNERS = {
 	library_header = {w = 920, h = 430},
 	library_capsule = {w = 600, h = 900},
 
+	page_background = {w = 1438, h = 810},
+
 	-- Social banners
 	youtube_banner = {w = 2048, h = 1152},
 	x_banner = {w = 1500, h = 500},
@@ -50,9 +52,15 @@ local BANNERS = {
 	desktop = {w = 1920, h = 1080},
 }
 
+-- Banners that should output without text
+local TEXTLESS_BANNERS = {
+	library_hero = true,
+	page_background = true,
+}
 -- Could also do a promo banner asset variation, with call to action like "Wishlist on steam {steam icon}" etc.
 
 local TRANSPARENT_BANNERS = {
+	library_logo = true, -- Actually required by steam to be transparent
 	main_capsule = true,
 	header_capsule = true,
 	small_capsule = true,
@@ -225,7 +233,7 @@ end
 -- Banner group
 local function drawBannerGroup(w, h)
 	Title.invalidateCache()
-	Title.drawBannerStyle(w, h, { angle = -math.pi / 6 })
+	Title.drawBannerStyle(w, h, {angle = -math.pi / 6})
 end
 
 -- Banner export
@@ -238,7 +246,7 @@ function Export.exportBanners()
 
 		drawBannerBackground(b.w, b.h)
 
-		if name ~= "library_hero" then
+		if not TEXTLESS_BANNERS[name] then
 			drawBannerGroup(b.w, b.h)
 		end
 
@@ -288,7 +296,7 @@ function Export.exportAppIcons()
 end
 
 function Export.exportSocialAvatar()
-	local sizes = {256, 512, 1024, 2048}
+	local sizes = {98, 256, 512, 1024, 2048} -- 98 is YouTube avatar size
 	local Constants = require("core.constants")
 
 	local lg = love.graphics

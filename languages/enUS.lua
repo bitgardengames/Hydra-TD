@@ -10,26 +10,32 @@ return {
 		settings = "Settings",
 		quit = "Quit",
 		back = "Back",
-	},
-
-	pause = {
 		resume = "Resume",
 		restart = "Restart",
 		mainMenu = "Main Menu",
+		nextMap = "Next Map",
+		endless = "Endless Mode",
 	},
 
 	settings = {
 		title = "Settings",
 		music = "Music Volume",
 		sfx = "SFX Volume",
+		difficulty = "Difficulty",
 		fullscreen = "Fullscreen",
-		fullscreenOn = "Fullscreen: On",
-		fullscreenOff = "Fullscreen: Off",
+		on = "On",
+		off = "Off",
 	},
 
 	campaign = {
 		locked = "LOCKED",
 		mapOf = "Map %d of %d",
+	},
+
+	difficulty = {
+		easy = "Easy",
+		normal = "Normal",
+		hard = "Hard",
 	},
 
 	ui = {
@@ -67,7 +73,7 @@ return {
 	hud = {
 		lives = "Lives %d",
 		wave = "Wave %d",
-		prep = "Prep %.1fs (Space to start)",
+		prep = "Prep %.0fs (Space to start)",
 		spawning = "Spawning %d - Alive %d",
 	},
 

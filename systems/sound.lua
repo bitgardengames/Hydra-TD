@@ -35,7 +35,8 @@ function Sound.play(name)
         local last = lastPlayTime[name] or 0
 
         -- Scale with game speed
-        local speedMult = (State and State.speed == 4) and 1.6 or 1.0
+        --local speedMult = (State and State.speed == 4) and 1.6 or 1.0
+        local speedMult = (State and State.speed == 4) and 1.0 or 0.5
 
         if now - last < entry.cooldown * speedMult then
             return
@@ -57,7 +58,7 @@ function Sound.play(name)
 	end
 
     if entry.jitter then
-        sound:setPitch(1 + lmr(-8, 8) * 0.01)
+        sound:setPitch(1 + lmr(-8, 8) * 0.02)
     else
         sound:setPitch(1)
     end
@@ -139,29 +140,33 @@ function Sound.load()
 
 	-- NYI
     Sound.sfx.towerUpgraded = {
-		source = la.newSource("assets/sounds/sell.wav", "static"),
+		--source = la.newSource("assets/sounds/sell.wav", "static"),
 	}
 
     Sound.sfx.towerSold = {
-		source = la.newSource("assets/sounds/sell.wav", "static"),
+		sources = {
+			la.newSource("assets/sounds/Coins 7.ogg", "static"),
+			la.newSource("assets/sounds/Coins 8.ogg", "static"),
+			la.newSource("assets/sounds/Coins 9.ogg", "static"),
+		},
 	}
 
     Sound.sfx.lancer = {
 		source = la.newSource("assets/sounds/Arrow Impact wood 1.ogg", "static"),
 		jitter = true,
-		cooldown = 0.08,
+		--cooldown = 0.08,
 	}
 
     Sound.sfx.slow = {
 		source = la.newSource("assets/sounds/Mud footsteps 7.ogg", "static"),
 		jitter = true,
-		cooldown = 0.10,
+		--cooldown = 0.10,
 	}
 
     Sound.sfx.cannon = {
 		source = la.newSource("assets/sounds/Cannon shots 1.ogg", "static"),
 		jitter = true,
-		cooldown = 0.14,
+		--cooldown = 0.14,
 	}
 
     Sound.sfx.poison = {
@@ -170,7 +175,7 @@ function Sound.load()
 			la.newSource("assets/sounds/Bloody punches 10.ogg", "static"),
 		},
 		jitter = true,
-		cooldown = 0.12,
+		--cooldown = 0.12,
 	}
 
     Sound.sfx.shock = {
@@ -180,7 +185,7 @@ function Sound.load()
 			la.newSource("assets/sounds/Spark 3.ogg", "static"),
 		},
 		jitter = true,
-		cooldown = 0.09,
+		--cooldown = 0.09,
 	}
 
     -- Music

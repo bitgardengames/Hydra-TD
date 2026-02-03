@@ -52,7 +52,7 @@ local function spawn(fromTower, targetEnemy)
         life = 2.0,
 		t = 0,
         sourceTower = fromTower,
-        speed = fromTower.projSpeed,
+        speed = fromTower.projSpeed or 0,
         mode = isCannon and "ground" or "homing",
         target = targetEnemy or nil,
 		lastTX = targetEnemy.x,
@@ -99,7 +99,7 @@ local function update(dt)
 
 		-- Homing projectiles (Lancer / Slow / Poison)
 		if p.mode == "homing" then
-			local speed = p.speed
+			local speed = p.speed or 0
 			local e = p.target
 
 			-- Target tracking
@@ -210,7 +210,7 @@ local function update(dt)
 			local ny = dy * invDist
 			local dist = d2 * invDist
 
-			local step = min(p.speed * dt, dist)
+			local step = min((p.speed or 0) * dt, dist)
 
 			p.x = p.x + nx * step
 			p.y = p.y + ny * step

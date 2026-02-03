@@ -4,6 +4,8 @@ local SAVE_FILE = "save.lua"
 
 Save.data = nil
 
+local format = string.format
+
 function Save.load()
     if love.filesystem.getInfo(SAVE_FILE) then
         local chunk = love.filesystem.load(SAVE_FILE)
@@ -15,8 +17,9 @@ function Save.load()
             Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 
 			Save.data.settings = Save.data.settings or {}
-			Save.data.settings.musicVolume = Save.data.settings.musicVolume or 0.75
-			Save.data.settings.sfxVolume = Save.data.settings.sfxVolume or 0.60
+			Save.data.settings.musicVolume = Save.data.settings.musicVolume or 0.50
+			Save.data.settings.sfxVolume = Save.data.settings.sfxVolume or 0.50
+			Save.data.settings.difficulty = Save.data.settings.difficulty or "normal"
 			Save.data.settings.fullscreen = Save.data.settings.fullscreen or false
 
             return
@@ -31,6 +34,7 @@ function Save.load()
 		settings = {
 			musicVolume = 0.50,
 			sfxVolume = 0.50,
+			difficulty = "normal",
 			fullscreen = true,
 		},
     }

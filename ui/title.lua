@@ -32,11 +32,12 @@ local TITLE_TEXT = "HYDRA TD"
 -- =========================================================
 
 local titleCache = {
-	canvas = nil,
-	fontPx = nil,
-	textW = 0,
-	textH = 0,
-	pad   = 0,
+	canvas    = nil,
+	fontPx    = nil,
+	textW     = 0,
+	textH     = 0, -- raw font height
+	opticalH  = 0, -- ascent - descent (visual glyph height)
+	pad       = 0,
 }
 
 function Title.invalidateCache()
@@ -47,6 +48,10 @@ function Title.invalidateCache()
 	titleCache.canvas = nil
 	titleCache.fontPx = nil
 end
+
+-- =========================================================
+-- Build cached title canvas
+-- =========================================================
 
 local function buildTitleCanvas(lancerScale)
 	local fontPx = floor(BASE_LANCER_VISUAL_W * lancerScale * FONT_RATIO)
@@ -65,10 +70,18 @@ local function buildTitleCanvas(lancerScale)
 	local textW = font:getWidth(TITLE_TEXT)
 	local textH = font:getHeight()
 
+	-- Optical (visual) height: ascent minus descent
+	local ascent  = font:getAscent()
+	local descent = font:getDescent()
+	local opticalH = ascent - descent
+
 	local outline = floor(5 * (lancerScale / 2) + 0.5)
 	local pad = outline + 2
 
-	local canvas = lg.newCanvas(textW + pad * 2, textH + pad * 2)
+	local canvas = lg.newCanvas(
+		textW + pad * 2,
+		textH + pad * 2
+	)
 
 	lg.setCanvas(canvas)
 	lg.clear(0, 0, 0, 0)
@@ -89,15 +102,16 @@ local function buildTitleCanvas(lancerScale)
 
 	lg.setCanvas(prevCanvas)
 
-	titleCache.canvas = canvas
-	titleCache.fontPx = fontPx
-	titleCache.textW  = textW
-	titleCache.textH  = textH
-	titleCache.pad    = pad
+	titleCache.canvas   = canvas
+	titleCache.fontPx   = fontPx
+	titleCache.textW    = textW
+	titleCache.textH    = textH
+	titleCache.opticalH = opticalH
+	titleCache.pad      = pad
 end
 
 -- =========================================================
--- Lancer idle animation (unchanged)
+-- Lancer idle animation
 -- =========================================================
 
 function Title.updateLancerIdle(state, dt, timeNow)
@@ -122,7 +136,9 @@ function Title.updateLancerIdle(state, dt, timeNow)
 	p = p * p * (3 - 2 * p)
 
 	local a, b = state.from, state.to
-	if state.dir ~= 1 then a, b = b, a end
+	if state.dir ~= 1 then
+		a, b = b, a
+	end
 
 	state.angle = a + (b - a) * p
 
@@ -134,31 +150,34 @@ function Title.updateLancerIdle(state, dt, timeNow)
 end
 
 -- =========================================================
--- Menu title draw (pixel-identical)
+-- Menu title draw
 -- =========================================================
 
 function Title.draw(opts)
 	opts = opts or {}
 
-	local x = opts.x or 0
-	local y = opts.y or 0
+	local x     = opts.x or 0
+	local y     = opts.y or 0
 	local scale = opts.scale or 1
 	local angle = opts.angle or -pi / 6
 	local alpha = opts.alpha or 1
 
-	local GAP = opts.gap or 26
-	local LANCER_SCALE = opts.lancerScale or 2.2
+	local GAP            = opts.gap or 26
+	local LANCER_SCALE   = opts.lancerScale or 2.2
 	local LANCER_Y_OFFSET = opts.lancerYOffset or -7
-	local TEXT_Y_OFFSET = 3
+	local TEXT_Y_OFFSET  = 3
 
 	buildTitleCanvas(LANCER_SCALE)
 
 	local lancerVisualW = BASE_LANCER_VISUAL_W * LANCER_SCALE
 
-	-- IMPORTANT: layout uses *text width*, not canvas width
+	-- Layout uses text width (optical centering)
 	local groupW = lancerVisualW + GAP + titleCache.textW
 	local OPTICAL_CENTER_BIAS = titleCache.textW * 0.020
 	local baseX = -groupW * 0.5 - OPTICAL_CENTER_BIAS
+
+	-- Shared vertical midline
+	local midY = LANCER_Y_OFFSET
 
 	lg.push()
 	lg.translate(x, y)
@@ -166,23 +185,33 @@ function Title.draw(opts)
 
 	-- Lancer
 	lg.push()
-	lg.translate(baseX + lancerVisualW * 0.5, LANCER_Y_OFFSET)
+	lg.translate(baseX + lancerVisualW * 0.5, midY)
 	lg.scale(LANCER_SCALE, LANCER_SCALE)
-	Entities.drawTowerCore("lancer", 0, 0, {angle = angle, alpha = alpha, shadow = false})
+	Entities.drawTowerCore(
+		"lancer",
+		0, 0,
+		{ angle = angle, alpha = alpha, shadow = false }
+	)
 	lg.pop()
 
-	-- Title text
+	-- Title text (optically centered to same midline)
 	lg.setColor(1, 1, 1, alpha)
 	lg.draw(
 		titleCache.canvas,
 		baseX + lancerVisualW + GAP - titleCache.pad,
-		-titleCache.textH * 0.5 + TEXT_Y_OFFSET - titleCache.pad
+		midY
+			- titleCache.opticalH * 0.5
+			+ TEXT_Y_OFFSET
+			- titleCache.pad
 	)
 
 	lg.pop()
 end
 
--- Banner draw (also identical)
+-- =========================================================
+-- Banner draw
+-- =========================================================
+
 function Title.drawBannerStyle(w, h, opts)
 	opts = opts or {}
 
@@ -191,6 +220,10 @@ function Title.drawBannerStyle(w, h, opts)
 
 	local aspect = w / h
 	local horizontalBoost = min(2.4, max(1.0, aspect))
+
+	if h < 200 then
+		horizontalBoost = horizontalBoost * 1.18
+	end
 
 	local LANCER_SCALE = min(w, h) * BANNER_LANCER_SCALE_FACTOR * horizontalBoost
 	buildTitleCanvas(LANCER_SCALE)
@@ -203,25 +236,36 @@ function Title.drawBannerStyle(w, h, opts)
 		and (h * 0.333 + h * 0.06)
 		or centerY
 
-	local TEXT_BASELINE_BIAS = titleCache.textH * 0.08
-	local TEXT_OPTICAL_BIAS  = titleCache.textW * 0.020
+	local TEXT_OPTICAL_BIAS = titleCache.textW * 0.020
 
-	local groupW = lancerVisualW + GAP + titleCache.textW + titleCache.pad * 2 - 1
+	local groupW =
+		lancerVisualW
+		+ GAP
+		+ titleCache.textW
+		+ titleCache.pad * 2
+		- 1
+
 	local baseX = (w - groupW) * 0.5 - TEXT_OPTICAL_BIAS
 
 	-- Lancer
 	lg.push()
 	lg.translate(baseX + lancerVisualW * 0.5, anchorY)
 	lg.scale(LANCER_SCALE, LANCER_SCALE)
-	Entities.drawTowerCore("lancer", 0, 0, {angle = angle, alpha = alpha, shadow = false})
+	Entities.drawTowerCore(
+		"lancer",
+		0, 0,
+		{ angle = angle, alpha = alpha, shadow = false }
+	)
 	lg.pop()
 
-	-- Title text
+	-- Title text (same shared midline)
 	lg.setColor(1, 1, 1, alpha)
 	lg.draw(
 		titleCache.canvas,
 		baseX + lancerVisualW + GAP - titleCache.pad,
-		anchorY - titleCache.textH * 0.5 + TEXT_BASELINE_BIAS - titleCache.pad
+		anchorY
+			- titleCache.opticalH * 0.5
+			- titleCache.pad
 	)
 end
 

@@ -35,72 +35,72 @@ function Camera.centerOn(cx, cy, z)
 end
 
 local function computeAdaptiveZoom()
-    local sw, sh = lg.getDimensions()
+	local sw, sh = lg.getDimensions()
 
-    local scaleX = sw / REF_W
-    local scaleY = sh / REF_H
+	local scaleX = sw / REF_W
+	local scaleY = sh / REF_H
 
-    -- Preserve framing by using the limiting axis
-    local resolutionFactor = min(scaleX, scaleY)
+	-- Preserve framing by using the limiting axis
+	local resolutionFactor = min(scaleX, scaleY)
 
-    -- Optional softening (feels nicer than linear)
-    resolutionFactor = resolutionFactor
+	-- Optional softening (feels nicer than linear)
+	resolutionFactor = resolutionFactor
 
-    local z = AUTHORED_ZOOM * resolutionFactor
+	local z = AUTHORED_ZOOM * resolutionFactor
 
-    return max(MIN_ZOOM, min(MAX_ZOOM, z))
+	return max(MIN_ZOOM, min(MAX_ZOOM, z))
 end
 
 function Camera.load()
-    Camera.resize()
+	Camera.resize()
 	Camera.setZoom(computeAdaptiveZoom())
 end
 
 function Camera.setZoom(z)
-    Camera.wscale = z
+	Camera.wscale = z
 
-    local sw, sh = lg.getDimensions()
+	local sw, sh = lg.getDimensions()
 
-    local mapW = Constants.GRID_W * Constants.TILE
-    local mapH = Constants.GRID_H * Constants.TILE
+	local mapW = Constants.GRID_W * Constants.TILE
+	local mapH = Constants.GRID_H * Constants.TILE
 
-    local mapCX = mapW * 0.5
-    local mapCY = mapH * 0.5
+	local mapCX = mapW * 0.5
+	local mapCY = mapH * 0.5
 
-    Camera.wx = mapCX - (sw / (2 * z))
-    Camera.wy = mapCY - (sh / (2 * z))
+	Camera.wx = mapCX - (sw / (2 * z))
+	Camera.wy = mapCY - (sh / (2 * z))
 end
 
 function Camera.resize()
-    local winW, winH = lg.getDimensions()
+	local winW, winH = lg.getDimensions()
 
 	local msaa = Scale.suggestMSAA(winW, winH)
 
-    Camera.canvas = lg.newCanvas(winW, winH, {msaa = msaa})
+	Camera.canvas = lg.newCanvas(winW, winH, {msaa = msaa})
 
-    Camera.ox = 0
-    Camera.oy = 0
+	Camera.ox = 0
+	Camera.oy = 0
 
 	Camera.setZoom(computeAdaptiveZoom())
 end
 
 function Camera.begin()
-    lg.setCanvas(Camera.canvas)
-    lg.clear()
+	lg.setCanvas(Camera.canvas)
+	lg.clear()
 
-    lg.push()
-    lg.scale(Camera.wscale, Camera.wscale)
-    lg.translate(-Camera.wx, -Camera.wy)
+	lg.push()
+	lg.scale(Camera.wscale, Camera.wscale)
+	lg.translate(-Camera.wx, -Camera.wy)
 end
 
 function Camera.finish()
-    lg.pop()
-    lg.setCanvas()
+	lg.pop()
+	lg.setCanvas()
 end
 
 function Camera.present()
-    lg.setColor(1, 1, 1)
-    lg.draw(Camera.canvas, 0, 0)
+	lg.setColor(1, 1, 1)
+	lg.draw(Camera.canvas, 0, 0)
 end
 
 function Camera.screenToWorld(x, y)

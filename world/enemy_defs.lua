@@ -43,7 +43,7 @@ return {
 
 	boss = {
 		nameKey = "enemy.boss",
-		hp = 5000, -- 7600
+		hp = 5000,
 		speed = 45,
 		reward = 75,
 		score = 300,

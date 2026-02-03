@@ -9,6 +9,8 @@ local max = math.max
 local format = string.format
 
 local colorText = Theme.ui.text
+local colorPanel = Theme.ui.panel
+local colorHealth = Theme.ui.bossHealth
 
 local hpCache = {
 	hpValue = nil,
@@ -44,8 +46,14 @@ function BossHP.draw()
     local barH = 22
 
 	local sw, _ = lg.getDimensions()
-    local x = (sw - barW) * 0.5
-    local y = 14
+	local screenPad = 12
+	local pad = 4
+
+	local xPanel = (sw - barW) * 0.5 - pad
+	local yPanel = screenPad
+
+	local x = xPanel + pad
+	local y = yPanel + pad
 
     local pad = 4
     local radius = 8
@@ -53,11 +61,12 @@ function BossHP.draw()
     local hpFrac = max(0, boss.hp / boss.maxHp)
 
     -- Background frame
-    lg.setColor(0, 0, 0, 0.75)
-    lg.rectangle("fill", x - pad, y - pad, barW + pad * 2, barH + pad * 2, radius, radius)
+    lg.setColor(colorPanel)
+	lg.setColor(colorPanel)
+	lg.rectangle("fill", xPanel, yPanel, barW + pad * 2, barH + pad * 2, radius, radius)
 
     -- HP fill
-    lg.setColor(0.75, 0.15, 0.15, 0.9)
+    lg.setColor(colorHealth)
     lg.rectangle("fill", x, y, barW * hpFrac, barH, radius - 4, radius - 4)
 
     -- Text

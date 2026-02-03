@@ -133,7 +133,7 @@ function Screen.draw()
 	love.graphics.rectangle("fill", 0, 0, sw, sh)
 
 	-- Title
-	Title.draw({x = sw * 0.5, y = titleY, lancerScale = 3.4, angle = lancerIdle.angle, alpha = 1})
+	Title.draw({x = sw * 0.5, y = titleY, lancerScale = 4.0, angle = lancerIdle.angle, alpha = 1})
 
 	Fonts.set("menu")
 

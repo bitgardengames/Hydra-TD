@@ -1,4 +1,5 @@
 local Sound = require("systems.sound")
+local Difficulty = require("systems.difficulty")
 local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
@@ -23,8 +24,10 @@ local colorMenu = Theme.menu
 local LABEL_W   = 180
 local SLIDER_W  = 160
 local ROW_H     = 32
-local ROW_PAD_Y = 6
 local THUMB_R   = 6
+
+local ARROW_W   = 24          -- space reserved on the left for ">"
+local ROW_W     = ARROW_W + LABEL_W + SLIDER_W + 40
 
 local settingsCursor = 1
 local rows = {}
@@ -34,78 +37,130 @@ local sliderRects = {}
 local rowRects = {}
 local draggingSlider = nil
 
-local function drawUIMeter(label, color, value, x, y, selected, hovered, rowIndex)
-	local t = max(0, min(1, value))
+------------------------------------------------------------
+-- Difficulty helpers
+------------------------------------------------------------
 
-	-- Register full row hitbox
-	rowRects[rowIndex] = {x = x - 24, y = y - ROW_PAD_Y, w = LABEL_W + SLIDER_W + 40, h = ROW_H}
+local DIFFICULTY_ORDER = { "easy", "normal", "hard" }
 
-	-- Highlight
+local function getDifficultyIndex(key)
+	for i, v in ipairs(DIFFICULTY_ORDER) do
+		if v == key then
+			return i
+		end
+	end
+	return 2
+end
+
+------------------------------------------------------------
+-- Layout helpers (top-based rows)
+------------------------------------------------------------
+
+local function rowRectFor(index, x, yTop)
+	rowRects[index] = {
+		x = x - ARROW_W,
+		y = yTop,
+		w = ROW_W,
+		h = ROW_H
+	}
+	return rowRects[index]
+end
+
+local function rowTextY(yTop)
+	-- Text.printShadow is top-left anchored (like love.graphics.print),
+	-- so center text box within ROW_H using current font height.
+	local fh = lg.getFont():getHeight()
+	return yTop + (ROW_H - fh) * 0.5 + 3
+end
+
+local function rowSliderY(yTop)
+	-- 8px track vertically centered in the row
+	return yTop + (ROW_H - 8) * 0.5
+end
+
+local function drawRowHighlight(index, selected, hovered)
 	if selected or hovered then
 		lg.setColor(1, 1, 1, selected and 0.10 or 0.06)
-		lg.rectangle("fill", rowRects[rowIndex].x, rowRects[rowIndex].y, rowRects[rowIndex].w, rowRects[rowIndex].h, 6, 6)
+		local r = rowRects[index]
+		lg.rectangle("fill", r.x, r.y, r.w, r.h, 6, 6)
 	end
+end
 
+local function drawRowArrow(x, yTop, selected)
 	if selected then
 		lg.setColor(1, 1, 1, 1)
-		Text.printShadow(">", x - 18, y)
+		Text.printShadow(">", x - 18, rowTextY(yTop))
 	end
+end
 
+------------------------------------------------------------
+-- Row content renderers
+------------------------------------------------------------
+
+local function drawSliderRow(row, x, yTop, selected, hovered, index)
 	-- Label
-	Text.printShadow(label, x, y)
+	Text.printShadow(row.label, x, rowTextY(yTop))
 
+	-- Slider geometry
 	local sliderX = x + LABEL_W
-	local sliderY = y + ROW_PAD_Y
+	local sliderY = rowSliderY(yTop)
 
-	-- Slider hitbox
-	sliderRects[rowIndex] = {x = sliderX, y = sliderY, w = SLIDER_W, h = 8}
+	sliderRects[index] = { x = sliderX, y = sliderY, w = SLIDER_W, h = 8 }
+
+	local t = max(0, min(1, row.get()))
 
 	-- Track
 	lg.setColor(0, 0, 0, 0.35)
 	lg.rectangle("fill", sliderX, sliderY, SLIDER_W, 8, 4, 4)
 
 	-- Fill
-	if value > 0 then
-		lg.setColor(color)
+	if t > 0 then
+		lg.setColor(row.color)
 		lg.rectangle("fill", sliderX, sliderY, SLIDER_W * t, 8, 4, 4)
 	end
 
 	-- Thumb
 	local thumbX = sliderX + SLIDER_W * t
 	local thumbY = sliderY + 4
-	local thumbGrow = (hovered or draggingSlider == rowIndex) and 2 or 0
+	local thumbGrow = (hovered or draggingSlider == index) and 2 or 0
 
-	-- Glow
-	lg.setColor(color[1], color[2], color[3], 0.25)
+	lg.setColor(row.color[1], row.color[2], row.color[3], 0.25)
 	lg.circle("fill", thumbX, thumbY, THUMB_R + thumbGrow + 3)
 
-	-- Core
 	lg.setColor(1, 1, 1, 1)
 	lg.circle("fill", thumbX, thumbY, THUMB_R + thumbGrow)
 
 	lg.setColor(1, 1, 1, 1)
 end
 
-local function drawRow(row, selected, hovered, x, y, index)
+local function drawToggleRow(row, x, yTop)
+	local valueText = row.get() and L("settings.on") or L("settings.off")
+	Text.printShadow(string.format("%s: %s", row.label, valueText), x, rowTextY(yTop))
+end
+
+local function drawDiscreteRow(row, x, yTop)
+	local key = row.get()
+	Text.printShadow(string.format("%s: %s", row.label, L("difficulty." .. key)), x, rowTextY(yTop))
+end
+
+local function drawRow(row, selected, hovered, x, yTop, index)
+	-- Register rect first (used for highlight + hover)
+	rowRectFor(index, x, yTop)
+	drawRowHighlight(index, selected, hovered)
+	drawRowArrow(x, yTop, selected)
+
 	if row.type == "slider" then
-		drawUIMeter(row.label, row.color, row.get(), x, y, selected, hovered, index)
-
+		drawSliderRow(row, x, yTop, selected, hovered, index)
 	elseif row.type == "toggle" then
-		rowRects[index] = {x = x - 24, y = y - ROW_PAD_Y, w = LABEL_W + SLIDER_W + 40, h = ROW_H}
-
-		if selected or hovered then
-			lg.setColor(1, 1, 1, selected and 0.10 or 0.06)
-			lg.rectangle("fill", rowRects[index].x, rowRects[index].y, rowRects[index].w, rowRects[index].h, 6, 6)
-		end
-
-		if selected then
-			lg.setColor(1, 1, 1, 1)
-			Text.printShadow(">", x - 18, y)
-		end
-
-		Text.printShadow(string.format("%s: %s", row.label, row.get() and L("on") or L("off")), x, y)
+		drawToggleRow(row, x, yTop)
+	elseif row.type == "discrete" then
+		drawDiscreteRow(row, x, yTop)
 	end
 end
+
+------------------------------------------------------------
+-- Screen lifecycle
+------------------------------------------------------------
 
 function Screen.load()
 	settingsCursor = 1
@@ -136,15 +191,36 @@ function Screen.load()
 			end,
 		},
 		{
+			id = "difficulty",
+			label = L("settings.difficulty"),
+			type = "discrete",
+			get = function()
+				return Save.data.settings.difficulty or Difficulty.default
+			end,
+			set = function(key)
+				Save.data.settings.difficulty = key
+				Difficulty.set(key)
+				Save.flush()
+			end,
+		},
+		{
 			id = "fullscreen",
 			label = L("settings.fullscreen"),
 			type = "toggle",
 			get = function() return love.window.getFullscreen() end,
 			set = function(v)
 				if v then
-					love.window.setMode(0, 0, { fullscreen = true, fullscreentype = "desktop", vsync = 1 })
+					love.window.setMode(0, 0, {
+						fullscreen = true,
+						fullscreentype = "desktop",
+						vsync = 1
+					})
 				else
-					love.window.setMode(1280, 800, { fullscreen = false, resizable = true, vsync = 1 })
+					love.window.setMode(1280, 800, {
+						fullscreen = false,
+						resizable = true,
+						vsync = 1
+					})
 				end
 
 				Save.data.settings.fullscreen = v
@@ -169,7 +245,8 @@ function Screen.load()
 end
 
 function Screen.update(dt)
-	rowRects = {}
+	-- NOTE: do NOT clear rowRects/sliderRects here.
+	-- Update uses the rects built during the previous draw for hover/drag.
 
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
@@ -178,24 +255,22 @@ function Screen.update(dt)
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = startY + (#rows * 44) + 24 + (i - 1) * 52
-
 		Button.update(btn, Cursor.x, Cursor.y, dt)
 	end
 
-	-- Hover selects row
+	-- Hover selects row (uses last-draw rects)
 	for i, rect in pairs(rowRects) do
-		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
+		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w
+		and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
 			settingsCursor = i
 		end
 	end
 
-	-- Drag slider
+	-- Drag slider (uses last-draw slider rects)
 	if draggingSlider then
 		local rect = sliderRects[draggingSlider]
-
 		if rect then
 			local t = Util.clamp((Cursor.x - rect.x) / rect.w, 0, 1)
-
 			rows[draggingSlider].set(t)
 		end
 	end
@@ -203,26 +278,26 @@ function Screen.update(dt)
 	-- Gamepad analog control
 	if Cursor.usingVirtual then
 		local row = rows[settingsCursor]
-
 		if row and row.type == "slider" then
 			local ax = Cursor.axisX or 0
-
 			if abs(ax) > 0.25 then
-				local v = Util.clamp(row.get() + ax * dt * 0.7, 0, 1)
-				row.set(v)
+				row.set(Util.clamp(row.get() + ax * dt * 0.7, 0, 1))
 			end
 		end
 	end
 end
 
 function Screen.draw()
+	-- Rebuild rects every frame here (single source of truth for layout)
+	rowRects = {}
+	sliderRects = {}
+
 	local sw, sh = lg.getDimensions()
 	local centerX = floor(sw * 0.5)
 	local startY = floor(sh * 0.25)
 	local lineH = 48
-	local gap = 14
 
-	sliderRects = {}
+	local listX = centerX - 160
 
 	lg.setColor(colorMenu)
 	lg.rectangle("fill", 0, 0, sw, sh)
@@ -234,9 +309,21 @@ function Screen.draw()
 	Fonts.set("menu")
 
 	for i, row in ipairs(rows) do
-		local hovered = rowRects[i] and Cursor.x >= rowRects[i].x and Cursor.x <= rowRects[i].x + rowRects[i].w and Cursor.y >= rowRects[i].y and Cursor.y <= rowRects[i].y + rowRects[i].h
+		local yTop = startY + (i - 1) * lineH
 
-		drawRow(row, settingsCursor == i, hovered, centerX - 160, startY + (i - 1) * lineH + gap, i)
+		-- Hover uses the rect we are about to create (predictable + no 1-frame lag)
+		local r = {
+			x = listX - ARROW_W,
+			y = yTop,
+			w = ROW_W,
+			h = ROW_H
+		}
+
+		local hovered =
+			Cursor.x >= r.x and Cursor.x <= r.x + r.w and
+			Cursor.y >= r.y and Cursor.y <= r.y + r.h
+
+		drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
 	end
 
 	for _, btn in ipairs(buttons) do
@@ -253,23 +340,24 @@ function Screen.keypressed(key)
 		Sound.play("uiMove")
 	elseif key == "left" or key == "right" then
 		local row = rows[settingsCursor]
-
-		if not row then
-			return
-		end
+		if not row then return end
 
 		if row.type == "slider" then
 			local dir = (key == "right") and 1 or -1
-			local step = 0.10
-			local v = Util.clamp(row.get() + dir * step, 0, 1)
-
-			row.set(v)
+			row.set(Util.clamp(row.get() + dir * 0.10, 0, 1))
 			Sound.play("uiMove")
 		elseif row.type == "toggle" then
 			row.set(not row.get())
 			Sound.play("uiConfirm")
+		elseif row.type == "discrete" then
+			local dir = (key == "right") and 1 or -1
+			local cur = getDifficultyIndex(row.get())
+			local next = cur + dir
+			if next < 1 then next = #DIFFICULTY_ORDER end
+			if next > #DIFFICULTY_ORDER then next = 1 end
+			row.set(DIFFICULTY_ORDER[next])
+			Sound.play("uiMove")
 		end
-
 	elseif key == "return" or key == "escape" then
 		State.mode = "menu"
 		Sound.play("uiBack")

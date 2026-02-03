@@ -12,6 +12,7 @@ local tinsert = table.insert
 local tsort = table.sort
 
 local colorText = Theme.ui.text
+local colorPanel = Theme.ui.panel
 
 local meterCache = {
 	list = {},
@@ -79,23 +80,28 @@ function DamageMeter.draw()
 
 	-- Layout
     local panelW = 200
-    local barH = 16
-    local lineH = 22
+    local barH = 18
+    local lineH = 21
     local padX = 8
-    local panelPad = 8
+	local panelPad = 8
+	local screenPad = 12
 
 	local sw, _ = lg.getDimensions()
-    local x = sw - panelW - 12
-    local y = 12
+
+	local panelX = sw - panelW - panelPad * 2 - screenPad
+	local panelY = screenPad
+
+	local x = panelX + panelPad
+	local y = panelY + panelPad
 
     local panelH = 32 + (#list * lineH)
 
     -- Bar width is constrained by panel width
-    local maxBarW = panelW - (padX * 2)
+    local maxBarW = panelW
 
 	-- Panel background
-    lg.setColor(0, 0, 0, 0.6)
-    lg.rectangle("fill", x - panelPad, y - panelPad, panelW + panelPad * 2, panelH, 8, 8)
+    lg.setColor(colorPanel)
+	lg.rectangle("fill", panelX, panelY, panelW + panelPad * 2, panelH, 8, 8)
 
     -- Header
 	lg.setColor(colorText)
@@ -104,7 +110,7 @@ function DamageMeter.draw()
 		meterCache.headerText = isBossView and L("damage.boss") or L("damage.normal")
 	end
 
-	Text.printShadow(meterCache.headerText, x, y)
+	Text.printShadow(meterCache.headerText, x + 2, y - 2)
 
     y = y + 20
 

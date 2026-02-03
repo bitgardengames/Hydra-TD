@@ -4,6 +4,10 @@ local Screens = {
 	menu = require("ui.menu.screens.main"),
 	campaign = require("ui.menu.screens.campaign"),
 	settings = require("ui.menu.screens.settings"),
+
+	victory = require("ui.menu.screens.victory"),
+	game_over = require("ui.menu.screens.game_over"),
+
 	pause = require("ui.menu.pause"),
 }
 

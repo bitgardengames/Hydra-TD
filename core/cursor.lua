@@ -4,7 +4,7 @@ local Cursor = {
 
 	usingVirtual = false,
 
-	speed = 800, -- px / second
+	speed = 700, -- px / second
 	deadzone = 0.18,
 }
 

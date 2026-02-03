@@ -59,6 +59,11 @@ local function mousepressed(x, y, button)
 		return
 	end
 
+	-- Overlay screens
+	if State.mode == "game_over" or State.mode == "victory" then
+		Menu.mousepressed(x, y, button)
+	end
+
 	-- Pause overlay
 	if State.paused then
 		if Menu.mousepressedPause(x, y, button) then
@@ -190,7 +195,7 @@ local function keypressed(key)
 	-- Menu screens
 	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" then
 		Menu.keypressed(key)
-		
+
 		return
 	end
 
@@ -217,14 +222,14 @@ local function keypressed(key)
 	-- Pause toggle
 	if key == Hotkeys.actions.pause then
 		State.paused = not State.paused
-		
+
 		return
 	end
 
 	-- Pause overlay
 	if State.paused then
 		Menu.keypressed(key)
-		
+
 		return
 	end
 

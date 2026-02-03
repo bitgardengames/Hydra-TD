@@ -162,7 +162,7 @@ local function upgradeTower(t)
 
 	Floaters.add(t.x, t.y - 10, L("floater.upgrade"), colorGood[1], colorGood[2], colorGood[3])
 
-	Sound.play("towerUpgraded")
+	--Sound.play("towerUpgraded")
 
 	Rumble.pulse(0.22, 0.045)
 end

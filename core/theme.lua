@@ -45,14 +45,21 @@ Theme.ui = {
     good = {0.35, 0.95, 0.55},
     bad = {0.95, 0.35, 0.35},
     warn = {0.98, 0.82, 0.30},
-    panel = {0.09, 0.10, 0.12},
-    panel2 = {0.12, 0.13, 0.16},
+    panel = {0.18, 0.19, 0.21, 1},
+    panel2 = {0.13, 0.14, 0.16, 1},
     hovered = lighten({0.09, 0.10, 0.12}, 0.06),
     selected = {1.00, 0.88, 0.40},
 
-	button = {0.18, 0.19, 0.22, 1},
-	buttonHover = {0.22, 0.24, 0.28, 1},
-	buttonSelected = {0.30, 0.42, 0.62, 1},
+	button = {0.23, 0.24, 0.27, 1},
+	buttonHover = {0.27, 0.28, 0.32, 1},
+	buttonSelected = {0.32, 0.44, 0.64, 1},
+	buttonDisabled = {0.16, 0.17, 0.19, 1},
+
+	money = {0.90, 0.82, 0.42, 1}, -- gold or a nice cash green
+	lives = {0.92, 0.46, 0.44, 1}, -- soft red
+	wave = {0.42, 0.78, 0.92, 1}, -- blue or cyan
+
+	bossHealth = {0.75, 0.15, 0.15, 0.9},
 }
 
 Theme.menu = {0.31, 0.57, 0.76, 1}

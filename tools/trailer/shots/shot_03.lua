@@ -1,51 +1,53 @@
-local Camera  = require("tools.trailer.camera")
+local Camera = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
 local Constants = require("core.constants")
 
 local mapCX = Constants.GRID_W * Constants.TILE * 0.5
 local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
+local tile = Constants.TILE
+
+local adjustX = tile * 6
+local adjustY = -(tile)
+
 return {
-    map = 4,
-    duration = 7.0,
-    next = "shot_04",
+	map = 5,
+	duration = 6.5,
+	next = "shot_04",
 
-    scene = {
-        towers = {
-            { kind = "cannon", gx = 12, gy = 8 },
-            { kind = "shock", gx = 9, gy = 9 },
-            { kind = "slow", gx = 14, gy = 9 },
-        },
-
-        wave = {
+	scene = {
+		towers = {
+			{ kind = "poison", gx = 9,  gy = 9 },
+			{ kind = "shock",  gx = 8, gy = 9 },
+			{ kind = "lancer",  gx = 12, gy = 8 },
+			{ kind = "slow",  gx = 14, gy = 11 },
+		},
+		wave = {
 			index = 6,
-            start = true,
-            warmup = 5.0,
-        },
-    },
+			start = true,
+			warmup = 31.3,
+		},
+	},
+
+	actions = {
+		{ t = 2.55, fn = Actions.upgradeTowerAt(8,  9, 1) }, -- shock +1
+		{ t = 3.55, fn = Actions.upgradeTowerAt(12, 8, 1) }, -- lancer +1
+		{ t = 4.55, fn = Actions.upgradeTowerAt(9,  9, 1) }, -- poison +1
+	},
 
 	camera = Camera.pan({
-		duration = 7.0,
-		from = {x = mapCX, y = mapCY, zoom = 1.28},
-		to = {x = mapCX, y = mapCY, zoom = 1.28}
+		duration = 6.0,
+		from = {x = mapCX - adjustX, y = mapCY - adjustY, zoom = 2.8},
+		to = {x = mapCX - adjustX, y = mapCY - adjustY, zoom = 2.8}
 	}),
-
-    actions = {
-		{ t = 0, fn = Actions.upgradeTowerAt(9, 9, 2)},
-        { t = 0.3, fn = Actions.startWave() },
-
-		{ t = 2.55, fn = Actions.placeTower("cannon", 12, 7) },
-		{ t = 3.55, fn = Actions.placeTower("lancer", 14, 7) },
-        { t = 4.55, fn = Actions.placeTower("poison", 12, 9) },
-    },
 
 	text = {
 		{
 			t = 0.8,
-			text = "Build",
+			text = "UPGRADE",
 			dur = 3,
 			fadeIn = 0.25,
 			fadeOut = 0.4,
 		},
-	}
+	},
 }
