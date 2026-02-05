@@ -38,6 +38,8 @@ local state = {
 
 	mode = "menu", -- "menu", "campaign", "game", "pause"
 
+	inputSource = "keyboard",
+
 	stats = {
 		damageView = 0,
 		damageByTower = {},

@@ -21,13 +21,14 @@ local Screen = {}
 local colorText = Theme.ui.text
 local colorMenu = Theme.menu
 
-local LABEL_W   = 180
-local SLIDER_W  = 160
-local ROW_H     = 32
-local THUMB_R   = 6
+local LABEL_W = 180
+local SLIDER_W = 160
+local SLIDER_H = 10
+local ROW_H = 32
+local THUMB_R = 7
 
-local ARROW_W   = 24          -- space reserved on the left for ">"
-local ROW_W     = ARROW_W + LABEL_W + SLIDER_W + 40
+local ARROW_W = 24 -- space reserved on the left for ">"
+local ROW_W = ARROW_W + LABEL_W + SLIDER_W + 40
 
 local settingsCursor = 1
 local rows = {}
@@ -37,11 +38,8 @@ local sliderRects = {}
 local rowRects = {}
 local draggingSlider = nil
 
-------------------------------------------------------------
 -- Difficulty helpers
-------------------------------------------------------------
-
-local DIFFICULTY_ORDER = { "easy", "normal", "hard" }
+local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
 
 local function getDifficultyIndex(key)
 	for i, v in ipairs(DIFFICULTY_ORDER) do
@@ -49,13 +47,11 @@ local function getDifficultyIndex(key)
 			return i
 		end
 	end
+
 	return 2
 end
 
-------------------------------------------------------------
--- Layout helpers (top-based rows)
-------------------------------------------------------------
-
+-- Layout helpers
 local function rowRectFor(index, x, yTop)
 	rowRects[index] = {
 		x = x - ARROW_W,
@@ -63,25 +59,26 @@ local function rowRectFor(index, x, yTop)
 		w = ROW_W,
 		h = ROW_H
 	}
+
 	return rowRects[index]
 end
 
 local function rowTextY(yTop)
-	-- Text.printShadow is top-left anchored (like love.graphics.print),
-	-- so center text box within ROW_H using current font height.
 	local fh = lg.getFont():getHeight()
+
 	return yTop + (ROW_H - fh) * 0.5 + 3
 end
 
 local function rowSliderY(yTop)
 	-- 8px track vertically centered in the row
-	return yTop + (ROW_H - 8) * 0.5
+	return yTop + (ROW_H - SLIDER_H) * 0.5
 end
 
 local function drawRowHighlight(index, selected, hovered)
 	if selected or hovered then
-		lg.setColor(1, 1, 1, selected and 0.10 or 0.06)
 		local r = rowRects[index]
+
+		lg.setColor(1, 1, 1, selected and 0.10 or 0.06)
 		lg.rectangle("fill", r.x, r.y, r.w, r.h, 6, 6)
 	end
 end
@@ -93,10 +90,7 @@ local function drawRowArrow(x, yTop, selected)
 	end
 end
 
-------------------------------------------------------------
 -- Row content renderers
-------------------------------------------------------------
-
 local function drawSliderRow(row, x, yTop, selected, hovered, index)
 	-- Label
 	Text.printShadow(row.label, x, rowTextY(yTop))
@@ -105,23 +99,23 @@ local function drawSliderRow(row, x, yTop, selected, hovered, index)
 	local sliderX = x + LABEL_W
 	local sliderY = rowSliderY(yTop)
 
-	sliderRects[index] = { x = sliderX, y = sliderY, w = SLIDER_W, h = 8 }
+	sliderRects[index] = {x = sliderX, y = sliderY, w = SLIDER_W, h = SLIDER_H}
 
 	local t = max(0, min(1, row.get()))
 
 	-- Track
 	lg.setColor(0, 0, 0, 0.35)
-	lg.rectangle("fill", sliderX, sliderY, SLIDER_W, 8, 4, 4)
+	lg.rectangle("fill", sliderX, sliderY, SLIDER_W, SLIDER_H, 4, 4)
 
 	-- Fill
 	if t > 0 then
 		lg.setColor(row.color)
-		lg.rectangle("fill", sliderX, sliderY, SLIDER_W * t, 8, 4, 4)
+		lg.rectangle("fill", sliderX, sliderY, SLIDER_W * t, SLIDER_H, 4, 4)
 	end
 
 	-- Thumb
 	local thumbX = sliderX + SLIDER_W * t
-	local thumbY = sliderY + 4
+	local thumbY = sliderY + 5
 	local thumbGrow = (hovered or draggingSlider == index) and 2 or 0
 
 	lg.setColor(row.color[1], row.color[2], row.color[3], 0.25)
@@ -157,10 +151,6 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 		drawDiscreteRow(row, x, yTop)
 	end
 end
-
-------------------------------------------------------------
--- Screen lifecycle
-------------------------------------------------------------
 
 function Screen.load()
 	settingsCursor = 1
@@ -207,7 +197,7 @@ function Screen.load()
 			id = "fullscreen",
 			label = L("settings.fullscreen"),
 			type = "toggle",
-			get = function() return love.window.getFullscreen() end,
+			get = function() return Save.data.settings.fullscreen end,
 			set = function(v)
 				if v then
 					love.window.setMode(0, 0, {
@@ -225,6 +215,7 @@ function Screen.load()
 
 				Save.data.settings.fullscreen = v
 				require("core.camera").resize()
+				require("ui.title").invalidateCache()
 				Save.flush()
 			end,
 		},
@@ -247,7 +238,6 @@ end
 function Screen.update(dt)
 	-- NOTE: do NOT clear rowRects/sliderRects here.
 	-- Update uses the rects built during the previous draw for hover/drag.
-
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 	local startY = floor(sh * 0.55)
@@ -340,7 +330,9 @@ function Screen.keypressed(key)
 		Sound.play("uiMove")
 	elseif key == "left" or key == "right" then
 		local row = rows[settingsCursor]
-		if not row then return end
+		if not row then
+			return
+		end
 
 		if row.type == "slider" then
 			local dir = (key == "right") and 1 or -1
@@ -353,6 +345,7 @@ function Screen.keypressed(key)
 			local dir = (key == "right") and 1 or -1
 			local cur = getDifficultyIndex(row.get())
 			local next = cur + dir
+
 			if next < 1 then next = #DIFFICULTY_ORDER end
 			if next > #DIFFICULTY_ORDER then next = 1 end
 			row.set(DIFFICULTY_ORDER[next])
@@ -367,10 +360,10 @@ end
 function Screen.mousepressed(x, y, button)
 	if button == 1 then
 		for i, rect in pairs(sliderRects) do
-			if x >= rect.x and x <= rect.x + rect.w
-			and y >= rect.y and y <= rect.y + rect.h then
+			if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
 				settingsCursor = i
 				draggingSlider = i
+
 				return true
 			end
 		end

@@ -2,6 +2,7 @@ local Button = require("ui.button")
 local Cursor = require("core.cursor")
 local State = require("core.state")
 local Sound = require("systems.sound")
+local Hotkeys = require("core.hotkeys")
 local L = require("core.localization")
 
 local Page = {}
@@ -76,6 +77,41 @@ function Page.mousepressed(x, y, button)
 	end
 
 	return false
+end
+
+function Page.keypressed(key)
+	if key == Hotkeys.kb.actions.escape then
+		State.mode = "game"
+	end
+end
+
+function Page.gamepadpressed(joystick, button)
+	local action = Hotkeys.padActionFromButton(button)
+
+	if not action then
+		return
+	end
+
+	-- Confirm = press hovered button
+	if action == "confirm" then
+		if confirmAtCursor() then
+			Sound.play("uiConfirm")
+		end
+		return
+	end
+
+	-- Cancel / back (optional, but nice)
+	if action == "cancel" or action == "back" then
+		State.mode = "game"
+		Sound.play("uiCancel")
+		return
+	end
+
+	-- Pause button toggles pause
+	if action == "pause" then
+		State.mode = "game"
+		return
+	end
 end
 
 return Page

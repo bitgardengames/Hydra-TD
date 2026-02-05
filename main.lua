@@ -21,6 +21,7 @@ local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
 local Menu = require("ui.menu.menu")
 local Hotkeys = require("core.hotkeys")
+local HotkeyDisplay = require("ui.hotkey_display")
 local Rumble = require("systems.rumble")
 local Localization = require("core.localization")
 local Victory = require("ui.menu.screens.victory")
@@ -29,7 +30,6 @@ local GameOver = require("ui.menu.screens.game_over")
 local lg = love.graphics
 local lk = love.keyboard
 local lm = love.mouse
-local getTime = love.timer.getTime
 
 local max = math.max
 local min = math.min
@@ -98,6 +98,10 @@ function resetGame()
 end
 
 function love.load()
+	print(Constants.VERSION_STRING)
+
+	love.math.setRandomSeed(123456) -- Lock determinism
+
 	if ART_EXPORT == 1 then
 		require("tools.art_export").run()
 
@@ -146,9 +150,9 @@ function love.load()
 	end
 
 	lg.setBackgroundColor(colorBg)
-	--love.math.setRandomSeed(123456) -- Lock determinism
 
 	Menu.load()
+	--HotkeyDisplay.load()
 end
 
 function love.update(dt)
@@ -312,30 +316,11 @@ function love.mousereleased(x, y, button)
 end
 
 function love.keypressed(key)
-	if key == Hotkeys.actions.screenshot then
+	State.inputSource = "keyboard"
+
+	if key == Hotkeys.kb.actions.screenshot then
 		local time = os.date("%Y-%m-%d_%H-%M-%S")
 		lg.captureScreenshot("screenshot_" .. time .. ".png")
-	end
-
-	if State.mode == "game" and key == "p" then
-		State.mode = "pause"
-
-		return
-	elseif State.mode == "pause" and key == "p" then
-		State.mode = "game"
-
-		return
-	end
-
-	if State.mode == "pause" then
-		if key == "r" then
-			State.mode = "game"
-			resetGame()
-		elseif key == "m" then
-			State.mode = "menu"
-		end
-
-		return
 	end
 
 	if State.mode ~= "game" then
@@ -347,33 +332,38 @@ function love.keypressed(key)
 	Input.keypressed(key)
 end
 
-local lastPadClick = 0
-
-function love.gamepadpressed(_, button)
-	Cursor.enableVirtual()
-
-	local now = getTime()
-
-	if button == "a" then
-		if now - lastPadClick > 0.12 then
-			love.mousepressed(Cursor.x, Cursor.y, 1)
-			lastPadClick = now
-		end
-	elseif button == "b" then
-		love.mousepressed(Cursor.x, Cursor.y, 2)
-	end
+function love.gamepadpressed(joystick, button)
+	State.inputSource = "controller"
+	Input.gamepadpressed(joystick, button)
 end
 
-function love.gamepadreleased(_, button)
-	Input.mousereleased(x, y, button)
+function love.gamepadreleased(joystick, button)
+	Input.gamepadreleased(joystick, button)
 end
 
 function love.mousemoved(x, y, dx, dy)
 	if abs(dx) + abs(dy) > 2 then
 		Cursor.disableVirtual()
+		State.inputSource = "mouse"
 	end
 
 	Cursor.mousemoved(x, y)
+end
+
+function love.gamepadaxis(joystick, axis, value)
+	if abs(value) > 0.3 then
+		State.inputSource = "controller"
+	end
+end
+
+function love.joystickremoved(joystick)
+	if State.mode == "game" then
+		State.mode = "pause"
+	end
+end
+
+function love.joystickadded(joystick)
+
 end
 
 function love.resize(w, h)

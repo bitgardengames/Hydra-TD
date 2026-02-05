@@ -4,6 +4,8 @@ local Button = require("ui.button")
 local Cursor = require("core.cursor")
 local State = require("core.state")
 local Sound = require("systems.sound")
+local Difficulty = require("systems.difficulty")
+local Text = require("ui.text")
 local Fonts = require("core.fonts")
 local L = require("core.localization")
 
@@ -11,7 +13,14 @@ local lg = love.graphics
 local Screen = {}
 
 local buttons = nil
+
 local colorGood = Theme.ui.good
+
+local function getDifficultyLabel()
+    local key = Difficulty.key()
+
+    return L("difficulty." .. key)
+end
 
 function Screen.load()
     local sw, sh = lg.getDimensions()
@@ -77,21 +86,27 @@ end
 
 function Screen.draw()
     local sw, sh = lg.getDimensions()
+	local screenHalf = sh * 0.5
 
     -- Dim background
     lg.setColor(0, 0, 0, 0.5)
     lg.rectangle("fill", 0, 0, sw, sh)
 
     -- Title
-    Fonts.set("menu")
+    Fonts.set("title")
+	
     lg.setColor(colorGood)
-    lg.printf(L("game.victory"), 0, sh * 0.5 - 70, sw, "center")
+	Text.printfShadow(L("game.victory"), 0, sh * 0.5 - 120, sw, "center")
 
-    -- Optional subtitle / flavor text
-    if State.victoryReasonKey then
-        lg.setColor(1, 1, 1, 0.7)
-        lg.printf(L(State.victoryReasonKey), 0, sh * 0.5 - 36, sw, "center")
-    end
+	Fonts.set("menu")
+
+	-- Difficulty
+	local difficultyLabel = getDifficultyLabel()
+
+	if difficultyLabel then
+		lg.setColor(1, 1, 1, 0.6)
+		Text.printfShadow(string.format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, screenHalf - 64, sw, "center")
+	end
 
     -- Buttons
     for _, btn in ipairs(buttons) do

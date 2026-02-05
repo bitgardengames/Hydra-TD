@@ -73,7 +73,7 @@ return {
 	hud = {
 		lives = "Lives %d",
 		wave = "Wave %d",
-		prep = "Prep %.0fs (Space to start)",
+		prep = "Prep %.0fs (%s to start)",
 		spawning = "Spawning %d - Alive %d",
 	},
 

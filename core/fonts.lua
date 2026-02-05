@@ -21,6 +21,7 @@ end
 function Fonts.reload()
 	local f = FONT_MAP[Fonts.active]
 
+	Fonts.version = love.graphics.newFont(f, 12)
 	Fonts.ui = love.graphics.newFont(f, 16)
 	Fonts.floaters = love.graphics.newFont(f, 24)
 	Fonts.menu = love.graphics.newFont(f, 32)

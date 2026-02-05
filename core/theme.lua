@@ -55,11 +55,13 @@ Theme.ui = {
 	buttonSelected = {0.32, 0.44, 0.64, 1},
 	buttonDisabled = {0.16, 0.17, 0.19, 1},
 
-	money = {0.90, 0.82, 0.42, 1}, -- gold or a nice cash green
-	lives = {0.92, 0.46, 0.44, 1}, -- soft red
-	wave = {0.42, 0.78, 0.92, 1}, -- blue or cyan
+	money = {0.90, 0.82, 0.42, 1},
+	lives = {0.92, 0.46, 0.44, 1},
+	wave = {0.42, 0.78, 0.92, 1},
 
 	bossHealth = {0.75, 0.15, 0.15, 0.9},
+	
+	shadow = {0, 0, 0, 0.35},
 }
 
 Theme.menu = {0.31, 0.57, 0.76, 1}

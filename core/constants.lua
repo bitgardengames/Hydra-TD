@@ -1,5 +1,9 @@
 local Constants = {}
 
+Constants.VERSION = "1.0.0" -- major.minor.patch
+Constants.BUILD = 1
+Constants.VERSION_STRING = string.format("v%s (build %d)", Constants.VERSION, Constants.BUILD)
+
 Constants.TILE = 56
 Constants.GRID_W = 34
 Constants.GRID_H = 16

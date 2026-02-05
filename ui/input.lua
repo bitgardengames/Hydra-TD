@@ -14,6 +14,7 @@ local BottomBar = require("ui.bottom_bar")
 local Cursor = require("core.cursor")
 local L = require("core.localization")
 
+local getTime = love.timer.getTime
 local lm = love.mouse
 local floor = math.floor
 local min = math.min
@@ -23,6 +24,9 @@ local findEnemyAt = Enemies.findEnemyAt
 local colorBad = Theme.ui.bad
 
 local TILE = Constants.TILE
+
+local lastPadConfirm = 0
+local PAD_CLICK_COOLDOWN = 0.12
 
 local function worldToGrid(wx, wy)
 	if wx < 0 or wy < 0 then
@@ -47,6 +51,24 @@ local function cancelPlacement()
 	State.placing = nil
 end
 
+local function controllerCancel()
+	-- Cancel placement first
+	if State.placing then
+		cancelPlacement()
+
+		return true
+	end
+
+	-- Then deselect
+	if State.selectedTower or State.selectedEnemy then
+		deselect()
+
+		return true
+	end
+
+	return false
+end
+
 local function updateHover()
 	State.hoverGX, State.hoverGY = screenToGrid(Cursor.x, Cursor.y)
 end
@@ -65,7 +87,7 @@ local function mousepressed(x, y, button)
 	end
 
 	-- Pause overlay
-	if State.paused then
+	if State.mode == "pause" then
 		if Menu.mousepressedPause(x, y, button) then
 			return
 		end
@@ -99,31 +121,14 @@ local function mousepressed(x, y, button)
 		end
 
 		-- Inspect panel (upgrade / sell)
-		local btns = BottomBar.getBottomBarButtons()
+		local btns = BottomBar.getInspectButtons()
 
 		if btns then
-			-- Upgrade
-			if btns.upgrade then
-				local b = btns.upgrade
+			for _, b in ipairs(btns) do
 				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-					if State.selectedTower then
-						Towers.upgradeTower(State.selectedTower)
-						--Sound.play("ui_click")
+					if b.onClick then
+						b.onClick()
 					end
-
-					return
-				end
-			end
-
-			-- Sell
-			if btns.sell then
-				local b = btns.sell
-				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-					if State.selectedTower then
-						Towers.sellTower(State.selectedTower)
-						--Sound.play("ui_sell")
-					end
-
 					return
 				end
 			end
@@ -193,7 +198,7 @@ end
 
 local function keypressed(key)
 	-- Menu screens
-	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" then
+	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" or State.mode == "pause" then
 		Menu.keypressed(key)
 
 		return
@@ -201,84 +206,216 @@ local function keypressed(key)
 
 	-- Victory / game over
 	if State.gameOver and State.victory then
-		if key == Hotkeys.actions.endless then
+		if key == Hotkeys.kb.actions.endless then
 			State.gameOver = false
 			State.victory = false
 			State.endless = true
 			State.inPrep = true
 			State.prepTimer = 6.0
+
 			return
-		elseif key == Hotkeys.actions.nextMap then
+		elseif key == Hotkeys.kb.actions.nextMap then
 			State.mapIndex = min(State.mapIndex + 1, #Maps)
 
 			State.endless = false
 			State.gameOver = false
 			State.victory = false
 			State.mode = "campaign"
+
 			return
 		end
 	end
 
-	-- Pause toggle
-	if key == Hotkeys.actions.pause then
-		State.paused = not State.paused
-
-		return
-	end
-
-	-- Pause overlay
-	if State.paused then
-		Menu.keypressed(key)
-
-		return
-	end
-
 	-- Gameplay hotkeys
-	if key == Hotkeys.actions.deselect then
-		cancelPlacement()
-		deselect()
-	elseif key == Hotkeys.shop.lancer then
+	if key == Hotkeys.kb.actions.escape then
+		-- Cancel placement
+		if State.placing then
+			cancelPlacement()
+
+			return
+		end
+
+		-- Deselect selection
+		if State.selectedTower or State.selectedEnemy then
+			deselect()
+
+			return
+		end
+
+		-- Pause
+		State.mode = "pause"
+	elseif key == Hotkeys.kb.shop.lancer then
 		State.placing = "lancer"
 		deselect()
-	elseif key == Hotkeys.shop.slow then
+	elseif key == Hotkeys.kb.shop.slow then
 		State.placing = "slow"
 		deselect()
-	elseif key == Hotkeys.shop.cannon then
+	elseif key == Hotkeys.kb.shop.cannon then
 		State.placing = "cannon"
 		deselect()
-	elseif key == Hotkeys.shop.shock then
+	elseif key == Hotkeys.kb.shop.shock then
 		State.placing = "shock"
 		deselect()
-	elseif key == Hotkeys.shop.poison then
+	elseif key == Hotkeys.kb.shop.poison then
 		State.placing = "poison"
 		deselect()
-	elseif key == Hotkeys.actions.fastForward then
+	elseif key == Hotkeys.kb.actions.fastForward then
 		State.speed = (State.speed == 1) and 4 or 1
-	elseif key == Hotkeys.actions.skipPrep then
+	elseif key == Hotkeys.kb.actions.skipPrep then
 		if State.inPrep then
 			State.prepTimer = 0
 			Waves.startWave()
 		end
-	elseif key == Hotkeys.actions.upgrade then
+	elseif key == Hotkeys.kb.actions.upgrade then
 		if State.selectedTower then
 			Towers.upgradeTower(State.selectedTower)
 		end
-	elseif key == Hotkeys.actions.sell then
+	elseif key == Hotkeys.kb.actions.sell then
 		if State.selectedTower then
 			Towers.sellTower(State.selectedTower)
 		end
-	elseif key == Hotkeys.actions.toggleMeter then
+	elseif key == Hotkeys.kb.actions.toggleMeter then
 		State.stats.showDamageMeter = not State.stats.showDamageMeter
-	elseif key == Hotkeys.actions.toggleMeterInfo then
+	elseif key == Hotkeys.kb.actions.toggleMeterInfo then
 		if State.stats.showDamageMeter then
 			State.stats.damageView = (State.stats.damageView + 1) % 2
 		end
 	end
 end
 
+local function gamepadpressed(joystick, button)
+	Cursor.enableVirtual()
+
+	-- Shop selection (d-pad → towers)
+	local shopKind = Hotkeys.padShopKindFromButton(button)
+
+	if shopKind and State.mode == "game" then
+		State.placing = shopKind
+		deselect()
+
+		return
+	end
+
+	-- Resolve pad action
+	local action = Hotkeys.padActionFromButton(button)
+
+	if not action then
+		return
+	end
+
+	-- Global actions
+	if action == "pause" then
+		if State.mode == "pause" then
+			State.mode = "game"
+		elseif State.mode == "game" then
+			State.mode = "pause"
+		end
+
+		return
+	end
+
+	-- Menu / overlay screens
+	if State.mode ~= "game" then
+		if action == "confirm" then
+			local now = getTime()
+
+			if now - lastPadConfirm > PAD_CLICK_COOLDOWN then
+				mousepressed(Cursor.x, Cursor.y, 1)
+				lastPadConfirm = now
+			end
+
+			return
+		end
+
+		if action == "cancel" or action == "back" then
+			mousepressed(Cursor.x, Cursor.y, 2)
+
+			return
+		end
+
+		return
+	end
+
+	-- Gameplay actions
+	if action == "confirm" then
+		local now = getTime()
+
+		if now - lastPadConfirm > PAD_CLICK_COOLDOWN then
+			mousepressed(Cursor.x, Cursor.y, 1)
+			lastPadConfirm = now
+		end
+
+		return
+	end
+
+	-- Cancel / deselect
+	if action == "cancel" or action == "back" then
+		controllerCancel()
+
+		return
+	end
+
+	-- Fast-forward
+	if action == "fastForward" then
+		State.speed = (State.speed == 1) and 4 or 1
+
+		return
+	end
+
+	-- Skip prep
+	if action == "skipPrep" then
+		if State.inPrep then
+			State.prepTimer = 0
+			Waves.startWave()
+		end
+
+		return
+	end
+
+	-- Upgrade tower
+	if action == "upgrade" then
+		if State.selectedTower then
+			Towers.upgradeTower(State.selectedTower)
+		end
+
+		return
+	end
+
+	-- Sell tower
+	if action == "sell" then
+		if State.selectedTower then
+			Towers.sellTower(State.selectedTower)
+		end
+
+		return
+	end
+
+	-- Toggle damage meter
+	if action == "toggleMeter" then
+		State.stats.showDamageMeter = not State.stats.showDamageMeter
+
+		return
+	end
+
+	-- Toggle damage meter info
+	if action == "toggleMeterInfo" then
+		if State.stats.showDamageMeter then
+			State.stats.damageView = (State.stats.damageView + 1) % 2
+		end
+
+		return
+	end
+end
+
+local function gamepadreleased(joystick, button)
+	-- noop
+end
+
 return {
 	updateHover = updateHover,
 	mousepressed = mousepressed,
 	mousereleased = mousereleased,
+	gamepadpressed = gamepadpressed,
+	gamepadreleased  = gamepadreleased,
 	keypressed = keypressed,
 }

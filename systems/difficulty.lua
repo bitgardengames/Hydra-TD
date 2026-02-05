@@ -4,10 +4,10 @@ Difficulty.defs = {
 	easy = {
 		key = "easy",
 
-		enemyHp = 0.85,
-		enemySpeed = 0.90,
+		enemyHp = 0.75,
+		enemySpeed = 0.95,
 
-		bossHp = 0.85,
+		bossHp = 0.75,
 
 		startMoney = 140,
 		startLives = 25,
@@ -30,12 +30,12 @@ Difficulty.defs = {
 	hard = {
 		key = "hard",
 
-		enemyHp = 1.15,
-		enemySpeed = 1.10,
+		enemyHp = 1.25,
+		enemySpeed = 1.05,
 
-		bossHp = 1.15,
+		bossHp = 1.25,
 
-		startMoney = 110,
+		startMoney = 100,
 		startLives = 15,
 		sellRefund = 0.60,
 	},

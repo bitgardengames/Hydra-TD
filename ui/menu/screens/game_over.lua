@@ -4,6 +4,7 @@ local Cursor = require("core.cursor")
 local State = require("core.state")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
+local Text = require("ui.text")
 local Fonts = require("core.fonts")
 local L = require("core.localization")
 
@@ -72,22 +73,25 @@ function Screen.draw()
     lg.rectangle("fill", 0, 0, sw, sh)
 
     -- Title
-    Fonts.set("menu")
+    Fonts.set("title")
     lg.setColor(colorBad)
-    lg.printf(L("game.gameOver"), 0, screenHalf - 96, sw, "center")
+
+	Text.printfShadow(State.endTitle, 0, screenHalf - 120, sw, "center")
+
+	Fonts.set("menu")
 
 	-- Difficulty
 	local difficultyLabel = getDifficultyLabel()
-	
+
 	if difficultyLabel then
 		lg.setColor(1, 1, 1, 0.6)
-		lg.printf(string.format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, screenHalf - 64, sw, "center")
+		Text.printfShadow(string.format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, screenHalf - 64, sw, "center")
 	end
 
     -- Reason
-    if State.gameOverReasonKey then
+    if State.endReason then
         lg.setColor(1, 1, 1, 0.7)
-        lg.printf(L(State.gameOverReasonKey), 0, screenHalf - 32, sw, "center")
+		Text.printfShadow(State.endReason, 0, screenHalf - 32, sw, "center")
     end
 
     -- Buttons

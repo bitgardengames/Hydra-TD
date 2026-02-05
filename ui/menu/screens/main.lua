@@ -1,3 +1,4 @@
+local Constants = require("core.constants")
 local Theme = require("core.theme")
 local Button = require("ui.button")
 local Cursor = require("core.cursor")
@@ -14,6 +15,10 @@ local floor = math.floor
 local menuColor = Theme.menu
 
 local buttons = nil
+
+local verText = Constants.VERSION_STRING
+local verAlpha = 0.65
+local verPad = 12
 
 local lancerIdle = {
 	angle = -math.pi / 6,
@@ -141,6 +146,17 @@ function Screen.draw()
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
+	
+	-- Version tag
+	Fonts.set("ui")
+
+	love.graphics.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], verAlpha)
+
+	local font = love.graphics.getFont()
+	local tw = font:getWidth(verText)
+	local th = font:getHeight()
+
+	love.graphics.print(verText, sw - tw - verPad - 5, sh - th - verPad)
 end
 
 function Screen.mousepressed(x, y, button)

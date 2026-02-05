@@ -1,6 +1,7 @@
 local Save = {}
 
 local SAVE_FILE = "save.lua"
+local SAVE_VERSION = 1
 
 Save.data = nil
 
@@ -13,14 +14,33 @@ function Save.load()
 
         if ok and type(data) == "table" then
             Save.data = data
+
+			local version = Save.data.version or 0
+
+			--[[ If I need upgrading for adding/removing keys
+			local migrated = false
+
+			if version < 2 then
+				Save.data.settings.showDamageMeter = true
+				migrated = true
+			end
+
+			Save.data.version = SAVE_VERSION
+
+			if migrated then
+				Save.flush()
+			end
+			--]]
+
             Save.data.furthestIndex = Save.data.furthestIndex or 1
             Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 
 			Save.data.settings = Save.data.settings or {}
-			Save.data.settings.musicVolume = Save.data.settings.musicVolume or 0.50
-			Save.data.settings.sfxVolume = Save.data.settings.sfxVolume or 0.50
+
+			Save.data.settings.musicVolume = Save.data.settings.musicVolume or 0.25
+			Save.data.settings.sfxVolume = Save.data.settings.sfxVolume or 0.25
 			Save.data.settings.difficulty = Save.data.settings.difficulty or "normal"
-			Save.data.settings.fullscreen = Save.data.settings.fullscreen or false
+			Save.data.settings.fullscreen = Save.data.settings.fullscreen ~= nil and Save.data.settings.fullscreen or false
 
             return
         end
@@ -28,12 +48,12 @@ function Save.load()
 
     -- Fresh save
     Save.data = {
-        version = 1,
+        version = SAVE_VERSION,
         furthestIndex = 1,
         unlockedMaps = {},
 		settings = {
-			musicVolume = 0.50,
-			sfxVolume = 0.50,
+			musicVolume = 0.25,
+			sfxVolume = 0.25,
 			difficulty = "normal",
 			fullscreen = true,
 		},
@@ -41,6 +61,8 @@ function Save.load()
 end
 
 function Save.flush()
+	Save.data.version = SAVE_VERSION
+
     local serialized = "return " .. Save.serialize(Save.data)
     love.filesystem.write(SAVE_FILE, serialized)
 end

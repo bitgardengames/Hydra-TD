@@ -1,7 +1,11 @@
+local Theme = require("core.theme")
+
 local Text = {}
 
 local lg = love.graphics
 local getColor = lg.getColor
+
+local colorShadow = Theme.ui.shadow
 
 function Text.printShadow(text, x, y, opts)
 	opts = opts or {}
@@ -9,7 +13,7 @@ function Text.printShadow(text, x, y, opts)
 	local ox = opts.ox or 1
 	local oy = opts.oy or 1
 	local alphaMul = opts.alpha or 0.4
-	local shadowColor = opts.shadowColor or {0, 0, 0}
+	local shadowColor = opts.shadowColor or colorShadow
 
 	local r, g, b, a = getColor()
 
@@ -28,7 +32,7 @@ function Text.printfShadow(text, x, y, w, align, opts)
 	local ox = opts.ox or 1
 	local oy = opts.oy or 1
 	local alphaMul = opts.alpha or 0.4
-	local shadowColor = opts.shadowColor or {0, 0, 0}
+	local shadowColor = opts.shadowColor or colorShadow
 
 	local r, g, b, a = getColor()
 

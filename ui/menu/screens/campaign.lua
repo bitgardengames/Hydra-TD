@@ -16,25 +16,29 @@ local floor = math.floor
 local Screen = {}
 
 -- Colors
-local colorText  = Theme.ui.text
-local colorPath  = Theme.terrain.path
+local colorText = Theme.ui.text
+local colorPath = Theme.terrain.path
 local colorGrass = Theme.terrain.grass
 local colorPanel = Theme.ui.panel
-local colorMenu  = Theme.menu
+local colorMenu = Theme.menu
+local colorShadow = Theme.ui.shadow
+local colorHover = {0.94, 0.94, 0.94}
+local colorEnabled = {0.88, 0.88, 0.88}
+local colorDisabled = {0.65, 0.65, 0.65}
 
 -- Layout
 local PAD_PREVIEW = 28
-local PAD_TITLE   = 54
-local PAD_META    = 18
-local PAD_ACTION  = 26
+local PAD_TITLE = 54
+local PAD_META = 18
+local PAD_ACTION = 26
 
 local PREVIEW_ZOOM = 1.3
 
 -- Arrow navigation
-local ARROW_SIZE   = 26
+local ARROW_SIZE = 26
 local ARROW_OFFSET = 48
-local ARROW_ALPHA  = 0.85
-local ARROW_HOVER  = 1.0
+local ARROW_ALPHA = 0.85
+local ARROW_HOVER = 1.0
 
 -- State
 local mapPreviews = {}
@@ -55,6 +59,33 @@ local function pointInTriangle(px, py, ax, ay, bx, by, cx, cy)
 	local b3 = sign(px, py, cx, cy, ax, ay) < 0
 
 	return (b1 == b2) and (b2 == b3)
+end
+
+local function resolveArrowColor(enabled, hover)
+	if not enabled then
+		return colorDisabled
+	end
+
+	if hover then
+		return colorHover
+	end
+
+	return colorEnabled
+end
+
+local function drawTriangleWithShadow(points, color)
+	-- Shadow
+	lg.setColor(colorShadow)
+	lg.polygon(
+		"fill",
+		points[1] + 1, points[2] + 1,
+		points[3] + 1, points[4] + 1,
+		points[5] + 1, points[6] + 1
+	)
+
+	-- Main triangle
+	lg.setColor(color)
+	lg.polygon("fill", unpack(points))
 end
 
 -- Map preview generation
@@ -212,63 +243,47 @@ function Screen.draw()
 		)
 	end
 
-	-- =====================================================
 	-- Navigation arrows
-	-- =====================================================
 	local leftEnabled  = State.mapIndex > 1
 	local rightEnabled = State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1)
 
 	local arrowY = centerY
-	local size   = ARROW_SIZE
+	local size = ARROW_SIZE
 
 	-- Left arrow
 	do
 		local cx = centerX - pw * 0.5 - ARROW_OFFSET
-		local a = leftEnabled and ARROW_ALPHA or 0.25
+		local enabled = leftEnabled
 
-		if leftEnabled and Cursor.x then
-			if pointInTriangle(
-				Cursor.x, Cursor.y,
-				cx + size * 0.5, arrowY - size,
-				cx - size * 0.5, arrowY,
-				cx + size * 0.5, arrowY + size
-			) then
-				a = ARROW_HOVER
-			end
+		local points = {cx + size * 0.5, arrowY - size, cx - size * 0.5, arrowY, cx + size * 0.5, arrowY + size}
+
+		local hover = false
+
+		if enabled and Cursor.x then
+			hover = pointInTriangle(Cursor.x, Cursor.y, points[1], points[2], points[3], points[4], points[5], points[6])
 		end
 
-		lg.setColor(colorText[1], colorText[2], colorText[3], a)
-		lg.polygon(
-			"fill",
-			cx + size * 0.5, arrowY - size,
-			cx - size * 0.5, arrowY,
-			cx + size * 0.5, arrowY + size
-		)
+		local color = resolveArrowColor(enabled, hover)
+
+		drawTriangleWithShadow(points, color)
 	end
 
 	-- Right arrow
 	do
 		local cx = centerX + pw * 0.5 + ARROW_OFFSET
-		local a = rightEnabled and ARROW_ALPHA or 0.25
+		local enabled = rightEnabled
 
-		if rightEnabled and Cursor.x then
-			if pointInTriangle(
-				Cursor.x, Cursor.y,
-				cx - size * 0.5, arrowY - size,
-				cx + size * 0.5, arrowY,
-				cx - size * 0.5, arrowY + size
-			) then
-				a = ARROW_HOVER
-			end
+		local points = {cx - size * 0.5, arrowY - size, cx + size * 0.5, arrowY, cx - size * 0.5, arrowY + size}
+
+		local hover = false
+
+		if enabled and Cursor.x then
+			hover = pointInTriangle( Cursor.x, Cursor.y, points[1], points[2], points[3], points[4], points[5], points[6])
 		end
 
-		lg.setColor(colorText[1], colorText[2], colorText[3], a)
-		lg.polygon(
-			"fill",
-			cx - size * 0.5, arrowY - size,
-			cx + size * 0.5, arrowY,
-			cx - size * 0.5, arrowY + size
-		)
+		local color = resolveArrowColor(enabled, hover)
+
+		drawTriangleWithShadow(points, color)
 	end
 
 	-- Text

@@ -1,8 +1,5 @@
 local Scale = {}
 
-local lg = love.graphics
-local min = math.min
-
 -- Authored reference resolution
 local REF_W = 1920
 local REF_H = 1080
@@ -12,21 +9,19 @@ Scale.sh = REF_H
 Scale.factor = 1.0
 
 function Scale.update()
-    Scale.sw, Scale.sh = lg.getDimensions()
+    Scale.sw, Scale.sh = love.graphics.getDimensions()
 
     local sx = Scale.sw / REF_W
     local sy = Scale.sh / REF_H
 
     -- Limiting axis preserves framing/layout
-    Scale.factor = min(sx, sy)
+    Scale.factor = math.min(sx, sy)
 end
 
--- Raw, unclamped resolution factor
 function Scale.getScale()
     return Scale.factor
 end
 
--- Convenience
 function Scale.getDimensions()
     return Scale.sw, Scale.sh
 end

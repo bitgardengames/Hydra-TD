@@ -45,7 +45,7 @@ local hudCache = {
 	spawn = {remaining = nil, count = nil, text = ""},
 }
 
-local bottomBarButtons = {}
+local inspectButtons = {}
 local shopButtons = {}
 local shopBumps = {}
 local shopAnims = {}
@@ -142,7 +142,7 @@ local INSPECT_W = 260 -- right panel content width
 local COL_W = 120
 local HUD_H = 28 -- top strip height
 
-local ACTION_W = 220 -- matches divider width
+local ACTION_W = 240
 local BUTTON_W = (ACTION_W - GAP) / 2
 local BUTTON_H = 28
 
@@ -268,7 +268,7 @@ function BottomBar.draw()
 
 	for _, key in ipairs(Towers.shopOrder) do
 		local def = Towers.TowerDefs[key]
-		local hotkey = Hotkeys.getShopKey(key)
+		local hotkeyLabel = Hotkeys.getDisplay(key)
 
 		local col = i % SHOP_COLS
 		local row = floor(i / SHOP_COLS)
@@ -350,12 +350,24 @@ function BottomBar.draw()
 			lg.rectangle("fill", x, yb, SHOP_BTN_W, SHOP_BTN_H, 6, 6)
 		end
 
+		local HOTKEY_PAD = 14
+		local nameX = x + PAD
+
 		local ty = yb + (SHOP_BTN_H - textH) * 0.5
 		local colorAfford = canAfford and colorText or colorBad
 		local nameAlpha = canAfford and 1 or 0.55
 
+		if hotkeyLabel then
+			nameX = nameX + HOTKEY_PAD
+
+			lg.setColor(colorText)
+
+			-- vertically centered
+			Text.printShadow( hotkeyLabel, x + PAD, ty)
+		end
+
 		lg.setColor(colorText[1], colorText[2], colorText[3], nameAlpha)
-		Text.printShadow(L(def.nameKey), x + PAD, ty)
+		Text.printShadow(L(def.nameKey), nameX, ty)
 
 		lg.setColor(colorAfford)
 		Text.printfShadow("$" .. def.cost, x + PAD, ty, SHOP_BTN_W - PAD2, "right")
@@ -400,13 +412,17 @@ function BottomBar.draw()
 		local inspectTitleY = inspectInfoY + floor((inspectInfoH - textH) * 0.5 + 0.5)
 
 		local inspectBodyX = inspectContentX + PAD
-		local inspectBodyY = inspectContentY + PAD
+		local inspectBodyY = inspectContentY + PAD - 1
 
 		local lineH = 16
 
 		lg.setColor(colorText)
 
 		if State.selectedTower then
+			for i = #inspectButtons, 1, -1 do
+				inspectButtons[i] = nil
+			end
+
 			local t = State.selectedTower
 
 			-- Title (top strip)
@@ -416,6 +432,120 @@ function BottomBar.draw()
 			Text.printShadow(L("inspect.damage", formatNum(t.damageDealt)), inspectBodyX, inspectBodyY)
 
 			Text.printShadow(L("inspect.kills", t.kills), inspectBodyX, inspectBodyY + 16)
+
+			-- Action buttons (upgrade / sell)
+			local actionY = inspectContentY + inspectContentH - BUTTON_H - PAD
+			local actionX = inspectContentX + PAD
+
+			-- Upgrade cost
+			local upgradeCost = Towers.towerUpgradeCost(t)
+			local canUpgrade = upgradeCost and State.money >= upgradeCost
+
+			-- Sell value
+			local sellValue = t.sellValue
+
+			-- Upgrade button
+			inspectButtons[#inspectButtons + 1] = {
+				id = "upgrade",
+				x = actionX,
+				y = actionY,
+				w = BUTTON_W,
+				h = BUTTON_H,
+				canAfford = canUpgrade,
+				value = nil,
+				cost = upgradeCost,
+				onClick = function()
+					Towers.upgradeTower(t)
+				end,
+				hotkey = Hotkeys.getDisplay("upgrade"),
+				label = L("actions.upgrade"),
+			}
+
+			-- Sell button
+			inspectButtons[#inspectButtons + 1] = {
+				id = "sell",
+				x = actionX + BUTTON_W + GAP,
+				y = actionY,
+				w = BUTTON_W,
+				h = BUTTON_H,
+				canAfford = true,
+				cost = nil,
+				value = sellValue,
+				onClick = function()
+					Towers.sellTower(t)
+				end,
+				hotkey = Hotkeys.getDisplay("sell"),
+				label = L("actions.sell"),
+			}
+
+			-- Draw inspect action buttons (upgrade / sell)
+			for _, btn in ipairs(inspectButtons) do
+				local x, y = btn.x, btn.y
+				local w, h = btn.w, btn.h
+				local canAfford = btn.canAfford
+				local hotkeyLabel = btn.hotkey
+				local label = btn.label
+
+				local mx, my = Cursor.x, Cursor.y
+				local hovered = mx >= x and mx <= x + w and my >= y and my <= y + h
+
+				local anim = ensureShopAnim(btn.id)
+
+				if hovered ~= anim.hovered then
+					anim.active = true
+				end
+
+				anim.hovered = hovered
+
+				if anim.active then
+					local speed = getDelta() * 10
+					anim.t = hovered and min(1, anim.t + speed) or max(0, anim.t - speed)
+
+					if anim.t == 0 or anim.t == 1 then
+						anim.active = false
+					end
+				end
+
+				local ease = anim.t * anim.t * (3 - 2 * anim.t)
+				local bg = lerpColor(colorButton, colorButtonHover, ease)
+
+				lg.setColor(bg)
+				lg.rectangle("fill", x, y, w, h, 6, 6)
+
+				if not canAfford then
+					lg.setColor(colorDisabled)
+					lg.rectangle("fill", x, y, w, h, 6, 6)
+				end
+
+				local ty = y + (h - textH) * 0.5
+				local nameX = x + PAD
+
+				-- Hotkey (left)
+				if hotkeyLabel then
+					lg.setColor(colorText)
+					Text.printShadow(hotkeyLabel, nameX, ty)
+					nameX = nameX + 14
+				end
+
+				-- Label
+				local labelAlpha = canAfford and 1 or 0.55
+				lg.setColor(colorText[1], colorText[2], colorText[3], labelAlpha)
+				Text.printShadow(label, nameX, ty)
+
+				-- Cost / value (right-aligned, shop-style)
+				if btn.cost then
+					-- Upgrade cost
+					local costColor = canAfford and colorGood or colorBad
+					
+					lg.setColor(costColor)
+					
+					Text.printfShadow("$" .. formatNum(btn.cost), x + PAD, ty, w - PAD2, "right")
+				elseif btn.value then
+					-- Sell value (always positive, usually green)
+					lg.setColor(colorGood)
+					Text.printfShadow( "+$" .. formatNum(btn.value), x + PAD, ty, w - PAD2, "right")
+				end
+			end
 		elseif State.selectedEnemy then
 			local e = State.selectedEnemy
 
@@ -430,8 +560,8 @@ function BottomBar.getShopButtons()
 	return shopButtons
 end
 
-function BottomBar.getBottomBarButtons()
-	return bottomBarButtons
+function BottomBar.getInspectButtons()
+	return inspectButtons
 end
 
 return BottomBar

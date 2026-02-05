@@ -70,6 +70,13 @@ function Menu.mousereleased(x, y, button)
 	end
 end
 
+function Menu.gamepadpressed(key)
+	local screen = Screens[State.mode]
+	if screen and screen.gamepadpressed then
+		screen.gamepadpressed(key)
+	end
+end
+
 -- Pause overlay (called from main loop)
 function Menu.updatePause(dt)
 	Screens.pause.update(dt)
