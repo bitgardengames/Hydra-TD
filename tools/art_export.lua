@@ -776,6 +776,97 @@ function Export.exportCogSocialAvatarAnim()
 	end
 end
 
+local _bannerLogoCache = {}
+
+local function getBannerLogoCanvas(name)
+	if _bannerLogoCache[name] then
+		return _bannerLogoCache[name]
+	end
+
+	local b = BANNERS[name]
+	assert(b, "Unknown banner type: " .. tostring(name))
+
+	local canvas = lg.newCanvas(b.w, b.h, { msaa = 8 })
+
+	lg.setCanvas(canvas)
+	lg.clear(0, 0, 0, 0)
+
+	-- EXACT same call as exportBanners transparent pass
+	drawBannerGroup(b.w, b.h)
+
+	lg.setCanvas()
+
+	_bannerLogoCache[name] = canvas
+	return canvas
+end
+
+function Export.composeHero(opts)
+	assert(opts.canvas, "composeHero requires canvas")
+
+	local srcCanvas = opts.canvas
+	local w = opts.width
+	local h = opts.height
+
+	local out = lg.newCanvas(w, h, { msaa = 8 })
+	lg.setCanvas(out)
+	lg.clear(0, 0, 0, 0)
+
+	-- =====================================================
+	-- 1. Draw hero render
+	-- =====================================================
+	lg.setColor(1, 1, 1, 1)
+	lg.draw(srcCanvas, 0, 0)
+
+	-- =====================================================
+	-- 2. Subtle edge darkening (hero-friendly vignette)
+	-- =====================================================
+	lg.setBlendMode("alpha")
+
+	local steps = 12
+	local maxInset = math.min(w, h) * 0.06
+
+	for i = 1, steps do
+		local t = i / steps
+		local inset = t * maxInset
+		local alpha = 0.025 * (1 - t) ^ 2
+
+		lg.setColor(0, 0, 0, alpha)
+
+		lg.rectangle("fill", 0, 0, w, inset)                 -- Top
+		lg.rectangle("fill", 0, h - inset, w, inset)        -- Bottom
+		lg.rectangle("fill", 0, inset, inset, h - inset*2)  -- Left
+		lg.rectangle("fill", w - inset, inset, inset, h - inset*2) -- Right
+	end
+
+	-- =====================================================
+	-- 3. Draw Hydra TD logo (same logic as banner export)
+	-- =====================================================
+	local logoCanvas = getBannerLogoCanvas("vertical_capsule")
+
+	local lw = logoCanvas:getWidth()
+	local lh = logoCanvas:getHeight()
+
+	-- Center it EXACTLY like a banner
+	local x = math.floor((w - lw) * 0.5)
+	local y = math.floor((h - lh) * 0.5)
+
+	lg.setColor(1, 1, 1, 1)
+	lg.draw(logoCanvas, x, y)
+
+	lg.setCanvas()
+
+	-- =====================================================
+	-- 4. Save
+	-- =====================================================
+	local stamp = os.date("%Y-%m-%d_%H-%M-%S")
+	local fileName = ("hero_branded_%s.png"):format(stamp)
+
+	local img = out:newImageData()
+	img:encode("png", fileName)
+
+	return out
+end
+
 function Export.run()
 	ensureDirs()
 	--Export.exportTowers()

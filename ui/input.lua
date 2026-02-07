@@ -286,8 +286,13 @@ end
 local function gamepadpressed(joystick, button)
 	Cursor.enableVirtual()
 
-	-- Shop selection (d-pad → towers)
-	local shopKind = Hotkeys.padShopKindFromButton(button)
+	-- Settings screen gets raw D-Pad input (no mouse emulation)
+	if State.mode ~= "game" then
+		Menu.gamepadpressed(joystick, button)
+	end
+
+	-- Shop selection (d-pad > towers)
+	local shopKind = Hotkeys.padShopKindFromButton(joystick, button)
 
 	if shopKind and State.mode == "game" then
 		State.placing = shopKind

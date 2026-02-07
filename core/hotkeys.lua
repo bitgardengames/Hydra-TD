@@ -21,7 +21,7 @@ Hotkeys.kb = {
 		fastForward = "tab",
 		skipPrep = "space",
 		toggleMeter = "d",
-		toggleMeterInfo = "f",
+		--toggleMeterInfo = "f",
 		screenshot = "printscreen",
 	},
 }
@@ -30,22 +30,19 @@ Hotkeys.kb = {
 -- These names work across Xbox/PS/Switch/Steam Deck (input-wise).
 Hotkeys.pad = {
 	actions = {
-		confirm = "a", -- A / Cross
-		cancel = "b", -- B / Circle
-		pause = "start", -- Menu / Options
-		back = "back", -- View / Share
+		confirm = "a",
+		cancel = "b",
+		pause = "start",
+		back = "back",
 
-		-- Tempo
-		fastForward = "rightshoulder", -- RB / R1
-		skipPrep = "leftshoulder", -- LB / L1
+		fastForward = "rightshoulder",
+		skipPrep = "leftshoulder",
 
-		-- Tower actions
-		upgrade = "y", -- Y / Triangle
-		sell = "x", -- X / Square
+		upgrade = "y",
+		sell = "x",
 
-		-- Info
-		toggleMeter = "rightstick", -- R3
-		toggleMeterInfo = "leftstick", -- L3
+		toggleMeter = "leftstick",
+		--toggleMeterInfo = "leftstick",
 	},
 
 	shop = {
@@ -53,9 +50,7 @@ Hotkeys.pad = {
 		dpleft = "slow",
 		dpdown = "poison",
 		dpright = "cannon",
-
-		-- Optional special tower
-		--y = "shock", -- RT / R2
+		rightstick = "shock",
 	},
 }
 
@@ -74,13 +69,7 @@ Hotkeys.padAliases = {
 
 	start = "Start",
 	back  = "Back",
-
-	dpup    = "^",
-	dpdown  = "v",
-	dpleft  = "<",
-	dpright = ">",
 }
-
 
 function Hotkeys.getShopKey(kind)
 	return Hotkeys.kb.shop[kind]
@@ -90,8 +79,7 @@ function Hotkeys.getActionKey(action)
 	return Hotkeys.kb.actions[action]
 end
 
--- Returns a human-readable label for an action or shop kind,
--- based on input mode (keyboard vs controller)
+-- Returns a readable label based on input mode (keyboard vs controller)
 function Hotkeys.getDisplay(action)
 	local usingController = State.inputSource == "controller"
 
@@ -115,14 +103,15 @@ function Hotkeys.getDisplay(action)
 
 	-- Keyboard display
 	local key = Hotkeys.kb.actions[action] or Hotkeys.kb.shop[action]
+
 	if not key then
 		return nil
 	end
 
 	-- Normalize common keys
 	if key == "escape" then return "Esc" end
-	if key == "space"  then return "Space" end
-	if key == "tab"    then return "Tab" end
+	if key == "space" then return "Space" end
+	if key == "tab" then return "Tab" end
 
 	return key:upper()
 end
@@ -137,9 +126,58 @@ function Hotkeys.padActionFromButton(button)
 	return nil
 end
 
-function Hotkeys.padShopKindFromButton(button)
-	-- button is dpup/dpleft/... or y/x etc
+function Hotkeys.padShopKindFromButton(joystick, button)
+	--[[ Modifier layer
+	if joystick:isGamepadDown(Hotkeys.pad.shop.modifier) then
+		return Hotkeys.pad.shop.mod and Hotkeys.pad.shop.mod[button]
+	end]]
+
+	-- Base layer
 	return Hotkeys.pad.shop[button]
+end
+
+function Hotkeys.getGlyph(action)
+	-- Only show glyphs when using a controller
+	if State.inputSource ~= "controller" then
+		return nil
+	end
+
+	-- Direct action bindings (confirm, upgrade, sell, etc.)
+	local btn = Hotkeys.pad.actions[action]
+	if btn then
+		-- Face buttons
+		if btn == "a" then return "confirm" end
+		if btn == "b" then return "cancel" end
+		if btn == "x" then return "x" end
+		if btn == "y" then return "y" end
+
+		-- Shoulders
+		if btn == "leftshoulder" then return "pad_lb" end
+		if btn == "rightshoulder" then return "pad_rb" end
+
+		-- Stick buttons
+		if btn == "leftstick" then return "pad_l3" end
+		if btn == "rightstick" then return "pad_r3" end
+
+		-- D-pad used as actions
+		if btn == "dpup" then return "dpad_up" end
+		if btn == "dpdown" then return "dpad_down" end
+		if btn == "dpleft" then return "dpad_left" end
+		if btn == "dpright" then return "dpad_right" end
+	end
+
+	-- Shop bindings (tower kinds mapped to d-pad / stick)
+	for dpad, kind in pairs(Hotkeys.pad.shop) do
+		if kind == action then
+			if dpad == "dpup" then return "dpad_up" end
+			if dpad == "dpdown" then return "dpad_down" end
+			if dpad == "dpleft" then return "dpad_left" end
+			if dpad == "dpright" then return "dpad_right" end
+			if dpad == "rightstick" then return "pad_r3" end
+		end
+	end
+
+	return nil
 end
 
 return Hotkeys

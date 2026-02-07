@@ -27,6 +27,9 @@ local CTA_FONT_SIZE = 120
 local FONT_HERO = lg.newFont("assets/fonts/PTSans.ttf", HERO_FONT_SIZE)
 local FONT_CTA = lg.newFont("assets/fonts/PTSans.ttf", CTA_FONT_SIZE)
 
+local FPS = 60
+local STEP_DT = 1 / FPS
+
 local Director = {
 	t = 0,
 	shot = nil,
@@ -50,6 +53,13 @@ local Director = {
 	logoT = 0,
 
 	ctx = nil,
+
+	scrub = {
+		enabled = false,
+		playing = false,
+		frame = 0,
+		lastShotName = nil,
+	},
 }
 
 local HERO_ANGLE = -math.pi / 6
@@ -104,9 +114,91 @@ function Director.buildScene(scene)
     end
 end
 
+function Director._stepFixed(step)
+	Director.t = Director.t + step
+
+	-- Run simulation
+	if Director.shot.type ~= "logo" then
+		Sim.update(step, { force = true })
+
+		-- Capture first enemy once
+		if not Director.ctx.firstEnemy then
+			local enemies = Enemies.enemies
+			if enemies and enemies[1] then
+				Director.ctx.firstEnemy = enemies[1]
+			end
+		end
+
+		-- Camera
+		if Director.activeCamera then
+			Director.activeCamera.update(Director.t)
+		end
+	end
+
+	-- Run scheduled actions
+	for _, action in ipairs(Director.timelineActions or {}) do
+		if not action.done and Director.t >= action.t then
+			action.fn()
+			action.done = true
+		end
+	end
+
+	-- Text beats
+	local texts = Director.shot.text or {}
+	for _, tb in ipairs(texts) do
+		if not tb.done and Director.t >= tb.t then
+			Director.activeText = tb
+			Director.textT = 0
+			tb.done = true
+		end
+	end
+
+	if Director.activeText then
+		Director.textT = Director.textT + step
+		if Director.textT >= Director.activeText.dur then
+			Director.activeText = nil
+		end
+	end
+
+	-- Logo beat
+	local logo = Director.shot.logo
+	if logo and not logo.done and Director.t >= logo.t then
+		Director.activeLogo = true
+		Director.logoT = 0
+		logo.done = true
+	end
+
+	if Director.activeLogo then
+		Director.logoT = Director.logoT + step
+		Title.updateLancerIdle(Director.lancerIdle, step, Director.logoT)
+		if logo and Director.logoT >= logo.dur then
+			Director.activeLogo = false
+		end
+	end
+end
+
+function Director.seekToFrame(frame)
+	frame = math.max(0, frame)
+	Director.scrub.frame = frame
+
+	-- Reload current shot fresh
+	local name = Director.scrub.lastShotName
+	if not name then return end
+
+	Director.load(name)
+
+	-- Fast-forward deterministically
+	for i = 1, frame do
+		Director._stepFixed(STEP_DT)
+	end
+end
+
+
 function Director.load(name)
 	Director.shot = Shots[name]
 	assert(Director.shot, "Trailer shot not found: " .. tostring(name))
+
+	Director.scrub.lastShotName = name
 
 	Director.t = 0
 
@@ -159,7 +251,21 @@ function Director.load(name)
 end
 
 function Director.update(dt)
-    Director.t = Director.t + dt
+	-- Scrub mode takes over time
+	if Director.scrub.enabled then
+		if Director.scrub.playing then
+			-- advance in real time but quantized to fixed frames
+			Director._scrubAccum = (Director._scrubAccum or 0) + dt
+			while Director._scrubAccum >= STEP_DT do
+				Director._scrubAccum = Director._scrubAccum - STEP_DT
+				Director.scrub.frame = Director.scrub.frame + 1
+				Director._stepFixed(STEP_DT)
+			end
+		end
+		return
+	end
+
+	Director._stepFixed(dt)
 
     -- Run simulation
 	if Director.shot.type ~= "logo" then
@@ -486,7 +592,41 @@ end
 
 function love.keypressed(key)
 	if key == "f9" then
-		HeroExport.capture()
+		HeroExport.setFormat("vertical") -- or "vertical"
+		HeroExport.capture({
+			--subject = require("world.towers").towers[1],          -- ACTUAL tower instance from world.towers
+			subject = require("world.enemies").enemies[1],          -- ACTUAL tower instance from world.towers
+			subjectType = "enemy",
+		})
+	elseif key == "f8" then
+		Director.scrub.enabled = not Director.scrub.enabled
+		Director.scrub.playing = false
+		Director._scrubAccum = 0
+
+		-- When enabling scrub, lock to the *current* frame
+		if Director.scrub.enabled then
+			Director.scrub.frame = math.floor(Director.t * FPS + 0.5)
+			Director.seekToFrame(Director.scrub.frame)
+		end
+	end
+
+	if Director.scrub.enabled then
+		if key == "space" then
+			Director.scrub.playing = not Director.scrub.playing
+		elseif key == "right" then
+			Director.seekToFrame(Director.scrub.frame + 1)
+		elseif key == "left" then
+			Director.seekToFrame(Director.scrub.frame - 1)
+		elseif key == "pagedown" then
+			Director.seekToFrame(Director.scrub.frame + 10)
+		elseif key == "pageup" then
+			Director.seekToFrame(Director.scrub.frame - 10)
+		elseif key == "home" then
+			Director.seekToFrame(0)
+		elseif key == "end" then
+			local maxFrame = math.floor((Director.shot.duration or 0) * FPS + 0.5)
+			Director.seekToFrame(maxFrame)
+		end
 	end
 end
 

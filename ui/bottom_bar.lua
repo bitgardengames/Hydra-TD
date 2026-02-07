@@ -6,6 +6,7 @@ local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local Waves = require("systems.waves")
 local Hotkeys = require("core.hotkeys")
+local Glyphs = require("ui.glyphs")
 local Text = require("ui.text")
 local L = require("core.localization")
 
@@ -41,7 +42,7 @@ local hudCache = {
 	money = {value = nil, text = ""},
 	lives = {value = nil, text = ""},
 	wave = {value = nil, text = ""},
-	prep = {value = nil, text = ""},
+	prep = {value = nil, text = "", action = nil},
 	spawn = {remaining = nil, count = nil, text = ""},
 }
 
@@ -124,6 +125,35 @@ local function formatModifier(label, value, suffix)
 	local pct = abs(floor(delta + 0.5))
 
 	return ("%s%d%% %s %s"):format(sign, pct, label, suffix)
+end
+
+local GLYPH_X_OFFSET = -5
+
+local function drawHotkeyVisual(action, x, y, textY)
+	-- Try glyph first (controller mode)
+	local glyph = Hotkeys.getGlyph(action)
+
+	if glyph then
+		local gw, gh = Glyphs.getSize(glyph, 1)
+
+		-- Vertically center glyph against text baseline
+		Glyphs.draw(glyph, x + GLYPH_X_OFFSET, textY - 1)
+
+		return gw - 10
+	end
+
+	-- Fallback to text
+	local label = Hotkeys.getDisplay(action)
+
+	if label then
+		lg.setColor(colorText)
+		Text.printShadow(label, x, textY)
+
+		-- Match the spacing you already assume elsewhere
+		return 14
+	end
+
+	return 0
 end
 
 -- Spacing
@@ -232,10 +262,12 @@ function BottomBar.draw()
 	if State.inPrep then
 		local t = floor(State.prepTimer * 10 + 0.5) / 10
 		local prepCache = hudCache.prep
+		local skipKey = Hotkeys.getDisplay("skipPrep")
 
-		if prepCache.value ~= t then
+		if prepCache.value ~= t or prepCache.action ~= skipKey then
 			prepCache.value = t
-			prepCache.text = L("hud.prep", t)
+			prepCache.action = skipKey
+			prepCache.text = L("hud.prep", t, skipKey)
 		end
 
 		lg.setColor(colorGood)
@@ -358,12 +390,9 @@ function BottomBar.draw()
 		local nameAlpha = canAfford and 1 or 0.55
 
 		if hotkeyLabel then
-			nameX = nameX + HOTKEY_PAD
+			local used = drawHotkeyVisual(key, x + PAD + GLYPH_X_OFFSET, yb, ty)
 
-			lg.setColor(colorText)
-
-			-- vertically centered
-			Text.printShadow( hotkeyLabel, x + PAD, ty)
+			nameX = nameX + used
 		end
 
 		lg.setColor(colorText[1], colorText[2], colorText[3], nameAlpha)
@@ -522,9 +551,9 @@ function BottomBar.draw()
 
 				-- Hotkey (left)
 				if hotkeyLabel then
-					lg.setColor(colorText)
-					Text.printShadow(hotkeyLabel, nameX, ty)
-					nameX = nameX + 14
+					local used = drawHotkeyVisual(btn.id, nameX + GLYPH_X_OFFSET, y, ty)
+
+					nameX = nameX + used
 				end
 
 				-- Label
@@ -536,9 +565,9 @@ function BottomBar.draw()
 				if btn.cost then
 					-- Upgrade cost
 					local costColor = canAfford and colorGood or colorBad
-					
+
 					lg.setColor(costColor)
-					
+
 					Text.printfShadow("$" .. formatNum(btn.cost), x + PAD, ty, w - PAD2, "right")
 				elseif btn.value then
 					-- Sell value (always positive, usually green)

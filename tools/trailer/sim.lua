@@ -8,10 +8,14 @@ local Effects = require("world.effects")
 
 local Sim = {}
 
-function Sim.update(dt)
+function Sim.update(dt, opts)
+	opts = opts or {}
+
 	-- Skip simulation when paused / game over if desired
-	if State.paused or State.gameOver then
-		return
+	if not opts.force then
+		if State.paused or State.gameOver then
+			return
+		end
 	end
 
 	Waves.updatePrep(dt)

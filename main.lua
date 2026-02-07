@@ -16,16 +16,17 @@ local Projectiles = require("world.projectiles")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Draw = require("ui.draw")
+local Glyphs = require("ui.glyphs")
 local DrawWorld = require("ui.draw_world")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
 local Menu = require("ui.menu.menu")
 local Hotkeys = require("core.hotkeys")
-local HotkeyDisplay = require("ui.hotkey_display")
 local Rumble = require("systems.rumble")
 local Localization = require("core.localization")
 local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
+local Scale = require("core.scale")
 
 local lg = love.graphics
 local lk = love.keyboard
@@ -152,7 +153,10 @@ function love.load()
 	lg.setBackgroundColor(colorBg)
 
 	Menu.load()
-	--HotkeyDisplay.load()
+
+	require("ui.glyph_defs")
+
+	--require("ui.glyphs").exportSheet("glyphs.png", {cols = 6})
 end
 
 function love.update(dt)
@@ -315,8 +319,17 @@ function love.mousereleased(x, y, button)
 	Input.mousereleased(x, y, button)
 end
 
+function love.mousemoved(x, y, dx, dy)
+	if abs(dx) + abs(dy) > 2 then
+		Cursor.disableVirtual()
+		State.inputSource = "mouse"
+	end
+
+	Cursor.mousemoved(x, y)
+end
+
 function love.keypressed(key)
-	State.inputSource = "keyboard"
+	--State.inputSource = "keyboard"
 
 	if key == Hotkeys.kb.actions.screenshot then
 		local time = os.date("%Y-%m-%d_%H-%M-%S")
@@ -332,27 +345,62 @@ function love.keypressed(key)
 	Input.keypressed(key)
 end
 
+local function detectControllerType(joystick)
+	local name = joystick:getName():lower()
+
+	-- Steam Deck
+	if name:find("steam") then
+		return "steamdeck"
+	end
+
+	-- PlayStation
+	if name:find("dualshock") or name:find("dualsense") or name:find("playstation") or name:find("ps4") or name:find("ps5") then
+		return "playstation"
+	end
+
+	-- Xbox (default)
+	if name:find("xbox") or name:find("xinput") then
+		return "xbox"
+	end
+
+	-- Fallback: treat unknown gamepads as Xbox
+	return "xbox"
+end
+
 function love.gamepadpressed(joystick, button)
 	State.inputSource = "controller"
+
+	local platform = detectControllerType(joystick)
+
+	if platform and platform ~= State.lastInputPlatform then
+		State.lastInputPlatform = platform
+		Glyphs.setPlatform(platform)
+	end
+
 	Input.gamepadpressed(joystick, button)
 end
 
 function love.gamepadreleased(joystick, button)
-	Input.gamepadreleased(joystick, button)
-end
+	local platform = detectControllerType(joystick)
 
-function love.mousemoved(x, y, dx, dy)
-	if abs(dx) + abs(dy) > 2 then
-		Cursor.disableVirtual()
-		State.inputSource = "mouse"
+	if platform and platform ~= State.lastInputPlatform then
+		State.lastInputPlatform = platform
+		Glyphs.setPlatform(platform)
 	end
 
-	Cursor.mousemoved(x, y)
+	Input.gamepadreleased(joystick, button)
 end
 
 function love.gamepadaxis(joystick, axis, value)
 	if abs(value) > 0.3 then
 		State.inputSource = "controller"
+
+		local platform = detectControllerType(joystick)
+
+		if platform and platform ~= State.lastInputPlatform then
+			State.lastInputPlatform = platform
+			Glyphs.setPlatform(platform)
+		end
 	end
 end
 
@@ -363,10 +411,26 @@ function love.joystickremoved(joystick)
 end
 
 function love.joystickadded(joystick)
+	local platform = detectControllerType(joystick)
 
+	if platform and platform ~= State.lastInputPlatform then
+		State.lastInputPlatform = platform
+		Glyphs.setPlatform(platform)
+	end
 end
 
 function love.resize(w, h)
 	Scale.update()
-	Camera.resize(w, h)
+	Camera.resize()
+	require("ui.title").invalidateCache()
+	require("ui.menu.screens.campaign").resize(w, h)
+end
+
+function love.focus(focused)
+	if not focused then
+		-- Steam Overlay / alt-tab
+		if State.mode == "game" then
+			State.mode = "pause"
+		end
+	end
 end

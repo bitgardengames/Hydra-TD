@@ -70,10 +70,10 @@ function Menu.mousereleased(x, y, button)
 	end
 end
 
-function Menu.gamepadpressed(key)
+function Menu.gamepadpressed(joystick, button)
 	local screen = Screens[State.mode]
 	if screen and screen.gamepadpressed then
-		screen.gamepadpressed(key)
+		screen.gamepadpressed(joystick, button)
 	end
 end
 

@@ -17,7 +17,7 @@ return {
 		upgrade = {
 			cost = 60,
 			dmgMult = 1.50,
-			rangeAdd = 0.30 * Constants.TILE,
+			rangeAdd = 0.12 * Constants.TILE,
 			fireMult = 1.02,
 		}
 	},
@@ -38,7 +38,7 @@ return {
 		upgrade = {
 			cost = 55,
 			dmgMult = 1.45,
-			rangeAdd = 0.2 * Constants.TILE,
+			rangeAdd = 0.1 * Constants.TILE,
 			fireMult = 1.04,
 			slowDurAdd = 0.35,
 		}
@@ -88,7 +88,7 @@ return {
 		upgrade = {
 			cost = 78,
 			dmgMult = 1.55,
-			rangeAdd = 0.12 * Constants.TILE,
+			rangeAdd = 0.8 * Constants.TILE,
 			fireMult = 1.08,
 		}
 	},
@@ -113,7 +113,7 @@ return {
 		upgrade = {
 			cost = 72,
 			dmgMult = 1.40,
-			rangeAdd = 0.25 * Constants.TILE,
+			rangeAdd = 0.12 * Constants.TILE,
 			fireMult = 1.02,
 			poisonDurAdd = 0.35,
 			poisonDpsMult = 1.15,

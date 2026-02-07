@@ -27,7 +27,7 @@ local SLIDER_H = 10
 local ROW_H = 32
 local THUMB_R = 7
 
-local ARROW_W = 24 -- space reserved on the left for ">"
+local ARROW_W = 24
 local ROW_W = ARROW_W + LABEL_W + SLIDER_W + 40
 
 local settingsCursor = 1
@@ -47,18 +47,30 @@ local function getDifficultyIndex(key)
 			return i
 		end
 	end
-
 	return 2
+end
+
+local function adjustRow(row, dir)
+	if row.type == "slider" then
+		row.set(Util.clamp(row.get() + dir * 0.10, 0, 1))
+		Sound.play("uiMove")
+	elseif row.type == "toggle" then
+		row.set(not row.get())
+		Sound.play("uiConfirm")
+	elseif row.type == "discrete" then
+		local cur = getDifficultyIndex(row.get())
+		local next = cur + dir
+
+		if next < 1 then next = #DIFFICULTY_ORDER end
+		if next > #DIFFICULTY_ORDER then next = 1 end
+		row.set(DIFFICULTY_ORDER[next])
+		Sound.play("uiMove")
+	end
 end
 
 -- Layout helpers
 local function rowRectFor(index, x, yTop)
-	rowRects[index] = {
-		x = x - ARROW_W,
-		y = yTop,
-		w = ROW_W,
-		h = ROW_H
-	}
+	rowRects[index] = {x = x - ARROW_W, y = yTop, w = ROW_W, h = ROW_H}
 
 	return rowRects[index]
 end
@@ -70,7 +82,6 @@ local function rowTextY(yTop)
 end
 
 local function rowSliderY(yTop)
-	-- 8px track vertically centered in the row
 	return yTop + (ROW_H - SLIDER_H) * 0.5
 end
 
@@ -90,12 +101,10 @@ local function drawRowArrow(x, yTop, selected)
 	end
 end
 
--- Row content renderers
+-- Row renderers
 local function drawSliderRow(row, x, yTop, selected, hovered, index)
-	-- Label
 	Text.printShadow(row.label, x, rowTextY(yTop))
 
-	-- Slider geometry
 	local sliderX = x + LABEL_W
 	local sliderY = rowSliderY(yTop)
 
@@ -103,42 +112,38 @@ local function drawSliderRow(row, x, yTop, selected, hovered, index)
 
 	local t = max(0, min(1, row.get()))
 
-	-- Track
 	lg.setColor(0, 0, 0, 0.35)
 	lg.rectangle("fill", sliderX, sliderY, SLIDER_W, SLIDER_H, 4, 4)
 
-	-- Fill
 	if t > 0 then
 		lg.setColor(row.color)
 		lg.rectangle("fill", sliderX, sliderY, SLIDER_W * t, SLIDER_H, 4, 4)
 	end
 
-	-- Thumb
 	local thumbX = sliderX + SLIDER_W * t
 	local thumbY = sliderY + 5
-	local thumbGrow = (hovered or draggingSlider == index) and 2 or 0
+	local grow = (hovered or draggingSlider == index) and 2 or 0
 
 	lg.setColor(row.color[1], row.color[2], row.color[3], 0.25)
-	lg.circle("fill", thumbX, thumbY, THUMB_R + thumbGrow + 3)
+	lg.circle("fill", thumbX, thumbY, THUMB_R + grow + 3)
 
 	lg.setColor(1, 1, 1, 1)
-	lg.circle("fill", thumbX, thumbY, THUMB_R + thumbGrow)
-
-	lg.setColor(1, 1, 1, 1)
+	lg.circle("fill", thumbX, thumbY, THUMB_R + grow)
 end
 
 local function drawToggleRow(row, x, yTop)
 	local valueText = row.get() and L("settings.on") or L("settings.off")
+
 	Text.printShadow(string.format("%s: %s", row.label, valueText), x, rowTextY(yTop))
 end
 
 local function drawDiscreteRow(row, x, yTop)
 	local key = row.get()
+
 	Text.printShadow(string.format("%s: %s", row.label, L("difficulty." .. key)), x, rowTextY(yTop))
 end
 
 local function drawRow(row, selected, hovered, x, yTop, index)
-	-- Register rect first (used for highlight + hover)
 	rowRectFor(index, x, yTop)
 	drawRowHighlight(index, selected, hovered)
 	drawRowArrow(x, yTop, selected)
@@ -200,22 +205,22 @@ function Screen.load()
 			get = function() return Save.data.settings.fullscreen end,
 			set = function(v)
 				if v then
-					love.window.setMode(0, 0, {
-						fullscreen = true,
-						fullscreentype = "desktop",
-						vsync = 1
-					})
+					local sw, sh = love.graphics.getDimensions()
+					local msaa = require("core.scale").suggestMSAA(sw, sh) or 8
+
+					love.window.setMode(0, 0, { fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
 				else
-					love.window.setMode(1280, 800, {
-						fullscreen = false,
-						resizable = true,
-						vsync = 1
-					})
+					local msaa = require("core.scale").suggestMSAA(1280, 800) or 2
+
+					love.window.setMode(1280, 800, { fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
 				end
 
 				Save.data.settings.fullscreen = v
-				require("core.camera").resize()
-				require("ui.title").invalidateCache()
+
+				local sw, sh = love.graphics.getDimensions()
+
+				love.resize(sw, sh)
+
 				Save.flush()
 			end,
 		},
@@ -236,8 +241,7 @@ function Screen.load()
 end
 
 function Screen.update(dt)
-	-- NOTE: do NOT clear rowRects/sliderRects here.
-	-- Update uses the rects built during the previous draw for hover/drag.
+	-- do NOT clear rowRects/sliderRects here. Update uses the rects built during the previous draw for hover/drag.
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 	local startY = floor(sh * 0.55)
@@ -248,19 +252,20 @@ function Screen.update(dt)
 		Button.update(btn, Cursor.x, Cursor.y, dt)
 	end
 
-	-- Hover selects row (uses last-draw rects)
+	-- Hover selects row
 	for i, rect in pairs(rowRects) do
-		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w
-		and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
+		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
 			settingsCursor = i
 		end
 	end
 
-	-- Drag slider (uses last-draw slider rects)
+	-- Drag slider
 	if draggingSlider then
 		local rect = sliderRects[draggingSlider]
+
 		if rect then
 			local t = Util.clamp((Cursor.x - rect.x) / rect.w, 0, 1)
+
 			rows[draggingSlider].set(t)
 		end
 	end
@@ -268,8 +273,10 @@ function Screen.update(dt)
 	-- Gamepad analog control
 	if Cursor.usingVirtual then
 		local row = rows[settingsCursor]
+
 		if row and row.type == "slider" then
 			local ax = Cursor.axisX or 0
+
 			if abs(ax) > 0.25 then
 				row.set(Util.clamp(row.get() + ax * dt * 0.7, 0, 1))
 			end
@@ -278,7 +285,6 @@ function Screen.update(dt)
 end
 
 function Screen.draw()
-	-- Rebuild rects every frame here (single source of truth for layout)
 	rowRects = {}
 	sliderRects = {}
 
@@ -301,17 +307,9 @@ function Screen.draw()
 	for i, row in ipairs(rows) do
 		local yTop = startY + (i - 1) * lineH
 
-		-- Hover uses the rect we are about to create (predictable + no 1-frame lag)
-		local r = {
-			x = listX - ARROW_W,
-			y = yTop,
-			w = ROW_W,
-			h = ROW_H
-		}
+		local r = {x = listX - ARROW_W, y = yTop, w = ROW_W, h = ROW_H}
 
-		local hovered =
-			Cursor.x >= r.x and Cursor.x <= r.x + r.w and
-			Cursor.y >= r.y and Cursor.y <= r.y + r.h
+		local hovered = Cursor.x >= r.x and Cursor.x <= r.x + r.w and Cursor.y >= r.y and Cursor.y <= r.y + r.h
 
 		drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
 	end
@@ -328,30 +326,42 @@ function Screen.keypressed(key)
 	elseif key == "down" then
 		settingsCursor = min(#rows, settingsCursor + 1)
 		Sound.play("uiMove")
-	elseif key == "left" or key == "right" then
+	elseif key == "left" then
 		local row = rows[settingsCursor]
-		if not row then
-			return
+
+		if row then
+			adjustRow(row, -1)
 		end
+	elseif key == "right" then
+		local row = rows[settingsCursor]
 
-		if row.type == "slider" then
-			local dir = (key == "right") and 1 or -1
-			row.set(Util.clamp(row.get() + dir * 0.10, 0, 1))
-			Sound.play("uiMove")
-		elseif row.type == "toggle" then
-			row.set(not row.get())
-			Sound.play("uiConfirm")
-		elseif row.type == "discrete" then
-			local dir = (key == "right") and 1 or -1
-			local cur = getDifficultyIndex(row.get())
-			local next = cur + dir
-
-			if next < 1 then next = #DIFFICULTY_ORDER end
-			if next > #DIFFICULTY_ORDER then next = 1 end
-			row.set(DIFFICULTY_ORDER[next])
-			Sound.play("uiMove")
+		if row then
+			adjustRow(row, 1)
 		end
 	elseif key == "return" or key == "escape" then
+		State.mode = "menu"
+		Sound.play("uiBack")
+	end
+end
+
+function Screen.gamepadpressed(_, button)
+	local row = rows[settingsCursor]
+
+	if not row then
+		return
+	end
+
+	if button == "dpup" then
+		settingsCursor = max(1, settingsCursor - 1)
+		Sound.play("uiMove")
+	elseif button == "dpdown" then
+		settingsCursor = min(#rows, settingsCursor + 1)
+		Sound.play("uiMove")
+	elseif button == "dpleft" then
+		adjustRow(row, -1)
+	elseif button == "dpright" then
+		adjustRow(row, 1)
+	elseif button == "b" then
 		State.mode = "menu"
 		Sound.play("uiBack")
 	end
@@ -377,6 +387,10 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased()
+	if draggingSlider then
+		Sound.play("uiMove")
+	end
+
 	draggingSlider = nil
 end
 

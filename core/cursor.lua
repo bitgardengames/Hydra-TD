@@ -88,25 +88,29 @@ function Cursor.updateVirtual(dt)
 	Cursor.x = Cursor.x + ax * Cursor.speed * dt
 	Cursor.y = Cursor.y + ay * Cursor.speed * dt
 end
+
 -- Call this when a gamepad is used
 function Cursor.enableVirtual()
 	if Cursor.usingVirtual then
 		return
 	end
 
-	local x, y = love.mouse.getPosition()
 	local sw, sh = lg.getDimensions()
 
-	x = max(0, min(sw - 1, x))
-	y = max(0, min(sh - 1, y))
+	-- Only seed position if cursor was never placed
+	if Cursor.x == 0 and Cursor.y == 0 then
+		local x, y = love.mouse.getPosition()
 
-	-- Gamepad only / edge case protection
-	if x == 0 and y == 0 then
-		Cursor.x = sw * 0.5
-		Cursor.y = sh * 0.5
-	else
-		Cursor.x = x
-		Cursor.y = y
+		x = max(0, min(sw - 1, x))
+		y = max(0, min(sh - 1, y))
+
+		if x == 0 and y == 0 then
+			Cursor.x = sw * 0.5
+			Cursor.y = sh * 0.5
+		else
+			Cursor.x = x
+			Cursor.y = y
+		end
 	end
 
 	Cursor.usingVirtual = true

@@ -102,6 +102,7 @@ return {
 	},
 
 	game = {
+		victory = "VICTORY!",
 		gameOver = "GAME OVER",
 		bossBreach = "Boss breach",
 		outOfLives = "Out of lives",

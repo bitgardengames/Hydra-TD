@@ -85,33 +85,4 @@ function Page.keypressed(key)
 	end
 end
 
-function Page.gamepadpressed(joystick, button)
-	local action = Hotkeys.padActionFromButton(button)
-
-	if not action then
-		return
-	end
-
-	-- Confirm = press hovered button
-	if action == "confirm" then
-		if confirmAtCursor() then
-			Sound.play("uiConfirm")
-		end
-		return
-	end
-
-	-- Cancel / back (optional, but nice)
-	if action == "cancel" or action == "back" then
-		State.mode = "game"
-		Sound.play("uiCancel")
-		return
-	end
-
-	-- Pause button toggles pause
-	if action == "pause" then
-		State.mode = "game"
-		return
-	end
-end
-
 return Page

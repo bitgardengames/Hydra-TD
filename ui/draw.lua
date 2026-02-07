@@ -1,4 +1,3 @@
-local Scale = require("core.scale")
 local Effects = require("world.effects")
 local Projectiles = require("world.projectiles")
 local DrawWorld = require("ui.draw_world")

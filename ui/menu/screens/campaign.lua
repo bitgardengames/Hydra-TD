@@ -124,16 +124,28 @@ local function buildMapPreview(mapDef)
 	return canvas
 end
 
--- =====================================================
+local function clearMapPreviews()
+	for i, canvas in ipairs(mapPreviews) do
+		if canvas and canvas.release then
+			canvas:release()
+		end
+
+		mapPreviews[i] = nil
+	end
+end
+
+local function rebuildMapPreviews()
+	clearMapPreviews()
+
+	for i, map in ipairs(Maps) do
+		mapPreviews[i] = buildMapPreview(map)
+	end
+end
+
 -- Load
--- =====================================================
 function Screen.load()
 	-- Build previews once
-	if #mapPreviews == 0 then
-		for i, map in ipairs(Maps) do
-			mapPreviews[i] = buildMapPreview(map)
-		end
-	end
+	rebuildMapPreviews()
 
 	campaignButtons = {
 		{
@@ -385,6 +397,85 @@ function Screen.mousepressed(x, y, button)
 			return true
 		end
 	end
+end
+
+local function canMoveLeft()
+	return State.mapIndex > 1
+end
+
+-- Gamepad halpers
+local function canMoveRight()
+	return State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1)
+end
+
+local function moveLeft()
+	if canMoveLeft() then
+		State.mapIndex = State.mapIndex - 1
+		Sound.play("uiMove")
+	else
+		Sound.play("uiError")
+	end
+end
+
+local function moveRight()
+	if canMoveRight() then
+		State.mapIndex = State.mapIndex + 1
+		Sound.play("uiMove")
+	else
+		Sound.play("uiError")
+	end
+end
+
+local function pressPlay()
+	for _, btn in ipairs(campaignButtons) do
+		if btn.id == "play" then
+			if btn.enabled then
+				btn.onClick()
+			else
+				Sound.play("uiError")
+			end
+			return
+		end
+	end
+end
+
+local function pressBack()
+	for _, btn in ipairs(campaignButtons) do
+		if btn.id == "back" then
+			btn.onClick()
+			return
+		end
+	end
+end
+
+function Screen.gamepadpressed(joystick, button)
+	-- Hard disable cursor for this screen
+	Cursor.disableVirtual()
+
+	-- D-Pad navigation
+	if button == "dpleft" then
+		moveLeft()
+		return true
+
+	elseif button == "dpright" then
+		moveRight()
+		return true
+	end
+
+	-- Face buttons
+	if button == "a" then
+		pressPlay()
+		return true
+	end
+
+	if button == "b" or button == "back" then
+		pressBack()
+		return true
+	end
+end
+
+function Screen.resize(w, h)
+	rebuildMapPreviews()
 end
 
 return Screen
