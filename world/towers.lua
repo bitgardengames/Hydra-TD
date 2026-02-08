@@ -104,8 +104,11 @@ local function addTower(kind, gx, gy)
 	return true
 end
 
-local function towerUpgradeCost(t)
-	return t.def.upgrade.cost + (t.level - 1) * math.floor(t.def.upgrade.cost * 0.6)
+local function towerUpgradeCost(tower)
+    local base = tower.def.cost
+    local exp = 1.55
+
+    return math.floor(base * (exp ^ tower.level) + 0.5)
 end
 
 local function upgradeTower(t)
@@ -154,7 +157,7 @@ local function upgradeTower(t)
 		end
 
 		if t.def.upgrade.stackAdd then
-			t.poison.maxStacks = t.poison.maxStacks + t.def.upgrade.stackAdd
+			t.poison.maxStacks = math.min(6, t.poison.maxStacks + t.def.upgrade.stackAdd) -- 6 max
 		end
 	end
 

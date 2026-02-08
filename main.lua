@@ -26,7 +26,6 @@ local Rumble = require("systems.rumble")
 local Localization = require("core.localization")
 local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
-local Scale = require("core.scale")
 
 local lg = love.graphics
 local lk = love.keyboard

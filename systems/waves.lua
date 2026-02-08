@@ -1,14 +1,10 @@
 local State = require("core.state")
 local Maps = require("world.map_defs")
 local Enemies = require("world.enemies")
-local Difficulty = require("systems.difficulty")
-local WaveDefs = require("systems.wave_defs")
+local DifficultyCurve = require("systems.difficulty_curve")
 local WaveBuilder = require("systems.wave_builder")
-local WaveEndless = require("systems.wave_endless")
 
 local Waves = {}
-
-local bossAddTimer = 0
 
 local min = math.min
 local max = math.max
@@ -25,35 +21,10 @@ local spawner = {
 	-- Legacy field (kept for compatibility; no longer used)
 	mix = nil,
 
-	-- New deterministic spawn list
+	-- Deterministic spawn list
 	spawnList = nil,
 	spawnIndex = 1,
 }
-
--- Deterministic spawn order (feel free to tweak)
---local SPAWN_ORDER = {"tank", "splitter", "grunt", "runner"}
-local SPAWN_ORDER = {"runner", "grunt", "splitter", "tank"}
-
-local function getCount(tbl, key)
-	if not tbl then return 0 end
-	return tbl[key] or 0
-end
-
-local function buildSpawnList(enemies)
-	local list = {}
-	local n = 0
-
-	for _, kind in ipairs(SPAWN_ORDER) do
-		local count = getCount(enemies, kind)
-
-		for i = 1, count do
-			n = n + 1
-			list[n] = kind
-		end
-	end
-
-	return list
-end
 
 local function beginSpawner(list, gap, hpMult, spdMult)
 	spawner.active = true
@@ -66,62 +37,58 @@ local function beginSpawner(list, gap, hpMult, spdMult)
 	spawner.spawnIndex = 1
 	spawner.remaining = list and #list or 0
 
-	-- Legacy (unused now)
+	-- Legacy (unused)
 	spawner.mix = nil
 
 	State.inPrep = false
 end
 
+local function buildRepeatList(kind, count)
+	local list = {}
+	for i = 1, count do
+		list[i] = kind
+	end
+	return list
+end
+
 -- Wave start
 function Waves.startWave()
-	local diff = Difficulty.get()
 	local map = Maps[State.mapIndex]
-	local waveData = map.waves
 
 	State.wave = State.wave + 1
 	State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 
-	-- Boss waves (every 10th wave)
-	local isBossWave = (State.wave % 10 == 0)
-
-	if isBossWave and waveData and waveData.bosses then
-		local bossIndex = State.wave / 10
-		local boss = waveData.bosses[bossIndex]
-
-		if boss then
-			-- Boss HP
-			local baseHp = boss.hpBase * (boss.hpRamp ^ (bossIndex - 1))
-			local hpMult = baseHp * diff.bossHp
-
-			-- Boss Speed
-			local baseSpeed = 1.0 + (bossIndex - 1) * boss.spdRamp
-			local spdMult = baseSpeed * diff.enemySpeed
-
-			-- Deterministic single spawn
-			beginSpawner({ boss.type }, 0, hpMult, spdMult)
-			return
-		end
-	end
-
-	-- Normal waves: authored + deterministic
-	-- Build base wave from anchors/interpolation
+	-- WaveBuilder enforces boss invariant and returns a simple descriptor
 	local wave = WaveBuilder.build(State.wave)
 
-	-- Apply endless scaling automatically past last anchor, OR if State.endless is enabled
-	if State.wave > WaveDefs.LAST_ANCHOR or State.endless then
-		local depth = max(0, State.wave - WaveDefs.LAST_ANCHOR)
-		WaveEndless.apply(wave, depth)
+	-- Boss waves: exactly 1 unit, no adds, no exceptions
+	if wave.boss then
+		-- Optional: if the map defines boss types, use them (still no adds)
+		local bossKind = wave.enemy or "boss"
+		if map and map.waves and map.waves.bosses then
+			local bossIndex = State.wave / 10
+			local bossDef = map.waves.bosses[bossIndex]
+			if bossDef and bossDef.type then
+				bossKind = bossDef.type
+			end
+		end
+
+		local hpMult = DifficultyCurve.getBossHpMultiplier(State.wave)
+		local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
+
+		beginSpawner({ bossKind }, 0, hpMult, spdMult)
+		return
 	end
 
-	-- Convert wave to spawner settings
-	local gap = wave.gap or 0.6
+	-- Normal waves: single enemy kind with count + spacing
+	local count = max(1, wave.count or 1)
+	local kind = wave.enemy or "grunt"
 
-	-- Ramps are explicit now, then difficulty multiplies on top
-	local hpMult = (wave.ramps and wave.ramps.hp or 1.0) * diff.enemyHp
-	local spdMult = (wave.ramps and wave.ramps.speed or 1.0) * diff.enemySpeed
+	local hpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave)
+	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
-	-- Build deterministic spawn list (no RNG)
-	local list = buildSpawnList(wave.enemies)
+	local list = buildRepeatList(kind, count)
+	local gap = wave.spacing or 0.6
 
 	beginSpawner(list, gap, hpMult, spdMult)
 end
@@ -187,8 +154,6 @@ function Waves.resetSpawner()
 
 	spawner.spawnList = nil
 	spawner.spawnIndex = 1
-
-	bossAddTimer = 0
 end
 
 function Waves.getSpawner()

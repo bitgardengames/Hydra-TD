@@ -15,7 +15,6 @@ return {
 		color = Theme.tower.lancer,
 		canRotate = true,
 		upgrade = {
-			cost = 60,
 			dmgMult = 1.50,
 			rangeAdd = 0.12 * Constants.TILE,
 			fireMult = 1.02,
@@ -27,7 +26,7 @@ return {
 		cost = 50,
 		range = 3.8 * Constants.TILE,
 		fireRate = 1.4,
-		damage = 5,
+		damage = 6,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 10,
 		projSpeed = 370,
@@ -36,7 +35,6 @@ return {
 		canRotate = true,
 		onHitSlow = {factor = 0.55, dur = 1.4},
 		upgrade = {
-			cost = 55,
 			dmgMult = 1.45,
 			rangeAdd = 0.1 * Constants.TILE,
 			fireMult = 1.04,
@@ -61,7 +59,6 @@ return {
 			falloff = 0.45, -- % damage applied at edge
 		},
 		upgrade = {
-			cost = 82,
 			dmgMult = 1.48,
 			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.06,
@@ -86,7 +83,6 @@ return {
 			falloff = 0.75 -- damage multiplier per jump
 		},
 		upgrade = {
-			cost = 78,
 			dmgMult = 1.55,
 			rangeAdd = 0.8 * Constants.TILE,
 			fireMult = 1.08,
@@ -111,12 +107,11 @@ return {
 			maxStacks = 4,
 		},
 		upgrade = {
-			cost = 72,
-			dmgMult = 1.40,
+			dmgMult = 1.30,
 			rangeAdd = 0.12 * Constants.TILE,
 			fireMult = 1.02,
-			poisonDurAdd = 0.35,
-			poisonDpsMult = 1.15,
+			poisonDurAdd = 0.25,
+			poisonDpsMult = 1.10,
 			stackAdd = 1,
 		}
 	},

@@ -107,33 +107,33 @@ end
 function Sound.load()
 	-- Sounds
     Sound.sfx.uiMove = {
-		source = la.newSource("assets/sounds/Pop sounds 10.ogg", "static"),
+		source = la.newSource("assets/sounds/uiMove.ogg", "static"),
 	}
 
     Sound.sfx.uiConfirm = {
-		source = la.newSource("assets/sounds/Click.ogg", "static"),
+		source = la.newSource("assets/sounds/uiConfirm.ogg", "static"),
 	}
 
     Sound.sfx.uiBack = {
-		source = la.newSource("assets/sounds/select.ogg", "static"),
+		source = la.newSource("assets/sounds/uiBack.ogg", "static"),
 	}
 
     Sound.sfx.uiError = {
-		source = la.newSource("assets/sounds/Bonus 2.ogg", "static"),
+		source = la.newSource("assets/sounds/uiError.ogg", "static"),
 	}
 
 	Sound.sfx.victory = {
-		source = la.newSource("assets/sounds/Buff 3.ogg", "static"),
+		source = la.newSource("assets/sounds/victory.ogg", "static"),
 	}
 
 	Sound.sfx.gameOver = {
-		source = la.newSource("assets/sounds/Bonus 2.ogg", "static"),
+		source = la.newSource("assets/sounds/gameOver.ogg", "static"),
 	}
 
     Sound.sfx.towerPlaced = {
 		sources = {
-			la.newSource("assets/sounds/Shadow Punch 1.ogg", "static"),
-			la.newSource("assets/sounds/Shadow Punch 2.ogg", "static"),
+			la.newSource("assets/sounds/towerPlaced1.ogg", "static"),
+			la.newSource("assets/sounds/towerPlaced2.ogg", "static"),
 		},
 		jitter = true,
 	}
@@ -145,34 +145,34 @@ function Sound.load()
 
     Sound.sfx.towerSold = {
 		sources = {
-			la.newSource("assets/sounds/Coins 7.ogg", "static"),
-			la.newSource("assets/sounds/Coins 8.ogg", "static"),
-			la.newSource("assets/sounds/Coins 9.ogg", "static"),
+			la.newSource("assets/sounds/towerSold1.ogg", "static"),
+			la.newSource("assets/sounds/towerSold2.ogg", "static"),
+			la.newSource("assets/sounds/towerSold3.ogg", "static"),
 		},
 	}
 
     Sound.sfx.lancer = {
-		source = la.newSource("assets/sounds/Arrow Impact wood 1.ogg", "static"),
+		source = la.newSource("assets/sounds/lancer.ogg", "static"),
 		jitter = true,
 		--cooldown = 0.08,
 	}
 
     Sound.sfx.slow = {
-		source = la.newSource("assets/sounds/Mud footsteps 7.ogg", "static"),
+		source = la.newSource("assets/sounds/slow.ogg", "static"),
 		jitter = true,
 		--cooldown = 0.10,
 	}
 
     Sound.sfx.cannon = {
-		source = la.newSource("assets/sounds/Cannon shots 1.ogg", "static"),
+		source = la.newSource("assets/sounds/cannon.ogg", "static"),
 		jitter = true,
 		--cooldown = 0.14,
 	}
 
     Sound.sfx.poison = {
 		sources = {
-			la.newSource("assets/sounds/Bloody punches 7.ogg", "static"),
-			la.newSource("assets/sounds/Bloody punches 10.ogg", "static"),
+			la.newSource("assets/sounds/poison1.ogg", "static"),
+			la.newSource("assets/sounds/poison2.ogg", "static"),
 		},
 		jitter = true,
 		--cooldown = 0.12,
@@ -180,9 +180,9 @@ function Sound.load()
 
     Sound.sfx.shock = {
 		sources = {
-			la.newSource("assets/sounds/Spark 1.ogg", "static"),
-			la.newSource("assets/sounds/Spark 2.ogg", "static"),
-			la.newSource("assets/sounds/Spark 3.ogg", "static"),
+			la.newSource("assets/sounds/shock1.ogg", "static"),
+			la.newSource("assets/sounds/shock2.ogg", "static"),
+			la.newSource("assets/sounds/shock3.ogg", "static"),
 		},
 		jitter = true,
 		--cooldown = 0.09,

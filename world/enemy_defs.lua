@@ -35,15 +35,24 @@ return {
 		radius = 11,
 		split = {
 			count = 2,
-			child = "runner",
+			child = "child",
 			childHpMult = 0.6,
 			childSpdMult = 1.1,
 		}
 	},
 
+	child = {
+		nameKey = "enemy.splitter",
+		hp = 30,
+		speed = 95,
+		reward = 0,
+		score = 12,
+		radius = 9,
+	},
+
 	boss = {
 		nameKey = "enemy.boss",
-		hp = 5000,
+		hp = 2900,
 		speed = 45,
 		reward = 75,
 		score = 300,

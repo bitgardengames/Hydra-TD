@@ -38,7 +38,7 @@ local function findEnemyAt(x, y)
 	return nil
 end
 
-local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex, opts)
+local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
 	local def = EnemyDefs[kind]
 
 	local x, y, idx
@@ -59,10 +59,12 @@ local function spawnEnemy(kind, hpMult, spdMult, spawnX, spawnY, pathIndex, opts
 		x = x,
 		y = y,
 		boss = def.boss or false,
-		hp = def.hp * hpMult,
-		maxHp = def.hp * hpMult,
-		baseSpeed = def.speed * spdMult,
-		speed = def.speed * spdMult,
+		hpScale = hpScale,
+		spdScale = spdScale,
+		hp = def.hp * hpScale,
+		maxHp = def.hp * hpScale,
+		baseSpeed = def.speed * spdScale,
+		speed = def.speed * spdScale,
 		reward = def.reward,
 		score = def.score,
 		radius = def.radius,
@@ -222,7 +224,10 @@ local function updateEnemies(dt)
 					-- add slight spread
 					local spread = (j - (e.split.count + 1) / 2) * 0.35
 
-					spawnEnemy(e.split.child, e.split.childHpMult or 1.0, e.split.childSpdMult or 1.0, e.x, e.y, e.pathIndex, {impulseAngle = baseAngle + spread, impulseStrength = 60, impulseTime = 0.12})
+					local childHpScale = e.hpScale * (e.split.childHpMult or 1.0)
+					local childSpdScale = e.spdScale * (e.split.childSpdMult or 1.0)
+
+					spawnEnemy(e.split.child, childHpScale, childSpdScale, e.x, e.y, e.pathIndex, {impulseAngle = baseAngle + spread, impulseStrength = 60, impulseTime = 0.12})
 				end
 			end
 

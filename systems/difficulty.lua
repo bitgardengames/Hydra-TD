@@ -4,11 +4,12 @@ Difficulty.defs = {
 	easy = {
 		key = "easy",
 
-		enemyHp = 0.75,
-		enemySpeed = 0.95,
+		-- Enemy baseline bias
+		enemyHpBias = 0.75,
+		enemySpeedBias = 0.95,
+		bossHpBias = 0.75,
 
-		bossHp = 0.75,
-
+		-- Player affordances
 		startMoney = 140,
 		startLives = 25,
 		sellRefund = 0.85,
@@ -17,10 +18,9 @@ Difficulty.defs = {
 	normal = {
 		key = "normal",
 
-		enemyHp = 1.0,
-		enemySpeed = 1.0,
-
-		bossHp = 1.0,
+		enemyHpBias = 1.0,
+		enemySpeedBias = 1.0,
+		bossHpBias = 1.0,
 
 		startMoney = 120,
 		startLives = 20,
@@ -30,10 +30,9 @@ Difficulty.defs = {
 	hard = {
 		key = "hard",
 
-		enemyHp = 1.25,
-		enemySpeed = 1.05,
-
-		bossHp = 1.25,
+		enemyHpBias = 1.25,
+		enemySpeedBias = 1.05,
+		bossHpBias = 1.25,
 
 		startMoney = 100,
 		startLives = 15,
@@ -46,19 +45,19 @@ Difficulty.default = "normal"
 local active = Difficulty.default
 
 function Difficulty.set(key)
-    if Difficulty.defs[key] then
-        active = key
-    else
-        active = Difficulty.default
-    end
+	if Difficulty.defs[key] then
+		active = key
+	else
+		active = Difficulty.default
+	end
 end
 
 function Difficulty.get()
-    return Difficulty.defs[active] or Difficulty.defs[Difficulty.default]
+	return Difficulty.defs[active] or Difficulty.defs[Difficulty.default]
 end
 
 function Difficulty.key()
-    return active
+	return active
 end
 
 return Difficulty

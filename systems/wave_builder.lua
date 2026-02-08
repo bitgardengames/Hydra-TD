@@ -1,73 +1,74 @@
-local WaveDefs = require("systems.wave_defs")
+local DifficultyCurve = require("systems.difficulty_curve")
 
 local Builder = {}
 
-local function lerp(a, b, t)
-	return a + (b - a) * t
+-- Wave templates define structure, not difficulty
+local Templates = {
+	standard = {
+		enemy = "grunt",
+		baseCount = 12,
+		spacing = 0.65,
+	},
+
+	dense = {
+		enemy = "splitter",
+		baseCount = 12,
+		spacing = 0.35,
+	},
+
+	fast = {
+		enemy = "runner",
+		baseCount = 20,
+		spacing = 0.45,
+	},
+
+	tanky = {
+		enemy = "tank",
+		baseCount = 8,
+		spacing = 0.85,
+	},
+}
+
+-- Simple deterministic template selection
+local function pickTemplate(waveIndex)
+	if waveIndex % 5 == 0 then
+		return Templates.dense
+	end
+
+	if waveIndex % 7 == 0 then
+		return Templates.fast
+	end
+
+	if waveIndex % 9 == 0 then
+		return Templates.tanky
+	end
+
+	return Templates.standard
 end
 
-local function lerpInt(a, b, t)
-	return math.floor(lerp(a, b, t) + 0.5)
-end
-
-local function deepCopy(tbl)
-	if type(tbl) ~= "table" then
-		return tbl
-	end
-
-	local copy = {}
-
-	for k, v in pairs(tbl) do
-		copy[k] = deepCopy(v)
-	end
-
-	return copy
-end
-
-local function findAnchors(wave)
-	local lower, upper
-
-	for i = #WaveDefs.anchors, 1, -1 do
-		if WaveDefs.anchors[i].id <= wave then
-			lower = WaveDefs.anchors[i]
-
-			break
-		end
-	end
-
-	for i = 1, #WaveDefs.anchors do
-		if WaveDefs.anchors[i].id >= wave then
-			upper = WaveDefs.anchors[i]
-
-			break
-		end
-	end
-
-	return lower, upper
+local function jitter(value)
+	return value * (0.9 + love.math.random() * 0.2)
 end
 
 function Builder.build(waveIndex)
-	local lower, upper = findAnchors(waveIndex)
-
-	-- Exact anchor
-	if not upper or lower.id == upper.id then
-		return deepCopy(lower)
+	-- Boss invariant: every 10th wave, no exceptions
+	if waveIndex % 10 == 0 then
+		return {
+			boss = true,
+			enemy = "boss",
+			count = 1,
+			spacing = 0,
+		}
 	end
 
-	local t = (waveIndex - lower.id) / (upper.id - lower.id)
+	local template = pickTemplate(waveIndex)
+	local scalar = DifficultyCurve.getScalar(waveIndex)
 
 	return {
-		gap = lerp(lower.gap, upper.gap, t),
-		enemies = {
-			grunt = lerpInt(lower.enemies.grunt, upper.enemies.grunt, t),
-			runner = lerpInt(lower.enemies.runner, upper.enemies.runner, t),
-			tank = lerpInt(lower.enemies.tank, upper.enemies.tank, t),
-			splitter = lerpInt(lower.enemies.splitter, upper.enemies.splitter, t),
-		},
-		ramps = {
-			hp = lerp(lower.ramps.hp, upper.ramps.hp, t),
-			speed = lerp(lower.ramps.speed, upper.ramps.speed, t),
-		}
+		boss = false,
+		enemy = template.enemy,
+		count = math.max(1, math.floor(template.baseCount * scalar)),
+		spacing = jitter(template.spacing),
 	}
 end
 
