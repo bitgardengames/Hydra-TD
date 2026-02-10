@@ -1,4 +1,5 @@
 local Theme = require("core.theme")
+local Text = require("ui.text")
 local Fonts = require("core.fonts")
 local Cursor = require("core.cursor")
 local Constants = require("core.constants")
@@ -11,9 +12,11 @@ local Tooltip = {}
 
 Tooltip.active = nil
 Tooltip.padding = 8
+Tooltip.titleSpacing = 10
 Tooltip.lineHeight = 18
 Tooltip.maxWidth = 260
 Tooltip.corner = 6
+Tooltip.minLabelStatGap = 20
 
 -- Colors
 local colorPanel = Theme.ui.panel
@@ -25,6 +28,10 @@ local colorMuted = {colorText[1], colorText[2], colorText[3], 0.7}
 
 local function getFont()
 	return Fonts.tooltip
+end
+
+local function getTitleFont()
+	return Fonts.ui
 end
 
 function Tooltip.show(def)
@@ -65,10 +72,8 @@ function Tooltip.draw()
 		return
 	end
 
-	local lastFont =
-
-	Fonts.set("tooltip")
-
+	-- Title font
+	Fonts.set("ui")
 	local font = getFont()
 
 	-- Panel
@@ -80,15 +85,17 @@ function Tooltip.draw()
 
 	local x = t.x + Tooltip.padding
 	local y = t.y + Tooltip.padding
-	local rightX = t.x + t.w - Tooltip.padding
 
 	-- Title
 	if t.title then
 		lg.setColor(colorText)
-		lg.print(t.title, x, y)
+		Text.printShadow(t.title, x, y)
 
-		y = y + Tooltip.lineHeight + 4
+		y = y + Tooltip.lineHeight + Tooltip.titleSpacing
 	end
+
+	-- Row font
+	Fonts.set("tooltip")
 
 	-- Rows
 	for _, row in ipairs(t.rows) do
@@ -96,7 +103,7 @@ function Tooltip.draw()
 
 		if kind == "text" then
 			lg.setColor(row.color or colorMuted)
-			lg.print(row.text or "", x, y)
+			Text.printShadow(row.text or "", x, y)
 
 			y = y + Tooltip.lineHeight + (row.padAfter or 0)
 
@@ -105,23 +112,31 @@ function Tooltip.draw()
 			local value = tostring(row.value or "")
 			local delta = row.delta
 
+			-- Label (left)
 			lg.setColor(row.color or colorText)
-			lg.print(label, x, y)
+			Text.printShadow(label, x, y)
 
-			local valueW = font:getWidth(value)
-			lg.print(value, rightX - valueW, y)
+			-- Stats block (right-anchored, left-aligned internally)
+			local statsRightX = t.x + t.w - Tooltip.padding
+			local statsX = statsRightX - (t.statsBlockW or 0)
 
+			-- Value
+			lg.setColor(row.color or colorText)
+			Text.printShadow(value, statsX, y)
+
+			-- Delta
 			if delta then
 				local dc = colorGood
+
 				if sub(delta, 1, 1) == "-" then
 					dc = colorBad
 				end
 
-				local deltaText = tostring(delta)
-				local deltaW = font:getWidth(deltaText)
+				local valueW = font:getWidth(value)
+				local deltaText = "(" .. tostring(delta) .. ")"
 
 				lg.setColor(dc)
-				lg.print(deltaText, rightX - valueW - deltaW - 6, y)
+				Text.printShadow(deltaText, statsX + valueW + 6, y)
 			end
 
 			y = y + Tooltip.lineHeight
@@ -137,14 +152,18 @@ function Tooltip.recalculate()
 	end
 
 	local font = getFont()
+	local titleFont = getTitleFont()
 
 	local w = 0
 	local h = Tooltip.padding * 2
 
+	-- Track the widest label, and the widest "stats block" (value + delta)
+	local maxLabelW = 0
+	local maxStatsW = 0
+
 	if t.title then
-		--lg.setFont(font)
-		w = max(w, font:getWidth(t.title))
-		h = h + Tooltip.lineHeight + 4
+		w = max(w, titleFont:getWidth(t.title))
+		h = h + Tooltip.lineHeight + Tooltip.titleSpacing
 	end
 
 	for _, row in ipairs(t.rows) do
@@ -156,18 +175,36 @@ function Tooltip.recalculate()
 			w = max(w, font:getWidth(text))
 			h = h + Tooltip.lineHeight + (row.padAfter or 0)
 		else
-			local labelW = font:getWidth(row.label or "")
-			local valueW = font:getWidth(tostring(row.value or ""))
-			local deltaW = row.delta and (font:getWidth(tostring(row.delta)) + 6) or 0
-			local rowW = labelW + valueW + deltaW + 12
+			local label = row.label or ""
+			local value = tostring(row.value or "")
+			local delta = row.delta
+			local labelW = font:getWidth(label)
+			local statsW = font:getWidth(value)
 
-			w = max(w, rowW)
+			maxLabelW = max(maxLabelW, labelW)
+
+			if delta then
+				local deltaText = "(" .. tostring(delta) .. ")"
+
+				statsW = statsW + 6 + font:getWidth(deltaText)
+			end
+
+			maxStatsW = max(maxStatsW, statsW)
+
 			h = h + Tooltip.lineHeight
 		end
 	end
 
-	-- Respect maxWidth if someone feeds a very long single-line description
-	w = max(0, math.min(w, Tooltip.maxWidth))
+	-- Minimum spacing between label and stats
+	t.statsOffset = maxLabelW + Tooltip.minLabelStatGap
+
+	-- Stats block width = actual text width
+	t.statsBlockW = maxStatsW
+
+	-- Key value width = label + gap + stats
+	local kvW = t.statsOffset + t.statsBlockW
+
+	w = max(w, kvW)
 
 	t.w = w + Tooltip.padding * 2
 	t.h = h

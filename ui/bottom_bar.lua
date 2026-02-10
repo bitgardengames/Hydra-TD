@@ -383,13 +383,10 @@ function BottomBar.draw()
 			Tooltip.show{
 				title = L(def.nameKey),
 				rows = {
-					{ label = L("stats.damage"), value = def.damage },
-					{ label = L("stats.fireRate"), value = def.fireRate },
-					{ label = L("stats.range"), value = def.range },
-					{
-						kind = "text",
-						text = L(def.descKey),
-					},
+					{label = L("stats.damage"), value = def.damage},
+					{label = L("stats.fireRate"), value = def.fireRate},
+					{label = L("stats.range"), value = def.range},
+					{kind = "text", text = L(def.descKey)},
 				}
 			}
 		end
@@ -568,17 +565,17 @@ function BottomBar.draw()
 							rows = {
 								{
 									label = L("stats.damage"),
-									value = floor(preview.damage + 0.5),
+									value = floor(t.damage + 0.5),
 									delta = "+" .. floor(preview.damage - t.damage + 0.5),
 								},
 								{
 									label = L("stats.fireRate"),
-									value = string.format("%.2f", preview.fireRate),
-									delta = string.format("%.2f", preview.fireRate - t.fireRate),
+									value = string.format("%.2f", t.fireRate),
+									delta = string.format("+%.2f", preview.fireRate - t.fireRate),
 								},
 								{
 									label = L("stats.range"),
-									value = floor(preview.range + 0.5),
+									value = floor(t.range + 0.5),
 									delta = "+" .. floor(preview.range - t.range + 0.5),
 								},
 							}
