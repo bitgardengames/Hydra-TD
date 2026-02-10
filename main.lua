@@ -1,3 +1,5 @@
+-- Hydra TD: Dec 19 2025, 2:22 AM
+
 local Constants = require("core.constants")
 local Scale = require("core.scale")
 local Camera = require("core.camera")
@@ -15,6 +17,7 @@ local Effects = require("world.effects")
 local Projectiles = require("world.projectiles")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
+local Tooltip = require("ui.tooltip")
 local Draw = require("ui.draw")
 local Glyphs = require("ui.glyphs")
 local DrawWorld = require("ui.draw_world")
@@ -220,6 +223,7 @@ function love.update(dt)
 	Projectiles.update(dt)
 	Effects.update(dt)
 	Floaters.update(dt)
+	Tooltip.update(dt)
 
 	-- Loss condition
 	if State.lives <= 0 and not State.gameOver then
@@ -297,10 +301,12 @@ function love.draw()
 		end
 
 		Cursor.draw()
+		Tooltip.draw()
 	else
 		Menu.draw()
 
 		Cursor.draw()
+		Tooltip.draw()
 	end
 end
 

@@ -177,9 +177,6 @@ function Screen.load()
 	}
 end
 
--- =====================================================
--- Update
--- =====================================================
 function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
@@ -195,64 +192,44 @@ function Screen.update(dt)
 	end
 end
 
--- =====================================================
--- Draw
--- =====================================================
 function Screen.draw()
 	local sw, sh = lg.getDimensions()
 
 	lg.setColor(colorMenu)
 	lg.rectangle("fill", 0, 0, sw, sh)
 
-	local index    = State.mapIndex
-	local map      = Maps[index]
+	local index = State.mapIndex
+	local map = Maps[index]
 	local mapCount = #Maps
 
 	local preview = mapPreviews[index]
 	local pw, ph  = preview:getWidth(), preview:getHeight()
 
 	local centerX = floor(sw * 0.5)
-	local blockH  = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + PAD_ACTION
-	local pyTop   = floor(sh * 0.38 - blockH * 0.5)
+	local blockH = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + PAD_ACTION
+	local pyTop = floor(sh * 0.38 - blockH * 0.5)
 	local centerY = pyTop + ph * 0.5
 
 	-- Preview
 	local locked = isMapLocked(index)
-	local alpha  = locked and 0.35 or 1.0
+	local alpha = locked and 0.35 or 1.0
 
 	lg.setColor(1, 1, 1, alpha)
 	lg.draw(preview, centerX - pw * 0.5, centerY - ph * 0.5)
 
 	-- Frame
 	lg.setColor(colorPanel)
-	lg.rectangle(
-		"line",
-		centerX - pw * 0.5,
-		centerY - ph * 0.5,
-		pw, ph,
-		6, 6
-	)
+	lg.rectangle("line", centerX - pw * 0.5, centerY - ph * 0.5, pw, ph, 6, 6)
 
 	-- Locked overlay
 	if locked then
 		lg.setColor(0, 0, 0, 0.45)
-		lg.rectangle(
-			"fill",
-			centerX - pw * 0.5,
-			centerY - ph * 0.5,
-			pw, ph,
-			12, 12
-		)
+		lg.rectangle("fill", centerX - pw * 0.5, centerY - ph * 0.5, pw, ph, 12, 12)
+
+		Fonts.set("title")
 
 		lg.setColor(colorText)
-		Fonts.set("title")
-		Text.printfShadow(
-			L("campaign.locked"),
-			centerX - pw * 0.5,
-			centerY - 14,
-			pw,
-			"center"
-		)
+		Text.printfShadow(L("campaign.locked"), centerX - pw * 0.5, centerY - 14, pw, "center")
 	end
 
 	-- Navigation arrows
@@ -266,10 +243,9 @@ function Screen.draw()
 	do
 		local cx = centerX - pw * 0.5 - ARROW_OFFSET
 		local enabled = leftEnabled
+		local hover = false
 
 		local points = {cx + size * 0.5, arrowY - size, cx - size * 0.5, arrowY, cx + size * 0.5, arrowY + size}
-
-		local hover = false
 
 		if enabled and Cursor.x then
 			hover = pointInTriangle(Cursor.x, Cursor.y, points[1], points[2], points[3], points[4], points[5], points[6])
@@ -284,10 +260,9 @@ function Screen.draw()
 	do
 		local cx = centerX + pw * 0.5 + ARROW_OFFSET
 		local enabled = rightEnabled
+		local hover = false
 
 		local points = {cx - size * 0.5, arrowY - size, cx + size * 0.5, arrowY, cx - size * 0.5, arrowY + size}
-
-		local hover = false
 
 		if enabled and Cursor.x then
 			hover = pointInTriangle( Cursor.x, Cursor.y, points[1], points[2], points[3], points[4], points[5], points[6])
@@ -301,21 +276,18 @@ function Screen.draw()
 	-- Text
 	local textY = pyTop + ph + PAD_PREVIEW
 
-	lg.setColor(colorText)
 	Fonts.set("title")
+
+	lg.setColor(colorText)
 	Text.printfShadow(L(map.nameKey), 0, textY, sw, "center")
 
 	Fonts.set("ui")
-	Text.printfShadow(
-		L("campaign.mapOf", index, mapCount),
-		0,
-		textY + PAD_TITLE,
-		sw,
-		"center"
-	)
+
+	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
 
 	-- Buttons
 	Fonts.set("menu")
+
 	for _, btn in ipairs(campaignButtons) do
 		Button.draw(btn)
 	end

@@ -4,6 +4,7 @@ local Theme = require("core.theme")
 return {
 	lancer = {
 		nameKey = "tower.lancer",
+		descKey = "towerDesc.lancer",
 		cost = 40,
 		range = 4.0 * Constants.TILE,
 		fireRate = 2.0, -- shots/sec
@@ -15,14 +16,15 @@ return {
 		color = Theme.tower.lancer,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 1.50,
-			rangeAdd = 0.12 * Constants.TILE,
+			dmgMult = 2.0,
+			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.02,
 		}
 	},
 
 	slow = {
 		nameKey = "tower.slow",
+		descKey = "towerDesc.slow",
 		cost = 50,
 		range = 3.8 * Constants.TILE,
 		fireRate = 1.4,
@@ -35,7 +37,7 @@ return {
 		canRotate = true,
 		onHitSlow = {factor = 0.55, dur = 1.4},
 		upgrade = {
-			dmgMult = 1.45,
+			dmgMult = 2.0,
 			rangeAdd = 0.1 * Constants.TILE,
 			fireMult = 1.04,
 			slowDurAdd = 0.35,
@@ -44,10 +46,11 @@ return {
 
 	cannon = {
 		nameKey = "tower.cannon",
+		descKey = "towerDesc.cannon",
 		cost = 70,
 		range = 3.2 * Constants.TILE,
 		fireRate = 0.8,
-		damage = 18,
+		damage = 17,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
 		projSpeed = 320,
@@ -59,7 +62,7 @@ return {
 			falloff = 0.45, -- % damage applied at edge
 		},
 		upgrade = {
-			dmgMult = 1.48,
+			dmgMult = 2.0,
 			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.06,
 			splashAdd = 4, -- increase AoE radius per upgrade
@@ -68,8 +71,9 @@ return {
 
 	shock = {
 		nameKey = "tower.shock",
+		descKey = "towerDesc.shock",
 		cost = 65,
-		range = 3.6 * Constants.TILE,
+		range = 3.5 * Constants.TILE,
 		fireRate = 1.2,
 		damage = 10,
 		recoilStrength = 0,
@@ -83,16 +87,17 @@ return {
 			falloff = 0.75 -- damage multiplier per jump
 		},
 		upgrade = {
-			dmgMult = 1.55,
-			rangeAdd = 0.8 * Constants.TILE,
+			dmgMult = 2.0,
+			rangeAdd = 0.06 * Constants.TILE,
 			fireMult = 1.08,
 		}
 	},
 
 	poison = {
 		nameKey = "tower.poison",
+		descKey = "towerDesc.poison",
 		cost = 60,
-		range = 3.8 * Constants.TILE,
+		range = 3.6 * Constants.TILE,
 		fireRate = 1.6,
 		damage = 5,
 		recoilStrength = Constants.TILE * 0.06,
@@ -107,8 +112,8 @@ return {
 			maxStacks = 4,
 		},
 		upgrade = {
-			dmgMult = 1.30,
-			rangeAdd = 0.12 * Constants.TILE,
+			dmgMult = 2.0,
+			rangeAdd = 0.06 * Constants.TILE,
 			fireMult = 1.02,
 			poisonDurAdd = 0.25,
 			poisonDpsMult = 1.10,

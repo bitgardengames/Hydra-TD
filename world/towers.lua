@@ -170,6 +170,43 @@ local function upgradeTower(t)
 	Rumble.pulse(0.22, 0.045)
 end
 
+local function getUpgradePreview(t)
+	if not t or not t.def or not t.def.upgrade then
+		return nil
+	end
+
+	local u = t.def.upgrade
+
+	-- Start from current effective stats
+	local curDamage = t.damage or t.def.damage
+	local curFireRate = t.fireRate or t.def.fireRate
+	local curRange = t.range or t.def.range
+
+	local preview = {
+		damage = curDamage,
+		fireRate = curFireRate,
+		range = curRange,
+	}
+
+	-- Damage
+	if u.dmgMult then
+		preview.damage = curDamage * u.dmgMult
+	end
+
+	-- Fire rate
+	if u.fireMult then
+		preview.fireRate = curFireRate * u.fireMult
+	end
+
+	-- Range
+	if u.rangeAdd then
+		preview.range = curRange + u.rangeAdd
+	end
+
+	return preview
+end
+
+
 local function sellTower(t)
 	if not t then
 		return
@@ -325,6 +362,7 @@ return {
 	addTower = addTower,
 	towerUpgradeCost = towerUpgradeCost,
 	upgradeTower = upgradeTower,
+	getUpgradePreview = getUpgradePreview,
 	sellTower = sellTower,
 	findTowerAt = findTowerAt,
 	updateTowers = updateTowers,

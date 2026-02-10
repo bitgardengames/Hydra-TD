@@ -5,12 +5,13 @@ Difficulty.defs = {
 		key = "easy",
 
 		-- Enemy baseline bias
-		enemyHpBias = 0.75,
-		enemySpeedBias = 0.95,
-		bossHpBias = 0.75,
+		enemyPressureBias = 0.90,
+		enemySpeedBias = 1.0,
+		enemyHpBias = 0.85,
+		bossHpBias = 0.85,
 
 		-- Player affordances
-		startMoney = 140,
+		startMoney = 120,
 		startLives = 25,
 		sellRefund = 0.85,
 	},
@@ -18,8 +19,9 @@ Difficulty.defs = {
 	normal = {
 		key = "normal",
 
-		enemyHpBias = 1.0,
+		enemyPressureBias = 1.0,
 		enemySpeedBias = 1.0,
+		enemyHpBias = 1.0,
 		bossHpBias = 1.0,
 
 		startMoney = 120,
@@ -30,11 +32,12 @@ Difficulty.defs = {
 	hard = {
 		key = "hard",
 
-		enemyHpBias = 1.25,
-		enemySpeedBias = 1.05,
-		bossHpBias = 1.25,
+		enemyPressureBias = 1.08,
+		enemySpeedBias = 1.0,
+		enemyHpBias = 1.15,
+		bossHpBias = 1.15,
 
-		startMoney = 100,
+		startMoney = 120,
 		startLives = 15,
 		sellRefund = 0.60,
 	},

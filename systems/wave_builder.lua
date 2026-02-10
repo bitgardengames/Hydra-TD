@@ -1,3 +1,4 @@
+local State = require("core.state")
 local DifficultyCurve = require("systems.difficulty_curve")
 
 local Builder = {}
@@ -7,51 +8,41 @@ local Templates = {
 	standard = {
 		enemy = "grunt",
 		baseCount = 12,
-		spacing = 0.65,
-	},
-
-	dense = {
-		enemy = "splitter",
-		baseCount = 12,
-		spacing = 0.35,
+		spacing = 0.65, -- 0.65
 	},
 
 	fast = {
 		enemy = "runner",
 		baseCount = 20,
-		spacing = 0.45,
+		spacing = 0.65, -- 0.45
 	},
 
 	tanky = {
 		enemy = "tank",
-		baseCount = 8,
-		spacing = 0.85,
+		baseCount = 10,
+		spacing = 1.05, -- 1.05
 	},
 }
 
 -- Simple deterministic template selection
 local function pickTemplate(waveIndex)
-	if waveIndex % 5 == 0 then
-		return Templates.dense
+	if waveIndex % 6 == 0 then
+		return Templates.standard
 	end
 
 	if waveIndex % 7 == 0 then
 		return Templates.fast
 	end
 
-	if waveIndex % 9 == 0 then
+	if waveIndex % 11 == 0 then
 		return Templates.tanky
 	end
 
 	return Templates.standard
 end
 
-local function jitter(value)
-	return value * (0.9 + love.math.random() * 0.2)
-end
-
 function Builder.build(waveIndex)
-	-- Boss invariant: every 10th wave, no exceptions
+	-- Boss every 10th wave, no exceptions
 	if waveIndex % 10 == 0 then
 		return {
 			boss = true,
@@ -62,13 +53,12 @@ function Builder.build(waveIndex)
 	end
 
 	local template = pickTemplate(waveIndex)
-	local scalar = DifficultyCurve.getScalar(waveIndex)
 
 	return {
 		boss = false,
 		enemy = template.enemy,
-		count = math.max(1, math.floor(template.baseCount * scalar)),
-		spacing = jitter(template.spacing),
+		count = template.baseCount,
+		spacing = template.spacing,
 	}
 end
 

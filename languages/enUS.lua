@@ -62,11 +62,18 @@ return {
 		poison = "Poison",
 	},
 
+	towerDesc = {
+		lancer = "Fast single-target damage.",
+		slow = "Slows enemies in range.",
+		cannon = "Heavy splash damage.",
+		shock = "Chains lightning between enemies.",
+		poison = "Applies damage over time.",
+	},
+
 	enemy = {
 		grunt = "Grunt",
 		tank = "Tank",
 		runner = "Runner",
-		splitter = "Splitter",
 		boss = "Boss",
 	},
 
@@ -79,10 +86,17 @@ return {
 
 	inspect = {
 		towerTitle = "%s level %d",
+		upgradeTitle = "Upgrade to level %d",
 		damage = "Damage: %s",
 		kills = "Kills: %d",
 		hp = "HP: %s / %s",
 		modifiers = "Modifiers:",
+	},
+
+	stats = {
+		damage = "Damage",
+		fireRate = "Fire Rate",
+		range = "Range",
 	},
 
 	actions = {

@@ -69,7 +69,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		score = def.score,
 		radius = def.radius,
 		radius2 = def.radius * def.radius,
-		split = def.split,
 		hitFlash = 0,
 		dying = false,
 		deathT = 0,
@@ -211,24 +210,6 @@ local function updateEnemies(dt)
 
 			if State.selectedEnemy == e then
 				State.selectedEnemy = nil
-			end
-
-			if e.split then
-				for j = 1, e.split.count do
-					-- derive movement direction
-					local node = pathWorld[e.pathIndex]
-					local px = node[1]
-					local py = node[2]
-					local baseAngle = atan2(e.y - py, e.x - px)
-
-					-- add slight spread
-					local spread = (j - (e.split.count + 1) / 2) * 0.35
-
-					local childHpScale = e.hpScale * (e.split.childHpMult or 1.0)
-					local childSpdScale = e.spdScale * (e.split.childSpdMult or 1.0)
-
-					spawnEnemy(e.split.child, childHpScale, childSpdScale, e.x, e.y, e.pathIndex, {impulseAngle = baseAngle + spread, impulseStrength = 60, impulseTime = 0.12})
-				end
 			end
 
 			State.money = State.money + e.reward

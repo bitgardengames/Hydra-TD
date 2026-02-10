@@ -7,6 +7,7 @@ local Towers = require("world.towers")
 local Waves = require("systems.waves")
 local Hotkeys = require("core.hotkeys")
 local Glyphs = require("ui.glyphs")
+local Tooltip = require("ui.tooltip")
 local Text = require("ui.text")
 local L = require("core.localization")
 
@@ -377,6 +378,22 @@ function BottomBar.draw()
 		lg.setColor(bg[1] * pulse, bg[2] * pulse, bg[3] * pulse, 1)
 		lg.rectangle("fill", x - bumpPad, yb - bumpPad, SHOP_BTN_W + bumpPad * 2, SHOP_BTN_H + bumpPad * 2, 6, 6)
 
+		-- Tooltip information
+		if hovered then
+			Tooltip.show{
+				title = L(def.nameKey),
+				rows = {
+					{ label = L("stats.damage"), value = def.damage },
+					{ label = L("stats.fireRate"), value = def.fireRate },
+					{ label = L("stats.range"), value = def.range },
+					{
+						kind = "text",
+						text = L(def.descKey),
+					},
+				}
+			}
+		end
+
 		if not canAfford then
 			lg.setColor(colorDisabled)
 			lg.rectangle("fill", x, yb, SHOP_BTN_W, SHOP_BTN_H, 6, 6)
@@ -540,6 +557,34 @@ function BottomBar.draw()
 
 				lg.setColor(bg)
 				lg.rectangle("fill", x, y, w, h, 6, 6)
+
+				-- Tooltip information
+				if hovered and btn.id == "upgrade" and upgradeCost then
+					local preview = Towers.getUpgradePreview(t)
+
+					if preview then
+						Tooltip.show{
+							title = L("inspect.upgradeTitle", t.level + 1),
+							rows = {
+								{
+									label = L("stats.damage"),
+									value = floor(preview.damage + 0.5),
+									delta = "+" .. floor(preview.damage - t.damage + 0.5),
+								},
+								{
+									label = L("stats.fireRate"),
+									value = string.format("%.2f", preview.fireRate),
+									delta = string.format("%.2f", preview.fireRate - t.fireRate),
+								},
+								{
+									label = L("stats.range"),
+									value = floor(preview.range + 0.5),
+									delta = "+" .. floor(preview.range - t.range + 0.5),
+								},
+							}
+						}
+					end
+				end
 
 				if not canAfford then
 					lg.setColor(colorDisabled)

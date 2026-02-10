@@ -6,7 +6,6 @@ local WaveBuilder = require("systems.wave_builder")
 
 local Waves = {}
 
-local min = math.min
 local max = math.max
 
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
@@ -45,15 +44,18 @@ end
 
 local function buildRepeatList(kind, count)
 	local list = {}
+
 	for i = 1, count do
 		list[i] = kind
 	end
+
 	return list
 end
 
 -- Wave start
 function Waves.startWave()
 	local map = Maps[State.mapIndex]
+	local mapMult = State.mapCoverageMult or 1.0
 
 	State.wave = State.wave + 1
 	State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
@@ -63,20 +65,23 @@ function Waves.startWave()
 
 	-- Boss waves: exactly 1 unit, no adds, no exceptions
 	if wave.boss then
-		-- Optional: if the map defines boss types, use them (still no adds)
+		-- Optional: if the map defines boss types, use them
 		local bossKind = wave.enemy or "boss"
+
 		if map and map.waves and map.waves.bosses then
 			local bossIndex = State.wave / 10
 			local bossDef = map.waves.bosses[bossIndex]
+
 			if bossDef and bossDef.type then
 				bossKind = bossDef.type
 			end
 		end
 
-		local hpMult = DifficultyCurve.getBossHpMultiplier(State.wave)
+		local hpMult = DifficultyCurve.getBossHpMultiplier(State.wave) * mapMult
 		local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
-		beginSpawner({ bossKind }, 0, hpMult, spdMult)
+		beginSpawner({bossKind}, 0, hpMult, spdMult)
+
 		return
 	end
 
@@ -84,11 +89,11 @@ function Waves.startWave()
 	local count = max(1, wave.count or 1)
 	local kind = wave.enemy or "grunt"
 
-	local hpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave)
+	local hpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult
 	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
 	local list = buildRepeatList(kind, count)
-	local gap = wave.spacing or 0.6
+	local gap = wave.spacing or 1.0
 
 	beginSpawner(list, gap, hpMult, spdMult)
 end

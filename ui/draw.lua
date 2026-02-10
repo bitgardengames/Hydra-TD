@@ -6,6 +6,7 @@ local BottomBar = require("ui.bottom_bar")
 local BossHealthBar = require("ui.boss_hp")
 local DamageMeter = require("ui.damage_meter")
 local Floaters = require("ui.floaters")
+local Tooltip = require("ui.tooltip")
 local Fonts = require("core.fonts")
 
 local function drawWorld()
@@ -22,6 +23,8 @@ local function drawWorld()
 end
 
 local function drawUI()
+	Tooltip.hide()
+
 	Fonts.set("ui")
 
 	BottomBar.draw()
@@ -31,6 +34,8 @@ local function drawUI()
 	Fonts.set("floaters")
 
 	Floaters.draw()
+
+	Tooltip.draw()
 end
 
 return {
