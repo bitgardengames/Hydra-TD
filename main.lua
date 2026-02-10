@@ -200,7 +200,6 @@ function love.update(dt)
 	end
 
 	dt = min(dt, MAX_DT)
-	--dt = min(dt * State.speed, MAX_DT)
 	dt = dt * State.speed
 
 	State.livesAnim = max(0, State.livesAnim - dt * 4.5)

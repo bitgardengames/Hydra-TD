@@ -6,6 +6,7 @@ local Effects = require("world.effects")
 local MapMod = require("world.map")
 local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
+local DifficultyCurve = require("systems.difficulty_curve")
 local L = require("core.localization")
 
 local enemies = {}
@@ -65,7 +66,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		maxHp = def.hp * hpScale,
 		baseSpeed = def.speed * spdScale,
 		speed = def.speed * spdScale,
-		reward = def.reward,
+		reward = def.reward * (1.0 + State.wave * 0.01),
 		score = def.score,
 		radius = def.radius,
 		radius2 = def.radius * def.radius,
@@ -84,10 +85,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		poisonStacks = 0,
 		poisonTimer = 0,
 		poisonDPS = 0,
-
-		impulseVX = opts and opts.impulseAngle and cos(opts.impulseAngle) * (opts.impulseStrength or 0) or 0,
-		impulseVY = opts and opts.impulseAngle and sin(opts.impulseAngle) * (opts.impulseStrength or 0) or 0,
-		impulseT = opts and opts.impulseTime or 0,
 	}
 
 	if e.boss then
@@ -242,18 +239,6 @@ local function updateEnemies(dt)
 			if e.hitFlash < 0 then
 				e.hitFlash = 0
 			end
-		end
-
-		if e.impulseT and e.impulseT > 0 then
-			local p = e.impulseT / 0.12
-			local ease = p * p * (3 - 2 * p)
-
-			e.x = e.x + e.impulseVX * dt * ease
-			e.y = e.y + e.impulseVY * dt * ease
-
-			e.impulseT = e.impulseT - dt
-
-			goto continue
 		end
 
 		-- Path movement

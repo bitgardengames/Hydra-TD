@@ -24,7 +24,7 @@ local colorBad = Theme.ui.bad
 local colorMuted = {colorText[1], colorText[2], colorText[3], 0.7}
 
 local function getFont()
-	return Fonts.ui
+	return Fonts.tooltip
 end
 
 function Tooltip.show(def)
@@ -47,6 +47,7 @@ end
 
 function Tooltip.update(dt)
 	local t = Tooltip.active
+
 	if not t then
 		return
 	end
@@ -59,11 +60,14 @@ end
 
 function Tooltip.draw()
 	local t = Tooltip.active
+
 	if not t then
 		return
 	end
 
-	Fonts.set("ui")
+	local lastFont =
+
+	Fonts.set("tooltip")
 
 	local font = getFont()
 
@@ -127,6 +131,7 @@ end
 
 function Tooltip.recalculate()
 	local t = Tooltip.active
+
 	if not t then
 		return
 	end
@@ -137,7 +142,7 @@ function Tooltip.recalculate()
 	local h = Tooltip.padding * 2
 
 	if t.title then
-		lg.setFont(font)
+		--lg.setFont(font)
 		w = max(w, font:getWidth(t.title))
 		h = h + Tooltip.lineHeight + 4
 	end

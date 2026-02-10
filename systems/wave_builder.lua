@@ -1,6 +1,3 @@
-local State = require("core.state")
-local DifficultyCurve = require("systems.difficulty_curve")
-
 local Builder = {}
 
 -- Wave templates define structure, not difficulty

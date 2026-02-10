@@ -1,5 +1,7 @@
 local Fonts = {}
 
+local current = "ui"
+
 local FONT_MAP = {
 	latin = "assets/fonts/PTSans.ttf",
 	cjk = "assets/fonts/NotoSansCJK-Regular.ttc",
@@ -22,6 +24,7 @@ function Fonts.reload()
 	local f = FONT_MAP[Fonts.active]
 
 	Fonts.version = love.graphics.newFont(f, 12)
+	Fonts.tooltip = love.graphics.newFont(f, 14)
 	Fonts.ui = love.graphics.newFont(f, 16)
 	Fonts.floaters = love.graphics.newFont(f, 24)
 	Fonts.menu = love.graphics.newFont(f, 32)
@@ -29,7 +32,12 @@ function Fonts.reload()
 end
 
 function Fonts.set(kind)
+	current = kind
 	love.graphics.setFont(Fonts[kind])
+end
+
+function Fonts.get(kind)
+	return Fonts[current]
 end
 
 return Fonts

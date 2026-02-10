@@ -17,9 +17,6 @@ local spawner = {
 	hpMult = 1.0,
 	spdMult = 1.0,
 
-	-- Legacy field (kept for compatibility; no longer used)
-	mix = nil,
-
 	-- Deterministic spawn list
 	spawnList = nil,
 	spawnIndex = 1,
@@ -35,9 +32,6 @@ local function beginSpawner(list, gap, hpMult, spdMult)
 	spawner.spawnList = list
 	spawner.spawnIndex = 1
 	spawner.remaining = list and #list or 0
-
-	-- Legacy (unused)
-	spawner.mix = nil
 
 	State.inPrep = false
 end
@@ -113,6 +107,7 @@ function Waves.updateSpawner(dt)
 		if not list or spawner.spawnIndex > #list then
 			spawner.remaining = 0
 			spawner.active = false
+
 			return
 		end
 
@@ -155,8 +150,6 @@ function Waves.resetSpawner()
 	spawner.timer = 0
 	spawner.hpMult = 1.0
 	spawner.spdMult = 1.0
-	spawner.mix = nil
-
 	spawner.spawnList = nil
 	spawner.spawnIndex = 1
 end
