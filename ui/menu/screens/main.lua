@@ -6,6 +6,7 @@ local State = require("core.state")
 local Title = require("ui.title")
 local Sound = require("systems.sound")
 local Fonts = require("core.fonts")
+local Backdrop = require("scenes.backdrop")
 
 local Screen = {}
 
@@ -17,7 +18,7 @@ local menuColor = Theme.menu
 local buttons = nil
 
 local verText = Constants.VERSION_STRING
-local verAlpha = 0.65
+local verAlpha = 0.75
 local verPad = 12
 
 local lancerIdle = {
@@ -36,6 +37,8 @@ local HOLD_TIME = 5.0
 function Screen.load()
 	-- Reset cursor when entering menu
 	Cursor.usingVirtual = false
+
+	Backdrop.start()
 
 	buttons = {
 		{
@@ -71,6 +74,8 @@ function Screen.load()
 end
 
 function Screen.update(dt)
+	Backdrop.update(dt)
+
 	local sw, sh = love.graphics.getDimensions()
 	local t = getTime()
 	local cx = floor(sw * 0.5)
@@ -118,7 +123,7 @@ function Screen.update(dt)
 		end
 	end
 
-	local startY = floor(sh * 0.58)
+	local startY = floor(sh * 0.52)
 	local gap = 58
 
 	for i, btn in ipairs(buttons) do
@@ -133,12 +138,11 @@ function Screen.draw()
 	local sw, sh = love.graphics.getDimensions()
 	local titleY = floor(sh * 0.34)
 
-	-- Background
-	love.graphics.setColor(menuColor)
-	love.graphics.rectangle("fill", 0, 0, sw, sh)
+	-- Background scene
+	Backdrop.draw()
 
 	-- Title
-	Title.draw({x = sw * 0.5, y = titleY, lancerScale = 4.0, angle = lancerIdle.angle, alpha = 1})
+	Title.draw({x = sw * 0.5, y = titleY, lancerScale = 2.0, angle = lancerIdle.angle, alpha = 1})
 
 	Fonts.set("menu")
 
@@ -146,7 +150,7 @@ function Screen.draw()
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
-	
+
 	-- Version tag
 	Fonts.set("ui")
 

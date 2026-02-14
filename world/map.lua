@@ -113,10 +113,8 @@ local function loadPath(points)
 	local raw = coverageIndex / REF_COVERAGE_INDEX
 
 	map.coverageMult = math.max(0.90, math.min(1.10, raw))
-	
+
 	State.mapCoverageMult = map.coverageMult
-	
-	print("Map coverage:", string.format("%.2f", coverageIndex), "mult:", string.format("%.2f", map.coverageMult))
 end
 
 local function buildPath(mapDef)

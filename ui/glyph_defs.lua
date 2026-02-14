@@ -11,7 +11,7 @@ local colorText = Theme.ui.text
 local PS_SYMBOL_SCALE = 0.45
 local BUTTON_RADIUS = 0.50
 
-local faceColors = {
+local xboxColors = {
 	a = {0.36, 0.78, 0.36},
 	b = {0.86, 0.36, 0.36},
 	x = {0.36, 0.56, 0.86},
@@ -59,7 +59,6 @@ end
 local function drawArrow(w, h, rotation)
 	local side = h * 0.5
 	local triH = side * math.sqrt(3) * 0.5
-
 	local cxOffset = triH / 3
 
 	lg.push()
@@ -82,10 +81,10 @@ local function registerFace(id, label, color, xoffset)
 	end)
 end
 
-registerFace("pad_a", "A", faceColors.a)
-registerFace("pad_b", "B", faceColors.b, 1)
-registerFace("pad_x", "X", faceColors.x)
-registerFace("pad_y", "Y", faceColors.y)
+registerFace("pad_a", "A", xboxColors.a)
+registerFace("pad_b", "B", xboxColors.b, 1)
+registerFace("pad_x", "X", xboxColors.x)
+registerFace("pad_y", "Y", xboxColors.y)
 
 -- Playstation shapes
 local function registerPS(id, drawSymbol, color)

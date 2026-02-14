@@ -5,7 +5,7 @@ local Towers = require("world.towers")
 local State = require("core.state")
 local Waves = require("systems.waves")
 local Shots = require("tools.trailer.shots")
-local Sim = require("tools.trailer.sim")
+local Sim = require("core.sim")
 local Recorder = require("tools.trailer.recorder")
 local HeroExport = require("tools.trailer.hero_export")
 local Title = require("ui.title")
@@ -119,7 +119,7 @@ function Director._stepFixed(step)
 
 	-- Run simulation
 	if Director.shot.type ~= "logo" then
-		Sim.update(step, { force = true })
+		Sim.update(step)
 
 		-- Capture first enemy once
 		if not Director.ctx.firstEnemy then
@@ -145,6 +145,7 @@ function Director._stepFixed(step)
 
 	-- Text beats
 	local texts = Director.shot.text or {}
+
 	for _, tb in ipairs(texts) do
 		if not tb.done and Director.t >= tb.t then
 			Director.activeText = tb
@@ -230,7 +231,7 @@ function Director.load(name)
 	end
 
 	-- Jump to map
-	State.mapIndex = Director.shot.map
+	State.worldMapIndex = Director.shot.map
 
 	-- Reset game
 	State.mode = "game"
@@ -256,12 +257,14 @@ function Director.update(dt)
 		if Director.scrub.playing then
 			-- advance in real time but quantized to fixed frames
 			Director._scrubAccum = (Director._scrubAccum or 0) + dt
+
 			while Director._scrubAccum >= STEP_DT do
 				Director._scrubAccum = Director._scrubAccum - STEP_DT
 				Director.scrub.frame = Director.scrub.frame + 1
 				Director._stepFixed(STEP_DT)
 			end
 		end
+
 		return
 	end
 
@@ -269,8 +272,6 @@ function Director.update(dt)
 
     -- Run simulation
 	if Director.shot.type ~= "logo" then
-		Sim.update(dt)
-
 		-- Capture first enemy once
 		if not Director.ctx.firstEnemy then
 			local enemies = Enemies.enemies
@@ -283,50 +284,6 @@ function Director.update(dt)
 		-- Camera
 		if Director.activeCamera then
 			Director.activeCamera.update(Director.t)
-		end
-	end
-
-    -- Run scheduled actions
-    for _, action in ipairs(Director.timelineActions or {}) do
-        if not action.done and Director.t >= action.t then
-            action.fn()
-            action.done = true
-        end
-    end
-
-	local texts = Director.shot.text or {}
-
-	for _, tb in ipairs(texts) do
-		if not tb.done and Director.t >= tb.t then
-			Director.activeText = tb
-			Director.textT = 0
-			tb.done = true
-		end
-	end
-
-	if Director.activeText then
-		Director.textT = Director.textT + dt
-
-		if Director.textT >= Director.activeText.dur then
-			Director.activeText = nil
-		end
-	end
-
-	local logo = Director.shot.logo
-
-	if logo and not logo.done and Director.t >= logo.t then
-		Director.activeLogo = true
-		Director.logoT = 0
-		logo.done = true
-	end
-
-	if Director.activeLogo then
-		Director.logoT = Director.logoT + dt
-
-		Title.updateLancerIdle(Director.lancerIdle, dt, Director.logoT)
-
-		if Director.logoT >= logo.dur then
-			Director.activeLogo = false
 		end
 	end
 

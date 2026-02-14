@@ -6,8 +6,9 @@ local State = require("core.state")
 local Save = require("core.save")
 local Maps = require("world.map_defs")
 local Text = require("ui.text")
-local Cursor = require("core.cursor")
 local Button = require("ui.button")
+local Backdrop = require("scenes.backdrop")
+local Cursor = require("core.cursor")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -20,7 +21,6 @@ local colorText = Theme.ui.text
 local colorPath = Theme.terrain.path
 local colorGrass = Theme.terrain.grass
 local colorPanel = Theme.ui.panel
-local colorMenu = Theme.menu
 local colorShadow = Theme.ui.shadow
 local colorHover = {0.94, 0.94, 0.94}
 local colorEnabled = {0.88, 0.88, 0.88}
@@ -160,7 +160,9 @@ function Screen.load()
 				end
 
 				Sound.play("uiConfirm")
+				State.worldMapIndex = State.mapIndex
 				State.mode = "game"
+				Backdrop.stop()
 				resetGame()
 			end
 		},
@@ -183,6 +185,8 @@ function Screen.update(dt)
 	local startY = floor(sh * 0.38 + 260)
 	local gap = 52
 
+	Backdrop.update(dt)
+
 	for i, btn in ipairs(campaignButtons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = startY + (i - 1) * gap
@@ -195,8 +199,7 @@ end
 function Screen.draw()
 	local sw, sh = lg.getDimensions()
 
-	lg.setColor(colorMenu)
-	lg.rectangle("fill", 0, 0, sw, sh)
+	Backdrop.draw()
 
 	local index = State.mapIndex
 	local map = Maps[index]

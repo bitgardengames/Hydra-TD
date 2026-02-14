@@ -1,4 +1,3 @@
--- tools/hero_export.lua
 local Camera = require("core.camera")
 local State  = require("core.state")
 
@@ -7,10 +6,6 @@ local min = math.min
 local max = math.max
 
 local HeroExport = {}
-
--- ============================================================
--- CONFIG
--- ============================================================
 
 HeroExport.formats = {
 	hero = {
@@ -27,10 +22,7 @@ HeroExport.formats = {
 	},
 }
 
--- ============================================================
--- STATE
--- ============================================================
-
+-- State
 HeroExport.active        = false
 HeroExport.canvas        = nil
 HeroExport.subject       = nil   -- actual tower or enemy instance
@@ -44,10 +36,6 @@ HeroExport.verticalBias  = 0.1
 HeroExport.captureX      = 0
 HeroExport.captureY      = 0
 HeroExport._prevPaused   = nil
-
--- ============================================================
--- INIT / FORMAT
--- ============================================================
 
 function HeroExport.init()
 	HeroExport._rebuildCanvas()
@@ -66,16 +54,8 @@ function HeroExport.setFormat(name)
 end
 
 function HeroExport._rebuildCanvas()
-	HeroExport.canvas = lg.newCanvas(
-		HeroExport.width,
-		HeroExport.height,
-		{ msaa = 8 }
-	)
+	HeroExport.canvas = lg.newCanvas(HeroExport.width, HeroExport.height, {msaa = 8})
 end
-
--- ============================================================
--- SUBJECT BOUNDS (REAL DATA)
--- ============================================================
 
 function HeroExport.getSubjectBounds()
 	local s = HeroExport.subject
@@ -109,10 +89,7 @@ function HeroExport.getSubjectBounds()
 	return nil
 end
 
--- ============================================================
--- CAMERA FRAMING
--- ============================================================
-
+-- Camera framing
 function HeroExport.frameOnSubject()
 	local b = HeroExport.getSubjectBounds()
 	if not b then
@@ -133,10 +110,6 @@ function HeroExport.computeZoom(bounds)
 	return targetPixels / diameter
 end
 
--- ============================================================
--- CAPTURE
--- ============================================================
-
 function HeroExport.capture(opts)
 	opts = opts or {}
 
@@ -153,10 +126,6 @@ function HeroExport.capture(opts)
 	HeroExport.captureX, HeroExport.captureY =
 		HeroExport.frameOnSubject()
 end
-
--- ============================================================
--- DRAW + EXPORT
--- ============================================================
 
 function HeroExport.draw(renderWorldFn)
 	if not HeroExport.active then

@@ -23,102 +23,105 @@ function Sound.play(name)
 		return
 	end
 
-    local entry = Sound.sfx[name]
+	local entry = Sound.sfx[name]
 
-    if not entry then
+	if not entry then
 		return
 	end
 
-    -- Cooldown throttle per sound
-    if entry.cooldown then
-        local now = love.timer.getTime()
-        local last = lastPlayTime[name] or 0
+	-- Cooldown throttle per sound
+	if entry.cooldown then
+		local now = love.timer.getTime()
+		local last = lastPlayTime[name] or 0
 
-        -- Scale with game speed
-        --local speedMult = (State and State.speed == 4) and 1.6 or 1.0
-        local speedMult = (State and State.speed == 4) and 1.0 or 0.5
+		-- Scale with game speed
+		--local speedMult = (State and State.speed == 4) and 1.6 or 1.0
+		local speedMult = (State and State.speed == 4) and 1.0 or 0.5
 
-        if now - last < entry.cooldown * speedMult then
-            return
-        end
+		if now - last < entry.cooldown * speedMult then
+			return
+		end
 
-        lastPlayTime[name] = now
-    end
+		lastPlayTime[name] = now
+	end
 
-    local sound
+	local sound
 
-    if entry.sources then
-        sound = entry.sources[lmr(#entry.sources)]
-    else
-        sound = entry.source
-    end
+	if entry.sources then
+		sound = entry.sources[lmr(#entry.sources)]
+	else
+		sound = entry.source
+	end
 
 	if not entry.cooldown then
 		sound:stop()
 	end
 
-    if entry.jitter then
-        sound:setPitch(1 + lmr(-8, 8) * 0.02)
-    else
-        sound:setPitch(1)
-    end
+	if entry.jitter then
+		sound:setPitch(1 + lmr(-8, 8) * 0.02)
+	else
+		sound:setPitch(1)
+	end
 
-    sound:play()
+	sound:play()
 end
 
 function Sound.setSFXVolume(v)
-    local vol = clampHalf(v)
+	local baseVol = clampHalf(v)
 
-    for _, entry in pairs(Sound.sfx) do
-        if entry.source then
-            entry.source:setVolume(vol)
-        elseif entry.sources then
-            for _, s in ipairs(entry.sources) do
-                s:setVolume(vol)
-            end
-        end
-    end
+	for _, entry in pairs(Sound.sfx) do
+		local bias = entry.bias or 1.0
+		local vol = baseVol * bias
+
+		if entry.source then
+			entry.source:setVolume(vol)
+		elseif entry.sources then
+			for _, s in ipairs(entry.sources) do
+				s:setVolume(vol)
+			end
+		end
+	end
 end
 
 -- Play music
 function Sound.playMusic(name)
-    local music = Sound.music[name]
+	local music = Sound.music[name]
 
-    if music then
-        music:play()
-    end
+	if music then
+		music:play()
+	end
 end
 
 -- Stop music
 function Sound.stopMusic(name)
-    local music = Sound.music[name]
+	local music = Sound.music[name]
 
-    if music then
-        music:stop()
-    end
+	if music then
+		music:stop()
+	end
 end
 
 function Sound.setMusicVolume(v)
-    if Sound.music.bg then
-        Sound.music.bg:setVolume(clampHalf(v))
-    end
+	if Sound.music.bg then
+		Sound.music.bg:setVolume(clampHalf(v))
+	end
 end
 
 function Sound.load()
 	-- Sounds
-    Sound.sfx.uiMove = {
+	Sound.sfx.uiMove = {
 		source = la.newSource("assets/sounds/uiMove.ogg", "static"),
 	}
 
-    Sound.sfx.uiConfirm = {
+	Sound.sfx.uiConfirm = {
 		source = la.newSource("assets/sounds/uiConfirm.ogg", "static"),
 	}
 
-    Sound.sfx.uiBack = {
+	Sound.sfx.uiBack = {
 		source = la.newSource("assets/sounds/uiBack.ogg", "static"),
 	}
 
-    Sound.sfx.uiError = {
+	Sound.sfx.uiError = {
 		source = la.newSource("assets/sounds/uiError.ogg", "static"),
 	}
 
@@ -130,7 +133,7 @@ function Sound.load()
 		source = la.newSource("assets/sounds/gameOver.ogg", "static"),
 	}
 
-    Sound.sfx.towerPlaced = {
+	Sound.sfx.towerPlaced = {
 		sources = {
 			la.newSource("assets/sounds/towerPlaced1.ogg", "static"),
 			la.newSource("assets/sounds/towerPlaced2.ogg", "static"),
@@ -139,11 +142,11 @@ function Sound.load()
 	}
 
 	-- NYI
-    Sound.sfx.towerUpgraded = {
+	Sound.sfx.towerUpgraded = {
 		--source = la.newSource("assets/sounds/sell.wav", "static"),
 	}
 
-    Sound.sfx.towerSold = {
+	Sound.sfx.towerSold = {
 		sources = {
 			la.newSource("assets/sounds/towerSold1.ogg", "static"),
 			la.newSource("assets/sounds/towerSold2.ogg", "static"),
@@ -151,34 +154,37 @@ function Sound.load()
 		},
 	}
 
-    Sound.sfx.lancer = {
+	Sound.sfx.lancer = {
 		source = la.newSource("assets/sounds/lancer.ogg", "static"),
 		jitter = true,
+		bias = 0.70,
 		--cooldown = 0.08,
 	}
 
-    Sound.sfx.slow = {
+	Sound.sfx.slow = {
 		source = la.newSource("assets/sounds/slow.ogg", "static"),
 		jitter = true,
+		bias = 0.40,
 		--cooldown = 0.10,
 	}
 
-    Sound.sfx.cannon = {
+	Sound.sfx.cannon = {
 		source = la.newSource("assets/sounds/cannon.ogg", "static"),
 		jitter = true,
 		--cooldown = 0.14,
 	}
 
-    Sound.sfx.poison = {
+	Sound.sfx.poison = {
 		sources = {
 			la.newSource("assets/sounds/poison1.ogg", "static"),
 			la.newSource("assets/sounds/poison2.ogg", "static"),
 		},
 		jitter = true,
+		bias = 0.70,
 		--cooldown = 0.12,
 	}
 
-    Sound.sfx.shock = {
+	Sound.sfx.shock = {
 		sources = {
 			la.newSource("assets/sounds/shock1.ogg", "static"),
 			la.newSource("assets/sounds/shock2.ogg", "static"),
@@ -188,9 +194,9 @@ function Sound.load()
 		--cooldown = 0.09,
 	}
 
-    -- Music
-    Sound.music.bg = la.newSource("assets/music/Menu4.ogg", "stream")
-    Sound.music.bg:setLooping(true)
+	-- Music
+	Sound.music.bg = la.newSource("assets/music/Menu4.ogg", "stream")
+	Sound.music.bg:setLooping(true)
 
 	Sound.setMusicVolume(Save.data.settings.musicVolume)
 	Sound.setSFXVolume(Save.data.settings.sfxVolume)

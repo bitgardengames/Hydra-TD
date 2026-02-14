@@ -7,6 +7,7 @@ local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
 local Text = require("ui.text")
 local Fonts = require("core.fonts")
+local Backdrop = require("scenes.backdrop")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -15,6 +16,7 @@ local Screen = {}
 local buttons = nil
 
 local colorGood = Theme.ui.good
+local colorText = Theme.ui.text
 
 local function getDifficultyLabel()
     local key = Difficulty.key()
@@ -38,7 +40,7 @@ function Screen.load()
                 Sound.play("uiConfirm")
 
                 -- Advance to next map
-                State.mapIndex = State.mapIndex + 1
+                State.worldMapIndex = State.worldMapIndex + 1
                 State.gameOver = false
                 State.victory = false
                 State.mode = "game"
@@ -67,6 +69,7 @@ function Screen.load()
             h = 46,
             onClick = function()
                 Sound.play("uiConfirm")
+				Background.start()
                 State.mode = "menu"
             end
         },
@@ -89,7 +92,7 @@ function Screen.draw()
 	local screenHalf = sh * 0.5
 
     -- Dim background
-    lg.setColor(0, 0, 0, 0.5)
+    lg.setColor(0, 0, 0, 0.55)
     lg.rectangle("fill", 0, 0, sw, sh)
 
     -- Title
@@ -104,7 +107,7 @@ function Screen.draw()
 	local difficultyLabel = getDifficultyLabel()
 
 	if difficultyLabel then
-		lg.setColor(1, 1, 1, 0.6)
+		lg.setColor(colorText)
 		Text.printfShadow(string.format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, screenHalf - 64, sw, "center")
 	end
 

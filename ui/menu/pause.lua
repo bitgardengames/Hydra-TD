@@ -3,6 +3,7 @@ local Cursor = require("core.cursor")
 local State = require("core.state")
 local Sound = require("systems.sound")
 local Hotkeys = require("core.hotkeys")
+local Backdrop = require("scenes.backdrop")
 local L = require("core.localization")
 
 local Page = {}
@@ -42,6 +43,7 @@ function Page.load()
 			h = 42,
 			onClick = function()
 				State.paused = false
+				Backdrop.start()
 				State.mode = "menu"
 				Sound.play("uiConfirm")
 			end

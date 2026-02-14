@@ -424,10 +424,7 @@ function Export.exportCogSocialAvatar()
 
 	local ENEMY_RADIUS_REF = Constants.TILE * 0.42
 	local OUTLINE_RATIO    = 3 / ENEMY_RADIUS_REF
-
-	-- =========================
 	-- Cog eye helper
-	-- =========================
 	local function drawCog(x, y, r, teeth, toothDepth, rotation)
 		lg.push()
 		lg.translate(x, y)
@@ -521,9 +518,7 @@ function Export.exportCogSocialAvatar()
 
 			lg.setColor(outlineColor)
 
-			-- =========================
 			-- Mouth
-			-- =========================
 			local mouthY    = cy + radius * 0.32
 			local outerR    = radius * 0.56
 			local lipOffset = radius * 0.07
@@ -542,9 +537,7 @@ function Export.exportCogSocialAvatar()
 
 			drawMouthStencil()
 
-			-- =========================
 			-- Teeth bars (stenciled)
-			-- =========================
 			lg.stencil(drawMouthStencil, "replace", 1)
 			lg.setStencilTest("greater", 0)
 
@@ -594,18 +587,14 @@ function Export.exportCogSocialAvatarAnim()
 	local ENEMY_RADIUS_REF = Constants.TILE * 0.42
 	local OUTLINE_RATIO    = 3 / ENEMY_RADIUS_REF
 
-	-- =========================
 	-- Animation settings
-	-- =========================
 	local FRAMES = 24          -- number of slices
 	local TEETH  = 8           -- must match cog teeth
 	local LOOP_ANGLE = (2 * pi) / TEETH
 	local MESH_OFFSET = LOOP_ANGLE
 	-- one tooth step = perfect loop
 
-	-- =========================
 	-- Cog eye helper
-	-- =========================
 	local function drawCog(x, y, r, teeth, toothDepth, rotation)
 		lg.push()
 		lg.translate(x, y)
@@ -652,9 +641,7 @@ function Export.exportCogSocialAvatarAnim()
 				local cy = size * 0.5
 				local radius = size * 0.34
 
-				-- =========================
 				-- Outline + body
-				-- =========================
 				local outlinePad   = radius * OUTLINE_RATIO * 1.28
 				local outlineColor = data.color
 				local bodyColor    = { 0.05, 0.05, 0.05, 1 }
@@ -665,9 +652,7 @@ function Export.exportCogSocialAvatarAnim()
 				lg.setColor(bodyColor)
 				lg.circle("fill", cx, cy, radius)
 
-				-- =========================
-				-- Cog eyes ⚙️
-				-- =========================
+				-- Cog eyes
 				local eyeSep = radius * 0.30
 				local eyeR   = radius * 0.25
 				local hubR   = eyeR * 0.44
@@ -708,9 +693,7 @@ function Export.exportCogSocialAvatarAnim()
 
 				lg.setColor(outlineColor)
 
-				-- =========================
 				-- Mouth
-				-- =========================
 				local mouthY    = cy + radius * 0.32
 				local outerR    = radius * 0.56
 				local lipOffset = radius * 0.07
@@ -729,9 +712,7 @@ function Export.exportCogSocialAvatarAnim()
 
 				drawMouthStencil()
 
-				-- =========================
 				-- Teeth bars (stenciled)
-				-- =========================
 				lg.stencil(drawMouthStencil, "replace", 1)
 				lg.setStencilTest("greater", 0)
 
@@ -811,15 +792,11 @@ function Export.composeHero(opts)
 	lg.setCanvas(out)
 	lg.clear(0, 0, 0, 0)
 
-	-- =====================================================
 	-- 1. Draw hero render
-	-- =====================================================
 	lg.setColor(1, 1, 1, 1)
 	lg.draw(srcCanvas, 0, 0)
 
-	-- =====================================================
 	-- 2. Subtle edge darkening (hero-friendly vignette)
-	-- =====================================================
 	lg.setBlendMode("alpha")
 
 	local steps = 12
@@ -838,9 +815,7 @@ function Export.composeHero(opts)
 		lg.rectangle("fill", w - inset, inset, inset, h - inset*2) -- Right
 	end
 
-	-- =====================================================
 	-- 3. Draw Hydra TD logo (same logic as banner export)
-	-- =====================================================
 	local logoCanvas = getBannerLogoCanvas("vertical_capsule")
 
 	local lw = logoCanvas:getWidth()
@@ -855,9 +830,7 @@ function Export.composeHero(opts)
 
 	lg.setCanvas()
 
-	-- =====================================================
 	-- 4. Save
-	-- =====================================================
 	local stamp = os.date("%Y-%m-%d_%H-%M-%S")
 	local fileName = ("hero_branded_%s.png"):format(stamp)
 

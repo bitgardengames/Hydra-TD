@@ -17,6 +17,7 @@ local Effects = require("world.effects")
 local Projectiles = require("world.projectiles")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
+local Sim = require("core.sim")
 local Tooltip = require("ui.tooltip")
 local Draw = require("ui.draw")
 local Glyphs = require("ui.glyphs")
@@ -43,15 +44,17 @@ local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
 local colorBg = Theme.terrain.bg
 
-local MAX_DT = 1 / 60
+local MAX_DT = 1 / 60 -- Fixed step
+local ACCUM = 0 -- Frame accumulator
 
 -- Artwork export, always make sure it's disabled
 local ART_EXPORT = 0
+local MAP_EXPORT = 0
 local TRAILER_EXPORT = 0
 
 function resetGame()
 	-- Remove! Just testing. Brute force.
-	--State.mapIndex = 2
+	--State.worldMapIndex = 2
 
     -- Clear world state
     Enemies.clear()
@@ -62,7 +65,7 @@ function resetGame()
 
     -- Map state
     MapMod.clearBlocked()
-    MapMod.buildPath(Maps[State.mapIndex])
+    MapMod.buildPath(Maps[State.worldMapIndex])
 
 	local diff = Difficulty.get()
 
@@ -98,6 +101,8 @@ function resetGame()
 
     -- Waves
     Waves.resetSpawner()
+
+	Camera.load()
 end
 
 function love.load()
@@ -107,6 +112,12 @@ function love.load()
 
 	if ART_EXPORT == 1 then
 		require("tools.art_export").run()
+
+		return
+	end
+
+	if MAP_EXPORT == 1 then
+		require("tools.map_export.main").run()
 
 		return
 	end
@@ -126,7 +137,7 @@ function love.load()
 	-- Testing resolution scaling
 	--love.window.setMode(2560, 1440, {fullscreen = false, resizable = false}) -- 1440p
 	--love.window.setMode(1920, 1080, {fullscreen = false, resizable = false}) -- 1080
-	--love.window.setMode(1280, 720, {fullscreen = false, resizable = false}) -- 720p testing
+	--love.window.setMode(1280, 720, {fullscreen = false, resizable = false}) -- 720p
 	--love.window.setMode(1366, 768, {fullscreen = false, resizable = false}) -- laptops
 	--love.window.setMode(1280, 800, {fullscreen = false, resizable = false}) -- steam deck
 	--love.window.setMode(1024, 768, {fullscreen = false, resizable = false}) -- torture test
@@ -162,6 +173,8 @@ function love.load()
 end
 
 function love.update(dt)
+	dt = min(dt, 0.1)
+
 	local mode = State.mode
 	local target = (mode == "pause") and 1 or 0
 
@@ -176,7 +189,6 @@ function love.update(dt)
 		return
 	end
 
-	--if mode == "menu" or mode == "campaign" or mode == "settings" or mode == "game_over" or mode == "victory" then
 	if mode ~= "game" then -- Pause already bailed right there ^
 		Menu.update(dt)
 	end
@@ -199,8 +211,15 @@ function love.update(dt)
 		return
 	end
 
-	dt = min(dt, MAX_DT)
-	dt = dt * State.speed
+	--dt = min(dt, MAX_DT)
+	--dt = dt * State.speed
+
+    ACCUM = ACCUM + dt
+
+    while ACCUM >= FIXED_DT do
+        Sim.update(FIXED_DT * State.speed)
+        ACCUM = ACCUM - FIXED_DT
+    end
 
 	State.livesAnim = max(0, State.livesAnim - dt * 4.5)
 	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
@@ -215,13 +234,8 @@ function love.update(dt)
 	local p = State.placingFadeT
 	State.placingFade = p * p * (3 - 2 * p)
 
-	Waves.updatePrep(dt)
-	Waves.updateSpawner(dt)
-	Enemies.updateEnemies(dt)
-	Towers.updateTowers(dt)
-	Projectiles.update(dt)
-	Effects.update(dt)
-	Floaters.update(dt)
+	--Sim.update(dt)
+
 	Tooltip.update(dt)
 
 	-- Loss condition

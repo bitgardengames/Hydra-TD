@@ -6,6 +6,7 @@ local state = {
 	score = 0,
 
 	mapIndex = 1,
+	worldMapIndex = 1,
 	wave = 0,
 	waveAnim = 1,
 	inPrep = true,

@@ -7,6 +7,7 @@ local Util = require("core.util")
 local Save = require("core.save")
 local Text = require("ui.text")
 local Button = require("ui.button")
+local Backdrop = require("scenes.backdrop")
 local Cursor = require("core.cursor")
 local L = require("core.localization")
 
@@ -19,7 +20,6 @@ local abs = math.abs
 local Screen = {}
 
 local colorText = Theme.ui.text
-local colorMenu = Theme.menu
 
 local LABEL_W = 180
 local SLIDER_W = 160
@@ -47,6 +47,7 @@ local function getDifficultyIndex(key)
 			return i
 		end
 	end
+
 	return 2
 end
 
@@ -246,6 +247,8 @@ function Screen.update(dt)
 	local cx = floor(sw * 0.5)
 	local startY = floor(sh * 0.55)
 
+	Backdrop.update(dt)
+
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = startY + (#rows * 44) + 24 + (i - 1) * 52
@@ -290,25 +293,23 @@ function Screen.draw()
 
 	local sw, sh = lg.getDimensions()
 	local centerX = floor(sw * 0.5)
-	local startY = floor(sh * 0.25)
+	local startY = floor(sh * 0.40)
 	local lineH = 48
 
 	local listX = centerX - 160
 
-	lg.setColor(colorMenu)
-	lg.rectangle("fill", 0, 0, sw, sh)
+	Backdrop.draw()
+
+	Fonts.set("title")
 
 	lg.setColor(colorText)
-	Fonts.set("title")
 	Text.printfShadow(L("settings.title"), 0, startY - 120, sw, "center")
 
 	Fonts.set("menu")
 
 	for i, row in ipairs(rows) do
 		local yTop = startY + (i - 1) * lineH
-
 		local r = {x = listX - ARROW_W, y = yTop, w = ROW_W, h = ROW_H}
-
 		local hovered = Cursor.x >= r.x and Cursor.x <= r.x + r.w and Cursor.y >= r.y and Cursor.y <= r.y + r.h
 
 		drawRow(row, settingsCursor == i, hovered, listX, yTop, i)

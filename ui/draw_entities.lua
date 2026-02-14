@@ -27,6 +27,7 @@ local colorBad = Theme.ui.bad
 local outlineWidth = Theme.outline.width
 
 local TILE = Constants.TILE
+local HALF_PI = math.pi / 2
 
 -- Draw a single enemy
 local function drawEnemy(e)
@@ -252,77 +253,58 @@ local function forwardOffset(t, dist)
 end
 
 local function drawLancerFX(t)
-    local a = t.fireAnim
-    if a <= 0 then return end
+	local a = t.fireAnim
 
-    local fx, fy = forwardOffset(t, TILE * 0.34)
+	if a <= 0 then
+		return
+	end
 
-    -- Muzzle flash
-    lg.setColor(1, 1, 1, 0.9 * a)
-    lg.circle("fill", t.x + fx, t.y + fy, 2)
+	local fx, fy = forwardOffset(t, TILE * 0.34)
+
+	-- Muzzle flash
+	lg.setColor(1, 1, 1, 0.75 * a)
+	lg.circle("fill", t.x + fx, t.y + fy, 2)
 end
 
 local function drawSlowFX(t)
-    local time = getTime()
-    local pulse = 0.5 + sin(time * 2) * 0.5
 
-    local r = TILE * (0.45 + pulse * 0.08)
-
-    lg.setLineWidth(3)
-    lg.setColor(
-        Theme.tower.slow[1],
-        Theme.tower.slow[2],
-        Theme.tower.slow[3],
-        0.6
-    )
-    lg.circle("line", t.x, t.y, r)
-
-    lg.setLineWidth(1)
 end
 
 local function drawPoisonFX(t)
-    local time = getTime()
-    local wobble = sin(time * 4 + t.x) * 3
+	local a = t.fireAnim
 
-    lg.setColor(Theme.tower.poison[1], Theme.tower.poison[2], Theme.tower.poison[3], 0.65)
-    lg.circle("fill", t.x + wobble, t.y, TILE * 0.22)
+	if not a or a <= 0 then
+		return
+	end
 
-    lg.setColor(0, 0, 0, 0.25)
-    lg.circle("line", t.x + wobble, t.y, TILE * 0.22)
+	local fx, fy = forwardOffset(t, TILE * 0.10)
+
+	-- Core flash
+	lg.setColor(1, 1, 1, 0.75 * a)
+	lg.circle("fill", t.x + fx, t.y + fy, 2)
 end
 
 local function drawShockFX(t)
-    local w = t.windUp
-    if not w or w <= 0 then return end
+	local size = TILE * 0.42
+	local outerR = size * 0.36
+	local coreR  = size * 0.08
 
-    -- This must match drawTowerCore
-    local size = TILE * 0.42
-    local bodyR = size * 0.36
+	-- Charge build-up (windUp collapsing inward)
+	if t.windUp and t.windUp > 0 then
+		local tNorm = 1 - (t.windUp / 0.08)
+		local charge = tNorm * tNorm -- ease-in
 
-    -- Wind-up normalization (0 > 1)
-    local windDur = 0.08
-    local p = 1 - (w / windDur)
+		local ringR = outerR + (coreR - outerR) * charge
+		local alpha = 0.25 + charge * 0.75
 
-    if p < 0 then p = 0 end
-    if p > 1 then p = 1 end
+		lg.setLineWidth(2)
+		lg.setColor(1, 1, 1, alpha)
+		lg.circle("line", t.x, t.y, ringR)
 
-    -- Ring geometry
-    local stroke = 2 -- 1–2px
-    local startR = bodyR - stroke -- inside edge of body
-    local endR = 1 -- collapse to center dot
-
-    local r = startR + (endR - startR) * p
-
-    lg.setColor(Theme.tower.shock[1], Theme.tower.shock[2], Theme.tower.shock[3], 1)
-
-    if r > endR + 0.5 then
-        lg.setLineWidth(stroke)
-        lg.circle("line", t.x, t.y, r)
-        lg.setLineWidth(1)
-    else
-        -- Final collapse
-        lg.circle("fill", t.x, t.y, 2)
-    end
+		-- subtle core glow
+		lg.setColor(1, 1, 1, charge * 0.4)
+		lg.circle("fill", t.x, t.y, coreR * (1 + charge * 0.4))
+	end
 end
 
 local function drawCannonFX(t)
@@ -332,27 +314,27 @@ local function drawCannonFX(t)
 		return
 	end
 
-	local size = TILE * 0.6
+	local size = TILE * 0.3
 	local fx, fy = forwardOffset(t, size)
 
-	local r = 8 + (1 - a) * 6
+	local r = 4 + (1 - a) * 4
 
 	lg.setColor(0.9, 0.9, 0.9, 0.75 * a)
 	lg.circle("fill", t.x + fx, t.y + fy, r)
 end
 
 local function drawTowerFX(t)
-    if t.kind == "shock" then
-        drawShockFX(t)
-    elseif t.kind == "cannon" then
-        drawCannonFX(t)
-    elseif t.kind == "lancer" then
-        drawLancerFX(t)
-    elseif t.kind == "slow" then
-        drawSlowFX(t)
-    elseif t.kind == "poison" then
-        drawPoisonFX(t)
-    end
+	if t.kind == "shock" then
+		drawShockFX(t)
+	elseif t.kind == "cannon" then
+		drawCannonFX(t)
+	elseif t.kind == "lancer" then
+		drawLancerFX(t)
+	--elseif t.kind == "slow" then
+	--	drawSlowFX(t)
+	elseif t.kind == "poison" then
+		drawPoisonFX(t)
+	end
 end
 
 -- Draw tower core shape
@@ -367,7 +349,6 @@ local function drawTowerCore(kind, cx, cy, opts)
 
 	local size = TILE * 0.42
 	local color = def.color
-	local angle = opts.angle or -math.pi / 2
 	local alpha = opts.alpha or 1
 	local tintR = opts.tintR or 1
 	local tintG = opts.tintG or 1
@@ -401,10 +382,10 @@ local function drawTowerCore(kind, cx, cy, opts)
 	lg.translate(cx, cy)
 
 	if def.canRotate then
-		lg.rotate(angle)
+		lg.rotate(opts.angle or -HALF_PI)
 	end
 
-	-- recoil is now stable and cannot "slide"
+	-- Recoil
 	lg.translate(-(opts.recoil or 0), 0)
 
 	-- Cannon
@@ -549,6 +530,8 @@ local function drawTowers()
 		local cx, cy = t.x, t.y
 
 		drawTowerCore(t.kind, cx, cy, {angle = t.angle, recoil = t.recoil, alpha = 1})
+
+		drawTowerFX(t)
 
 		if anim > 0 then
 			local a = anim

@@ -51,9 +51,15 @@ local function drawGrass()
 	end
 end
 
+local function updatePathColor(color)
+	colorPath = color
+end
+
 local function drawPath()
 	local pathThickness = tile
 	local half = pathThickness * 0.5
+
+	lg.setColor(colorPath)
 
 	for i = 1, #MapMod.map.path - 1 do
 		local a = MapMod.map.path[i]
@@ -78,8 +84,6 @@ local function drawPath()
 
 			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
 		end
-
-		lg.setColor(colorPath)
 
 		if dx ~= 0 then
 			local x1 = min(ax, bx)
@@ -126,7 +130,6 @@ local function drawPath()
 		if dx1 ~= dx2 or dy1 ~= dy2 then
 			local cx, cy = MapMod.gridToCenter(cur[1], cur[2])
 
-			lg.setColor(colorPath)
 			lg.circle("fill", cx, cy, half)
 		end
 	end
@@ -157,7 +160,10 @@ local function drawGrid()
 end
 
 return {
-	drawWorld = drawWorld,
+	drawGrass = drawGrass,
+	drawPath = drawPath,
 	drawGrid = drawGrid,
+	drawWorld = drawWorld,
 	rebuild = rebuildWorld,
+	updatePathColor = updatePathColor,
 }

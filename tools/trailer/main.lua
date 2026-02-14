@@ -1,7 +1,6 @@
 local Config = require("tools.trailer.config")
 local Director = require("tools.trailer.director")
 local Recorder = require("tools.trailer.recorder")
-local Sim = require("tools.trailer.sim")
 
 local Trailer = {}
 
@@ -18,7 +17,7 @@ function Trailer.run()
     love.math.setRandomSeed(123456)
 
 	Recorder.fixedDt = FIXED_DT
-	
+
 	--Recorder.enabled = false -- Flip back after recording audio
 
     -- Force fixed timestep
