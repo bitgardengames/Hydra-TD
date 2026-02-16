@@ -10,11 +10,10 @@ local FRAMES_DIR = TRAILER_DIR .. "/frames"
 local FIXED_DT = 1 / 60
 
 function Trailer.run()
+	require("core.bootstrap").initMinimal()
+
 	love.filesystem.createDirectory(TRAILER_DIR)
 	love.filesystem.createDirectory(FRAMES_DIR)
-
-    -- Lock determinism
-    love.math.setRandomSeed(123456)
 
 	Recorder.fixedDt = FIXED_DT
 

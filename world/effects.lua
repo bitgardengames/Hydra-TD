@@ -3,12 +3,18 @@ local Sound = require("systems.sound")
 local lg = love.graphics
 local random = love.math.random
 local tinsert = table.insert
-local tremove = table.remove
 local sin = math.sin
 local cos = math.cos
 local min = math.min
 local max = math.max
 local pi = math.pi
+
+local function swapRemove(list, i)
+	local last = #list
+
+	list[i] = list[last]
+	list[last] = nil
+end
 
 local Effects = {}
 
@@ -24,48 +30,36 @@ local function jitter(amount)
 end
 
 function Effects.spawnZapEffect(x, y, chain)
-	-- Snapshot the chain into immutable segments so visuals are not dependent
-	-- on enemy hp / removal after damage is applied.
+	-- Snapshot the chain into immutable segments so visuals are not dependent on enemy hp / removal after damage is applied.
 	local segs = {}
 
 	if chain then
 		for i = 1, #chain do
 			local seg = chain[i]
 			local from = seg.from
-			local to   = seg.to
+			local to = seg.to
 
-			-- "to" must exist to draw a segment
 			if to and to.x and to.y then
 				-- IMPORTANT: first hop may have from == nil; anchor it to the tower origin.
 				local x1, y1
+
 				if from and from.x and from.y then
 					x1, y1 = from.x, from.y
 				else
 					x1, y1 = x, y
 				end
 
-				segs[#segs + 1] = {
-					x1 = x1,
-					y1 = y1,
-					x2 = to.x,
-					y2 = to.y,
-				}
+				segs[#segs + 1] = { x1 = x1, y1 = y1, x2 = to.x, y2 = to.y}
 			end
 		end
 	end
 
-	-- Fallback: if somehow no segments were recorded, at least draw a tiny pop at origin
+	-- Fallback, if somehow no segments were recorded, at least draw a tiny pop at origin
 	if #segs == 0 then
-		segs[1] = { x1 = x, y1 = y, x2 = x, y2 = y }
+		segs[1] = {x1 = x, y1 = y, x2 = x, y2 = y}
 	end
 
-	table.insert(Effects.zaps, {
-		x = x,
-		y = y,
-		segs = segs,
-		t = 0,
-		life = 0.12,
-	})
+	tinsert(Effects.zaps, {x = x, y = y, segs = segs, t = 0, life = 0.12})
 
 	Sound.play("shock")
 end
@@ -110,7 +104,7 @@ function Effects.update(dt)
 		s.t = s.t + dt
 
 		if s.t >= s.life then
-			tremove(splashes, i)
+			swapRemove(splashes, i)
 		end
 	end
 
@@ -130,7 +124,7 @@ function Effects.update(dt)
 		end
 
 		if e.t >= e.life then
-			tremove(explosions, i)
+			swapRemove(explosions, i)
 		end
 	end
 
@@ -142,7 +136,7 @@ function Effects.update(dt)
 		z.t = z.t + dt
 
 		if z.t >= z.life then
-			tremove(zaps, i)
+			swapRemove(zaps, i)
 		end
 	end
 end
@@ -150,6 +144,7 @@ end
 function Effects.draw()
 	-- Cannon splash rings
 	local splashes = Effects.splashes
+
 	for i = 1, #splashes do
 		local s = splashes[i]
 		local t = s.t / s.life
@@ -209,15 +204,16 @@ function Effects.draw()
 
 		if segs then
 			local count = #segs
-			local u = math.min(1, z.t / z.life)
+			local u = min(1, z.t / z.life)
 			local a = 1.0 - 0.3 * u
+			local d = max(1, count)
 
 			for s = 1, count do
 				local seg = segs[s]
 				local x1, y1 = seg.x1, seg.y1
 				local x2, y2 = seg.x2, seg.y2
 
-				local t = (s - 1) / math.max(1, count)
+				local t = (s - 1) / d
 				local jumpA = 1.0 - 0.1 * (s - 1)
 				local radius = 2 * (1 - t) + 1
 
@@ -227,7 +223,7 @@ function Effects.draw()
 				lg.setColor(0.6, 0.9, 1.0, 0.6 * a * jumpA)
 				lg.circle("fill", x2 + jx, y2 + jy, radius)
 
-				local w = (2 * (1 - t) + 1) * (0.8 - 0.4 * u)
+				local w = (3 * (1 - t) + 1) * (0.8 - 0.4 * u)
 				lg.setLineWidth(w)
 
 				local jx1 = jitter(zapJitter)
@@ -248,9 +244,17 @@ function Effects.draw()
 end
 
 function Effects.clear()
-	for i = #Effects.splashes, 1, -1 do Effects.splashes[i] = nil end
-	for i = #Effects.explosions, 1, -1 do Effects.explosions[i] = nil end
-	for i = #Effects.zaps, 1, -1 do Effects.zaps[i] = nil end
+	for i = #Effects.splashes, 1, -1 do
+		Effects.splashes[i] = nil
+	end
+
+	for i = #Effects.explosions, 1, -1 do
+		Effects.explosions[i] = nil
+	end
+
+	for i = #Effects.zaps, 1, -1 do
+		Effects.zaps[i] = nil
+	end
 end
 
 return Effects

@@ -75,10 +75,17 @@ end
 local function buildCanvas(id, scale)
 	scale = scale or 1
 
-	local key = id .. "@" .. scale
+	-- Ensure sub-cache exists for this id
+	local idCache = cache[id]
 
-	if cache[key] then
-		return cache[key]
+	if not idCache then
+		idCache = {}
+		cache[id] = idCache
+	end
+
+	-- Return cached scale if present
+	if idCache[scale] then
+		return idCache[scale]
 	end
 
 	local h = floor(BASE_H * scale)
@@ -108,15 +115,15 @@ local function buildCanvas(id, scale)
 	lg.setCanvas()
 	lg.pop()
 
-	cache[key] = {canvas = canvas, w = w, h = h}
+	local entry = {canvas = canvas, w = w, h = h}
 
-	return cache[key]
+	idCache[scale] = entry
+
+	return entry
 end
 
 function Glyphs.draw(id, x, y, opts)
-	opts = opts or {}
-	local scale = opts.scale or 1
-
+	local scale = (opts and opts.scale) or 1
 	local resolved = resolveGlyph(id)
 	local g = buildCanvas(resolved, scale)
 

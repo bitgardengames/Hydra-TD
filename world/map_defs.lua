@@ -120,15 +120,12 @@ local maps = {
 		id = "doublebend",
 		nameKey = "map.doublebend",
 		path = {
-			{4, 7},   {11, 7},     -- entry sweep (mid row)
-			{11, 11},              -- rise
-			{23, 11},              -- short top push
-			{23, 7},               -- drop past entry row (offset)
-			{13, 7},               -- mid return (different row than entry)
-			{13, 4},               -- small drop
-			{25, 4},               -- bottom sweep right
-			{25, 7},               -- climb to exit row
-			{31, 7},               -- exit
+			{4, 7},   {11, 7},
+			{11, 11}, {23, 11},
+			{23, 6}, {18, 6},
+			{18, 9}, {13, 9},
+			{13, 4}, {25, 4},
+			{25, 7}, {31, 7},
 		},
 	},
 

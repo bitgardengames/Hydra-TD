@@ -3,25 +3,36 @@ local Text = require("ui.text")
 
 local floaters = {}
 
-local ipairs = ipairs
+local pool = {}
+
 local floor = math.floor
 local random = love.math.random
-local tinsert = table.insert
-local tremove = table.remove
 
 local function add(x, y, text, r, g, b)
-	tinsert(floaters, {
-		x = x,
-		y = y,
-		startY = y,
-		rise = 22 + random() * 6,
-		text = text,
-		t = 0,
-		life = 1,
-		r = r or 1,
-		g = g or 1,
-		b = b or 1,
-	})
+    local f = pool[#pool]
+
+    if f then
+        pool[#pool] = nil
+    else
+        f = {}
+    end
+
+	local font = love.graphics.getFont()
+	local textW = font:getWidth(text)
+
+    f.x = x
+    f.y = y
+    f.startY = y
+    f.rise = 22 + random() * 6
+    f.text = text
+    f.textW = textW
+    f.t = 0
+    f.life = 1
+    f.r = r or 1
+    f.g = g or 1
+    f.b = b or 1
+
+    floaters[#floaters + 1] = f
 end
 
 local function update(dt)
@@ -33,7 +44,10 @@ local function update(dt)
 		local p = f.t / f.life
 
 		if p >= 1 then
-			tremove(floaters, i)
+			floaters[i] = floaters[#floaters]
+			floaters[#floaters] = nil
+
+			pool[#pool + 1] = f
 		else
 			local ease = 1 - (1 - p) * (1 - p)
 
@@ -43,7 +57,8 @@ local function update(dt)
 end
 
 local function draw()
-	for _, f in ipairs(floaters) do
+	for i = 1, #floaters do
+		local f = floaters[i]
 		local p = f.t / f.life
 
 		local rise = (1 - p) * 10
@@ -56,17 +71,14 @@ local function draw()
 		sx = floor(sx + 0.5)
 		sy = floor(sy + 0.5)
 
-		local text = f.text
-		local font = love.graphics.getFont()
-		local textW = font:getWidth(text)
-
 		love.graphics.setColor(f.r, f.g, f.b, alpha)
-		Text.printShadow(text, sx - textW * 0.5, sy)
+		Text.printShadow(f.text, sx - f.textW * 0.5, sy)
 	end
 end
 
 function clear()
 	for i = #floaters, 1, -1 do
+		pool[#pool + 1] = floaters[i]
 		floaters[i] = nil
 	end
 end

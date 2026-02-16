@@ -232,7 +232,9 @@ local function sellTower(t)
 end
 
 local function findTowerAt(gx, gy)
-	for _, t in ipairs(towers) do
+	for i = 1, #towers do
+		local t = towers[i]
+
 		if t.gx == gx and t.gy == gy then
 			return t
 		end
@@ -242,7 +244,9 @@ local function findTowerAt(gx, gy)
 end
 
 local function updateTowers(dt)
-	for _, t in ipairs(towers) do
+	for i = 1, #towers do
+		local t = towers[i]
+
 		t.cooldown = t.cooldown - dt
 		t.fireAnim = max(0, t.fireAnim - dt * 8)
 		t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)

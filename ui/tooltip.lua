@@ -35,16 +35,27 @@ local function getTitleFont()
 end
 
 function Tooltip.show(def)
-	Tooltip.active = {
-		title = def.title,
-		rows = def.rows or {},
-		x = Cursor.x + 14,
-		y = Cursor.y + 14,
-		w = 0,
-		h = 0,
-	}
+	local t = Tooltip.active
 
-	Tooltip.recalculate()
+	-- If content changed, rebuild + recalc
+	if not t or t.title ~= def.title or t.rows ~= def.rows then
+		t = {
+			title = def.title,
+			rows = def.rows or {},
+			x = 0,
+			y = 0,
+			w = 0,
+			h = 0,
+		}
+
+		Tooltip.active = t
+		Tooltip.recalculate()
+	end
+
+	-- Always update position
+	t.x = Cursor.x + 14
+	t.y = Cursor.y + 14
+
 	Tooltip.clampToScreen()
 end
 

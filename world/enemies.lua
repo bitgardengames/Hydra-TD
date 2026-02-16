@@ -19,15 +19,20 @@ local tick = 0.5 -- seconds per poison tick
 
 local min = math.min
 local max = math.max
-local sin = math.sin
-local cos = math.cos
-local atan2 = math.atan2
 local sqrt = math.sqrt
+local floor = math.floor
 local tinsert = table.insert
-local tremove = table.remove
+
+local function swapRemove(list, i)
+	local last = #list
+
+	list[i] = list[last]
+	list[last] = nil
+end
 
 local function findEnemyAt(x, y)
-	for _, e in ipairs(enemies) do
+	for i = 1, #enemies do
+		local e = enemies[i]
 		local dx = x - e.x
 		local dy = y - e.y
 
@@ -59,6 +64,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		def = def,
 		x = x,
 		y = y,
+		prevX = x,
+		prevY = y,
 		boss = def.boss or false,
 		hpScale = hpScale,
 		spdScale = spdScale,
@@ -78,6 +85,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		exitFade = nil,
 		alpha = 1,
 		animT = 0,
+		prevAnimT = 0,
 		pathIndex = idx,
 		modifiers = def.modifiers,
 		slowFactor = 1,
@@ -103,12 +111,10 @@ local function updateEnemies(dt)
 		local e = enemies[i]
 		local isBoss = e.boss
 
-		-- Animate
-		e.animT = (e.animT or 0) + dt * e.speed * 0.03
-
 		-- Spawn fade-in
 		if e.spawnFade and e.spawnFade > 0 then
 			e.spawnFade = e.spawnFade - dt
+
 			if e.spawnFade < 0 then
 				e.spawnFade = 0
 			end
@@ -133,11 +139,12 @@ local function updateEnemies(dt)
 			e.poisonTimer = e.poisonTimer - dt
 			e.poisonTickTimer = (e.poisonTickTimer or 0) + dt
 
-			while e.poisonTickTimer >= tick do
-				e.poisonTickTimer = e.poisonTickTimer - tick
+			if e.poisonTickTimer >= tick then
+				local ticks = floor(e.poisonTickTimer / tick)
+				e.poisonTickTimer = e.poisonTickTimer - ticks * tick
 
 				local poisonMult = (e.modifiers and e.modifiers.poison) or 1.0
-				local dmg = e.poisonDPS * e.poisonStacks * poisonMult * tick
+				local dmg = e.poisonDPS * e.poisonStacks * poisonMult * tick * ticks
 
 				e.hp = e.hp - dmg
 
@@ -178,7 +185,7 @@ local function updateEnemies(dt)
 				State.activeBoss = nil
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
 
-				tremove(enemies, i)
+				swapRemove(enemies, i)
 			end
 
 			goto continue
@@ -214,7 +221,7 @@ local function updateEnemies(dt)
 
 			tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
-			tremove(enemies, i)
+			swapRemove(enemies, i)
 
 			goto continue
 		end
@@ -231,6 +238,8 @@ local function updateEnemies(dt)
 		end
 
 		e.speed = e.baseSpeed * e.slowFactor
+		e.prevAnimT = e.animT
+		e.animT = e.animT + dt * e.speed * 0.03
 
 		-- Hit flash
 		if e.hitFlash > 0 then
@@ -243,6 +252,11 @@ local function updateEnemies(dt)
 
 		-- Path movement
 		local remaining = e.speed * dt
+		local NODE_EPS2 = 0.000001
+
+		-- Store previous position for interpolation
+		e.prevX = e.x
+		e.prevY = e.y
 
 		while remaining > 0 and e.pathIndex < pathLen do
 			local nextIndex = e.pathIndex + 1
@@ -253,22 +267,24 @@ local function updateEnemies(dt)
 			local dy = ty - e.y
 			local d2 = dx * dx + dy * dy
 
-			if d2 < 0.001 then
-				-- Snap to node
-				e.x, e.y = tx, ty
+			-- Close enough: snap, but consume the tiny remaining distance
+			if d2 <= NODE_EPS2 then
+				local dist = sqrt(d2)
+
+				e.x = tx
+				e.y = ty
 				e.pathIndex = nextIndex
+				remaining = remaining - dist
 			else
-				local d = sqrt(d2)
+				local dist = sqrt(d2)
 
-				if remaining >= d then
-					-- Consume entire segment
-					e.x, e.y = tx, ty
+				if remaining >= dist then
+					e.x = tx
+					e.y = ty
 					e.pathIndex = nextIndex
-					remaining = remaining - d
+					remaining = remaining - dist
 				else
-					-- Partial move
-					local inv = remaining / d
-
+					local inv = remaining / dist
 					e.x = e.x + dx * inv
 					e.y = e.y + dy * inv
 					remaining = 0
@@ -309,7 +325,7 @@ local function updateEnemies(dt)
 
 				Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
 
-				tremove(enemies, i)
+				swapRemove(enemies, i)
 
 				if State.lives <= 0 then
 					State.lives = 0
@@ -339,7 +355,7 @@ local function updateEnemies(dt)
 		d.t = d.t + dt
 
 		if d.t > 0.12 then
-			tremove(deathFX, i)
+			swapRemove(deathFX, i)
 		end
 	end
 end
@@ -347,6 +363,10 @@ end
 local function clear()
 	for i = #enemies, 1, -1 do
 		enemies[i] = nil
+	end
+
+	for i = #deathFX, 1, -1 do
+		deathFX[i] = nil
 	end
 end
 

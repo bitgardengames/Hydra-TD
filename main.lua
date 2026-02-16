@@ -42,15 +42,9 @@ local abs = math.abs
 local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
-local colorBg = Theme.terrain.bg
 
-local MAX_DT = 1 / 60 -- Fixed step
+local FIXED_DT = 1 / 120 -- Fixed step
 local ACCUM = 0 -- Frame accumulator
-
--- Artwork export, always make sure it's disabled
-local ART_EXPORT = 0
-local MAP_EXPORT = 0
-local TRAILER_EXPORT = 0
 
 function resetGame()
 	-- Remove! Just testing. Brute force.
@@ -105,72 +99,37 @@ function resetGame()
 	Camera.load()
 end
 
-function love.load()
+function love.load(arg)
 	print(Constants.VERSION_STRING)
 
-	love.math.setRandomSeed(123456) -- Lock determinism
+	love.math.setRandomSeed(123456)
 
-	if ART_EXPORT == 1 then
-		require("tools.art_export").run()
+	local mode = arg and arg[1]
 
-		return
-	end
+	require("core.environment").load()
 
-	if MAP_EXPORT == 1 then
-		require("tools.map_export.main").run()
-
-		return
-	end
-
-	love.mouse.setVisible(false)
-
-	-- If a joystick exists at boot, assume controller-first until mouse movement is received
-	if #love.joystick.getJoysticks() > 0 then
-		Cursor.enableVirtual()
-	end
-
-	Save.load()
-
-	love.window.setTitle("Hydra TD")
-	--love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1})
-
-	-- Testing resolution scaling
-	--love.window.setMode(2560, 1440, {fullscreen = false, resizable = false}) -- 1440p
-	--love.window.setMode(1920, 1080, {fullscreen = false, resizable = false}) -- 1080
-	--love.window.setMode(1280, 720, {fullscreen = false, resizable = false}) -- 720p
-	--love.window.setMode(1366, 768, {fullscreen = false, resizable = false}) -- laptops
-	--love.window.setMode(1280, 800, {fullscreen = false, resizable = false}) -- steam deck
-	--love.window.setMode(1024, 768, {fullscreen = false, resizable = false}) -- torture test
-
-	lg.setDefaultFilter("nearest", "nearest")
-
-	Difficulty.set(Save.data.settings.difficulty)
-
-	Localization.load(Save.data.settings.language or "enUS")
-
-	Fonts.load()
-
-	Scale.update()
-	Camera.load()
-
-	Sound.load()
-
-	Sound.playMusic("bg")
-
-	if TRAILER_EXPORT == 1 then
+	if mode == "art" then
+		return require("tools.art_export").run()
+	elseif mode == "map" then
+		return require("tools.map_export.main").run()
+	elseif mode == "trailer" then
 		require("tools.trailer.main").run()
-
-		return
+	else
+	    require("core.bootstrap").initFull()
+		require("ui.menu.menu").load()
 	end
-
-	lg.setBackgroundColor(colorBg)
-
-	Menu.load()
-
-	require("ui.glyph_defs")
-
-	--require("ui.glyphs").exportSheet("glyphs.png", {cols = 6})
 end
+
+
+	local lastMem = 0
+
+	function debugGC()
+		local mem = collectgarbage("count")
+		if math.abs(mem - lastMem) > 20 then
+			print("GC spike:", mem - lastMem)
+		end
+		lastMem = mem
+	end
 
 function love.update(dt)
 	dt = min(dt, 0.1)
@@ -211,15 +170,14 @@ function love.update(dt)
 		return
 	end
 
-	--dt = min(dt, MAX_DT)
-	--dt = dt * State.speed
+	ACCUM = ACCUM + dt
 
-    ACCUM = ACCUM + dt
+	while ACCUM >= FIXED_DT do
+		Sim.update(FIXED_DT * State.speed)
+		ACCUM = ACCUM - FIXED_DT
+	end
 
-    while ACCUM >= FIXED_DT do
-        Sim.update(FIXED_DT * State.speed)
-        ACCUM = ACCUM - FIXED_DT
-    end
+	State.renderAlpha = ACCUM / FIXED_DT
 
 	State.livesAnim = max(0, State.livesAnim - dt * 4.5)
 	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
@@ -272,6 +230,8 @@ function love.update(dt)
 		State.inPrep = true
 		State.prepTimer = 6.0
 	end
+
+	debugGC()
 end
 
 function love.draw()
@@ -365,6 +325,8 @@ end
 
 local function detectControllerType(joystick)
 	local name = joystick:getName():lower()
+
+	print("Controller name:", name)
 
 	-- Steam Deck
 	if name:find("steam") then

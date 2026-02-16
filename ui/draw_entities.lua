@@ -1,7 +1,6 @@
 local Constants = require("core.constants")
 local Theme = require("core.theme")
 local State = require("core.state")
-local Util = require("core.util")
 local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
@@ -24,15 +23,25 @@ local colorSelected = Theme.ui.selected
 local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
 
+local outR, outG, outB = outlineColor[1], outlineColor[2], outlineColor[3]
+local eR, eG, eB = enemyBody[1], enemyBody[2], enemyBody[3]
+local esR, esG, esB, esA = enemyShadow[1], enemyShadow[2], enemyShadow[3], enemyShadow[4]
+local efR, efG, efB = enemyFace[1], enemyFace[2], enemyFace[3]
+local slowR, slowG, slowB = colorSlow[1], colorSlow[2], colorSlow[3]
+local selR, selG, selB = colorSelected[1], colorSelected[2], colorSelected[3]
+
+local goodR, goodG, goodB = colorGood[1], colorGood[2], colorGood[3]
+local badR, badG, badB = colorBad[1], colorBad[2], colorBad[3]
+
 local outlineWidth = Theme.outline.width
 
 local TILE = Constants.TILE
 local HALF_PI = math.pi / 2
 
 -- Draw a single enemy
-local function drawEnemy(e)
-	local bounce = sin(e.animT) * (e.slowTimer > 0 and 1 or 2)
-	local y = e.y + bounce
+local function drawEnemy(e, ix, iy, animT)
+	local bounce = sin(animT)
+	local y = iy + bounce
 
 	-- Boss horns
 	if e.boss then
@@ -41,73 +50,73 @@ local function drawEnemy(e)
 		local hornW = e.radius * 0.55
 		local hornH = e.radius * 0.75
 		local hornY = y - e.radius * 1.05
-		local hornWob = sin(e.animT * 2.5) * 0.06
+		local hornWob = sin(animT * 2.5) * 0.06
 
 		lg.push()
-		lg.translate(e.x - e.radius * 0.46, hornY)
+		lg.translate(ix - e.radius * 0.46, hornY)
 		lg.rotate(-0.26 + hornWob)
 		lg.polygon("fill", 0, 0, -hornW,  hornH * 0.5, -hornW, -hornH * 0.5)
 		lg.pop()
 
 		lg.push()
-		lg.translate(e.x + e.radius * 0.46, hornY)
+		lg.translate(ix + e.radius * 0.46, hornY)
 		lg.rotate(0.26 - hornWob)
 		lg.polygon("fill", 0, 0, hornW, -hornH * 0.5, hornW,  hornH * 0.5)
 		lg.pop()
 	end
 
-	local enemyAlpha  = e.alpha
-	local shadowAlpha = enemyShadow[4] * (enemyAlpha ^ 1.3)
+	local enemyAlpha = e.alpha
+	local shadowAlpha = esA * (enemyAlpha * enemyAlpha)
 
 	-- Shadow
-	lg.setColor(enemyShadow[1], enemyShadow[2], enemyShadow[3], shadowAlpha)
-	lg.ellipse("fill", e.x, e.y + e.radius, e.radius * 1.1, e.radius * 0.4)
+	lg.setColor(esR, esG, esB, shadowAlpha)
+	lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.1, e.radius * 0.4)
 
 	-- Outline
-	lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], enemyAlpha)
-	lg.circle("fill", e.x, y, e.radius + 3)
+	lg.setColor(outR, outG, outB, enemyAlpha)
+	lg.circle("fill", ix, iy, e.radius + 3)
 
 	-- Body
-	lg.setColor(enemyBody[1], enemyBody[2], enemyBody[3], enemyAlpha)
-	lg.circle("fill", e.x, y, e.radius)
+	lg.setColor(eR, eG, eB, enemyAlpha)
+	lg.circle("fill", ix, iy, e.radius)
 
 	-- Hit flash
 	if e.hitFlash > 0 then
 		local a = min(1, e.hitFlash / 0.05)
 
 		lg.setColor(1.0, 0.95, 0.9, a * 0.35)
-		lg.circle("fill", e.x, e.y, e.radius + 1)
+		lg.circle("fill", ix, iy, e.radius + 1)
 	end
 
 	-- Slow overlay
 	if e.slowTimer > 0 then
-		local pulse = 0.5 + sin(e.animT * 5) * 0.5
+		local pulse = 0.5 + sin(animT * 5) * 0.5
 		local slowAlpha = (0.18 + pulse * 0.08) * enemyAlpha
 
-		lg.setColor(colorSlow[1], colorSlow[2], colorSlow[3], slowAlpha)
-		lg.circle("fill", e.x, y, e.radius - 2)
+		lg.setColor(slowR, slowG, slowB, slowAlpha)
+		lg.circle("fill", ix, iy, e.radius - 2)
 
 		lg.setLineWidth(1)
-		lg.setColor(colorSlow[1], colorSlow[2], colorSlow[3], 0.35)
-		lg.circle("line", e.x, y, e.radius - 1)
+		lg.setColor(slowR, slowG, slowB, 0.35)
+		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
 	-- Poison overlay
 	if e.poisonStacks and e.poisonStacks > 0 then
-		local wob = sin(e.animT * 3 + e.poisonStacks) * 0.5
+		local wob = sin(animT * 3 + e.poisonStacks) * 0.5
 		local intensity = min(0.35, 0.15 + e.poisonStacks * 0.05)
 		local poisonAlpha = intensity * (enemyAlpha ^ 0.75)
 
 		lg.setColor(0.35, 0.85, 0.35, poisonAlpha)
-		lg.circle("fill", e.x, y + wob, e.radius - 3)
+		lg.circle("fill", ix, iy + wob, e.radius - 3)
 	end
 
 	-- Eyes
-	local eyeSep  = e.radius * 0.38
+	local eyeSep = e.radius * 0.38
 	local eyeSize = max(1.6, e.radius * 0.16)
-	local eyeY = y - e.radius * 0.22
+	local eyeY = iy - e.radius * 0.22
 
-	lg.setColor(enemyFace[1], enemyFace[2], enemyFace[3], enemyAlpha)
+	lg.setColor(efR, efG, efB, enemyAlpha)
 
 	if e.boss and e.dying then
 		local bigR = eyeSize + 1
@@ -117,14 +126,14 @@ local function drawEnemy(e)
 		local pop = 1 + (1 - (p * p)) * 0.15
 
 		lg.push()
-		lg.translate(e.x, eyeY)
+		lg.translate(ix, eyeY)
 		lg.scale(pop, pop)
 
-		-- Big shocked eye (outline)
+		-- Big shocked eye
 		lg.setLineWidth(3)
 		lg.circle("line", -eyeSep, 0, bigR)
 
-		-- Small collapsed eye (fill)
+		-- Small collapsed eye
 		lg.circle("fill", eyeSep, 0, smallR)
 
 		lg.setLineWidth(1)
@@ -133,30 +142,20 @@ local function drawEnemy(e)
 		-- Normal boss face
 		local browLen = eyeSize * 2.5
 		local browDrop = eyeSize * 0.85
-		local browTension = sin(e.animT * 1.8) * 0.8
-		local browLift = eyeSize * 0.35 -- <-- move brows upward (tune this)
-		local browIn = eyeSize * 0.35 -- inward shift (tune 0.15–0.35)
+		local browTension = sin(animT * 1.8) * 0.8
+		local browLift = eyeSize * 0.35 -- move brows upward
+		local browIn = eyeSize * 0.35 -- inward shift (0.15 - 0.35)
 
-		lg.circle("fill", e.x - eyeSep, eyeY, eyeSize)
-		lg.circle("fill", e.x + eyeSep, eyeY, eyeSize)
+		lg.circle("fill", ix - eyeSep, eyeY, eyeSize)
+		lg.circle("fill", ix + eyeSep, eyeY, eyeSize)
 
 		lg.setLineWidth(2)
-		lg.line(
-			e.x - eyeSep - browLen * 0.65 + browIn,
-			eyeY - browDrop - browLift,
-			e.x - eyeSep + browLen * 0.35 + browIn,
-			eyeY - browDrop * 0.15 + browTension - browLift
-		)
+		lg.line(ix - eyeSep - browLen * 0.65 + browIn, eyeY - browDrop - browLift, ix - eyeSep + browLen * 0.35 + browIn, eyeY - browDrop * 0.15 + browTension - browLift)
 
-		lg.line(
-			e.x + eyeSep - browLen * 0.35 - browIn,
-			eyeY - browDrop * 0.15 + browTension - browLift,
-			e.x + eyeSep + browLen * 0.65 - browIn,
-			eyeY - browDrop - browLift
-		)
+		lg.line(ix + eyeSep - browLen * 0.35 - browIn, eyeY - browDrop * 0.15 + browTension - browLift, ix + eyeSep + browLen * 0.65 - browIn, eyeY - browDrop - browLift)
 
-		--[[ Boss mouth: grin ↔ laugh animation
-		local t = 0.5 + sin(e.animT * 1.2) * 0.5
+		--[[ Boss mouth: grin / laugh animation
+		local t = 0.5 + sin(animT * 1.2) * 0.5
 
 		local mouthYThin = e.y + e.radius * 0.36
 		local mouthYThick = e.y + e.radius * 0.28
@@ -175,78 +174,112 @@ local function drawEnemy(e)
 		lg.arc("fill", 0, 0, outerR, -pi * 0.02, pi * 1.02)
 		lg.pop()]]
 	else
-		local dx = sin(e.animT * 1.3) * 0.6
-		local dy = cos(e.animT * 1.1) * 0.4
+		local dx = sin(animT * 1.3) * 0.6
+		local dy = cos(animT * 1.1) * 0.4
 
-		lg.circle("fill", e.x - eyeSep + dx, eyeY + dy, eyeSize)
-		lg.circle("fill", e.x + eyeSep + dx, eyeY + dy, eyeSize)
+		lg.circle("fill", ix - eyeSep + dx, eyeY + dy, eyeSize)
+		lg.circle("fill", ix + eyeSep + dx, eyeY + dy, eyeSize)
 	end
 
 	-- Selection ring
 	if State.selectedEnemy == e then
-		lg.setColor(colorSelected[1], colorSelected[2], colorSelected[3], 0.25)
-		lg.circle("fill", e.x, y, e.radius + 4)
+		lg.setColor(selR, selG, selB, 0.25)
+		lg.circle("fill", ix, iy, e.radius + 4)
 
 		lg.setColor(colorSelected)
-		lg.circle("line", e.x, y, e.radius + 4)
+		lg.circle("line", ix, iy, e.radius + 4)
 	end
+end
+
+local function drawEnemyHealth(e, ix, iy)
+	if e.hp <= 0 then
+		return
+	end
+
+	local w = e.boss and 44 or 28
+	local h = e.boss and 7 or 5
+	local bx = ix - w / 2
+	local by = iy - e.radius - (e.boss and 18 or 12)
+
+	local t = max(0, e.hp / e.maxHp)
+
+	local r, g
+
+	if t > 0.5 then
+		local p = (t - 0.5) / 0.5
+
+		r, g = 1 - p, 1
+	else
+		local p = t / 0.5
+
+		r, g = 1, p
+	end
+
+	-- Background
+	lg.setColor(0, 0, 0, 0.5)
+	lg.rectangle("fill", bx, by, w, h, 3, 3)
+
+	-- Fill
+	local fillW = w * t
+
+	if fillW > 0 then
+		-- Keep a minimum width so it never collapses visually
+		local minW = 4
+		local visibleW = math.max(fillW, minW)
+
+		-- Fade out near zero instead of shrinking into a square
+		local alphaScale = 1
+
+		if t < 0.10 then
+			alphaScale = t / 0.10
+		end
+
+		local radius = math.min(3, visibleW * 0.5, h * 0.5)
+
+		lg.setColor(r * 0.9 + 0.05, g * 0.9 + 0.05, 0.15, 0.9 * alphaScale)
+
+		lg.rectangle("fill", bx, by, visibleW, h, radius, radius)
+	end
+end
+
+local function computeEnemyRender(e, alpha)
+    local ix = e.prevX + (e.x - e.prevX) * alpha
+    local iy = e.prevY + (e.y - e.prevY) * alpha
+    local animT = e.prevAnimT + (e.animT - e.prevAnimT) * alpha
+
+    return ix, iy, animT
 end
 
 -- Draw all enemies + death FX
 local function drawEnemies()
-	for _, e in ipairs(Enemies.enemies) do
-		drawEnemy(e)
+	local alpha = State.renderAlpha or 0
+	local enemies = Enemies.enemies
+
+	for i = 1, #enemies do
+		local e = enemies[i]
+
+		local ix, iy, animT = computeEnemyRender(e, alpha)
+
+		drawEnemy(e, ix, iy, animT)
+		drawEnemyHealth(e, ix, iy)
 	end
 
-	for _, d in ipairs(Enemies.deathFX) do
-		local p = d.t / 0.14
-		local alpha = (1 - p) * 0.6
+	local deathFX = Enemies.deathFX
+
+	for i = 1, #deathFX do
+		local fx = deathFX[i]
+		local p = fx.t / 0.14
+		local a = (1 - p) * 0.6
 		local scale = 1 + p * 0.25
 
-		lg.setColor(1, 1, 1, alpha)
-		lg.circle("line", d.x, d.y, d.r * scale)
+		lg.setColor(1, 1, 1, a)
+		lg.circle("line", fx.x, fx.y, fx.r * scale)
 
-		lg.setColor(1, 1, 1, alpha * 0.2)
-		lg.circle("fill", d.x, d.y, d.r * scale)
+		lg.setColor(1, 1, 1, a * 0.2)
+		lg.circle("fill", fx.x, fx.y, fx.r * scale)
 	end
 end
 
-local function drawEnemyHealth(e)
-    if e.hp <= 0 then
-		return
-	end
-
-    local w = e.boss and 44 or 28
-    local h = e.boss and 7 or 5
-    local bx = e.x - w / 2
-    local by = e.y - e.radius - (e.boss and 18 or 12)
-
-    -- Background
-    lg.setColor(0, 0, 0, 0.5)
-    lg.rectangle("fill", bx, by, w, h, 3, 3)
-
-    local t = max(0, e.hp / e.maxHp)
-
-    local r, g
-    if t > 0.5 then
-        local p = (t - 0.5) / 0.5
-
-        r, g = 1 - p, 1
-    else
-        local p = t / 0.5
-
-        r, g = 1, p
-    end
-
-    lg.setColor(r * 0.9 + 0.05, g * 0.9 + 0.05, 0.15, 0.9)
-    lg.rectangle("fill", bx, by, w * t, h, 3, 3)
-end
-
-local function drawEnemyOverlays()
-	for _, e in ipairs(Enemies.enemies) do
-		drawEnemyHealth(e)
-	end
-end
 
 local function forwardOffset(t, dist)
     return cos(t.angle) * dist, sin(t.angle) * dist
@@ -341,6 +374,7 @@ end
 local function drawTowerCore(kind, cx, cy, opts)
 	opts = opts or {}
 
+	-- Could be t.def but we don't pass the tower
 	local def = Towers.TowerDefs[kind]
 
 	if not def then
@@ -371,7 +405,7 @@ local function drawTowerCore(kind, cx, cy, opts)
 	local outerRadius = 6 + outlineW * 0.5
 	local innerRadius = 6 - outlineW * 0.25
 
-	lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+	lg.setColor(outR, outG, outB, outlineA)
 	lg.rectangle("fill", cx - baseOuter, cy - baseOuter, baseOuter * 2, baseOuter * 2, outerRadius, outerRadius)
 
 	lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
@@ -394,13 +428,13 @@ local function drawTowerCore(kind, cx, cy, opts)
 		local rInner = rOuter - outlineW
 		local barrelH = size * 0.28
 
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.setColor(outR, outG, outB, outlineA)
 		lg.circle("fill", 0, 0, rOuter)
 
 		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
 		lg.circle("fill", 0, 0, rInner)
 
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
 	-- Slow
 	elseif kind == "slow" then
@@ -409,7 +443,7 @@ local function drawTowerCore(kind, cx, cy, opts)
 		local o = size * 0.34 + outlineW * 0.5
 		local i = o - outlineW
 
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", -o, -o, o * 2, o * 2, 3 + outlineW * 0.5, 3 + outlineW * 0.5)
 
 		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
@@ -419,7 +453,7 @@ local function drawTowerCore(kind, cx, cy, opts)
 		local rOuter = size * 0.36 + outlineW * 0.5
 		local rInner = rOuter - outlineW
 
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.setColor(outR, outG, outB, outlineA)
 		lg.circle("fill", 0, 0, rOuter)
 
 		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
@@ -429,26 +463,26 @@ local function drawTowerCore(kind, cx, cy, opts)
 		local rOuter = size * 0.38 + outlineW * 0.5
 		local rInner = rOuter - outlineW
 
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.setColor(outR, outG, outB, outlineA)
 		lg.circle("fill", 0, 0, rOuter)
 
 		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
 		lg.circle("fill", 0, 0, rInner)
 
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.setColor(outR, outG, outB, outlineA)
 		lg.circle("fill", size * 0.26, 0, size * 0.16)
 	-- Lancer
 	else
 		local o = size * 0.35 + outlineW * 0.5
 		local i = o - outlineW
 
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", -o, -o, o * 2, o * 2, 5 + outlineW * 0.5, 5 + outlineW * 0.5)
 
 		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
 		lg.rectangle("fill", -i, -i, i * 2, i * 2, 5 - outlineW * 0.25, 5 - outlineW * 0.25)
 
-		lg.setColor(outlineColor[1], outlineColor[2], outlineColor[3], outlineA)
+		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.32, -size * 0.08, size * 0.58, size * 0.16, 2, 2)
 	end
 
@@ -479,7 +513,7 @@ local function drawTowerGhost()
 	lg.setColor(ok and 0.2 or 0.6, ok and 1.0 or 0.2, ok and 0.2 or 0.2, 0.14 * fade)
 	lg.circle("fill", cx, cy, def.range)
 
-	lg.setColor(ok and colorGood[1] or colorBad[1], ok and colorGood[2] or colorBad[2], ok and colorGood[3] or colorBad[3], 0.45 * fade)
+	lg.setColor(ok and goodR or badR, ok and goodG or badG, ok and goodB or badB, 0.45 * fade)
 	lg.circle("line", cx, cy, def.range)
 
 	drawTowerCore(State.placing, cx, cy, {alpha = (ok and 0.45 or 0.25) * fade, tintR = 1, tintG = ok and 1 or 0.4, tintB = ok and 1 or 0.4, shadow = false})
@@ -492,7 +526,7 @@ local function drawTowers()
 		local size = TILE * 0.42
 		local pad = 2
 
-		lg.setColor(colorSelected[1], colorSelected[2], colorSelected[3], 0.18)
+		lg.setColor(selR, selG, selB, 0.18)
 		lg.circle("fill", selected.x, selected.y, selected.range)
 
 		lg.setColor(colorSelected)
@@ -503,7 +537,11 @@ local function drawTowers()
 		lg.setLineWidth(1)
 	end
 
-	for _, t in ipairs(Towers.towers) do
+	local towers = Towers.towers
+
+	for i = 1, #towers do
+		local t = towers[i]
+
 		-- Upgrade pips
 		local pips = min(8, t.level)
 		local anim = t.levelUpAnim or 0
@@ -546,7 +584,6 @@ end
 return {
 	drawEnemy = drawEnemy,
 	drawEnemies = drawEnemies,
-	drawEnemyOverlays = drawEnemyOverlays,
 	drawTowerCore = drawTowerCore,
 	drawTowerGhost = drawTowerGhost,
 	drawTowers = drawTowers,

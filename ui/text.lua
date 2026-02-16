@@ -7,18 +7,18 @@ local getColor = lg.getColor
 
 local colorShadow = Theme.ui.shadow
 
+local sr, sg, sb = colorShadow[1], colorShadow[2], colorShadow[3]
+
 function Text.printShadow(text, x, y, opts)
 	opts = opts or {}
 
 	local ox = opts.ox or 1
 	local oy = opts.oy or 1
-	local alphaMul = opts.alpha or 0.4
-	local shadowColor = opts.shadowColor or colorShadow
 
 	local r, g, b, a = getColor()
 
 	-- Shadow
-	lg.setColor(shadowColor[1], shadowColor[2], shadowColor[3], a * alphaMul)
+	lg.setColor(sr, sg, sb, a)
 	lg.print(text, x + ox, y + oy)
 
 	-- Main
@@ -31,13 +31,11 @@ function Text.printfShadow(text, x, y, w, align, opts)
 
 	local ox = opts.ox or 1
 	local oy = opts.oy or 1
-	local alphaMul = opts.alpha or 0.4
-	local shadowColor = opts.shadowColor or colorShadow
 
 	local r, g, b, a = getColor()
 
 	-- Shadow
-	lg.setColor(shadowColor[1], shadowColor[2], shadowColor[3], a * alphaMul)
+	lg.setColor(sr, sg, sb, a)
 	lg.printf(text, x + ox, y + oy, w, align)
 
 	-- Main
