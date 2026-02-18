@@ -81,8 +81,6 @@ Theme.ui = {
 	shadow = {0, 0, 0, 0.35},
 }
 
-Theme.menu = {0.31, 0.57, 0.76, 1}
-
 Theme.towerShadow = {0, 0, 0, 0.35}
 
 Theme.text = {}

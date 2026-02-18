@@ -2,7 +2,6 @@ local Camera = require("core.camera")
 local Text = require("ui.text")
 
 local floaters = {}
-
 local pool = {}
 
 local floor = math.floor
@@ -17,15 +16,11 @@ local function add(x, y, text, r, g, b)
         f = {}
     end
 
-	local font = love.graphics.getFont()
-	local textW = font:getWidth(text)
-
     f.x = x
     f.y = y
     f.startY = y
     f.rise = 22 + random() * 6
     f.text = text
-    f.textW = textW
     f.t = 0
     f.life = 1
     f.r = r or 1
@@ -36,57 +31,58 @@ local function add(x, y, text, r, g, b)
 end
 
 local function update(dt)
-	for i = #floaters, 1, -1 do
-		local f = floaters[i]
+    for i = #floaters, 1, -1 do
+        local f = floaters[i]
 
-		f.t = f.t + dt
+        f.t = f.t + dt
+        local p = f.t / f.life
 
-		local p = f.t / f.life
-
-		if p >= 1 then
-			floaters[i] = floaters[#floaters]
-			floaters[#floaters] = nil
-
-			pool[#pool + 1] = f
-		else
-			local ease = 1 - (1 - p) * (1 - p)
-
-			f.y = f.startY - ease * f.rise
-		end
-	end
+        if p >= 1 then
+            floaters[i] = floaters[#floaters]
+            floaters[#floaters] = nil
+            pool[#pool + 1] = f
+        else
+            local ease = 1 - (1 - p) * (1 - p)
+            f.y = f.startY - ease * f.rise
+        end
+    end
 end
 
 local function draw()
-	for i = 1, #floaters do
-		local f = floaters[i]
-		local p = f.t / f.life
+    local font = love.graphics.getFont()
 
-		local rise = (1 - p) * 10
-		local alpha = (p < 0.2) and 1 or (1 - (p - 0.2) / 0.8)
+    for i = 1, #floaters do
+        local f = floaters[i]
+        local p = f.t / f.life
 
-		-- Convert world to screen
-		local sx, sy = Camera.worldToScreen(f.x, f.y - rise)
+        local rise = (1 - p) * 10
+        local alpha = (p < 0.2) and 1 or (1 - (p - 0.2) / 0.8)
 
-		-- Snap after conversion
-		sx = floor(sx + 0.5)
-		sy = floor(sy + 0.5)
+        local sx, sy = Camera.worldToScreen(f.x, f.y - rise)
 
-		love.graphics.setColor(f.r, f.g, f.b, alpha)
-		Text.printShadow(f.text, sx - f.textW * 0.5, sy)
-	end
+        -- Measure width with CURRENT font
+        local textW = font:getWidth(f.text)
+
+        local leftX = sx - textW * 0.5
+        leftX = floor(leftX + 0.5)
+        sy = floor(sy + 0.5)
+
+        love.graphics.setColor(f.r, f.g, f.b, alpha)
+        Text.printShadow(f.text, leftX, sy)
+    end
 end
 
 function clear()
-	for i = #floaters, 1, -1 do
-		pool[#pool + 1] = floaters[i]
-		floaters[i] = nil
-	end
+    for i = #floaters, 1, -1 do
+        pool[#pool + 1] = floaters[i]
+        floaters[i] = nil
+    end
 end
 
 return {
-	floaters = floaters,
-	add = add,
-	update = update,
-	draw = draw,
-	clear = clear,
+    floaters = floaters,
+    add = add,
+    update = update,
+    draw = draw,
+    clear = clear,
 }

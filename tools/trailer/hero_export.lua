@@ -1,11 +1,17 @@
+local Constants = require("core.constants")
 local Camera = require("core.camera")
 local State  = require("core.state")
+local Title  = require("ui.title")
 
 local lg = love.graphics
 local min = math.min
 local max = math.max
 
 local HeroExport = {}
+
+-- =========================================================
+-- Formats (existing behavior preserved)
+-- =========================================================
 
 HeroExport.formats = {
 	hero = {
@@ -22,20 +28,68 @@ HeroExport.formats = {
 	},
 }
 
+-- =========================================================
+-- Banner Sizes (copied from art_export intentionally)
+-- =========================================================
+
+HeroExport.BANNERS = {
+	main_capsule     = {w = 1232, h = 706},
+	header_capsule   = {w = 920,  h = 430},
+	small_capsule    = {w = 462,  h = 174},
+	vertical_capsule = {w = 748,  h = 896},
+
+	library_hero     = {w = 3840, h = 1240},
+	library_logo     = {w = 1280, h = 720},
+	library_header   = {w = 920,  h = 430},
+	library_capsule  = {w = 600,  h = 900},
+
+	page_background  = {w = 1438, h = 810},
+
+	youtube_banner   = {w = 2048, h = 1152},
+	x_banner         = {w = 1500, h = 500},
+
+	desktop          = {w = 1920, h = 1080},
+}
+
+HeroExport.TEXTLESS_BANNERS = {
+	library_hero = true,
+	page_background = true,
+}
+
+HeroExport.TRANSPARENT_BANNERS = {
+	library_logo = true,
+	main_capsule = true,
+	header_capsule = true,
+	small_capsule = true,
+	desktop = true,
+}
+
+-- =========================================================
 -- State
+-- =========================================================
+
 HeroExport.active        = false
 HeroExport.canvas        = nil
-HeroExport.subject       = nil   -- actual tower or enemy instance
-HeroExport.subjectType   = nil   -- "tower" | "enemy"
+HeroExport.subject       = nil
+HeroExport.subjectType   = nil
 
 HeroExport.width         = 3840
 HeroExport.height        = 1240
 HeroExport.subjectScale  = 0.7
 HeroExport.verticalBias  = 0.1
+HeroExport.frameLift = 66
+HeroExport.extraZoom = 3.0
+HeroExport.titleDrop = 0.24
 
 HeroExport.captureX      = 0
 HeroExport.captureY      = 0
 HeroExport._prevPaused   = nil
+
+HeroExport._logoCache    = {}
+
+-- =========================================================
+-- Setup
+-- =========================================================
 
 function HeroExport.init()
 	HeroExport._rebuildCanvas()
@@ -57,39 +111,31 @@ function HeroExport._rebuildCanvas()
 	HeroExport.canvas = lg.newCanvas(HeroExport.width, HeroExport.height, {msaa = 8})
 end
 
+-- =========================================================
+-- Subject Bounds (unchanged)
+-- =========================================================
+
 function HeroExport.getSubjectBounds()
 	local s = HeroExport.subject
 	if not s then return nil end
 
-	-- Towers (match towers.lua reality)
 	if HeroExport.subjectType == "tower" then
 		local r =
 			(s.def and s.def.visualRadius) or
 			s.visualRadius or
 			32
 
-		return {
-			x = s.x,
-			y = s.y,
-			r = r,
-		}
+		return { x = s.x, y = s.y, r = r }
 	end
 
-	-- Enemies (match enemies.lua reality)
 	if HeroExport.subjectType == "enemy" then
 		local r = s.radius or s.r or 16
-
-		return {
-			x = s.x,
-			y = s.y,
-			r = r,
-		}
+		return { x = s.x, y = s.y, r = r }
 	end
 
 	return nil
 end
 
--- Camera framing
 function HeroExport.frameOnSubject()
 	local b = HeroExport.getSubjectBounds()
 	if not b then
@@ -97,7 +143,8 @@ function HeroExport.frameOnSubject()
 	end
 
 	local cx = b.x
-	local cy = b.y - b.r * (HeroExport.verticalBias or 0.1)
+	local lift = HeroExport.verticalBias or 0.1
+	local cy = b.y - b.r * lift + (b.r * HeroExport.frameLift)
 
 	return cx, cy
 end
@@ -105,10 +152,13 @@ end
 function HeroExport.computeZoom(bounds)
 	local diameter = bounds.r * 2
 	local minScreen = min(HeroExport.width, HeroExport.height)
-
 	local targetPixels = minScreen * HeroExport.subjectScale
 	return targetPixels / diameter
 end
+
+-- =========================================================
+-- Capture (unchanged)
+-- =========================================================
 
 function HeroExport.capture(opts)
 	opts = opts or {}
@@ -117,7 +167,6 @@ function HeroExport.capture(opts)
 	HeroExport.subject     = assert(opts.subject, "HeroExport.capture requires subject")
 	HeroExport.subjectType = assert(opts.subjectType, "HeroExport.capture requires subjectType")
 
-	-- Freeze sim
 	if opts.freezeSim ~= false then
 		HeroExport._prevPaused = State.paused
 		State.paused = true
@@ -126,6 +175,122 @@ function HeroExport.capture(opts)
 	HeroExport.captureX, HeroExport.captureY =
 		HeroExport.frameOnSubject()
 end
+
+-- =========================================================
+-- Rendering Helpers
+-- =========================================================
+
+local function drawVignette(w, h)
+	local steps = 12
+	local maxInset = math.min(w, h) * 0.06
+
+	for i = 1, steps do
+		local t = i / steps
+		local inset = t * maxInset
+		local alpha = 0.025 * (1 - t) ^ 2
+
+		lg.setColor(0, 0, 0, alpha)
+
+		lg.rectangle("fill", 0, 0, w, inset)
+		lg.rectangle("fill", 0, h - inset, w, inset)
+		lg.rectangle("fill", 0, inset, inset, h - inset * 2)
+		lg.rectangle("fill", w - inset, inset, inset, h - inset * 2)
+	end
+end
+
+local function drawScaledFill(srcCanvas, targetW, targetH)
+	local sw = srcCanvas:getWidth()
+	local sh = srcCanvas:getHeight()
+
+	local scale = math.max(targetW / sw, targetH / sh)
+
+	local drawW = sw * scale
+	local drawH = sh * scale
+
+	local dx = (targetW - drawW) * 0.5
+	local dy = (targetH - drawH) * 0.5
+
+	lg.draw(srcCanvas, dx, dy, 0, scale, scale)
+end
+
+function HeroExport._getLogoCanvas(name)
+	if HeroExport._logoCache[name] then
+		return HeroExport._logoCache[name]
+	end
+
+	local b = HeroExport.BANNERS[name]
+	if not b then return nil end
+
+	local canvas = lg.newCanvas(b.w, b.h, {msaa = 8})
+
+	lg.setCanvas(canvas)
+	lg.clear(0, 0, 0, 0)
+
+	Title.invalidateCache()
+	Title.drawBannerStyle(b.w, b.h, {angle = -math.pi / 6})
+
+	lg.setCanvas()
+
+	HeroExport._logoCache[name] = canvas
+	return canvas
+end
+
+local function exportCanvas(canvas, filePath)
+	local img = canvas:newImageData()
+	img:encode("png", filePath)
+end
+
+-- Render the world to a target canvas size using the SAME framing rules,
+function HeroExport._renderWorldToCanvas(w, h, renderWorldFn)
+
+    -- Save live camera state
+    local prevCanvas = Camera.canvas
+    local prevWx     = Camera.wx
+    local prevWy     = Camera.wy
+    local prevScale  = Camera.wscale
+
+    -- Create export canvas
+    local canvas = lg.newCanvas(w, h, { msaa = 8 })
+    Camera.canvas = canvas
+
+    -- Live screen size
+    local liveW, liveH = love.graphics.getDimensions()
+
+    -- Preserve exact world center
+    local centerWorldX = prevWx + (liveW / (2 * prevScale))
+    local centerWorldY = prevWy + (liveH / (2 * prevScale))
+	-- Apply vertical lift in world space
+	local liftAmount = HeroExport.frameLift or 0
+
+	-- Positive frameLift moves scene upward visually
+	centerWorldY = centerWorldY + liftAmount
+
+	local scaleFactor = w / liveW
+	local newScale = prevScale * scaleFactor * HeroExport.extraZoom
+
+    Camera.wscale = newScale
+
+    -- Recenter camera for new canvas size
+    Camera.wx = centerWorldX - (w / (2 * newScale))
+    Camera.wy = centerWorldY - (h / (2 * newScale))
+
+    -- Render
+    Camera.begin()
+    renderWorldFn()
+    Camera.finish()
+
+    -- Restore camera
+    Camera.canvas = prevCanvas
+    Camera.wx     = prevWx
+    Camera.wy     = prevWy
+    Camera.wscale = prevScale
+
+    return canvas
+end
+
+-- =========================================================
+-- Draw (original behavior preserved + extended)
+-- =========================================================
 
 function HeroExport.draw(renderWorldFn)
 	if not HeroExport.active then
@@ -145,16 +310,13 @@ function HeroExport.draw(renderWorldFn)
 
 	lg.push()
 
-	-- 1. Scale world
 	lg.scale(scale, scale)
 
-	-- 2. Move subject to origin
 	lg.translate(
 		-HeroExport.captureX,
 		-HeroExport.captureY
 	)
 
-	-- 3. Move origin to center of output canvas
 	lg.translate(
 		HeroExport.width  * 0.5 / scale,
 		HeroExport.height * 0.5 / scale
@@ -165,10 +327,6 @@ function HeroExport.draw(renderWorldFn)
 
 	lg.setCanvas(prevCanvas)
 
-	--local img = HeroExport.canvas:newImageData()
-	--img:encode("png", fileName)
-
-	-- Restore sim
 	if HeroExport._prevPaused ~= nil then
 		State.paused = HeroExport._prevPaused
 		HeroExport._prevPaused = nil
@@ -176,22 +334,121 @@ function HeroExport.draw(renderWorldFn)
 
 	HeroExport.active = false
 
-	if HeroExport.canvas then
-		ArtExport = require("tools.art_export")
-		ArtExport.composeHero({
-			canvas = HeroExport.canvas,
-			width  = HeroExport.width,
-			height = HeroExport.height,
-		})
-	end
+	-- =====================================================
+	-- Export ALL banner sizes CRISP (native render per size)
+	-- =====================================================
+
+	HeroExport.exportAllFromWorld(renderWorldFn)
 
 	return true
+end
 
-	--[[return {
-		canvas = HeroExport.canvas,
-		width  = HeroExport.width,
-		height = HeroExport.height,
-	}]]
+-- =========================================================
+-- Existing export path (kept for compatibility)
+-- =========================================================
+
+function HeroExport.exportAllFromCanvas(srcCanvas)
+	if not srcCanvas then return end
+
+	love.filesystem.createDirectory("export")
+	love.filesystem.createDirectory("export/hero")
+
+	for name, b in pairs(HeroExport.BANNERS) do
+		local canvas = lg.newCanvas(b.w, b.h, {msaa = 8})
+		lg.setCanvas(canvas)
+		lg.clear(0, 0, 0, 0)
+
+		lg.setColor(1,1,1,1)
+		drawScaledFill(srcCanvas, b.w, b.h)
+
+		drawVignette(b.w, b.h)
+
+		if not HeroExport.TEXTLESS_BANNERS[name] then
+			lg.setBlendMode("alpha")
+			lg.setColor(1,1,1,1)
+
+			Title.invalidateCache()
+			Title.drawBannerStyle(b.w, b.h, { angle = -math.pi / 6, yOffset = b.h * 0.16 })
+		end
+
+		lg.setCanvas()
+
+		local filePath = string.format("export/hero/%s_%dx%d.png", name, b.w, b.h)
+		exportCanvas(canvas, filePath)
+
+		if HeroExport.TRANSPARENT_BANNERS[name] then
+			local logo = HeroExport._getLogoCanvas(name)
+			if logo then
+				local tCanvas = lg.newCanvas(b.w, b.h, {msaa = 8})
+				lg.setCanvas(tCanvas)
+				lg.clear(0,0,0,0)
+
+				lg.setBlendMode("alpha")
+				lg.setColor(1,1,1,1)
+				lg.draw(logo, 0, 0)
+
+				lg.setCanvas()
+
+				local tPath = string.format("export/hero/%s_%dx%d_transparent.png", name, b.w, b.h)
+				exportCanvas(tCanvas, tPath)
+			end
+		end
+	end
+
+	print("HeroExport: All banner sizes exported (scaled).")
+end
+
+-- =========================================================
+-- NEW: Crisp export path (native render per size)
+-- =========================================================
+
+function HeroExport.exportAllFromWorld(renderWorldFn)
+	if not renderWorldFn then return end
+
+	love.filesystem.createDirectory("export")
+	love.filesystem.createDirectory("export/hero")
+
+	for name, b in pairs(HeroExport.BANNERS) do
+		local canvas = HeroExport._renderWorldToCanvas(b.w, b.h, renderWorldFn)
+		if canvas then
+			lg.setCanvas(canvas)
+
+			-- Post effects + branding
+			lg.setBlendMode("alpha")
+			drawVignette(b.w, b.h)
+
+			if not HeroExport.TEXTLESS_BANNERS[name] then
+				lg.setBlendMode("alpha")
+				lg.setColor(1,1,1,1)
+				Title.invalidateCache()
+				Title.drawBannerStyle(b.w, b.h, { angle = -math.pi / 6, yOffset = b.h * HeroExport.titleDrop })
+			end
+
+			lg.setCanvas()
+
+			local filePath = string.format("export/hero/%s_%dx%d.png", name, b.w, b.h)
+			exportCanvas(canvas, filePath)
+
+			-- Transparent variant stays logo-only (kept exactly as before)
+			if HeroExport.TRANSPARENT_BANNERS[name] then
+				local tCanvas = lg.newCanvas(b.w, b.h, {msaa = 8})
+				lg.setCanvas(tCanvas)
+				lg.clear(0,0,0,0)
+
+				lg.setBlendMode("alpha")
+				lg.setColor(1,1,1,1)
+				Title.invalidateCache()
+				Title.drawBannerStyle(b.w, b.h, { angle = -math.pi / 6 })
+
+				lg.setCanvas()
+
+				local tPath = string.format("export/hero/%s_%dx%d_transparent.png", name, b.w, b.h)
+				exportCanvas(tCanvas, tPath)
+			end
+		end
+	end
+
+	print("HeroExport: All banner sizes exported (crisp native render).")
 end
 
 return HeroExport

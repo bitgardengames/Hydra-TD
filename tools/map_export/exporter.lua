@@ -3,7 +3,7 @@ local Maps = require("world.map_defs")
 local State = require("core.state")
 local Constants = require("core.constants")
 local Camera = require("core.camera")
-local DrawWorld = require("ui.draw_world")
+local DrawWorld = require("render.draw_world")
 local Theme = require("core.theme")
 
 local lg = love.graphics

@@ -164,6 +164,5 @@ return {
 	drawPath = drawPath,
 	drawGrid = drawGrid,
 	drawWorld = drawWorld,
-	rebuild = rebuildWorld,
 	updatePathColor = updatePathColor,
 }

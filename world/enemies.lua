@@ -1,4 +1,5 @@
 local Theme = require("core.theme")
+local Constants = require("core.constants")
 local Sound = require("systems.sound")
 local Util = require("core.util")
 local State = require("core.state")
@@ -86,7 +87,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		alpha = 1,
 		animT = 0,
 		prevAnimT = 0,
-		pathIndex = idx,
+		dist = 0,
+		prevDist = 0,
+		seg = 1,
 		modifiers = def.modifiers,
 		slowFactor = 1,
 		slowTimer = 0,
@@ -250,50 +253,28 @@ local function updateEnemies(dt)
 			end
 		end
 
-		-- Path movement
-		local remaining = e.speed * dt
-		local NODE_EPS2 = 0.000001
-
 		-- Store previous position for interpolation
 		e.prevX = e.x
 		e.prevY = e.y
 
-		while remaining > 0 and e.pathIndex < pathLen do
-			local nextIndex = e.pathIndex + 1
-			local node = pathWorld[nextIndex]
-			local tx, ty = node[1], node[2]
+		-- Advance distance
+		e.prevDist = e.dist
+		e.dist = e.dist + e.speed * dt
 
-			local dx = tx - e.x
-			local dy = ty - e.y
-			local d2 = dx * dx + dy * dy
+		local totalLen = MapMod.map.totalWorldLength or 0
 
-			-- Close enough: snap, but consume the tiny remaining distance
-			if d2 <= NODE_EPS2 then
-				local dist = sqrt(d2)
-
-				e.x = tx
-				e.y = ty
-				e.pathIndex = nextIndex
-				remaining = remaining - dist
-			else
-				local dist = sqrt(d2)
-
-				if remaining >= dist then
-					e.x = tx
-					e.y = ty
-					e.pathIndex = nextIndex
-					remaining = remaining - dist
-				else
-					local inv = remaining / dist
-					e.x = e.x + dx * inv
-					e.y = e.y + dy * inv
-					remaining = 0
-				end
-			end
+		if e.dist >= totalLen then
+			e.dist = totalLen
 		end
 
+		-- Sample world position from path
+		local x, y, seg = MapMod.sampleAtDist(e.dist, e.seg)
+		e.x = x
+		e.y = y
+		e.seg = seg
+
 		-- Reached end of path
-		if e.pathIndex >= pathLen then
+		if e.dist >= totalLen then
 			if not e.exitFade then
 				e.exitFade = 0.10
 				e.speed = 0

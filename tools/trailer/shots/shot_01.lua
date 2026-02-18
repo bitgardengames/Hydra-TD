@@ -1,4 +1,4 @@
-local Camera  = require("tools.trailer.camera")
+local Camera = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
 local Constants = require("core.constants")
 
@@ -18,6 +18,10 @@ return {
 			warmup = 12.0,
 		},
 	},
+
+    actions = {
+		{t = 0, fn = Actions.upgradeTowerAt(27, 10, 1)},
+    },
 
 	camera = function(ctx)
 		return Camera.follow{

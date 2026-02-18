@@ -17,11 +17,12 @@ return {
 
 	scene = {
 		towers = {
-			{ kind = "poison", gx = 9,  gy = 9 },
-			{ kind = "shock",  gx = 8, gy = 9 },
-			{ kind = "lancer",  gx = 12, gy = 8 },
-			{ kind = "slow",  gx = 14, gy = 11 },
+			{kind = "poison", gx = 9,  gy = 9},
+			{kind = "shock",  gx = 8, gy = 9},
+			{kind = "lancer",  gx = 12, gy = 8},
+			{kind = "slow",  gx = 14, gy = 11},
 		},
+
 		wave = {
 			index = 6,
 			start = true,
@@ -30,9 +31,9 @@ return {
 	},
 
 	actions = {
-		{ t = 2.55, fn = Actions.upgradeTowerAt(8,  9, 1) }, -- shock +1
-		{ t = 3.55, fn = Actions.upgradeTowerAt(12, 8, 1) }, -- lancer +1
-		{ t = 4.55, fn = Actions.upgradeTowerAt(9,  9, 1) }, -- poison +1
+		{t = 2.55, fn = Actions.upgradeTowerAt(8,  9, 1)},
+		{t = 3.55, fn = Actions.upgradeTowerAt(12, 8, 1)},
+		{t = 4.55, fn = Actions.upgradeTowerAt(9,  9, 1)},
 	},
 
 	camera = Camera.pan({
@@ -42,12 +43,6 @@ return {
 	}),
 
 	text = {
-		{
-			t = 0.8,
-			text = "UPGRADE",
-			dur = 3,
-			fadeIn = 0.25,
-			fadeOut = 0.4,
-		},
+		{t = 0.8, text = "UPGRADE", dur = 3, fadeIn = 0.25, fadeOut = 0.4},
 	},
 }

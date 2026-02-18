@@ -19,9 +19,9 @@ local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Sim = require("core.sim")
 local Tooltip = require("ui.tooltip")
-local Draw = require("ui.draw")
+local Draw = require("render.draw")
 local Glyphs = require("ui.glyphs")
-local DrawWorld = require("ui.draw_world")
+local DrawWorld = require("render.draw_world")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
 local Menu = require("ui.menu.menu")
@@ -119,17 +119,6 @@ function love.load(arg)
 		require("ui.menu.menu").load()
 	end
 end
-
-
-	local lastMem = 0
-
-	function debugGC()
-		local mem = collectgarbage("count")
-		if math.abs(mem - lastMem) > 20 then
-			print("GC spike:", mem - lastMem)
-		end
-		lastMem = mem
-	end
 
 function love.update(dt)
 	dt = min(dt, 0.1)
@@ -230,8 +219,6 @@ function love.update(dt)
 		State.inPrep = true
 		State.prepTimer = 6.0
 	end
-
-	debugGC()
 end
 
 function love.draw()

@@ -46,6 +46,7 @@ function CineCam.follow(opts)
 				fx = opts.startAt.x
 				fy = opts.startAt.y
 				Camera.centerOn(fx, fy, opts.zoomFrom or opts.zoom)
+
 				return
 			end
 
@@ -60,8 +61,7 @@ function CineCam.follow(opts)
 
 				fx = ax + (tx - ax) * p
 				fy = ay + (ty - ay) * p
-
-			-- follow
+			-- Follow
 			else
 				if not fx then
 					fx = tx

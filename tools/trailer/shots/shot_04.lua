@@ -12,29 +12,29 @@ return {
 
     scene = {
         towers = {
-            { kind = "slow",   gx = 11, gy = 7 },
-            { kind = "slow",   gx = 17, gy = 5 },
-            { kind = "lancer", gx = 12, gy = 7 },
-            { kind = "lancer", gx = 12, gy = 9 },
-            { kind = "poison", gx = 14, gy = 7 },
-            { kind = "shock", gx = 16, gy = 7 },
-            { kind = "cannon", gx = 12, gy = 6 },
+            {kind = "slow",   gx = 11, gy = 7},
+            {kind = "slow",   gx = 17, gy = 5},
+            {kind = "lancer", gx = 12, gy = 7},
+            {kind = "lancer", gx = 12, gy = 9},
+            {kind = "poison", gx = 14, gy = 7},
+            {kind = "shock", gx = 16, gy = 7},
+            {kind = "cannon", gx = 12, gy = 6},
         },
 
         wave = {
 			index = 10,
             start = true,
-            warmup = 8, -- boss already visible
+            warmup = 8,
         },
     },
 
     actions = {
-        { t = 0, fn = Actions.upgradeTowerAt(12, 7, 1) },
-        { t = 0, fn = Actions.upgradeTowerAt(12, 9, 1) },
-        { t = 0, fn = Actions.upgradeTowerAt(14, 8, 2) },
-        { t = 0, fn = Actions.upgradeTowerAt(12, 6, 2) },
-        { t = 0, fn = Actions.upgradeTowerAt(16, 7, 1) },
-        { t = 0, fn = Actions.upgradeTowerAt(14, 7, 1) },
+        {t = 0, fn = Actions.upgradeTowerAt(12, 7, 1)},
+        {t = 0, fn = Actions.upgradeTowerAt(12, 9, 1)},
+        {t = 0, fn = Actions.upgradeTowerAt(14, 8, 2)},
+        {t = 0, fn = Actions.upgradeTowerAt(12, 6, 2)},
+        {t = 0, fn = Actions.upgradeTowerAt(16, 7, 1)},
+        {t = 0, fn = Actions.upgradeTowerAt(14, 7, 1)},
     },
 
 	camera = function(ctx)
@@ -50,7 +50,6 @@ return {
 			lag = 7,
 			offset = {y = -6},
 
-			-- Optional cinematic zoom over the whole shot
 			zoomFrom = 3.4,
 			zoomTo   = 8.0,
 			zoomDelay = 0,
@@ -59,12 +58,6 @@ return {
 	end,
 
 	text = {
-		{
-			t = 0.8,
-			text = "SURVIVE",
-			dur = 3,
-			fadeIn = 0.25,
-			fadeOut = 0.4,
-		},
+		{t = 0.8, text = "SURVIVE", dur = 3, fadeIn = 0.25, fadeOut = 0.4},
 	}
 }

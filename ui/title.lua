@@ -1,5 +1,5 @@
 local Theme = require("core.theme")
-local Entities = require("ui.draw_entities")
+local Entities = require("render.draw_entities")
 
 local Title = {}
 
@@ -186,6 +186,7 @@ function Title.drawBannerStyle(w, h, opts)
 
 	local angle = opts.angle or -pi / 6
 	local alpha = opts.alpha or 1
+	local yOffset = opts.yOffset or 0
 
 	local aspect = w / h
 	local horizontalBoost = min(2.4, max(1.0, aspect))
@@ -196,7 +197,9 @@ function Title.drawBannerStyle(w, h, opts)
 
 	local lancerScale = min(w, h) * BANNER_LANCER_SCALE_FACTOR * horizontalBoost
 	local gap = (BASE_LANCER_VISUAL_W * lancerScale) * 0.16
-	local anchorY = (aspect < 0.9) and (h * 0.333 + h * 0.06) or (h * 0.5)
+	local anchorY = (aspect < 0.9) and (h * 0.333 + h * 0.06) or  (h * 0.5)
+
+	anchorY = anchorY + yOffset
 
 	drawTitleLayout(w * 0.5, anchorY, 1, lancerScale, gap, angle, alpha)
 end

@@ -1,6 +1,7 @@
 local Config = require("tools.trailer.config")
 local Camera = require("core.camera")
-local Draw = require("ui.draw")
+local Draw = require("render.draw")
+local DrawWorld = require("render.draw_world")
 local Towers = require("world.towers")
 local State = require("core.state")
 local Waves = require("systems.waves")
@@ -18,6 +19,7 @@ local pi = math.pi
 local min = math.min
 local max = math.max
 local sin = math.sin
+local floor = math.floor
 
 local lg = love.graphics
 
@@ -179,12 +181,15 @@ function Director._stepFixed(step)
 end
 
 function Director.seekToFrame(frame)
-	frame = math.max(0, frame)
+	frame = max(0, frame)
 	Director.scrub.frame = frame
 
 	-- Reload current shot fresh
 	local name = Director.scrub.lastShotName
-	if not name then return end
+
+	if not name then
+		return
+	end
 
 	Director.load(name)
 
@@ -354,21 +359,17 @@ local function drawFadedBannerForText(text, font, y, alpha)
 	local totalW = textW + paddingX * 2
 	local x0 = (screenW - totalW) * 0.5
 
-	-- Height is FIXED relative to font size (not string content)
+	-- Height is fixed relative to font size (not string content)
 	local bannerHeight = font:getAscent() * 1.15
 
 	-- Slight upward optical bias (feels centered)
 	local y0 = y + font:getAscent() * 0.10
 
-	------------------------------------------------------------
 	-- Solid center slab
-	------------------------------------------------------------
 	lg.setColor(0, 0, 0, alpha)
 	lg.rectangle("fill", x0, y0, totalW, bannerHeight)
 
-	------------------------------------------------------------
 	-- Horizontal fades
-	------------------------------------------------------------
 	for i = 1, fade do
 		local a = alpha * (1 - i / fade)
 		if a <= 0 then break end
@@ -380,27 +381,12 @@ local function drawFadedBannerForText(text, font, y, alpha)
 end
 
 function Director.draw()
-	--[[if Director.shot.type ~= "logo" then
-		Camera.begin()
-		Draw.drawWorld()
-		Camera.finish()
-		Camera.present()
-
-		if Config.showUI then
-			Draw.drawUI()
-		else
-			Fonts.set("floaters")
-
-			Floaters.draw()
-		end]]
-
 	if Director.shot.type ~= "logo" then
-
 		if HeroExport.draw(function()
 			--Camera.begin()
 			Draw.drawWorld()
 		end) then
-			return -- skip normal draw this frame
+			return -- Skip normal draw this frame
 		end
 
 		Camera.begin()
@@ -411,16 +397,19 @@ function Director.draw()
 		Fonts.set("title")
 
 		Floaters.draw()
-
 	else
 		-- Clear to black for logo cards
 		lg.clear(0, 0, 0, 1)
 
 		-- Backdrop
-		local sw, sh = lg.getDimensions()
+		--local sw, sh = lg.getDimensions()
 
-		lg.setColor(0.31, 0.57, 0.76, 1)
-		lg.rectangle("fill", 0, 0, sw, sh)
+		--lg.setColor(0.31, 0.57, 0.76, 1)
+		--lg.rectangle("fill", 0, 0, sw, sh)
+		Camera.begin()
+		DrawWorld.drawGrass()
+		Camera.finish()
+		Camera.present()
 	end
 
 	-- Text beat
@@ -433,7 +422,7 @@ function Director.draw()
 
 		-- Base layout
 		local yBase = h * 0.65
-		local drift = 10 -- pixels of vertical motion
+		local drift = 10 -- Pixels of vertical motion
 		local y = yBase
 
 		-- Alpha calculation
@@ -466,12 +455,7 @@ function Director.draw()
 			lg.setFont(FONT_CTA)
 		else
 			-- Banner backdrop
-			drawFadedBannerForText(
-				tb.text,
-				FONT_HERO,
-				y - 10,
-				alpha * 0.4
-			)
+			drawFadedBannerForText(tb.text, FONT_HERO, y - 10, alpha * 0.4)
 
 			lg.setFont(FONT_HERO)
 		end
@@ -498,8 +482,8 @@ function Director.draw()
 		local alphaStart = 0.60
 
 		local baseScale = 0.56
-		local w = math.floor(sw * baseScale)
-		local h = math.floor(sh * baseScale)
+		local w = floor(sw * baseScale)
+		local h = floor(sh * baseScale)
 
 		local p = 1
 		if Director.logoT < fadeDur then
@@ -510,8 +494,8 @@ function Director.draw()
 		local alpha = alphaStart + (1 - alphaStart) * p
 
 		-- Banner top-left position
-		local x = math.floor(sw * 0.5)
-		local y = math.floor(sh * 0.5) - 120
+		local x = floor(sw * 0.5)
+		local y = floor(sh * 0.5) - 120
 
 		lg.setColor(1, 1, 1, alpha)
 		Title.draw({x = x, y = y, alpha = 1, lancerScale = 7.0, angle = Director.lancerIdle.angle})
@@ -525,7 +509,7 @@ function Director.draw()
 		if Director.transition == "out" then
 			local t = min(1, Director.transitionT / Director.transitionDur)
 
-			t = t * t * (3 - 2 * t) -- smoothstep
+			t = t * t * (3 - 2 * t)
 			alpha = t
 		elseif Director.transition == "hold" then
 			alpha = 1
@@ -537,12 +521,7 @@ function Director.draw()
 		end
 
 		lg.setColor(0, 0, 0, alpha)
-		lg.rectangle(
-			"fill",
-			0, 0,
-			lg.getWidth(),
-			lg.getHeight()
-		)
+		lg.rectangle("fill", 0, 0, lg.getWidth(), lg.getHeight())
 		lg.setColor(1, 1, 1, 1)
 	end
 end
@@ -551,8 +530,8 @@ function love.keypressed(key)
 	if key == "f9" then
 		HeroExport.setFormat("vertical") -- or "vertical"
 		HeroExport.capture({
-			--subject = require("world.towers").towers[1],          -- ACTUAL tower instance from world.towers
-			subject = require("world.enemies").enemies[1],          -- ACTUAL tower instance from world.towers
+			--subject = require("world.towers").towers[1], -- Actual tower instance from world.towers
+			subject = require("world.enemies").enemies[1], -- Actual tower instance from world.towers
 			subjectType = "enemy",
 		})
 	elseif key == "f8" then
@@ -562,7 +541,7 @@ function love.keypressed(key)
 
 		-- When enabling scrub, lock to the *current* frame
 		if Director.scrub.enabled then
-			Director.scrub.frame = math.floor(Director.t * FPS + 0.5)
+			Director.scrub.frame = floor(Director.t * FPS + 0.5)
 			Director.seekToFrame(Director.scrub.frame)
 		end
 	end
@@ -581,7 +560,7 @@ function love.keypressed(key)
 		elseif key == "home" then
 			Director.seekToFrame(0)
 		elseif key == "end" then
-			local maxFrame = math.floor((Director.shot.duration or 0) * FPS + 0.5)
+			local maxFrame = floor((Director.shot.duration or 0) * FPS + 0.5)
 			Director.seekToFrame(maxFrame)
 		end
 	end

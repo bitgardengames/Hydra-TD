@@ -3,8 +3,10 @@ local TowersDefs = require("world.tower_defs")
 local Theme = require("core.theme")
 local Enemies = require("world.enemies")
 local EnemyDefs = require("world.enemy_defs")
-local Draw = require("ui.draw")
-local DrawEntities = require("ui.draw_entities")
+local Draw = require("render.draw")
+local DrawWorld = require("render.draw_world")
+local DrawEntities = require("render.draw_entities")
+local Camera = require("core.camera")
 local Title = require("ui.title")
 
 local Export = {}
@@ -208,8 +210,13 @@ local function drawOutlinedText(text, x, y, font, opts)
 end
 
 local function drawBannerBackground(w, h)
-	lg.setColor(Theme.menu) -- soft arcade
-	lg.rectangle("fill", 0, 0, w, h)
+	--lg.setColor(Theme.menu) -- soft arcade
+	--lg.rectangle("fill", 0, 0, w, h)
+
+	--Camera.begin()
+	DrawWorld.drawGrass()
+	--Camera.finish()
+	--Camera.present()
 
 	lg.setBlendMode("alpha")
 
@@ -849,6 +856,9 @@ function Export.run()
 	--Export.exportSocialAvatar()
 	--Export.exportCogSocialAvatar()
 	--Export.exportCogSocialAvatarAnim()
+	
+	--require("ui.glyphs").exportSheet("glyphs.png", {cols = 6})
+	
 	love.event.quit()
 end
 

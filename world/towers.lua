@@ -21,9 +21,13 @@ local abs = math.abs
 local atan2 = math.atan2
 local min = math.min
 local max = math.max
+local floor = math.floor
 
 local colorGood = Theme.ui.good
 local colorWarn = Theme.ui.warn
+
+local cgR, cgG, cgB = colorGood[1], colorGood[2], colorGood[3]
+local cwR, cwG, cwB = colorWarn[1], colorWarn[2], colorWarn[3]
 
 local enemies = Enemies.enemies
 
@@ -84,7 +88,7 @@ local function addTower(kind, gx, gy)
 		retargetT = 0,
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
-		sellValue = math.floor(def.cost * 0.75),
+		sellValue = floor(def.cost * 0.75),
 		slow = def.onHitSlow and {factor = def.onHitSlow.factor, dur = def.onHitSlow.dur} or nil,
 		splash = def.splash and {radius = def.splash.radius, falloff = def.splash.falloff} or nil,
 		chain = def.chain and {jumps = def.chain.jumps, radius = def.chain.radius, falloff = def.chain.falloff} or nil,
@@ -95,7 +99,7 @@ local function addTower(kind, gx, gy)
 	MapMod.map.blocked[MapMod.makeKey(gx, gy)] = true
 	table.insert(towers, t)
 
-	Floaters.add(x, y - 10, "-" .. def.cost, colorWarn[1], colorWarn[2], colorWarn[3])
+	Floaters.add(x, y - 10, "-" .. def.cost, cwR, cwG, cwB)
 
 	Sound.play("towerPlaced")
 
@@ -108,7 +112,7 @@ local function towerUpgradeCost(tower)
     local base = tower.def.cost
     local exp = 1.55
 
-    return math.floor(base * (exp ^ tower.level) + 0.5)
+    return floor(base * (exp ^ tower.level) + 0.5)
 end
 
 local function upgradeTower(t)
@@ -133,7 +137,7 @@ local function upgradeTower(t)
 	t.recoil = t.def.upgrade.recoil or 0
 	t.fireRate = t.fireRate * t.def.upgrade.fireMult
 	t.fireInterval = 1 / t.fireRate
-	t.sellValue = t.sellValue + math.floor(cost * diff.sellRefund)
+	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 
 	if t.slow and t.def.upgrade.slowDurAdd then
 		t.slow.dur = t.slow.dur + t.def.upgrade.slowDurAdd
@@ -157,13 +161,13 @@ local function upgradeTower(t)
 		end
 
 		if t.def.upgrade.stackAdd then
-			t.poison.maxStacks = math.min(6, t.poison.maxStacks + t.def.upgrade.stackAdd) -- 6 max
+			t.poison.maxStacks = min(6, t.poison.maxStacks + t.def.upgrade.stackAdd) -- 6 max
 		end
 	end
 
 	t.levelUpAnim = 1
 
-	Floaters.add(t.x, t.y - 10, L("floater.upgrade"), colorGood[1], colorGood[2], colorGood[3])
+	Floaters.add(t.x, t.y - 10, L("floater.upgrade"), cgR, cgG, cgB)
 
 	--Sound.play("towerUpgraded")
 
@@ -223,7 +227,7 @@ local function sellTower(t)
 		end
 	end
 
-	Floaters.add(t.x, t.y - 10, "+" .. t.sellValue, colorGood[1], colorGood[2], colorGood[3])
+	Floaters.add(t.x, t.y - 10, "+" .. t.sellValue, cgR, cgG, cgB)
 	State.selectedTower = nil
 
 	Sound.play("towerSold")
@@ -285,8 +289,28 @@ local function updateTowers(dt)
 		local aimDiff = nil
 
 		if target then
-			local dx = target.x - t.x
-			local dy = target.y - t.y
+			local ax, ay = target.x, target.y
+
+			if t.splash then
+				local speedFactor = min((target.speed or 0) / 120, 0.18)
+				local leadTime = 0.28 + speedFactor
+
+				if target.slowTimer and target.slowTimer > 0 then
+					leadTime = leadTime * 0.85
+				end
+
+				local futureDist = (target.dist or 0) + (target.speed or 0) * leadTime
+				local nx, ny = MapMod.sampleAtDist(futureDist) -- careful: MapMod vs WorldMap (see note below)
+
+				ax = ax + (nx - target.x)
+				ay = ay + (ny - target.y)
+			end
+
+			t.aimX = ax
+			t.aimY = ay
+
+			local dx = ax - t.x
+			local dy = ay - t.y
 			local targetAngle = atan2(dy, dx)
 
 			aimDiff = (targetAngle - t.angle + pi) % (pi * 2) - pi
@@ -312,8 +336,11 @@ local function updateTowers(dt)
 				local canFire = true
 
 				if t.canRotate then
-					local dx = target.x - t.x
-					local dy = target.y - t.y
+					local ax = t.aimX or target.x
+					local ay = t.aimY or target.y
+
+					local dx = ax - t.x
+					local dy = ay - t.y
 					local targetAngle = atan2(dy, dx)
 					local diff = (targetAngle - t.angle + pi) % (pi * 2) - pi
 

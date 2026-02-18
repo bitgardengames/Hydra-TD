@@ -38,21 +38,17 @@ local function spawn(fromTower, targetEnemy)
 	if isCannon then
 		-- Base lead scaled by enemy speed
 		local speedFactor = min(targetEnemy.speed / 120, 0.18)
-		local lead = 0.28 + speedFactor
+		local leadTime = 0.28 + speedFactor
 
-		-- If enemy is slowed, reduce prediction slightly
 		if targetEnemy.slowTimer and targetEnemy.slowTimer > 0 then
-			lead = lead * 0.85
+			leadTime = leadTime * 0.85
 		end
 
-		local path = WorldMap.map.path
-		local nextIdx = min(targetEnemy.pathIndex + 1, #path)
-		local cell = path[nextIdx]
-		local gx, gy = cell[1], cell[2]
-		local nx, ny = WorldMap.gridToCenter(gx, gy)
+		local futureDist = (targetEnemy.dist or 0) + (targetEnemy.speed or 0) * leadTime
+		local nx, ny = WorldMap.sampleAtDist(futureDist)
 
-		tx = tx + (nx - targetEnemy.x) * lead
-		ty = ty + (ny - targetEnemy.y) * lead
+		tx = tx + (nx - targetEnemy.x)
+		ty = ty + (ny - targetEnemy.y)
 	end
 
 	local p = {
@@ -61,6 +57,8 @@ local function spawn(fromTower, targetEnemy)
 		r = 4.5,
 		life = 2.0,
 		t = 0,
+
+		rotation = fromTower.angle or 0,
 
 		sourceTower = fromTower,
 		sourceKind = fromTower.kind,
@@ -112,6 +110,7 @@ local function update(dt)
 
 		if p.life <= 0 then
 			swapRemove(projectiles, i)
+
 			goto continue
 		end
 
@@ -149,7 +148,10 @@ local function update(dt)
 			local dx = tx - p.x
 			local dy = ty - p.y
 			local d2 = dx * dx + dy * dy
-			if d2 < EPS then d2 = EPS end
+
+			if d2 < EPS then
+				d2 = EPS
+			end
 
 			local wave = p.slow and (1 + sin(p.t * 10) * 0.18) or 1
 			local maxStep = speed * dt * wave
@@ -218,6 +220,7 @@ local function update(dt)
 
 				-- Always remove projectile once it reaches impact position
 				swapRemove(projectiles, i)
+
 				goto continue
 			end
 		end
@@ -228,7 +231,10 @@ local function update(dt)
 			local dx = tx - p.x
 			local dy = ty - p.y
 			local d2 = dx * dx + dy * dy
-			if d2 < EPS then d2 = EPS end
+
+			if d2 < EPS then
+				d2 = EPS
+			end
 
 			local speed = p.speed or 0
 			local maxStep = speed * dt
@@ -290,6 +296,7 @@ local function update(dt)
 				})
 
 				swapRemove(projectiles, i)
+
 				goto continue
 			end
 		end
@@ -299,7 +306,8 @@ local function update(dt)
 end
 
 local function draw()
-	for _, p in ipairs(projectiles) do
+	for i = 1, #projectiles do
+		local p = projectiles[i]
 		local rotation = 0
 		local a = min(1, p.t * 10)
 
@@ -307,12 +315,11 @@ local function draw()
 		if p.mode == "homing" then
 			local dx = (p.lastTX or p.x) - p.x
 			local dy = (p.lastTY or p.y) - p.y
+
 			rotation = atan2(dy, dx)
 		-- Ground: aim at targetted impact point
 		elseif p.mode == "ground" then
-			local dx = (p.tx or p.x) - p.x
-			local dy = (p.ty or p.y) - p.y
-			rotation = atan2(dy, dx)
+			rotation = p.rotation
 		end
 
 		if p.splash then
@@ -320,7 +327,7 @@ local function draw()
 			lg.push()
 			lg.translate(p.x, p.y)
 			lg.rotate(rotation)
-			lg.rectangle("fill", -8, -4, 14, 8, 4, 4)
+			lg.rectangle("fill", -7, -4, 14, 8, 4, 4)
 			lg.pop()
 		elseif p.slow then
 			lg.setColor(0.7, 0.85, 1, a)

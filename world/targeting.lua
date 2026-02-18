@@ -42,8 +42,8 @@ function Targeting.findProgressTarget(tower, enemies)
         if dx * dx + dy * dy <= r2 then
             -- Prefer enemies further along the path
             -- Slight bias against slowed enemies (keeps flow feeling good)
-            local slowBias = (e.slowTimer and e.slowTimer > 0) and 0.1 or 0
-            local prog = e.pathIndex + (1.0 - slowBias)
+            local slowBias = (e.slowTimer and e.slowTimer > 0) and 5 or 0 -- 5-15 pixels
+			local prog = e.dist - slowBias
 
             if prog > bestProg then
                 bestProg = prog

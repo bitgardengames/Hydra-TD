@@ -39,7 +39,10 @@ local TILE = Constants.TILE
 local HALF_PI = math.pi / 2
 
 -- Draw a single enemy
-local function drawEnemy(e, ix, iy, animT)
+local function drawEnemy(e)
+	local ix = e.x
+	local iy = e.y
+	local animT = e.animT
 	local bounce = sin(animT)
 	local y = iy + bounce
 
@@ -191,13 +194,16 @@ local function drawEnemy(e, ix, iy, animT)
 	end
 end
 
-local function drawEnemyHealth(e, ix, iy)
+local function drawEnemyHealth(e)
 	if e.hp <= 0 then
 		return
 	end
 
 	local w = e.boss and 44 or 28
 	local h = e.boss and 7 or 5
+	local ix = e.x
+	local iy = e.y
+	local animT = e.animT
 	local bx = ix - w / 2
 	local by = iy - e.radius - (e.boss and 18 or 12)
 
@@ -225,7 +231,7 @@ local function drawEnemyHealth(e, ix, iy)
 	if fillW > 0 then
 		-- Keep a minimum width so it never collapses visually
 		local minW = 4
-		local visibleW = math.max(fillW, minW)
+		local visibleW = max(fillW, minW)
 
 		-- Fade out near zero instead of shrinking into a square
 		local alphaScale = 1
@@ -234,20 +240,12 @@ local function drawEnemyHealth(e, ix, iy)
 			alphaScale = t / 0.10
 		end
 
-		local radius = math.min(3, visibleW * 0.5, h * 0.5)
+		local radius = min(3, visibleW * 0.5, h * 0.5)
 
 		lg.setColor(r * 0.9 + 0.05, g * 0.9 + 0.05, 0.15, 0.9 * alphaScale)
 
 		lg.rectangle("fill", bx, by, visibleW, h, radius, radius)
 	end
-end
-
-local function computeEnemyRender(e, alpha)
-    local ix = e.prevX + (e.x - e.prevX) * alpha
-    local iy = e.prevY + (e.y - e.prevY) * alpha
-    local animT = e.prevAnimT + (e.animT - e.prevAnimT) * alpha
-
-    return ix, iy, animT
 end
 
 -- Draw all enemies + death FX
@@ -258,10 +256,8 @@ local function drawEnemies()
 	for i = 1, #enemies do
 		local e = enemies[i]
 
-		local ix, iy, animT = computeEnemyRender(e, alpha)
-
-		drawEnemy(e, ix, iy, animT)
-		drawEnemyHealth(e, ix, iy)
+		drawEnemy(e)
+		drawEnemyHealth(e)
 	end
 
 	local deathFX = Enemies.deathFX
