@@ -33,7 +33,7 @@ return {
 			offset = {y = -6},
 
 			zoomFrom = 8.0,
-			zoomTo = 3.4,
+			zoomTo = 3.0,
 			zoomDur = 1.0,
 			zoomDelay = 1.0,
 		}

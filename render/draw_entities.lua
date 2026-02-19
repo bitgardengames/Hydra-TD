@@ -43,27 +43,29 @@ local function drawEnemy(e)
 	local ix = e.x
 	local iy = e.y
 	local animT = e.animT
-	local bounce = sin(animT)
-	local y = iy + bounce
+	--local bounce = sin(animT)
+	--local y = iy + bounce
 
 	-- Boss horns
 	if e.boss then
 		lg.setColor(outlineColor)
 
-		local hornW = e.radius * 0.55
-		local hornH = e.radius * 0.75
-		local hornY = y - e.radius * 1.05
-		local hornWob = sin(animT * 2.5) * 0.06
+		local hornW = e.radius * 0.60
+		local hornH = e.radius * 0.82
+		local hornY = iy - e.radius * 1.02
+		--local hornWob = sin(animT) * 0.02
 
 		lg.push()
 		lg.translate(ix - e.radius * 0.46, hornY)
-		lg.rotate(-0.26 + hornWob)
+		--lg.rotate(-0.26 + hornWob)
+		lg.rotate(-0.26)
 		lg.polygon("fill", 0, 0, -hornW,  hornH * 0.5, -hornW, -hornH * 0.5)
 		lg.pop()
 
 		lg.push()
 		lg.translate(ix + e.radius * 0.46, hornY)
-		lg.rotate(0.26 - hornWob)
+		--lg.rotate(0.26 - hornWob)
+		lg.rotate(0.26)
 		lg.polygon("fill", 0, 0, hornW, -hornH * 0.5, hornW,  hornH * 0.5)
 		lg.pop()
 	end
@@ -145,7 +147,7 @@ local function drawEnemy(e)
 		-- Normal boss face
 		local browLen = eyeSize * 2.5
 		local browDrop = eyeSize * 0.85
-		local browTension = sin(animT * 1.8) * 0.8
+		local browTension = sin(animT * 1.6) * 0.6
 		local browLift = eyeSize * 0.35 -- move brows upward
 		local browIn = eyeSize * 0.35 -- inward shift (0.15 - 0.35)
 
@@ -275,7 +277,6 @@ local function drawEnemies()
 		lg.circle("fill", fx.x, fx.y, fx.r * scale)
 	end
 end
-
 
 local function forwardOffset(t, dist)
     return cos(t.angle) * dist, sin(t.angle) * dist

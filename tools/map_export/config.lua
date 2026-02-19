@@ -21,7 +21,6 @@ return {
 		line = true,
 	},
 
-	-- Determinism
 	seed = 123456,
 
 	stitch = {

@@ -7,39 +7,38 @@ local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
 local tile = Constants.TILE
 
-local adjustX = tile * 6
-local adjustY = -(tile)
+local adjustX = tile * 5
+local adjustY = tile * 2
 
 return {
-	map = 5,
-	duration = 6.5,
+	map = 12,
+	duration = 8.0,
 	next = "shot_04",
 
 	scene = {
 		towers = {
-			{kind = "poison", gx = 9,  gy = 9},
-			{kind = "shock",  gx = 8, gy = 9},
-			{kind = "lancer",  gx = 12, gy = 8},
-			{kind = "slow",  gx = 14, gy = 11},
+			{kind = "poison", gx = 11,  gy = 10},
+			{kind = "shock",  gx = 12, gy = 11},
+			{kind = "lancer",  gx = 13, gy = 10},
 		},
 
 		wave = {
 			index = 6,
 			start = true,
-			warmup = 31.3,
+			warmup = 22,
 		},
 	},
 
 	actions = {
-		{t = 2.55, fn = Actions.upgradeTowerAt(8,  9, 1)},
-		{t = 3.55, fn = Actions.upgradeTowerAt(12, 8, 1)},
-		{t = 4.55, fn = Actions.upgradeTowerAt(9,  9, 1)},
+		{t = 2.25, fn = Actions.upgradeTowerAt(11,  10, 1)},
+		{t = 3.25, fn = Actions.upgradeTowerAt(12, 11, 1)},
+		{t = 4.25, fn = Actions.upgradeTowerAt(13,  10, 1)},
 	},
 
 	camera = Camera.pan({
-		duration = 6.0,
-		from = {x = mapCX - adjustX, y = mapCY - adjustY, zoom = 2.8},
-		to = {x = mapCX - adjustX, y = mapCY - adjustY, zoom = 2.8}
+		duration = 8.0,
+		from = {x = mapCX - adjustX, y = mapCY + adjustY, zoom = 3.0},
+		to = {x = mapCX - adjustX, y = mapCY + adjustY, zoom = 3.0}
 	}),
 
 	text = {

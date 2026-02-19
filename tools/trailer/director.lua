@@ -119,6 +119,8 @@ end
 function Director._stepFixed(step)
 	Director.t = Director.t + step
 
+	Director.ctx.time = Director.t
+
 	-- Run simulation
 	if Director.shot.type ~= "logo" then
 		Sim.update(step)
@@ -210,6 +212,7 @@ function Director.load(name)
 
 	Director.ctx = {
 		firstEnemy = nil,
+		time = 0,
 	}
 
 	-- Logo-only shot, no world setup
@@ -478,8 +481,8 @@ function Director.draw()
 		local sw = lg.getWidth()
 		local sh = lg.getHeight()
 
-		local fadeDur = 0.15
-		local alphaStart = 0.60
+		local fadeDur = 0.375
+		local alphaStart = 0
 
 		local baseScale = 0.56
 		local w = floor(sw * baseScale)
@@ -498,7 +501,7 @@ function Director.draw()
 		local y = floor(sh * 0.5) - 120
 
 		lg.setColor(1, 1, 1, alpha)
-		Title.draw({x = x, y = y, alpha = 1, lancerScale = 7.0, angle = Director.lancerIdle.angle})
+		Title.draw({x = x, y = y, alpha = alpha, lancerScale = 7.0, angle = Director.lancerIdle.angle})
 
 		lg.setColor(1, 1, 1, 1)
 	end
