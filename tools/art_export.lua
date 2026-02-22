@@ -13,8 +13,6 @@ local Export = {}
 
 local lg = love.graphics
 
-local colorMenu = Theme.menu
-
 local SIZES = {64, 128, 256, 512, 1024}
 local REF_ICON_SIZE = 64
 local ICON_FILL = 2.00

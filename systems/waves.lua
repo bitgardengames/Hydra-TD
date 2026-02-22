@@ -1,8 +1,11 @@
 local State = require("core.state")
 local Maps = require("world.map_defs")
 local Enemies = require("world.enemies")
+local Difficulty = require("systems.difficulty")
 local DifficultyCurve = require("systems.difficulty_curve")
 local WaveBuilder = require("systems.wave_builder")
+local Steam = require("core.steam")
+local L = require("core.localization")
 
 local Waves = {}
 
@@ -54,12 +57,18 @@ function Waves.startWave()
 	State.wave = State.wave + 1
 	State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 
+	if State.mode == "game" then -- Make sure the background scene doesn't set the status
+		local diffKey = Difficulty.key()
+		local diffText = L("difficulty." .. diffKey)
+
+		Steam.setRichPresence(L("presence.gameStatus", State.wave, diffText))
+	end
+
 	-- WaveBuilder enforces boss invariant and returns a simple descriptor
 	local wave = WaveBuilder.build(State.wave)
 
-	-- Boss waves: exactly 1 unit, no adds, no exceptions
+	-- Boss waves
 	if wave.boss then
-		-- Optional: if the map defines boss types, use them
 		local bossKind = wave.enemy or "boss"
 
 		if map and map.waves and map.waves.bosses then

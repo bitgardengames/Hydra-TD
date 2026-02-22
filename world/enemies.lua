@@ -8,6 +8,7 @@ local MapMod = require("world.map")
 local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
 local DifficultyCurve = require("systems.difficulty_curve")
+local Steam = require("core.steam")
 local L = require("core.localization")
 
 local enemies = {}
@@ -96,6 +97,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		poisonStacks = 0,
 		poisonTimer = 0,
 		poisonDPS = 0,
+		shadow = true,
 	}
 
 	if e.boss then
@@ -187,6 +189,8 @@ local function updateEnemies(dt)
 
 				State.activeBoss = nil
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
+
+				Steam.unlockAchievement("ACH_FIRST_BOSS")
 
 				swapRemove(enemies, i)
 			end

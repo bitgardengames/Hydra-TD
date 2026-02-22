@@ -30,6 +30,7 @@ local Rumble = require("systems.rumble")
 local Localization = require("core.localization")
 local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
+local Steam = require("core.steam")
 
 local lg = love.graphics
 local lk = love.keyboard
@@ -110,6 +111,8 @@ function love.load(arg)
 
 	if mode == "art" then
 		return require("tools.art_export").run()
+	elseif mode == "achievements" then
+		require("tools.achievement_export").run()
 	elseif mode == "map" then
 		return require("tools.map_export.main").run()
 	elseif mode == "trailer" then
@@ -130,6 +133,7 @@ function love.update(dt)
 
 	Cursor.update(dt)
 	Rumble.update(dt)
+	Steam.update()
 
 	if mode == "pause" then
 		Menu.updatePause(dt)
@@ -163,6 +167,7 @@ function love.update(dt)
 
 	while ACCUM >= FIXED_DT do
 		Sim.update(FIXED_DT * State.speed)
+
 		ACCUM = ACCUM - FIXED_DT
 	end
 
@@ -394,8 +399,15 @@ function love.resize(w, h)
 end
 
 function love.focus(focused)
-	if not focused then
-		-- Steam Overlay / alt-tab
+	if not focused then -- Alt-tab or focus loss
+		if State.mode == "game" then
+			State.mode = "pause"
+		end
+	end
+end
+
+function love.visible(visible)
+	if not visible then
 		if State.mode == "game" then
 			State.mode = "pause"
 		end

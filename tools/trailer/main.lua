@@ -17,8 +17,6 @@ function Trailer.run()
 
 	Recorder.fixedDt = FIXED_DT
 
-	--Recorder.enabled = false -- Flip back after recording audio
-
     -- Force fixed timestep
     love.timer.step()
 
@@ -27,6 +25,8 @@ function Trailer.run()
     else
         Director.load("shot_01") -- always start at the beginning
     end
+	
+	--require("systems.sound").playMusic("bg")
 end
 
 function love.update(dt)

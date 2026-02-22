@@ -20,7 +20,7 @@ function Environment.load()
 	--love.window.setMode(1024, 768, {fullscreen = false, resizable = false, msaa = 8}) -- torture test
 
 	-- Vertical format
-	--love.window.setMode(1080, 1920, {fullscreen = false, msaa = 8})
+	--love.window.setMode(1080, 1920, {fullscreen = false, resizable = false, msaa = 8})
 end
 
 return Environment

@@ -167,6 +167,7 @@ function Director._stepFixed(step)
 
 	-- Logo beat
 	local logo = Director.shot.logo
+
 	if logo and not logo.done and Director.t >= logo.t then
 		Director.activeLogo = true
 		Director.logoT = 0
@@ -176,6 +177,7 @@ function Director._stepFixed(step)
 	if Director.activeLogo then
 		Director.logoT = Director.logoT + step
 		Title.updateLancerIdle(Director.lancerIdle, step, Director.logoT)
+
 		if logo and Director.logoT >= logo.dur then
 			Director.activeLogo = false
 		end
@@ -214,13 +216,6 @@ function Director.load(name)
 		firstEnemy = nil,
 		time = 0,
 	}
-
-	-- Logo-only shot, no world setup
-	if Director.shot.type == "logo" then
-		Title.invalidateCache()
-
-		return
-	end
 
 	HeroExport.init()
 
@@ -478,6 +473,8 @@ function Director.draw()
 
 	-- Logo
 	if Director.activeLogo then
+		--Title.invalidateCache()
+
 		local sw = lg.getWidth()
 		local sh = lg.getHeight()
 
@@ -489,6 +486,7 @@ function Director.draw()
 		local h = floor(sh * baseScale)
 
 		local p = 1
+
 		if Director.logoT < fadeDur then
 			p = Director.logoT / fadeDur
 			p = p * p * (3 - 2 * p)
@@ -542,7 +540,6 @@ function love.keypressed(key)
 		Director.scrub.playing = false
 		Director._scrubAccum = 0
 
-		-- When enabling scrub, lock to the *current* frame
 		if Director.scrub.enabled then
 			Director.scrub.frame = floor(Director.t * FPS + 0.5)
 			Director.seekToFrame(Director.scrub.frame)

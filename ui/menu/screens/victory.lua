@@ -8,6 +8,7 @@ local Difficulty = require("systems.difficulty")
 local Text = require("ui.text")
 local Fonts = require("core.fonts")
 local Backdrop = require("scenes.backdrop")
+local Steam = require("core.steam")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -69,7 +70,8 @@ function Screen.load()
             h = 46,
             onClick = function()
                 Sound.play("uiConfirm")
-				Background.start()
+				Backdrop.start()
+				Steam.setRichPresence(L("presence.menu"))
                 State.mode = "menu"
             end
         },
@@ -97,7 +99,7 @@ function Screen.draw()
 
     -- Title
     Fonts.set("title")
-	
+
     lg.setColor(colorGood)
 	Text.printfShadow(L("game.victory"), 0, sh * 0.5 - 120, sw, "center")
 
@@ -127,6 +129,7 @@ end
 
 function Screen.keypressed(key)
     if key == "escape" then
+		Steam.setRichPresence(L("presence.menu"))
         State.mode = "menu"
     end
 end

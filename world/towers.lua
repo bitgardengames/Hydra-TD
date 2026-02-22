@@ -13,6 +13,7 @@ local Effects = require("world.effects")
 local Projectiles = require("world.projectiles")
 local Shock = require("world.shock")
 local L = require("core.localization")
+--local Steam = require("luasteam")
 
 local towers = {}
 
@@ -99,11 +100,17 @@ local function addTower(kind, gx, gy)
 	MapMod.map.blocked[MapMod.makeKey(gx, gy)] = true
 	table.insert(towers, t)
 
-	Floaters.add(x, y - 10, "-" .. def.cost, cwR, cwG, cwB)
+	Floaters.add(x, y - 20, "-" .. def.cost, cwR, cwG, cwB)
 
 	Sound.play("towerPlaced")
 
 	Rumble.pulse(0.32, 0.055)
+
+	--[[if Steam then
+		Steam.userStats.setAchievement("ACH_TEST")
+		Steam.userStats.storeStats()
+		print("unlocked steam achievement: ACH_TEST")
+	end]]
 
 	return true
 end
@@ -167,7 +174,7 @@ local function upgradeTower(t)
 
 	t.levelUpAnim = 1
 
-	Floaters.add(t.x, t.y - 10, L("floater.upgrade"), cgR, cgG, cgB)
+	Floaters.add(t.x, t.y - 20, L("floater.upgrade"), cgR, cgG, cgB)
 
 	--Sound.play("towerUpgraded")
 
@@ -227,7 +234,7 @@ local function sellTower(t)
 		end
 	end
 
-	Floaters.add(t.x, t.y - 10, "+" .. t.sellValue, cgR, cgG, cgB)
+	Floaters.add(t.x, t.y - 20, "+" .. t.sellValue, cgR, cgG, cgB)
 	State.selectedTower = nil
 
 	Sound.play("towerSold")

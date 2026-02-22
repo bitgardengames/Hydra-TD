@@ -33,7 +33,7 @@ Backdrop.shots = {
 			{kind = "shock", gx = 13, gy = 9, level = 3},
 		},
 		wave = 10,
-		warmup = 52.0,
+		warmup = 55.0,
 		camera = {gx = 12, gy = 8, ox = 180, oy = -134, zoom = 2.0},
 	},
 

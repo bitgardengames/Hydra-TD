@@ -136,4 +136,10 @@ return {
 		sidewinder = "Sidewinder",
 		crosscurrent = "Crosscurrent",
 	},
+
+	presence = {
+		menu = "In Menu",
+		campaign = "Map Selection",
+		gameStatus = "Wave %s - %s",
+	},
 }

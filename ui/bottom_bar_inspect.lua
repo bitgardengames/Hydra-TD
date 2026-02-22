@@ -1,4 +1,5 @@
 local State = require("core.state")
+local Util = require("core.util")
 local Towers = require("world.towers")
 local Hotkeys = require("core.hotkeys")
 local Tooltip = require("ui.tooltip")
@@ -36,6 +37,8 @@ function Inspect.getButtons()
     return inspectButtons
 end
 
+local formatInt = Util.formatInt
+
 -- Internal animation state stays inside module
 local inspectAnim = 0
 
@@ -49,14 +52,13 @@ local colorDisabled = Theme.ui.buttonDisabled
 local colorButton = Theme.ui.button
 local colorButtonHover = Theme.ui.buttonHover
 
+local ct1, ct2, ct3 = colorText[1], colorText[2], colorText[3]
 local cb1, cb2, cb3 = colorButton[1], colorButton[2], colorButton[3]
 local ch1, ch2, ch3 = colorButtonHover[1], colorButtonHover[2], colorButtonHover[3]
 
 local cbd1 = ch1 - cb1
 local cbd2 = ch2 - cb2
 local cbd3 = ch3 - cb3
-
-local ct1, ct2, ct3 = colorText[1], colorText[2], colorText[3]
 
 -- Layout constants local to inspect
 local OUTER_PAD = 10
@@ -166,23 +168,11 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		local t = State.selectedTower
 
 		-- Title
-		Text.printShadow(
-			L("inspect.towerTitle", L(t.def.nameKey), t.level),
-			titleX,
-			titleY
-		)
+		Text.printShadow(L("inspect.towerTitle", L(t.def.nameKey), t.level), titleX, titleY)
 
-		Text.printShadow(
-			L("inspect.damage", t.damageDealt),
-			bodyX,
-			bodyY
-		)
+		Text.printShadow(L("inspect.damage", formatInt(t.damageDealt)), bodyX, bodyY)
 
-		Text.printShadow(
-			L("inspect.kills", t.kills),
-			bodyX,
-			bodyY + 16
-		)
+		Text.printShadow(L("inspect.kills", t.kills), bodyX, bodyY + 16)
 
 		-- Buttons layout
 		local actionY = contentY + contentH - BUTTON_H - PAD
@@ -216,9 +206,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			local bx, by = btn.x, btn.y
 			local bw, bh = btn.w, btn.h
 
-			local hovered =
-				mx >= bx and mx <= bx + bw and
-				my >= by and my <= by + bh
+			local hovered = mx >= bx and mx <= bx + bw and my >= by and my <= by + bh
 
 			local ease = hovered and 1 or 0
 
@@ -235,36 +223,23 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			end
 
 			local ty = by + (bh - textH) * 0.5
-			local label = btn.id == "upgrade"
-				and L("actions.upgrade")
-				or L("actions.sell")
+			local label = btn.id == "upgrade" and L("actions.upgrade") or L("actions.sell")
 
 			lg.setColor(ct1, ct2, ct3, btn.canAfford and 1 or 0.55)
 			Text.printShadow(label, bx + PAD, ty)
 
 			if btn.cost then
 				lg.setColor(btn.canAfford and colorGood or colorBad)
-				Text.printfShadow(
-					"$" .. btn.cost,
-					bx + PAD,
-					ty,
-					bw - PAD * 2,
-					"right"
-				)
+				Text.printfShadow("$" .. btn.cost, bx + PAD, ty, bw - PAD * 2, "right")
 			elseif btn.value then
 				lg.setColor(colorGood)
-				Text.printfShadow(
-					"+$" .. btn.value,
-					bx + PAD,
-					ty,
-					bw - PAD * 2,
-					"right"
-				)
+				Text.printfShadow("+$" .. btn.value, bx + PAD, ty, bw - PAD * 2, "right")
 			end
 
 			-- Upgrade tooltip
 			if hovered and btn.id == "upgrade" and upgradeCost then
 				local preview = Towers.getUpgradePreview(t)
+
 				if preview then
 					Tooltip.show{
 						title = L("inspect.upgradeTitle", t.level + 1),
@@ -292,17 +267,9 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
     elseif State.selectedEnemy then
         local e = State.selectedEnemy
 
-        Text.printShadow(
-            L(e.def.nameKey),
-            titleX,
-            titleY
-        )
+        Text.printShadow(L(e.def.nameKey), titleX, titleY)
 
-        Text.printShadow(
-            L("inspect.hp", e.hp, e.maxHp),
-            bodyX,
-            bodyY
-        )
+        Text.printShadow(L("inspect.hp", formatInt(e.hp), formatInt(e.maxHp)), bodyX, bodyY)
     end
 end
 

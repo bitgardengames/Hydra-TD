@@ -9,10 +9,7 @@ local max = math.max
 
 local HeroExport = {}
 
--- =========================================================
 -- Formats (existing behavior preserved)
--- =========================================================
-
 HeroExport.formats = {
 	hero = {
 		width = 3840,
@@ -28,27 +25,29 @@ HeroExport.formats = {
 	},
 }
 
--- =========================================================
--- Banner Sizes (copied from art_export intentionally)
--- =========================================================
-
+-- Banner Sizes
 HeroExport.BANNERS = {
-	main_capsule     = {w = 1232, h = 706},
-	header_capsule   = {w = 920,  h = 430},
-	small_capsule    = {w = 462,  h = 174},
-	vertical_capsule = {w = 748,  h = 896},
+	-- Steam banner sizes
+	main_capsule = {w = 1232, h = 706},
+	header_capsule = {w = 920, h = 430},
+	small_capsule = {w = 462, h = 174},
+	vertical_capsule = {w = 748, h = 896},
 
-	library_hero     = {w = 3840, h = 1240},
-	library_logo     = {w = 1280, h = 720},
-	library_header   = {w = 920,  h = 430},
-	library_capsule  = {w = 600,  h = 900},
+	library_hero = {w = 3840, h = 1240},
+	library_logo = {w = 1280, h = 720},
+	library_header = {w = 920, h = 430},
+	library_capsule = {w = 600, h = 900},
 
-	page_background  = {w = 1438, h = 810},
+	page_background = {w = 1438, h = 810},
 
-	youtube_banner   = {w = 2048, h = 1152},
-	x_banner         = {w = 1500, h = 500},
+	-- Social banners
+	youtube_banner = {w = 2048, h = 1152},
+	reddit_banner = {w = 1920, h = 384},
+	reddit_mobile_banner = {w = 1600, h = 480},
+	x_banner = {w = 1500, h = 500},
 
-	desktop          = {w = 1920, h = 1080},
+	-- Desktop
+	desktop = {w = 1920, h = 1080},
 }
 
 HeroExport.TEXTLESS_BANNERS = {
@@ -64,33 +63,27 @@ HeroExport.TRANSPARENT_BANNERS = {
 	desktop = true,
 }
 
--- =========================================================
 -- State
--- =========================================================
+HeroExport.active = false
+HeroExport.canvas = nil
+HeroExport.subject = nil
+HeroExport.subjectType = nil
 
-HeroExport.active        = false
-HeroExport.canvas        = nil
-HeroExport.subject       = nil
-HeroExport.subjectType   = nil
-
-HeroExport.width         = 3840
-HeroExport.height        = 1240
-HeroExport.subjectScale  = 0.7
-HeroExport.verticalBias  = 0.1
+HeroExport.width = 3840
+HeroExport.height = 1240
+HeroExport.subjectScale = 0.7
+HeroExport.verticalBias = 0.1
 HeroExport.frameLift = 66
 HeroExport.extraZoom = 3.0
 HeroExport.titleDrop = 0.24
 
-HeroExport.captureX      = 0
-HeroExport.captureY      = 0
-HeroExport._prevPaused   = nil
+HeroExport.captureX = 0
+HeroExport.captureY = 0
+HeroExport._prevPaused = nil
 
-HeroExport._logoCache    = {}
+HeroExport._logoCache = {}
 
--- =========================================================
 -- Setup
--- =========================================================
-
 function HeroExport.init()
 	HeroExport._rebuildCanvas()
 end
@@ -99,8 +92,8 @@ function HeroExport.setFormat(name)
 	local f = HeroExport.formats[name]
 	assert(f, "Unknown HeroExport format: " .. tostring(name))
 
-	HeroExport.width        = f.width
-	HeroExport.height       = f.height
+	HeroExport.width = f.width
+	HeroExport.height = f.height
 	HeroExport.subjectScale = f.subjectScale
 	HeroExport.verticalBias = f.verticalBias
 
@@ -111,10 +104,7 @@ function HeroExport._rebuildCanvas()
 	HeroExport.canvas = lg.newCanvas(HeroExport.width, HeroExport.height, {msaa = 8})
 end
 
--- =========================================================
--- Subject Bounds (unchanged)
--- =========================================================
-
+-- Subject Bounds
 function HeroExport.getSubjectBounds()
 	local s = HeroExport.subject
 	if not s then return nil end
@@ -156,10 +146,7 @@ function HeroExport.computeZoom(bounds)
 	return targetPixels / diameter
 end
 
--- =========================================================
--- Capture (unchanged)
--- =========================================================
-
+-- Capture
 function HeroExport.capture(opts)
 	opts = opts or {}
 
@@ -176,10 +163,7 @@ function HeroExport.capture(opts)
 		HeroExport.frameOnSubject()
 end
 
--- =========================================================
 -- Rendering Helpers
--- =========================================================
-
 local function drawVignette(w, h)
 	local steps = 12
 	local maxInset = math.min(w, h) * 0.06
@@ -288,10 +272,6 @@ function HeroExport._renderWorldToCanvas(w, h, renderWorldFn)
     return canvas
 end
 
--- =========================================================
--- Draw (original behavior preserved + extended)
--- =========================================================
-
 function HeroExport.draw(renderWorldFn)
 	if not HeroExport.active then
 		return false
@@ -334,18 +314,10 @@ function HeroExport.draw(renderWorldFn)
 
 	HeroExport.active = false
 
-	-- =====================================================
-	-- Export ALL banner sizes CRISP (native render per size)
-	-- =====================================================
-
 	HeroExport.exportAllFromWorld(renderWorldFn)
 
 	return true
 end
-
--- =========================================================
--- Existing export path (kept for compatibility)
--- =========================================================
 
 function HeroExport.exportAllFromCanvas(srcCanvas)
 	if not srcCanvas then return end
@@ -398,10 +370,7 @@ function HeroExport.exportAllFromCanvas(srcCanvas)
 	print("HeroExport: All banner sizes exported (scaled).")
 end
 
--- =========================================================
--- NEW: Crisp export path (native render per size)
--- =========================================================
-
+-- New: Crisp export path (native render per size)
 function HeroExport.exportAllFromWorld(renderWorldFn)
 	if not renderWorldFn then return end
 

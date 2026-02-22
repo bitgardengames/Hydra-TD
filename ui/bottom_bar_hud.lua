@@ -1,5 +1,6 @@
 local State = require("core.state")
 local Theme = require("core.theme")
+local Util = require("core.util")
 local Enemies = require("world.enemies")
 local Waves = require("systems.waves")
 local Hotkeys = require("core.hotkeys")
@@ -23,6 +24,8 @@ local cm1, cm2, cm3 = colorMoney[1], colorMoney[2], colorMoney[3]
 local cl1, cl2, cl3 = colorLives[1], colorLives[2], colorLives[3]
 local cg1, cg2, cg3 = colorGood[1], colorGood[2], colorGood[3]
 
+local formatInt = Util.formatInt
+
 -- Text caches (no per-frame string rebuilding)
 local hudCache = {
 	money = {value = nil, text = ""},
@@ -31,24 +34,6 @@ local hudCache = {
 	prep = {value = nil, text = "", action = nil},
 	spawn = {remaining = nil, count = nil, text = ""},
 }
-
--- Number formatting cache
-local numCache = {}
-
-local function formatNum(n)
-	local v = floor(n + 0.5)
-	local cached = numCache[v]
-
-	if cached then
-		return cached
-	end
-
-	local s = tostring(v)
-	s = s:reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
-	numCache[v] = s
-
-	return s
-end
 
 function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	local font = lg.getFont()
@@ -63,7 +48,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 
 	if moneyCache.value ~= moneyRounded then
 		moneyCache.value = moneyRounded
-		moneyCache.text = "$" .. formatNum(moneyRounded)
+		moneyCache.text = "$" .. formatInt(moneyRounded)
 	end
 
 	lg.setColor(cm1, cm2, cm3, 1)

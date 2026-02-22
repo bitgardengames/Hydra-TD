@@ -9,6 +9,7 @@ local Text = require("ui.text")
 local Button = require("ui.button")
 local Backdrop = require("scenes.backdrop")
 local Cursor = require("core.cursor")
+local Steam = require("core.steam")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -76,12 +77,7 @@ end
 local function drawTriangleWithShadow(points, color)
 	-- Shadow
 	lg.setColor(colorShadow)
-	lg.polygon(
-		"fill",
-		points[1] + 1, points[2] + 1,
-		points[3] + 1, points[4] + 1,
-		points[5] + 1, points[6] + 1
-	)
+	lg.polygon("fill", points[1] + 1, points[2] + 1, points[3] + 1, points[4] + 1, points[5] + 1, points[6] + 1)
 
 	-- Main triangle
 	lg.setColor(color)
@@ -166,6 +162,7 @@ function Screen.load()
 				resetGame()
 			end
 		},
+
 		{
 			id = "back",
 			label = L("menu.back"),
@@ -173,6 +170,7 @@ function Screen.load()
 			h = 42,
 			onClick = function()
 				State.mode = "menu"
+				Steam.setRichPresence(L("presence.menu"))
 				Sound.play("uiBack")
 			end
 		}
@@ -296,9 +294,6 @@ function Screen.draw()
 	end
 end
 
--- =====================================================
--- Input
--- =====================================================
 function Screen.keypressed(key)
 	if key == "left" then
 		if State.mapIndex > 1 then
@@ -318,6 +313,7 @@ function Screen.keypressed(key)
 
 	elseif key == "escape" then
 		State.mode = "menu"
+		Steam.setRichPresence(L("presence.menu"))
 		Sound.play("uiBack")
 	end
 end
@@ -338,14 +334,11 @@ function Screen.mousepressed(x, y, button)
 		-- Left arrow click
 		if index > 1 then
 			local cx = centerX - pw * 0.5 - ARROW_OFFSET
-			if pointInTriangle(
-				x, y,
-				cx + size * 0.5, centerY - size,
-				cx - size * 0.5, centerY,
-				cx + size * 0.5, centerY + size
-			) then
+
+			if pointInTriangle(x, y, cx + size * 0.5, centerY - size, cx - size * 0.5, centerY, cx + size * 0.5, centerY + size) then
 				State.mapIndex = index - 1
 				Sound.play("uiMove")
+
 				return true
 			end
 		end
@@ -353,14 +346,11 @@ function Screen.mousepressed(x, y, button)
 		-- Right arrow click
 		if index < #Maps and not isMapLocked(index + 1) then
 			local cx = centerX + pw * 0.5 + ARROW_OFFSET
-			if pointInTriangle(
-				x, y,
-				cx - size * 0.5, centerY - size,
-				cx + size * 0.5, centerY,
-				cx - size * 0.5, centerY + size
-			) then
+
+			if pointInTriangle(x, y, cx - size * 0.5, centerY - size, cx + size * 0.5, centerY, cx - size * 0.5, centerY + size) then
 				State.mapIndex = index + 1
 				Sound.play("uiMove")
+
 				return true
 			end
 		end
@@ -409,6 +399,7 @@ local function pressPlay()
 			else
 				Sound.play("uiError")
 			end
+
 			return
 		end
 	end
@@ -418,6 +409,7 @@ local function pressBack()
 	for _, btn in ipairs(campaignButtons) do
 		if btn.id == "back" then
 			btn.onClick()
+
 			return
 		end
 	end
@@ -430,21 +422,24 @@ function Screen.gamepadpressed(joystick, button)
 	-- D-Pad navigation
 	if button == "dpleft" then
 		moveLeft()
-		return true
 
+		return true
 	elseif button == "dpright" then
 		moveRight()
+
 		return true
 	end
 
 	-- Face buttons
 	if button == "a" then
 		pressPlay()
+
 		return true
 	end
 
 	if button == "b" or button == "back" then
 		pressBack()
+
 		return true
 	end
 end

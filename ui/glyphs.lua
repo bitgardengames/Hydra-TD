@@ -146,6 +146,7 @@ function Glyphs.exportSheet(path, opts)
 	local spacing = opts.spacing or 6
 
 	local ids = {}
+
 	for id in pairs(registry) do
 		ids[#ids + 1] = id
 	end

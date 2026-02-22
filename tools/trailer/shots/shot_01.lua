@@ -9,18 +9,18 @@ return {
 
 	scene = {
 		towers = {
-			{kind = "lancer", gx = 26, gy = 6},
-			{kind = "lancer", gx = 27, gy = 10},
+			{kind = "lancer", gx = 24, gy = 6},
+			{kind = "lancer", gx = 25, gy = 10},
 		},
 
 		wave = {
 			start = true,
-			warmup = 12.0,
+			warmup = 11.0,
 		},
 	},
 
     actions = {
-		{t = 0, fn = Actions.upgradeTowerAt(27, 10, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(25, 10, 1)},
     },
 
 	camera = function(ctx)

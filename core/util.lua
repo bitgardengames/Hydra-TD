@@ -1,11 +1,13 @@
 local Util = {}
 
-local sqrt = math.sqrt
 local min = math.min
 local max = math.max
+local sqrt = math.sqrt
+local floor = math.floor
 
+-- Targeting / distance math
 function Util.clamp(x, a, b)
-	return max(a, math.min(x, b))
+	return max(a, min(x, b))
 end
 
 function Util.dist2(x1, y1, x2, y2)
@@ -27,6 +29,24 @@ function Util.norm(x,y)
 	end
 
 	return x / l, y / l
+end
+
+-- Number formatting
+local numCache = {}
+
+function Util.formatInt(n)
+	local v = floor(n + 0.5)
+	local cached = numCache[v]
+
+	if cached then
+		return cached
+	end
+
+	local s = tostring(v)
+	s = s:reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+	numCache[v] = s
+
+	return s
 end
 
 return Util

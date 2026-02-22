@@ -7,6 +7,7 @@ local Difficulty = require("systems.difficulty")
 local Text = require("ui.text")
 local Fonts = require("core.fonts")
 local Backdrop = require("scenes.backdrop")
+local Steam = require("core.steam")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -50,6 +51,7 @@ function Screen.load()
             onClick = function()
                 Sound.play("uiConfirm")
 				Backdrop.start()
+				Steam.setRichPresence(L("presence.menu"))
                 State.mode = "menu"
             end
         },
@@ -115,6 +117,7 @@ end
 function Screen.keypressed(key)
     if key == "escape" then
         State.mode = "menu"
+		Steam.setRichPresence(L("presence.menu"))
     end
 end
 

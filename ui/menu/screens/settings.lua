@@ -9,6 +9,7 @@ local Text = require("ui.text")
 local Button = require("ui.button")
 local Backdrop = require("scenes.backdrop")
 local Cursor = require("core.cursor")
+local Steam = require("core.steam")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -235,6 +236,7 @@ function Screen.load()
 			h = 42,
 			onClick = function()
 				State.mode = "menu"
+				Steam.setRichPresence(L("presence.menu"))
 				Sound.play("uiBack")
 			end
 		}
@@ -341,6 +343,7 @@ function Screen.keypressed(key)
 		end
 	elseif key == "return" or key == "escape" then
 		State.mode = "menu"
+		Steam.setRichPresence(L("presence.menu"))
 		Sound.play("uiBack")
 	end
 end
@@ -364,6 +367,7 @@ function Screen.gamepadpressed(_, button)
 		adjustRow(row, 1)
 	elseif button == "b" then
 		State.mode = "menu"
+		Steam.setRichPresence(L("presence.menu"))
 		Sound.play("uiBack")
 	end
 end

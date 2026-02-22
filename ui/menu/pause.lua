@@ -4,6 +4,7 @@ local State = require("core.state")
 local Sound = require("systems.sound")
 local Hotkeys = require("core.hotkeys")
 local Backdrop = require("scenes.backdrop")
+local Steam = require("core.steam")
 local L = require("core.localization")
 
 local Page = {}
@@ -45,6 +46,7 @@ function Page.load()
 				State.paused = false
 				Backdrop.start()
 				State.mode = "menu"
+				Steam.setRichPresence(L("presence.menu"))
 				Sound.play("uiConfirm")
 			end
 		},

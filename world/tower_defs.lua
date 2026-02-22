@@ -5,10 +5,10 @@ return {
 	lancer = {
 		nameKey = "tower.lancer",
 		descKey = "towerDesc.lancer",
-		cost = 40,
-		range = 4.0 * Constants.TILE,
-		fireRate = 2.0, -- shots/sec
-		damage = 11,
+		cost = 55,
+		range = 3.9 * Constants.TILE,
+		fireRate = 1.8, -- shots/sec
+		damage = 10,
 		recoilStrength = Constants.TILE * 0.08,
 		recoilDecay = 18,
 		projSpeed = 460,
@@ -16,9 +16,9 @@ return {
 		color = Theme.tower.lancer,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 2.0,
+			dmgMult = 2.5,
 			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.02,
+			fireMult = 1.03,
 		}
 	},
 
@@ -35,9 +35,9 @@ return {
 		turnSpeed = 10,
 		color = Theme.tower.slow,
 		canRotate = true,
-		onHitSlow = {factor = 0.55, dur = 1.4},
+		onHitSlow = {factor = 0.55, dur = 1.5},
 		upgrade = {
-			dmgMult = 2.0,
+			dmgMult = 2.5,
 			rangeAdd = 0.1 * Constants.TILE,
 			fireMult = 1.04,
 			slowDurAdd = 0.35,
@@ -49,7 +49,7 @@ return {
 		descKey = "towerDesc.cannon",
 		cost = 70,
 		range = 3.2 * Constants.TILE,
-		fireRate = 0.8,
+		fireRate = 0.85,
 		damage = 17,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
@@ -62,9 +62,9 @@ return {
 			falloff = 0.45, -- % damage applied at edge
 		},
 		upgrade = {
-			dmgMult = 2.0,
+			dmgMult = 2.5,
 			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.06,
+			fireMult = 1.05,
 			splashAdd = 4, -- increase AoE radius per upgrade
 		}
 	},
@@ -87,9 +87,9 @@ return {
 			falloff = 0.75 -- damage multiplier per jump
 		},
 		upgrade = {
-			dmgMult = 2.0,
+			dmgMult = 2.5,
 			rangeAdd = 0.06 * Constants.TILE,
-			fireMult = 1.08,
+			fireMult = 1.04,
 		}
 	},
 
@@ -112,7 +112,7 @@ return {
 			maxStacks = 4,
 		},
 		upgrade = {
-			dmgMult = 2.0,
+			dmgMult = 2.5,
 			rangeAdd = 0.06 * Constants.TILE,
 			fireMult = 1.02,
 			poisonDurAdd = 0.25,

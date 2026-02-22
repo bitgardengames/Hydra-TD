@@ -4,10 +4,10 @@ local DifficultyCurve = {}
 
 -- Campaign tuning
 DifficultyCurve.campaignEnd = 20
-DifficultyCurve.campaignHpSlope = 0.86
+DifficultyCurve.campaignHpSlope = 0.95 -- 0.86
 
 -- Endless tuning
-DifficultyCurve.endlessHpSlope = 1.20
+DifficultyCurve.endlessHpSlope = 1.35 -- 1.20
 
 -- Boss scaling
 DifficultyCurve.bossExponent = 1.04

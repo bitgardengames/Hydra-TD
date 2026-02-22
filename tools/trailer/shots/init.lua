@@ -10,6 +10,6 @@ for _, file in ipairs(files) do
     end
 end
 
---Shots["capsule"] = require("tools.trailer.shots.capsule_art")
+Shots["capsule"] = require("tools.trailer.shots.capsule_art")
 
 return Shots
