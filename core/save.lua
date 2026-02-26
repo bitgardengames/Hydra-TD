@@ -1,7 +1,7 @@
 local Save = {}
 
 local SAVE_FILE = "save.lua"
-local SAVE_VERSION = 1
+local SAVE_VERSION = 1 -- Only upgrade the version if I change the structure of saves
 
 Save.data = nil
 
@@ -32,15 +32,35 @@ function Save.load()
 			end
 			--]]
 
+			-- Campaign progression
             Save.data.furthestIndex = Save.data.furthestIndex or 1
             Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 
+			-- Settings
 			Save.data.settings = Save.data.settings or {}
 
-			Save.data.settings.musicVolume = Save.data.settings.musicVolume or 0.25
-			Save.data.settings.sfxVolume = Save.data.settings.sfxVolume or 0.25
-			Save.data.settings.difficulty = Save.data.settings.difficulty or "normal"
-			Save.data.settings.fullscreen = Save.data.settings.fullscreen ~= nil and Save.data.settings.fullscreen or false
+			local settings = Save.data.settings
+
+			settings.musicVolume = settings.musicVolume or 0.25
+			settings.sfxVolume = settings.sfxVolume or 0.25
+			settings.difficulty = settings.difficulty or "normal"
+			settings.fullscreen = settings.fullscreen ~= nil and settings.fullscreen or false
+
+			-- Achievement progress / stat storage
+			Save.data.meta = Save.data.meta or {}
+
+			local meta = Save.data.meta
+
+			meta.ENEMIES_KILLED = meta.ENEMIES_KILLED or 0
+			meta.BOSSES_KILLED = meta.BOSSES_KILLED or 0
+
+			meta.TOWER_LANCER_KILLS = meta.TOWER_LANCER_KILLS or 0
+			meta.TOWER_SLOW_KILLS = meta.TOWER_SLOW_KILLS or 0
+			meta.TOWER_CANNON_KILLS = meta.TOWER_CANNON_KILLS or 0
+			meta.TOWER_SHOCK_KILLS = meta.TOWER_SHOCK_KILLS or 0
+			meta.TOWER_POISON_KILLS = meta.TOWER_POISON_KILLS or 0
+
+			meta.unlockedAchievements = meta.unlockedAchievements or {}
 
             return
         end
@@ -57,13 +77,31 @@ function Save.load()
 			difficulty = "normal",
 			fullscreen = true,
 		},
+
+		meta = {
+			ENEMIES_KILLED = 0,
+			BOSSES_KILLED = 0,
+
+			TOWER_LANCER_KILLS = 0,
+			TOWER_SLOW_KILLS = 0,
+			TOWER_CANNON_KILLS = 0,
+			TOWER_SHOCK_KILLS = 0,
+			TOWER_POISON_KILLS = 0,
+
+			unlockedAchievements = {},
+		},
     }
 end
 
 function Save.flush()
+	if not Save.data then
+		return
+	end
+
 	Save.data.version = SAVE_VERSION
 
     local serialized = "return " .. Save.serialize(Save.data)
+
     love.filesystem.write(SAVE_FILE, serialized)
 end
 

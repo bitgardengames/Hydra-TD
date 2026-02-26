@@ -1,14 +1,16 @@
 local TowersDefs = require("world.tower_defs")
 local EnemyDefs = require("world.enemy_defs")
 local DrawEntities = require("render.draw_entities")
+local Fonts = require("core.fonts")
+local Text = require("ui.text")
 
 local Export = {}
 local lg = love.graphics
 
 local SIZE = 256
 local REF_ICON_SIZE = 64
-local TOWER_SCALE = (SIZE / REF_ICON_SIZE) * 1.8 -- 1.5 scale
-local ENEMY_SCALE = (SIZE / REF_ICON_SIZE) * 1.4 -- 1.0 scale
+local TOWER_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.5 scale
+local ENEMY_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.0 scale
 
 local EXPORT_DIR = "export"
 local ACH_DIR = EXPORT_DIR .. "/achievements"
@@ -47,7 +49,7 @@ end
 
 local function drawTower(kind)
     centerAndScale(function()
-        DrawEntities.drawTowerCore(kind, 0, 0, { angle  = -math.pi / 4, alpha  = 1, shadow = false, scale = 2.0})
+        DrawEntities.drawTowerCore(kind, 0, 0, { angle  = -math.pi / 4, alpha  = 1, shadow = false})
 
         lg.setColor(1, 1, 1, 1)
     end, TOWER_SCALE)
@@ -61,6 +63,8 @@ local function drawEnemy(kind, isDead)
         def = def,
         x = 0,
         y = 0,
+		prevX = 0,
+		prevY = 0,
         boss = def.boss or false,
 
         hp = 0,
@@ -75,6 +79,11 @@ local function drawEnemy(kind, isDead)
 
         alpha = 1,
         animT = 0,
+		prevAnimT = 0,
+		dist = 0,
+		prevDist = 0,
+		seg = 1,
+		prevSeg = 1,
 
         hitFlash = 0,
         dying = isDead,
@@ -83,7 +92,6 @@ local function drawEnemy(kind, isDead)
 
         spawnFade = 0,
         exitFade = nil,
-        pathIndex = 1,
         modifiers = def.modifiers,
 
         slowFactor = 1,
@@ -100,54 +108,102 @@ local function drawEnemy(kind, isDead)
     end, ENEMY_SCALE, 5)
 end
 
+-- Kill Tier Achievement Export
+local function drawKillTier(enemyType, isDead, tierNumber)
+	drawEnemy(enemyType, isDead)
+
+	if not tierNumber then
+		return
+	end
+
+	lg.push()
+	lg.origin()
+
+	local pad = 16
+	local text = tostring(tierNumber)
+
+	Fonts.set("achievement")
+
+	local font = Fonts.get("achievement")
+	local h = font:getHeight()
+
+	lg.setColor(1, 1, 1, 1)
+
+	Text.printShadow(text, pad, SIZE - h + (pad * 0.5), {ox = 2, oy = 2})
+
+	lg.pop()
+end
+
 local achievements = {
+	-- No tower achievements are implemented yet
     {
-        id = "ACH_LANCER_MASTER",
+        id = "TOWER_LANCER_250",
         render = function()
             drawTower("lancer")
         end
     },
 
     {
-        id = "ACH_SLOW_MASTER",
+        id = "TOWER_SLOW_250",
         render = function()
             drawTower("slow")
         end
     },
 
     {
-        id = "ACH_CANNON_MASTER",
+        id = "TOWER_CANNON_250",
         render = function()
             drawTower("cannon")
         end
     },
 
     {
-        id = "ACH_SHOCK_MASTER",
+        id = "TOWER_SHOCK_250",
         render = function()
             drawTower("shock")
         end
     },
 
     {
-        id = "ACH_POISON_MASTER",
+        id = "TOWER_POISON_250",
         render = function()
             drawTower("poison")
         end
     },
 
     {
-        id = "ACH_FIRST_BOSS",
+        id = "BOSS_KILL_1",
         render = function()
-            drawEnemy("boss", false)
-        end
+			drawKillTier("boss", true)
+		end
     },
 
     {
-        id = "ACH_BOSS_EXECUTED",
+        id = "BOSS_KILL_25",
         render = function()
-            drawEnemy("boss", true)
-        end
+			drawKillTier("boss", true, 25)
+		end
+    },
+
+    {
+        id = "ENEMY_KILL_500",
+        render = function()
+			drawKillTier("fakeEntry", true, 500)
+		end
+    },
+
+    {
+        id = "ENEMY_KILL_1500",
+        render = function()
+			drawKillTier("fakeEntry", true, 1500)
+		end
+    },
+
+    {
+        id = "ENEMY_KILL_3000",
+        render = function()
+			drawKillTier("fakeEntry", true, 3000)
+		end
     },
 }
 
@@ -172,7 +228,7 @@ local function makeLockedVersion(sourceCanvas)
     local locked = lg.newCanvas(SIZE, SIZE, {msaa = 8})
 
     lg.setCanvas(locked)
-    lg.clear(0,0,0,0)
+    lg.clear(0, 0, 0, 0)
 
     lg.setColor(0.25, 0.25, 0.26, 1)
     lg.rectangle("fill", 0, 0, SIZE, SIZE)
@@ -195,12 +251,12 @@ function Export.exportAchievements()
 
         local earned = lg.newCanvas(SIZE, SIZE, { msaa = 8 })
         lg.setCanvas(earned)
-        lg.clear(0,0,0,0)
+        lg.clear(0, 0, 0, 0)
 
         lg.setColor(0.25, 0.25, 0.26, 1)
         lg.rectangle("fill", 0, 0, SIZE, SIZE)
 
-        lg.setColor(1,1,1,1)
+        lg.setColor(1, 1, 1, 1)
         lg.draw(fg, 0, 0)
 
         lg.setCanvas()
@@ -212,7 +268,23 @@ function Export.exportAchievements()
 end
 
 function Export.run()
+	Fonts.load()
+
+	-- Add a new font for our artwork
+	Fonts.achievement = love.graphics.newFont("assets/fonts/PTSans.ttf", 72)
+
+	-- Add a new fake enemy type just for artwork sizing
+	EnemyDefs.fakeEntry = {
+		nameKey = "enemy.tank",
+		hp = 90,
+		speed = 45,
+		reward = 12,
+		score = 22,
+		radius = 14,
+	},
+
     ensureDirs()
+
     Export.exportAchievements()
 
     love.event.quit()

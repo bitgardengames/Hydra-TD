@@ -37,6 +37,7 @@ function Menu.update(dt)
 	end]]
 
 	local screen = Screens[State.mode]
+
 	if screen and screen.update then
 		screen.update(dt)
 	end

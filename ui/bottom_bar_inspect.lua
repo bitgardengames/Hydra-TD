@@ -7,6 +7,8 @@ local Text = require("ui.text")
 local Theme = require("core.theme")
 local L = require("core.localization")
 
+local Inspect = {}
+
 local lg = love.graphics
 local min = math.min
 local max = math.max
@@ -14,35 +16,13 @@ local sin = math.sin
 local abs = math.abs
 local floor = math.floor
 
-local Inspect = {}
-
-local inspectButtons = {
-    {
-        id = "upgrade",
-        x = 0, y = 0, w = 0, h = 0,
-        canAfford = false,
-        cost = nil,
-        value = nil,
-    },
-    {
-        id = "sell",
-        x = 0, y = 0, w = 0, h = 0,
-        canAfford = true,
-        cost = nil,
-        value = nil,
-    }
-}
-
-function Inspect.getButtons()
-    return inspectButtons
-end
-
 local formatInt = Util.formatInt
 
--- Internal animation state stays inside module
+-- Animation state
 local inspectAnim = 0
+local inspectTarget = 0
 
--- Colors cached locally (no upvalue explosion)
+-- Colors
 local colorPanel = Theme.ui.panel
 local colorPanel2 = Theme.ui.panel2
 local colorText = Theme.ui.text
@@ -51,10 +31,16 @@ local colorBad = Theme.ui.bad
 local colorDisabled = Theme.ui.buttonDisabled
 local colorButton = Theme.ui.button
 local colorButtonHover = Theme.ui.buttonHover
+local colorSlow = Theme.tower.slow
+local colorPoison = Theme.tower.poison
 
 local ct1, ct2, ct3 = colorText[1], colorText[2], colorText[3]
 local cb1, cb2, cb3 = colorButton[1], colorButton[2], colorButton[3]
 local ch1, ch2, ch3 = colorButtonHover[1], colorButtonHover[2], colorButtonHover[3]
+local cs1, cs2, cs3 = colorSlow[1], colorSlow[2], colorSlow[3]
+local cp1, cp2, cp3 = colorPoison[1], colorPoison[2], colorPoison[3]
+local panel1, panel2, panel3 = colorPanel[1], colorPanel[2], colorPanel[3]
+local paneldark1, paneldark2, paneldark3 = colorPanel2[1], colorPanel2[2], colorPanel2[3]
 
 local cbd1 = ch1 - cb1
 local cbd2 = ch2 - cb2
@@ -71,43 +57,106 @@ local ACTION_W = 240
 local GAP = 8
 local BUTTON_W = (ACTION_W - GAP) / 2
 
-local BAR_W = 64
-local BAR_H = 8
-local LABEL_W = 44
+-- Buttons
+local inspectButtons = {
+	{
+		id = "upgrade",
+		x = 0,
+		y = 0,
+		w = 0,
+		h = 0,
+		canAfford = false,
+		cost = nil,
+		value = nil,
+		onClick = function()
+			local t = State.selectedTower
 
-local function drawStatusBar(label, color, timeLeft, duration, x, y)
-	if not timeLeft or timeLeft <= 0 then
-		return
+			if not t then
+				return
+			end
+
+			local upgradeCost = Towers.getUpgradeCost(t)
+
+			-- Only upgrade if affordable
+			if upgradeCost and State.money >= upgradeCost then
+				Towers.upgradeTower(t)
+			else
+				-- optional error sound / floater
+			end
+		end,
+	},
+
+	{
+		id = "sell",
+		x = 0,
+		y = 0,
+		w = 0,
+		h = 0,
+		canAfford = true,
+		cost = nil,
+		value = nil,
+		onClick = function()
+			local t = State.selectedTower
+
+			if t then
+				Towers.sellTower(t)
+			end
+		end
+	}
+}
+
+function Inspect.getButtons()
+	return inspectButtons
+end
+
+-- Status effects
+local BAR_W = 120
+local BAR_H = 12
+local STATUS_GAP = 10
+
+local function drawStatusBar(r, g, b, timer, duration, x, y, now)
+	if not timer or timer <= 0 then
+		return 0
 	end
 
 	if not duration or duration <= 0 then
-		return
+		return 0
 	end
 
-	local t = max(0, min(1, timeLeft / duration))
+	local pct = timer / duration
 
-	-- Subtle pulse near expiration
-	local pulse = 1
+	if pct < 0 then pct = 0 end
+	if pct > 1 then pct = 1 end
 
-	if t < 0.25 then
-		pulse = 0.85 + sin(getTime() * 10) * 0.15
-	end
-
-	-- Label
-	lg.setColor(colorText)
-	Text.printShadow(label, x, y)
-
-	-- Bar background
+	-- Background
 	lg.setColor(0, 0, 0, 0.35)
-	lg.rectangle("fill", x + LABEL_W, y + 4, BAR_W, BAR_H, 4, 4)
+	lg.rectangle("fill", x, y, BAR_W, BAR_H, 4, 4)
 
-	-- Bar fill
-	lg.setColor(color[1] * pulse, color[2] * pulse, color[3] * pulse, 1)
-	lg.rectangle("fill", x + LABEL_W, y + 4, BAR_W * t, BAR_H, 4, 4)
+	-- Fill width
+	local fillW = BAR_W * pct
 
-	-- Timer
-	lg.setColor(1, 1, 1, 0.85)
-	Text.printShadow(L("ui.seconds", timeLeft), x + LABEL_W + BAR_W + 6, y)
+	if fillW > 0 then
+		local minW = 4
+		local visibleW = max(fillW, minW)
+
+		-- Fade near zero instead of collapsing
+		local alphaScale = 1
+
+		if pct < 0.10 then
+			alphaScale = pct / 0.10
+		end
+
+		local radius = min(4, visibleW * 0.5, BAR_H * 0.5)
+
+		lg.setColor(r, g, b, alphaScale)
+		lg.rectangle("fill", x, y, visibleW, BAR_H, radius, radius)
+	end
+
+	-- Timer (right of bar)
+	lg.setColor(ct1, ct2, ct3, 1)
+	Text.printShadow(L("ui.seconds", timer), x + BAR_W + 8, y - 2)
+
+	return BAR_H + STATUS_GAP
 end
 
 local function formatModifier(label, value, suffix)
@@ -123,21 +172,29 @@ local function formatModifier(label, value, suffix)
 end
 
 function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
-    local hasInspect = State.selectedTower ~= nil or State.selectedEnemy ~= nil
+	local hasInspect = State.selectedTower ~= nil or State.selectedEnemy ~= nil
 
-    if not hasInspect then
-        inspectAnim = inspectAnim + (0 - inspectAnim) * dt * 10
+	inspectTarget = hasInspect and 1 or 0
 
-        return
-    end
+	-- Critically damped style snap
+	local speed = 18
+	inspectAnim = inspectAnim + (inspectTarget - inspectAnim) * min(1, dt * speed)
 
-    inspectAnim = inspectAnim + (1 - inspectAnim) * dt * 10
-    local slide = (1 - inspectAnim) * 16
+	-- Clamp to avoid micro drift
+	if abs(inspectAnim - inspectTarget) < 0.001 then
+		inspectAnim = inspectTarget
+	end
+
+	-- Slide from left
+	local slide = (1 - inspectAnim) * 18
+
+	-- Fade
+	local alpha = inspectAnim
 
     local panelX = x + slide
     local panelY = y
 
-    lg.setColor(colorPanel)
+    lg.setColor(panel1, panel2, panel3, alpha)
     lg.rectangle("fill", panelX, panelY, w, h, OUTER_R, OUTER_R)
 
     local infoX = panelX + OUTER_PAD
@@ -145,7 +202,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
     local infoW = w - OUTER_PAD * 2
     local infoH = 28
 
-    lg.setColor(colorPanel2)
+    lg.setColor(paneldark1, paneldark2, paneldark3, alpha)
     lg.rectangle("fill", infoX, infoY, infoW, infoH, INNER_R, INNER_R)
 
     local contentX = panelX + OUTER_PAD
@@ -153,7 +210,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
     local contentW = w - OUTER_PAD * 2
     local contentH = h - (contentY - panelY) - OUTER_PAD
 
-    lg.setColor(colorPanel2)
+    lg.setColor(paneldark1, paneldark2, paneldark3, alpha)
     lg.rectangle("fill", contentX, contentY, contentW, contentH, INNER_R, INNER_R)
 
     local titleX = infoX + PAD
@@ -162,7 +219,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
     local bodyX = contentX + PAD
     local bodyY = contentY + PAD
 
-    lg.setColor(ct1, ct2, ct3, 1)
+    lg.setColor(ct1, ct2, ct3, alpha)
 
     if State.selectedTower then
 		local t = State.selectedTower
@@ -178,7 +235,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		local actionY = contentY + contentH - BUTTON_H - PAD
 		local actionX = contentX + PAD
 
-		local upgradeCost = Towers.towerUpgradeCost(t)
+		local upgradeCost = Towers.getUpgradeCost(t)
 		local canUpgrade = upgradeCost and State.money >= upgradeCost
 
 		-- Configure upgrade button
@@ -249,11 +306,13 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 								value = t.damage,
 								delta = "+" .. (preview.damage - t.damage),
 							},
+
 							{
 								label = L("stats.fireRate"),
 								value = t.fireRate,
 								delta = "+" .. (preview.fireRate - t.fireRate),
 							},
+
 							{
 								label = L("stats.range"),
 								value = t.range,
@@ -270,6 +329,18 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
         Text.printShadow(L(e.def.nameKey), titleX, titleY)
 
         Text.printShadow(L("inspect.hp", formatInt(e.hp), formatInt(e.maxHp)), bodyX, bodyY)
+
+		local statusY = bodyY + 24
+
+		-- Slow
+		if e.slowTimer > 0 and e.slowDuration > 0 then
+			statusY = statusY + drawStatusBar(cs1, cs2, cs3, e.slowTimer, e.slowDuration, bodyX, statusY, now)
+		end
+
+		-- Poison
+		if e.poisonTimer > 0 and e.poisonDuration > 0 then
+			statusY = statusY + drawStatusBar(cp1, cp2, cp3, e.poisonTimer, e.poisonDuration, bodyX, statusY, now)
+		end
     end
 end
 

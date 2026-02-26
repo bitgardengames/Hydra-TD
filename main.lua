@@ -24,6 +24,7 @@ local Glyphs = require("ui.glyphs")
 local DrawWorld = require("render.draw_world")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
+local Achievements = require("systems.achievements")
 local Menu = require("ui.menu.menu")
 local Hotkeys = require("core.hotkeys")
 local Rumble = require("systems.rumble")
@@ -43,6 +44,9 @@ local abs = math.abs
 local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
+local colorDim = Theme.ui.screenDim
+
+local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 
 local FIXED_DT = 1 / 120 -- Fixed step
 local ACCUM = 0 -- Frame accumulator
@@ -88,11 +92,7 @@ function resetGame()
     State.activeBoss = nil
 
     -- Reset damage stats
-    State.stats.damageByTower = {}
-    State.stats.bossDamageByTower = {}
-    State.stats.totalDamage = 0
-    State.stats.bossTotalDamage = 0
-    State.stats.damageView = 0
+	State.resetDamage()
 
     -- Waves
     Waves.resetSpawner()
@@ -104,6 +104,9 @@ function love.load(arg)
 	print(Constants.VERSION_STRING)
 
 	love.math.setRandomSeed(123456)
+
+	math.randomseed(os.time())
+	math.random()
 
 	local mode = arg and arg[1]
 
@@ -146,7 +149,7 @@ function love.update(dt)
 	end
 
 	if mode == "campaign" then
-		State.carouselT = math.min(1, State.carouselT + dt * 7)
+		State.carouselT = min(1, State.carouselT + dt * 7)
 
 		if State.carouselT >= 1 then
 			State.carouselDir = 0
@@ -186,14 +189,14 @@ function love.update(dt)
 	local p = State.placingFadeT
 	State.placingFade = p * p * (3 - 2 * p)
 
-	--Sim.update(dt)
-
 	Tooltip.update(dt)
 
 	-- Loss condition
 	if State.lives <= 0 and not State.gameOver then
 		State.gameOver = true
 		State.victory = false
+
+		Achievements.onGameOver()
 
 		State.mode = "game_over"
 
@@ -207,8 +210,9 @@ function love.update(dt)
 		-- Win condition: wave 20 cleared
 		if State.wave == 20 and not State.endless then
 			-- Save
-			Save.data.furthestIndex = math.max(Save.data.furthestIndex, State.mapIndex + 1)
-			Save.flush()
+			Save.data.furthestIndex = max(Save.data.furthestIndex, State.mapIndex + 1)
+
+			Achievements.onGameOver()
 
 			State.gameOver = true
 			State.victory = true
@@ -245,18 +249,8 @@ function love.draw()
 			local ease = t * t * (3 - 2 * t)
 
 			-- Dim overlay
-			lg.setColor(0, 0, 0, 0.55 * ease)
+			lg.setColor(cd1, cd2, cd3, cd4 * ease)
 			lg.rectangle("fill", 0, 0, sw, sh)
-
-			-- Text motion
-			local drop = (1 - ease) * 10
-			local alpha = ease
-
-			-- Text
-			Fonts.set("menu")
-
-			lg.setColor(colorText[1], colorText[2], colorText[3], ease)
-			lg.printf("PAUSED", 0, sh * 0.5 - 70 + drop, sw, "center")
 
 			Menu.drawPause()
 		end
@@ -412,4 +406,9 @@ function love.visible(visible)
 			State.mode = "pause"
 		end
 	end
+end
+
+function love.quit()
+	Steam.shutdown()
+	Achievements.onGameOver()
 end

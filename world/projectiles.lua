@@ -166,7 +166,7 @@ local function update(dt)
 				p.y = p.y + dy * invDist * maxStep
 			end
 
-			-- Hit resolution (always resolve when reaching position)
+			-- Hit resolution
 			local dxh = p.x - ex
 			local dyh = p.y - ey
 
@@ -181,6 +181,7 @@ local function update(dt)
 
 					-- Slow
 					local slow = p.slow
+
 					if slow then
 						local duration = slow.dur or 0
 						local slowAmount = slow.factor or 0
@@ -198,6 +199,7 @@ local function update(dt)
 
 					-- Poison
 					local poison = p.poison
+
 					if poison then
 						local duration = poison.dur
 
@@ -275,7 +277,10 @@ local function update(dt)
 
 					if ed2 <= r2 then
 						local t = 1 - (ed2 / r2)
-						if t < 0 then t = 0 end
+
+						if t < 0 then
+							t = 0
+						end
 
 						local dmg = baseDamage * (falloff + (1 - falloff) * t)
 
@@ -287,13 +292,7 @@ local function update(dt)
 					end
 				end
 
-				tinsert(Effects.splashes, {
-					x = px,
-					y = py,
-					r = r,
-					t = 0,
-					life = 0.21,
-				})
+				tinsert(Effects.splashes, {x = px, y = py, r = r, t = 0, life = 0.21})
 
 				swapRemove(projectiles, i)
 
@@ -311,13 +310,13 @@ local function draw()
 		local rotation = 0
 		local a = min(1, p.t * 10)
 
-		-- Homing: aim at target (or last known)
+		-- Aim at target (or last known)
 		if p.mode == "homing" then
 			local dx = (p.lastTX or p.x) - p.x
 			local dy = (p.lastTY or p.y) - p.y
 
 			rotation = atan2(dy, dx)
-		-- Ground: aim at targetted impact point
+		-- Aim at targetted impact point
 		elseif p.mode == "ground" then
 			rotation = p.rotation
 		end

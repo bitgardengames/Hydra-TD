@@ -37,13 +37,40 @@ local badR, badG, badB = colorBad[1], colorBad[2], colorBad[3]
 local outlineWidth = Theme.outline.width
 
 local TILE = Constants.TILE
-local HALF_PI = math.pi / 2
+local HALF_PI = pi / 2
+
+local function lerp(a, b, t)
+	return a + (b - a) * t
+end
+
+local function prepareEnemyRenderData()
+	local enemies = Enemies.enemies
+	local a = max(0, min(1, State.renderAlpha or 0))
+
+	for i = 1, #enemies do
+		local e = enemies[i]
+
+		-- Interpolate distance
+		local d = lerp(e.prevDist or e.dist, e.dist, a)
+		local segHint = e.prevSeg or e.seg or 1
+
+		local x, y = MapMod.sampleAtDist(d, segHint)
+
+		-- Interpolate animation time
+		local animT = lerp(e.prevAnimT or e.animT, e.animT, a)
+
+		-- Store render-only values
+		e.rx = x
+		e.ry = y
+		e.rAnimT = animT
+	end
+end
 
 -- Draw a single enemy
 local function drawEnemy(e)
-    local ix = e.x
-    local iy = e.y
-    local animT = e.animT
+	local ix = e.rx or 0
+	local iy = e.ry or 0
+	local animT = e.rAnimT or 0
     local enemyAlpha = e.alpha
 
     -- Boss Horns
@@ -104,7 +131,7 @@ local function drawEnemy(e)
 		lg.setColor(sr * 0.7, sg * 0.85, sb, 0.10 * enemyAlpha)
 		lg.circle("fill", ix, iy, e.radius - 3)
 	end
-	
+
 	-- Poison inner rim (clean green accent)
 	if e.poisonStacks and e.poisonStacks > 0 then
 		local stacks = e.poisonStacks
@@ -183,9 +210,8 @@ local function drawEnemyHealth(e)
 
 	local w = e.boss and 44 or 28
 	local h = e.boss and 7 or 5
-	local ix = e.x
-	local iy = e.y
-	local animT = e.animT
+	local ix = e.rx
+	local iy = e.ry
 	local bx = ix - w / 2
 	local by = iy - e.radius - (e.boss and 18 or 12)
 
@@ -234,10 +260,20 @@ end
 local function drawEnemies()
 	local enemies = Enemies.enemies
 
+	-- Interpolate enemy positions
+	prepareEnemyRenderData()
+
+	-- Draw bodies
 	for i = 1, #enemies do
 		local e = enemies[i]
 
 		drawEnemy(e)
+	end
+
+	-- Draw health bars above bodies
+	for i = 1, #enemies do
+		local e = enemies[i]
+
 		drawEnemyHealth(e)
 	end
 
@@ -414,7 +450,7 @@ local function drawTowerCore(kind, cx, cy, opts)
 		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
 	-- Slow
 	elseif kind == "slow" then
-		lg.rotate(math.pi / 4)
+		lg.rotate(pi / 4)
 
 		local o = size * 0.34 + outlineW * 0.5
 		local i = o - outlineW

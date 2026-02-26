@@ -12,12 +12,26 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 
 local lg = love.graphics
+
+local floor = math.floor
+local format = string.format
+
 local Screen = {}
 
 local buttons = nil
 
 local colorGood = Theme.ui.good
 local colorText = Theme.ui.text
+local colorBackdrop = Theme.ui.backdrop
+local colorDim = Theme.ui.screenDim
+
+local paddingX = 60
+local paddingY = 44
+local corner = 18
+
+local btnW = 240
+local btnH = 46
+local gap = 58
 
 local function getDifficultyLabel()
     local key = Difficulty.key()
@@ -27,16 +41,15 @@ end
 
 function Screen.load()
     local sw, sh = lg.getDimensions()
-    local cx = math.floor(sw * 0.5)
-    local startY = math.floor(sh * 0.5 + 40)
-    local gap = 58
+    local cx = floor(sw * 0.5)
+    local startY = floor(sh * 0.5 + 40)
 
     buttons = {
         {
             id = "next",
             label = L("menu.nextMap"),
-            w = 240,
-            h = 46,
+            w = btnW,
+            h = btnH,
             onClick = function()
                 Sound.play("uiConfirm")
 
@@ -52,8 +65,8 @@ function Screen.load()
         {
             id = "endless",
             label = L("menu.endless"),
-            w = 240,
-            h = 46,
+            w = btnW,
+            h = btnH,
             onClick = function()
                 Sound.play("uiConfirm")
 
@@ -66,8 +79,8 @@ function Screen.load()
         {
             id = "menu",
             label = L("menu.mainMenu"),
-            w = 240,
-            h = 46,
+            w = btnW,
+            h = btnH,
             onClick = function()
                 Sound.play("uiConfirm")
 				Backdrop.start()
@@ -90,27 +103,38 @@ function Screen.update(dt)
 end
 
 function Screen.draw()
-    local sw, sh = lg.getDimensions()
+	local sw, sh = lg.getDimensions()
 	local screenHalf = sh * 0.5
+	local cx = floor(sw * 0.5)
 
-    -- Dim background
-    lg.setColor(0, 0, 0, 0.55)
-    lg.rectangle("fill", 0, 0, sw, sh)
+	local titleY = screenHalf - 120
+	local bottomY = buttons[#buttons].y + btnH
 
-    -- Title
-    Fonts.set("title")
+	local boxW = btnW + paddingX * 2
+	local boxX = cx - boxW * 0.5
+	local boxY = titleY - paddingY
+	local boxH = (bottomY + paddingY) - boxY
 
-    lg.setColor(colorGood)
-	Text.printfShadow(L("game.victory"), 0, sh * 0.5 - 120, sw, "center")
+	-- Dim background
+	lg.setColor(colorDim)
+	lg.rectangle("fill", 0, 0, sw, sh)
 
+	-- Backdrop panel
+	lg.setColor(colorBackdrop)
+	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
+
+	-- Title
 	Fonts.set("menu")
+
+	lg.setColor(colorGood)
+	Text.printfShadow(L("game.victory"), 0, titleY, sw, "center")
 
 	-- Difficulty
 	local difficultyLabel = getDifficultyLabel()
 
 	if difficultyLabel then
 		lg.setColor(colorText)
-		Text.printfShadow(string.format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, screenHalf - 64, sw, "center")
+		Text.printfShadow(format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, screenHalf - 64, sw, "center")
 	end
 
     -- Buttons

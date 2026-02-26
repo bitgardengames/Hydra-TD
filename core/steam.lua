@@ -6,34 +6,22 @@ local Steam = {
 
 function Steam.load()
 	if ok and steam then
-		if steam.init() then
+		local init = steam.init()
+
+		if init then
 			Steam.loaded = true
 
-			steam.friends.setRichPresence("steam_display", "Booted")
-
-			--[[print('dumping "steam" object:')
-			for k, v in pairs(steam) do
-				print(k, v)
-
-				if type(v) == "table" then
-					print('dumping ' .. k .. " object:")
-					for k2, v2 in pairs(v) do
-						print(k2, v2)
-
-						if type(v2) == "table" then
-							print('dumping ' .. k2 .. " object:")
-							for k3, v3 in pairs(v2) do
-								print(k3, v3)
-							end
-						end
-					end
+			steam.friends.onGameOverlayActivated = function(data)
+				if data.active then
+					-- We can pause here
 				end
-			end]]
+			end
+
+			steam.userStats.onUserStatsReceived = function(data)
+				print("onUserStatsReceived:", data)
+			end
 		end
 	end
-
-	-- steam.utils.isSteamRunningOnSteamDeck()
-	-- steam.utils.isSteamInBigPictureMode()
 end
 
 function Steam.update()
@@ -53,6 +41,25 @@ function Steam.unlockAchievement(id)
 	if Steam.loaded and id then
 		steam.userStats.setAchievement(id)
 		steam.userStats.storeStats()
+	end
+end
+
+function Steam.setStat(stat, value)
+	if Steam.loaded and stat then
+		steam.userStats.setStatInt(stat, value or 1)
+		steam.userStats.storeStats()
+	end
+end
+
+function Steam.storeStats()
+	if Steam.loaded then
+		steam.userStats.storeStats()
+	end
+end
+
+function Steam.shutdown()
+	if Steam.loaded then
+		steam.shutdown()
 	end
 end
 

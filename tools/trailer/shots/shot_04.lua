@@ -8,7 +8,7 @@ return {
 
     scene = {
         towers = {
-            {kind = "lancer", gx = 18, gy = 10},
+            {kind = "lancer", gx = 18, gy = 13},
             {kind = "lancer", gx = 19, gy = 11},
             {kind = "poison", gx = 19, gy = 10},
             {kind = "shock", gx = 16, gy = 13},
@@ -25,7 +25,7 @@ return {
     actions = {
         {t = 0, fn = Actions.upgradeTowerAt(19, 10, 2)},
         {t = 0, fn = Actions.upgradeTowerAt(19, 11, 1)},
-        {t = 0, fn = Actions.upgradeTowerAt(18, 10, 1)},
+        {t = 0, fn = Actions.upgradeTowerAt(18, 13, 1)},
         {t = 0, fn = Actions.upgradeTowerAt(20, 11, 1)},
     },
 

@@ -38,8 +38,8 @@ local isValidTarget = Targeting.isValidTarget
 local FIRE_ANGLE_EPS = math.rad(6)
 
 local shopOrder = {
-	"lancer",
 	"slow",
+	"lancer",
 	"poison",
 	"shock",
 	"cannon",
@@ -115,7 +115,7 @@ local function addTower(kind, gx, gy)
 	return true
 end
 
-local function towerUpgradeCost(tower)
+local function getUpgradeCost(tower)
     local base = tower.def.cost
     local exp = 1.55
 
@@ -127,7 +127,7 @@ local function upgradeTower(t)
 		return
 	end
 
-	local cost = towerUpgradeCost(t)
+	local cost = getUpgradeCost(t)
 
 	if State.money < cost then
 		return
@@ -398,7 +398,7 @@ return {
 	shopOrder = shopOrder,
 	TowerDefs = TowerDefs,
 	addTower = addTower,
-	towerUpgradeCost = towerUpgradeCost,
+	getUpgradeCost = getUpgradeCost,
 	upgradeTower = upgradeTower,
 	getUpgradePreview = getUpgradePreview,
 	sellTower = sellTower,

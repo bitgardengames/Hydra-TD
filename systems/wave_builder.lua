@@ -10,7 +10,7 @@ local Templates = {
 
 	fast = {
 		enemy = "runner",
-		baseCount = 20,
+		baseCount = 16,
 		spacing = 0.65, -- 0.45
 	},
 

@@ -94,12 +94,14 @@ function Backdrop.start(index)
 	State.worldMapIndex = shot.map
 
 	-- Save current difficulty
-	Backdrop.prevDifficulty = prevDifficulty
+	Backdrop.prevDifficulty = Difficulty.get()
 
 	-- Force Normal
 	Difficulty.set("normal")
 
 	resetGame()
+
+	State.ignoreStats = true
 
 	State.money = 9999
 
@@ -118,8 +120,6 @@ function Backdrop.start(index)
 		end
 	end
 
-	Sound.suppressed = false
-
 	-- Start wave
 	State.wave = shot.wave or 1
 	Waves.startWave()
@@ -132,6 +132,8 @@ function Backdrop.start(index)
 		Sim.update(step)
 		tt = tt + step
 	end
+
+	Sound.suppressed = false
 
 	-- begin fade-in
 	local dur = Backdrop.isInitial and Backdrop.fadeDurInitial or Backdrop.fadeDur
@@ -211,6 +213,8 @@ end
 
 function Backdrop.stop()
 	Backdrop.active = false
+
+	State.ignoreStats = false
 
 	if Backdrop.prevDifficulty then
 		Difficulty.set(Backdrop.prevDifficulty)

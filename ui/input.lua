@@ -275,10 +275,10 @@ local function keypressed(key)
 			Towers.sellTower(State.selectedTower)
 		end
 	elseif key == Hotkeys.kb.actions.toggleMeter then
-		State.stats.showDamageMeter = not State.stats.showDamageMeter
+		State.combatStats.showDamageMeter = not State.combatStats.showDamageMeter
 	elseif key == Hotkeys.kb.actions.toggleMeterInfo then
-		if State.stats.showDamageMeter then
-			State.stats.damageView = (State.stats.damageView + 1) % 2
+		if State.combatStats.showDamageMeter then
+			State.combatStats.damageView = (State.combatStats.damageView + 1) % 2
 		end
 	end
 end
@@ -362,7 +362,7 @@ local function gamepadpressed(joystick, button)
 
 	-- Fast-forward
 	if action == "fastForward" then
-		State.speed = (State.speed == 1) and 4 or 1
+		State.speed = (State.speed == 1) and 3 or 1
 
 		return
 	end
@@ -397,15 +397,15 @@ local function gamepadpressed(joystick, button)
 
 	-- Toggle damage meter
 	if action == "toggleMeter" then
-		State.stats.showDamageMeter = not State.stats.showDamageMeter
+		State.combatStats.showDamageMeter = not State.combatStats.showDamageMeter
 
 		return
 	end
 
 	-- Toggle damage meter info
 	if action == "toggleMeterInfo" then
-		if State.stats.showDamageMeter then
-			State.stats.damageView = (State.stats.damageView + 1) % 2
+		if State.combatStats.showDamageMeter then
+			State.combatStats.damageView = (State.combatStats.damageView + 1) % 2
 		end
 
 		return

@@ -164,7 +164,7 @@ function Sound.load()
 	Sound.sfx.slow = {
 		source = la.newSource("assets/sounds/slow.ogg", "static"),
 		jitter = true,
-		bias = 0.40,
+		bias = 0.20,
 		--cooldown = 0.10,
 	}
 

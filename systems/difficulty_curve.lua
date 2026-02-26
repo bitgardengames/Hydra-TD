@@ -4,13 +4,13 @@ local DifficultyCurve = {}
 
 -- Campaign tuning
 DifficultyCurve.campaignEnd = 20
-DifficultyCurve.campaignHpSlope = 0.95 -- 0.86
+DifficultyCurve.campaignHpSlope = 0.97
 
 -- Endless tuning
 DifficultyCurve.endlessHpSlope = 1.35 -- 1.20
 
 -- Boss scaling
-DifficultyCurve.bossExponent = 1.04
+DifficultyCurve.bossExponent = 1.05
 
 -- Enemy hp multiplier
 function DifficultyCurve.getEnemyHpMultiplier(waveIndex)

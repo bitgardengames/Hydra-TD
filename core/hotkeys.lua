@@ -5,8 +5,8 @@ local Hotkeys = {}
 -- Keyboard bindings
 Hotkeys.kb = {
 	shop = {
-		lancer = "1",
-		slow = "2",
+		slow = "1",
+		lancer = "2",
 		poison = "3",
 		shock = "4",
 		cannon = "5",
@@ -26,7 +26,7 @@ Hotkeys.kb = {
 	},
 }
 
--- Gamepad bindings (standardized LÖVE names)
+-- Gamepad bindings (standardized LOVE names)
 -- These names work across Xbox/PS/Switch/Steam Deck (input-wise).
 Hotkeys.pad = {
 	actions = {
@@ -46,8 +46,8 @@ Hotkeys.pad = {
 	},
 
 	shop = {
-		dpup = "lancer",
 		dpleft = "slow",
+		dpup = "lancer",
 		dpdown = "poison",
 		dpright = "cannon",
 		rightstick = "shock",

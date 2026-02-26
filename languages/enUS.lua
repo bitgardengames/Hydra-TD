@@ -15,6 +15,7 @@ return {
 		mainMenu = "Main Menu",
 		nextMap = "Next Map",
 		endless = "Endless Mode",
+		paused = "PAUSED",
 	},
 
 	settings = {
@@ -141,5 +142,35 @@ return {
 		menu = "In Menu",
 		campaign = "Map Selection",
 		gameStatus = "Wave %s - %s",
+	},
+
+	achievement = {
+		boss_first = "First Blood",
+		boss_50 = "No Mercy",
+
+		kill_500 = "Still Standing",
+		kill_1500 = "Keep Them Coming",
+		kill_3000 = "Unstoppable Force",
+
+		tower_lancer_250 = "Between the Eyes",
+		tower_slow_250 = "Stopped Cold",
+		tower_cannon_250 = "Heavy Ordinance",
+		tower_shock_250 = "High Voltage",
+		tower_poison_250 = "It Adds Up",
+	},
+
+	achievementDesc = {
+		boss_first = "Defeat your first boss.",
+		boss_50 = "Defeat 50 bosses.",
+
+		kill_500 = "Defeat 500 enemies.",
+		kill_1500 = "Defeat 1,500 enemies.",
+		kill_3000 = "Defeat 3,000 enemies.",
+
+		tower_lancer_250 = "Defeat 250 enemies with the Lancer.",
+		tower_slow_250 = "Defeat 250 enemies with the Slow tower.",
+		tower_cannon_250 = "Defeat 250 enemies with the Cannon.",
+		tower_shock_250 = "Defeat 250 enemies with the Shock tower.",
+		tower_poison_250 = "Defeat 250 enemies with the Poison tower.",
 	},
 }

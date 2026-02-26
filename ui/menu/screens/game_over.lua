@@ -2,6 +2,7 @@ local Theme = require("core.theme")
 local Button = require("ui.button")
 local Cursor = require("core.cursor")
 local State = require("core.state")
+local Achievements = require("systems.achievements")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
 local Text = require("ui.text")
@@ -11,12 +12,36 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 
 local lg = love.graphics
+
+local floor = math.floor
+local format = string.format
+
 local Screen = {}
 
 local buttons = nil
 
 local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
+local colorBackdrop = Theme.ui.backdrop
+local colorDim = Theme.ui.screenDim
+
+local paddingX = 24
+local paddingY = 24
+local corner = 18
+
+local btnW = 240
+local btnH = 46
+local gap = 58
+
+local headerHeight = 36
+local headerSpacing = 28
+local reasonSpacing = 34
+local buttonsOffset = 48
+
+local contentStartY = 0
+local titleY = 0
+local reasonY = 0
+local difficultyY = 0
 
 local function getDifficultyLabel()
     local key = Difficulty.key()
@@ -26,16 +51,15 @@ end
 
 function Screen.load()
     local sw, sh = lg.getDimensions()
-    local cx = math.floor(sw * 0.5)
-    local startY = math.floor(sh * 0.5 + 40)
-    local gap = 58
+    local cx = floor(sw * 0.5)
+    local startY = floor(sh * 0.5 + 40)
 
     buttons = {
         {
             id = "restart",
             label = L("menu.restart"),
-            w = 240,
-            h = 46,
+            w = btnW,
+            h = btnH,
             onClick = function()
                 Sound.play("uiConfirm")
                 State.mode = "game"
@@ -43,11 +67,12 @@ function Screen.load()
                 resetGame()
             end
         },
+
         {
             id = "menu",
             label = L("menu.mainMenu"),
-            w = 240,
-            h = 46,
+            w = btnW,
+            h = btnH,
             onClick = function()
                 Sound.play("uiConfirm")
 				Backdrop.start()
@@ -64,46 +89,76 @@ function Screen.load()
 end
 
 function Screen.update(dt)
-    for _, btn in ipairs(buttons) do
-        Button.update(btn, Cursor.x, Cursor.y, dt)
-    end
+	local sw, sh = lg.getDimensions()
+	local cx = floor(sw * 0.5)
+
+	-- Anchor like pause
+	contentStartY = floor(sh * 0.5 - 110)
+
+	titleY = contentStartY
+	reasonY = titleY + headerHeight + headerSpacing
+	difficultyY = reasonY + reasonSpacing
+
+	local buttonsStartY = difficultyY + buttonsOffset
+
+	for i, btn in ipairs(buttons) do
+		btn.x = cx - btn.w * 0.5
+		btn.y = buttonsStartY + (i - 1) * gap
+
+		Button.update(btn, Cursor.x, Cursor.y, dt)
+	end
 end
 
 function Screen.draw()
-    local sw, sh = lg.getDimensions()
-	local screenHalf = sh * 0.5
+	local sw, sh = lg.getDimensions()
+	local cx = floor(sw * 0.5)
 
-    -- Dim background
-    lg.setColor(0, 0, 0, 0.55)
-    lg.rectangle("fill", 0, 0, sw, sh)
+	local count = #buttons
+	local buttonsHeight = (count - 1) * gap + btnH
 
-    -- Title
-    Fonts.set("title")
+	local contentHeight = headerHeight + headerSpacing + reasonSpacing + buttonsOffset + buttonsHeight
 
-    lg.setColor(colorBad)
+	local boxW = btnW + paddingX * 2
+	local boxH = contentHeight + paddingY * 2
+	local boxX = cx - boxW * 0.5
+	local boxY = contentStartY - paddingY
 
-	Text.printfShadow(State.endTitle, 0, screenHalf - 120, sw, "center")
+	-- Dim
+	lg.setColor(colorDim)
+	lg.rectangle("fill", 0, 0, sw, sh)
 
+	-- Panel
+	lg.setColor(colorBackdrop)
+	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
+
+	-- Title
 	Fonts.set("menu")
+	lg.setColor(colorBad)
+	Text.printfShadow(State.endTitle, 0, titleY, sw, "center")
 
+	-- Reason
 	lg.setColor(colorText)
+	if State.endReason then
+		Text.printfShadow(State.endReason, 0, reasonY, sw, "center")
+	end
 
 	-- Difficulty
 	local difficultyLabel = getDifficultyLabel()
-
 	if difficultyLabel then
-		Text.printfShadow(string.format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, screenHalf - 64, sw, "center")
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.7)
+		Text.printfShadow(
+			format("%s: %s", L("settings.difficulty"), difficultyLabel),
+			0,
+			difficultyY,
+			sw,
+			"center"
+		)
 	end
 
-    -- Reason
-    if State.endReason then
-		Text.printfShadow(State.endReason, 0, screenHalf - 32, sw, "center")
-    end
-
-    -- Buttons
-    for _, btn in ipairs(buttons) do
-        Button.draw(btn)
-    end
+	-- Buttons
+	for _, btn in ipairs(buttons) do
+		Button.draw(btn)
+	end
 end
 
 function Screen.mousepressed(x, y, button)

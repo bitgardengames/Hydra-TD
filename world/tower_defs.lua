@@ -7,7 +7,7 @@ return {
 		descKey = "towerDesc.lancer",
 		cost = 55,
 		range = 3.9 * Constants.TILE,
-		fireRate = 1.8, -- shots/sec
+		fireRate = 2.0, -- shots/sec
 		damage = 10,
 		recoilStrength = Constants.TILE * 0.08,
 		recoilDecay = 18,
@@ -35,7 +35,7 @@ return {
 		turnSpeed = 10,
 		color = Theme.tower.slow,
 		canRotate = true,
-		onHitSlow = {factor = 0.55, dur = 1.5},
+		onHitSlow = {factor = 0.5, dur = 1.5},
 		upgrade = {
 			dmgMult = 2.5,
 			rangeAdd = 0.1 * Constants.TILE,
@@ -50,7 +50,7 @@ return {
 		cost = 70,
 		range = 3.2 * Constants.TILE,
 		fireRate = 0.85,
-		damage = 17,
+		damage = 19,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
 		projSpeed = 320,
@@ -75,7 +75,7 @@ return {
 		cost = 65,
 		range = 3.5 * Constants.TILE,
 		fireRate = 1.2,
-		damage = 10,
+		damage = 9,
 		recoilStrength = 0,
 		recoilDecay = 0,
 		turnSpeed = 20,

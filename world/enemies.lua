@@ -9,6 +9,7 @@ local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
 local DifficultyCurve = require("systems.difficulty_curve")
 local Steam = require("core.steam")
+local Achievements = require("systems.achievements")
 local L = require("core.localization")
 
 local enemies = {}
@@ -23,6 +24,7 @@ local min = math.min
 local max = math.max
 local sqrt = math.sqrt
 local floor = math.floor
+local upper = string.upper
 local tinsert = table.insert
 
 local function swapRemove(list, i)
@@ -90,7 +92,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		prevAnimT = 0,
 		dist = 0,
 		prevDist = 0,
-		seg = 1,
+		seg = idx or 1,
+		prevSeg = idx or 1,
 		modifiers = def.modifiers,
 		slowFactor = 1,
 		slowTimer = 0,
@@ -180,17 +183,22 @@ local function updateEnemies(dt)
 			if e.deathT <= 0 then
 				if e.lastHitTower then
 					e.lastHitTower.kills = e.lastHitTower.kills + 1
+
+					local statName = "TOWER_" .. upper(e.lastHitTower.kind) .. "_KILLS"
+
+					Achievements.increment(statName)
 				end
 
-				State.money = State.money + e.reward
+				Achievements.increment("BOSSES_KILLED")
+				Achievements.increment("ENEMIES_KILLED") -- Bosses still count as an enemy
+
+				State.money = State.money + floor(e.reward)
 				State.score = State.score + e.score
 
 				tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
 				State.activeBoss = nil
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
-
-				Steam.unlockAchievement("ACH_FIRST_BOSS")
 
 				swapRemove(enemies, i)
 			end
@@ -217,7 +225,13 @@ local function updateEnemies(dt)
 			-- Non-boss: immediate death
 			if e.lastHitTower then
 				e.lastHitTower.kills = e.lastHitTower.kills + 1
+
+				local statName = "TOWER_" .. upper(e.lastHitTower.kind) .. "_KILLS"
+
+				Achievements.increment(statName)
 			end
+
+			Achievements.increment("ENEMIES_KILLED")
 
 			if State.selectedEnemy == e then
 				State.selectedEnemy = nil
@@ -261,7 +275,8 @@ local function updateEnemies(dt)
 		e.prevX = e.x
 		e.prevY = e.y
 
-		-- Advance distance
+		-- Store previous distance/segment (render will interpolate distance, then sample)
+		e.prevSeg = e.seg
 		e.prevDist = e.dist
 		e.dist = e.dist + e.speed * dt
 
@@ -292,6 +307,8 @@ local function updateEnemies(dt)
 					State.gameOver = true
 					State.victory = false
 
+					Achievements.onGameOver()
+
 					State.mode = "game_over"
 
 					State.endT = 0
@@ -305,10 +322,11 @@ local function updateEnemies(dt)
 				end
 
 				State.lives = State.lives - 1
+
 				local livesAnim = State.livesAnim or 0
 				State.livesAnim = livesAnim + (1 - livesAnim) * 0.6
 
-				Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
+				--Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
 
 				swapRemove(enemies, i)
 
@@ -316,6 +334,8 @@ local function updateEnemies(dt)
 					State.lives = 0
 					State.gameOver = true
 					State.victory = false
+
+					Achievements.onGameOver()
 
 					State.mode = "game_over"
 

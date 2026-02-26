@@ -3,6 +3,10 @@ local State = require("core.state")
 
 local REF_COVERAGE_INDEX = 1.8
 
+local min = math.min
+local max = math.max
+local sqrt = math.sqrt
+
 local map = {
 	blocked = {},
 	isPath = {},
@@ -25,6 +29,7 @@ local function canPlaceAt(gx, gy)
 		return false, "outside"
 
 	end
+
 	if map.isPath[makeKey(gx, gy)] then
 		return false, "path"
 	end
@@ -102,6 +107,7 @@ local function loadPath(points)
 	-- Build world-space path (visuals, movement, etc.)
 	for i, p in ipairs(map.path) do
 		local wx, wy = gridToCenter(p[1], p[2])
+
 		map.pathWorld[i] = {wx, wy}
 	end
 
@@ -120,7 +126,7 @@ local function loadPath(points)
 
 		local dx = bx - ax
 		local dy = by - ay
-		local dist = math.sqrt(dx * dx + dy * dy)
+		local dist = sqrt(dx * dx + dy * dy)
 
 		totalDist = totalDist + dist
 		map.pathDist[i] = totalDist
@@ -132,7 +138,7 @@ local function loadPath(points)
 	local coverageIndex = coverageTiles / pathLength
 	local raw = coverageIndex / REF_COVERAGE_INDEX
 
-	map.coverageMult = math.max(0.90, math.min(1.10, raw))
+	map.coverageMult = max(0.90, min(1.10, raw))
 
 	State.mapCoverageMult = map.coverageMult
 end
@@ -145,10 +151,10 @@ end
 local function sampleAtDist(dist, hintSeg)
 	-- Clamp
 	local pathWorld = map.pathWorld
-	local pathDist  = map.pathDist
+	local pathDist = map.pathDist
 	local n = #pathDist
 
-	if n == 0 then
+	if not pathDist or n == 0 then
 		return 0, 0, 1
 	end
 
@@ -157,6 +163,7 @@ local function sampleAtDist(dist, hintSeg)
 	end
 
 	local total = map.totalWorldLength or pathDist[n] or 0
+
 	if dist >= total then
 		return pathWorld[n][1], pathWorld[n][2], n - 1
 	end
@@ -177,6 +184,7 @@ local function sampleAtDist(dist, hintSeg)
 
 	local t = 0
 	local denom = (segEnd - segStart)
+
 	if denom > 0 then
 		t = (dist - segStart) / denom
 	end
@@ -191,12 +199,13 @@ local function sampleDirAtDist(dist, hintSeg)
 	local dx = x2 - x1
 	local dy = y2 - y1
 	local d2 = dx * dx + dy * dy
-	
+
 	if d2 <= 0.000001 then
 		return 1, 0, seg
 	end
 
-	local inv = 1 / math.sqrt(d2)
+	local inv = 1 / sqrt(d2)
+
 	return dx * inv, dy * inv, seg
 end
 

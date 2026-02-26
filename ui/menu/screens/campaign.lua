@@ -85,6 +85,7 @@ local function drawTriangleWithShadow(points, color)
 end
 
 -- Map preview generation
+
 local function buildMapPreview(mapDef)
 	local w, h = 520, 312
 	local canvas = lg.newCanvas(w, h)

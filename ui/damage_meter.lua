@@ -35,11 +35,11 @@ local function sorter(a, b)
 end
 
 function DamageMeter.draw()
-    if not State.stats or not State.stats.showDamageMeter then
+    if not State.combatStats or not State.combatStats.showDamageMeter then
         return
     end
 
-    local stats = State.stats
+    local stats = State.combatStats
     local isBossView = (stats.damageView == 1)
 
     local dmgTable = isBossView and stats.bossDamageByTower or stats.damageByTower

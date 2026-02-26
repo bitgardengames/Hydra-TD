@@ -27,7 +27,7 @@ function Fonts.reload()
 	Fonts.tooltip = love.graphics.newFont(f, 14)
 	Fonts.ui = love.graphics.newFont(f, 16)
 	Fonts.floaters = love.graphics.newFont(f, 24)
-	Fonts.menu = love.graphics.newFont(f, 32)
+	Fonts.menu = love.graphics.newFont(f, 24)
 	Fonts.title = love.graphics.newFont(f, 48)
 end
 

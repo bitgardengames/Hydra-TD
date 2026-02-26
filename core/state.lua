@@ -1,4 +1,5 @@
 local state = {
+	-- Gameplay data
 	money = 100,
 	moneyLerp = 100,
 	lives = 20,
@@ -41,7 +42,10 @@ local state = {
 
 	inputSource = "keyboard",
 
-	stats = {
+	ignoreStats = false,
+
+	-- Combat data
+	combatStats = {
 		damageView = 0,
 		damageByTower = {},
 		bossDamageByTower = {},
@@ -58,22 +62,40 @@ function state.addDamage(kind, dmg, isBoss)
 		return
 	end
 
-    local stats = state.stats
-    stats.damageByTower[kind] = (stats.damageByTower[kind] or 0) + dmg
-    stats.totalDamage = (stats.totalDamage or 0) + dmg
+    local combatStats = state.combatStats
+    combatStats.damageByTower[kind] = (combatStats.damageByTower[kind] or 0) + dmg
+    combatStats.totalDamage = (combatStats.totalDamage or 0) + dmg
 
     if isBoss then
-        stats.bossDamageByTower[kind] = (stats.bossDamageByTower[kind] or 0) + dmg
-        stats.bossTotalDamage = (stats.bossTotalDamage or 0) + dmg
+        combatStats.bossDamageByTower[kind] = (combatStats.bossDamageByTower[kind] or 0) + dmg
+        combatStats.bossTotalDamage = (combatStats.bossTotalDamage or 0) + dmg
     end
 
-	stats.damageDirty = true
+	combatStats.damageDirty = true
 end
 
-state.stats.damageByTower.lancer = 0
-state.stats.damageByTower.slow = 0
-state.stats.damageByTower.cannon = 0
-state.stats.damageByTower.shock = 0
-state.stats.damageByTower.poison = 0
+function state.resetDamage()
+	local stats = state.combatStats
+
+	stats.damageView = 0
+
+	stats.totalDamage = 0
+	stats.bossTotalDamage = 0
+
+	stats.damageByTower.lancer = 0
+	stats.bossDamageByTower.lancer = 0
+
+	stats.damageByTower.slow = 0
+	stats.bossDamageByTower.slow = 0
+
+	stats.damageByTower.cannon = 0
+	stats.bossDamageByTower.cannon = 0
+
+	stats.damageByTower.shock = 0
+	stats.bossDamageByTower.shock = 0
+
+	stats.damageByTower.poison = 0
+	stats.bossDamageByTower.poison = 0
+end
 
 return state
