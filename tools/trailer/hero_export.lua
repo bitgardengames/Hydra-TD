@@ -21,7 +21,7 @@ HeroExport.formats = {
 		width = 748,
 		height = 896,
 		subjectScale = 0.05,
-		verticalBias = 0.15,
+		verticalBias = 0.0,
 	},
 }
 
@@ -61,6 +61,11 @@ HeroExport.TRANSPARENT_BANNERS = {
 	header_capsule = true,
 	small_capsule = true,
 	desktop = true,
+}
+
+HeroExport.TITLE_DROP_BY_BANNER = {
+	vertical_capsule = 0.34,
+	library_capsule = 0.36,
 }
 
 -- State
@@ -387,10 +392,12 @@ function HeroExport.exportAllFromWorld(renderWorldFn)
 			drawVignette(b.w, b.h)
 
 			if not HeroExport.TEXTLESS_BANNERS[name] then
+				local drop = HeroExport.TITLE_DROP_BY_BANNER[name] or HeroExport.titleDrop
+
 				lg.setBlendMode("alpha")
 				lg.setColor(1,1,1,1)
 				Title.invalidateCache()
-				Title.drawBannerStyle(b.w, b.h, { angle = -math.pi / 6, yOffset = b.h * HeroExport.titleDrop })
+				Title.drawBannerStyle(b.w, b.h, { angle = -math.pi / 6, yOffset = b.h * drop})
 			end
 
 			lg.setCanvas()

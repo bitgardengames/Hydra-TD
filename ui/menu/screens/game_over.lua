@@ -30,12 +30,12 @@ local paddingY = 24
 local corner = 18
 
 local btnW = 240
-local btnH = 46
+local btnH = 42
 local gap = 58
 
 local headerHeight = 36
-local headerSpacing = 28
-local reasonSpacing = 34
+local headerSpacing = 30
+local reasonSpacing = 32
 local buttonsOffset = 48
 
 local contentStartY = 0
@@ -64,6 +64,7 @@ function Screen.load()
                 Sound.play("uiConfirm")
                 State.mode = "game"
                 State.gameOver = false
+				Sound.playMusic("gameplay")
                 resetGame()
             end
         },
@@ -78,6 +79,7 @@ function Screen.load()
 				Backdrop.start()
 				Steam.setRichPresence(L("presence.menu"))
                 State.mode = "menu"
+				Sound.playMusic("menu")
             end
         },
     }
@@ -132,27 +134,26 @@ function Screen.draw()
 	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
 
 	-- Title
-	Fonts.set("menu")
+	Fonts.set("title")
+
 	lg.setColor(colorBad)
 	Text.printfShadow(State.endTitle, 0, titleY, sw, "center")
 
+	Fonts.set("menu")
+
 	-- Reason
 	lg.setColor(colorText)
+
 	if State.endReason then
 		Text.printfShadow(State.endReason, 0, reasonY, sw, "center")
 	end
 
 	-- Difficulty
 	local difficultyLabel = getDifficultyLabel()
+
 	if difficultyLabel then
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.7)
-		Text.printfShadow(
-			format("%s: %s", L("settings.difficulty"), difficultyLabel),
-			0,
-			difficultyY,
-			sw,
-			"center"
-		)
+		Text.printfShadow(format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, difficultyY, sw, "center")
 	end
 
 	-- Buttons

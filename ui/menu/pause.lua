@@ -63,6 +63,7 @@ function Page.load()
 				Backdrop.start()
 				State.mode = "menu"
 				Steam.setRichPresence(L("presence.menu"))
+				Sound.exitPause()
 				Sound.play("uiConfirm")
 			end
 		},
@@ -82,10 +83,10 @@ function Page.update(dt)
 	end
 end
 
-local paddingX = 24 -- 40
+local paddingX = 24
 local paddingY = 24
-local headerSpacing = 30
-local headerHeight = 32 -- glyph height of Fonts.menu
+local headerSpacing = 36
+local headerHeight = 38
 
 function Page.draw()
 	local sw, sh = lg.getDimensions()
@@ -95,7 +96,7 @@ function Page.draw()
 	local count = #buttons
 
 	-- Header
-	Fonts.set("menu")
+	Fonts.set("title")
 
 	-- Button block height
 	local buttonsHeight = (count - 1) * gap + btnH
@@ -117,6 +118,8 @@ function Page.draw()
 	lg.setColor(1, 1, 1, 1)
 	lg.printf(L("menu.paused"), 0, boxY + paddingY, sw, "center")
 
+	Fonts.set("menu")
+
 	-- Draw buttons
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
@@ -136,6 +139,8 @@ end
 function Page.keypressed(key)
 	if key == Hotkeys.kb.actions.escape then
 		State.mode = "game"
+		Sound.exitPause()
+		print('exitPause')
 	end
 end
 

@@ -6,9 +6,17 @@ local Towers = require("world.towers")
 local Sound = require("systems.sound")
 local Waves = require("systems.waves")
 local Constants = require("core.constants")
+local Theme = require("core.theme")
+local Fonts = require("core.fonts")
 local Difficulty = require("systems.difficulty")
 
 local lg = love.graphics
+
+local versionText = Constants.VERSION_STRING
+local versionPad = 12
+
+local colorText = Theme.ui.text
+local cr, cg, cb = colorText[1], colorText[2], colorText[3]
 
 local Backdrop = {
     active = false,
@@ -209,6 +217,19 @@ function Backdrop.draw()
 		lg.rectangle("fill", 0, 0, lg.getWidth(), lg.getHeight())
 		lg.setColor(1, 1, 1, 1)
 	end
+
+	-- Version tag
+	local sw, sh = lg.getDimensions()
+
+	Fonts.set("ui")
+
+	love.graphics.setColor(cr, cg, cb, 0.75)
+
+	local font = Fonts.ui
+	local tw = font:getWidth(versionText)
+	local th = font:getHeight()
+
+	love.graphics.print(versionText, sw - tw - versionPad - 5, sh - th - versionPad)
 end
 
 function Backdrop.stop()

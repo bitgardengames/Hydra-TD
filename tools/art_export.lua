@@ -300,6 +300,21 @@ function Export.exportAppIcons()
 	end
 end
 
+--[[
+	Animation idea, keep a glitchy tone but smooth animation
+
+	animate the x eyes so they spin around,
+	scale out
+	boss shocked eyes scale/pop in
+	flicker one eye
+	vertical rounded rectangle (1 larger, 1 smaller) can "drip" from the eye, then fade out
+	schocked eyes pop out
+	x eyes come back
+	x eyes flicke, one at a time, or just one
+
+	normal eyes could come in, and look around, or wink or something.
+--]]
+
 function Export.exportSocialAvatar()
 	local sizes = {98, 256, 512, 1024, 2048} -- 98 is YouTube avatar size
 	local Constants = require("core.constants")
@@ -854,9 +869,9 @@ function Export.run()
 	--Export.exportSocialAvatar()
 	--Export.exportCogSocialAvatar()
 	--Export.exportCogSocialAvatarAnim()
-	
+
 	--require("ui.glyphs").exportSheet("glyphs.png", {cols = 6})
-	
+
 	love.event.quit()
 end
 

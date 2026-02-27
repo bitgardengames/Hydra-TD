@@ -26,7 +26,7 @@ function Trailer.run()
         Director.load("shot_01") -- always start at the beginning
     end
 	
-	--require("systems.sound").playMusic("bg")
+	--require("systems.sound").playMusic("menu")
 end
 
 function love.update(dt)

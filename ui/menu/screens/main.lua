@@ -11,20 +11,21 @@ local Backdrop = require("scenes.backdrop")
 local Screen = {}
 
 local getTime = love.timer.getTime
+
+local sin = math.sin
+local min = math.min
+local rad = math.rad
 local floor = math.floor
 
-local menuColor = Theme.menu
+local colorText = Theme.ui.text
+local colorBackdrop = Theme.ui.backdrop
 
 local buttons = nil
-
-local verText = Constants.VERSION_STRING
-local verAlpha = 0.75
-local verPad = 12
 
 local lancerIdle = {
 	angle = -math.pi / 6,
 	from = -math.pi / 6,
-	to = -math.pi / 6 - math.rad(28),
+	to = -math.pi / 6 - rad(28),
 	t = 0,
 	hold = 0,
 	dir = 1,
@@ -33,6 +34,14 @@ local lancerIdle = {
 
 local ROTATE_TIME = 1.8
 local HOLD_TIME = 5.0
+
+local btnW = 240
+local btnH = 42
+local gap = 58
+
+local panelPaddingX = 24
+local panelPaddingY = 24
+local panelCorner = 18
 
 function Screen.load()
 	-- Reset cursor when entering menu
@@ -44,28 +53,30 @@ function Screen.load()
 		{
 			id = "play",
 			label = "Play",
-			w = 240,
-			h = 46,
+			w = btnW,
+			h = btnH,
 			onClick = function()
 				State.mode = "campaign"
 				Sound.play("uiConfirm")
 			end
 		},
+
 		{
 			id = "settings",
 			label = "Settings",
-			w = 240,
-			h = 46,
+			w = btnW,
+			h = btnH,
 			onClick = function()
 				State.mode = "settings"
 				Sound.play("uiConfirm")
 			end
 		},
+
 		{
 			id = "quit",
 			label = "Quit",
-			w = 240,
-			h = 46,
+			w = btnW,
+			h = btnH,
 			onClick = function()
 				love.event.quit()
 			end
@@ -114,17 +125,16 @@ function Screen.update(dt)
 
 		-- Servo while holding
 		if lancerIdle.hold > 0 then
-			local SERVO_AMPLITUDE = math.rad(0.35)
+			local SERVO_AMPLITUDE = rad(0.35)
 			local SERVO_SPEED = 1.8
-			local fade = math.min(1, lancerIdle.hold / 0.6)
+			local fade = min(1, lancerIdle.hold / 0.6)
 
-			local servo = math.sin(t * SERVO_SPEED) * SERVO_AMPLITUDE * fade
+			local servo = sin(t * SERVO_SPEED) * SERVO_AMPLITUDE * fade
 			lancerIdle.angle = lancerIdle.angle + servo
 		end
 	end
 
 	local startY = floor(sh * 0.52)
-	local gap = 58
 
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
@@ -136,7 +146,8 @@ end
 
 function Screen.draw()
 	local sw, sh = love.graphics.getDimensions()
-	local titleY = floor(sh * 0.34)
+	local cx = floor(sw * 0.5)
+	local titleY = floor(sh * 0.41)
 
 	-- Background scene
 	Backdrop.draw()
@@ -144,25 +155,26 @@ function Screen.draw()
 	-- Title
 	Title.draw({x = sw * 0.5, y = titleY, lancerScale = 2.0, angle = lancerIdle.angle, alpha = 1})
 
+	-- Calculate button block size
+	local totalHeight = (#buttons - 1) * gap + btnH
+
+	local panelW = btnW + panelPaddingX * 2
+	local panelH = totalHeight + panelPaddingY * 2
+
+	local panelX = cx - panelW * 0.5
+	local panelY = buttons[1].y - panelPaddingY
+
+	-- Draw button backdrop panel
+	love.graphics.setColor(colorBackdrop)
+	love.graphics.rectangle("fill", panelX, panelY, panelW, panelH, panelCorner, panelCorner)
+
 	Fonts.set("menu")
 
-	-- Buttons
+	-- Draw buttons
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
-
-	-- Version tag
-	Fonts.set("ui")
-
-	love.graphics.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], verAlpha)
-
-	local font = love.graphics.getFont()
-	local tw = font:getWidth(verText)
-	local th = font:getHeight()
-
-	love.graphics.print(verText, sw - tw - verPad - 5, sh - th - verPad)
 end
-
 function Screen.mousepressed(x, y, button)
 	for _, btn in ipairs(buttons) do
 		if Button.mousepressed(btn, x, y, button) then

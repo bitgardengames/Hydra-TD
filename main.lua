@@ -51,10 +51,9 @@ local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 local FIXED_DT = 1 / 120 -- Fixed step
 local ACCUM = 0 -- Frame accumulator
 
-function resetGame()
-	-- Remove! Just testing. Brute force.
-	--State.worldMapIndex = 2
+local SCREENSHOT_DIR = "screenshots"
 
+function resetGame()
     -- Clear world state
     Enemies.clear()
     Towers.clear()
@@ -100,6 +99,13 @@ function resetGame()
 	Camera.load()
 end
 
+local pauseGame = function()
+	if State.mode == "game" then
+		State.mode = "pause"
+		Sound.enterPause()
+	end
+end
+
 function love.load(arg)
 	print(Constants.VERSION_STRING)
 
@@ -123,6 +129,8 @@ function love.load(arg)
 	else
 	    require("core.bootstrap").initFull()
 		require("ui.menu.menu").load()
+
+		Steam.setOverlayHook(pauseGame)
 	end
 end
 
@@ -137,6 +145,7 @@ function love.update(dt)
 	Cursor.update(dt)
 	Rumble.update(dt)
 	Steam.update()
+	Sound.update(dt)
 
 	if mode == "pause" then
 		Menu.updatePause(dt)
@@ -297,7 +306,12 @@ function love.keypressed(key)
 
 	if key == Hotkeys.kb.actions.screenshot then
 		local time = os.date("%Y-%m-%d_%H-%M-%S")
-		lg.captureScreenshot("screenshot_" .. time .. ".png")
+
+		if not love.filesystem.getInfo(SCREENSHOT_DIR) then
+			love.filesystem.createDirectory(SCREENSHOT_DIR)
+		end
+
+		lg.captureScreenshot(SCREENSHOT_DIR .. "/screenshot_" .. time .. ".png")
 	end
 
 	if State.mode ~= "game" then
@@ -371,9 +385,7 @@ function love.gamepadaxis(joystick, axis, value)
 end
 
 function love.joystickremoved(joystick)
-	if State.mode == "game" then
-		State.mode = "pause"
-	end
+	pauseGame()
 end
 
 function love.joystickadded(joystick)
@@ -394,17 +406,13 @@ end
 
 function love.focus(focused)
 	if not focused then -- Alt-tab or focus loss
-		if State.mode == "game" then
-			State.mode = "pause"
-		end
+		pauseGame()
 	end
 end
 
 function love.visible(visible)
 	if not visible then
-		if State.mode == "game" then
-			State.mode = "pause"
-		end
+		pauseGame()
 	end
 end
 

@@ -12,6 +12,7 @@ local Menu = require("ui.menu.menu")
 local Settings = require("ui.menu.screens.settings")
 local BottomBar = require("ui.bottom_bar")
 local Cursor = require("core.cursor")
+local Sound = require("systems.sound")
 local L = require("core.localization")
 
 local getTime = love.timer.getTime
@@ -19,14 +20,13 @@ local lm = love.mouse
 local floor = math.floor
 local min = math.min
 
+local lastPadConfirm = 0
+local PAD_CLICK_COOLDOWN = 0.12
+local TILE = Constants.TILE
+
 local findEnemyAt = Enemies.findEnemyAt
 
 local colorBad = Theme.ui.bad
-
-local TILE = Constants.TILE
-
-local lastPadConfirm = 0
-local PAD_CLICK_COOLDOWN = 0.12
 
 local function worldToGrid(wx, wy)
 	if wx < 0 or wy < 0 then
@@ -197,6 +197,35 @@ local function mousereleased(x, y, button)
 end
 
 local function keypressed(key)
+	-- Toggle pause
+	if key == Hotkeys.kb.actions.escape then
+		if State.mode == "pause" then
+			State.mode = "game"
+			Sound.exitPause()
+
+			return
+		elseif State.mode == "game" then
+			-- Cancel placement
+			if State.placing then
+				cancelPlacement()
+
+				return
+			end
+
+			-- Deselect
+			if State.selectedTower or State.selectedEnemy then
+				deselect()
+
+				return
+			end
+
+			State.mode = "pause"
+			Sound.enterPause()
+
+			return
+		end
+	end
+
 	-- Menu screens
 	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" or State.mode == "pause" then
 		Menu.keypressed(key)
@@ -227,24 +256,7 @@ local function keypressed(key)
 	end
 
 	-- Gameplay hotkeys
-	if key == Hotkeys.kb.actions.escape then
-		-- Cancel placement
-		if State.placing then
-			cancelPlacement()
-
-			return
-		end
-
-		-- Deselect selection
-		if State.selectedTower or State.selectedEnemy then
-			deselect()
-
-			return
-		end
-
-		-- Pause
-		State.mode = "pause"
-	elseif key == Hotkeys.kb.shop.lancer then
+	if key == Hotkeys.kb.shop.lancer then
 		State.placing = "lancer"
 		deselect()
 	elseif key == Hotkeys.kb.shop.slow then
@@ -311,9 +323,13 @@ local function gamepadpressed(joystick, button)
 	-- Global actions
 	if action == "pause" then
 		if State.mode == "pause" then
+			print('exit pause?')
 			State.mode = "game"
+			Sound.exitPause()
 		elseif State.mode == "game" then
+			print("enter pause?")
 			State.mode = "pause"
+			Sound.enterPause()
 		end
 
 		return

@@ -1,20 +1,28 @@
 local State = require("core.state")
 local Save = require("core.save")
 
-local Sound = {}
+local Sound = {
+	masterVolume = 0.16,
+	currentMusic = nil,
+	suppressed = false,
+	musicFadeT = 0,
+	musicFadeDur = 0.25,
+	musicFadeDir = 0,
+	musicDuckAmount = 0.2,
 
-Sound.sfx = {}
-Sound.music = {}
-
-Sound.supressed = false
+	sfx = {},
+	music = {},
+}
 
 local lastPlayTime = {}
 
 local la = love.audio
 local lmr = love.math.random
+local max = math.max
+local min = math.min
 
-local function clampHalf(v)
-	return v * 0.25
+local function scaleVolume(v)
+	return v * Sound.masterVolume
 end
 
 -- Play a sound effect
@@ -36,7 +44,7 @@ function Sound.play(name)
 
 		-- Scale with game speed
 		--local speedMult = (State and State.speed == 4) and 1.6 or 1.0
-		local speedMult = (State and State.speed == 4) and 1.0 or 0.5
+		local speedMult = (State and State.speed == 2) and 1.0 or 0.5
 
 		if now - last < entry.cooldown * speedMult then
 			return
@@ -67,7 +75,7 @@ function Sound.play(name)
 end
 
 function Sound.setSFXVolume(v)
-	local baseVol = clampHalf(v)
+	local baseVol = scaleVolume(v)
 
 	for _, entry in pairs(Sound.sfx) do
 		local bias = entry.bias or 1.0
@@ -83,57 +91,83 @@ function Sound.setSFXVolume(v)
 	end
 end
 
--- Play music
+-- Music controls
 function Sound.playMusic(name)
-	local music = Sound.music[name]
+	local newTrack = nil
 
-	if music then
-		music:play()
+	if name == "gameplay" then
+		if not Sound.gameplayTracks or #Sound.gameplayTracks == 0 then
+			return
+		end
+
+		newTrack = Sound.gameplayTracks[lmr(#Sound.gameplayTracks)]
+	else
+		newTrack = Sound.music[name]
 	end
+
+	if not newTrack then
+		return
+	end
+
+	-- If already playing this track, do nothing
+	if Sound.currentMusic == newTrack then
+		return
+	end
+
+	-- Stop previous music
+	if Sound.currentMusic then
+		Sound.currentMusic:stop()
+	end
+
+	Sound.currentMusic = newTrack
+	Sound.currentMusic:play()
 end
 
--- Stop music
-function Sound.stopMusic(name)
-	local music = Sound.music[name]
-
-	if music then
-		music:stop()
+function Sound.stopAllMusic()
+	if Sound.currentMusic then
+		Sound.currentMusic:stop()
+		Sound.currentMusic = nil
 	end
 end
 
 function Sound.setMusicVolume(v)
-	if Sound.music.bg then
-		Sound.music.bg:setVolume(clampHalf(v))
+	local vol = scaleVolume(v)
+
+	for _, music in pairs(Sound.music) do
+		music:setVolume(vol)
 	end
 end
 
 function Sound.load()
+	local sfx = Sound.sfx
+	local music = Sound.music
+
 	-- Sounds
-	Sound.sfx.uiMove = {
+	sfx.uiMove = {
 		source = la.newSource("assets/sounds/uiMove.ogg", "static"),
 	}
 
-	Sound.sfx.uiConfirm = {
+	sfx.uiConfirm = {
 		source = la.newSource("assets/sounds/uiConfirm.ogg", "static"),
 	}
 
-	Sound.sfx.uiBack = {
+	sfx.uiBack = {
 		source = la.newSource("assets/sounds/uiBack.ogg", "static"),
 	}
 
-	Sound.sfx.uiError = {
+	sfx.uiError = {
 		source = la.newSource("assets/sounds/uiError.ogg", "static"),
 	}
 
-	Sound.sfx.victory = {
+	sfx.victory = {
 		source = la.newSource("assets/sounds/victory.ogg", "static"),
 	}
 
-	Sound.sfx.gameOver = {
+	sfx.gameOver = {
 		source = la.newSource("assets/sounds/gameOver.ogg", "static"),
 	}
 
-	Sound.sfx.towerPlaced = {
+	sfx.towerPlaced = {
 		sources = {
 			la.newSource("assets/sounds/towerPlaced1.ogg", "static"),
 			la.newSource("assets/sounds/towerPlaced2.ogg", "static"),
@@ -142,11 +176,11 @@ function Sound.load()
 	}
 
 	-- NYI
-	Sound.sfx.towerUpgraded = {
+	sfx.towerUpgraded = {
 		--source = la.newSource("assets/sounds/sell.wav", "static"),
 	}
 
-	Sound.sfx.towerSold = {
+	sfx.towerSold = {
 		sources = {
 			la.newSource("assets/sounds/towerSold1.ogg", "static"),
 			la.newSource("assets/sounds/towerSold2.ogg", "static"),
@@ -154,52 +188,135 @@ function Sound.load()
 		},
 	}
 
-	Sound.sfx.lancer = {
+	sfx.lancer = {
 		source = la.newSource("assets/sounds/lancer.ogg", "static"),
 		jitter = true,
-		bias = 0.70,
+		bias = 0.7,
 		--cooldown = 0.08,
 	}
 
-	Sound.sfx.slow = {
+	sfx.slow = {
 		source = la.newSource("assets/sounds/slow.ogg", "static"),
 		jitter = true,
-		bias = 0.20,
+		bias = 0.2,
 		--cooldown = 0.10,
 	}
 
-	Sound.sfx.cannon = {
+	sfx.cannon = {
 		source = la.newSource("assets/sounds/cannon.ogg", "static"),
 		jitter = true,
+		bias = 0.82,
 		--cooldown = 0.14,
 	}
 
-	Sound.sfx.poison = {
+	sfx.poison = {
 		sources = {
 			la.newSource("assets/sounds/poison1.ogg", "static"),
 			la.newSource("assets/sounds/poison2.ogg", "static"),
 		},
 		jitter = true,
-		bias = 0.70,
+		bias = 0.7,
 		--cooldown = 0.12,
 	}
 
-	Sound.sfx.shock = {
+	sfx.shock = {
 		sources = {
 			la.newSource("assets/sounds/shock1.ogg", "static"),
 			la.newSource("assets/sounds/shock2.ogg", "static"),
 			la.newSource("assets/sounds/shock3.ogg", "static"),
 		},
 		jitter = true,
+		bias = 0.9,
 		--cooldown = 0.09,
 	}
 
 	-- Music
-	Sound.music.bg = la.newSource("assets/music/Menu4.ogg", "stream")
-	Sound.music.bg:setLooping(true)
+	music.menu = la.newSource("assets/music/Menu4.ogg", "stream")
+	music.menu:setLooping(true)
+
+	music.pause = la.newSource("assets/music/Pause.ogg", "stream")
+	music.pause:setLooping(true)
+
+	music.gameOver = la.newSource("assets/music/GameOver.ogg", "stream")
+	music.gameOver:setLooping(true)
+
+	music.track1 = la.newSource("assets/music/Track1.ogg", "stream")
+	music.track1:setLooping(true)
+
+	music.track2 = la.newSource("assets/music/Track2.ogg", "stream")
+	music.track2:setLooping(true)
+
+	music.track3 = la.newSource("assets/music/Track3.ogg", "stream")
+	music.track3:setLooping(true)
+
+	music.track4 = la.newSource("assets/music/Track4.ogg", "stream")
+	music.track4:setLooping(true)
+
+	music.track5 = la.newSource("assets/music/Track5.ogg", "stream")
+	music.track5:setLooping(true)
+
+	music.track6 = la.newSource("assets/music/Track6.ogg", "stream")
+	music.track6:setLooping(true)
+
+	Sound.gameplayTracks = {
+		music.track1,
+		music.track2,
+		music.track3,
+		music.track4,
+		music.track5,
+		music.track6,
+	}
 
 	Sound.setMusicVolume(Save.data.settings.musicVolume)
 	Sound.setSFXVolume(Save.data.settings.sfxVolume)
+end
+
+function Sound.update(dt)
+	if not Sound.currentMusic then
+		return
+	end
+
+	if Sound.musicFadeDir == 0 then
+		return
+	end
+
+	local t = Sound.musicFadeT
+	local dur = Sound.musicFadeDur
+
+	t = t + (dt / dur) * Sound.musicFadeDir
+	t = max(0, min(1, t))
+
+	Sound.musicFadeT = t
+
+	-- Stop when finished
+	if t == 0 or t == 1 then
+		Sound.musicFadeDir = 0
+	end
+
+	local base = Save.data.settings.musicVolume or 1
+	local duck = Sound.musicDuckAmount
+
+	local eased = t * t
+	local fadeFactor = 1 - (eased * (1 - duck))
+	local finalVol = base * fadeFactor * Sound.masterVolume
+
+	Sound.currentMusic:setVolume(finalVol)
+end
+
+function Sound.enterPause()
+	if not Sound.currentMusic then
+		return
+	end
+
+	Sound.musicFadeDir = 1
+end
+
+function Sound.exitPause()
+	if not Sound.currentMusic then
+		return
+	end
+
+	Sound.musicFadeDir = -1
 end
 
 return Sound

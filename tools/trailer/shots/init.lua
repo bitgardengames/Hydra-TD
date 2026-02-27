@@ -11,5 +11,6 @@ for _, file in ipairs(files) do
 end
 
 Shots["capsule"] = require("tools.trailer.shots.capsule_art")
+Shots["boss_capsule"] = require("tools.trailer.shots.boss_capsule")
 
 return Shots

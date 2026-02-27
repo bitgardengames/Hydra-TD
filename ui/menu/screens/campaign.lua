@@ -23,20 +23,31 @@ local colorPath = Theme.terrain.path
 local colorGrass = Theme.terrain.grass
 local colorPanel = Theme.ui.panel
 local colorShadow = Theme.ui.shadow
+local colorDim = Theme.ui.screenDim
+local colorBackdrop = Theme.ui.backdrop
 local colorHover = {0.94, 0.94, 0.94}
 local colorEnabled = {0.88, 0.88, 0.88}
 local colorDisabled = {0.65, 0.65, 0.65}
 
 -- Layout
-local PAD_PREVIEW = 28
-local PAD_TITLE = 54
+local PAD_PREVIEW = 44
+local PAD_TITLE = 60
 local PAD_META = 18
 local PAD_ACTION = 26
+local TITLE_OFFSET = -22
+
+local paddingX = 28
+local paddingY = 28
+local corner = 18
+
+local btnW = 240
+local btnH = 42
+local gap = 58
 
 local PREVIEW_ZOOM = 1.3
 
 -- Arrow navigation
-local ARROW_SIZE = 26
+local ARROW_SIZE = 20
 local ARROW_OFFSET = 48
 local ARROW_ALPHA = 0.85
 local ARROW_HOVER = 1.0
@@ -85,7 +96,6 @@ local function drawTriangleWithShadow(points, color)
 end
 
 -- Map preview generation
-
 local function buildMapPreview(mapDef)
 	local w, h = 520, 312
 	local canvas = lg.newCanvas(w, h)
@@ -148,8 +158,8 @@ function Screen.load()
 		{
 			id = "play",
 			label = L("menu.play"),
-			w = 220,
-			h = 42,
+			w = btnW,
+			h = btnH,
 			onClick = function()
 				if isMapLocked(State.mapIndex) then
 					Sound.play("uiError")
@@ -161,14 +171,15 @@ function Screen.load()
 				State.mode = "game"
 				Backdrop.stop()
 				resetGame()
+				Sound.playMusic("gameplay")
 			end
 		},
 
 		{
 			id = "back",
 			label = L("menu.back"),
-			w = 220,
-			h = 42,
+			w = btnW,
+			h = btnH,
 			onClick = function()
 				State.mode = "menu"
 				Steam.setRichPresence(L("presence.menu"))
@@ -181,14 +192,31 @@ end
 function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
-	local startY = floor(sh * 0.38 + 260)
-	local gap = 52
 
 	Backdrop.update(dt)
 
+	local index = State.mapIndex
+	local preview = mapPreviews[index]
+	local pw, ph = preview:getWidth(), preview:getHeight()
+
+	-- Layout
+	local previewBlockH = ph
+	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
+	local buttonsBlockH = (#campaignButtons - 1) * 52 + campaignButtons[1].h
+	local contentH = previewBlockH + titleBlockH + buttonsBlockH
+
+	local boxW = pw + paddingX * 2
+	local boxH = contentH + paddingY * 2
+	local boxY = floor(sh * 0.5 - boxH * 0.5)
+
+	local previewY = boxY + paddingY
+	local textY = previewY + ph + PAD_PREVIEW
+	local buttonsStartY = textY + PAD_TITLE + PAD_META
+
+	-- Buttons
 	for i, btn in ipairs(campaignButtons) do
 		btn.x = cx - btn.w * 0.5
-		btn.y = startY + (i - 1) * gap
+		btn.y = buttonsStartY + (i - 1) * 52
 		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
 
 		Button.update(btn, Cursor.x, Cursor.y, dt)
@@ -205,79 +233,96 @@ function Screen.draw()
 	local mapCount = #Maps
 
 	local preview = mapPreviews[index]
-	local pw, ph  = preview:getWidth(), preview:getHeight()
+	local pw, ph = preview:getWidth(), preview:getHeight()
 
-	local centerX = floor(sw * 0.5)
-	local blockH = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + PAD_ACTION
-	local pyTop = floor(sh * 0.38 - blockH * 0.5)
-	local centerY = pyTop + ph * 0.5
+	local cx = floor(sw * 0.5)
+
+	-- Layout
+	local previewBlockH = ph
+	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
+	local buttonsBlockH = (#campaignButtons - 1) * 52 + campaignButtons[1].h
+
+	local contentH = previewBlockH + titleBlockH + buttonsBlockH
+	local boxW = pw + paddingX * 2
+	local boxH = contentH + paddingY * 2
+
+	local boxX = cx - boxW * 0.5
+	local boxY = floor(sh * 0.5 - boxH * 0.5)
+
+	-- Dim background
+	lg.setColor(colorDim)
+	lg.rectangle("fill", 0, 0, sw, sh)
+
+	-- Panel
+	lg.setColor(colorBackdrop)
+	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
 
 	-- Preview
+	local previewX = cx - pw * 0.5
+	local previewY = boxY + paddingY
+
 	local locked = isMapLocked(index)
 	local alpha = locked and 0.35 or 1.0
 
 	lg.setColor(1, 1, 1, alpha)
-	lg.draw(preview, centerX - pw * 0.5, centerY - ph * 0.5)
+	lg.draw(preview, previewX, previewY)
 
 	-- Frame
-	lg.setColor(colorPanel)
-	lg.rectangle("line", centerX - pw * 0.5, centerY - ph * 0.5, pw, ph, 6, 6)
+	lg.setColor(colorBackdrop)
+	lg.setLineWidth(2)
+	lg.rectangle("line", previewX, previewY, pw, ph)
+	lg.setLineWidth(1)
 
 	-- Locked overlay
 	if locked then
-		lg.setColor(0, 0, 0, 0.45)
-		lg.rectangle("fill", centerX - pw * 0.5, centerY - ph * 0.5, pw, ph, 12, 12)
+		lg.setColor(0.01, 0.01, 0.01, 0.45)
+		lg.rectangle("fill", previewX, previewY, pw, ph, 12, 12)
 
 		Fonts.set("title")
 
 		lg.setColor(colorText)
-		Text.printfShadow(L("campaign.locked"), centerX - pw * 0.5, centerY - 14, pw, "center")
+		Text.printfShadow(L("campaign.locked"), previewX, previewY + ph * 0.5 - 16, pw, "center")
 	end
 
-	-- Navigation arrows
+	local bandY = previewY + ph + PAD_PREVIEW
+	local textY = bandY + TITLE_OFFSET
+
+	-- Arrows
 	local leftEnabled  = State.mapIndex > 1
 	local rightEnabled = State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1)
 
-	local arrowY = centerY
+	local arrowY = textY + 28
 	local size = ARROW_SIZE
 
-	-- Left arrow
+	-- Left
 	do
-		local cx = centerX - pw * 0.5 - ARROW_OFFSET
-		local enabled = leftEnabled
+		local ax = boxX + paddingX + ARROW_SIZE * 2
 		local hover = false
+		local points = {ax + size * 0.5, arrowY - size, ax - size * 0.5, arrowY, ax + size * 0.5, arrowY + size}
 
-		local points = {cx + size * 0.5, arrowY - size, cx - size * 0.5, arrowY, cx + size * 0.5, arrowY + size}
-
-		if enabled and Cursor.x then
-			hover = pointInTriangle(Cursor.x, Cursor.y, points[1], points[2], points[3], points[4], points[5], points[6])
+		if leftEnabled then
+			hover = pointInTriangle(Cursor.x, Cursor.y, unpack(points))
 		end
 
-		local color = resolveArrowColor(enabled, hover)
-
+		local color = resolveArrowColor(leftEnabled, hover)
 		drawTriangleWithShadow(points, color)
 	end
 
-	-- Right arrow
+	-- Right
 	do
-		local cx = centerX + pw * 0.5 + ARROW_OFFSET
-		local enabled = rightEnabled
+		local ax = boxX + boxW - paddingX - ARROW_SIZE * 2
 		local hover = false
+		local points = {ax - size * 0.5, arrowY - size, ax + size * 0.5, arrowY, ax - size * 0.5, arrowY + size}
 
-		local points = {cx - size * 0.5, arrowY - size, cx + size * 0.5, arrowY, cx - size * 0.5, arrowY + size}
-
-		if enabled and Cursor.x then
-			hover = pointInTriangle( Cursor.x, Cursor.y, points[1], points[2], points[3], points[4], points[5], points[6])
+		if rightEnabled then
+			hover = pointInTriangle(Cursor.x, Cursor.y, unpack(points))
 		end
 
-		local color = resolveArrowColor(enabled, hover)
-
+		local color = resolveArrowColor(rightEnabled, hover)
 		drawTriangleWithShadow(points, color)
 	end
 
-	-- Text
-	local textY = pyTop + ph + PAD_PREVIEW
-
+	-- Title
 	Fonts.set("title")
 
 	lg.setColor(colorText)
@@ -288,9 +333,11 @@ function Screen.draw()
 	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
 
 	-- Buttons
+	local buttonsStartY = textY + PAD_TITLE + PAD_META
+
 	Fonts.set("menu")
 
-	for _, btn in ipairs(campaignButtons) do
+	for i, btn in ipairs(campaignButtons) do
 		Button.draw(btn)
 	end
 end
@@ -303,7 +350,6 @@ function Screen.keypressed(key)
 		else
 			Sound.play("uiError")
 		end
-
 	elseif key == "right" then
 		if State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1) then
 			State.mapIndex = State.mapIndex + 1
@@ -311,7 +357,6 @@ function Screen.keypressed(key)
 		else
 			Sound.play("uiError")
 		end
-
 	elseif key == "escape" then
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
@@ -326,17 +371,31 @@ function Screen.mousepressed(x, y, button)
 		local preview = mapPreviews[index]
 		local pw, ph = preview:getWidth(), preview:getHeight()
 
-		local centerX = floor(sw * 0.5)
-		local blockH  = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + PAD_ACTION
-		local pyTop   = floor(sh * 0.38 - blockH * 0.5)
-		local centerY = pyTop + ph * 0.5
-		local size    = ARROW_SIZE
+		local cx = floor(sw * 0.5)
 
-		-- Left arrow click
+		-- Layout
+		local previewBlockH = ph
+		local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
+		local buttonsBlockH = (#campaignButtons - 1) * 52 + campaignButtons[1].h
+		local contentH = previewBlockH + titleBlockH + buttonsBlockH
+
+		local boxW = pw + paddingX * 2
+		local boxH = contentH + paddingY * 2
+		local boxX = cx - boxW * 0.5
+		local boxY = floor(sh * 0.5 - boxH * 0.5)
+
+		local previewX = cx - pw * 0.5
+		local previewY = boxY + paddingY
+
+		local bandY = previewY + ph + PAD_PREVIEW
+		local textY = bandY + TITLE_OFFSET
+		local arrowY = textY + 28
+
+		-- Left
 		if index > 1 then
-			local cx = centerX - pw * 0.5 - ARROW_OFFSET
+			local ax = boxX + paddingX + ARROW_SIZE * 2
 
-			if pointInTriangle(x, y, cx + size * 0.5, centerY - size, cx - size * 0.5, centerY, cx + size * 0.5, centerY + size) then
+			if pointInTriangle(x, y, ax + ARROW_SIZE * 0.5, arrowY - ARROW_SIZE, ax - ARROW_SIZE * 0.5, arrowY, ax + ARROW_SIZE * 0.5, arrowY + ARROW_SIZE) then
 				State.mapIndex = index - 1
 				Sound.play("uiMove")
 
@@ -344,11 +403,11 @@ function Screen.mousepressed(x, y, button)
 			end
 		end
 
-		-- Right arrow click
+		-- Right
 		if index < #Maps and not isMapLocked(index + 1) then
-			local cx = centerX + pw * 0.5 + ARROW_OFFSET
+			local ax = boxX + boxW - paddingX - ARROW_SIZE * 2
 
-			if pointInTriangle(x, y, cx - size * 0.5, centerY - size, cx + size * 0.5, centerY, cx - size * 0.5, centerY + size) then
+			if pointInTriangle(x, y, ax - ARROW_SIZE * 0.5, arrowY - ARROW_SIZE, ax + ARROW_SIZE * 0.5, arrowY, ax - ARROW_SIZE * 0.5, arrowY + ARROW_SIZE) then
 				State.mapIndex = index + 1
 				Sound.play("uiMove")
 

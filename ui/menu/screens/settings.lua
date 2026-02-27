@@ -21,6 +21,8 @@ local abs = math.abs
 local Screen = {}
 
 local colorText = Theme.ui.text
+local colorBackdrop = Theme.ui.backdrop
+local colorDim = Theme.ui.screenDim or {0, 0, 0, 0.55}
 
 local LABEL_W = 180
 local SLIDER_W = 160
@@ -28,8 +30,7 @@ local SLIDER_H = 10
 local ROW_H = 32
 local THUMB_R = 7
 
-local ARROW_W = 24
-local ROW_W = ARROW_W + LABEL_W + SLIDER_W + 40
+local ROW_W = LABEL_W + SLIDER_W + 40
 
 local settingsCursor = 1
 local rows = {}
@@ -65,6 +66,7 @@ local function adjustRow(row, dir)
 
 		if next < 1 then next = #DIFFICULTY_ORDER end
 		if next > #DIFFICULTY_ORDER then next = 1 end
+
 		row.set(DIFFICULTY_ORDER[next])
 		Sound.play("uiMove")
 	end
@@ -72,7 +74,7 @@ end
 
 -- Layout helpers
 local function rowRectFor(index, x, yTop)
-	rowRects[index] = {x = x - ARROW_W, y = yTop, w = ROW_W, h = ROW_H}
+	rowRects[index] = {x = x, y = yTop, w = ROW_W, h = ROW_H}
 
 	return rowRects[index]
 end
@@ -93,13 +95,6 @@ local function drawRowHighlight(index, selected, hovered)
 
 		lg.setColor(1, 1, 1, selected and 0.10 or 0.06)
 		lg.rectangle("fill", r.x, r.y, r.w, r.h, 6, 6)
-	end
-end
-
-local function drawRowArrow(x, yTop, selected)
-	if selected then
-		lg.setColor(1, 1, 1, 1)
-		Text.printShadow(">", x - 18, rowTextY(yTop))
 	end
 end
 
@@ -135,20 +130,19 @@ end
 
 local function drawToggleRow(row, x, yTop)
 	local valueText = row.get() and L("settings.on") or L("settings.off")
-
 	Text.printShadow(string.format("%s: %s", row.label, valueText), x, rowTextY(yTop))
 end
 
 local function drawDiscreteRow(row, x, yTop)
 	local key = row.get()
-
 	Text.printShadow(string.format("%s: %s", row.label, L("difficulty." .. key)), x, rowTextY(yTop))
 end
 
 local function drawRow(row, selected, hovered, x, yTop, index)
 	rowRectFor(index, x, yTop)
 	drawRowHighlight(index, selected, hovered)
-	drawRowArrow(x, yTop, selected)
+
+	lg.setColor(colorText)
 
 	if row.type == "slider" then
 		drawSliderRow(row, x, yTop, selected, hovered, index)
@@ -158,6 +152,25 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 		drawDiscreteRow(row, x, yTop)
 	end
 end
+
+-- Layout
+local paddingX = 24
+local paddingY = 24
+local corner = 18
+
+local btnW = 240
+local btnH = 42
+
+local lineH = 48
+local headerHeight = 36
+local headerSpacing = 30
+local footerSpacing = 22
+
+local boxX, boxY, boxW, boxH = 0, 0, 0, 0
+local titleY = 0
+local rowsStartY = 0
+local buttonsStartY = 0
+local listX = 0
 
 function Screen.load()
 	settingsCursor = 1
@@ -175,6 +188,7 @@ function Screen.load()
 				Save.flush()
 			end,
 		},
+
 		{
 			id = "sfx",
 			label = L("settings.sfx"),
@@ -187,6 +201,7 @@ function Screen.load()
 				Save.flush()
 			end,
 		},
+
 		{
 			id = "difficulty",
 			label = L("settings.difficulty"),
@@ -200,6 +215,7 @@ function Screen.load()
 				Save.flush()
 			end,
 		},
+
 		{
 			id = "fullscreen",
 			label = L("settings.fullscreen"),
@@ -210,17 +226,15 @@ function Screen.load()
 					local sw, sh = love.graphics.getDimensions()
 					local msaa = require("core.scale").suggestMSAA(sw, sh) or 8
 
-					love.window.setMode(0, 0, { fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
+					love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
 				else
 					local msaa = require("core.scale").suggestMSAA(1280, 800) or 2
-
-					love.window.setMode(1280, 800, { fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
+					love.window.setMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
 				end
 
 				Save.data.settings.fullscreen = v
 
 				local sw, sh = love.graphics.getDimensions()
-
 				love.resize(sw, sh)
 
 				Save.flush()
@@ -232,8 +246,8 @@ function Screen.load()
 		{
 			id = "back",
 			label = L("menu.back"),
-			w = 220,
-			h = 42,
+			w = btnW,
+			h = btnH,
 			onClick = function()
 				State.mode = "menu"
 				Steam.setRichPresence(L("presence.menu"))
@@ -244,16 +258,36 @@ function Screen.load()
 end
 
 function Screen.update(dt)
-	-- do NOT clear rowRects/sliderRects here. Update uses the rects built during the previous draw for hover/drag.
+	-- do NOT clear rowRects/sliderRects here. Update uses rects built during the previous draw for hover/drag.
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
-	local startY = floor(sh * 0.55)
 
 	Backdrop.update(dt)
 
+	-- Panel sizing (content-driven)
+	local rowsBlockH = (#rows - 1) * lineH + ROW_H
+	local btnBlockH = buttons[1] and buttons[1].h or 0
+
+	local contentH = headerHeight + headerSpacing + rowsBlockH + footerSpacing + btnBlockH
+
+	boxW = ROW_W + paddingX * 2
+	boxH = contentH + paddingY * 2
+	boxX = cx - boxW * 0.5
+	boxY = floor(sh * 0.5 - boxH * 0.5)
+
+	titleY = boxY + paddingY
+	rowsStartY = titleY + headerHeight + headerSpacing
+
+	-- Center the row block inside the panel width
+	local rowRectX = cx - (ROW_W * 0.5)
+	listX = rowRectX
+
+	-- Buttons (layout in update, like pause)
+	buttonsStartY = rowsStartY + rowsBlockH + footerSpacing
+
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
-		btn.y = startY + (#rows * 44) + 24 + (i - 1) * 52
+		btn.y = buttonsStartY + (i - 1) * 52
 		Button.update(btn, Cursor.x, Cursor.y, dt)
 	end
 
@@ -294,29 +328,35 @@ function Screen.draw()
 	sliderRects = {}
 
 	local sw, sh = lg.getDimensions()
-	local centerX = floor(sw * 0.5)
-	local startY = floor(sh * 0.40)
-	local lineH = 48
-
-	local listX = centerX - 160
 
 	Backdrop.draw()
 
+	-- Dim background
+	lg.setColor(colorDim)
+	lg.rectangle("fill", 0, 0, sw, sh)
+
+	-- Panel
+	lg.setColor(colorBackdrop)
+	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
+
+	-- Title
 	Fonts.set("title")
 
 	lg.setColor(colorText)
-	Text.printfShadow(L("settings.title"), 0, startY - 120, sw, "center")
+	Text.printfShadow(L("settings.title"), 0, titleY, sw, "center")
 
+	-- Rows
 	Fonts.set("menu")
 
 	for i, row in ipairs(rows) do
-		local yTop = startY + (i - 1) * lineH
-		local r = {x = listX - ARROW_W, y = yTop, w = ROW_W, h = ROW_H}
+		local yTop = rowsStartY + (i - 1) * lineH
+		local r = {x = listX, y = yTop, w = ROW_W, h = ROW_H}
 		local hovered = Cursor.x >= r.x and Cursor.x <= r.x + r.w and Cursor.y >= r.y and Cursor.y <= r.y + r.h
 
 		drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
 	end
 
+	-- Button(s)
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
@@ -331,13 +371,11 @@ function Screen.keypressed(key)
 		Sound.play("uiMove")
 	elseif key == "left" then
 		local row = rows[settingsCursor]
-
 		if row then
 			adjustRow(row, -1)
 		end
 	elseif key == "right" then
 		local row = rows[settingsCursor]
-
 		if row then
 			adjustRow(row, 1)
 		end
@@ -350,7 +388,6 @@ end
 
 function Screen.gamepadpressed(_, button)
 	local row = rows[settingsCursor]
-
 	if not row then
 		return
 	end
@@ -378,7 +415,6 @@ function Screen.mousepressed(x, y, button)
 			if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
 				settingsCursor = i
 				draggingSlider = i
-
 				return true
 			end
 		end

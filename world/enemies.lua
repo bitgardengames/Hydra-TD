@@ -317,6 +317,7 @@ local function updateEnemies(dt)
 					State.endReason = L("game.bossBreach")
 
 					Sound.play("gameOver")
+					Sound.playMusic("gameOver")
 
 					return
 				end
@@ -345,6 +346,7 @@ local function updateEnemies(dt)
 					State.endReason = L("game.outOfLives")
 
 					Sound.play("gameOver")
+					Sound.playMusic("gameOver")
 				end
 
 				goto continue

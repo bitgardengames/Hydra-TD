@@ -18,7 +18,7 @@ function Bootstrap.initFull()
 	Camera.load()
 	Steam.load()
 	Sound.load()
-	Sound.playMusic("bg")
+	Sound.playMusic("menu")
 
 	Steam.setRichPresence(L("presence.menu"))
 

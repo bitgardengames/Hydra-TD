@@ -10,16 +10,6 @@ function Steam.load()
 
 		if init then
 			Steam.loaded = true
-
-			steam.friends.onGameOverlayActivated = function(data)
-				if data.active then
-					-- We can pause here
-				end
-			end
-
-			steam.userStats.onUserStatsReceived = function(data)
-				print("onUserStatsReceived:", data)
-			end
 		end
 	end
 end
@@ -54,6 +44,16 @@ end
 function Steam.storeStats()
 	if Steam.loaded then
 		steam.userStats.storeStats()
+	end
+end
+
+function Steam.setOverlayHook(callback)
+	if steam and steam.friends and callback then
+		steam.friends.onGameOverlayActivated = function(data)
+			if data.active then
+				callback()
+			end
+		end
 	end
 end
 

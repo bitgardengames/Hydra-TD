@@ -1,11 +1,15 @@
 local TowersDefs = require("world.tower_defs")
 local EnemyDefs = require("world.enemy_defs")
 local DrawEntities = require("render.draw_entities")
+local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local Text = require("ui.text")
 
 local Export = {}
 local lg = love.graphics
+
+local pi = math.pi -- Why am I optimizing a render script
+local max = math.max
 
 local SIZE = 256
 local REF_ICON_SIZE = 64
@@ -15,13 +19,15 @@ local ENEMY_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.0 scale
 local EXPORT_DIR = "export"
 local ACH_DIR = EXPORT_DIR .. "/achievements"
 
+local enemyFace = Theme.enemy.face
+
 local function ensureDirs()
     love.filesystem.createDirectory(EXPORT_DIR)
     love.filesystem.createDirectory(ACH_DIR)
 end
 
 local function beginCanvas()
-    local canvas = lg.newCanvas(SIZE, SIZE, { msaa = 8 })
+    local canvas = lg.newCanvas(SIZE, SIZE, {msaa = 8})
     lg.setCanvas(canvas)
     lg.clear(0, 0, 0, 0)
 
@@ -40,19 +46,53 @@ end
 
 local function centerAndScale(fn, scale, adjusty)
 	adjusty = adjusty or 0
+
     lg.push()
+
     lg.translate(SIZE * 0.5, SIZE * 0.5 + adjusty)
     lg.scale(scale, scale)
     fn()
+
     lg.pop()
 end
 
 local function drawTower(kind)
     centerAndScale(function()
-        DrawEntities.drawTowerCore(kind, 0, 0, { angle  = -math.pi / 4, alpha  = 1, shadow = false})
+        DrawEntities.drawTowerCore(kind, 0, 0, {angle  = -pi / 4, alpha  = 1, shadow = false})
 
         lg.setColor(1, 1, 1, 1)
     end, TOWER_SCALE)
+end
+
+local function drawDeadEyes(radius)
+	local cx = 0
+	local cy = 0
+
+	local eyeSep = radius * 0.38
+	local eyeSize = max(1.6, radius * 0.16)
+	local eyeY = cy - radius * 0.19
+
+	local armLen = eyeSize * 2.2
+	local armThick = eyeSize * 1.4
+
+	local function drawX(x, y)
+		lg.push()
+		lg.translate(x, y)
+		lg.rotate(pi / 4)
+		lg.rectangle("fill", -armLen, -armThick * 0.5, armLen * 2, armThick, armThick * 0.45)
+		lg.pop()
+
+		lg.push()
+		lg.translate(x, y)
+		lg.rotate(-pi / 4)
+		lg.rectangle("fill", -armLen, -armThick * 0.5, armLen * 2, armThick, armThick * 0.45)
+		lg.pop()
+	end
+
+	lg.setColor(enemyFace)
+
+	drawX(cx - eyeSep, eyeY)
+	drawX(cx + eyeSep, eyeY)
 end
 
 local function drawEnemy(kind, isDead)
@@ -103,6 +143,10 @@ local function drawEnemy(kind, isDead)
 
     centerAndScale(function()
         DrawEntities.drawEnemy(enemy)
+
+		if isDead and kind ~= "boss" then
+			drawDeadEyes(enemy.radius)
+		end
 
         lg.setColor(1, 1, 1, 1)
     end, ENEMY_SCALE, 5)

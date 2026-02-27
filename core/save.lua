@@ -1,6 +1,7 @@
 local Save = {}
 
-local SAVE_FILE = "save.lua"
+local SAVE_DIR = "saves"
+local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local SAVE_VERSION = 1 -- Only upgrade the version if I change the structure of saves
 
 Save.data = nil
@@ -17,20 +18,15 @@ function Save.load()
 
 			local version = Save.data.version or 0
 
-			--[[ If I need upgrading for adding/removing keys
-			local migrated = false
+			-- If I need upgrading for adding/removing keys
+			if version < SAVE_VERSION then
+				--[[if version < 2 then
+					-- migration logic
+				end]]
 
-			if version < 2 then
-				Save.data.settings.showDamageMeter = true
-				migrated = true
-			end
-
-			Save.data.version = SAVE_VERSION
-
-			if migrated then
+				Save.data.version = SAVE_VERSION
 				Save.flush()
 			end
-			--]]
 
 			-- Campaign progression
             Save.data.furthestIndex = Save.data.furthestIndex or 1
@@ -44,7 +40,10 @@ function Save.load()
 			settings.musicVolume = settings.musicVolume or 0.25
 			settings.sfxVolume = settings.sfxVolume or 0.25
 			settings.difficulty = settings.difficulty or "normal"
-			settings.fullscreen = settings.fullscreen ~= nil and settings.fullscreen or false
+
+			if settings.fullscreen == nil then
+				settings.fullscreen = true
+			end
 
 			-- Achievement progress / stat storage
 			Save.data.meta = Save.data.meta or {}
@@ -101,6 +100,10 @@ function Save.flush()
 	Save.data.version = SAVE_VERSION
 
     local serialized = "return " .. Save.serialize(Save.data)
+
+	if not love.filesystem.getInfo(SAVE_DIR) then
+		love.filesystem.createDirectory(SAVE_DIR)
+	end
 
     love.filesystem.write(SAVE_FILE, serialized)
 end
