@@ -153,7 +153,7 @@ function Screen.draw()
 	Backdrop.draw()
 
 	-- Title
-	Title.draw({x = sw * 0.5, y = titleY, lancerScale = 2.0, angle = lancerIdle.angle, alpha = 1})
+	Title.draw({x = sw * 0.5, y = titleY, lancerScale = 3.0, angle = lancerIdle.angle, alpha = 1})
 
 	-- Calculate button block size
 	local totalHeight = (#buttons - 1) * gap + btnH

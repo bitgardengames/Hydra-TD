@@ -100,7 +100,7 @@ local function drawEnemy(e)
 	if e.shadow then
 		local shadowAlpha = esA * (enemyAlpha * enemyAlpha)
 		lg.setColor(esR, esG, esB, shadowAlpha)
-		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.1, e.radius * 0.4)
+		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.4, e.radius * 0.4)
 	end
 
 	-- Body outline
@@ -295,8 +295,20 @@ local function drawEnemies()
 	end
 end
 
-local function forwardOffset(t, dist)
-    return cos(t.angle) * dist, sin(t.angle) * dist
+local function getBarrelTip(t, localTipX)
+	local size = TILE * 0.42
+
+	-- apply recoil in local barrel space
+	local localX = (localTipX or 0) - (t.recoil or 0)
+	local localY = 0
+
+	local ca = cos(t.angle)
+	local sa = sin(t.angle)
+
+	local worldX = t.x + (localX * ca - localY * sa)
+	local worldY = t.renderY + (localX * sa + localY * ca)
+
+	return worldX, worldY
 end
 
 local function drawLancerFX(t)
@@ -306,15 +318,38 @@ local function drawLancerFX(t)
 		return
 	end
 
-	local fx, fy = forwardOffset(t, TILE * 0.34)
+	local size = TILE * 0.42
+	local tipX = size * 0.90
 
-	-- Muzzle flash
+	local mx, my = getBarrelTip(t, tipX)
+
 	lg.setColor(1, 1, 1, 0.75 * a)
-	lg.circle("fill", t.x + fx, t.y + fy, 2)
+	lg.circle("fill", mx, my, 2)
 end
 
 local function drawSlowFX(t)
+	local a = t.fireAnim
 
+	if not a or a <= 0 then
+		return
+	end
+
+	local size = TILE * 0.42
+	local tipX = size * 0.42
+
+	local mx, my = getBarrelTip(t, tipX)
+
+	local p = 1 - a
+	local radius = 3 + p * 10
+	local alpha = 0.9 * (a * a)
+
+	lg.setLineWidth(2 + a * 1.5)
+	--lg.setColor(sr, sg, sb, alpha)
+	lg.setColor(0.92, 0.92, 0.96, alpha)
+	lg.circle("line", mx, my, radius)
+
+	lg.setColor(sr * 0.8, sg * 0.9, sb, alpha * 0.35)
+	lg.circle("fill", mx, my, radius * 0.6)
 end
 
 local function drawPoisonFX(t)
@@ -324,11 +359,13 @@ local function drawPoisonFX(t)
 		return
 	end
 
-	local fx, fy = forwardOffset(t, TILE * 0.10)
+	local size = TILE * 0.42
+	local tipX = size * 0.26
 
-	-- Core flash
+	local mx, my = getBarrelTip(t, tipX)
+
 	lg.setColor(1, 1, 1, 0.75 * a)
-	lg.circle("fill", t.x + fx, t.y + fy, 2)
+	lg.circle("fill", mx, my, 2)
 end
 
 local function drawShockFX(t)
@@ -336,21 +373,19 @@ local function drawShockFX(t)
 	local outerR = size * 0.36
 	local coreR  = size * 0.08
 
-	-- Charge build-up (windUp collapsing inward)
 	if t.windUp and t.windUp > 0 then
 		local tNorm = 1 - (t.windUp / 0.08)
-		local charge = tNorm * tNorm -- ease-in
+		local charge = tNorm * tNorm
 
 		local ringR = outerR + (coreR - outerR) * charge
 		local alpha = 0.25 + charge * 0.75
 
 		lg.setLineWidth(2)
 		lg.setColor(1, 1, 1, alpha)
-		lg.circle("line", t.x, t.y, ringR)
+		lg.circle("line", t.x, t.renderY, ringR)
 
-		-- subtle core glow
 		lg.setColor(1, 1, 1, charge * 0.4)
-		lg.circle("fill", t.x, t.y, coreR * (1 + charge * 0.4))
+		lg.circle("fill", t.x, t.renderY, coreR * (1 + charge * 0.4))
 	end
 end
 
@@ -361,13 +396,15 @@ local function drawCannonFX(t)
 		return
 	end
 
-	local size = TILE * 0.3
-	local fx, fy = forwardOffset(t, size)
+	local size = TILE * 0.42
+	local tipX = size * 0.80
+
+	local mx, my = getBarrelTip(t, tipX)
 
 	local r = 4 + (1 - a) * 4
 
 	lg.setColor(0.9, 0.9, 0.9, 0.75 * a)
-	lg.circle("fill", t.x + fx, t.y + fy, r)
+	lg.circle("fill", mx, my, r)
 end
 
 local function drawTowerFX(t)
@@ -377,11 +414,45 @@ local function drawTowerFX(t)
 		drawCannonFX(t)
 	elseif t.kind == "lancer" then
 		drawLancerFX(t)
-	--elseif t.kind == "slow" then
-	--	drawSlowFX(t)
+	elseif t.kind == "slow" then
+		drawSlowFX(t)
 	elseif t.kind == "poison" then
 		drawPoisonFX(t)
 	end
+end
+
+local size = TILE * 0.42
+local pad = 2
+
+local function drawTowerBase(kind, cx, cy, opts)
+	opts = opts or {}
+
+	local def = Towers.TowerDefs[kind]
+
+	if not def then
+		return
+	end
+
+	local color = def.color
+	local alpha = opts.alpha or 1
+	local tintR = opts.tintR or 1
+	local tintG = opts.tintG or 1
+	local tintB = opts.tintB or 1
+	local outlineW = outlineWidth
+
+	local baseOuter = size * 0.6 + outlineW * 0.5
+	local baseInner = baseOuter - outlineW
+
+	local outerRadius = 6 + outlineW * 0.5
+	local innerRadius = 6 - outlineW * 0.25
+
+	-- Outline
+	lg.setColor(outR, outG, outB, alpha)
+	lg.rectangle("fill", cx - baseOuter, cy - baseOuter, baseOuter * 2, baseOuter * 2, outerRadius, outerRadius)
+
+	-- Fill
+	lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, alpha)
+	lg.rectangle("fill", cx - baseInner, cy - baseInner, baseInner * 2, baseInner * 2, innerRadius, innerRadius)
 end
 
 -- Draw tower core shape
@@ -395,7 +466,6 @@ local function drawTowerCore(kind, cx, cy, opts)
 		return
 	end
 
-	local size = TILE * 0.42
 	local color = def.color
 	local alpha = opts.alpha or 1
 	local tintR = opts.tintR or 1
@@ -404,19 +474,6 @@ local function drawTowerCore(kind, cx, cy, opts)
 	local outlineW = outlineWidth
 	local outlineA = alpha
 	local bodyA = alpha
-
-	-- Base
-	local baseOuter = size * 0.6 + outlineW * 0.5
-	local baseInner = baseOuter - outlineW
-
-	local outerRadius = 6 + outlineW * 0.5
-	local innerRadius = 6 - outlineW * 0.25
-
-	lg.setColor(outR, outG, outB, outlineA)
-	lg.rectangle("fill", cx - baseOuter, cy - baseOuter, baseOuter * 2, baseOuter * 2, outerRadius, outerRadius)
-
-	lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
-	lg.rectangle("fill", cx - baseInner, cy - baseInner, baseInner * 2, baseInner * 2, innerRadius, innerRadius)
 
 	-- Body + Barrel
 	lg.push()
@@ -476,8 +533,21 @@ local function drawTowerCore(kind, cx, cy, opts)
 		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
 		lg.circle("fill", 0, 0, rInner)
 
+		-- Venom gland. Yum
+		local pulse = 0
+
+		if opts.fireAnim and opts.fireAnim > 0 then
+			local a = opts.fireAnim
+
+			-- Inflate early, shrink late
+			local inflate = a * (1 - a) * 4
+			pulse = inflate
+		end
+
+		local sacRadius = size * 0.16 + pulse
+
 		lg.setColor(outR, outG, outB, outlineA)
-		lg.circle("fill", size * 0.26, 0, size * 0.16)
+		lg.circle("fill", size * 0.26, 0, sacRadius)
 	-- Lancer
 	else
 		local o = size * 0.35 + outlineW * 0.5
@@ -523,6 +593,8 @@ local function drawTowerGhost()
 	lg.setColor(ok and goodR or badR, ok and goodG or badG, ok and goodB or badB, 0.45 * fade)
 	lg.circle("line", cx, cy, def.range)
 
+	drawTowerBase(State.placing, cx, cy, {alpha = (ok and 0.45 or 0.25) * fade, tintR = 1, tintG = ok and 1 or 0.4, tintB = ok and 1 or 0.4})
+
 	drawTowerCore(State.placing, cx, cy, {alpha = (ok and 0.45 or 0.25) * fade, tintR = 1, tintG = ok and 1 or 0.4, tintB = ok and 1 or 0.4})
 end
 
@@ -530,9 +602,6 @@ local function drawTowers()
 	local selected = State.selectedTower
 
 	if selected then
-		local size = TILE * 0.42
-		local pad = 2
-
 		lg.setColor(selR, selG, selB, 0.18)
 		lg.circle("fill", selected.x, selected.y, selected.range)
 
@@ -549,57 +618,55 @@ local function drawTowers()
 	for i = 1, #towers do
 		local t = towers[i]
 
-		-- Upgrade pips
-		local pips = min(8, t.level)
-		local anim = t.levelUpAnim or 0
-		local pipW, pipH = 3, 4
-		local baseY = (t.gy - 1) * TILE + TILE - 11
-
-		for i = 1, pips do
-			local isNew = (i == pips) and anim > 0
-			local a = 1
-			local y = baseY
-
-			if isNew then
-				local p = 1 - anim
-				local ease = p * p * (3 - 2 * p)
-
-				a = ease
-				y = baseY + (1 - ease) * pipH
-			end
-
-			lg.setColor(0.92, 0.92, 0.92, a)
-			lg.rectangle("fill", (t.gx - 1) * TILE + 10 + (i - 1) * 4, y, pipW, pipH)
-		end
-
 		local cx = t.x
-		local cy = t.y
+		local groundY = t.y
+		local bodyY = groundY
 
-		local size = TILE * 0.42
-
+		-- Spawn drop (unchanged)
 		local spawn = t.spawnAnim or 0
-		local p = 1 - spawn
-		local ease = p * p * (3 - 2 * p)
+		local pSpawn = 1 - spawn
+		local easeSpawn = pSpawn * pSpawn * (3 - 2 * pSpawn)
 
-		-- Vertical drop
 		if spawn > 0 then
-			cy = cy - ((1 - ease) * 8)
+			bodyY = bodyY - ((1 - easeSpawn) * 8)
 		end
 
-		-- Shadow interpolation
-		local widthMult = 1 + (1 - ease) * 0.4
-		local alphaMult = ease
+		-- Shadow
+		local widthMult = 1 + (1 - easeSpawn) * 0.4
+		local alphaMult = easeSpawn
 
 		lg.setColor(tsR, tsG, tsB, tsA * alphaMult)
 		lg.ellipse("fill", cx, t.y + size * 0.4, size * 0.85 * widthMult, size * 0.30)
 
-		drawTowerCore(t.kind, cx, cy, {angle = t.angle, recoil = t.recoil, alpha = 1})
+		-- Permanent height from levels
+		local levelHeight = (t.level - 1) * 4
+
+		-- Animation progress
+		local riseAnim = t.levelUpAnim or 0
+		local p = 1 - riseAnim
+		local ease = p * p * (3 - 2 * p)
+
+		local animatedHeight = levelHeight * ease
+
+		t.renderY = bodyY - animatedHeight
+
+		-- Only draw ground base after spawn completes
+		if spawn <= 0 then
+			drawTowerBase(t.kind, cx, groundY, {alpha = 1, tintR = 0.2, tintG = 0.2, tintB = 0.2})
+		end
+
+		-- Base (moving)
+		drawTowerBase(t.kind, cx, bodyY - animatedHeight, {alpha = 1})
+
+		-- Colored body
+		drawTowerCore(t.kind, cx, bodyY - animatedHeight, {angle = t.angle, recoil = t.recoil, alpha = 1, fireAnim = t.fireAnim})
 
 		drawTowerFX(t)
 
-		if anim > 0 then
-			lg.setColor(1, 1, 1, anim * 0.4)
-			lg.circle("line", cx, cy, size * (1 + (1 - anim)))
+		-- Pulse ring
+		if riseAnim > 0 then
+			lg.setColor(1, 1, 1, riseAnim * 0.4)
+			lg.circle("line", cx, groundY - animatedHeight, size * (1 + (1 - riseAnim)))
 		end
 	end
 end
@@ -607,6 +674,7 @@ end
 return {
 	drawEnemy = drawEnemy,
 	drawEnemies = drawEnemies,
+	drawTowerBase = drawTowerBase,
 	drawTowerCore = drawTowerCore,
 	drawTowerGhost = drawTowerGhost,
 	drawTowers = drawTowers,

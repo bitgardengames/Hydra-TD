@@ -59,6 +59,7 @@ end
 
 local function drawTower(kind)
     centerAndScale(function()
+        DrawEntities.drawTowerBase(kind, 0, 0, {alpha  = 1, shadow = false})
         DrawEntities.drawTowerCore(kind, 0, 0, {angle  = -pi / 4, alpha  = 1, shadow = false})
 
         lg.setColor(1, 1, 1, 1)

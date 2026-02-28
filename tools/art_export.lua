@@ -105,6 +105,8 @@ function Export.exportTowers()
 				lg.translate(size * 0.5, size * 0.5)
 				lg.scale(scale, scale)
 
+				DrawEntities.drawTowerBase(kind, 0, 0, {alpha = 1, shadow = false})
+				
 				DrawEntities.drawTowerCore(kind, 0, 0, {angle = angle, alpha = 1, shadow = false})
 
 				lg.pop()
@@ -290,6 +292,8 @@ function Export.exportAppIcons()
 			lg.translate(size * 0.5, size * 0.5)
 			lg.scale(scale, scale)
 
+			DrawEntities.drawTowerBase(towerId, 0, 0, {alpha  = 1, shadow = false})
+			
 			DrawEntities.drawTowerCore(towerId, 0, 0, {angle  = -math.pi / 4, alpha  = 1, shadow = false})
 
 			lg.pop()
