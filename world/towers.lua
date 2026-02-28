@@ -85,6 +85,7 @@ local function addTower(kind, gx, gy)
 		recoilDecay = def.recoilDecay or 18,
 		angle = -pi / 2,
 		levelUpAnim = 0,
+		spawnAnim = 1,
 		target = nil,
 		retargetT = 0,
 		turnSpeed = def.turnSpeed or 12,
@@ -260,6 +261,7 @@ local function updateTowers(dt)
 
 		t.cooldown = t.cooldown - dt
 		t.fireAnim = max(0, t.fireAnim - dt * 8)
+		t.spawnAnim = max(0, (t.spawnAnim or 0) - dt * 5)
 		t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)
 
 		-- Retarget cooldown

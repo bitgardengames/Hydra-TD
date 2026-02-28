@@ -38,7 +38,7 @@ Theme.enemy = {
 	--body = {0.95, 0.97, 0.99},
 
 	face = {0.07, 0.07, 0.07},
-	shadow = {0, 0, 0, 0.35},
+	shadow = {0.01, 0.01, 0.01, 0.32},
 }
 
 Theme.tower = {
@@ -48,6 +48,8 @@ Theme.tower = {
 	shock = {0.45, 0.78, 0.98},
 	poison = {0.50, 0.82, 0.44},
 }
+
+Theme.towerShadow = {0.01, 0.01, 0.01, 0.32}
 
 Theme.projectiles = {
 	lancer = {0.97, 0.97, 0.97},
@@ -81,10 +83,8 @@ Theme.ui = {
 
 	bossHealth = {0.75, 0.15, 0.15, 0.9},
 
-	shadow = {0, 0, 0, 0.35},
+	shadow = {0.01, 0.01, 0.01, 0.32},
 }
-
-Theme.towerShadow = {0, 0, 0, 0.35}
 
 Theme.text = {}
 

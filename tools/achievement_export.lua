@@ -19,7 +19,8 @@ local ENEMY_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.0 scale
 local EXPORT_DIR = "export"
 local ACH_DIR = EXPORT_DIR .. "/achievements"
 
-local enemyFace = Theme.enemy.face
+local colorFace = Theme.enemy.face
+local colorBody = Theme.enemy.body
 
 local function ensureDirs()
     love.filesystem.createDirectory(EXPORT_DIR)
@@ -73,7 +74,21 @@ local function drawDeadEyes(radius)
 	local eyeY = cy - radius * 0.19
 
 	local armLen = eyeSize * 2.2
-	local armThick = eyeSize * 1.4
+	local armThick = eyeSize * 1.2
+
+	local wipeW = eyeSize * 4.2
+	local wipeH = eyeSize * 2.6
+
+	local function wipeEye(x, y)
+		lg.setColor(colorBody)
+		lg.rectangle("fill",
+			x - wipeW * 0.5,
+			y - wipeH * 0.5,
+			wipeW,
+			wipeH,
+			wipeH * 0.4
+		)
+	end
 
 	local function drawX(x, y)
 		lg.push()
@@ -89,8 +104,12 @@ local function drawDeadEyes(radius)
 		lg.pop()
 	end
 
-	lg.setColor(enemyFace)
+	-- Wipe original eyes first
+	wipeEye(cx - eyeSep, eyeY)
+	wipeEye(cx + eyeSep, eyeY)
 
+	-- Then draw X eyes
+	lg.setColor(colorFace) -- or outlineColor if that's your eye color
 	drawX(cx - eyeSep, eyeY)
 	drawX(cx + eyeSep, eyeY)
 end

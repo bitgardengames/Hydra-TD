@@ -23,6 +23,7 @@ local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
 local colorPoison = Theme.projectiles.poison -- Can use Theme.tower.poison alternatively. Test and see
 local colorSlow = Theme.projectiles.slow
+local towerShadow = Theme.towerShadow
 
 local outR, outG, outB = outlineColor[1], outlineColor[2], outlineColor[3]
 local eR, eG, eB = enemyBody[1], enemyBody[2], enemyBody[3]
@@ -33,6 +34,7 @@ local pr, pg, pb = colorPoison[1], colorPoison[2], colorPoison[3]
 local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]
 local goodR, goodG, goodB = colorGood[1], colorGood[2], colorGood[3]
 local badR, badG, badB = colorBad[1], colorBad[2], colorBad[3]
+local tsR, tsG, tsB, tsA = towerShadow[1], towerShadow[2], towerShadow[3], towerShadow[4]
 
 local outlineWidth = Theme.outline.width
 
@@ -399,16 +401,9 @@ local function drawTowerCore(kind, cx, cy, opts)
 	local tintR = opts.tintR or 1
 	local tintG = opts.tintG or 1
 	local tintB = opts.tintB or 1
-	local shadow = opts.shadow ~= false
 	local outlineW = outlineWidth
 	local outlineA = alpha
 	local bodyA = alpha
-
-	-- Shadow
-	if shadow then
-		lg.setColor(0, 0, 0, 0.35 * alpha)
-		lg.ellipse("fill", cx, cy + size * 0.42, size * 0.85, size * 0.30)
-	end
 
 	-- Base
 	local baseOuter = size * 0.6 + outlineW * 0.5
@@ -528,7 +523,7 @@ local function drawTowerGhost()
 	lg.setColor(ok and goodR or badR, ok and goodG or badG, ok and goodB or badB, 0.45 * fade)
 	lg.circle("line", cx, cy, def.range)
 
-	drawTowerCore(State.placing, cx, cy, {alpha = (ok and 0.45 or 0.25) * fade, tintR = 1, tintG = ok and 1 or 0.4, tintB = ok and 1 or 0.4, shadow = false})
+	drawTowerCore(State.placing, cx, cy, {alpha = (ok and 0.45 or 0.25) * fade, tintR = 1, tintG = ok and 1 or 0.4, tintB = ok and 1 or 0.4})
 end
 
 local function drawTowers()
@@ -577,18 +572,34 @@ local function drawTowers()
 			lg.rectangle("fill", (t.gx - 1) * TILE + 10 + (i - 1) * 4, y, pipW, pipH)
 		end
 
-		local cx, cy = t.x, t.y
+		local cx = t.x
+		local cy = t.y
+
+		local size = TILE * 0.42
+
+		local spawn = t.spawnAnim or 0
+		local p = 1 - spawn
+		local ease = p * p * (3 - 2 * p)
+
+		-- Vertical drop
+		if spawn > 0 then
+			cy = cy - ((1 - ease) * 8)
+		end
+
+		-- Shadow interpolation
+		local widthMult = 1 + (1 - ease) * 0.4
+		local alphaMult = ease
+
+		lg.setColor(tsR, tsG, tsB, tsA * alphaMult)
+		lg.ellipse("fill", cx, t.y + size * 0.4, size * 0.85 * widthMult, size * 0.30)
 
 		drawTowerCore(t.kind, cx, cy, {angle = t.angle, recoil = t.recoil, alpha = 1})
 
 		drawTowerFX(t)
 
 		if anim > 0 then
-			local a = anim
-			local size = TILE * 0.42
-
-			lg.setColor(1, 1, 1, a * 0.4)
-			lg.circle("line", cx, cy, size * (1 + (1 - a)))
+			lg.setColor(1, 1, 1, anim * 0.4)
+			lg.circle("line", cx, cy, size * (1 + (1 - anim)))
 		end
 	end
 end
