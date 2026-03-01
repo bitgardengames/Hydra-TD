@@ -23,6 +23,9 @@ local SERVO_SPEED = 1.8
 
 local TITLE_TEXT = "HYDRA TD"
 
+local colorLancer = Theme.tower.lancer
+local colorOutline = Theme.outline.color
+
 local titleCache = {
 	canvas = nil,
 	fontPx = nil,
@@ -72,7 +75,7 @@ local function buildTitleCanvas(lancerScale)
 	lg.clear(0, 0, 0, 0)
 
 	-- Outline
-	lg.setColor(0, 0, 0, 0.55)
+	lg.setColor(colorOutline)
 
 	for ox = -outline, outline do
 		for oy = -outline, outline do
@@ -83,7 +86,7 @@ local function buildTitleCanvas(lancerScale)
 	end
 
 	-- Fill
-	lg.setColor(Theme.tower.lancer)
+	lg.setColor(colorLancer)
 	lg.print(TITLE_TEXT, pad, pad)
 
 	lg.setCanvas(prevCanvas)
@@ -158,9 +161,9 @@ local function drawTitleLayout(originX, originY, layoutScale, lancerScale, gap, 
 	lg.translate(baseX + lancerVisualW * 0.5, midY)
 	lg.scale(lancerScale, lancerScale)
 
-	Entities.drawTowerBase("lancer", 0, 0, {alpha = alpha, shadow = false})
+	Entities.drawTowerBase("lancer", 0, 0, alpha, 1, 1, 1)
 
-	Entities.drawTowerCore("lancer", 0, 0, {angle = angle, alpha = alpha, shadow = false})
+	Entities.drawTowerCore("lancer", 0, 0, angle, 0, alpha, 1, 1, 1, 0)
 
 	lg.pop()
 
@@ -171,26 +174,22 @@ local function drawTitleLayout(originX, originY, layoutScale, lancerScale, gap, 
 	lg.pop()
 end
 
-function Title.draw(opts)
-	opts = opts or {}
-
-	local x = opts.x or 0
-	local y = opts.y or 0
-	local scale = opts.scale or 1
-	local lancerScale = opts.lancerScale or 2.2
-	local angle = opts.angle or -pi / 6
-	local alpha = opts.alpha or 1
-	local gap = opts.gap or 26
+function Title.draw(x, y, scale, lancerScale, angle, alpha, gap)
+	x = x or 0
+	y = y or 0
+	scale = scale or 1
+	lancerScale = lancerScale or 2.2
+	angle = angle or -pi / 6
+	alpha = alpha or 1
+	gap = gap or 26
 
 	drawTitleLayout(x, y, scale, lancerScale, gap, angle, alpha)
 end
 
-function Title.drawBannerStyle(w, h, opts)
-	opts = opts or {}
-
-	local angle = opts.angle or -pi / 6
-	local alpha = opts.alpha or 1
-	local yOffset = opts.yOffset or 0
+function Title.drawBannerStyle(w, h, angle, alpha, yOffset)
+	angle = angle or -pi / 6
+	alpha = alpha or 1
+	yOffset = yOffset or 0
 
 	local aspect = w / h
 	local horizontalBoost = min(2.4, max(1.0, aspect))

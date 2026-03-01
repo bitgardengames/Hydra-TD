@@ -6,12 +6,13 @@ return {
 	outDir = "export/maps",
 
 	drawGrass = true,
-	forcePathColor = false,
-	--forcedPathColor = Theme.tower.lancer,
-	forcedPathColor = { 0.10, 0.10, 0.11 },
+	forcePathColor = true,
+	forcedPathColor = Theme.tower.lancer,
+	--forcedPathColor = { 0.10, 0.10, 0.11 },
 
 	-- Output resolutions
 	sizes = {
+		--{w = 1920/18, h = 1080/18}, -- 1080p
 		{w = 1920, h = 1080}, -- 1080p
 		--{w = 3840, h = 2160}, -- 4K
 	},

@@ -41,8 +41,8 @@ local shopOrder = {
 	"slow",
 	"lancer",
 	"poison",
-	"shock",
 	"cannon",
+	"shock",
 }
 
 local function addTower(kind, gx, gy)

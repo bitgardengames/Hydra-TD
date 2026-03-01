@@ -102,10 +102,10 @@ function Backdrop.start(index)
 	State.worldMapIndex = shot.map
 
 	-- Save current difficulty
-	Backdrop.prevDifficulty = Difficulty.get()
+	Backdrop.prevDifficulty = Difficulty.key()
 
-	-- Force Normal
-	Difficulty.set("normal")
+	-- Force difficulty
+	Difficulty.set("hard")
 
 	resetGame()
 

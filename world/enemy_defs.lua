@@ -28,7 +28,7 @@ return {
 
 	boss = {
 		nameKey = "enemy.boss",
-		hp = 500,
+		hp = 675,
 		speed = 45,
 		reward = 75,
 		score = 300,
@@ -36,7 +36,7 @@ return {
 		boss = true,
 
 		modifiers = {
-			slow = 0.5, -- 50% slow effectiveness (movement speed)
+			--slow = 0.5, -- 50% slow effectiveness (movement speed)
 		--	poison = 1.25, -- +25% poison damage taken
 		}
 	},

@@ -8,8 +8,8 @@ Hotkeys.kb = {
 		slow = "1",
 		lancer = "2",
 		poison = "3",
-		shock = "4",
-		cannon = "5",
+		cannon = "4",
+		shock = "5",
 	},
 
 	actions = {

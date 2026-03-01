@@ -43,8 +43,8 @@ function Effects.spawnZapEffect(x, y, chain)
 				-- IMPORTANT: first hop may have from == nil; anchor it to the tower origin.
 				local x1, y1
 
-				if from and from.x and from.y then
-					x1, y1 = from.x, from.y
+				if from then
+					x1, y1 = from.x, from.renderY or from.y
 				else
 					x1, y1 = x, y
 				end

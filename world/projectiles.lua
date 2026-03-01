@@ -53,7 +53,7 @@ local function spawn(fromTower, targetEnemy)
 
 	local p = {
 		x = fromTower.x,
-		y = fromTower.y,
+		y = fromTower.renderY or fromTower.y,
 		r = 4.5,
 		life = 2.0,
 		t = 0,

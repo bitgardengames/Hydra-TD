@@ -1,19 +1,22 @@
 local Config = require("tools.trailer.config")
 local Director = require("tools.trailer.director")
 local Recorder = require("tools.trailer.recorder")
+local Difficulty = require("systems.difficulty")
 
 local Trailer = {}
 
 local TRAILER_DIR = "trailer"
 local FRAMES_DIR = TRAILER_DIR .. "/frames"
 
-local FIXED_DT = 1 / 60
+local FIXED_DT = 1 / 1200
 
 function Trailer.run()
 	require("core.bootstrap").initMinimal()
 
 	love.filesystem.createDirectory(TRAILER_DIR)
 	love.filesystem.createDirectory(FRAMES_DIR)
+
+	Difficulty.set("hard")
 
 	Recorder.fixedDt = FIXED_DT
 
@@ -25,7 +28,7 @@ function Trailer.run()
     else
         Director.load("shot_01") -- always start at the beginning
     end
-	
+
 	--require("systems.sound").playMusic("menu")
 end
 
@@ -35,7 +38,7 @@ function love.update(dt)
         Director.update(Recorder.fixedDt)
     else
         -- Normal interactive update
-        Director.update(dt)
+        Director.update(Recorder.fixedDt)
     end
 end
 

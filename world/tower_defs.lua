@@ -2,26 +2,6 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 
 return {
-	lancer = {
-		nameKey = "tower.lancer",
-		descKey = "towerDesc.lancer",
-		cost = 55,
-		range = 3.9 * Constants.TILE,
-		fireRate = 2.0, -- shots/sec
-		damage = 10,
-		recoilStrength = Constants.TILE * 0.08,
-		recoilDecay = 18,
-		projSpeed = 460,
-		turnSpeed = 15,
-		color = Theme.tower.lancer,
-		canRotate = true,
-		upgrade = {
-			dmgMult = 2.5,
-			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.03,
-		}
-	},
-
 	slow = {
 		nameKey = "tower.slow",
 		descKey = "towerDesc.slow",
@@ -44,52 +24,23 @@ return {
 		}
 	},
 
-	cannon = {
-		nameKey = "tower.cannon",
-		descKey = "towerDesc.cannon",
-		cost = 70,
-		range = 3.2 * Constants.TILE,
-		fireRate = 0.85,
-		damage = 19,
-		recoilStrength = Constants.TILE * 0.12,
-		recoilDecay = 14,
-		projSpeed = 320,
-		turnSpeed = 8,
-		color = Theme.tower.cannon,
+	lancer = {
+		nameKey = "tower.lancer",
+		descKey = "towerDesc.lancer",
+		cost = 55,
+		range = 3.9 * Constants.TILE,
+		fireRate = 2.0, -- shots/sec
+		damage = 10,
+		recoilStrength = Constants.TILE * 0.08,
+		recoilDecay = 18,
+		projSpeed = 460,
+		turnSpeed = 15,
+		color = Theme.tower.lancer,
 		canRotate = true,
-		splash = {
-			radius = 42, -- AoE radius in pixels
-			falloff = 0.45, -- % damage applied at edge
-		},
 		upgrade = {
 			dmgMult = 2.5,
 			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.05,
-			splashAdd = 4, -- increase AoE radius per upgrade
-		}
-	},
-
-	shock = {
-		nameKey = "tower.shock",
-		descKey = "towerDesc.shock",
-		cost = 65,
-		range = 3.5 * Constants.TILE,
-		fireRate = 1.2,
-		damage = 9,
-		recoilStrength = 0,
-		recoilDecay = 0,
-		turnSpeed = 20,
-		color = Theme.tower.shock,
-		canRotate = false,
-		chain = {
-			jumps = 3, -- number of additional enemies
-			radius = 56, -- max distance between jumps
-			falloff = 0.75 -- damage multiplier per jump
-		},
-		upgrade = {
-			dmgMult = 2.5,
-			rangeAdd = 0.06 * Constants.TILE,
-			fireMult = 1.04,
+			fireMult = 1.03,
 		}
 	},
 
@@ -118,6 +69,55 @@ return {
 			poisonDurAdd = 0.25,
 			poisonDpsMult = 1.10,
 			stackAdd = 1,
+		}
+	},
+
+	cannon = {
+		nameKey = "tower.cannon",
+		descKey = "towerDesc.cannon",
+		cost = 65,
+		range = 3.2 * Constants.TILE,
+		fireRate = 0.85,
+		damage = 19,
+		recoilStrength = Constants.TILE * 0.12,
+		recoilDecay = 14,
+		projSpeed = 320,
+		turnSpeed = 8,
+		color = Theme.tower.cannon,
+		canRotate = true,
+		splash = {
+			radius = 42, -- AoE radius in pixels
+			falloff = 0.45, -- % damage applied at edge
+		},
+		upgrade = {
+			dmgMult = 2.5,
+			rangeAdd = 0.08 * Constants.TILE,
+			fireMult = 1.05,
+			splashAdd = 4, -- increase AoE radius per upgrade
+		}
+	},
+
+	shock = {
+		nameKey = "tower.shock",
+		descKey = "towerDesc.shock",
+		cost = 70,
+		range = 3.5 * Constants.TILE,
+		fireRate = 1.2,
+		damage = 9,
+		recoilStrength = 0,
+		recoilDecay = 0,
+		turnSpeed = 20,
+		color = Theme.tower.shock,
+		canRotate = false,
+		chain = {
+			jumps = 3, -- number of additional enemies
+			radius = 56, -- max distance between jumps
+			falloff = 0.75 -- damage multiplier per jump
+		},
+		upgrade = {
+			dmgMult = 2.5,
+			rangeAdd = 0.06 * Constants.TILE,
+			fireMult = 1.04,
 		}
 	},
 }

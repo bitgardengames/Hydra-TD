@@ -6,11 +6,8 @@ local DifficultyCurve = {}
 DifficultyCurve.campaignEnd = 20
 DifficultyCurve.campaignHpSlope = 0.97
 
--- Endless tuning
-DifficultyCurve.endlessHpSlope = 1.35 -- 1.20
-
--- Boss scaling
-DifficultyCurve.bossExponent = 1.05
+-- Endless tuning (exponential base per wave)
+DifficultyCurve.endlessHpBase = 1.055 -- 1.05 = gentle, 1.07 = aggressive
 
 -- Enemy hp multiplier
 function DifficultyCurve.getEnemyHpMultiplier(waveIndex)
@@ -24,7 +21,7 @@ function DifficultyCurve.getEnemyHpMultiplier(waveIndex)
 		local endlessWave = waveIndex - DifficultyCurve.campaignEnd
 		local campaignHp = 1 + DifficultyCurve.campaignEnd * DifficultyCurve.campaignHpSlope
 
-		hpMult = campaignHp + endlessWave * DifficultyCurve.endlessHpSlope
+		hpMult = campaignHp * (DifficultyCurve.endlessHpBase ^ endlessWave)
 	end
 
 	return hpMult * d.enemyHpBias
@@ -38,7 +35,7 @@ function DifficultyCurve.getBossHpMultiplier(waveIndex)
 	local d = Difficulty.get()
 	local hpMult = DifficultyCurve.getEnemyHpMultiplier(waveIndex)
 
-	return d.bossHpBias * (hpMult ^ DifficultyCurve.bossExponent)
+	return d.bossHpBias * hpMult
 end
 
 return DifficultyCurve

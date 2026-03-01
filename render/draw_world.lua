@@ -28,9 +28,9 @@ local function drawGrass()
 
 	for y = 1, gridH do
 		for x = 1, gridW do
-			local k = MapMod.makeKey(x, y)
+			local col = MapMod.map.isPath[x]
 
-			if not MapMod.map.isPath[k] then
+			if not (col and col[y]) then
 				local seed = (x * 127 + y * 331) % 997
 				local r = seed % 4
 

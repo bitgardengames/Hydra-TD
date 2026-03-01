@@ -54,6 +54,8 @@ local ACCUM = 0 -- Frame accumulator
 local SCREENSHOT_DIR = "screenshots"
 
 function resetGame()
+	--State.worldMapIndex = 7
+
     -- Clear world state
     Enemies.clear()
     Towers.clear()
@@ -66,6 +68,8 @@ function resetGame()
     MapMod.buildPath(Maps[State.worldMapIndex])
 
 	local diff = Difficulty.get()
+
+	print(diff, diff.startLives)
 
     -- Core game state
     State.money = diff.startMoney

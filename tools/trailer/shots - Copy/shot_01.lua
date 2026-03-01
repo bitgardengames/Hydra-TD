@@ -4,7 +4,7 @@ local Constants = require("core.constants")
 
 return {
 	map = 13,
-	duration = 5.0,
+	duration = 7.0,
 	next = "shot_02",
 
 	scene = {
@@ -17,7 +17,7 @@ return {
 		wave = {
 			index = 1,
 			start = true,
-			warmup = 14,
+			warmup = 11.0,
 		},
 	},
 
@@ -34,10 +34,10 @@ return {
 			lag = 9,
 			offset = {y = -6},
 
-			zoomFrom = 3.0,
+			zoomFrom = 8.0,
 			zoomTo = 3.0,
 			zoomDur = 1.0,
-			zoomDelay = 0.2,
+			zoomDelay = 1.0,
 		}
 	end
 }

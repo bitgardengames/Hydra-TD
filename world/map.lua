@@ -27,14 +27,17 @@ end
 local function canPlaceAt(gx, gy)
 	if not gx then
 		return false, "outside"
-
 	end
 
-	if map.isPath[makeKey(gx, gy)] then
+	local col = map.isPath[gx]
+
+	if col and col[gy] then
 		return false, "path"
 	end
 
-	if map.blocked[makeKey(gx, gy)] then
+	local bcol = map.blocked[gx]
+
+	if bcol and bcol[gy] then
 		return false, "occupied"
 	end
 
@@ -42,21 +45,34 @@ local function canPlaceAt(gx, gy)
 end
 
 local function clearBlocked()
-	map.blocked = {}
+	for gx in pairs(map.blocked) do
+		map.blocked[gx] = nil
+	end
 end
 
-local function computeCoverageIndex(path, canPlaceAt)
+local function computeCoverageIndex(path, canPlaceAtFn)
 	local covered = {}
 
-	for _, p in ipairs(path) do
+	for i = 1, #path do
+		local p = path[i]
+		local px = p[1]
+		local py = p[2]
+
 		for dx = -1, 1 do
 			for dy = -1, 1 do
 				if not (dx == 0 and dy == 0) then
-					local gx = p[1] + dx
-					local gy = p[2] + dy
+					local gx = px + dx
+					local gy = py + dy
 
-					if canPlaceAt(gx, gy) then
-						covered[gx .. "," .. gy] = true
+					if canPlaceAtFn(gx, gy) then
+						local col = covered[gx]
+
+						if not col then
+							col = {}
+							covered[gx] = col
+						end
+
+						col[gy] = true
 					end
 				end
 			end
@@ -65,8 +81,10 @@ local function computeCoverageIndex(path, canPlaceAt)
 
 	local count = 0
 
-	for _ in pairs(covered) do
-		count = count + 1
+	for _, col in pairs(covered) do
+		for _ in pairs(col) do
+			count = count + 1
+		end
 	end
 
 	return count
@@ -89,8 +107,11 @@ local function loadPath(points)
 		local x, y = ax, ay
 
 		-- Insert first point of the segment
-		table.insert(map.path, {x, y})
-		map.isPath[makeKey(x, y)] = true
+		local idx = #map.path + 1
+		map.path[idx] = {x, y}
+
+		map.isPath[x] = map.isPath[x] or {}
+		map.isPath[x][y] = true
 
 		while x ~= bx or y ~= by do
 			x = x + dx
@@ -99,13 +120,17 @@ local function loadPath(points)
 			-- Each step is exactly 1 tile
 			pathLength = pathLength + 1
 
-			table.insert(map.path, {x, y})
-			map.isPath[makeKey(x, y)] = true
+			local j = #map.path + 1
+			map.path[j] = {x, y}
+
+			map.isPath[x] = map.isPath[x] or {}
+			map.isPath[x][y] = true
 		end
 	end
 
 	-- Build world-space path (visuals, movement, etc.)
-	for i, p in ipairs(map.path) do
+	for i = 1, #map.path do
+		local p = map.path[i]
 		local wx, wy = gridToCenter(p[1], p[2])
 
 		map.pathWorld[i] = {wx, wy}
@@ -124,9 +149,9 @@ local function loadPath(points)
 		local ax, ay = map.pathWorld[i - 1][1], map.pathWorld[i - 1][2]
 		local bx, by = map.pathWorld[i][1], map.pathWorld[i][2]
 
-		local dx = bx - ax
-		local dy = by - ay
-		local dist = sqrt(dx * dx + dy * dy)
+		local ddx = bx - ax
+		local ddy = by - ay
+		local dist = sqrt(ddx * ddx + ddy * ddy)
 
 		totalDist = totalDist + dist
 		map.pathDist[i] = totalDist
@@ -144,17 +169,22 @@ local function loadPath(points)
 end
 
 local function buildPath(mapDef)
-    currentMap = mapDef
-    loadPath(mapDef.path)
+	currentMap = mapDef
+	loadPath(mapDef.path)
 end
 
 local function sampleAtDist(dist, hintSeg)
 	-- Clamp
 	local pathWorld = map.pathWorld
 	local pathDist = map.pathDist
+
+	if not pathDist then
+		return 0, 0, 1
+	end
+
 	local n = #pathDist
 
-	if not pathDist or n == 0 then
+	if n == 0 then
 		return 0, 0, 1
 	end
 
@@ -170,8 +200,14 @@ local function sampleAtDist(dist, hintSeg)
 
 	-- Start from hint segment if provided (enemy can cache it)
 	local seg = hintSeg or 1
-	if seg < 1 then seg = 1 end
-	if seg > n - 1 then seg = n - 1 end
+
+	if seg < 1 then
+		seg = 1
+	end
+
+	if seg > n - 1 then
+		seg = n - 1
+	end
 
 	while seg < n - 1 and pathDist[seg + 1] <= dist do
 		seg = seg + 1
@@ -180,7 +216,7 @@ local function sampleAtDist(dist, hintSeg)
 	local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
 	local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
 	local segStart = pathDist[seg]
-	local segEnd   = pathDist[seg + 1]
+	local segEnd = pathDist[seg + 1]
 
 	local t = 0
 	local denom = (segEnd - segStart)

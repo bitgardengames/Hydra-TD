@@ -153,7 +153,7 @@ function Screen.draw()
 	Backdrop.draw()
 
 	-- Title
-	Title.draw({x = sw * 0.5, y = titleY, lancerScale = 3.0, angle = lancerIdle.angle, alpha = 1})
+	Title.draw(sw * 0.5, titleY, 1, 3.0, lancerIdle.angle, 1, 26)
 
 	-- Calculate button block size
 	local totalHeight = (#buttons - 1) * gap + btnH
@@ -175,6 +175,7 @@ function Screen.draw()
 		Button.draw(btn)
 	end
 end
+
 function Screen.mousepressed(x, y, button)
 	for _, btn in ipairs(buttons) do
 		if Button.mousepressed(btn, x, y, button) then

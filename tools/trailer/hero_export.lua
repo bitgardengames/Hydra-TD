@@ -86,7 +86,7 @@ HeroExport.captureX = 0
 HeroExport.captureY = 0
 HeroExport._prevPaused = nil
 
-HeroExport._logoCache = {}
+HeroExport.logoCache = {}
 
 -- Setup
 function HeroExport.init()
@@ -202,13 +202,16 @@ local function drawScaledFill(srcCanvas, targetW, targetH)
 	lg.draw(srcCanvas, dx, dy, 0, scale, scale)
 end
 
-function HeroExport._getLogoCanvas(name)
-	if HeroExport._logoCache[name] then
-		return HeroExport._logoCache[name]
+function HeroExport.getLogoCanvas(name)
+	if HeroExport.logoCache[name] then
+		return HeroExport.logoCache[name]
 	end
 
 	local b = HeroExport.BANNERS[name]
-	if not b then return nil end
+
+	if not b then
+		return nil
+	end
 
 	local canvas = lg.newCanvas(b.w, b.h, {msaa = 8})
 
@@ -216,11 +219,12 @@ function HeroExport._getLogoCanvas(name)
 	lg.clear(0, 0, 0, 0)
 
 	Title.invalidateCache()
-	Title.drawBannerStyle(b.w, b.h, {angle = -math.pi / 6})
+	Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, 0)
 
 	lg.setCanvas()
 
-	HeroExport._logoCache[name] = canvas
+	HeroExport.logoCache[name] = canvas
+
 	return canvas
 end
 
@@ -230,13 +234,13 @@ local function exportCanvas(canvas, filePath)
 end
 
 -- Render the world to a target canvas size using the SAME framing rules,
-function HeroExport._renderWorldToCanvas(w, h, renderWorldFn)
+function HeroExport.renderWorldToCanvas(w, h, renderWorldFn)
 
     -- Save live camera state
     local prevCanvas = Camera.canvas
-    local prevWx     = Camera.wx
-    local prevWy     = Camera.wy
-    local prevScale  = Camera.wscale
+    local prevWx = Camera.wx
+    local prevWy = Camera.wy
+    local prevScale = Camera.wscale
 
     -- Create export canvas
     local canvas = lg.newCanvas(w, h, { msaa = 8 })
@@ -325,7 +329,9 @@ function HeroExport.draw(renderWorldFn)
 end
 
 function HeroExport.exportAllFromCanvas(srcCanvas)
-	if not srcCanvas then return end
+	if not srcCanvas then
+		return
+	end
 
 	love.filesystem.createDirectory("export")
 	love.filesystem.createDirectory("export/hero")
@@ -345,7 +351,7 @@ function HeroExport.exportAllFromCanvas(srcCanvas)
 			lg.setColor(1,1,1,1)
 
 			Title.invalidateCache()
-			Title.drawBannerStyle(b.w, b.h, { angle = -math.pi / 6, yOffset = b.h * 0.16 })
+			Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, b.h * 0.16)
 		end
 
 		lg.setCanvas()
@@ -354,7 +360,8 @@ function HeroExport.exportAllFromCanvas(srcCanvas)
 		exportCanvas(canvas, filePath)
 
 		if HeroExport.TRANSPARENT_BANNERS[name] then
-			local logo = HeroExport._getLogoCanvas(name)
+			local logo = HeroExport.getLogoCanvas(name)
+
 			if logo then
 				local tCanvas = lg.newCanvas(b.w, b.h, {msaa = 8})
 				lg.setCanvas(tCanvas)
@@ -377,13 +384,15 @@ end
 
 -- New: Crisp export path (native render per size)
 function HeroExport.exportAllFromWorld(renderWorldFn)
-	if not renderWorldFn then return end
+	if not renderWorldFn then
+		return
+	end
 
 	love.filesystem.createDirectory("export")
 	love.filesystem.createDirectory("export/hero")
 
 	for name, b in pairs(HeroExport.BANNERS) do
-		local canvas = HeroExport._renderWorldToCanvas(b.w, b.h, renderWorldFn)
+		local canvas = HeroExport.renderWorldToCanvas(b.w, b.h, renderWorldFn)
 		if canvas then
 			lg.setCanvas(canvas)
 
@@ -395,9 +404,9 @@ function HeroExport.exportAllFromWorld(renderWorldFn)
 				local drop = HeroExport.TITLE_DROP_BY_BANNER[name] or HeroExport.titleDrop
 
 				lg.setBlendMode("alpha")
-				lg.setColor(1,1,1,1)
+				lg.setColor(1, 1, 1, 1)
 				Title.invalidateCache()
-				Title.drawBannerStyle(b.w, b.h, { angle = -math.pi / 6, yOffset = b.h * drop})
+				Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, b.h * drop)
 			end
 
 			lg.setCanvas()
@@ -409,12 +418,12 @@ function HeroExport.exportAllFromWorld(renderWorldFn)
 			if HeroExport.TRANSPARENT_BANNERS[name] then
 				local tCanvas = lg.newCanvas(b.w, b.h, {msaa = 8})
 				lg.setCanvas(tCanvas)
-				lg.clear(0,0,0,0)
+				lg.clear(0, 0, 0, 0)
 
 				lg.setBlendMode("alpha")
 				lg.setColor(1,1,1,1)
 				Title.invalidateCache()
-				Title.drawBannerStyle(b.w, b.h, { angle = -math.pi / 6 })
+				Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, 0)
 
 				lg.setCanvas()
 

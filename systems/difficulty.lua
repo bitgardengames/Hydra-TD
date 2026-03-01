@@ -5,7 +5,7 @@ Difficulty.defs = {
 		key = "easy",
 
 		-- Enemy baseline bias
-		enemyPressureBias = 0.90,
+		enemyPressureBias = 0.85,
 		enemySpeedBias = 1.0,
 		enemyHpBias = 0.85,
 		bossHpBias = 0.85,
@@ -19,10 +19,10 @@ Difficulty.defs = {
 	normal = {
 		key = "normal",
 
-		enemyPressureBias = 1.0,
+		enemyPressureBias = 0.93,
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.0,
-		bossHpBias = 1.0,
+		enemyHpBias = 0.93,
+		bossHpBias = 0.93,
 
 		startMoney = 120,
 		startLives = 20,
@@ -32,15 +32,26 @@ Difficulty.defs = {
 	hard = {
 		key = "hard",
 
-		enemyPressureBias = 1.08,
+		enemyPressureBias = 1.0,
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.15,
-		bossHpBias = 1.15,
+		enemyHpBias = 1.07,
+		bossHpBias = 1.07,
 
 		startMoney = 120,
 		startLives = 15,
 		sellRefund = 0.60,
 	},
+
+	--[[expert = {
+		enemyPressureBias = 1.08,
+		enemySpeedBias = 1.0,
+		enemyHpBias = 1.12,
+		bossHpBias = 1.12,
+
+		startMoney = 120,
+		startLives = 10,
+		sellRefund = 0.50,
+	}]]
 }
 
 Difficulty.default = "normal"

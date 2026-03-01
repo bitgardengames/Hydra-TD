@@ -106,7 +106,7 @@ function Export.exportTowers()
 				lg.scale(scale, scale)
 
 				DrawEntities.drawTowerBase(kind, 0, 0, {alpha = 1, shadow = false})
-				
+
 				DrawEntities.drawTowerCore(kind, 0, 0, {angle = angle, alpha = 1, shadow = false})
 
 				lg.pop()
@@ -238,9 +238,11 @@ local function drawBannerBackground(w, h)
 end
 
 -- Banner group
+local lancerAngle = -math.pi / 6
+
 local function drawBannerGroup(w, h)
 	Title.invalidateCache()
-	Title.drawBannerStyle(w, h, {angle = -math.pi / 6})
+	Title.drawBannerStyle(w, h, lancerAngle, 1, 0)
 end
 
 -- Banner export
@@ -293,7 +295,7 @@ function Export.exportAppIcons()
 			lg.scale(scale, scale)
 
 			DrawEntities.drawTowerBase(towerId, 0, 0, {alpha  = 1, shadow = false})
-			
+
 			DrawEntities.drawTowerCore(towerId, 0, 0, {angle  = -math.pi / 4, alpha  = 1, shadow = false})
 
 			lg.pop()

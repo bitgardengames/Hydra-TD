@@ -23,11 +23,13 @@ local floor = math.floor
 
 local lg = love.graphics
 
-local HERO_FONT_SIZE = 168
+local HERO_FONT_SIZE = 148
 local CTA_FONT_SIZE = 120
+local FLOATER_FONT_SIZE = 60
 
 local FONT_HERO = lg.newFont("assets/fonts/PTSans.ttf", HERO_FONT_SIZE)
 local FONT_CTA = lg.newFont("assets/fonts/PTSans.ttf", CTA_FONT_SIZE)
+local FONT_FLOATERS = lg.newFont("assets/fonts/PTSans.ttf", FLOATER_FONT_SIZE) -- Make floaters slightly more dramatic
 
 local FPS = 60
 local STEP_DT = 1 / FPS
@@ -40,7 +42,8 @@ local Director = {
 
 	transition = nil, -- "out", "hold", "in"
 	transitionT = 0,
-	transitionDur = 0.25,
+	--transitionDur = 0.25,
+	transitionDur = 0.1,
 
 	transitionHold = 0,
 	transitionHoldFrames = 2, -- tweak: 1–3 is ideal
@@ -271,24 +274,7 @@ function Director.update(dt)
 		return
 	end
 
-	Director._stepFixed(dt)
-
-    -- Run simulation
-	if Director.shot.type ~= "logo" then
-		-- Capture first enemy once
-		if not Director.ctx.firstEnemy then
-			local enemies = Enemies.enemies
-
-			if enemies and enemies[1] then
-				Director.ctx.firstEnemy = enemies[1]
-			end
-		end
-
-		-- Camera
-		if Director.activeCamera then
-			Director.activeCamera.update(Director.t)
-		end
-	end
+	Director._stepFixed(STEP_DT)
 
     -- Shot finished?
 	if Director.t >= Director.shot.duration and not Director.transition then
@@ -358,7 +344,7 @@ local function drawFadedBannerForText(text, font, y, alpha)
 	local x0 = (screenW - totalW) * 0.5
 
 	-- Height is fixed relative to font size (not string content)
-	local bannerHeight = font:getAscent() * 1.15
+	local bannerHeight = font:getAscent() * 1.1
 
 	-- Slight upward optical bias (feels centered)
 	local y0 = y + font:getAscent() * 0.10
@@ -370,7 +356,10 @@ local function drawFadedBannerForText(text, font, y, alpha)
 	-- Horizontal fades
 	for i = 1, fade do
 		local a = alpha * (1 - i / fade)
-		if a <= 0 then break end
+
+		if a <= 0 then
+			break
+		end
 
 		lg.setColor(0, 0, 0, a)
 		lg.rectangle("fill", x0 - i, y0, 1, bannerHeight)
@@ -392,7 +381,7 @@ function Director.draw()
 		Camera.finish()
 		Camera.present()
 
-		Fonts.set("title")
+		lg.setFont(FONT_FLOATERS)
 
 		Floaters.draw()
 	else
@@ -453,7 +442,7 @@ function Director.draw()
 			lg.setFont(FONT_CTA)
 		else
 			-- Banner backdrop
-			drawFadedBannerForText(tb.text, FONT_HERO, y - 10, alpha * 0.4)
+			drawFadedBannerForText(tb.text, FONT_HERO, y - 10, alpha * 0.35)
 
 			lg.setFont(FONT_HERO)
 		end
@@ -499,7 +488,7 @@ function Director.draw()
 		local y = floor(sh * 0.5) - 120
 
 		lg.setColor(1, 1, 1, alpha)
-		Title.draw({x = x, y = y, alpha = alpha, lancerScale = 7.0, angle = Director.lancerIdle.angle})
+		Title.draw(x, y, 1, 7.0, Director.lancerIdle.angle, alpha, 26)
 
 		lg.setColor(1, 1, 1, 1)
 	end
@@ -532,7 +521,7 @@ function love.keypressed(key)
 		HeroExport.setFormat("vertical") -- or "vertical"
 		HeroExport.capture({
 			--subject = require("world.towers").towers[1], -- Actual tower instance from world.towers
-			subject = require("world.enemies").enemies[1], -- Actual tower instance from world.towers
+			subject = require("world.enemies").enemies[1], -- Actual tower instance from world.enemies
 			subjectType = "enemy",
 		})
 	elseif key == "f8" then
