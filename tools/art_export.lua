@@ -44,6 +44,10 @@ local BANNERS = {
 
 	page_background = {w = 1438, h = 810},
 
+	-- Steam update / announcement images
+	announcement_cover = {w = 800, h = 450},
+	announcement_header = {w = 1920, h = 622},
+
 	-- Social banners
 	youtube_banner = {w = 2048, h = 1152},
 	x_banner = {w = 1500, h = 500},

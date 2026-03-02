@@ -10,7 +10,7 @@ return {
 
 	tank = {
 		nameKey = "enemy.tank",
-		hp = 84,
+		hp = 80,
 		speed = 45,
 		reward = 12,
 		score = 22,
