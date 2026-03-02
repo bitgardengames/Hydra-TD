@@ -1,8 +1,8 @@
 local Constants = {}
 
 -- Version
-Constants.VERSION = "1.0.0" -- major.minor.patch
-Constants.BUILD = 1
+Constants.VERSION = "1.0.1" -- major.minor.patch
+Constants.BUILD = 2
 Constants.VERSION_STRING = string.format("v%s (build %d)", Constants.VERSION, Constants.BUILD)
 
 -- Display
