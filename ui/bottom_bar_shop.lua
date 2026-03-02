@@ -11,7 +11,9 @@ local lg = love.graphics
 local min = math.min
 local max = math.max
 local sin = math.sin
+local abs = math.abs
 local floor = math.floor
+local format = string.format
 local tostring = tostring
 
 local Shop = {}
@@ -61,6 +63,26 @@ local function formatNum(n)
 	numCache[v] = s
 
 	return s
+end
+
+local function formatStat(value)
+	if not value then
+		return value
+	end
+
+	-- Round to 1 decimal
+	local rounded = floor(value * 10 + 0.5) / 10
+
+	-- If effectively whole number, return integer string
+	if abs(rounded - floor(rounded)) < 0.001 then
+		return tostring(floor(rounded))
+	end
+
+	return format("%.1f", rounded)
+end
+
+local function formatInterval(seconds)
+	return (("%.2f"):format(seconds):gsub("0+$", ""):gsub("%.$", "")) .. "s"
 end
 
 local function getShopButton(i)
@@ -208,10 +230,10 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 				rows[1].value = def.damage
 
 				rows[2].label = L("stats.fireRate")
-				rows[2].value = def.fireRate
+				rows[2].value = formatInterval(1 / def.fireRate)
 
 				rows[3].label = L("stats.range")
-				rows[3].value = def.range
+				rows[3].value = formatStat(def.range)
 
 				rows[4].text = L(def.descKey)
 			end
@@ -229,6 +251,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 
 		if hotkeyLabel then
 			local used = drawHotkeyVisual(key, x + PAD, yb, ty)
+
 			nameX = nameX + used
 		end
 

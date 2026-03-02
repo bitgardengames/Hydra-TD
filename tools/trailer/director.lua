@@ -14,6 +14,7 @@ local Fonts = require("core.fonts")
 local Enemies = require("world.enemies")
 local Floaters = require("ui.floaters")
 local Sound = require("systems.sound")
+local Difficulty = require("systems.difficulty")
 
 local pi = math.pi
 local min = math.min
@@ -97,6 +98,10 @@ function Director.buildScene(scene)
 	for _, action in ipairs(Director.warmupActions or {}) do
 		action.fn()
 		action.done = true
+	end
+
+	if Config.showUI then
+		State.money = math.random(0, 120)
 	end
 
     -- Start wave early if requested
@@ -241,6 +246,9 @@ function Director.load(name)
 
 	-- Reset game
 	State.mode = "game"
+
+	Difficulty.set("hard")
+
 	resetGame()
 
 	Sound.suppressed = true
@@ -381,9 +389,13 @@ function Director.draw()
 		Camera.finish()
 		Camera.present()
 
-		lg.setFont(FONT_FLOATERS)
+		if Config.showUI then
+			Draw.drawUI()
+		else
+			lg.setFont(FONT_FLOATERS)
 
-		Floaters.draw()
+			Floaters.draw()
+		end
 	else
 		-- Clear to black for logo cards
 		lg.clear(0, 0, 0, 1)

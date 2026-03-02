@@ -7,6 +7,7 @@ local SAVE_VERSION = 1 -- Only upgrade the version if I change the structure of 
 Save.data = nil
 
 local format = string.format
+local rep = string.rep
 
 function Save.load()
     if love.filesystem.getInfo(SAVE_FILE) then
@@ -37,8 +38,8 @@ function Save.load()
 
 			local settings = Save.data.settings
 
-			settings.musicVolume = settings.musicVolume or 0.25
-			settings.sfxVolume = settings.sfxVolume or 0.25
+			settings.musicVolume = settings.musicVolume or 0.20
+			settings.sfxVolume = settings.sfxVolume or 0.20
 			settings.difficulty = settings.difficulty or "normal"
 
 			if settings.fullscreen == nil then
@@ -71,8 +72,8 @@ function Save.load()
         furthestIndex = 1,
         unlockedMaps = {},
 		settings = {
-			musicVolume = 0.25,
-			sfxVolume = 0.25,
+			musicVolume = 0.20,
+			sfxVolume = 0.20,
 			difficulty = "normal",
 			fullscreen = true,
 		},
@@ -123,12 +124,12 @@ function Save.serialize(tbl, indent)
     local s = "{\n"
 
     for k, v in pairs(tbl) do
-        s = s .. pad .. "  [" .. string.format("%q", k) .. "] = "
+        s = s .. pad .. "  [" .. format("%q", k) .. "] = "
 
         if type(v) == "table" then
             s = s .. Save.serialize(v, indent + 2)
         elseif type(v) == "string" then
-            s = s .. string.format("%q", v)
+            s = s .. format("%q", v)
         else
             s = s .. tostring(v)
         end

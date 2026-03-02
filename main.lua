@@ -69,8 +69,6 @@ function resetGame()
 
 	local diff = Difficulty.get()
 
-	print(diff, diff.startLives)
-
     -- Core game state
     State.money = diff.startMoney
     State.moneyLerp = State.money

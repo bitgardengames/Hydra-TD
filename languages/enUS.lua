@@ -40,8 +40,8 @@ return {
 	},
 
 	ui = {
-		seconds = "%.1fs",
 		hotkey = "[%s] ",
+		seconds = "%.1fs",
 	},
 
 	status = {
@@ -65,7 +65,7 @@ return {
 
 	towerDesc = {
 		lancer = "Fast single-target damage.",
-		slow = "Slows enemies in range.",
+		slow = "Slows enemy movement.",
 		cannon = "Heavy splash damage.",
 		shock = "Chains lightning between enemies.",
 		poison = "Applies damage over time.",

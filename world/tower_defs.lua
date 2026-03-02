@@ -17,9 +17,9 @@ return {
 		canRotate = true,
 		onHitSlow = {factor = 0.5, dur = 1.5},
 		upgrade = {
-			dmgMult = 2.5,
+			dmgMult = 2.2,
 			rangeAdd = 0.1 * Constants.TILE,
-			fireMult = 1.04,
+			fireMult = 1.0, -- 1.04
 			slowDurAdd = 0.35,
 		}
 	},
@@ -38,9 +38,9 @@ return {
 		color = Theme.tower.lancer,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 2.5,
+			dmgMult = 2.2,
 			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.03,
+			fireMult = 1.0, -- 1.03
 		}
 	},
 
@@ -63,9 +63,9 @@ return {
 			maxStacks = 4,
 		},
 		upgrade = {
-			dmgMult = 2.5,
+			dmgMult = 2.2,
 			rangeAdd = 0.06 * Constants.TILE,
-			fireMult = 1.02,
+			fireMult = 1.0, -- 1.02
 			poisonDurAdd = 0.25,
 			poisonDpsMult = 1.10,
 			stackAdd = 1,
@@ -90,9 +90,9 @@ return {
 			falloff = 0.45, -- % damage applied at edge
 		},
 		upgrade = {
-			dmgMult = 2.5,
+			dmgMult = 2.2,
 			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.05,
+			fireMult = 1.0, -- 1.05
 			splashAdd = 4, -- increase AoE radius per upgrade
 		}
 	},
@@ -115,9 +115,9 @@ return {
 			falloff = 0.75 -- damage multiplier per jump
 		},
 		upgrade = {
-			dmgMult = 2.5,
+			dmgMult = 2.2,
 			rangeAdd = 0.06 * Constants.TILE,
-			fireMult = 1.04,
+			fireMult = 1.0, -- 1.04
 		}
 	},
 }

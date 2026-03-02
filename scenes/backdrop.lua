@@ -51,7 +51,7 @@ Backdrop.shots = {
 		towers = {
 			{kind = "cannon", gx = 12, gy = 7, level = 2},
 			{kind = "shock", gx = 12, gy = 11},
-			{kind = "poison", gx = 22, gy = 7},
+			{kind = "poison", gx = 22, gy = 7, level = 2},
 		},
 		wave = 4,
 		warmup = 26.0,
@@ -77,7 +77,7 @@ Backdrop.shots = {
 		map = 10,
 		towers = {
 			{kind = "cannon", gx = 12, gy = 8, level = 3},
-			{kind = "slow", gx = 12, gy = 10},
+			{kind = "lancer", gx = 12, gy = 10},
 			{kind = "poison", gx = 21, gy = 8, level = 4},
 			{kind = "lancer", gx = 23, gy = 8, level = 3},
 		},

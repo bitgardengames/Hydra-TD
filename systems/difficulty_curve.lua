@@ -4,10 +4,10 @@ local DifficultyCurve = {}
 
 -- Campaign tuning
 DifficultyCurve.campaignEnd = 20
-DifficultyCurve.campaignHpSlope = 0.97
+DifficultyCurve.campaignHpSlope = 1.03
 
 -- Endless tuning (exponential base per wave)
-DifficultyCurve.endlessHpBase = 1.055 -- 1.05 = gentle, 1.07 = aggressive
+DifficultyCurve.endlessHpBase = 1.12
 
 -- Enemy hp multiplier
 function DifficultyCurve.getEnemyHpMultiplier(waveIndex)

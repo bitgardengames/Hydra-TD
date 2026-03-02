@@ -2,6 +2,7 @@ local State = require("core.state")
 local Util = require("core.util")
 local Towers = require("world.towers")
 local Hotkeys = require("core.hotkeys")
+local Glyphs = require("ui.glyphs")
 local Tooltip = require("ui.tooltip")
 local Text = require("ui.text")
 local Theme = require("core.theme")
@@ -15,6 +16,7 @@ local max = math.max
 local sin = math.sin
 local abs = math.abs
 local floor = math.floor
+local format = string.format
 
 local formatInt = Util.formatInt
 
@@ -56,6 +58,29 @@ local BUTTON_H = 28
 local ACTION_W = 240
 local GAP = 8
 local BUTTON_W = (ACTION_W - GAP) / 2
+local GLYPH_X_OFFSET = -5
+
+local function drawHotkeyVisual(action, x, y, textY)
+	local glyph = Hotkeys.getGlyph(action)
+
+	if glyph then
+		local gw = Glyphs.getSize(glyph, 1)
+		Glyphs.draw(glyph, x + GLYPH_X_OFFSET, textY - 1)
+
+		return gw - 10
+	end
+
+	local label = Hotkeys.getDisplay(action)
+
+	if label then
+		lg.setColor(colorText)
+		Text.printShadow(label, x, textY)
+
+		return 14
+	end
+
+	return 0
+end
 
 -- Buttons
 local inspectButtons = {
@@ -171,6 +196,22 @@ local function formatModifier(label, value, suffix)
 	return ("%s%d%% %s %s"):format(sign, pct, label, suffix)
 end
 
+local function formatStat(value)
+	if not value then
+		return value
+	end
+
+	-- Round to 1 decimal
+	local rounded = floor(value * 10 + 0.5) / 10
+
+	-- If effectively whole number, return integer string
+	if abs(rounded - floor(rounded)) < 0.001 then
+		return tostring(floor(rounded))
+	end
+
+	return format("%.1f", rounded)
+end
+
 function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 	local hasInspect = State.selectedTower ~= nil or State.selectedEnemy ~= nil
 
@@ -280,10 +321,21 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			end
 
 			local ty = by + (bh - textH) * 0.5
-			local label = btn.id == "upgrade" and L("actions.upgrade") or L("actions.sell")
+			local action = btn.id
+			local baseLabel = L("actions." .. action)
+
+			local nameX = bx + PAD
+
+			local hotkeyLabel = Hotkeys.getDisplay(action)
+
+			if hotkeyLabel then
+				local used = drawHotkeyVisual(action, bx + PAD, by, ty)
+
+				nameX = nameX + used
+			end
 
 			lg.setColor(ct1, ct2, ct3, btn.canAfford and 1 or 0.55)
-			Text.printShadow(label, bx + PAD, ty)
+			Text.printShadow(baseLabel, nameX, ty)
 
 			if btn.cost then
 				lg.setColor(btn.canAfford and colorGood or colorBad)
@@ -308,15 +360,9 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 							},
 
 							{
-								label = L("stats.fireRate"),
-								value = t.fireRate,
-								delta = "+" .. (preview.fireRate - t.fireRate),
-							},
-
-							{
 								label = L("stats.range"),
 								value = t.range,
-								delta = "+" .. (preview.range - t.range),
+								delta = "+" .. formatStat(preview.range - t.range),
 							},
 						}
 					}

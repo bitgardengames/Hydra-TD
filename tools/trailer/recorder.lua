@@ -1,6 +1,6 @@
 local recorder = {
     frame = 0,
-    enabled = false,
+    enabled = true,
 }
 
 local format = string.format
