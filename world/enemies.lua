@@ -15,8 +15,9 @@ local L = require("core.localization")
 local enemies = {}
 local deathFX = {}
 
-local colorGood = Theme.ui.good
-local colorBad = Theme.ui.bad
+local colorMoney = Theme.ui.money
+
+local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local tick = 0.5 -- seconds per poison tick
 
@@ -192,8 +193,12 @@ local function updateEnemies(dt)
 				Achievements.increment("BOSSES_KILLED")
 				Achievements.increment("ENEMIES_KILLED") -- Bosses still count as an enemy
 
-				State.money = State.money + floor(e.reward)
+				local reward = floor(e.reward + 0.5)
+
+				State.money = State.money + reward
 				State.score = State.score + e.score
+
+				Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB)
 
 				tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
@@ -237,8 +242,12 @@ local function updateEnemies(dt)
 				State.selectedEnemy = nil
 			end
 
-			State.money = State.money + e.reward
+			local reward = floor(e.reward + 0.5)
+
+			State.money = State.money + reward
 			State.score = State.score + e.score
+
+			Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB)
 
 			tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 

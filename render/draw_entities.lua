@@ -406,7 +406,7 @@ end
 local size = TILE * 0.42
 local pad = 2
 
-local function drawTowerBase(kind, cx, cy, alpha, tintR, tintG, tintB)
+local function drawTowerBase(kind, cx, cy, alpha, tintR, tintG, tintB, height)
 	local def = Towers.TowerDefs[kind]
 
 	if not def then
@@ -417,6 +417,7 @@ local function drawTowerBase(kind, cx, cy, alpha, tintR, tintG, tintB)
 	tintR = tintR or 1
 	tintG = tintG or 1
 	tintB = tintB or 1
+	height = height or 0
 
 	local color = def.color
 	local outlineW = outlineWidth
@@ -427,13 +428,15 @@ local function drawTowerBase(kind, cx, cy, alpha, tintR, tintG, tintB)
 	local outerRadius = 6 + outlineW * 0.5
 	local innerRadius = 6 - outlineW * 0.25
 
+	local h = baseOuter * 2 + height
+
 	-- Outline
 	lg.setColor(outR, outG, outB, alpha)
-	lg.rectangle("fill", cx - baseOuter, cy - baseOuter, baseOuter * 2, baseOuter * 2, outerRadius, outerRadius)
+	lg.rectangle("fill", cx - baseOuter, cy - baseOuter - height, baseOuter * 2, h, outerRadius, outerRadius)
 
 	-- Fill
 	lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, alpha)
-	lg.rectangle("fill", cx - baseInner, cy - baseInner, baseInner * 2, baseInner * 2, innerRadius, innerRadius)
+	lg.rectangle("fill", cx - baseInner, cy - baseInner - height, baseInner * 2, h - outlineW * 2, innerRadius, innerRadius)
 end
 
 -- Draw tower core shape
@@ -603,7 +606,7 @@ local function drawTowers()
 
 		-- Only draw ground base after spawn completes
 		if spawn <= 0 then
-			drawTowerBase(t.kind, cx, groundY, 1, 0.2, 0.2, 0.2)
+			drawTowerBase(t.kind, cx, groundY, 1, 0.2, 0.2, 0.2, groundY - renderY)
 		end
 
 		-- Base (moving)

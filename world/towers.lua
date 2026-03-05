@@ -69,6 +69,7 @@ local function addTower(kind, gx, gy)
 		y = y,
 		level = 1,
 		height = 0,
+		prevHeight = 0,
 		renderY = y,
 		range = def.range,
 		range2 = def.range * def.range,
@@ -103,7 +104,7 @@ local function addTower(kind, gx, gy)
 	MapMod.map.blocked[MapMod.makeKey(gx, gy)] = true
 	table.insert(towers, t)
 
-	Floaters.add(x, t.renderY - 26, "-" .. def.cost, cwR, cwG, cwB)
+	Floaters.add(x, t.renderY - 30, "-" .. def.cost, cwR, cwG, cwB)
 
 	Sound.play("towerPlaced")
 
@@ -135,6 +136,7 @@ local function upgradeTower(t)
 	State.money = State.money - cost
 
 	t.level = t.level + 1
+	t.prevHeight = t.height
 	t.height = (t.level - 1) * 4
 	t.levelUpAnim = 1
 	t.damage = t.damage * t.def.upgrade.dmgMult
@@ -171,7 +173,7 @@ local function upgradeTower(t)
 		end
 	end
 
-	Floaters.add(t.x, t.renderY - 26, L("floater.upgrade"), cgR, cgG, cgB)
+	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
 
 	--Sound.play("towerUpgraded")
 
@@ -230,7 +232,7 @@ local function sellTower(t)
 		end
 	end
 
-	Floaters.add(t.x, t.renderY - 26, "+" .. t.sellValue, cgR, cgG, cgB)
+	Floaters.add(t.x, t.renderY - 30, "+" .. t.sellValue, cgR, cgG, cgB)
 	State.selectedTower = nil
 
 	Sound.play("towerSold")
@@ -263,9 +265,8 @@ local function updateTowers(dt)
 		local riseAnim = t.levelUpAnim or 0
 		local p = 1 - riseAnim
 		local ease = p * p * (3 - 2 * p)
-
-		-- Animated height
-		local animatedHeight = t.height * ease
+		local prev = t.prevHeight or 0
+		local animatedHeight = prev + (t.height - prev) * ease
 
 		-- Spawn animation
 		local spawn = t.spawnAnim or 0

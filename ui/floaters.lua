@@ -20,10 +20,9 @@ local function add(x, y, text, r, g, b)
 		f = {}
 	end
 
-	-- Small horizontal spawn jitter prevents perfect stacking
-	x = x + random(-4, 4)
+	y = floor(y + 0.5)
 
-	f.x = x
+	f.x = floor(x + 0.5 + random(-4, 4)) -- Small horizontal spawn jitter prevents perfect stacking
 	f.y = y
 	f.startY = y
 	f.rise = 18 + random() * 6
