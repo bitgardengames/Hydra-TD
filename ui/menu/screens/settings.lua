@@ -23,6 +23,31 @@ local Screen = {}
 local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorDim = Theme.ui.screenDim or {0, 0, 0, 0.55}
+local colorOutline = Theme.outline.color
+
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
+
+local paddingX = 24
+local paddingY = 24
+local corner = 18
+
+local btnW = 240
+local btnH = 42
+local gap = 62
+
+local lineH = 48
+local headerHeight = 36
+local headerSpacing = 30
+local footerSpacing = 22
+
+local boxX, boxY, boxW, boxH = 0, 0, 0, 0
+local titleY = 0
+local rowsStartY = 0
+local buttonsStartY = 0
+local listX = 0
 
 local LABEL_W = 180
 local SLIDER_W = 160
@@ -153,25 +178,6 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 	end
 end
 
--- Layout
-local paddingX = 24
-local paddingY = 24
-local corner = 18
-
-local btnW = 240
-local btnH = 42
-
-local lineH = 48
-local headerHeight = 36
-local headerSpacing = 30
-local footerSpacing = 22
-
-local boxX, boxY, boxW, boxH = 0, 0, 0, 0
-local titleY = 0
-local rowsStartY = 0
-local buttonsStartY = 0
-local listX = 0
-
 function Screen.load()
 	settingsCursor = 1
 
@@ -287,7 +293,8 @@ function Screen.update(dt)
 
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
-		btn.y = buttonsStartY + (i - 1) * 52
+		btn.y = buttonsStartY + (i - 1) * gap
+
 		Button.update(btn, Cursor.x, Cursor.y, dt)
 	end
 
@@ -336,8 +343,11 @@ function Screen.draw()
 	lg.rectangle("fill", 0, 0, sw, sh)
 
 	-- Panel
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", boxX - outlineW, boxY - outlineW, boxW + outlineW * 2, boxH + outlineW * 2, outerRadius)
+
 	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
+	lg.rectangle( "fill", boxX, boxY, boxW, boxH, innerRadius)
 
 	-- Title
 	Fonts.set("title")
@@ -356,7 +366,7 @@ function Screen.draw()
 		drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
 	end
 
-	-- Button(s)
+	-- Button
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
@@ -371,11 +381,13 @@ function Screen.keypressed(key)
 		Sound.play("uiMove")
 	elseif key == "left" then
 		local row = rows[settingsCursor]
+
 		if row then
 			adjustRow(row, -1)
 		end
 	elseif key == "right" then
 		local row = rows[settingsCursor]
+
 		if row then
 			adjustRow(row, 1)
 		end
@@ -388,6 +400,7 @@ end
 
 function Screen.gamepadpressed(_, button)
 	local row = rows[settingsCursor]
+
 	if not row then
 		return
 	end
@@ -427,12 +440,18 @@ function Screen.mousepressed(x, y, button)
 	end
 end
 
-function Screen.mousereleased()
+function Screen.mousereleased(x, y, button)
 	if draggingSlider then
 		Sound.play("uiMove")
 	end
 
 	draggingSlider = nil
+
+	for _, btn in ipairs(buttons) do
+		if Button.mousereleased(btn, x, y, button) then
+			return true
+		end
+	end
 end
 
 return Screen

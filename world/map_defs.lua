@@ -164,16 +164,6 @@ local maps = {
 			{24, 7}, {31, 7},
 		},
 	},
-
-	-- Trailer usage, don't ship this
-	{
-		ignore = true,
-		id = "line",
-		nameKey = "map.line",
-		path = {
-			{4, 8}, {31, 8},
-		},
-	},
 }
 
 return maps

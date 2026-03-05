@@ -561,7 +561,7 @@ local function drawTowerGhost()
 
 	drawTowerBase(State.placing, cx, cy, (ok and 0.45 or 0.25) * fade, 1, ok and 1 or 0.4, ok and 1 or 0.4)
 
-	drawTowerCore(State.placing, cx, cy, 0, 0, (ok and 0.45 or 0.25) * fade, 1, ok and 1 or 0.4, ok and 1 or 0.4, 0)
+	drawTowerCore(State.placing, cx, cy, -HALF_PI, 0, (ok and 0.45 or 0.25) * fade, 1, ok and 1 or 0.4, ok and 1 or 0.4, 0)
 end
 
 local function drawTowers()
@@ -586,16 +586,13 @@ local function drawTowers()
 
 		local cx = t.x
 		local groundY = t.y
-		local bodyY = groundY
+		local renderY = t.renderY
+		local riseAnim = t.levelUpAnim or 0
 
 		-- Spawn drop (unchanged)
 		local spawn = t.spawnAnim or 0
 		local pSpawn = 1 - spawn
 		local easeSpawn = pSpawn * pSpawn * (3 - 2 * pSpawn)
-
-		if spawn > 0 then
-			bodyY = bodyY - ((1 - easeSpawn) * 8)
-		end
 
 		-- Shadow
 		local widthMult = 1 + (1 - easeSpawn) * 0.4
@@ -603,19 +600,6 @@ local function drawTowers()
 
 		lg.setColor(tsR, tsG, tsB, tsA * alphaMult)
 		lg.ellipse("fill", cx, t.y + size * 0.4, size * 0.85 * widthMult, size * 0.30)
-
-		-- Permanent height from levels
-		local levelHeight = (t.level - 1) * 4
-
-		-- Animation progress
-		local riseAnim = t.levelUpAnim or 0
-		local p = 1 - riseAnim
-		local ease = p * p * (3 - 2 * p)
-
-		local animatedHeight = levelHeight * ease
-		local renderY = bodyY - animatedHeight
-
-		t.renderY = renderY
 
 		-- Only draw ground base after spawn completes
 		if spawn <= 0 then
@@ -633,7 +617,7 @@ local function drawTowers()
 		-- Pulse ring
 		if riseAnim > 0 then
 			lg.setColor(1, 1, 1, riseAnim * 0.4)
-			lg.circle("line", cx, groundY - animatedHeight, size * (1 + (1 - riseAnim)))
+			lg.circle("line", cx, renderY, size * (1 + (1 - riseAnim)))
 		end
 	end
 end

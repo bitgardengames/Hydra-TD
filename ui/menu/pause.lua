@@ -15,14 +15,25 @@ local floor = math.floor
 local lg = love.graphics
 
 local colorBackdrop = Theme.ui.backdrop
+local colorOutline = Theme.outline.color
+
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
 
 local Page = {}
 local buttons = nil
 
 local btnW = 220
 local btnH = 42
-local gap = 52
+local gap = 62
 local corner = 18
+
+local paddingX = 24
+local paddingY = 24
+local headerSpacing = 36
+local headerHeight = 38
 
 function Page.load()
 	buttons = {
@@ -83,11 +94,6 @@ function Page.update(dt)
 	end
 end
 
-local paddingX = 24
-local paddingY = 24
-local headerSpacing = 36
-local headerHeight = 38
-
 function Page.draw()
 	local sw, sh = lg.getDimensions()
 
@@ -110,9 +116,12 @@ function Page.draw()
 	local boxX = cx - boxW * 0.5
 	local boxY = startY - paddingY - headerHeight - headerSpacing
 
-	-- Backdrop panel
+	-- Panel
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", boxX - outlineW, boxY - outlineW, boxW + outlineW * 2, boxH + outlineW * 2, outerRadius)
+
 	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
+	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
 
 	-- Draw header
 	lg.setColor(1, 1, 1, 1)
@@ -136,11 +145,18 @@ function Page.mousepressed(x, y, button)
 	return false
 end
 
+function Page.mousereleased(x, y, button)
+	for _, btn in ipairs(buttons) do
+		if Button.mousereleased(btn, x, y, button) then
+			return true
+		end
+	end
+end
+
 function Page.keypressed(key)
 	if key == Hotkeys.kb.actions.escape then
 		State.mode = "game"
 		Sound.exitPause()
-		print('exitPause')
 	end
 end
 

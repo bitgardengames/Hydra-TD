@@ -15,15 +15,21 @@ function Text.printShadow(text, x, y, opts)
 	local ox = opts.ox or 1
 	local oy = opts.oy or 1
 
-	local r, g, b, a = getColor()
+	local r = opts.r or 0
+	local sx = opts.sx or 1
+	local sy = opts.sy or sx
+	local kx = opts.kx or 0
+	local ky = opts.ky or 0
+
+	local cr, cg, cb, ca = getColor()
 
 	-- Shadow
-	lg.setColor(sr, sg, sb, a)
-	lg.print(text, x + ox, y + oy)
+	lg.setColor(sr, sg, sb, ca)
+	lg.print(text, x + ox, y + oy, r, sx, sy, kx, ky)
 
 	-- Main
-	lg.setColor(r, g, b, a)
-	lg.print(text, x, y)
+	lg.setColor(cr, cg, cb, ca)
+	lg.print(text, x, y, r, sx, sy, kx, ky)
 end
 
 function Text.printfShadow(text, x, y, w, align, opts)
@@ -32,14 +38,14 @@ function Text.printfShadow(text, x, y, w, align, opts)
 	local ox = opts.ox or 1
 	local oy = opts.oy or 1
 
-	local r, g, b, a = getColor()
+	local cr, cg, cb, ca = getColor()
 
 	-- Shadow
-	lg.setColor(sr, sg, sb, a)
+	lg.setColor(sr, sg, sb, ca)
 	lg.printf(text, x + ox, y + oy, w, align)
 
 	-- Main
-	lg.setColor(r, g, b, a)
+	lg.setColor(cr, cg, cb, ca)
 	lg.printf(text, x, y, w, align)
 end
 

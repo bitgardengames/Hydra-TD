@@ -19,6 +19,12 @@ local floor = math.floor
 
 local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
+local colorOutline = Theme.outline.color
+
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
 
 local buttons = nil
 
@@ -37,7 +43,7 @@ local HOLD_TIME = 5.0
 
 local btnW = 240
 local btnH = 42
-local gap = 58
+local gap = 62
 
 local panelPaddingX = 24
 local panelPaddingY = 24
@@ -144,6 +150,8 @@ function Screen.update(dt)
 	end
 end
 
+local idleLift = 6
+
 function Screen.draw()
 	local sw, sh = love.graphics.getDimensions()
 	local cx = floor(sw * 0.5)
@@ -156,17 +164,20 @@ function Screen.draw()
 	Title.draw(sw * 0.5, titleY, 1, 3.0, lancerIdle.angle, 1, 26)
 
 	-- Calculate button block size
-	local totalHeight = (#buttons - 1) * gap + btnH
+	local totalHeight = (#buttons - 1) * gap + btnH + idleLift
 
 	local panelW = btnW + panelPaddingX * 2
 	local panelH = totalHeight + panelPaddingY * 2
 
 	local panelX = cx - panelW * 0.5
-	local panelY = buttons[1].y - panelPaddingY
+	local panelY = buttons[1].y - panelPaddingY - idleLift
 
-	-- Draw button backdrop panel
+	-- Panel
+	love.graphics.setColor(colorOutline)
+	love.graphics.rectangle("fill", panelX - outlineW, panelY - outlineW, panelW + outlineW * 2, panelH + outlineW * 2, outerRadius)
+
 	love.graphics.setColor(colorBackdrop)
-	love.graphics.rectangle("fill", panelX, panelY, panelW, panelH, panelCorner, panelCorner)
+	love.graphics.rectangle("fill", panelX, panelY, panelW, panelH, innerRadius)
 
 	Fonts.set("menu")
 
@@ -179,6 +190,14 @@ end
 function Screen.mousepressed(x, y, button)
 	for _, btn in ipairs(buttons) do
 		if Button.mousepressed(btn, x, y, button) then
+			return true
+		end
+	end
+end
+
+function Screen.mousereleased(x, y, button)
+	for _, btn in ipairs(buttons) do
+		if Button.mousereleased(btn, x, y, button) then
 			return true
 		end
 	end

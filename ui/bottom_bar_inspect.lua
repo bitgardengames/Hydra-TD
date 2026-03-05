@@ -13,7 +13,6 @@ local Inspect = {}
 local lg = love.graphics
 local min = math.min
 local max = math.max
-local sin = math.sin
 local abs = math.abs
 local floor = math.floor
 local format = string.format
@@ -25,8 +24,8 @@ local inspectAnim = 0
 local inspectTarget = 0
 
 -- Colors
-local colorPanel = Theme.ui.panel
-local colorPanel2 = Theme.ui.panel2
+local colorBackdrop = Theme.ui.backdrop
+local colorOutline = Theme.outline.color
 local colorText = Theme.ui.text
 local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
@@ -41,24 +40,31 @@ local cb1, cb2, cb3 = colorButton[1], colorButton[2], colorButton[3]
 local ch1, ch2, ch3 = colorButtonHover[1], colorButtonHover[2], colorButtonHover[3]
 local cs1, cs2, cs3 = colorSlow[1], colorSlow[2], colorSlow[3]
 local cp1, cp2, cp3 = colorPoison[1], colorPoison[2], colorPoison[3]
-local panel1, panel2, panel3 = colorPanel[1], colorPanel[2], colorPanel[3]
-local paneldark1, paneldark2, paneldark3 = colorPanel2[1], colorPanel2[2], colorPanel2[3]
+local cd1, cd2, cd3 = colorDisabled[1], colorDisabled[2], colorDisabled[3]
 
 local cbd1 = ch1 - cb1
 local cbd2 = ch2 - cb2
 local cbd3 = ch3 - cb3
 
 -- Layout constants local to inspect
-local OUTER_PAD = 10
+local OUTER_PAD = 12
 local PANEL_GAP = 10
-local OUTER_R = 12
-local INNER_R = 8
 local PAD = 8
-local BUTTON_H = 28
-local ACTION_W = 240
-local GAP = 8
-local BUTTON_W = (ACTION_W - GAP) / 2
+local BUTTON_H = 32
+local GAP = 16
+local IDLE_LIFT = 6
 local GLYPH_X_OFFSET = -5
+local STAT_LINE_H = 22
+
+local idleLift = 6
+
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
+
+local outerSmallRadius = 6 + outlineW * 0.5
+local innerSmallRadius = 6 - outlineW * 0.25
 
 local function drawHotkeyVisual(action, x, y, textY)
 	local glyph = Hotkeys.getGlyph(action)
@@ -93,6 +99,7 @@ local inspectButtons = {
 		canAfford = false,
 		cost = nil,
 		value = nil,
+		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0},
 		onClick = function()
 			local t = State.selectedTower
 
@@ -120,6 +127,7 @@ local inspectButtons = {
 		canAfford = true,
 		cost = nil,
 		value = nil,
+		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0},
 		onClick = function()
 			local t = State.selectedTower
 
@@ -137,7 +145,7 @@ end
 -- Status effects
 local BAR_W = 120
 local BAR_H = 12
-local STATUS_GAP = 10
+local STATUS_GAP = 12
 
 local function drawStatusBar(r, g, b, timer, duration, x, y, now)
 	if not timer or timer <= 0 then
@@ -235,30 +243,29 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
     local panelX = x + slide
     local panelY = y
 
-    lg.setColor(panel1, panel2, panel3, alpha)
-    lg.rectangle("fill", panelX, panelY, w, h, OUTER_R, OUTER_R)
+	-- Outer outlined panel
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
+	lg.rectangle("fill", panelX - outlineW, panelY - outlineW, w + outlineW * 2, h + outlineW * 2, outerRadius)
+
+	lg.setColor(colorBackdrop[1], colorBackdrop[2], colorBackdrop[3], alpha)
+	lg.rectangle("fill", panelX, panelY, w, h, innerRadius)
 
     local infoX = panelX + OUTER_PAD
     local infoY = panelY + OUTER_PAD
     local infoW = w - OUTER_PAD * 2
     local infoH = 28
 
-    lg.setColor(paneldark1, paneldark2, paneldark3, alpha)
-    lg.rectangle("fill", infoX, infoY, infoW, infoH, INNER_R, INNER_R)
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
+	lg.rectangle("fill", infoX - outlineW, infoY - outlineW, infoW + outlineW * 2, infoH + outlineW * 2, outerSmallRadius)
 
-    local contentX = panelX + OUTER_PAD
-    local contentY = infoY + infoH + PANEL_GAP
-    local contentW = w - OUTER_PAD * 2
-    local contentH = h - (contentY - panelY) - OUTER_PAD
-
-    lg.setColor(paneldark1, paneldark2, paneldark3, alpha)
-    lg.rectangle("fill", contentX, contentY, contentW, contentH, INNER_R, INNER_R)
+	lg.setColor(Theme.ui.panel2[1], Theme.ui.panel2[2], Theme.ui.panel2[3], alpha)
+	lg.rectangle("fill", infoX, infoY, infoW, infoH, innerSmallRadius)
 
     local titleX = infoX + PAD
     local titleY = infoY + floor((infoH - textH) * 0.5 + 0.5)
 
-    local bodyX = contentX + PAD
-    local bodyY = contentY + PAD
+	local bodyX = panelX + OUTER_PAD
+	local bodyY = infoY + infoH + PANEL_GAP
 
     lg.setColor(ct1, ct2, ct3, alpha)
 
@@ -270,11 +277,13 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 		Text.printShadow(L("inspect.damage", formatInt(t.damageDealt)), bodyX, bodyY)
 
-		Text.printShadow(L("inspect.kills", t.kills), bodyX, bodyY + 16)
+		Text.printShadow(L("inspect.kills", t.kills), bodyX, bodyY + STAT_LINE_H)
 
 		-- Buttons layout
-		local actionY = contentY + contentH - BUTTON_H - PAD
-		local actionX = contentX + PAD
+		local actionX = panelX + OUTER_PAD
+		local usableW = w - OUTER_PAD * 2
+		local BUTTON_W = floor((usableW - GAP) * 0.5)
+		local actionY = panelY + h - OUTER_PAD - BUTTON_H
 
 		local upgradeCost = Towers.getUpgradeCost(t)
 		local canUpgrade = upgradeCost and State.money >= upgradeCost
@@ -306,31 +315,77 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			local hovered = mx >= bx and mx <= bx + bw and my >= by and my <= by + bh
 
-			local ease = hovered and 1 or 0
+			local anim = btn.anim
+
+			if hovered ~= anim.hovered then
+				anim.active = true
+			end
+
+			anim.hovered = hovered
+
+			if anim.active then
+				local speed = dt * 10
+
+				if anim.hovered then
+					anim.t = min(1, anim.t + speed)
+				else
+					anim.t = max(0, anim.t - speed)
+				end
+
+				if anim.t == 0 or anim.t == 1 then
+					anim.active = false
+				end
+			end
+
+			-- press animation
+			if anim.pressed then
+				anim.pressT = min(1, anim.pressT + dt * 20)
+			else
+				anim.pressT = max(0, anim.pressT - dt * 20)
+			end
+
+			local ease = anim.t * anim.t * (3 - 2 * anim.t)
 
 			local r = cb1 + cbd1 * ease
 			local g = cb2 + cbd2 * ease
 			local b = cb3 + cbd3 * ease
 
-			lg.setColor(r, g, b, 1)
-			lg.rectangle("fill", bx, by, bw, bh, 6, 6)
+			local pressEase = anim.pressT
+			local lift = IDLE_LIFT * (1 - pressEase)
+
+			local faceR = r
+			local faceG = g
+			local faceB = b
 
 			if not btn.canAfford then
-				lg.setColor(colorDisabled)
-				lg.rectangle("fill", bx, by, bw, bh, 6, 6)
+				faceR, faceG, faceB = cd1, cd2, cd3
 			end
 
-			local ty = by + (bh - textH) * 0.5
+			-- Base
+			lg.setColor(colorOutline)
+			lg.rectangle("fill", bx - outlineW, by - outlineW, bw + outlineW * 2, bh + outlineW * 2, outerSmallRadius)
+
+			lg.setColor(faceR * 0.4, faceG * 0.4, faceB * 0.4, 1)
+			lg.rectangle("fill", bx, by, bw, bh, innerSmallRadius)
+
+			-- Lifted face
+			local fy = by - lift
+
+			lg.setColor(colorOutline)
+			lg.rectangle("fill", bx - outlineW, fy - outlineW, bw + outlineW * 2, bh + outlineW * 2, outerSmallRadius)
+
+			lg.setColor(faceR, faceG, faceB, 1)
+			lg.rectangle("fill", bx, fy, bw, bh, innerSmallRadius)
+
+			local ty = fy + (bh - textH) * 0.5
 			local action = btn.id
 			local baseLabel = L("actions." .. action)
 
 			local nameX = bx + PAD
 
-			local hotkeyLabel = Hotkeys.getDisplay(action)
+			local used = drawHotkeyVisual(action, bx + PAD, fy, ty)
 
-			if hotkeyLabel then
-				local used = drawHotkeyVisual(action, bx + PAD, by, ty)
-
+			if used > 0 then
 				nameX = nameX + used
 			end
 

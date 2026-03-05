@@ -69,12 +69,12 @@ Theme.ui = {
 	hovered = lighten({0.09, 0.1, 0.12}, 0.06),
 	selected = {1, 0.88, 0.4},
 
-	button = {0.23, 0.24, 0.27, 1},
-	buttonHover = {0.27, 0.28, 0.32, 1},
-	buttonSelected = {0.32, 0.44, 0.64, 1},
+	button = {0.32, 0.33, 0.36},
+	buttonHover = {0.40, 0.42, 0.46},
+	buttonSelected = {0.34, 0.48, 0.64, 1},
 	buttonDisabled = {0.16, 0.17, 0.19, 1},
 
-	backdrop = {0.13, 0.14, 0.15, 0.94},
+	backdrop = {0.20, 0.21, 0.23, 1},
 	screenDim = {0.03, 0.04, 0.05, 0.4},
 
 	money = {0.9, 0.82, 0.42, 1},

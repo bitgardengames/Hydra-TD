@@ -9,7 +9,6 @@ local L = require("core.localization")
 
 local lg = love.graphics
 local floor = math.floor
-local tostring = tostring
 
 local Hud = {}
 
@@ -25,6 +24,11 @@ local cl1, cl2, cl3 = colorLives[1], colorLives[2], colorLives[3]
 local cg1, cg2, cg3 = colorGood[1], colorGood[2], colorGood[3]
 
 local formatInt = Util.formatInt
+
+local MONEY_X = 12
+local LIVES_X = 90
+local WAVE_X = 170
+local STATUS_X = 260
 
 -- Text caches (no per-frame string rebuilding)
 local hudCache = {
@@ -52,7 +56,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	end
 
 	lg.setColor(cm1, cm2, cm3, 1)
-	Text.printShadow(moneyCache.text, infoX + 12, y)
+	Text.printShadow(moneyCache.text, infoX + MONEY_X, y)
 
 	local livesCache = hudCache.lives
 
@@ -62,7 +66,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	end
 
 	lg.setColor(cl1, cl2, cl3, 1)
-	Text.printShadow(livesCache.text, infoX + 90, y)
+	Text.printShadow(livesCache.text, infoX + LIVES_X, y)
 
 	local waveCache = hudCache.wave
 
@@ -72,7 +76,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	end
 
 	lg.setColor(ct1, ct2, ct3, 1)
-	Text.printShadow(waveCache.text, infoX + 170, y)
+	Text.printShadow(waveCache.text, infoX + WAVE_X, y)
 
 	-- Prep / spawning block
 	if State.inPrep then
@@ -87,7 +91,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 		end
 
 		lg.setColor(cg1, cg2, cg3, 1)
-		Text.printShadow(prepCache.text, infoX + 260, y)
+		Text.printShadow(prepCache.text, infoX + STATUS_X, y)
 	else
 		local spawner = Waves.getSpawner()
 		local spawnCache = hudCache.spawn
@@ -101,7 +105,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 		end
 
 		lg.setColor(0.85, 0.85, 0.85, 0.85)
-		Text.printShadow(spawnCache.text, infoX + 260, y)
+		Text.printShadow(spawnCache.text, infoX + STATUS_X, y)
 	end
 end
 

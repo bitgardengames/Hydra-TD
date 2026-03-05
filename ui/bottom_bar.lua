@@ -13,18 +13,34 @@ local floor = math.floor
 
 local colorPanel  = Theme.ui.panel
 local colorPanel2 = Theme.ui.panel2
+local colorBackdrop = Theme.ui.backdrop
+local colorOutline = Theme.outline.color
 
 local BottomBar = {}
 
 -- Layout
-local PAD = 8
+local PAD = 12
 local UI_H = Constants.UI_H
-local SHOP_W = ((124 * 3) + (PAD * 2) + (PAD * (3 - 1)))
+local SHOP_W = ((120 * 3) + (PAD * 2) + (PAD * (3 - 1)))
 local INSPECT_W = 260
 local HUD_H = 28
 
-local PANEL_LIFT  = 12
-local PANEL_INSET = 12
+local PANEL_LIFT = 16
+local PANEL_INSET = 16
+
+local OUTER_PAD = 12
+local PANEL_GAP = 16
+
+local outerW = OUTER_PAD * 2 + SHOP_W
+local outerH = UI_H
+local outerX = PANEL_INSET
+
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
+local outerSmallRadius = 6 + outlineW * 0.5
+local innerSmallRadius = 6 - outlineW * 0.25
 
 function BottomBar.draw()
 	local font = lg.getFont()
@@ -35,19 +51,14 @@ function BottomBar.draw()
 	local now = getTime()
 	local mx, my = Cursor.x, Cursor.y
 
-	local OUTER_PAD = 10
-	local PANEL_GAP = 10
-	local OUTER_R = 12
-	local INNER_R = 8
-
-	local outerW = OUTER_PAD * 2 + SHOP_W
-	local outerH = UI_H
-	local outerX = PANEL_INSET
 	local outerY = sh - outerH - PANEL_LIFT
 
 	-- Outer backdrop
-	lg.setColor(colorPanel)
-	lg.rectangle("fill", outerX, outerY, outerW, outerH, OUTER_R, OUTER_R)
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", outerX - outlineW, outerY - outlineW, outerW + outlineW * 2, outerH + outlineW * 2, outerRadius)
+
+	lg.setColor(colorBackdrop)
+	lg.rectangle("fill", outerX, outerY, outerW, outerH, innerRadius)
 
 	-- HUD panel
 	local infoX = outerX + OUTER_PAD
@@ -55,9 +66,12 @@ function BottomBar.draw()
 	local infoW = outerW - OUTER_PAD * 2
 	local infoH = HUD_H
 
-	lg.setColor(colorPanel2)
-	lg.rectangle("fill", infoX, infoY, infoW, infoH, INNER_R, INNER_R)
-	
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", infoX - outlineW, infoY - outlineW, infoW + outlineW * 2, infoH + outlineW * 2, outerSmallRadius)
+
+	lg.setColor(colorPanel2) -- colorPanel2, colorBackdrop
+	lg.rectangle("fill", infoX, infoY, infoW, infoH, innerSmallRadius)
+
 	Hud.draw(infoX, infoY, infoW, infoH, dt)
 
 	-- Shop panel
@@ -66,14 +80,11 @@ function BottomBar.draw()
 	local shopPanelW = SHOP_W
 	local shopPanelH = outerH - (shopPanelY - outerY) - OUTER_PAD
 
-	lg.setColor(colorPanel2)
-	lg.rectangle("fill", shopPanelX, shopPanelY, shopPanelW, shopPanelH, INNER_R, INNER_R)
-
 	Shop.draw(shopPanelX + PAD, shopPanelY + PAD, shopPanelW - PAD * 2, shopPanelH - PAD * 2, dt, now, mx, my)
 
 	-- Inspect
 	local inspectW = INSPECT_W + PAD * 2
-	
+
 	Inspect.draw(outerX + outerW + PANEL_GAP, outerY, inspectW, outerH, dt, textH, now, mx, my)
 end
 

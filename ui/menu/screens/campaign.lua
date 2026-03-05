@@ -28,8 +28,14 @@ local colorBackdrop = Theme.ui.backdrop
 local colorHover = {0.94, 0.94, 0.94}
 local colorEnabled = {0.88, 0.88, 0.88}
 local colorDisabled = {0.65, 0.65, 0.65}
+local colorOutline = Theme.outline.color
 
 -- Layout
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
+
 local PAD_PREVIEW = 44
 local PAD_TITLE = 60
 local PAD_META = 18
@@ -42,7 +48,7 @@ local corner = 18
 
 local btnW = 240
 local btnH = 42
-local gap = 58
+local gap = 62
 
 local PREVIEW_ZOOM = 1.3
 
@@ -202,7 +208,7 @@ function Screen.update(dt)
 	-- Layout
 	local previewBlockH = ph
 	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
-	local buttonsBlockH = (#campaignButtons - 1) * 52 + campaignButtons[1].h
+	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 	local contentH = previewBlockH + titleBlockH + buttonsBlockH
 
 	local boxW = pw + paddingX * 2
@@ -216,7 +222,7 @@ function Screen.update(dt)
 	-- Buttons
 	for i, btn in ipairs(campaignButtons) do
 		btn.x = cx - btn.w * 0.5
-		btn.y = buttonsStartY + (i - 1) * 52
+		btn.y = buttonsStartY + (i - 1) * gap
 		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
 
 		Button.update(btn, Cursor.x, Cursor.y, dt)
@@ -240,7 +246,7 @@ function Screen.draw()
 	-- Layout
 	local previewBlockH = ph
 	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
-	local buttonsBlockH = (#campaignButtons - 1) * 52 + campaignButtons[1].h
+	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 
 	local contentH = previewBlockH + titleBlockH + buttonsBlockH
 	local boxW = pw + paddingX * 2
@@ -254,8 +260,11 @@ function Screen.draw()
 	lg.rectangle("fill", 0, 0, sw, sh)
 
 	-- Panel
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", boxX - outlineW, boxY - outlineW, boxW + outlineW * 2, boxH + outlineW * 2, outerRadius)
+
 	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
+	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
 
 	-- Preview
 	local previewX = cx - pw * 0.5
@@ -376,7 +385,7 @@ function Screen.mousepressed(x, y, button)
 		-- Layout
 		local previewBlockH = ph
 		local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
-		local buttonsBlockH = (#campaignButtons - 1) * 52 + campaignButtons[1].h
+		local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 		local contentH = previewBlockH + titleBlockH + buttonsBlockH
 
 		local boxW = pw + paddingX * 2
@@ -419,6 +428,14 @@ function Screen.mousepressed(x, y, button)
 	-- Buttons
 	for _, btn in ipairs(campaignButtons) do
 		if Button.mousepressed(btn, x, y, button) then
+			return true
+		end
+	end
+end
+
+function Screen.mousereleased(x, y, button)
+	for _, btn in ipairs(campaignButtons) do
+		if Button.mousereleased(btn, x, y, button) then
 			return true
 		end
 	end

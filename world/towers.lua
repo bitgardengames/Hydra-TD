@@ -68,6 +68,8 @@ local function addTower(kind, gx, gy)
 		x = x,
 		y = y,
 		level = 1,
+		height = 0,
+		renderY = y,
 		range = def.range,
 		range2 = def.range * def.range,
 		fireRate = def.fireRate,
@@ -101,17 +103,11 @@ local function addTower(kind, gx, gy)
 	MapMod.map.blocked[MapMod.makeKey(gx, gy)] = true
 	table.insert(towers, t)
 
-	Floaters.add(x, y - 20, "-" .. def.cost, cwR, cwG, cwB)
+	Floaters.add(x, t.renderY - 26, "-" .. def.cost, cwR, cwG, cwB)
 
 	Sound.play("towerPlaced")
 
 	Rumble.pulse(0.32, 0.055)
-
-	--[[if Steam then
-		Steam.userStats.setAchievement("ACH_TEST")
-		Steam.userStats.storeStats()
-		print("unlocked steam achievement: ACH_TEST")
-	end]]
 
 	return true
 end
@@ -139,6 +135,8 @@ local function upgradeTower(t)
 	State.money = State.money - cost
 
 	t.level = t.level + 1
+	t.height = (t.level - 1) * 4
+	t.levelUpAnim = 1
 	t.damage = t.damage * t.def.upgrade.dmgMult
 	t.range = t.range + t.def.upgrade.rangeAdd
 	t.range2 = t.range * t.range
@@ -173,9 +171,7 @@ local function upgradeTower(t)
 		end
 	end
 
-	t.levelUpAnim = 1
-
-	Floaters.add(t.x, t.y - 20, L("floater.upgrade"), cgR, cgG, cgB)
+	Floaters.add(t.x, t.renderY - 26, L("floater.upgrade"), cgR, cgG, cgB)
 
 	--Sound.play("towerUpgraded")
 
@@ -218,7 +214,6 @@ local function getUpgradePreview(t)
 	return preview
 end
 
-
 local function sellTower(t)
 	if not t then
 		return
@@ -235,7 +230,7 @@ local function sellTower(t)
 		end
 	end
 
-	Floaters.add(t.x, t.y - 20, "+" .. t.sellValue, cgR, cgG, cgB)
+	Floaters.add(t.x, t.renderY - 26, "+" .. t.sellValue, cgR, cgG, cgB)
 	State.selectedTower = nil
 
 	Sound.play("towerSold")
@@ -263,6 +258,27 @@ local function updateTowers(dt)
 		t.fireAnim = max(0, t.fireAnim - dt * 8)
 		t.spawnAnim = max(0, (t.spawnAnim or 0) - dt * 5)
 		t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)
+
+		-- Animation progress
+		local riseAnim = t.levelUpAnim or 0
+		local p = 1 - riseAnim
+		local ease = p * p * (3 - 2 * p)
+
+		-- Animated height
+		local animatedHeight = t.height * ease
+
+		-- Spawn animation
+		local spawn = t.spawnAnim or 0
+		local pSpawn = 1 - spawn
+		local easeSpawn = pSpawn * pSpawn * (3 - 2 * pSpawn)
+
+		local bodyY = t.y
+
+		if spawn > 0 then
+			bodyY = bodyY - ((1 - easeSpawn) * 8)
+		end
+
+		t.renderY = bodyY - animatedHeight
 
 		-- Retarget cooldown
 		t.retargetT = (t.retargetT or 0) - dt

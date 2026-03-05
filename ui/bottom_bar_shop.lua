@@ -23,18 +23,23 @@ local colorText = Theme.ui.text
 local colorButton = Theme.ui.button
 local colorButtonHover = Theme.ui.buttonHover
 local colorDisabled = Theme.ui.buttonDisabled
+local colorOutline = Theme.outline.color
 
 local ct1, ct2, ct3 = colorText[1], colorText[2], colorText[3]
 
 local cb1, cb2, cb3 = colorButton[1], colorButton[2], colorButton[3]
 local ch1, ch2, ch3 = colorButtonHover[1], colorButtonHover[2], colorButtonHover[3]
+local cd1, cd2, cd3 = colorDisabled[1], colorDisabled[2], colorDisabled[3]
 
 local cbd1 = ch1 - cb1
 local cbd2 = ch2 - cb2
 local cbd3 = ch3 - cb3
 
+local outlineW = Theme.outline.width
+local outerRadius = 6 + outlineW * 0.5
+local innerRadius = 6 - outlineW * 0.25
+
 local shopButtons = {}
-local shopBumps = {}
 local shopAnims = {}
 
 local lastTooltipKey = nil
@@ -96,7 +101,6 @@ local function getShopButton(i)
 			cost = nil,
 			costText = "",
 			nameText = "",
-			hotkeyText = nil
 		}
 
 		shopButtons[i] = b
@@ -107,13 +111,11 @@ end
 
 local function ensureShopAnim(kind)
 	if not shopAnims[kind] then
-		shopAnims[kind] = {hovered = false, active = false, t = 0}
+		shopAnims[kind] = {hovered = false, active = false, t = 0, pressed = false, pressT = 0}
 	end
 
 	return shopAnims[kind]
 end
-
-local GLYPH_X_OFFSET = -5
 
 local function drawHotkeyVisual(action, x, y, textY)
 	local glyph = Hotkeys.getGlyph(action)
@@ -137,36 +139,45 @@ local function drawHotkeyVisual(action, x, y, textY)
 	return 0
 end
 
+local GAP_X = 15
+local GAP_Y = 18
 local PAD = 8
-local GAP = PAD
-local SHOP_BTN_W = 124
+local SHOP_BTN_W = 126
 local SHOP_BTN_H = 32
 local SHOP_COLS = 3
+local IDLE_LIFT = 6
+local GLYPH_X_OFFSET = -5
+
+local totalRowWidth = SHOP_BTN_W * SHOP_COLS + GAP_X * (SHOP_COLS - 1)
+
+local totalRows = math.ceil(#Towers.shopOrder / SHOP_COLS)
+local totalHeight = totalRows * SHOP_BTN_H + (totalRows - 1) * GAP_Y
 
 function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 	local font = lg.getFont()
 	local textH = font:getHeight()
 
-	local shopCount = 0
-	local i = 0
 	local hoveredAnything = false
 
-	for _, key in ipairs(Towers.shopOrder) do
+	local startX = floor(panelX + (panelW - totalRowWidth) * 0.5)
+	local startY = floor(panelY + (panelH - totalHeight) * 0.5 + 3)
+
+	for i, key in ipairs(Towers.shopOrder) do
 		local def = Towers.TowerDefs[key]
 		local hotkeyLabel = Hotkeys.getDisplay(key)
 
-		local col = i % SHOP_COLS
-		local row = (i - col) / SHOP_COLS
+		local index = i - 1
+		local col = index % SHOP_COLS
+		local row = (index - col) / SHOP_COLS
 
-		local x = panelX + col * (SHOP_BTN_W + GAP)
-		local yb = panelY + row * (SHOP_BTN_H + GAP)
+		local x = startX + col * (SHOP_BTN_W + GAP_X)
+		local yb = startY + row * (SHOP_BTN_H + GAP_Y)
 
 		local selected = State.placing == key
 		local canAfford = State.money >= def.cost
 		local pulse = selected and (0.9 + sin(now * 6) * 0.1) or 1
 
-		shopCount = shopCount + 1
-		local btn = getShopButton(shopCount)
+		local btn = getShopButton(i)
 
 		btn.kind = key
 		btn.x = x
@@ -185,10 +196,6 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 			btn.nameText = L(def.nameKey)
 		end
 
-		if btn.hotkeyText ~= hotkeyLabel then
-			btn.hotkeyText = hotkeyLabel
-		end
-
 		local hovered = mx >= x and mx <= x + SHOP_BTN_W and my >= yb and my <= yb + SHOP_BTN_H
 		local anim = ensureShopAnim(key)
 
@@ -196,10 +203,19 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 			anim.active = true
 		end
 
+		btn.anim = anim
 		anim.hovered = hovered
+
+		-- Press animation
+		if anim.pressed then
+			anim.pressT = min(1, anim.pressT + dt * 20)
+		else
+			anim.pressT = max(0, anim.pressT - dt * 20)
+		end
 
 		if anim.active then
 			local speed = dt * 10
+
 			anim.t = hovered and min(1, anim.t + speed) or max(0, anim.t - speed)
 
 			if anim.t == 0 or anim.t == 1 then
@@ -212,9 +228,6 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local r = cb1 + cbd1 * ease
 		local g = cb2 + cbd2 * ease
 		local b = cb3 + cbd3 * ease
-
-		lg.setColor(r * pulse, g * pulse, b * pulse, 1)
-		lg.rectangle("fill", x, yb, SHOP_BTN_W, SHOP_BTN_H, 6, 6)
 
 		if hovered then
 			hoveredAnything = true
@@ -241,16 +254,39 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 			Tooltip.show(shopTooltip)
 		end
 
+		local pressEase = anim.pressT
+		local lift = IDLE_LIFT * (1 - pressEase)
+
+		local faceR = r * pulse
+		local faceG = g * pulse
+		local faceB = b * pulse
+
+		-- If unaffordable, override face color
 		if not canAfford then
-			lg.setColor(colorDisabled)
-			lg.rectangle("fill", x, yb, SHOP_BTN_W, SHOP_BTN_H, 6, 6)
+			faceR, faceG, faceB = cd1, cd2, cd3
 		end
 
+		-- Base
+		lg.setColor(colorOutline)
+		lg.rectangle("fill", x - outlineW, yb - outlineW, SHOP_BTN_W + outlineW * 2, SHOP_BTN_H + outlineW * 2, outerRadius)
+
+		lg.setColor(faceR * 0.4, faceG * 0.4, faceB * 0.4, 1)
+		lg.rectangle("fill", x, yb, SHOP_BTN_W, SHOP_BTN_H, innerRadius)
+
+		-- Face (lifted)
+		local fy = yb - lift
+
+		lg.setColor(colorOutline)
+		lg.rectangle("fill", x - outlineW, fy - outlineW, SHOP_BTN_W + outlineW * 2, SHOP_BTN_H + outlineW * 2, outerRadius)
+
+		lg.setColor(faceR, faceG, faceB, 1)
+		lg.rectangle("fill", x, fy, SHOP_BTN_W, SHOP_BTN_H, innerRadius)
+
 		local nameX = x + PAD
-		local ty = yb + (SHOP_BTN_H - textH) * 0.5
+		local ty = fy + (SHOP_BTN_H - textH) * 0.5
 
 		if hotkeyLabel then
-			local used = drawHotkeyVisual(key, x + PAD, yb, ty)
+			local used = drawHotkeyVisual(key, x + PAD, fy, ty)
 
 			nameX = nameX + used
 		end

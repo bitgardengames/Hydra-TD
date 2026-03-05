@@ -13,6 +13,7 @@ local L = require("core.localization")
 
 local lg = love.graphics
 
+local min = math.min
 local floor = math.floor
 local format = string.format
 
@@ -24,6 +25,12 @@ local colorGood = Theme.ui.good
 local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorDim = Theme.ui.screenDim
+local colorOutline = Theme.outline.color
+
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
 
 -- Match pause/game_over
 local paddingX = 24
@@ -32,7 +39,7 @@ local corner = 18
 
 local btnW = 240
 local btnH = 42
-local gap = 58
+local gap = 62
 
 local headerHeight = 36
 local headerSpacing = 38
@@ -53,13 +60,15 @@ function Screen.load()
 			h = btnH,
 			onClick = function()
 				Sound.play("uiConfirm")
-				State.worldMapIndex = State.worldMapIndex + 1
+				State.worldMapIndex = min(State.worldMapIndex + 1, #Maps)
+				State.mapIndex = State.worldMapIndex
 				State.gameOver = false
 				State.victory = false
 				State.mode = "game"
 				resetGame()
 			end
 		},
+
 		{
 			id = "endless",
 			label = L("menu.endless"),
@@ -73,6 +82,7 @@ function Screen.load()
 				State.mode = "game"
 			end
 		},
+
 		{
 			id = "menu",
 			label = L("menu.mainMenu"),
@@ -136,8 +146,15 @@ function Screen.draw()
 	lg.rectangle("fill", 0, 0, sw, sh)
 
 	-- Panel
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", boxX - outlineW, boxY - outlineW, boxW + outlineW * 2, boxH + outlineW * 2, outerRadius)
+
 	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
+	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
+
+	-- Optional grounding shadow (recommended)
+	lg.setColor(0, 0, 0, 0.18)
+	lg.ellipse("fill", boxX + boxW * 0.5, boxY + boxH + 6, boxW * 0.45, 8)
 
 	-- Title
 	local titleY = boxY + paddingY
@@ -174,6 +191,14 @@ end
 function Screen.mousepressed(x, y, button)
 	for _, btn in ipairs(buttons) do
 		if Button.mousepressed(btn, Cursor.x, Cursor.y, button) then
+			return true
+		end
+	end
+end
+
+function Screen.mousereleased(x, y, button)
+	for _, btn in ipairs(buttons) do
+		if Button.mousereleased(btn, x, y, button) then
 			return true
 		end
 	end

@@ -22,6 +22,7 @@ local Tooltip = require("ui.tooltip")
 local Draw = require("render.draw")
 local Glyphs = require("ui.glyphs")
 local DrawWorld = require("render.draw_world")
+local DamageMeter = require("ui.damage_meter")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
 local Achievements = require("systems.achievements")
@@ -92,8 +93,9 @@ function resetGame()
     State.endless = false
     State.activeBoss = nil
 
-    -- Reset damage stats
+    -- Reset damage stats and cached values
 	State.resetDamage()
+	DamageMeter.reset()
 
     -- Waves
     Waves.resetSpawner()
@@ -221,7 +223,8 @@ function love.update(dt)
 		-- Win condition: wave 20 cleared
 		if State.wave == 20 and not State.endless then
 			-- Save
-			Save.data.furthestIndex = max(Save.data.furthestIndex, State.mapIndex + 1)
+			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
+			Save.data.furthestIndex = max(Save.data.furthestIndex, nextMapIndex)
 
 			Achievements.onGameOver()
 
@@ -328,7 +331,7 @@ end
 local function detectControllerType(joystick)
 	local name = joystick:getName():lower()
 
-	print("Controller name:", name)
+	--print("Controller name:", name)
 
 	-- Steam Deck
 	if name:find("steam") then

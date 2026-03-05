@@ -84,6 +84,8 @@ local function mousepressed(x, y, button)
 	-- Overlay screens
 	if State.mode == "game_over" or State.mode == "victory" then
 		Menu.mousepressed(x, y, button)
+
+		return
 	end
 
 	-- Pause overlay
@@ -107,6 +109,10 @@ local function mousepressed(x, y, button)
 		if buttons then
 			for _, b in ipairs(buttons) do
 				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+					if b.anim then
+						b.anim.pressed = true
+					end
+
 					if b.canAfford then
 						State.placing = b.kind
 						State.selectedTower = nil
@@ -120,22 +126,23 @@ local function mousepressed(x, y, button)
 			end
 		end
 
-		-- Inspect panel (upgrade / sell)
+		-- Inspect panel (upgrade & sell)
 		local btns = BottomBar.getInspectButtons()
 
 		if btns then
 			for _, b in ipairs(btns) do
 				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-					if b.onClick then
-						b.onClick()
+					if b.anim then
+						b.anim.pressed = true
 					end
+
 					return
 				end
 			end
 		end
 	end
 
-	-- WORLD INTERACTION
+	-- World interaction
 	if button == 1 then
 		-- Enemy selection
 		local enemy = findEnemyAt(wx, wy)
@@ -191,6 +198,43 @@ local function mousepressed(x, y, button)
 end
 
 local function mousereleased(x, y, button)
+	-- Shop buttons
+	local buttons = BottomBar.getShopButtons()
+
+	if buttons then
+		for _, b in ipairs(buttons) do
+			if b.anim then
+				local wasPressed = b.anim.pressed
+				b.anim.pressed = false
+
+				if wasPressed and x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+					if b.canAfford then
+						State.placing = b.kind
+						State.selectedTower = nil
+					end
+				end
+			end
+		end
+	end
+
+	-- Inspect buttons
+	local btns = BottomBar.getInspectButtons()
+
+	if btns then
+		for _, b in ipairs(btns) do
+			if b.anim then
+				local wasPressed = b.anim.pressed
+				b.anim.pressed = false
+
+				if wasPressed and x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+					if b.onClick then
+						b.onClick()
+					end
+				end
+			end
+		end
+	end
+
 	if Menu.mousereleased then
 		Menu.mousereleased(x, y, button)
 	end
@@ -244,7 +288,10 @@ local function keypressed(key)
 
 			return
 		elseif key == Hotkeys.kb.actions.nextMap then
-			State.mapIndex = min(State.mapIndex + 1, #Maps)
+			local nextIndex = min(State.worldMapIndex + 1, #Maps)
+
+			State.worldMapIndex = nextIndex
+			State.mapIndex = nextIndex
 
 			State.endless = false
 			State.gameOver = false
@@ -378,7 +425,7 @@ local function gamepadpressed(joystick, button)
 
 	-- Fast-forward
 	if action == "fastForward" then
-		State.speed = (State.speed == 1) and 3 or 1
+		State.speed = (State.speed == 1) and 4 or 1
 
 		return
 	end

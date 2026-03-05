@@ -11,6 +11,20 @@ local format = string.format
 local colorText = Theme.ui.text
 local colorPanel = Theme.ui.panel
 local colorHealth = Theme.ui.bossHealth
+local colorOutline = Theme.outline.color
+local colorBase = Theme.ui.button
+
+local colorHealthR, colorHealthG, colorHealthB = colorHealth[1] * 0.4, colorHealth[2] * 0.4, colorHealth[3] * 0.4
+
+local y = 24
+local barW = 354
+local barH = 26
+
+local outlineW = Theme.outline.width
+local outerRadius = 6 + outlineW * 0.5
+local innerRadius = 6 - outlineW * 0.25
+
+local idleLift = 6
 
 local hpCache = {
 	hpValue = nil,
@@ -29,7 +43,6 @@ function BossHP.draw()
 	local boss = State.activeBoss
 
 	if not boss or boss.hp <= 0 then
-		-- Reset cache when boss disappears
 		hpCache.hpValue = nil
 		hpCache.maxText = nil
 		hpCache.text = nil
@@ -41,52 +54,51 @@ function BossHP.draw()
 		hpCache.maxText = formatNum(boss.maxHp)
 	end
 
-    -- Layout
-    local barW = 340
-    local barH = 22
-
 	local sw, _ = lg.getDimensions()
-	local screenPad = 12
-	local pad = 4
+	local x = floor((sw - barW) * 0.5)
+	local lift = idleLift
 
-	local xPanel = (sw - barW) * 0.5 - pad
-	local yPanel = screenPad
+	local r, g, b, a = colorBase[1], colorBase[2], colorBase[3], colorBase[4] or 1
 
-	local x = xPanel + pad
-	local y = yPanel + pad
+	-- Base
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", x - outlineW, y - outlineW, barW + outlineW * 2, barH + outlineW * 2, outerRadius)
 
-    local pad = 4
-    local radius = 8
+	lg.setColor(r * 0.4, g * 0.4, b * 0.4, a)
+	lg.rectangle("fill", x, y, barW, barH, innerRadius)
 
-    local hpFrac = max(0, boss.hp / boss.maxHp)
+	-- Face
+	local fy = y - lift
 
-    -- Background frame
-    lg.setColor(colorPanel)
-	lg.setColor(colorPanel)
-	lg.rectangle("fill", xPanel, yPanel, barW + pad * 2, barH + pad * 2, radius, radius)
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", x - outlineW, fy - outlineW, barW + outlineW * 2, barH + outlineW * 2, outerRadius)
 
-    -- HP fill
-    lg.setColor(colorHealth)
-    lg.rectangle("fill", x, y, barW * hpFrac, barH, radius - 4, radius - 4)
+	lg.setColor(colorHealthR, colorHealthG, colorHealthB, 1)
+	lg.rectangle("fill", x, fy, barW, barH, innerRadius)
 
-    -- Text
+	-- Fill
+	local hpFrac = max(0, boss.hp / boss.maxHp)
+	local fillW = floor(barW * hpFrac)
+
+	lg.setColor(colorHealth)
+	lg.rectangle("fill", x, fy, fillW, barH, innerRadius)
+
+	-- Text
 	local hpInt = ceil(boss.hp)
 
 	if hpCache.hpValue ~= hpInt then
 		hpCache.hpValue = hpInt
 
 		local hpText = format("%s / %s", formatNum(hpInt), hpCache.maxText)
-		hpCache.text = hpText
 
-		local font = lg.getFont()
-		hpCache.textW = font:getWidth(hpText)
+		hpCache.text = hpText
+		hpCache.textW = lg.getFont():getWidth(hpText)
 	end
 
-	local font = lg.getFont()
-	local textH = font:getHeight()
+	local textH = lg.getFont():getHeight()
 
-    lg.setColor(colorText)
-	Text.printShadow(hpCache.text, x + (barW - hpCache.textW) * 0.5, y + (barH - textH) * 0.5)
+	lg.setColor(colorText)
+	Text.printShadow(hpCache.text, x + (barW - hpCache.textW) * 0.5, fy + (barH - textH) * 0.5)
 end
 
 return BossHP

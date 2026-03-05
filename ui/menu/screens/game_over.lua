@@ -24,6 +24,12 @@ local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorDim = Theme.ui.screenDim
+local colorOutline = Theme.outline.color
+
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
 
 local paddingX = 24
 local paddingY = 24
@@ -31,7 +37,7 @@ local corner = 18
 
 local btnW = 240
 local btnH = 42
-local gap = 58
+local gap = 62
 
 local headerHeight = 36
 local headerSpacing = 30
@@ -130,8 +136,11 @@ function Screen.draw()
 	lg.rectangle("fill", 0, 0, sw, sh)
 
 	-- Panel
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", boxX - outlineW, boxY - outlineW, boxW + outlineW * 2, boxH + outlineW * 2, outerRadius)
+
 	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", boxX, boxY, boxW, boxH, corner, corner)
+	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
 
 	-- Title
 	Fonts.set("title")
@@ -168,6 +177,14 @@ function Screen.mousepressed(x, y, button)
             return true
         end
     end
+end
+
+function Screen.mousereleased(x, y, button)
+	for _, btn in ipairs(buttons) do
+		if Button.mousereleased(btn, x, y, button) then
+			return true
+		end
+	end
 end
 
 function Screen.keypressed(key)

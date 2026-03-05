@@ -1,9 +1,19 @@
 local Camera = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
 local Constants = require("core.constants")
+local Maps = require("world.map_defs")
+
+-- Insert a straight map
+Maps[13] = {
+	id = "line",
+	nameKey = "map.line",
+	path = {
+		{4, 8}, {31, 8},
+	},
+},
 
 return {
-	map = 13,
+	map = 13, -- Using 13 isn't future proof
 	duration = 5.0,
 	next = "shot_02",
 

@@ -125,17 +125,17 @@ return {
 
 	map = {
 		alpha = "Alpha Bend",
-		zigzag = "Zig-Zag",
 		spiral = "Spiral Run",
-		figure8 = "Figure Eight",
-		hairpins = "Hairpins",
+		zigzag = "Zig-Zag",
+		turntable = "Turntable",
 		gauntlet = "The Gauntlet",
+		hairpins = "Hairpins",
 		centerpull = "Center Pull",
 		snakepit = "Snake Pit",
 		doublebend = "Double Bend",
 		offsetloop = "Offset Loop",
 		sidewinder = "Sidewinder",
-		crosscurrent = "Crosscurrent",
+		ridge = "Ridge",
 	},
 
 	presence = {
@@ -154,7 +154,7 @@ return {
 
 		tower_lancer_250 = "Between the Eyes",
 		tower_slow_250 = "Stopped Cold",
-		tower_cannon_250 = "Heavy Ordinance",
+		tower_cannon_250 = "Heavy Ordnance",
 		tower_shock_250 = "High Voltage",
 		tower_poison_250 = "It Adds Up",
 	},

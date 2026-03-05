@@ -45,6 +45,7 @@ end
 
 function Menu.draw()
 	local screen = Screens[State.mode]
+
 	if screen and screen.draw then
 		screen.draw()
 	end
@@ -52,6 +53,7 @@ end
 
 function Menu.keypressed(key)
 	local screen = Screens[State.mode]
+
 	if screen and screen.keypressed then
 		screen.keypressed(key)
 	end
@@ -59,6 +61,7 @@ end
 
 function Menu.mousepressed(x, y, button)
 	local screen = Screens[State.mode]
+
 	if screen and screen.mousepressed then
 		screen.mousepressed(x, y, button)
 	end
@@ -66,6 +69,7 @@ end
 
 function Menu.mousereleased(x, y, button)
 	local screen = Screens[State.mode]
+
 	if screen and screen.mousereleased then
 		screen.mousereleased(x, y, button)
 	end
@@ -73,6 +77,7 @@ end
 
 function Menu.gamepadpressed(joystick, button)
 	local screen = Screens[State.mode]
+
 	if screen and screen.gamepadpressed then
 		screen.gamepadpressed(joystick, button)
 	end
