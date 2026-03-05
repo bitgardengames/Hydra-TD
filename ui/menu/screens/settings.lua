@@ -191,7 +191,6 @@ function Screen.load()
 			set = function(v)
 				Save.data.settings.musicVolume = v
 				Sound.setMusicVolume(v)
-				Save.flush()
 			end,
 		},
 
@@ -204,7 +203,6 @@ function Screen.load()
 			set = function(v)
 				Save.data.settings.sfxVolume = v
 				Sound.setSFXVolume(v)
-				Save.flush()
 			end,
 		},
 
@@ -443,6 +441,7 @@ end
 function Screen.mousereleased(x, y, button)
 	if draggingSlider then
 		Sound.play("uiMove")
+		Save.flush()
 	end
 
 	draggingSlider = nil
