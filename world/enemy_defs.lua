@@ -21,7 +21,7 @@ return {
 		nameKey = "enemy.runner",
 		hp = 22,
 		speed = 95,
-		reward = 6,
+		reward = 7,
 		score = 12,
 		radius = 9,
 	},
@@ -37,7 +37,7 @@ return {
 
 		modifiers = {
 			--slow = 0.5, -- 50% slow effectiveness (movement speed)
-		--	poison = 1.25, -- +25% poison damage taken
+			--poison = 1.25, -- +25% poison damage taken
 		}
 	},
 }

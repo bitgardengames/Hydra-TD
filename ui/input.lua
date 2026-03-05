@@ -370,11 +370,9 @@ local function gamepadpressed(joystick, button)
 	-- Global actions
 	if action == "pause" then
 		if State.mode == "pause" then
-			print('exit pause?')
 			State.mode = "game"
 			Sound.exitPause()
 		elseif State.mode == "game" then
-			print("enter pause?")
 			State.mode = "pause"
 			Sound.enterPause()
 		end

@@ -44,7 +44,7 @@ function Sound.play(name)
 
 		-- Scale with game speed
 		--local speedMult = (State and State.speed == 4) and 1.6 or 1.0
-		local speedMult = (State and State.speed == 2) and 1.0 or 0.5
+		local speedMult = (State and State.speed == 4) and 1.0 or 0.5
 
 		if now - last < entry.cooldown * speedMult then
 			return
