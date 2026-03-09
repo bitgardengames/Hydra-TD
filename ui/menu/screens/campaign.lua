@@ -1,5 +1,6 @@
 local Constants = require("core.constants")
 local Sound = require("systems.sound")
+local Difficulty = require("systems.difficulty")
 local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
@@ -7,6 +8,7 @@ local Save = require("core.save")
 local Maps = require("world.map_defs")
 local Text = require("ui.text")
 local Button = require("ui.button")
+local Medals = require("ui.medals")
 local Backdrop = require("scenes.backdrop")
 local Cursor = require("core.cursor")
 local Steam = require("core.steam")
@@ -14,6 +16,8 @@ local L = require("core.localization")
 
 local lg = love.graphics
 local floor = math.floor
+local format = string.format
+local upper = string.upper
 
 local Screen = {}
 
@@ -155,6 +159,32 @@ local function rebuildMapPreviews()
 	end
 end
 
+local function getMapStats(mapId)
+	local stats = Save.data.mapStats
+
+	return stats and stats[mapId]
+end
+
+local function getCompletionString(mapId)
+	local s = getMapStats(mapId)
+
+	if not s then
+		return nil
+	end
+
+	if s.completedDifficulty then
+		local diff = s.completedDifficulty:gsub("^%l", upper)
+
+		return format("Completed: %s • Best: %d", diff, s.bestWave or 0)
+	end
+
+	if s.bestWave and s.bestWave > 0 then
+		return format("Best: %d", s.bestWave)
+	end
+
+	return nil
+end
+
 -- Load
 function Screen.load()
 	-- Build previews once
@@ -173,9 +203,11 @@ function Screen.load()
 				end
 
 				Sound.play("uiConfirm")
+
 				State.worldMapIndex = State.mapIndex
 				State.mode = "game"
 				Backdrop.stop()
+				Difficulty.set(Save.data.settings.difficulty)
 				resetGame()
 				Sound.playMusic("gameplay")
 			end
@@ -200,6 +232,7 @@ function Screen.update(dt)
 	local cx = floor(sw * 0.5)
 
 	Backdrop.update(dt)
+	Medals.update(dt)
 
 	local index = State.mapIndex
 	local preview = mapPreviews[index]
@@ -276,9 +309,63 @@ function Screen.draw()
 	lg.setColor(1, 1, 1, alpha)
 	lg.draw(preview, previewX, previewY)
 
+	-- Completion medals
+	local stats = getMapStats(map.id)
+	local count = stats and stats.completedDifficulty and Medals.getCount(stats.completedDifficulty) or 0
+
+	local medalR = 9
+	local medalGap = 10
+	local insetX = 22
+	local insetY = 20
+	local platePadX = 10
+	local platePadY = 8
+
+	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
+
+	local plateX = previewX + insetX - platePadX
+	local plateY = previewY + insetY - platePadY
+	local plateW = clusterW + platePadX * 2
+	local plateH = clusterH + platePadY * 2
+
+	lg.setColor(colorDim)
+	lg.rectangle("fill", plateX, plateY, plateW, plateH, 8, 8)
+
+	Medals.draw(previewX + insetX, previewY + insetY, count, medalR, medalGap)
+
+	--[[ Completion stats
+	local statText = getCompletionString(map.id)
+
+	if statText then
+		local pad = 8
+		local offsetX = 12 -- move right
+		local offsetY = 4 -- move up
+
+		local font = Fonts.get("ui")
+
+		Fonts.set("ui")
+
+		local tw = font:getWidth(statText)
+		local th = 16
+
+		local bx = previewX + pad + offsetX
+		local by = previewY + ph - th - pad * 2 - offsetY
+		local bw = tw + pad * 2
+		local bh = th + pad * 2
+
+		-- Backdrop
+		lg.setColor(colorDim)
+		lg.rectangle("fill", bx - pad, by - pad, bw, bh, 8, 8)
+
+		-- Text
+		lg.setColor(colorText)
+		lg.print(statText, bx, by)
+	end]]
+
+	Fonts.set("title")
+
 	-- Frame
-	lg.setColor(colorBackdrop)
-	lg.setLineWidth(2)
+	lg.setColor(colorOutline)
+	lg.setLineWidth(3)
 	lg.rectangle("line", previewX, previewY, pw, ph)
 	lg.setLineWidth(1)
 
@@ -286,8 +373,6 @@ function Screen.draw()
 	if locked then
 		lg.setColor(0.01, 0.01, 0.01, 0.45)
 		lg.rectangle("fill", previewX, previewY, pw, ph, 12, 12)
-
-		Fonts.set("title")
 
 		lg.setColor(colorText)
 		Text.printfShadow(L("campaign.locked"), previewX, previewY + ph * 0.5 - 16, pw, "center")
@@ -332,8 +417,6 @@ function Screen.draw()
 	end
 
 	-- Title
-	Fonts.set("title")
-
 	lg.setColor(colorText)
 	Text.printfShadow(L(map.nameKey), 0, textY, sw, "center")
 

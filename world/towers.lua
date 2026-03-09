@@ -101,7 +101,10 @@ local function addTower(kind, gx, gy)
 	}
 
 	State.money = State.money - def.cost
-	MapMod.map.blocked[MapMod.makeKey(gx, gy)] = true
+
+	MapMod.map.blocked[gx] = MapMod.map.blocked[gx] or {}
+	MapMod.map.blocked[gx][gy] = true
+
 	table.insert(towers, t)
 
 	Floaters.add(x, t.renderY - 30, "-" .. def.cost, cwR, cwG, cwB)
@@ -222,7 +225,16 @@ local function sellTower(t)
 	end
 
 	State.money = State.money + t.sellValue
-	MapMod.map.blocked[MapMod.makeKey(t.gx, t.gy)] = nil
+
+	local col = MapMod.map.blocked[t.gx]
+
+	if col then
+		col[t.gy] = nil
+
+		if not next(col) then
+			MapMod.map.blocked[t.gx] = nil
+		end
+	end
 
 	for i = #towers, 1, -1 do
 		if towers[i] == t then

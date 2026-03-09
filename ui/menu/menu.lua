@@ -43,6 +43,16 @@ function Menu.update(dt)
 	end
 end
 
+function Menu.set(mode)
+	State.mode = mode
+	
+	local screen = Screens[mode]
+
+	if screen and screen.enter then
+		screen.enter()
+	end
+end
+
 function Menu.draw()
 	local screen = Screens[State.mode]
 

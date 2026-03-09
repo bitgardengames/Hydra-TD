@@ -26,6 +26,8 @@ local state = {
 	endTitle = nil,
 	endReason = nil,
 
+	previousCompletionDifficulty = nil,
+
 	carouselT = 1,
 	carouselDir = 0,
 

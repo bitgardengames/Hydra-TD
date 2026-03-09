@@ -86,6 +86,12 @@ Theme.ui = {
 	shadow = {0.01, 0.01, 0.01, 0.3},
 }
 
+Theme.medal = {
+	bronze = {0.80, 0.52, 0.24},
+	silver = {0.82, 0.84, 0.87},
+	gold = {0.98, 0.84, 0.24},
+}
+
 Theme.text = {}
 
 return Theme

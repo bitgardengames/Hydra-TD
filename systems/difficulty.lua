@@ -5,10 +5,12 @@ Difficulty.defs = {
 		key = "easy",
 
 		-- Enemy baseline bias
-		enemyPressureBias = 0.85,
 		enemySpeedBias = 1.0,
-		enemyHpBias = 0.85,
-		bossHpBias = 0.85,
+		enemyHpBias = 0.83,
+		bossHpBias = 0.83,
+
+		-- Economy
+		rewardBias = 1.05,
 
 		-- Player affordances
 		startMoney = 120,
@@ -19,10 +21,11 @@ Difficulty.defs = {
 	normal = {
 		key = "normal",
 
-		enemyPressureBias = 0.93,
 		enemySpeedBias = 1.0,
-		enemyHpBias = 0.93,
-		bossHpBias = 0.93,
+		enemyHpBias = 0.91,
+		bossHpBias = 0.91,
+
+		rewardBias = 1.00,
 
 		startMoney = 120,
 		startLives = 20,
@@ -32,10 +35,11 @@ Difficulty.defs = {
 	hard = {
 		key = "hard",
 
-		enemyPressureBias = 1.0,
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.07,
-		bossHpBias = 1.07,
+		enemyHpBias = 1.0,
+		bossHpBias = 1.0,
+
+		rewardBias = 1.00,
 
 		startMoney = 120,
 		startLives = 15,
@@ -43,10 +47,11 @@ Difficulty.defs = {
 	},
 
 	--[[expert = {
-		enemyPressureBias = 1.08,
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.12,
-		bossHpBias = 1.12,
+		enemyHpBias = 1.07,
+		bossHpBias = 1.07,
+
+		rewardBias = 1.00,
 
 		startMoney = 120,
 		startLives = 10,

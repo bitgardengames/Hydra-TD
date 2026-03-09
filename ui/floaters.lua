@@ -10,7 +10,7 @@ local min = math.min
 local random = love.math.random
 local lg = love.graphics
 
-local function add(x, y, text, r, g, b)
+local function add(x, y, text, r, g, b, drift)
 	local n = #pool
 	local f = pool[n]
 
@@ -22,15 +22,33 @@ local function add(x, y, text, r, g, b)
 
 	y = floor(y + 0.5)
 
-	f.x = floor(x + 0.5 + random(-4, 4)) -- Small horizontal spawn jitter prevents perfect stacking
+	-- Base position
+	local baseX
+
+	if drift == true then
+		f.drift = (random() * 2 - 1) * (14 + random() * 6)
+		baseX = floor(x + 0.5 + random(-4, 4))
+	else
+		f.drift = 0
+		baseX = floor(x + 0.5)
+	end
+
+	f.baseX = baseX
+	f.x = baseX
 	f.y = y
 	f.startY = y
+
+	-- Motion
 	f.rise = 18 + random() * 6
 
+	-- Text
 	f.text = text
+
+	-- Timing
 	f.t = 0
 	f.life = 1.25
 
+	-- Color
 	f.r = r or 1
 	f.g = g or 1
 	f.b = b or 1
@@ -53,7 +71,11 @@ local function update(dt)
 			local q = 1 - p
 			local ease = 1 - q * q * q
 
+			-- Vertical rise
 			f.y = f.startY - ease * f.rise
+
+			-- Horizontal drift (eases out)
+			f.x = f.baseX + f.drift * (1 - q * q)
 		end
 	end
 end
@@ -66,19 +88,25 @@ local function draw()
 
 		local p = f.t / f.life
 
-		-- Fade after 20% of life
+		-- Fade after 20% life
 		local alpha = 1 - max(0, (p - 0.2) / 0.8)
 
-		-- Premium "pop scale"
-		local pop = 1 - min(p / 0.12, 1)
-		local scale = 1 + pop * 0.35
+		-- Pop scale (short window only)
+		local scale = 1
+		if p < 0.12 then
+			local pop = 1 - (p / 0.12)
+			pop = pop * pop
+			scale = 1 + pop * 0.35
+		end
 
 		local sx, sy = Camera.worldToScreen(f.x, f.y)
 
+		-- Pixel snap
+		sx = floor(sx + 0.5)
+		sy = floor(sy + 0.5)
+
 		local textW = font:getWidth(f.text) * scale
 		local leftX = floor(sx - textW * 0.5 + 0.5)
-
-		sy = floor(sy + 0.5)
 
 		lg.setColor(f.r, f.g, f.b, alpha)
 

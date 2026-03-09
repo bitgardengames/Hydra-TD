@@ -32,6 +32,7 @@ function Save.load()
 			-- Campaign progression
             Save.data.furthestIndex = Save.data.furthestIndex or 1
             Save.data.unlockedMaps = Save.data.unlockedMaps or {}
+			Save.data.mapStats = Save.data.mapStats or {}
 
 			-- Settings
 			Save.data.settings = Save.data.settings or {}
@@ -62,6 +63,7 @@ function Save.load()
 
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
 
+
             return
         end
     end
@@ -71,6 +73,7 @@ function Save.load()
         version = SAVE_VERSION,
         furthestIndex = 1,
         unlockedMaps = {},
+		mapStats = {},
 		settings = {
 			musicVolume = 0.20,
 			sfxVolume = 0.20,
@@ -117,10 +120,37 @@ function Save.isMapUnlocked(i, mapId)
     return Save.data.unlockedMaps[mapId] == true
 end
 
+function Save.recordMapResult(mapId, wave, difficulty, completed)
+	local stats = Save.data.mapStats
+	local safeWave = math.max(0, tonumber(wave) or 0)
+
+	local s = stats[mapId]
+
+	if not s then
+		s = {bestWave = 0, completedDifficulty = nil}
+		stats[mapId] = s
+	end
+
+	if safeWave > (s.bestWave or 0) then
+		s.bestWave = safeWave
+	end
+
+	if completed then
+		local rank = {easy = 1, normal = 2, hard = 3}
+		local prev = s.completedDifficulty
+
+		if not prev or rank[difficulty] > rank[prev] then
+			s.completedDifficulty = difficulty
+		end
+	end
+
+	Save.flush()
+end
+
 -- Serialization
 function Save.serialize(tbl, indent)
     indent = indent or 0
-    local pad = string.rep(" ", indent)
+    local pad = rep(" ", indent)
     local s = "{\n"
 
     for k, v in pairs(tbl) do
@@ -149,10 +179,6 @@ function Save.unlockMap(mapId, mapIndex)
         Save.data.furthestIndex = math.max(Save.data.furthestIndex or 1, mapIndex or 1)
         Save.flush()
     end
-end
-
-function Save.isUnlocked(mapId)
-    return Save.data.unlockedMaps[mapId] == true
 end
 
 return Save

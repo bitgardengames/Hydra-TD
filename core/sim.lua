@@ -9,7 +9,8 @@ local Effects = require("world.effects")
 local Sim = {}
 
 function Sim.update(dt)
-	if State.paused or State.gameOver then
+	--if State.paused or State.gameOver then
+	if State.paused then
 		return
 	end
 

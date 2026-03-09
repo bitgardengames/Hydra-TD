@@ -179,6 +179,13 @@ function Sound.load()
 	sfx.towerUpgraded = {
 		--source = la.newSource("assets/sounds/sell.wav", "static"),
 	}
+	
+	sfx.medal = {
+		source = la.newSource("assets/sounds/medal.mp3", "static"),
+		jitter = true,
+		bias = 0.9,
+		--cooldown = 0.08,
+	}
 
 	sfx.towerSold = {
 		sources = {

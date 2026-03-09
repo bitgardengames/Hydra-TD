@@ -54,8 +54,31 @@ local ACCUM = 0 -- Frame accumulator
 
 local SCREENSHOT_DIR = "screenshots"
 
+-- Revisit this being a global
+function finalizeCurrentRun(completed)
+	--if State.mode ~= "game" and State.mode ~= "pause" then
+	--	return
+	--end
+
+	if State.ignoreStats then
+		return
+	end
+
+	local map = Maps[State.worldMapIndex]
+	local mapId = map.id
+	local stats = Save.data.mapStats[mapId]
+
+	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
+
+	if not map then
+		return
+	end
+
+	Save.recordMapResult(mapId, State.wave or 0, Difficulty.key(), completed == true)
+end
+
 function resetGame()
-	--State.worldMapIndex = 7
+	--State.worldMapIndex = 1 -- Map override
 
     -- Clear world state
     Enemies.clear()
@@ -157,19 +180,17 @@ function love.update(dt)
 		return
 	end
 
-	if mode ~= "game" then -- Pause already bailed right there ^
-		Menu.update(dt)
-	end
-
-	if mode == "campaign" then
-		State.carouselT = min(1, State.carouselT + dt * 7)
-
-		if State.carouselT >= 1 then
-			State.carouselDir = 0
-		end
-	end
-
 	if mode ~= "game" then
+		Menu.update(dt)
+
+		if mode == "campaign" then
+			State.carouselT = min(1, State.carouselT + dt * 7)
+
+			if State.carouselT >= 1 then
+				State.carouselDir = 0
+			end
+		end
+
 		return
 	end
 
@@ -185,6 +206,10 @@ function love.update(dt)
 		Sim.update(FIXED_DT * State.speed)
 
 		ACCUM = ACCUM - FIXED_DT
+	end
+
+	if mode == "victory" then
+		Menu.update(dt)
 	end
 
 	State.renderAlpha = ACCUM / FIXED_DT
@@ -211,6 +236,9 @@ function love.update(dt)
 
 		Achievements.onGameOver()
 
+		finalizeCurrentRun(false)
+
+		--Menu.set("game_over") -- All of this logic should be migrated to GameOver.enter() now
 		State.mode = "game_over"
 
 		Sound.play("gameOver")
@@ -228,12 +256,17 @@ function love.update(dt)
 
 			Achievements.onGameOver()
 
+			State.speed = 0.35
 			State.gameOver = true
 			State.victory = true
 
-			State.mode = "victory"
+			finalizeCurrentRun(true)
 
+			ACCUM = 0 -- Reset frame accumulator
+			Menu.set("victory") -- All of this logic should be migrated to Victory.enter() now
 			Sound.play("victory")
+
+			Save.flush()
 
 			return
 		end

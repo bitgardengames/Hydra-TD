@@ -198,7 +198,7 @@ local function updateEnemies(dt)
 				State.money = State.money + reward
 				State.score = State.score + e.score
 
-				Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB)
+				Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 
 				tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
@@ -247,7 +247,7 @@ local function updateEnemies(dt)
 			State.money = State.money + reward
 			State.score = State.score + e.score
 
-			Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB)
+			Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 
 			tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 

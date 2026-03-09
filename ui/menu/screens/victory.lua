@@ -1,4 +1,3 @@
--- ui/menu/screens/victory.lua
 local Theme = require("core.theme")
 local Button = require("ui.button")
 local Cursor = require("core.cursor")
@@ -7,6 +6,8 @@ local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
 local Text = require("ui.text")
 local Fonts = require("core.fonts")
+local Maps = require("world.map_defs")
+local Medals = require("ui.medals")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
@@ -20,6 +21,8 @@ local format = string.format
 local Screen = {}
 
 local buttons = nil
+local previousMedalCount = 0
+local currentMedalCount = 0
 
 local colorGood = Theme.ui.good
 local colorText = Theme.ui.text
@@ -32,22 +35,27 @@ local baseRadius = 6 * 3
 local outerRadius = baseRadius + outlineW * 0.5
 local innerRadius = baseRadius - outlineW * 0.25
 
--- Match pause/game_over
-local paddingX = 24
-local paddingY = 24
+local paddingX = 28
+local paddingY = 30
 local corner = 18
 
 local btnW = 240
 local btnH = 42
 local gap = 62
 
+-- Layout spacing
 local headerHeight = 36
-local headerSpacing = 38
-local difficultySpacing = 36
+local headerSpacing = 42
+local difficultySpacing = 32
+local medalSpacing = 64
+local buttonsOffset = 32
+
+-- Medal presentation
+local medalR = 16
+local medalGap = 14
 
 local function getDifficultyLabel()
 	local key = Difficulty.key()
-
 	return L("difficulty." .. key)
 end
 
@@ -76,6 +84,7 @@ function Screen.load()
 			h = btnH,
 			onClick = function()
 				Sound.play("uiConfirm")
+				State.speed = 1
 				State.endless = true
 				State.gameOver = false
 				State.victory = false
@@ -99,24 +108,33 @@ function Screen.load()
 
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
+	local contentStartY = floor(sh * 0.5 - 120)
+	local buttonsStartY = contentStartY + headerHeight + headerSpacing + difficultySpacing + medalSpacing + buttonsOffset
 
-	local contentStartY = floor(sh * 0.5 - 110)
-
-	local buttonsStartY = contentStartY + headerHeight + headerSpacing + difficultySpacing
-
-    for i, btn in ipairs(buttons) do
+	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = buttonsStartY + (i - 1) * gap
-    end
+	end
+end
+
+function Screen.enter()
+	Medals.resetAnimations()
+
+	previousMedalCount = Medals.getCount(State.previousCompletionDifficulty)
+	currentMedalCount = Medals.getCount(Difficulty.key())
+
+	if currentMedalCount > previousMedalCount then
+		Medals.beginReveal(previousMedalCount, currentMedalCount)
+	end
 end
 
 function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
+	local contentStartY = floor(sh * 0.5 - 120)
+	local buttonsStartY = contentStartY + headerHeight + headerSpacing + difficultySpacing + medalSpacing + buttonsOffset
 
-	local contentStartY = floor(sh * 0.5 - 110)
-
-	local buttonsStartY = contentStartY + headerHeight + headerSpacing + difficultySpacing
+	Medals.update(dt)
 
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
@@ -129,19 +147,19 @@ function Screen.draw()
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 
-	local contentStartY = floor(sh * 0.5 - 110)
+	local contentStartY = floor(sh * 0.5 - 120)
 
 	local count = #buttons
 	local buttonsHeight = (count - 1) * gap + btnH
 
-	local contentHeight = headerHeight + headerSpacing + difficultySpacing + buttonsHeight
+	local contentHeight = headerHeight + headerSpacing + difficultySpacing + medalSpacing + buttonsOffset + buttonsHeight
 
 	local boxW = btnW + paddingX * 2
 	local boxH = contentHeight + paddingY * 2
 	local boxX = cx - boxW * 0.5
 	local boxY = contentStartY - paddingY
 
-	-- Dim background
+	-- Dim world
 	lg.setColor(colorDim)
 	lg.rectangle("fill", 0, 0, sw, sh)
 
@@ -152,37 +170,46 @@ function Screen.draw()
 	lg.setColor(colorBackdrop)
 	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
 
-	-- Optional grounding shadow (recommended)
+	-- Panel shadow
 	lg.setColor(0, 0, 0, 0.18)
 	lg.ellipse("fill", boxX + boxW * 0.5, boxY + boxH + 6, boxW * 0.45, 8)
 
-	-- Title
 	local titleY = boxY + paddingY
 
 	Fonts.set("title")
-
 	lg.setColor(colorGood)
 	Text.printfShadow(L("game.victory"), 0, titleY, sw, "center")
 
 	Fonts.set("menu")
 
-	-- Difficulty
 	local difficultyLabel = getDifficultyLabel()
 
 	if difficultyLabel then
 		local difficultyY = titleY + headerHeight + headerSpacing - 12
 
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.75)
-		Text.printfShadow(
-			format("%s: %s", L("settings.difficulty"), difficultyLabel),
-			0,
-			difficultyY,
-			sw,
-			"center"
-		)
+		Text.printfShadow(format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, difficultyY, sw, "center")
 	end
 
-	-- Buttons
+	-- Medal positioning (centered between difficulty and buttons)
+	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
+	local medalX = cx - clusterW * 0.5
+
+	local difficultyY = titleY + headerHeight + headerSpacing - 12
+	local medalTop = difficultyY + difficultySpacing
+	local buttonsStartY = contentStartY + headerHeight + headerSpacing + difficultySpacing + medalSpacing + buttonsOffset
+	local medalBottom = buttonsStartY - buttonsOffset
+	local medalY = medalTop + (medalBottom - medalTop - clusterH) * 0.5
+
+	-- Medal plate
+	local platePadX = 16
+	local platePadY = 12
+
+	lg.setColor(colorDim)
+	lg.rectangle("fill", medalX - platePadX, medalY - platePadY, clusterW + platePadX * 2, clusterH + platePadY * 2, 14, 14)
+
+	Medals.drawReveal(medalX, medalY, medalR, medalGap)
+
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
