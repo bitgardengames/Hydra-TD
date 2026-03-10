@@ -291,7 +291,7 @@ local function keypressed(key)
 			local nextIndex = min(State.worldMapIndex + 1, #Maps)
 
 			State.worldMapIndex = nextIndex
-			State.mapIndex = nextIndex
+			State.mapIndex = State.resolveMapIndex(nextIndex)
 
 			State.endless = false
 			State.gameOver = false

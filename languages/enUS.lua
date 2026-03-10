@@ -15,7 +15,7 @@ return {
 		mainMenu = "Main Menu",
 		nextMap = "Next Map",
 		endless = "Endless Mode",
-		paused = "PAUSED",
+		paused = "Paused",
 	},
 
 	settings = {
@@ -117,14 +117,14 @@ return {
 	},
 
 	game = {
-		victory = "VICTORY!",
-		gameOver = "GAME OVER",
+		victory = "Victory!",
+		gameOver = "Defeat",
 		bossBreach = "Boss breach",
 		outOfLives = "Out of lives",
 	},
 
 	map = {
-		alpha = "Alpha Bend",
+		--[[alpha = "Alpha Bend",
 		spiral = "Spiral Run",
 		zigzag = "Zig-Zag",
 		turntable = "Turntable",
@@ -135,7 +135,23 @@ return {
 		doublebend = "Double Bend",
 		offsetloop = "Offset Loop",
 		sidewinder = "Sidewinder",
-		ridge = "Ridge",
+		ridge = "Ridge",]]
+
+		riverbend = "Riverbend",
+		switchback = "Switchback",
+		highpass = "High Pass",
+		roundabout = "Roundabout",
+		gauntlet = "Gauntlet",
+		snaketrail = "Snake Trail",
+		backtrack = "Backtrack",
+		lowvalley = "Low Valley",
+		circuit = "Circuit",
+		outerloop = "Outer Loop",
+		terrace = "Terrace",
+		highridge = "High Ridge",
+		crossflow = "Crossflow",
+		steppingstones = "Stepping Stones",
+		twinloop = "Twin Loop",
 	},
 
 	presence = {
@@ -172,5 +188,19 @@ return {
 		tower_cannon_250 = "Defeat 250 enemies with the Cannon.",
 		tower_shock_250 = "Defeat 250 enemies with the Shock tower.",
 		tower_poison_250 = "Defeat 250 enemies with the Poison tower.",
+	},
+
+	overlay = {
+		demoCompleteTitle = "Demo Complete!",
+		demoCompleteText = "Thank you for playing the Hydra TD demo!\n\nWishlist the full game to be notified of updates and sales.",
+
+		wishlistSteam = "Wishlist on Steam",
+		closeButton = "Close",
+
+		reviewTitle = "Hydra TD Complete!",
+		reviewText = "Thank you for playing Hydra TD!\n\nIf you enjoyed the game, a Steam review\nhelps indie developers more than you might think.",
+
+		reviewButton = "Write a Steam Review",
+		continue = "Continue",
 	},
 }

@@ -1,3 +1,5 @@
+local Constants = require("core.constants")
+
 local state = {
 	-- Gameplay data
 	money = 100,
@@ -98,6 +100,14 @@ function state.resetDamage()
 
 	stats.damageByTower.poison = 0
 	stats.bossDamageByTower.poison = 0
+end
+
+function state.resolveMapIndex(index)
+	if Constants.IS_DEMO then
+		return 1
+	end
+
+	return index
 end
 
 return state

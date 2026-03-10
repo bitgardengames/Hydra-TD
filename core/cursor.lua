@@ -48,7 +48,7 @@ function Cursor.draw()
     love.graphics.translate(tipX + HOTSPOT_X, tipY + HOTSPOT_Y)
     love.graphics.scale(1, down)
 
-    -- Define geometry RELATIVE to hotspot (0,0 is the tip)
+    -- Define geometry relative to hotspot (0,0 is the tip)
     local p1x, p1y = 0, 0
     local p2x, p2y = 0, -h
     local p3x, p3y = w, 0

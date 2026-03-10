@@ -2,36 +2,80 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 1 -- Only upgrade the version if I change the structure of saves
+local SAVE_VERSION = 1 -- Only upgrade if save structure changes
 
 Save.data = nil
 
 local format = string.format
 local rep = string.rep
 
-function Save.load()
-    if love.filesystem.getInfo(SAVE_FILE) then
-        local chunk = love.filesystem.load(SAVE_FILE)
-        local ok, data = pcall(chunk)
+-- Map ID migration (old campaign -> new campaign)
+local function migrateMapIds()
+	local oldToNew = {
+		alpha = "riverbend",
+		spiral = "switchback",
+		zigzag = "highpass",
+		turntable = "roundabout",
+		gauntlet = "gauntlet",
+		hairpins = "snaketrail",
+		centerpull = "backtrack",
+		snakepit = "lowvalley",
+		doublebend = "circuit",
+		offsetloop = "outerloop",
+		sidewinder = "terrace",
+		ridge = "highridge",
+	}
 
-        if ok and type(data) == "table" then
-            Save.data = data
+	local unlocked = Save.data.unlockedMaps
+	local stats = Save.data.mapStats
+
+	local changed = false
+
+	-- unlocked maps
+	for oldId, newId in pairs(oldToNew) do
+		if unlocked[oldId] ~= nil then
+			unlocked[newId] = unlocked[oldId]
+			unlocked[oldId] = nil
+			changed = true
+		end
+	end
+
+	-- map stats
+	for oldId, newId in pairs(oldToNew) do
+		if stats[oldId] ~= nil then
+			stats[newId] = stats[oldId]
+			stats[oldId] = nil
+			changed = true
+		end
+	end
+
+	return changed
+end
+
+function Save.load()
+	if love.filesystem.getInfo(SAVE_FILE) then
+		local chunk = love.filesystem.load(SAVE_FILE)
+		local ok, data = pcall(chunk)
+
+		if ok and type(data) == "table" then
+			Save.data = data
 
 			local version = Save.data.version or 0
 
-			-- If I need upgrading for adding/removing keys
+			-- Structure migrations (not used yet)
 			if version < SAVE_VERSION then
-				--[[if version < 2 then
-					-- migration logic
-				end]]
+				--[[ example future upgrade
+				if version < 2 then
+				end
+				]]
 
 				Save.data.version = SAVE_VERSION
 				Save.flush()
 			end
 
 			-- Campaign progression
-            Save.data.furthestIndex = Save.data.furthestIndex or 1
-            Save.data.unlockedMaps = Save.data.unlockedMaps or {}
+			Save.data.furthestIndex = Save.data.furthestIndex or 1
+			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 			Save.data.mapStats = Save.data.mapStats or {}
 
 			-- Settings
@@ -47,7 +91,7 @@ function Save.load()
 				settings.fullscreen = true
 			end
 
-			-- Achievement progress / stat storage
+			-- Achievement stats
 			Save.data.meta = Save.data.meta or {}
 
 			local meta = Save.data.meta
@@ -63,17 +107,28 @@ function Save.load()
 
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
 
+			-- Run map ID migration once
+			if not Save.data.mapIdMigrationDone then
+				local changed = migrateMapIds()
 
-            return
-        end
-    end
+				Save.data.mapIdMigrationDone = true
 
-    -- Fresh save
-    Save.data = {
-        version = SAVE_VERSION,
-        furthestIndex = 1,
-        unlockedMaps = {},
+				if changed then
+					Save.flush()
+				end
+			end
+
+			return
+		end
+	end
+
+	-- Fresh save
+	Save.data = {
+		version = SAVE_VERSION,
+		furthestIndex = 1,
+		unlockedMaps = {},
 		mapStats = {},
+
 		settings = {
 			musicVolume = 0.20,
 			sfxVolume = 0.20,
@@ -93,7 +148,9 @@ function Save.load()
 
 			unlockedAchievements = {},
 		},
-    }
+
+		mapIdMigrationDone = true, -- new saves don't need migration
+	}
 end
 
 function Save.flush()
@@ -103,21 +160,21 @@ function Save.flush()
 
 	Save.data.version = SAVE_VERSION
 
-    local serialized = "return " .. Save.serialize(Save.data)
+	local serialized = "return " .. Save.serialize(Save.data)
 
 	if not love.filesystem.getInfo(SAVE_DIR) then
 		love.filesystem.createDirectory(SAVE_DIR)
 	end
 
-    love.filesystem.write(SAVE_FILE, serialized)
+	love.filesystem.write(SAVE_FILE, serialized)
 end
 
 function Save.isMapUnlocked(i, mapId)
-    if i <= Save.data.furthestIndex then
-        return true
-    end
+	if i <= Save.data.furthestIndex then
+		return true
+	end
 
-    return Save.data.unlockedMaps[mapId] == true
+	return Save.data.unlockedMaps[mapId] == true
 end
 
 function Save.recordMapResult(mapId, wave, difficulty, completed)
@@ -149,36 +206,36 @@ end
 
 -- Serialization
 function Save.serialize(tbl, indent)
-    indent = indent or 0
-    local pad = rep(" ", indent)
-    local s = "{\n"
+	indent = indent or 0
+	local pad = rep(" ", indent)
+	local s = "{\n"
 
-    for k, v in pairs(tbl) do
-        s = s .. pad .. "  [" .. format("%q", k) .. "] = "
+	for k, v in pairs(tbl) do
+		s = s .. pad .. "  [" .. format("%q", k) .. "] = "
 
-        if type(v) == "table" then
-            s = s .. Save.serialize(v, indent + 2)
-        elseif type(v) == "string" then
-            s = s .. format("%q", v)
-        else
-            s = s .. tostring(v)
-        end
+		if type(v) == "table" then
+			s = s .. Save.serialize(v, indent + 2)
+		elseif type(v) == "string" then
+			s = s .. format("%q", v)
+		else
+			s = s .. tostring(v)
+		end
 
-        s = s .. ",\n"
-    end
+		s = s .. ",\n"
+	end
 
-    return s .. pad .. "}"
+	return s .. pad .. "}"
 end
 
 -- Helpers
 function Save.unlockMap(mapId, mapIndex)
-    local u = Save.data.unlockedMaps
+	local u = Save.data.unlockedMaps
 
-    if not u[mapId] then
-        u[mapId] = true
-        Save.data.furthestIndex = math.max(Save.data.furthestIndex or 1, mapIndex or 1)
-        Save.flush()
-    end
+	if not u[mapId] then
+		u[mapId] = true
+		Save.data.furthestIndex = math.max(Save.data.furthestIndex or 1, mapIndex or 1)
+		Save.flush()
+	end
 end
 
 return Save

@@ -1,14 +1,22 @@
+local Constants = require("core.constants")
+
 function love.conf(t)
-	t.identity = "HydraTD"
+	if Constants.IS_DEMO then
+		t.identity = "HydraTD_Demo"
+		t.window.title = "Hydra TD Demo"
+	else
+		t.identity = "HydraTD"
+		t.window.title = "Hydra TD"
+	end
+
 	t.window.icon = "assets/appicon_256.png"
 
-	t.console = false
+	t.console = true
 
 	t.modules.touch = false
 	t.modules.video = false
 	t.modules.physics = false
 
-	t.window.title = "Hydra TD"
 	--t.window.borderless = true
 	t.window.fullscreen = true
 	t.window.vsync = 1

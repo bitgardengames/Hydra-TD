@@ -1,4 +1,5 @@
 local Theme = require("core.theme")
+local Constants = require("core.constants")
 local Button = require("ui.button")
 local Cursor = require("core.cursor")
 local State = require("core.state")
@@ -11,6 +12,10 @@ local Medals = require("ui.medals")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
+
+local Overlay = require("ui.overlay")
+local DemoComplete = require("ui.overlays.demo_complete")
+local ReviewPrompt = require("ui.overlays.review_prompt")
 
 local lg = love.graphics
 
@@ -69,12 +74,13 @@ function Screen.load()
 			onClick = function()
 				Sound.play("uiConfirm")
 				State.worldMapIndex = min(State.worldMapIndex + 1, #Maps)
-				State.mapIndex = State.worldMapIndex
+				State.mapIndex = State.resolveMapIndex(State.worldMapIndex)
 				State.gameOver = false
 				State.victory = false
 				State.mode = "game"
 				resetGame()
-			end
+			end,
+			enabled = not Constants.IS_DEMO,
 		},
 
 		{
@@ -89,7 +95,8 @@ function Screen.load()
 				State.gameOver = false
 				State.victory = false
 				State.mode = "game"
-			end
+			end,
+			enabled = not Constants.IS_DEMO,
 		},
 
 		{
@@ -124,7 +131,23 @@ function Screen.enter()
 	currentMedalCount = Medals.getCount(Difficulty.key())
 
 	if currentMedalCount > previousMedalCount then
+		-- Animate new medals
 		Medals.beginReveal(previousMedalCount, currentMedalCount)
+	else
+		-- Show existing medals without animation
+		Medals.beginReveal(currentMedalCount, currentMedalCount)
+	end
+
+	if Constants.IS_DEMO then
+		Overlay.show(DemoComplete)
+	else
+		local lastMap = (#Maps == State.worldMapIndex)
+
+		if lastMap and not Save.data.reviewPromptShown then
+			Overlay.show(ReviewPrompt)
+			Save.data.reviewPromptShown = true
+			Save.flush()
+		end
 	end
 end
 
@@ -169,10 +192,6 @@ function Screen.draw()
 
 	lg.setColor(colorBackdrop)
 	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
-
-	-- Panel shadow
-	lg.setColor(0, 0, 0, 0.18)
-	lg.ellipse("fill", boxX + boxW * 0.5, boxY + boxH + 6, boxW * 0.45, 8)
 
 	local titleY = boxY + paddingY
 

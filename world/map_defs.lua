@@ -1,7 +1,7 @@
 local maps = {
-    {
-        id = "alpha",
-        nameKey = "map.alpha",
+	{
+		id = "riverbend",
+		nameKey = "map.riverbend",
 		path = {
 			{4, 8}, {13, 8},
 			{13, 4}, {19, 4},
@@ -9,33 +9,33 @@ local maps = {
 			{15, 6}, {21, 6},
 			{21, 8}, {31, 8},
 		},
-    },
+	},
 
-    {
-		id = "spiral",
-		nameKey = "map.spiral",
+	{
+		id = "switchback",
+		nameKey = "map.switchback",
 		path = {
 			{4, 8}, {15, 8},
 			{15, 4}, {21, 4},
 			{21, 12}, {11, 12},
 			{11, 6}, {31, 6},
 		},
-    },
+	},
 
-    {
-		id = "zigzag",
-		nameKey = "map.zigzag",
+	{
+		id = "highpass",
+		nameKey = "map.highpass",
 		path = {
 			{4, 6}, {21, 6},
 			{21, 12}, {10, 12},
 			{10, 4}, {23, 4},
 			{23, 10}, {31, 10},
 		},
-    },
+	},
 
 	{
-		id = "turntable",
-		nameKey = "map.turntable",
+		id = "roundabout",
+		nameKey = "map.roundabout",
 		path = {
 			{4, 10}, {12, 10},
 			{12, 4}, {18, 4},
@@ -49,7 +49,7 @@ local maps = {
 		id = "gauntlet",
 		nameKey = "map.gauntlet",
 		path = {
-			{4, 12},  {19, 12},
+			{4, 12}, {19, 12},
 			{19, 8}, {24, 8},
 			{24, 4}, {11, 4},
 			{11, 10}, {31, 10},
@@ -57,8 +57,8 @@ local maps = {
 	},
 
 	{
-		id = "hairpins",
-		nameKey = "map.hairpins",
+		id = "snaketrail",
+		nameKey = "map.snaketrail",
 		path = {
 			{4, 10}, {16, 10},
 			{16, 7}, {10, 7},
@@ -69,20 +69,9 @@ local maps = {
 		},
 	},
 
-	--[[{
-		id = "centerpull",
-		nameKey = "map.centerpull",
-		path = {
-			{4, 8}, {20, 8},
-			{20, 4}, {10, 4},
-			{10, 12}, {24, 12},
-			{24, 6}, {31, 6},
-		},
-	},]]
-
 	{
-		id = "centerpull",
-		nameKey = "map.centerpull",
+		id = "backtrack",
+		nameKey = "map.backtrack",
 		path = {
 			{4, 8}, {16, 8},
 			{16, 4}, {10, 4},
@@ -93,8 +82,8 @@ local maps = {
 	},
 
 	{
-		id = "snakepit",
-		nameKey = "map.snakepit",
+		id = "lowvalley",
+		nameKey = "map.lowvalley",
 		path = {
 			{4, 6}, {17, 6},
 			{17, 4}, {25, 4},
@@ -104,23 +93,11 @@ local maps = {
 		},
 	},
 
-	--[[{
-		id = "doublebend",
-		nameKey = "map.doublebend",
-		path = {
-			{4, 7}, {13, 7},
-			{13, 12}, {22, 12},
-			{22, 8}, {16, 8},
-			{16, 4}, {25, 4},
-			{25, 7}, {31, 7},
-		},
-	},]]
-
 	{
-		id = "doublebend",
-		nameKey = "map.doublebend",
+		id = "circuit",
+		nameKey = "map.circuit",
 		path = {
-			{4, 7},   {11, 7},
+			{4, 7}, {11, 7},
 			{11, 11}, {23, 11},
 			{23, 6}, {18, 6},
 			{18, 9}, {13, 9},
@@ -130,8 +107,8 @@ local maps = {
 	},
 
 	{
-		id = "offsetloop",
-		nameKey = "map.offsetloop",
+		id = "outerloop",
+		nameKey = "map.outerloop",
 		path = {
 			{4, 7}, {14, 7},
 			{14, 12}, {22, 12},
@@ -142,8 +119,8 @@ local maps = {
 	},
 
 	{
-		id = "sidewinder",
-		nameKey = "map.sidewinder",
+		id = "terrace",
+		nameKey = "map.terrace",
 		path = {
 			{4, 4}, {14, 4},
 			{14, 12}, {20, 12},
@@ -154,14 +131,51 @@ local maps = {
 	},
 
 	{
-		id = "ridge",
-		nameKey = "map.ridge",
+		id = "highridge",
+		nameKey = "map.highridge",
 		path = {
 			{4, 6}, {12, 6},
 			{12, 4}, {20, 4},
 			{20, 9}, {10, 9},
 			{10, 12}, {24, 12},
 			{24, 7}, {31, 7},
+		},
+	},
+
+	{
+		id = "crossflow",
+		nameKey = "map.crossflow",
+		path = {
+			{4, 7}, {12, 7},
+			{12, 12}, {20, 12},
+			{20, 4}, {15, 4},
+			{15, 9}, {23, 9},
+			{23, 6}, {31, 6},
+		},
+	},
+
+	{
+		id = "steppingstones",
+		nameKey = "map.steppingstones",
+		path = {
+			{4, 6}, {14, 6},
+			{14, 9}, {10, 9},
+			{10, 12}, {22, 12},
+			{22, 7}, {17, 7},
+			{17, 4}, {25, 4},
+			{25, 9}, {31, 9},
+		},
+	},
+
+	{
+		id = "twinloop",
+		nameKey = "map.twinloop",
+		path = {
+			{4, 8}, {12, 8},
+			{12, 4}, {20, 4},
+			{20, 8}, {12, 8},
+			{12, 12}, {24, 12},
+			{24, 6}, {31, 6},
 		},
 	},
 }

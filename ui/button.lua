@@ -13,6 +13,8 @@ local colorHover = Theme.ui.buttonHover
 local colorText = Theme.ui.text
 local colorOutline = Theme.outline.color
 
+local cdR, cdG, cdB = colorText[1] * 0.60, colorText[2] * 0.60, colorText[3] * 0.60
+
 local outlineW = Theme.outline.width
 local outerRadius = 6 + outlineW * 0.5
 local innerRadius = 6 - outlineW * 0.25
@@ -112,7 +114,12 @@ function Button.draw(btn)
 	-- Label
 	local ty = fy + (h - lg.getFont():getHeight()) * 0.5
 
-	lg.setColor(colorText)
+	if btn.enabled == false then
+		lg.setColor(cdR, cdG, cdB)
+	else
+		lg.setColor(colorText)
+	end
+
 	Text.printfShadow(btn.label, x, ty, w, "center")
 end
 

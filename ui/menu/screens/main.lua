@@ -5,8 +5,10 @@ local Cursor = require("core.cursor")
 local State = require("core.state")
 local Title = require("ui.title")
 local Sound = require("systems.sound")
+local Steam = require("core.steam")
 local Fonts = require("core.fonts")
 local Backdrop = require("scenes.backdrop")
+local L = require("core.localization")
 
 local Screen = {}
 
@@ -27,6 +29,7 @@ local outerRadius = baseRadius + outlineW * 0.5
 local innerRadius = baseRadius - outlineW * 0.25
 
 local buttons = nil
+local storeButton = nil
 
 local lancerIdle = {
 	angle = -math.pi / 6,
@@ -93,6 +96,19 @@ function Screen.load()
 		},
 	}
 
+	if Constants.IS_DEMO then
+		storeButton = {
+			id = "store",
+			label = L("overlay.wishlistSteam"),
+			w = 200,
+			h = 36,
+			onClick = function()
+				Steam.openStorePage(4095520)
+				Sound.play("uiConfirm")
+			end
+		}
+	end
+
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = startY + (i - 1) * gap
@@ -124,7 +140,6 @@ function Screen.update(dt)
 			end
 		end
 
-		-- Smoothstep
 		local p = lancerIdle.t
 		p = p * p * (3 - 2 * p)
 
@@ -151,6 +166,13 @@ function Screen.update(dt)
 
 	for _, btn in ipairs(buttons) do
 		Button.update(btn, Cursor.x, Cursor.y, dt)
+	end
+
+	if storeButton then
+		storeButton.x = 24
+		storeButton.y = sh - storeButton.h - 24
+
+		Button.update(storeButton, Cursor.x, Cursor.y, dt)
 	end
 end
 
@@ -189,6 +211,10 @@ function Screen.draw()
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
+
+	if storeButton then
+		Button.draw(storeButton)
+	end
 end
 
 function Screen.mousepressed(x, y, button)
@@ -197,6 +223,10 @@ function Screen.mousepressed(x, y, button)
 			return true
 		end
 	end
+
+	if storeButton and Button.mousepressed(storeButton, x, y, button) then
+		return true
+	end
 end
 
 function Screen.mousereleased(x, y, button)
@@ -204,6 +234,10 @@ function Screen.mousereleased(x, y, button)
 		if Button.mousereleased(btn, x, y, button) then
 			return true
 		end
+	end
+
+	if storeButton and Button.mousereleased(storeButton, x, y, button) then
+		return true
 	end
 end
 

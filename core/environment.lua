@@ -1,13 +1,13 @@
 local Environment = {}
 
 function Environment.load()
-    love.mouse.setVisible(false)
-    love.graphics.setDefaultFilter("nearest", "nearest")
-    love.window.setTitle("Hydra TD")
+	love.mouse.setVisible(false)
+	love.graphics.setDefaultFilter("nearest", "nearest")
+	love.window.setTitle("Hydra TD")
 
-    if #love.joystick.getJoysticks() > 0 then
-        require("core.cursor").enableVirtual()
-    end
+	if #love.joystick.getJoysticks() > 0 then
+		require("core.cursor").enableVirtual()
+	end
 
 	--love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = 8})
 

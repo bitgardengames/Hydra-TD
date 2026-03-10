@@ -27,9 +27,9 @@ local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
 local Achievements = require("systems.achievements")
 local Menu = require("ui.menu.menu")
+local Overlay = require("ui.overlay")
 local Hotkeys = require("core.hotkeys")
 local Rumble = require("systems.rumble")
-local Localization = require("core.localization")
 local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
 local Steam = require("core.steam")
@@ -182,6 +182,7 @@ function love.update(dt)
 
 	if mode ~= "game" then
 		Menu.update(dt)
+		Overlay.update(dt)
 
 		if mode == "campaign" then
 			State.carouselT = min(1, State.carouselT + dt * 7)
@@ -210,6 +211,7 @@ function love.update(dt)
 
 	if mode == "victory" then
 		Menu.update(dt)
+		Overlay.update(dt)
 	end
 
 	State.renderAlpha = ACCUM / FIXED_DT
@@ -249,7 +251,8 @@ function love.update(dt)
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
-		if State.wave == 20 and not State.endless then
+		--if State.wave == 20 and not State.endless then
+		if State.wave == 2 and not State.endless then
 			-- Save
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
 			Save.data.furthestIndex = max(Save.data.furthestIndex, nextMapIndex)
@@ -304,12 +307,14 @@ function love.draw()
 
 		if State.mode == "game_over" or State.mode == "victory" then
 			Menu.draw()
+			Overlay.draw()
 		end
 
 		Cursor.draw()
 		Tooltip.draw()
 	else
 		Menu.draw()
+		Overlay.draw()
 
 		Cursor.draw()
 		Tooltip.draw()
@@ -323,10 +328,22 @@ function love.mousepressed(x, y, button)
 		end
 	end
 
+	if Overlay.isActive() then
+		if Overlay.mousepressed(x, y, button) then
+			return
+		end
+	end
+
 	Input.mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button)
+	if Overlay.isActive() then
+		if Overlay.mousereleased(x, y, button) then
+			return
+		end
+	end
+
 	Input.mousereleased(x, y, button)
 end
 
@@ -350,6 +367,12 @@ function love.keypressed(key)
 		end
 
 		lg.captureScreenshot(SCREENSHOT_DIR .. "/screenshot_" .. time .. ".png")
+	end
+
+	if Overlay.isActive() then
+		if Overlay.keypressed(key) then
+			return
+		end
 	end
 
 	if State.mode ~= "game" then
@@ -445,12 +468,18 @@ end
 function love.focus(focused)
 	if not focused then -- Alt-tab or focus loss
 		pauseGame()
+		love.mouse.setVisible(true)
+	else
+		love.mouse.setVisible(false)
 	end
 end
 
 function love.visible(visible)
 	if not visible then
 		pauseGame()
+		love.mouse.setVisible(true)
+	else
+		love.mouse.setVisible(false)
 	end
 end
 

@@ -382,7 +382,7 @@ function Screen.draw()
 	local textY = bandY + TITLE_OFFSET
 
 	-- Arrows
-	local leftEnabled  = State.mapIndex > 1
+	local leftEnabled = State.mapIndex > 1
 	local rightEnabled = State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1)
 
 	local arrowY = textY + 28
@@ -437,14 +437,14 @@ end
 function Screen.keypressed(key)
 	if key == "left" then
 		if State.mapIndex > 1 then
-			State.mapIndex = State.mapIndex - 1
+			State.mapIndex = State.resolveMapIndex(State.mapIndex - 1)
 			Sound.play("uiMove")
 		else
 			Sound.play("uiError")
 		end
 	elseif key == "right" then
 		if State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1) then
-			State.mapIndex = State.mapIndex + 1
+			State.mapIndex = State.resolveMapIndex(State.mapIndex + 1)
 			Sound.play("uiMove")
 		else
 			Sound.play("uiError")
@@ -488,7 +488,7 @@ function Screen.mousepressed(x, y, button)
 			local ax = boxX + paddingX + ARROW_SIZE * 2
 
 			if pointInTriangle(x, y, ax + ARROW_SIZE * 0.5, arrowY - ARROW_SIZE, ax - ARROW_SIZE * 0.5, arrowY, ax + ARROW_SIZE * 0.5, arrowY + ARROW_SIZE) then
-				State.mapIndex = index - 1
+				State.mapIndex = State.resolveMapIndex(index - 1)
 				Sound.play("uiMove")
 
 				return true
@@ -500,7 +500,7 @@ function Screen.mousepressed(x, y, button)
 			local ax = boxX + boxW - paddingX - ARROW_SIZE * 2
 
 			if pointInTriangle(x, y, ax - ARROW_SIZE * 0.5, arrowY - ARROW_SIZE, ax + ARROW_SIZE * 0.5, arrowY, ax - ARROW_SIZE * 0.5, arrowY + ARROW_SIZE) then
-				State.mapIndex = index + 1
+				State.mapIndex = State.resolveMapIndex(index + 1)
 				Sound.play("uiMove")
 
 				return true
@@ -535,7 +535,7 @@ end
 
 local function moveLeft()
 	if canMoveLeft() then
-		State.mapIndex = State.mapIndex - 1
+		State.mapIndex = State.resolveMapIndex(State.mapIndex - 1)
 		Sound.play("uiMove")
 	else
 		Sound.play("uiError")
@@ -544,7 +544,7 @@ end
 
 local function moveRight()
 	if canMoveRight() then
-		State.mapIndex = State.mapIndex + 1
+		State.mapIndex = State.resolveMapIndex(State.mapIndex + 1)
 		Sound.play("uiMove")
 	else
 		Sound.play("uiError")
