@@ -11,7 +11,7 @@ function love.conf(t)
 
 	t.window.icon = "assets/appicon_256.png"
 
-	t.console = true
+	t.console = false
 
 	t.modules.touch = false
 	t.modules.video = false

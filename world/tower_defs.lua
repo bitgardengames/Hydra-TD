@@ -30,7 +30,7 @@ return {
 		cost = 55,
 		range = 3.9 * Constants.TILE,
 		fireRate = 2.0, -- shots/sec
-		damage = 10000,
+		damage = 10,
 		recoilStrength = Constants.TILE * 0.08,
 		recoilDecay = 18,
 		projSpeed = 460,

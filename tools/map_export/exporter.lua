@@ -75,6 +75,10 @@ local function renderMapToCanvas(canvasW, canvasH)
 		DrawWorld.drawGrass()
 	end
 
+	if Config.drawWater then
+		DrawWorld.drawWater()
+	end
+
 	if Config.forcePathColor then
 		DrawWorld.updatePathColor(Config.forcedPathColor)
 	end

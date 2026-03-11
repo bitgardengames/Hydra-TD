@@ -1,11 +1,11 @@
 local Constants = {}
 
 -- Build
-Constants.IS_DEMO = false
+Constants.IS_DEMO = true
 
 -- Version
-Constants.VERSION = "1.0.5" -- major.minor.patch
-Constants.BUILD = 6
+Constants.VERSION = "1.0.6" -- major.minor.patch
+Constants.BUILD = 7
 Constants.VERSION_STRING = string.format("v%s (build %d)%s", Constants.VERSION, Constants.BUILD, Constants.IS_DEMO and " - Demo" or "")
 
 -- Display

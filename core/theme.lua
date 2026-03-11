@@ -15,6 +15,7 @@ Theme.terrain = {
 	-- Normal
 	grass = {0.28, 0.58, 0.34},
 	path = {0.62, 0.63, 0.66},
+	water = {0.20, 0.42, 0.55},
 
 	-- Halloween
 	--grass = {0.27, 0.18, 0.36},
@@ -23,6 +24,38 @@ Theme.terrain = {
 	-- Winter
 	--grass = {0.86, 0.91, 0.95},
 	--path = {0.52, 0.66, 0.76},
+}
+
+Theme.palettes = {
+	default = {
+		grass = {0.30, 0.58, 0.34},
+		path  = {0.63, 0.65, 0.68},
+		water = {0.25, 0.45, 0.65},
+	},
+
+	autumn = {
+		grass = {0.62, 0.50, 0.22},
+		path  = {0.70, 0.60, 0.42},
+		water = {0.26, 0.42, 0.60},
+	},
+
+	drylands = {
+		grass = {0.56, 0.52, 0.33},   -- sun-bleached grass
+		path  = {0.72, 0.67, 0.52},   -- sandy road
+		water = {0.29, 0.46, 0.62},   -- oasis blue
+	},
+
+	highlands = {
+		grass = {0.26, 0.52, 0.42},   -- alpine green
+		path  = {0.60, 0.64, 0.70},   -- cool stone
+		water = {0.22, 0.42, 0.62},
+	},
+
+	coastal = {
+		grass = {0.32, 0.60, 0.46},   -- cool sea grass
+		path  = {0.64, 0.67, 0.70},   -- pale stone path
+		water = {0.28, 0.50, 0.70},   -- brighter water
+	},
 }
 
 Theme.grid = {0.16, 0.17, 0.2, 0.1}

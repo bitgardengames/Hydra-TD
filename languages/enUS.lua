@@ -124,19 +124,6 @@ return {
 	},
 
 	map = {
-		--[[alpha = "Alpha Bend",
-		spiral = "Spiral Run",
-		zigzag = "Zig-Zag",
-		turntable = "Turntable",
-		gauntlet = "The Gauntlet",
-		hairpins = "Hairpins",
-		centerpull = "Center Pull",
-		snakepit = "Snake Pit",
-		doublebend = "Double Bend",
-		offsetloop = "Offset Loop",
-		sidewinder = "Sidewinder",
-		ridge = "Ridge",]]
-
 		riverbend = "Riverbend",
 		switchback = "Switchback",
 		highpass = "High Pass",

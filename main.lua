@@ -91,6 +91,18 @@ function resetGame()
     MapMod.clearBlocked()
     MapMod.buildPath(Maps[State.worldMapIndex])
 
+	-- Map palettes
+	--[[local palette = MapMod.getPalette()
+
+	if palette then
+		DrawWorld.updateGrassColor(palette.grass)
+		DrawWorld.updatePathColor(palette.path)
+
+		if palette.water then
+			DrawWorld.updateWaterColor(palette.water)
+		end
+	end]]
+
 	local diff = Difficulty.get()
 
     -- Core game state
@@ -251,8 +263,7 @@ function love.update(dt)
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
-		--if State.wave == 20 and not State.endless then
-		if State.wave == 2 and not State.endless then
+		if State.wave == 20 and not State.endless then
 			-- Save
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
 			Save.data.furthestIndex = max(Save.data.furthestIndex, nextMapIndex)

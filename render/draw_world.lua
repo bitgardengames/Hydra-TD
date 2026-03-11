@@ -6,6 +6,7 @@ local State = require("core.state")
 local lg = love.graphics
 local min = math.min
 local abs = math.abs
+local sqrt = math.sqrt
 
 local tile = Constants.TILE
 local gridW = Constants.GRID_W
@@ -14,14 +15,26 @@ local gridH = Constants.GRID_H
 local colorGrass = Theme.terrain.grass
 local colorPath = Theme.terrain.path
 local colorGrid = Theme.grid
+local colorWater = Theme.terrain.water
+
+local colorScatterDark = {colorGrass[1] * 0.94, colorGrass[2] * 0.94, colorGrass[3] * 0.94, 1}
+local colorScatterLight = {colorGrass[1] * 1.06, colorGrass[2] * 1.06, colorGrass[3] * 1.06, 1}
+
+local colorMud = {
+	colorGrass[1] * 0.55,
+	colorGrass[2] * 0.45,
+	colorGrass[3] * 0.35,
+	1
+}
 
 local gridToCenter = MapMod.gridToCenter
 
--- Precomputed scatter colors
-local colorScatterDark  = {colorGrass[1] * 0.94, colorGrass[2] * 0.94, colorGrass[3] * 0.94, 1}
-local colorScatterLight = {colorGrass[1] * 1.06, colorGrass[2] * 1.06, colorGrass[3] * 1.06, 1}
+local function hashNoise(x, y, seed)
+	local n = math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453
 
--- Static world drawing
+	return n - math.floor(n)
+end
+
 local function drawGrass()
 	lg.setColor(colorGrass)
 	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
@@ -51,8 +64,86 @@ local function drawGrass()
 	end
 end
 
+local function isWater(gx, gy)
+	local water = MapMod.map.water
+	if not water then return false end
+
+	for i = 1, #water do
+		local blob = water[i]
+		local bx, by, r = blob[1], blob[2], blob[3]
+
+		local dx = gx - bx
+		local dy = gy - by
+		local d = sqrt(dx * dx + dy * dy)
+
+		local n = hashNoise(gx, gy, i)
+
+		local edge = r * (1 + (n - 0.5) * 0.36)
+
+		if d <= edge then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function drawWater()
+	local radius = 8
+	local water = MapMod.map.water
+
+	if not water then return end
+
+	for i = 1, #water do
+		local blob = water[i]
+		local bx, by, r = blob[1], blob[2], blob[3]
+
+		for y = -r - 1, r + 1 do
+			for x = -r - 1, r + 1 do
+
+				local gx = bx + x
+				local gy = by + y
+
+				if gx >= 1 and gx <= gridW and gy >= 1 and gy <= gridH then
+					if isWater(gx, gy) then
+
+						local wx = (gx - 1) * tile
+						local wy = (gy - 1) * tile
+
+						lg.setColor(colorWater)
+
+						-- Base rounded tile
+						lg.rectangle("fill", wx, wy, tile, tile, radius, radius)
+
+						-- Fill horizontal seam
+						if isWater(gx + 1, gy) then
+							lg.rectangle("fill", wx + tile - radius, wy, radius * 2, tile)
+						end
+
+						-- Fill vertical seam
+						if isWater(gx, gy + 1) then
+							lg.rectangle("fill", wx, wy + tile - radius, tile, radius * 2)
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 local function updatePathColor(color)
 	colorPath = color
+end
+
+local function updateGrassColor(color)
+	colorGrass = color
+
+	colorScatterDark = {color[1] * 0.94, color[2] * 0.94, color[3] * 0.94, 1}
+	colorScatterLight = {color[1] * 1.06, color[2] * 1.06, color[3] * 1.06, 1}
+end
+
+local function updateWaterColor(color)
+	colorWater = color
 end
 
 local function drawPath()
@@ -75,13 +166,11 @@ local function drawPath()
 
 		if i > 1 then
 			local p = MapMod.map.path[i - 1]
-
 			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
 		end
 
 		if i < #MapMod.map.path - 1 then
 			local n = MapMod.map.path[i + 2]
-
 			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
 		end
 
@@ -95,10 +184,11 @@ local function drawPath()
 			end
 
 			if trimB then
-				w  = w - half
+				w = w - half
 			end
 
 			lg.rectangle("fill", x1, ay - half, w, pathThickness)
+
 		else
 			local y1 = min(ay, by)
 			local h  = abs(by - ay)
@@ -109,14 +199,13 @@ local function drawPath()
 			end
 
 			if trimB then
-				h  = h - half
+				h = h - half
 			end
 
 			lg.rectangle("fill", ax - half, y1, pathThickness, h)
 		end
 	end
 
-	-- Rounded corners
 	for i = 2, #MapMod.map.path - 1 do
 		local prev = MapMod.map.path[i - 1]
 		local cur = MapMod.map.path[i]
@@ -129,7 +218,6 @@ local function drawPath()
 
 		if dx1 ~= dx2 or dy1 ~= dy2 then
 			local cx, cy = MapMod.gridToCenter(cur[1], cur[2])
-
 			lg.circle("fill", cx, cy, half)
 		end
 	end
@@ -137,16 +225,13 @@ end
 
 local function drawWorld()
 	drawGrass()
+	--drawWater()
 	drawPath()
 end
 
--- Grid
 local function drawGrid()
 	local fade = State.placingFade or 0
-
-	if fade == 0 then
-		return
-	end
+	if fade == 0 then return end
 
 	lg.setColor(colorGrid[1], colorGrid[2], colorGrid[3], colorGrid[4] * fade)
 
@@ -161,8 +246,11 @@ end
 
 return {
 	drawGrass = drawGrass,
+	drawWater = drawWater,
 	drawPath = drawPath,
 	drawGrid = drawGrid,
 	drawWorld = drawWorld,
 	updatePathColor = updatePathColor,
+	updateGrassColor = updateGrassColor,
+	updateWaterColor = updateWaterColor,
 }

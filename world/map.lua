@@ -1,5 +1,6 @@
 local Constants = require("core.constants")
 local State = require("core.state")
+local Theme = require("core.theme")
 
 local REF_COVERAGE_INDEX = 1.8
 
@@ -24,6 +25,28 @@ local function gridToCenter(gx, gy)
 	return (gx - 0.5) * Constants.TILE, (gy - 0.5) * Constants.TILE
 end
 
+local function isWaterTile(gx, gy)
+	local water = map.water
+
+	if not water then
+		return false
+	end
+
+	for i = 1, #water do
+		local blob = water[i]
+		local bx, by, r = blob[1], blob[2], blob[3]
+
+		local dx = gx - bx
+		local dy = gy - by
+
+		if dx * dx + dy * dy <= r * r then
+			return true
+		end
+	end
+
+	return false
+end
+
 local function canPlaceAt(gx, gy)
 	if not gx then
 		return false, "outside"
@@ -34,6 +57,10 @@ local function canPlaceAt(gx, gy)
 	if col and col[gy] then
 		return false, "path"
 	end
+
+	--[[if isWaterTile(gx, gy) then
+		return false, "water"
+	end]]
 
 	local bcol = map.blocked[gx]
 
@@ -48,6 +75,8 @@ local function clearBlocked()
 	for gx in pairs(map.blocked) do
 		map.blocked[gx] = nil
 	end
+
+	map.water = {}
 end
 
 local function computeCoverageIndex(path, canPlaceAtFn)
@@ -170,7 +199,19 @@ end
 
 local function buildPath(mapDef)
 	currentMap = mapDef
+
+	map.water = mapDef.water or {}
+	--map.terrain = mapDef.terrain or {}
+
 	loadPath(mapDef.path)
+
+	local name = mapDef.palette or "default"
+
+	map.palette = Theme.palettes[name] or Theme.palettes.default
+end
+
+local function getPalette()
+	return map.palette
 end
 
 local function sampleAtDist(dist, hintSeg)
@@ -249,6 +290,7 @@ return {
 	map = map,
 	makeKey = makeKey,
 	buildPath = buildPath,
+	getPalette = getPalette,
 	canPlaceAt = canPlaceAt,
 	gridToCenter = gridToCenter,
 	clearBlocked = clearBlocked,

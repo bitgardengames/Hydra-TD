@@ -6,7 +6,8 @@ return {
 	outDir = "export/maps",
 
 	drawGrass = true,
-	forcePathColor = true,
+	drawWater = false,
+	forcePathColor = false,
 	forcedPathColor = Theme.tower.lancer,
 	--forcedPathColor = { 0.10, 0.10, 0.11 },
 
