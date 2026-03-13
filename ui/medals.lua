@@ -20,6 +20,7 @@ local ranks = {
 local bronze = Theme.medal.bronze
 local silver = Theme.medal.silver
 local gold = Theme.medal.gold
+local outlineW = Theme.outline.width
 
 local COLORS = {
 	{bronze[1], bronze[2], bronze[3]},
@@ -27,8 +28,8 @@ local COLORS = {
 	{gold[1], gold[2], gold[3]},
 }
 
-local radius = 9
-local gap = 10
+local BASE_RADIUS = 9
+local BASE_GAP = 10
 
 local revealBaseCount = 0
 local revealTargetCount = 0
@@ -167,9 +168,10 @@ function Medals.update(dt)
 	end
 end
 
-local function drawMedal(x, y, tier, earned, scale, glint, yOffset)
+local function drawMedal(x, y, tier, earned, r, scale, glint, yOffset)
 	local c = COLORS[tier]
 
+	local radius = r or BASE_RADIUS
 	scale = scale or 1
 	yOffset = yOffset or 0
 
@@ -181,7 +183,7 @@ local function drawMedal(x, y, tier, earned, scale, glint, yOffset)
 	if earned then
 		-- Backplate
 		lg.setColor(c[1] * 0.35, c[2] * 0.35, c[3] * 0.35)
-		lg.circle("fill", x, y + yOffset, radius + 3)
+		lg.circle("fill", x, y + yOffset, radius + outlineW)
 
 		-- Medal
 		lg.setColor(c)
@@ -189,7 +191,7 @@ local function drawMedal(x, y, tier, earned, scale, glint, yOffset)
 
 		-- Soft highlight
 		lg.setColor(1, 1, 1, 0.10)
-		lg.circle("fill", x - 2, y - 2 + yOffset, radius * 0.55)
+		lg.circle("fill", x - 5, y - 5 + yOffset, radius * 0.35)
 
 		-- Highlight glint
 		if glint and glint < 1 then
@@ -214,7 +216,7 @@ local function drawMedal(x, y, tier, earned, scale, glint, yOffset)
 		end
 	else
 		lg.setColor(0.1, 0.1, 0.1)
-		lg.circle("fill", x, y, radius + 3)
+		lg.circle("fill", x, y, radius + outlineW)
 
 		lg.setColor(c[1] * 0.3, c[2] * 0.3, c[3] * 0.3)
 		lg.circle("fill", x, y, radius)
@@ -224,14 +226,14 @@ local function drawMedal(x, y, tier, earned, scale, glint, yOffset)
 end
 
 function Medals.draw(x, y, earnedCount, r, g)
-	radius = r or radius
-	gap = g or gap
+	BASE_RADIUS = r or BASE_RADIUS
+	BASE_GAP = g or BASE_GAP
 
 	local baseCount = min(earnedCount or 0, 3)
 
-	local startX = x + radius
-	local centerY = y + radius
-	local step = radius * 2 + gap
+	local startX = x + BASE_RADIUS
+	local centerY = y + BASE_RADIUS
+	local step = BASE_RADIUS * 2 + BASE_GAP
 
 	for i = 1, 3 do
 		local mx = startX + (i - 1) * step
@@ -242,14 +244,14 @@ function Medals.draw(x, y, earnedCount, r, g)
 end
 
 function Medals.drawReveal(x, y, r, g)
-	radius = r or radius
-	gap = g or gap
+	BASE_RADIUS = r or BASE_RADIUS
+	BASE_GAP = g or BASE_GAP
 
 	local staticCount = min(revealBaseCount, 3)
 
-	local startX = x + radius
-	local centerY = y + radius
-	local step = radius * 2 + gap
+	local startX = x + BASE_RADIUS
+	local centerY = y + BASE_RADIUS
+	local step = BASE_RADIUS * 2 + BASE_GAP
 
 	for i = 1, 3 do
 		local mx = startX + (i - 1) * step
@@ -267,10 +269,14 @@ function Medals.drawReveal(x, y, r, g)
 end
 
 function Medals.getClusterSize(r, g)
-	r = r or radius
-	g = g or gap
+	r = r or BASE_RADIUS
+	g = g or BASE_GAP
 
 	return 3 * (r * 2) + 2 * g, r * 2
+end
+
+function Medals.drawTier(x, y, tier, r, scale)
+	drawMedal(x, y, tier, true, r or BASE_RADIUS, scale or 1, 1, 0)
 end
 
 return Medals

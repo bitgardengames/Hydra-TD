@@ -2,6 +2,8 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 local MapMod = require("world.map")
 local State = require("core.state")
+local Trees = require("world.scatter_trees")
+local Rocks = require("world.scatter_rocks")
 
 local lg = love.graphics
 local min = math.min
@@ -146,6 +148,11 @@ local function updateWaterColor(color)
 	colorWater = color
 end
 
+local function drawScatter() -- Generic name for now, may or may not separate further, but I think it's not necessary
+	Rocks.draw()
+	Trees.draw()
+end
+
 local function drawPath()
 	local pathThickness = tile
 	local half = pathThickness * 0.5
@@ -227,6 +234,7 @@ local function drawWorld()
 	drawGrass()
 	--drawWater()
 	drawPath()
+	drawScatter()
 end
 
 local function drawGrid()
@@ -248,6 +256,7 @@ return {
 	drawGrass = drawGrass,
 	drawWater = drawWater,
 	drawPath = drawPath,
+	drawScatter = drawScatter,
 	drawGrid = drawGrid,
 	drawWorld = drawWorld,
 	updatePathColor = updatePathColor,

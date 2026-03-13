@@ -7,6 +7,7 @@ local target = {x = 0, y = 0}
 local function clamp01(x)
 	if x < 0 then return 0 end
 	if x > 1 then return 1 end
+
 	return x
 end
 
@@ -16,7 +17,7 @@ end
 
 return {
 	map = 3,
-	duration = 21,
+	duration = 5,
 
 	scene = {
 		towers = {
@@ -30,7 +31,7 @@ return {
 		wave = {
 			index = 10,
 			start = true,
-			warmup = 29,
+			warmup = 28,
 		},
 	},
 
@@ -58,7 +59,7 @@ return {
 		local fx, fy = nil, nil
 
 		local zoomFrom = 3.0
-		local zoomTo = 6.0
+		local zoomTo = 3.0
 		local zoomDelay = 0
 		local zoomDur = 10.0
 
@@ -129,14 +130,4 @@ return {
 			end
 		}
 	end,
-
-	logo = {
-		t = 10.6,
-		dur = 16,
-	},
-
-	text = {
-		{t = 0.8, text = "SURVIVE", dur = 3, fadeIn = 0.25, fadeOut = 0.4},
-		{t = 12, text = "Wishlist on Steam", dur = 16, fadeIn = 0.35, fadeOut = 0.45, smallText = true},
-	}
 }

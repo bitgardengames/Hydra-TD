@@ -1,6 +1,7 @@
 local TowersDefs = require("world.tower_defs")
 local EnemyDefs = require("world.enemy_defs")
 local DrawEntities = require("render.draw_entities")
+local Medals = require("ui.medals")
 local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local Text = require("ui.text")
@@ -15,12 +16,86 @@ local SIZE = 256
 local REF_ICON_SIZE = 64
 local TOWER_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.5 scale
 local ENEMY_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.0 scale
+local MEDAL_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.0 scale
 
 local EXPORT_DIR = "export"
 local ACH_DIR = EXPORT_DIR .. "/achievements"
 
 local colorFace = Theme.enemy.face
 local colorBody = Theme.enemy.body
+
+local tiers = {
+	[1] = "bronze",
+	[2] = "silver",
+	[3] = "gold",
+}
+
+local roman = {
+	[1] = "I",
+	[2] = "II",
+	[3] = "III",
+}
+
+local function drawCampaignMedal(tier)
+	local cx = SIZE * 0.5
+	local cy = SIZE * 0.5
+
+	Medals.drawTier(cx, cy, tier, 15, MEDAL_SCALE)
+
+	-- Roman numeral overlay
+	local text = roman[tier]
+
+	lg.push()
+	lg.origin()
+
+	Fonts.set("achievement")
+
+	local font = Fonts.get("achievement")
+	local w = font:getWidth(text)
+	local h = font:getHeight()
+
+	lg.setColor(1,1,1,1)
+
+	Text.printShadow(
+		text,
+		cx - w * 0.5,
+		cy - h * 0.45,
+		{ox = 3, oy = 3}
+	)
+
+	lg.pop()
+end
+
+local roman = {
+	[1] = "I",
+	[2] = "II",
+	[3] = "III",
+}
+
+local function drawCampaignMedal(tier)
+	local cx = SIZE * 0.5
+	local cy = SIZE * 0.5
+	local radius = 15
+
+	Medals.drawTier(cx, cy, tier, radius, MEDAL_SCALE)
+
+	local text = roman[tier]
+	local pad = 22
+
+	lg.push()
+	lg.origin()
+
+	Fonts.set("achievement")
+
+	local font = Fonts.get("achievement")
+	local h = font:getHeight()
+
+	lg.setColor(1, 1, 1, 1)
+
+	Text.printShadow(text, pad, SIZE - h + 2, {ox = 2, oy = 2})
+
+	lg.pop()
+end
 
 local function ensureDirs()
     love.filesystem.createDirectory(EXPORT_DIR)
@@ -58,12 +133,13 @@ local function centerAndScale(fn, scale, adjusty)
 end
 
 local function drawTower(kind)
-    centerAndScale(function()
-        DrawEntities.drawTowerBase(kind, 0, 0, {alpha  = 1, shadow = false})
-        DrawEntities.drawTowerCore(kind, 0, 0, {angle  = -pi / 4, alpha  = 1, shadow = false})
+	centerAndScale(function()
+		DrawEntities.drawTowerBase(kind, 0, 0, 1, 1, 1, 1, 0)
+		DrawEntities.drawTowerCore(kind, 0, 0, -pi / 4, 0, 1, 1,1,1, 0)
 
-        lg.setColor(1, 1, 1, 1)
-    end, TOWER_SCALE)
+		lg.setColor(1, 1, 1, 1)
+
+	end, TOWER_SCALE)
 end
 
 local function drawDeadEyes(radius)
@@ -82,13 +158,7 @@ local function drawDeadEyes(radius)
 
 	local function wipeEye(x, y)
 		lg.setColor(colorBody)
-		lg.rectangle("fill",
-			x - wipeW * 0.5,
-			y - wipeH * 0.5,
-			wipeW,
-			wipeH,
-			wipeH * 0.4
-		)
+		lg.rectangle("fill", x - wipeW * 0.5, y - wipeH * 0.5, wipeW, wipeH, wipeH * 0.4)
 	end
 
 	local function drawX(x, y)
@@ -183,7 +253,7 @@ local function drawKillTier(enemyType, isDead, tierNumber)
 	lg.push()
 	lg.origin()
 
-	local pad = 16
+	local pad = 22
 	local text = tostring(tierNumber)
 
 	Fonts.set("achievement")
@@ -193,13 +263,12 @@ local function drawKillTier(enemyType, isDead, tierNumber)
 
 	lg.setColor(1, 1, 1, 1)
 
-	Text.printShadow(text, pad, SIZE - h + (pad * 0.5), {ox = 2, oy = 2})
+	Text.printShadow(text, pad, SIZE - h + 2, {ox = 2, oy = 2})
 
 	lg.pop()
 end
 
 local achievements = {
-	-- No tower achievements are implemented yet
     {
         id = "TOWER_LANCER_250",
         render = function()
@@ -268,6 +337,27 @@ local achievements = {
         render = function()
 			drawKillTier("fakeEntry", true, 3000)
 		end
+    },
+
+    {
+        id = "CAMPAIGN_EASY",
+        render = function()
+            drawCampaignMedal(1)
+        end
+    },
+
+    {
+        id = "CAMPAIGN_NORMAL",
+        render = function()
+            drawCampaignMedal(2)
+        end
+    },
+
+    {
+        id = "CAMPAIGN_HARD",
+        render = function()
+            drawCampaignMedal(3)
+        end
     },
 }
 

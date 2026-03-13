@@ -45,7 +45,7 @@ end
 local function renderMapToCanvas(canvasW, canvasH)
 	local winW, winH = lg.getDimensions()
 
-	-- Scale logical window coords → canvas coords
+	-- Scale logical window coords > canvas coords
 	local sx = canvasW / winW
 	local sy = canvasH / winH
 
@@ -63,7 +63,6 @@ local function renderMapToCanvas(canvasW, canvasH)
 	-- Fill the canvas
 	lg.scale(sx, sy)
 
-	-- === Gameplay camera transform (unchanged) ===
 	lg.scale(z, z)
 
 	local wx = cx - (winW / (2 * z))
@@ -77,6 +76,10 @@ local function renderMapToCanvas(canvasW, canvasH)
 
 	if Config.drawWater then
 		DrawWorld.drawWater()
+	end
+
+	if Config.drawScatter then
+		DrawWorld.drawScatter()
 	end
 
 	if Config.forcePathColor then
@@ -119,6 +122,7 @@ local function exportStitchedHorizontal()
 	local h = first:getHeight()
 
 	local count = 0
+
 	for _ in pairs(Exporter.rendered) do
 		count = count + 1
 	end
@@ -220,7 +224,7 @@ function Exporter.update(dt)
 end
 
 function Exporter.draw()
-	-- Optional: show a simple progress screen, or nothing.
+	-- Simple progress count
 	lg.clear(0, 0, 0, 1)
 	lg.print("Exporting maps... " .. tostring(Exporter.i) .. "/" .. tostring(#Exporter.queue), 20, 20)
 end

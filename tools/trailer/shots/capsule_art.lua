@@ -11,36 +11,29 @@ local adjustX = tile * 2
 local adjustY = tile
 
 return {
-	map = 1,
-	duration = 10.0,
+	map = 13,
+	duration = 8.0,
 	next = "shot_02",
 
 	scene = {
 		towers = {
-			{kind = "shock", gx = 16, gy = 7},
-			{kind = "lancer", gx = 17, gy = 7},
-			{kind = "cannon", gx = 18, gy = 7},
-			{kind = "poison", gx = 16, gy = 8},
-			{kind = "slow", gx = 20, gy = 7},
+			--{kind = "lancer", gx = 26, gy = 6},
+			--{kind = "lancer", gx = 27, gy = 6},
 		},
 
 		wave = {
-			index = 19,
 			start = true,
-			warmup = 12.0,
+			warmup = 8.0,
 		},
 	},
 
     actions = {
-		{t = 0, fn = Actions.upgradeTowerAt(16, 7, 1)},
-		{t = 0, fn = Actions.upgradeTowerAt(17, 7, 1)},
-		{t = 0, fn = Actions.upgradeTowerAt(18, 7, 1)},
-		{t = 0, fn = Actions.upgradeTowerAt(16, 8, 2)},
+		--{t = 0, fn = Actions.upgradeTowerAt(27, 10, 1)},
     },
 
-	--[[camera = Camera.pan({
+	camera = Camera.pan({
 		duration = 7.0,
 		from = {x = mapCX - adjustX, y = mapCY - adjustY, zoom = 2.0},
 		to = {x = mapCX - adjustX, y = mapCY - adjustY, zoom = 2.0}
-	}),]]
+	}),
 }

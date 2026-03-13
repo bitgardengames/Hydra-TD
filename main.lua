@@ -22,6 +22,8 @@ local Tooltip = require("ui.tooltip")
 local Draw = require("render.draw")
 local Glyphs = require("ui.glyphs")
 local DrawWorld = require("render.draw_world")
+local Trees = require("world.scatter_trees")
+local Rocks = require("world.scatter_rocks")
 local DamageMeter = require("ui.damage_meter")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
@@ -90,6 +92,9 @@ function resetGame()
     -- Map state
     MapMod.clearBlocked()
     MapMod.buildPath(Maps[State.worldMapIndex])
+
+	Rocks.generate()
+	Trees.generate()
 
 	-- Map palettes
 	--[[local palette = MapMod.getPalette()

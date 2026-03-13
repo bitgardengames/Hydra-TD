@@ -102,8 +102,7 @@ local function addTower(kind, gx, gy)
 
 	State.money = State.money - def.cost
 
-	MapMod.map.blocked[gx] = MapMod.map.blocked[gx] or {}
-	MapMod.map.blocked[gx][gy] = true
+	MapMod.setBlocked(gx, gy)
 
 	table.insert(towers, t)
 

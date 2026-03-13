@@ -26,6 +26,70 @@ Theme.terrain = {
 	--path = {0.52, 0.66, 0.76},
 }
 
+Theme.world = {
+	treeTrunk = {0.36, 0.26, 0.16},
+	treeTrunkOutline = {0.22, 0.16, 0.10},
+
+	treeStyles = {
+		-- bright spring
+		{
+			fill = {0.46, 0.78, 0.48},
+			outline = {0.20, 0.44, 0.26},
+		},
+
+		-- balanced green
+		{
+			fill = {0.40, 0.72, 0.42},
+			outline = {0.18, 0.40, 0.22},
+		},
+
+		-- darker forest
+		{
+			fill = {0.32, 0.62, 0.36},
+			outline = {0.14, 0.34, 0.18},
+		},
+
+		-- slightly yellow green
+		{
+			fill = {0.54, 0.78, 0.44},
+			outline = {0.28, 0.46, 0.22},
+		},
+
+		-- muted moss
+		{
+			fill = {0.36, 0.66, 0.38},
+			outline = {0.16, 0.36, 0.20},
+		},
+	},
+
+	rockStyles = {
+		{
+			fill = {0.70, 0.68, 0.64},
+			outline = {0.40, 0.38, 0.35},
+		},
+
+		{
+			fill = {0.64, 0.63, 0.60},
+			outline = {0.36, 0.35, 0.32},
+		},
+
+		{
+			fill = {0.74, 0.72, 0.68},
+			outline = {0.44, 0.42, 0.38},
+		},
+
+		{
+			fill = {0.60, 0.60, 0.58},
+			outline = {0.32, 0.32, 0.30},
+		},
+
+		{
+			fill = {0.68, 0.66, 0.62},
+			outline = {0.38, 0.36, 0.33},
+		},
+	},
+}
+
 Theme.palettes = {
 	default = {
 		grass = {0.30, 0.58, 0.34},

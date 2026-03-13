@@ -3,10 +3,12 @@ local State = require("core.state")
 local Theme = require("core.theme")
 
 local REF_COVERAGE_INDEX = 1.8
+local TILE = Constants.TILE
 
 local min = math.min
 local max = math.max
 local sqrt = math.sqrt
+local floor = math.floor
 
 local map = {
 	blocked = {},
@@ -22,7 +24,32 @@ local function makeKey(gx, gy)
 end
 
 local function gridToCenter(gx, gy)
-	return (gx - 0.5) * Constants.TILE, (gy - 0.5) * Constants.TILE
+	return (gx - 0.5) * TILE, (gy - 0.5) * TILE
+end
+
+local function setBlocked(gx, gy)
+	local col = map.blocked[gx]
+
+	if not col then
+		col = {}
+		map.blocked[gx] = col
+	end
+
+	col[gy] = true
+end
+
+local function isBlocked(gx, gy)
+	local col = map.blocked[gx]
+
+	return col and col[gy]
+end
+
+local function clearBlocked()
+	for gx in pairs(map.blocked) do
+		map.blocked[gx] = nil
+	end
+
+	map.water = {}
 end
 
 local function isWaterTile(gx, gy)
@@ -48,35 +75,23 @@ local function isWaterTile(gx, gy)
 end
 
 local function canPlaceAt(gx, gy)
-	if not gx then
-		return false, "outside"
+	--[[if not gx then
+		return false
 	end
 
-	local col = map.isPath[gx]
+	local path = map.isPath[gx]
 
-	if col and col[gy] then
+	if path and path[gy] then
 		return false, "path"
 	end
 
-	--[[if isWaterTile(gx, gy) then
-		return false, "water"
-	end]]
-
-	local bcol = map.blocked[gx]
-
-	if bcol and bcol[gy] then
+	if isBlocked(gx, gy) then
 		return false, "occupied"
 	end
 
+	return true]]
+	
 	return true
-end
-
-local function clearBlocked()
-	for gx in pairs(map.blocked) do
-		map.blocked[gx] = nil
-	end
-
-	map.water = {}
 end
 
 local function computeCoverageIndex(path, canPlaceAtFn)
@@ -293,6 +308,8 @@ return {
 	getPalette = getPalette,
 	canPlaceAt = canPlaceAt,
 	gridToCenter = gridToCenter,
+	setBlocked = setBlocked,
+	isBlocked = isBlocked,
 	clearBlocked = clearBlocked,
 	sampleAtDist = sampleAtDist,
 	sampleDirAtDist = sampleDirAtDist,

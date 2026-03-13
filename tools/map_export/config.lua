@@ -7,6 +7,7 @@ return {
 
 	drawGrass = true,
 	drawWater = false,
+	drawScatter = true,
 	forcePathColor = false,
 	forcedPathColor = Theme.tower.lancer,
 	--forcedPathColor = { 0.10, 0.10, 0.11 },

@@ -2,17 +2,94 @@ local State = require("core.state")
 local Steam = require("core.steam")
 local Save = require("core.save")
 
+
+local Achievements = {}
+
+local watchers = {}
+
+
 --[[
 	List of achievements
 
 	BOSS_KILL_1, BOSS_KILL_25
 	ENEMY_KILL_500, ENEMY_KILL_1500, ENEMY_KILL_3000
 	TOWER_LANCER_250, TOWER_SLOW_250, TOWER_CANNON_250, TOWER_SHOCK_250, TOWER_POISON_250
+	CAMPAIGN_EASY, CAMPAIGN_NORMAL, CAMPAIGN_HARD
 --]]
 
-local Achievements = {}
+local BASE_CAMPAIGN_MAP_IDS = {
+	"riverbend",
+	"switchback",
+	"highpass",
+	"roundabout",
+	"gauntlet",
+	"snaketrail",
+	"backtrack",
+	"lowvalley",
+	"circuit",
+	"outerloop",
+	"terrace",
+	"highridge",
+	"crossflow",
+	"steppingstones",
+	"twinloop",
+}
 
-local watchers = {}
+local HIGHLANDS_CAMPAIGN_MAP_IDS = { -- NYI, Just for ideas
+	"ashfall",
+	"cliffside",
+	"forkriver",
+	"stormpass",
+	"ironvale",
+}
+
+local rank = {
+	easy = 1,
+	normal = 2,
+	hard = 3,
+}
+
+local function isDifficultyAtLeast(completedDifficulty, targetDifficulty)
+	return (rank[completedDifficulty] or 0) >= (rank[targetDifficulty] or 0)
+end
+
+local function countCompletedBaseCampaignMaps(targetDifficulty)
+	local mapStats = Save.data.mapStats or {}
+	local count = 0
+
+	for i = 1, #BASE_CAMPAIGN_MAP_IDS do
+		local mapId = BASE_CAMPAIGN_MAP_IDS[i]
+		local stats = mapStats[mapId]
+
+		if stats and isDifficultyAtLeast(stats.completedDifficulty, targetDifficulty) then
+			count = count + 1
+		end
+	end
+
+	return count
+end
+
+local function hasCompletedBaseCampaign(targetDifficulty)
+	return countCompletedBaseCampaignMaps(targetDifficulty) == #BASE_CAMPAIGN_MAP_IDS
+end
+
+function Achievements.checkCampaignCompletion()
+	if State.ignoreStats or not Save.data then
+		return
+	end
+
+	if hasCompletedBaseCampaign("easy") then
+		unlock("CAMPAIGN_EASY")
+	end
+
+	if hasCompletedBaseCampaign("normal") then
+		unlock("CAMPAIGN_NORMAL")
+	end
+
+	if hasCompletedBaseCampaign("hard") then
+		unlock("CAMPAIGN_HARD")
+	end
+end
 
 local function unlock(id)
 	local meta = Save.data.meta
@@ -82,6 +159,7 @@ function Achievements.increment(stat, amount)
 end
 
 function Achievements.onGameOver()
+	Achievements.checkCampaignCompletion()
 	Save.flush()
 end
 

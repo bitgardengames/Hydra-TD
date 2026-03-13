@@ -1,7 +1,7 @@
 local Constants = {}
 
 -- Build
-Constants.IS_DEMO = true
+Constants.IS_DEMO = false
 
 -- Version
 Constants.VERSION = "1.0.6" -- major.minor.patch

@@ -12,7 +12,7 @@ local adjustY = tile * 2
 
 return {
 	map = 12,
-	duration = 5.0,
+	duration = 6.0,
 	next = "shot_04",
 
 	scene = {
@@ -30,9 +30,9 @@ return {
 	},
 
 	actions = {
-		{t = 1.0, fn = Actions.upgradeTowerAt(11,  10, 1)},
-		{t = 2.0, fn = Actions.upgradeTowerAt(12, 11, 1)},
-		{t = 3.0, fn = Actions.upgradeTowerAt(13,  10, 1)},
+		{t = 1.50, fn = Actions.upgradeTowerAt(11,  10, 1)},
+		{t = 2.50, fn = Actions.upgradeTowerAt(12, 11, 1)},
+		{t = 3.50, fn = Actions.upgradeTowerAt(13,  10, 1)},
 	},
 
 	camera = Camera.pan({
@@ -40,4 +40,8 @@ return {
 		from = {x = mapCX - adjustX, y = mapCY + adjustY, zoom = 3.0},
 		to = {x = mapCX - adjustX, y = mapCY + adjustY, zoom = 3.0}
 	}),
+
+	text = {
+		{t = 0.8, text = "UPGRADE", dur = 3, fadeIn = 0.25, fadeOut = 0.4},
+	},
 }

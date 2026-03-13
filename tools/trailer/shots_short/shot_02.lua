@@ -12,14 +12,14 @@ local adjustY = tile * 2
 
 return {
     map = 12,
-    duration = 6.0,
+    duration = 5.0,
     next = "shot_03",
 
     scene = {
         wave = {
 			index = 2,
             start = true,
-            warmup = 5.0,
+            warmup = 10.0,
         },
     },
 
@@ -30,18 +30,8 @@ return {
 	}),
 
     actions = {
-		{t = 1.50, fn = Actions.placeTower("slow", 14, 7)},
-		{t = 2.50, fn = Actions.placeTower("cannon", 14, 6)},
-        {t = 3.50, fn = Actions.placeTower("lancer", 15, 6)},
+		{t = 1.0, fn = Actions.placeTower("lancer", 14, 7)},
+		{t = 2.0, fn = Actions.placeTower("cannon", 16, 6)},
+        {t = 3.0, fn = Actions.placeTower("slow", 18, 7)},
     },
-
-	text = {
-		{
-			t = 0.8,
-			text = "BUILD",
-			dur = 3,
-			fadeIn = 0.25,
-			fadeOut = 0.4,
-		},
-	}
 }
