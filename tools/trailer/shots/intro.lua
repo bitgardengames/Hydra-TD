@@ -1,11 +1,20 @@
 local Camera = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
 local Constants = require("core.constants")
+local Maps = require("world.map_defs")
+
+-- Insert a straight map
+Maps[0] = {
+	id = "line",
+	nameKey = "map.line",
+	path = {
+		{4, 8}, {31, 8},
+	},
+}
 
 return {
-	map = 13,
+	map = 0,
 	duration = 7.0,
-	next = "shot_02",
 
 	scene = {
 		towers = {
@@ -22,6 +31,7 @@ return {
 	},
 
     actions = {
+		{t = 0, fn = Actions.setMoney(9999)},
 		{t = 0, fn = Actions.upgradeTowerAt(25, 10, 1)},
     },
 

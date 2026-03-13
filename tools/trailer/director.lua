@@ -8,6 +8,7 @@ local Waves = require("systems.waves")
 local Shots = require("tools.trailer.shots")
 local Sim = require("core.sim")
 local Recorder = require("tools.trailer.recorder")
+local Sequences = require("tools.trailer.sequences")
 local HeroExport = require("tools.trailer.hero_export")
 local Title = require("ui.title")
 local Fonts = require("core.fonts")
@@ -59,6 +60,9 @@ local Director = {
 	logoT = 0,
 
 	ctx = nil,
+
+	sequence = nil,
+	sequenceIndex = 1,
 
 	scrub = {
 		enabled = false,
@@ -124,7 +128,7 @@ function Director.buildScene(scene)
     end
 end
 
-function Director._stepFixed(step)
+function Director.stepFixed(step)
 	Director.t = Director.t + step
 
 	Director.ctx.time = Director.t
@@ -207,10 +211,19 @@ function Director.seekToFrame(frame)
 
 	-- Fast-forward deterministically
 	for i = 1, frame do
-		Director._stepFixed(STEP_DT)
+		Director.stepFixed(STEP_DT)
 	end
 end
 
+function Director.loadSequence(name)
+	Director.sequence = Sequences[name]
+	assert(Director.sequence, "Sequence not found: " .. tostring(name))
+
+	Director.sequenceIndex = 1
+
+	local firstShot = Director.sequence[1]
+	Director.load(firstShot)
+end
 
 function Director.load(name)
 	Director.shot = Shots[name]
@@ -275,30 +288,30 @@ function Director.update(dt)
 			while Director._scrubAccum >= STEP_DT do
 				Director._scrubAccum = Director._scrubAccum - STEP_DT
 				Director.scrub.frame = Director.scrub.frame + 1
-				Director._stepFixed(STEP_DT)
+				Director.stepFixed(STEP_DT)
 			end
 		end
 
 		return
 	end
 
-	Director._stepFixed(STEP_DT)
+	Director.stepFixed(STEP_DT)
 
     -- Shot finished?
 	if Director.t >= Director.shot.duration and not Director.transition then
-		if Config.mode == "single" then
-			-- Stop immediately after this shot
-			Recorder.enabled = false
-			love.event.quit()
+		if Director.sequence then
+			Director.sequenceIndex = Director.sequenceIndex + 1
 
-			return
-		end
+			local nextShot = Director.sequence[Director.sequenceIndex]
 
-		-- sequence mode
-		if Director.shot.next then
-			Director.transition = "out"
-			Director.transitionT = 0
-			Director.nextShot = Director.shot.next
+			if nextShot then
+				Director.transition = "out"
+				Director.transitionT = 0
+				Director.nextShot = nextShot
+			else
+				Recorder.enabled = false
+				love.event.quit()
+			end
 		else
 			Recorder.enabled = false
 			love.event.quit()
@@ -545,6 +558,8 @@ function love.keypressed(key)
 			Director.scrub.frame = floor(Director.t * FPS + 0.5)
 			Director.seekToFrame(Director.scrub.frame)
 		end
+	elseif key == "f10" then
+		love.graphics.captureScreenshot(string.format("screenshots/shot_%05d.png", os.time()))
 	end
 
 	if Director.scrub.enabled then

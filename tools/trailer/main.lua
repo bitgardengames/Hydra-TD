@@ -20,13 +20,14 @@ function Trailer.run()
     -- Force fixed timestep
     love.timer.step()
 
-    if Config.mode == "single" then
-        Director.load(Config.startShot)
-    else
-        Director.load("shot_01") -- always start at the beginning
-    end
+	if Config.mode == "single" then
+		Director.load(Config.startShot)
+	else
+		Director.loadSequence(Config.sequence)
+	end
 
-	--require("systems.sound").playMusic("menu")
+	--require("systems.sound").playMusic("gameplay")
+	require("systems.sound").playMusic("menu")
 end
 
 function love.update(dt)

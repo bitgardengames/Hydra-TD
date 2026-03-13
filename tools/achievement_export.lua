@@ -23,6 +23,7 @@ local ACH_DIR = EXPORT_DIR .. "/achievements"
 
 local colorFace = Theme.enemy.face
 local colorBody = Theme.enemy.body
+local colorText = Theme.ui.text
 
 local tiers = {
 	[1] = "bronze",
@@ -36,61 +37,87 @@ local roman = {
 	[3] = "III",
 }
 
+local ribbonColors = {
+	[1] = { fill = {0.86, 0.18, 0.22}, outline = {0.42, 0.08, 0.09} }, -- bronze (red)
+	[2] = { fill = {0.26, 0.46, 0.90}, outline = {0.14, 0.26, 0.52} }, -- silver (blue)
+	[3] = { fill = {0.12, 0.32, 0.70}, outline = {0.06, 0.16, 0.40} }, -- gold (dark blue)
+}
+
+local function drawMedalRibbons(cx, cy, radius, tier)
+	local visualRadius = radius * MEDAL_SCALE
+
+	local ribbonLen = visualRadius * 2.4
+	local ribbonW = visualRadius * 0.56
+	local angle = math.rad(26)
+
+	local attachY = cy - visualRadius * 0.52
+	local attachOffsetX = visualRadius * 0.34 -- maybe .36
+
+	local rc = ribbonColors[tier]
+	local outlineColor = Theme.outline.color
+	local fillColor = rc.fill
+
+	local outlineW = Theme.outline.width * MEDAL_SCALE
+
+	local function ribbon(x, y, ang)
+		lg.push()
+		lg.translate(x, y)
+		lg.rotate(ang)
+
+		-- outline
+		lg.setColor(outlineColor)
+		lg.rectangle(
+			"fill",
+			-ribbonW * 0.5 - outlineW,
+			-ribbonLen,
+			ribbonW + outlineW * 2,
+			ribbonLen + outlineW * 2,
+			4
+		)
+
+		-- fill
+		lg.setColor(fillColor)
+		lg.rectangle(
+			"fill",
+			-ribbonW * 0.5,
+			-ribbonLen + outlineW,
+			ribbonW,
+			ribbonLen,
+			3
+		)
+
+		lg.pop()
+	end
+
+	ribbon(cx - attachOffsetX, attachY, -angle)
+	ribbon(cx + attachOffsetX, attachY, angle)
+end
+
+
 local function drawCampaignMedal(tier)
 	local cx = SIZE * 0.5
-	local cy = SIZE * 0.5
-
-	Medals.drawTier(cx, cy, tier, 15, MEDAL_SCALE)
-
-	-- Roman numeral overlay
-	local text = roman[tier]
+	local cy = SIZE * 0.60   -- slightly higher than before
+	local radius = 12
 
 	lg.push()
 	lg.origin()
 
-	Fonts.set("achievement")
+	-- ribbons
+	drawMedalRibbons(cx, cy, radius, tier)
 
-	local font = Fonts.get("achievement")
-	local w = font:getWidth(text)
-	local h = font:getHeight()
-
-	lg.setColor(1,1,1,1)
-
-	Text.printShadow(
-		text,
-		cx - w * 0.5,
-		cy - h * 0.45,
-		{ox = 3, oy = 3}
-	)
-
-	lg.pop()
-end
-
-local roman = {
-	[1] = "I",
-	[2] = "II",
-	[3] = "III",
-}
-
-local function drawCampaignMedal(tier)
-	local cx = SIZE * 0.5
-	local cy = SIZE * 0.5
-	local radius = 15
-
+	-- medal
 	Medals.drawTier(cx, cy, tier, radius, MEDAL_SCALE)
 
+	-- tier text
 	local text = roman[tier]
 	local pad = 22
 
-	lg.push()
-	lg.origin()
-
 	Fonts.set("achievement")
 
 	local font = Fonts.get("achievement")
 	local h = font:getHeight()
 
-	lg.setColor(1, 1, 1, 1)
+	lg.setColor(colorText)
 
 	Text.printShadow(text, pad, SIZE - h + 2, {ox = 2, oy = 2})
 
@@ -261,7 +288,7 @@ local function drawKillTier(enemyType, isDead, tierNumber)
 	local font = Fonts.get("achievement")
 	local h = font:getHeight()
 
-	lg.setColor(1, 1, 1, 1)
+	lg.setColor(colorText)
 
 	Text.printShadow(text, pad, SIZE - h + 2, {ox = 2, oy = 2})
 

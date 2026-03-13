@@ -4,7 +4,7 @@ local Constants = require("core.constants")
 local Maps = require("world.map_defs")
 
 -- Insert a straight map
-Maps[13] = {
+Maps[0] = {
 	id = "line",
 	nameKey = "map.line",
 	path = {
@@ -13,9 +13,8 @@ Maps[13] = {
 }
 
 return {
-	map = 13, -- Using 13 isn't future proof
+	map = 0, -- Using 13 isn't future proof
 	duration = 5.0,
-	next = "shot_02",
 
 	scene = {
 		towers = {

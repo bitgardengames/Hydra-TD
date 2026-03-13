@@ -13,7 +13,6 @@ local adjustY = tile * 2
 return {
 	map = 12,
 	duration = 5.0,
-	next = "shot_04",
 
 	scene = {
 		towers = {

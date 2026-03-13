@@ -1,5 +1,6 @@
 return {
-	mode = "sequence",      -- "single", "sequence"
-	startShot = "shot_01", -- which shot to load in single mode
+	mode = "sequence", -- sequence, single
+	sequence = "steam_trailer",
+	startShot = "build",
 	showUI = false,
 }

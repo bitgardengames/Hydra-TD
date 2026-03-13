@@ -21,6 +21,7 @@ local bronze = Theme.medal.bronze
 local silver = Theme.medal.silver
 local gold = Theme.medal.gold
 local outlineW = Theme.outline.width
+local colorOutline = Theme.outline.color
 
 local COLORS = {
 	{bronze[1], bronze[2], bronze[3]},
@@ -182,7 +183,7 @@ local function drawMedal(x, y, tier, earned, r, scale, glint, yOffset)
 
 	if earned then
 		-- Backplate
-		lg.setColor(c[1] * 0.35, c[2] * 0.35, c[3] * 0.35)
+		lg.setColor(colorOutline)
 		lg.circle("fill", x, y + yOffset, radius + outlineW)
 
 		-- Medal
@@ -191,7 +192,7 @@ local function drawMedal(x, y, tier, earned, r, scale, glint, yOffset)
 
 		-- Soft highlight
 		lg.setColor(1, 1, 1, 0.10)
-		lg.circle("fill", x - 5, y - 5 + yOffset, radius * 0.35)
+		lg.circle("fill", x - 4, y - 4 + yOffset, radius * 0.35)
 
 		-- Highlight glint
 		if glint and glint < 1 then
@@ -239,7 +240,7 @@ function Medals.draw(x, y, earnedCount, r, g)
 		local mx = startX + (i - 1) * step
 		local earned = i <= baseCount
 
-		drawMedal(mx, centerY, i, earned, 1)
+		drawMedal(mx, centerY, i, earned, BASE_RADIUS)
 	end
 end
 
@@ -257,7 +258,7 @@ function Medals.drawReveal(x, y, r, g)
 		local mx = startX + (i - 1) * step
 		local earned = i <= staticCount
 
-		drawMedal(mx, centerY, i, earned, 1)
+		drawMedal(mx, centerY, i, earned, BASE_RADIUS)
 	end
 
 	for i = 1, #active do

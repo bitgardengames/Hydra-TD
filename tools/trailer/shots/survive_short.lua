@@ -1,4 +1,4 @@
-local Camera = require("core.camera") -- NOTE: core camera, not tools.trailer.camera
+local Camera = require("core.camera")
 local Actions = require("tools.trailer.actions")
 local Constants = require("core.constants")
 

@@ -45,4 +45,10 @@ function Actions.setSpeed(v)
 	end
 end
 
+function Actions.setMoney(v)
+	return function()
+		State.money = v
+	end
+end
+
 return Actions

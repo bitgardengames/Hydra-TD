@@ -7,19 +7,18 @@ local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
 local tile = Constants.TILE
 
-local adjustX = tile * 1
-local adjustY = tile * 2
+local adjustX = -(tile * 3.5)
+local adjustY = 0
 
 return {
-    map = 12,
-    duration = 6.0,
-    next = "shot_03",
+    map = 9,
+    duration = 7.0,
 
     scene = {
         wave = {
 			index = 2,
             start = true,
-            warmup = 5.0,
+            warmup = 19.0,
         },
     },
 
@@ -30,9 +29,10 @@ return {
 	}),
 
     actions = {
-		{t = 1.50, fn = Actions.placeTower("slow", 14, 7)},
-		{t = 2.50, fn = Actions.placeTower("cannon", 14, 6)},
-        {t = 3.50, fn = Actions.placeTower("lancer", 15, 6)},
+		{t = 0, fn = Actions.setMoney(9999)},
+		{t = 1.50, fn = Actions.placeTower("slow", 21, 8)},
+		{t = 2.50, fn = Actions.placeTower("cannon", 20, 9)},
+        {t = 3.50, fn = Actions.placeTower("lancer", 20, 8)},
     },
 
 	text = {

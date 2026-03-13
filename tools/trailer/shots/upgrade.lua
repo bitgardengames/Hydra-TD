@@ -12,8 +12,7 @@ local adjustY = tile * 2
 
 return {
 	map = 12,
-	duration = 6.0,
-	next = "shot_04",
+	duration = 7.0,
 
 	scene = {
 		towers = {
@@ -30,6 +29,7 @@ return {
 	},
 
 	actions = {
+		{t = 0, fn = Actions.setMoney(9999)},
 		{t = 1.50, fn = Actions.upgradeTowerAt(11,  10, 1)},
 		{t = 2.50, fn = Actions.upgradeTowerAt(12, 11, 1)},
 		{t = 3.50, fn = Actions.upgradeTowerAt(13,  10, 1)},

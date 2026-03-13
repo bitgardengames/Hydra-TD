@@ -1,4 +1,4 @@
-local Camera = require("core.camera") -- NOTE: core camera, not tools.trailer.camera
+local Camera = require("core.camera")
 local Actions = require("tools.trailer.actions")
 local Constants = require("core.constants")
 
@@ -7,6 +7,7 @@ local target = {x = 0, y = 0}
 local function clamp01(x)
 	if x < 0 then return 0 end
 	if x > 1 then return 1 end
+
 	return x
 end
 
@@ -35,6 +36,7 @@ return {
 	},
 
 	actions = {
+		{t = 0, fn = Actions.setMoney(9999)},
 		{t = 0, fn = Actions.upgradeTowerAt(19, 10, 2)},
 		{t = 0, fn = Actions.upgradeTowerAt(19, 11, 2)},
 		{t = 0, fn = Actions.upgradeTowerAt(18, 13, 1)},
