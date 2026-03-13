@@ -14,7 +14,8 @@ Theme.terrain = {
 
 	-- Normal
 	grass = {0.28, 0.58, 0.34},
-	path = {0.62, 0.63, 0.66},
+	path = {0.64, 0.63, 0.60},
+	pathOutline = {0.36, 0.35, 0.32},
 	water = {0.20, 0.42, 0.55},
 
 	-- Halloween

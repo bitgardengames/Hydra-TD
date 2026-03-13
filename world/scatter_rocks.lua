@@ -67,7 +67,7 @@ end
 function Rocks.generate()
 	Rocks.clear()
 
-	local seed = 1234 + State.worldMapIndex * 977
+	local seed = 4321 + State.worldMapIndex * 977
 	rng:setSeed(seed + 2)
 
 	local count = 28

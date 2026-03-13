@@ -116,11 +116,11 @@ function Trees.draw()
 		local two = tw + outlineW * 2
 		local tho = th + outlineW * 2
 
-		local trunkY = canopyY + rOuter * 0.8
+		local trunkY = canopyY + rOuter * 0.72
 
 		-- shadow
 		lg.setColor(0, 0, 0, 0.18)
-		lg.ellipse("fill", x, y + rOuter * 1.2, rOuter * 1.2, rOuter * 0.5)
+		lg.ellipse("fill", x, y + rOuter * 1.4, rOuter * 1.4, rOuter * 0.5)
 
 		-- trunk outline
 		lg.setColor(trunkOutline)

@@ -7,8 +7,10 @@ local Rocks = require("world.scatter_rocks")
 
 local lg = love.graphics
 local min = math.min
+local sin = math.sin
 local abs = math.abs
 local sqrt = math.sqrt
+local floor = floor
 
 local tile = Constants.TILE
 local gridW = Constants.GRID_W
@@ -16,25 +18,23 @@ local gridH = Constants.GRID_H
 
 local colorGrass = Theme.terrain.grass
 local colorPath = Theme.terrain.path
+local colorPathOutline = Theme.terrain.pathOutline
 local colorGrid = Theme.grid
 local colorWater = Theme.terrain.water
+
+local outlineW = Theme.outline.width
 
 local colorScatterDark = {colorGrass[1] * 0.94, colorGrass[2] * 0.94, colorGrass[3] * 0.94, 1}
 local colorScatterLight = {colorGrass[1] * 1.06, colorGrass[2] * 1.06, colorGrass[3] * 1.06, 1}
 
-local colorMud = {
-	colorGrass[1] * 0.55,
-	colorGrass[2] * 0.45,
-	colorGrass[3] * 0.35,
-	1
-}
+local colorMud = {colorGrass[1] * 0.55, colorGrass[2] * 0.45, colorGrass[3] * 0.35, 1} -- Temp. If I do mud put it into theme
 
 local gridToCenter = MapMod.gridToCenter
 
 local function hashNoise(x, y, seed)
-	local n = math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453
+	local n = sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453
 
-	return n - math.floor(n)
+	return n - floor(n)
 end
 
 local function drawGrass()
@@ -155,16 +155,22 @@ end
 
 local function drawPath()
 	local pathThickness = tile
-	local half = pathThickness * 0.5
 
-	lg.setColor(colorPath)
+	local outlineThickness = pathThickness
+	local halfOutline = outlineThickness * 0.5
+
+	local fillThickness = pathThickness - outlineW * 2
+	local halfFill = fillThickness * 0.5
+
+	-- Outline
+	lg.setColor(colorPathOutline)
 
 	for i = 1, #MapMod.map.path - 1 do
 		local a = MapMod.map.path[i]
 		local b = MapMod.map.path[i + 1]
 
-		local ax, ay = MapMod.gridToCenter(a[1], a[2])
-		local bx, by = MapMod.gridToCenter(b[1], b[2])
+		local ax, ay = gridToCenter(a[1], a[2])
+		local bx, by = gridToCenter(b[1], b[2])
 
 		local dx = b[1] - a[1]
 		local dy = b[2] - a[2]
@@ -183,33 +189,32 @@ local function drawPath()
 
 		if dx ~= 0 then
 			local x1 = min(ax, bx)
-			local w  = abs(bx - ax)
+			local w = abs(bx - ax)
 
 			if trimA then
-				x1 = x1 + half
-				w = w - half
+				x1 = x1 + halfOutline
+				w = w - halfOutline
 			end
 
 			if trimB then
-				w = w - half
+				w = w - halfOutline
 			end
 
-			lg.rectangle("fill", x1, ay - half, w, pathThickness)
-
+			lg.rectangle("fill", x1, ay - halfOutline, w, outlineThickness)
 		else
 			local y1 = min(ay, by)
-			local h  = abs(by - ay)
+			local h = abs(by - ay)
 
 			if trimA then
-				y1 = y1 + half
-				h = h - half
+				y1 = y1 + halfOutline
+				h = h - halfOutline
 			end
 
 			if trimB then
-				h = h - half
+				h = h - halfOutline
 			end
 
-			lg.rectangle("fill", ax - half, y1, pathThickness, h)
+			lg.rectangle("fill", ax - halfOutline, y1, outlineThickness, h)
 		end
 	end
 
@@ -224,8 +229,80 @@ local function drawPath()
 		local dy2 = next[2] - cur[2]
 
 		if dx1 ~= dx2 or dy1 ~= dy2 then
-			local cx, cy = MapMod.gridToCenter(cur[1], cur[2])
-			lg.circle("fill", cx, cy, half)
+			local cx, cy = gridToCenter(cur[1], cur[2])
+			lg.circle("fill", cx, cy, halfOutline)
+		end
+	end
+
+	-- Fill
+	lg.setColor(colorPath)
+
+	for i = 1, #MapMod.map.path - 1 do
+		local a = MapMod.map.path[i]
+		local b = MapMod.map.path[i + 1]
+
+		local ax, ay = gridToCenter(a[1], a[2])
+		local bx, by = gridToCenter(b[1], b[2])
+
+		local dx = b[1] - a[1]
+		local dy = b[2] - a[2]
+
+		local trimA, trimB = false, false
+
+		if i > 1 then
+			local p = MapMod.map.path[i - 1]
+			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
+		end
+
+		if i < #MapMod.map.path - 1 then
+			local n = MapMod.map.path[i + 2]
+			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
+		end
+
+		if dx ~= 0 then
+			local x1 = min(ax, bx)
+			local w = abs(bx - ax)
+
+			if trimA then
+				x1 = x1 + half
+				w = w - half
+			end
+
+			if trimB then
+				w = w - half
+			end
+
+			lg.rectangle("fill", x1, ay - halfFill, w, fillThickness)
+		else
+			local y1 = min(ay, by)
+			local h = abs(by - ay)
+
+			if trimA then
+				y1 = y1 + half
+				h = h - half
+			end
+
+			if trimB then
+				h = h - half
+			end
+
+			lg.rectangle("fill", ax - halfFill, y1, fillThickness, h)
+		end
+	end
+
+	for i = 2, #MapMod.map.path - 1 do
+		local prev = MapMod.map.path[i - 1]
+		local cur = MapMod.map.path[i]
+		local next = MapMod.map.path[i + 1]
+
+		local dx1 = cur[1] - prev[1]
+		local dy1 = cur[2] - prev[2]
+		local dx2 = next[1] - cur[1]
+		local dy2 = next[2] - cur[2]
+
+		if dx1 ~= dx2 or dy1 ~= dy2 then
+			local cx, cy = gridToCenter(cur[1], cur[2])
+			lg.circle("fill", cx, cy, halfFill)
 		end
 	end
 end
