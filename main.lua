@@ -162,6 +162,7 @@ function love.load(arg)
 
 	require("core.environment").load()
 
+	-- Just make a loader already, if there's this many modes now
 	if mode == "art" then
 		return require("tools.art_export").run()
 	elseif mode == "achievements" then
@@ -170,6 +171,8 @@ function love.load(arg)
 		return require("tools.map_export.main").run()
 	elseif mode == "trailer" then
 		require("tools.trailer.main").run()
+	elseif mode == "capsule" then
+		require("tools.capsule_export").run()
 	else
 	    require("core.bootstrap").initFull()
 		require("ui.menu.menu").load()

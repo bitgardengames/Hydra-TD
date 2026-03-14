@@ -11,6 +11,7 @@ local Maps = require("world.map_defs")
 local Medals = require("ui.medals")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
+local Save = require("core.save")
 local L = require("core.localization")
 
 local Overlay = require("ui.overlay")
