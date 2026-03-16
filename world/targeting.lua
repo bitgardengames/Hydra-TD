@@ -1,4 +1,5 @@
 local Util = require("core.util")
+local Spatial = require("world.spatial_grid")
 
 local Targeting = {}
 
@@ -29,29 +30,37 @@ function Targeting.isValidTarget(tower, e)
 	return dx * dx + dy * dy <= tower.range2
 end
 
--- Target enemy furthest along the path (primary TD heuristic)
-function Targeting.findProgressTarget(tower, enemies)
-    local best = nil
-    local bestProg = -1
-    local r2 = tower.range * tower.range
+-- Target enemy furthest along the path
+function Targeting.findProgressTarget(tower)
+	local best = nil
+	local bestProg = -1
+	local r2 = tower.range2
 
-    for _, e in ipairs(enemies) do
-        local dx = e.x - tower.x
-        local dy = e.y - tower.y
+	local nearby = Spatial.queryCells(tower.x, tower.y)
 
-        if dx * dx + dy * dy <= r2 then
-            -- Prefer enemies further along the path, slight bias against slowed enemies
-            local slowBias = (e.slowTimer and e.slowTimer > 0) and 5 or 0 -- 5-15 pixels
-			local prog = e.dist - slowBias
+	for i = 1, #nearby do
+		local e = nearby[i]
 
-            if prog > bestProg then
-                bestProg = prog
-                best = e
-            end
-        end
-    end
+		if e.hp > 0 and not e.dying then
+			local dx = e.x - tower.x
+			local dy = e.y - tower.y
 
-    return best
+			if dx * dx + dy * dy <= r2 then
+				local prog = e.dist
+
+				if e.slowTimer and e.slowTimer > 0 then
+					prog = prog - 5
+				end
+
+				if prog > bestProg then
+					bestProg = prog
+					best = e
+				end
+			end
+		end
+	end
+
+	return best
 end
 
 return Targeting

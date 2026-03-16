@@ -6,7 +6,6 @@ local Towers = require("world.towers")
 local MapMod = require("world.map")
 
 local lg = love.graphics
-local getTime = love.timer.getTime
 local sin = math.sin
 local min = math.min
 local max = math.max

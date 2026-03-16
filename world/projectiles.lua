@@ -5,6 +5,7 @@ local Enemies = require("world.enemies")
 local WorldMap = require("world.map")
 
 local projectiles = {}
+local projectilePool = {}
 
 local lg = love.graphics
 
@@ -30,13 +31,32 @@ local function wobble(t, amp)
 	return sin(t * 6.0) * amp, cos(t * 4.5) * amp
 end
 
+local function acquireProjectile()
+	local p = projectilePool[#projectilePool]
+
+	if p then
+		projectilePool[#projectilePool] = nil
+
+		return p
+	end
+
+	return {}
+end
+
+local function releaseProjectile(p)
+	for k in pairs(p) do -- Can we/should we avoid pairs?
+		p[k] = nil
+	end
+
+	projectilePool[#projectilePool + 1] = p
+end
+
 local function spawn(fromTower, targetEnemy)
 	local isCannon = fromTower.splash ~= nil
 
 	local tx, ty = targetEnemy.x, targetEnemy.y
 
 	if isCannon then
-		-- Base lead scaled by enemy speed
 		local speedFactor = min(targetEnemy.speed / 120, 0.18)
 		local leadTime = 0.28 + speedFactor
 
@@ -51,54 +71,48 @@ local function spawn(fromTower, targetEnemy)
 		ty = ty + (ny - targetEnemy.y)
 	end
 
-	local p = {
-		x = fromTower.x,
-		y = fromTower.renderY or fromTower.y,
-		r = 4.5,
-		life = 2.0,
-		t = 0,
+	local p = acquireProjectile()
 
-		rotation = fromTower.angle or 0,
-
-		sourceTower = fromTower,
-		sourceKind = fromTower.kind,
-
-		speed = fromTower.projSpeed or 0,
-		damage = fromTower.damage,
-
-		mode = isCannon and "ground" or "homing",
-
-		target = targetEnemy,
-		lastTX = targetEnemy.x,
-		lastTY = targetEnemy.y,
-
-		tx = isCannon and tx or nil,
-		ty = isCannon and ty or nil,
-
-		splash = fromTower.splash,
-		slow = fromTower.slow,
-		poison = fromTower.poison,
-	}
+	p.x = fromTower.x
+	p.y = fromTower.renderY or fromTower.y
+	p.r = 4.5
+	p.life = 2.0
+	p.t = 0
+	p.rotation = fromTower.angle or 0
+	p.sourceTower = fromTower
+	p.sourceKind = fromTower.kind
+	p.speed = fromTower.projSpeed or 0
+	p.damage = fromTower.damage
+	p.mode = isCannon and "ground" or "homing"
+	p.target = targetEnemy
+	p.lastTX = targetEnemy.x
+	p.lastTY = targetEnemy.y
+	p.tx = isCannon and tx or nil
+	p.ty = isCannon and ty or nil
+	p.splash = fromTower.splash
+	p.slow = fromTower.slow
+	p.poison = fromTower.poison
 
 	p.hitRadius = p.r + targetEnemy.radius
 	p.hitRadius2 = p.hitRadius * p.hitRadius
-
-	-- Cannon impact check radius
 	p.impactRadius2 = (p.r + 1) * (p.r + 1)
 
 	if fromTower.slow then
-		-- Start very slow, ramp deliberately
 		local base = fromTower.projSpeed or 0
-
 		p.minSpeed = base * 0.30
 		p.maxSpeed = base * 1.05
 		p.accelT = 0
 		p.accelDur = 0.25
+	else
+		p.minSpeed = nil
+		p.maxSpeed = nil
+		p.accelT = nil
+		p.accelDur = nil
 	end
 
 	Sound.play(fromTower.kind)
 
-	tinsert(projectiles, p)
+	projectiles[#projectiles + 1] = p
 end
 
 local function update(dt)
@@ -109,7 +123,9 @@ local function update(dt)
 		p.t = p.t + dt
 
 		if p.life <= 0 then
+			local dead = projectiles[i]
 			swapRemove(projectiles, i)
+			releaseProjectile(dead)
 
 			goto continue
 		end
@@ -222,14 +238,16 @@ local function update(dt)
 					end
 
 					if e.hitFlash <= 0 then
-						e.hitFlash = 0.03
+						e.hitFlash = 0.05
 					end
 
 					State.addDamage(p.sourceKind, dmg, e.boss == true)
 				end
 
 				-- Always remove projectile once it reaches impact position
+				local dead = projectiles[i]
 				swapRemove(projectiles, i)
+				releaseProjectile(dead)
 
 				goto continue
 			end
@@ -296,6 +314,10 @@ local function update(dt)
 						tower.damageDealt = tower.damageDealt + dmg
 						e.lastHitTower = tower
 
+						if e.hitFlash <= 0 then
+							e.hitFlash = 0.05
+						end
+
 						State.addDamage(kind, dmg, e.boss == true)
 					end
 				end
@@ -303,7 +325,9 @@ local function update(dt)
 				--tinsert(Effects.splashes, {x = px, y = py, r = r, t = 0, life = 0.21})
 				Effects.spawnCannonImpact(tx, ty, r)
 
+				local dead = projectiles[i]
 				swapRemove(projectiles, i)
+				releaseProjectile(dead)
 
 				goto continue
 			end

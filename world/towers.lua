@@ -297,15 +297,19 @@ local function updateTowers(dt)
 
 		local target = t.target
 
-		-- Validate existing target
-		if target and not isValidTarget(t, target) then
-			target = nil
+		-- Keep existing target if still valid
+		if target then
+			if not isValidTarget(t, target) then
+				target = nil
+			end
 		end
 
-		-- Only rescan if needed
-		if not target and t.retargetT <= 0 then
-			target = findTarget(t, enemies)
-			t.retargetT = 0.10
+		-- Only search when we need a new target
+		if not target then
+			if t.retargetT <= 0 then
+				target = findTarget(t)
+				t.retargetT = 0.10
+			end
 		end
 
 		t.target = target
@@ -387,7 +391,7 @@ local function updateTowers(dt)
 				if canFire then
 					-- Fire
 					if t.chain and target and target.hp > 0 then
-						local zapOrder = Shock.fire(t, target, enemies)
+						local zapOrder = Shock.fire(t, target)
 
 						-- Always show feedback for a Shock fire
 						if zapOrder and #zapOrder > 0 then

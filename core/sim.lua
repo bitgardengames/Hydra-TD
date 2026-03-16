@@ -5,6 +5,7 @@ local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local State = require("core.state")
 local Effects = require("world.effects")
+local Spatial = require("world.spatial_grid")
 
 local Sim = {}
 
@@ -17,6 +18,9 @@ function Sim.update(dt)
 	Waves.updatePrep(dt)
 	Waves.updateSpawner(dt)
 	Enemies.updateEnemies(dt)
+	
+	Spatial.rebuild(Enemies.enemies) -- Should this be in Enemies.updateEnemies?
+	
 	Towers.updateTowers(dt)
 	Projectiles.update(dt)
 	Effects.update(dt)

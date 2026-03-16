@@ -75,7 +75,7 @@ local function isWaterTile(gx, gy)
 end
 
 local function canPlaceAt(gx, gy)
-	--[[if not gx then
+	if not gx then
 		return false
 	end
 
@@ -89,8 +89,6 @@ local function canPlaceAt(gx, gy)
 		return false, "occupied"
 	end
 
-	return true]]
-	
 	return true
 end
 
@@ -229,10 +227,10 @@ local function getPalette()
 	return map.palette
 end
 
-local function sampleAtDist(dist, hintSeg)
-	-- Clamp
+function sampleAtDist(dist, hintSeg)
 	local pathWorld = map.pathWorld
 	local pathDist = map.pathDist
+	local total = map.totalWorldLength
 
 	if not pathDist then
 		return 0, 0, 1
@@ -245,37 +243,40 @@ local function sampleAtDist(dist, hintSeg)
 	end
 
 	if dist <= 0 then
-		return pathWorld[1][1], pathWorld[1][2], 1
+		local p = pathWorld[1]
+		return p[1], p[2], 1
 	end
-
-	local total = map.totalWorldLength or pathDist[n] or 0
 
 	if dist >= total then
-		return pathWorld[n][1], pathWorld[n][2], n - 1
+		local p = pathWorld[n]
+		return p[1], p[2], n - 1
 	end
 
-	-- Start from hint segment if provided (enemy can cache it)
 	local seg = hintSeg or 1
 
 	if seg < 1 then
 		seg = 1
-	end
-
-	if seg > n - 1 then
+	elseif seg > n - 1 then
 		seg = n - 1
 	end
 
-	while seg < n - 1 and pathDist[seg + 1] <= dist do
+	-- advance segment only if necessary
+	local nextDist = pathDist[seg + 1]
+
+	while seg < n - 1 and nextDist <= dist do
 		seg = seg + 1
+		nextDist = pathDist[seg + 1]
 	end
 
 	local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
 	local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
+
 	local segStart = pathDist[seg]
-	local segEnd = pathDist[seg + 1]
+	local segEnd = nextDist
+
+	local denom = segEnd - segStart
 
 	local t = 0
-	local denom = (segEnd - segStart)
 
 	if denom > 0 then
 		t = (dist - segStart) / denom

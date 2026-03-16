@@ -8,6 +8,7 @@ local Rocks = {}
 
 local lg = love.graphics
 local floor = math.floor
+local treeAt = Trees.hasTreeAt
 
 local styles = Theme.world.rockStyles
 local outlineW = Theme.outline.width
@@ -41,23 +42,6 @@ local function nearPath(gx, gy)
 			if col and col[y] then
 				return true
 			end
-		end
-	end
-
-	return false
-end
-
-local function treeAt(gx, gy)
-	local trees = Trees.list
-
-	for i = 1, #trees do
-		local t = trees[i]
-
-		local tx = floor(t.x / TILE) + 1
-		local ty = floor(t.y / TILE) + 1
-
-		if tx == gx and ty == gy then
-			return true
 		end
 	end
 

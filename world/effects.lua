@@ -2,7 +2,6 @@ local Sound = require("systems.sound")
 
 local lg = love.graphics
 local random = love.math.random
-local tinsert = table.insert
 local sin = math.sin
 local cos = math.cos
 local min = math.min
@@ -12,7 +11,6 @@ local pi = math.pi
 
 local function swapRemove(list, i)
 	local last = #list
-
 	list[i] = list[last]
 	list[last] = nil
 end
@@ -33,8 +31,35 @@ local function jitter(amount)
 	return (random() * 2 - 1) * amount
 end
 
+-- Pools
+local splashPool = {}
+local explosionPool = {}
+local zapPool = {}
+local frostPool = {}
+local poisonPool = {}
+local lancerPool = {}
+
+local function acquire(pool)
+	local obj = pool[#pool]
+
+	if obj then
+		pool[#pool] = nil
+		return obj
+	end
+
+	return {}
+end
+
+local function release(pool, obj)
+	for k in pairs(obj) do
+		obj[k] = nil
+	end
+
+	pool[#pool + 1] = obj
+end
+
+-- Zaps
 function Effects.spawnZapEffect(x, y, chain)
-	-- Snapshot the chain into immutable segments so visuals are not dependent on enemy hp / removal after damage is applied.
 	local segs = {}
 
 	if chain then
@@ -44,143 +69,166 @@ function Effects.spawnZapEffect(x, y, chain)
 			local to = seg.to
 
 			if to and to.x and to.y then
-				-- IMPORTANT: first hop may have from == nil; anchor it to the tower origin.
 				local x1, y1
 
 				if from then
-					x1, y1 = from.x, from.renderY or from.y
+					x1 = from.x
+					y1 = from.renderY or from.y
 				else
-					x1, y1 = x, y
+					x1 = x
+					y1 = y
 				end
 
-				segs[#segs + 1] = { x1 = x1, y1 = y1, x2 = to.x, y2 = to.y}
+				segs[#segs + 1] = {x1 = x1, y1 = y1, x2 = to.x, y2 = to.y}
 			end
 		end
 	end
 
-	-- Fallback, if somehow no segments were recorded, at least draw a tiny pop at origin
 	if #segs == 0 then
 		segs[1] = {x1 = x, y1 = y, x2 = x, y2 = y}
 	end
 
-	tinsert(Effects.zaps, {x = x, y = y, segs = segs, t = 0, life = 0.12})
+	local z = acquire(zapPool)
+
+	z.x = x
+	z.y = y
+	z.segs = segs
+	z.t = 0
+	z.life = 0.12
+
+	Effects.zaps[#Effects.zaps + 1] = z
 
 	Sound.play("shock")
 end
 
+-- Boss Explosion
 function Effects.spawnBossDeathExplosion(x, y, radius)
+	local ring = acquire(explosionPool)
+
+	ring.x = x
+	ring.y = y
+	ring.r = radius
+	ring.t = 0
+	ring.life = 0.25
+	ring.type = "ring"
+
+	Effects.explosions[#Effects.explosions + 1] = ring
+
 	local count = 28
 
-	-- Core ring
-	tinsert(Effects.explosions, {
-		x = x,
-		y = y,
-		r = radius,
-		t = 0,
-		life = 0.25,
-		type = "ring",
-	})
-
-	-- Radial particles
 	for i = 1, count do
 		local a = (i / count) * pi * 2
 		local speed = random(120, 220)
 
-		tinsert(Effects.explosions, {
-			x = x,
-			y = y,
-			vx = cos(a) * speed,
-			vy = sin(a) * speed,
-			r = random(2, 4),
-			t = 0,
-			life = random() * 0.15 + 0.25,
-			type = "particle",
-		})
+		local p = acquire(explosionPool)
+
+		p.x = x
+		p.y = y
+		p.vx = cos(a) * speed
+		p.vy = sin(a) * speed
+		p.r = random(2, 4)
+		p.t = 0
+		p.life = random() * 0.15 + 0.25
+		p.type = "particle"
+
+		Effects.explosions[#Effects.explosions + 1] = p
 	end
 end
 
+-- Cannon Impact
 function Effects.spawnCannonImpact(x, y, r)
-	tinsert(Effects.splashes, {
-		x = x,
-		y = y,
-		r = r,
-		t = 0,
-		life = 0.18
-	})
+	local s = acquire(splashPool)
 
-	-- Radial debris
+	s.x = x
+	s.y = y
+	s.r = r
+	s.t = 0
+	s.life = 0.18
+
+	Effects.splashes[#Effects.splashes + 1] = s
+
 	for i = 1, 10 do
 		local a = random() * pi * 2
-		local sp = 160 + random() * 160
+		local sp = 130 + random() * 120
 
-		tinsert(Effects.explosions, {
-			x = x,
-			y = y,
-			vx = cos(a) * sp,
-			vy = sin(a) * sp,
-			r = random(2,3),
-			t = 0,
-			life = 0.18 + random() * 0.2,
-			type = "particle"
-		})
+		local p = acquire(explosionPool)
+
+		p.x = x
+		p.y = y
+		p.vx = cos(a) * sp
+		p.vy = sin(a) * sp
+		p.r = random(2, 3)
+		p.t = 0
+		p.life = 0.18 + random() * 0.2
+		p.type = "particle"
+
+		Effects.explosions[#Effects.explosions + 1] = p
 	end
 end
 
+-- Frost
 function Effects.spawnFrostBurst(x, y)
 	for i = 1, 6 do
 		local a = random() * pi * 2
 		local sp = 80 + random() * 80
 
-		tinsert(Effects.frost, {
-			x = x,
-			y = y,
-			vx = cos(a) * sp,
-			vy = sin(a) * sp,
-			r = random(2, 3),
-			rot = random() * pi,
-			vr = (random() - 0.5) * 6,
-			t = 0,
-			life = 0.18
-		})
+		local f = acquire(frostPool)
+
+		f.x = x
+		f.y = y
+		f.vx = cos(a) * sp
+		f.vy = sin(a) * sp
+		f.r = random(2,3)
+		f.rot = random() * pi
+		f.vr = (random() - 0.5) * 6
+		f.t = 0
+		f.life = 0.18
+
+		Effects.frost[#Effects.frost + 1] = f
 	end
 end
 
+-- Poison
 function Effects.spawnPoisonSplash(x, y)
 	for i = 1, 5 do
 		local a = random() * pi * 2
 		local sp = 70 + random() * 70
 
-		tinsert(Effects.poison, {
-			x = x,
-			y = y,
-			vx = cos(a) * sp,
-			vy = sin(a) * sp,
-			r = random(2,3),
-			t = 0,
-			life = 0.20
-		})
+		local p = acquire(poisonPool)
+
+		p.x = x
+		p.y = y
+		p.vx = cos(a) * sp
+		p.vy = sin(a) * sp
+		p.r = random(2,3)
+		p.t = 0
+		p.life = 0.20
+
+		Effects.poison[#Effects.poison + 1] = p
 	end
 end
 
+-- Lancer
 function Effects.spawnLancerHit(x, y)
 	for i = 1, 4 do
 		local a = random() * pi * 2
 		local sp = 120 + random() * 80
 
-		tinsert(Effects.lancer, {
-			x = x,
-			y = y,
-			vx = cos(a) * sp,
-			vy = sin(a) * sp,
-			len = random(5,7),
-			t = 0,
-			life = 0.12
-		})
+		local l = acquire(lancerPool)
+
+		l.x = x
+		l.y = y
+		l.vx = cos(a) * sp
+		l.vy = sin(a) * sp
+		l.len = random(5,7)
+		l.t = 0
+		l.life = 0.12
+
+		Effects.lancer[#Effects.lancer + 1] = l
 	end
 end
 
 function Effects.update(dt)
-	-- Cannon splashes
 	local splashes = Effects.splashes
 
 	for i = #splashes, 1, -1 do
@@ -189,10 +237,10 @@ function Effects.update(dt)
 
 		if s.t >= s.life then
 			swapRemove(splashes, i)
+			release(splashPool, s)
 		end
 	end
 
-	-- Explosions
 	local explosions = Effects.explosions
 
 	for i = #explosions, 1, -1 do
@@ -209,10 +257,10 @@ function Effects.update(dt)
 
 		if e.t >= e.life then
 			swapRemove(explosions, i)
+			release(explosionPool, e)
 		end
 	end
 
-	-- Zaps
 	local zaps = Effects.zaps
 
 	for i = #zaps, 1, -1 do
@@ -221,10 +269,17 @@ function Effects.update(dt)
 
 		if z.t >= z.life then
 			swapRemove(zaps, i)
+
+			if z.segs then
+				for j = #z.segs, 1, -1 do
+					z.segs[j] = nil
+				end
+			end
+
+			release(zapPool, z)
 		end
 	end
 
-	-- Frost shards
 	local frost = Effects.frost
 
 	for i = #frost, 1, -1 do
@@ -242,10 +297,10 @@ function Effects.update(dt)
 
 		if f.t >= f.life then
 			swapRemove(frost, i)
+			release(frostPool, f)
 		end
 	end
 
-	-- Poison splash
 	local poison = Effects.poison
 
 	for i = #poison, 1, -1 do
@@ -261,10 +316,10 @@ function Effects.update(dt)
 
 		if p.t >= p.life then
 			swapRemove(poison, i)
+			release(poisonPool, p)
 		end
 	end
 
-	-- Lancer hit
 	local lancer = Effects.lancer
 
 	for i = #lancer, 1, -1 do
@@ -280,6 +335,7 @@ function Effects.update(dt)
 
 		if l.t >= l.life then
 			swapRemove(lancer, i)
+			release(lancerPool, l)
 		end
 	end
 end
@@ -310,8 +366,8 @@ function Effects.draw()
 		lg.circle("line", s.x, s.y, radius)
 
 		lg.setLineWidth(2 * ease)
-		lg.setColor(1.0, 0.9, 0.7, alpha * 0.25)
-		lg.circle("line", s.x, s.y, radius * 1.15)
+		lg.setColor(1.0, 0.9, 0.7, alpha * 0.2)
+		lg.circle("line", s.x, s.y, radius * 0.8)
 
 		if t < 0.1 then
 			local flash = 1 - (t / 0.1)
@@ -391,7 +447,12 @@ function Effects.draw()
 
 				lg.setLineWidth(w)
 				lg.setColor(0.6, 0.9, 1.0, a * jumpA)
-				lg.line(x1 + jx1, y1 + jy1, x2 + jx2, y2 + jy2)
+
+				local mx = (x1 + x2) * 0.5 + jitter(8)
+				local my = (y1 + y2) * 0.5 + jitter(8)
+
+				lg.line(x1 + jx1, y1 + jy1, mx, my)
+				lg.line(mx, my, x2 + jx2, y2 + jy2)
 
 				-- Core
 				lg.setLineWidth(w * 0.4)

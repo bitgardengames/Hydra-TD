@@ -1,55 +1,96 @@
 local Util = require("core.util")
 local State = require("core.state")
+local Spatial = require("world.spatial_grid")
 
 local Shock = {}
 
 local dist2 = Util.dist2
-local tinsert = table.insert
 
-local function zapEnemy(ctx, from, e, dmg)
+-- Reusable context
+local ctx = {
+	tower = nil,
+	hit = {},
+	order = {}
+}
+
+local function resetContext(tower)
+	ctx.tower = tower
+
+	local hit = ctx.hit
+	for k in pairs(hit) do
+		hit[k] = nil
+	end
+
+	local order = ctx.order
+	for i = 1, #order do
+		order[i] = nil
+	end
+end
+
+local function addLink(from, to)
+	local order = ctx.order
+	local i = #order + 1
+
+	local link = order[i]
+	if not link then
+		link = {}
+		order[i] = link
+	end
+
+	link.from = from
+	link.to = to
+end
+
+local function zapEnemy(from, e, dmg)
 	e.hp = e.hp - dmg
 	ctx.hit[e] = true
 
-	tinsert(ctx.order, {from = from, to = e})
+	if e.hitFlash <= 0 then
+		e.hitFlash = 0.05
+	end
 
-	-- Attribute damage
+	addLink(from, e)
+
 	local tower = ctx.tower
-
 	tower.damageDealt = tower.damageDealt + dmg
+
 	e.lastHitTower = tower
 
 	State.addDamage("shock", dmg, e.boss == true)
 end
 
-function Shock.fire(sourceTower, initialTarget, enemies)
+function Shock.fire(sourceTower, initialTarget)
 	if not initialTarget or initialTarget.hp <= 0 then
 		return nil
 	end
 
 	local chain = sourceTower.chain
-
 	if not chain then
 		return nil
 	end
 
-	-- Context object (explicit instead of closure)
-	local ctx = {tower = sourceTower, hit = {}, order = {}}
+	resetContext(sourceTower)
 
-	-- First hit
 	local damage = sourceTower.damage
 
-	zapEnemy(ctx, sourceTower, initialTarget, damage)
+	-- First hit
+	zapEnemy(sourceTower, initialTarget, damage)
 
 	local last = initialTarget
+	local radius2 = chain.radius * chain.radius
+	local falloff = chain.falloff
 
-	-- Chain jumps
 	for _ = 1, chain.jumps do
-		damage = damage * chain.falloff
+		damage = damage * falloff
 
 		local best = nil
-		local bestDist = chain.radius * chain.radius
+		local bestDist = radius2
 
-		for _, e in ipairs(enemies) do
+		local nearby = Spatial.queryCells(last.x, last.y)
+
+		for i = 1, #nearby do
+			local e = nearby[i]
+
 			if not ctx.hit[e] and e.hp > 0 then
 				local d = dist2(last.x, last.y, e.x, e.y)
 
@@ -64,8 +105,7 @@ function Shock.fire(sourceTower, initialTarget, enemies)
 			break
 		end
 
-		zapEnemy(ctx, last, best, damage)
-
+		zapEnemy(last, best, damage)
 		last = best
 	end
 

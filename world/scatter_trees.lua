@@ -23,9 +23,28 @@ local function random(a, b)
 end
 
 Trees.list = {}
+Trees.occupied = {}
 
 function Trees.clear()
 	Trees.list = {}
+	Trees.occupied = {}
+end
+
+local function setOccupied(gx, gy)
+	local col = Trees.occupied[gx]
+
+	if not col then
+		col = {}
+		Trees.occupied[gx] = col
+	end
+
+	col[gy] = true
+end
+
+function Trees.hasTreeAt(gx, gy)
+	local col = Trees.occupied[gx]
+
+	return col and col[gy] or false
 end
 
 local function nearPath(gx, gy)
@@ -80,12 +99,12 @@ function Trees.generate()
 			scale = 0.8 + random() * 0.6
 		}
 
+		setOccupied(gx, gy)
 		Map.setBlocked(gx, gy)
 
 		::continue::
 	end
 
-	-- Depth sort (top to bottom)
 	table.sort(Trees.list, function(a, b)
 		return a.y < b.y
 	end)

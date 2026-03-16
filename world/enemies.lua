@@ -112,8 +112,11 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 end
 
 local function updateEnemies(dt)
-	local path = MapMod.map.path
-	local pathWorld = MapMod.map.pathWorld
+	local map = MapMod.map
+	local path = map.path
+	local pathWorld = map.pathWorld
+	local pathDist = map.pathDist
+	local totalLen = map.totalWorldLength
 	local pathLen = #path
 
 	for i = #enemies, 1, -1 do
@@ -289,17 +292,34 @@ local function updateEnemies(dt)
 		e.prevDist = e.dist
 		e.dist = e.dist + e.speed * dt
 
-		local totalLen = MapMod.map.totalWorldLength or 0
-
 		if e.dist >= totalLen then
 			e.dist = totalLen
 		end
 
 		-- Sample world position from path
-		local x, y, seg = MapMod.sampleAtDist(e.dist, e.seg)
-		e.x = x
-		e.y = y
+		local pathWorld = pathWorld
+		local pathDist = MapMod.map.pathDist
+
+		local seg = e.seg
+		local nextDist = pathDist[seg + 1]
+
+		-- Only search forward if needed
+		while seg < pathLen - 1 and nextDist <= e.dist do
+			seg = seg + 1
+			nextDist = pathDist[seg + 1]
+		end
+
 		e.seg = seg
+
+		local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
+		local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
+
+		local segStart = pathDist[seg]
+		local segEnd = nextDist
+		local t = (e.dist - segStart) / (segEnd - segStart)
+
+		e.x = ax + (bx - ax) * t
+		e.y = ay + (by - ay) * t
 
 		-- Reached end of path
 		if e.dist >= totalLen then
