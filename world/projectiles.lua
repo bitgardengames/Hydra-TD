@@ -302,9 +302,8 @@ local function update(dt)
 				local kind = p.sourceKind
 
 				local nearby = Spatial.queryCells(px, py)
-				local n = #nearby
 
-				for j = 1, n do
+				for j = 1, #nearby do
 					local e = nearby[j]
 					local ex, ey = e.x, e.y
 					local dx2 = ex - px

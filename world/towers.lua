@@ -104,7 +104,7 @@ local function addTower(kind, gx, gy)
 
 	MapMod.setBlocked(gx, gy)
 
-	table.insert(towers, t)
+	towers[#towers + 1] = t
 
 	Floaters.add(x, t.renderY - 30, "-" .. def.cost, cwR, cwG, cwB)
 

@@ -88,6 +88,7 @@ local function drawEnemy(e)
     -- Shadow
 	if e.shadow then
 		local shadowAlpha = esA * (enemyAlpha * enemyAlpha)
+
 		lg.setColor(esR, esG, esB, shadowAlpha)
 		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.4, e.radius * 0.4)
 	end
@@ -114,7 +115,6 @@ local function drawEnemy(e)
 		local alpha = (0.35 + pulse * 0.25) * enemyAlpha
 
 		-- Outer frost shell
-		lg.setLineWidth(2)
 		lg.setColor(sr, sg, sb, alpha)
 		lg.circle("line", ix, iy, e.radius + 3)
 
@@ -133,7 +133,6 @@ local function drawEnemy(e)
 		local pg = 0.85
 		local pb = 0.40
 
-		lg.setLineWidth(2)
 		lg.setColor(pr, pg, pb, 0.6 * intensity * enemyAlpha)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
@@ -161,7 +160,6 @@ local function drawEnemy(e)
 
         lg.setLineWidth(1)
         lg.pop()
-
     elseif e.boss then
         local browLen = eyeSize * 2.5
         local browDrop = eyeSize * 0.85
@@ -172,16 +170,28 @@ local function drawEnemy(e)
         lg.circle("fill", ix - eyeSep, eyeY, eyeSize)
         lg.circle("fill", ix + eyeSep, eyeY, eyeSize)
 
-        lg.setLineWidth(2)
         lg.line(ix - eyeSep - browLen * 0.65 + browIn, eyeY - browDrop - browLift, ix - eyeSep + browLen * 0.35 + browIn, eyeY - browDrop * 0.15 + browTension - browLift)
 
         lg.line(ix + eyeSep - browLen * 0.35 - browIn, eyeY - browDrop * 0.15 + browTension - browLift, ix + eyeSep + browLen * 0.65 - browIn, eyeY - browDrop - browLift)
     else
-        local dx = sin(animT * 1.3) * 0.6
-        local dy = cos(animT * 1.1) * 0.4
+		-- Eye direction follows movement
+		local strength = 1.2 * e.slowFactor
+		local dx = e.x - e.prevX
+		local dy = e.y - e.prevY
 
-        lg.circle("fill", ix - eyeSep + dx, eyeY + dy, eyeSize)
-        lg.circle("fill", ix + eyeSep + dx, eyeY + dy, eyeSize)
+		local m = 1.2 -- max
+
+		if dx > m then dx = m end
+		if dx < -m then dx = -m end
+		if dy > m then dy = m end
+		if dy < -m then dy = -m end
+
+		local ex = dx * strength
+		local ey = dy * strength
+
+		-- Draw pupils
+		lg.circle("fill", ix - eyeSep + ex, eyeY + ey, eyeSize)
+		lg.circle("fill", ix + eyeSep + ex, eyeY + ey, eyeSize)
     end
 
 	-- Selection Ring
@@ -189,7 +199,7 @@ local function drawEnemy(e)
 		lg.setColor(selR, selG, selB, 0.25)
 		lg.circle("fill", ix, iy, e.radius + 4)
 
-		lg.setColor(colorSelected)
+		lg.setColor(selR, selG, selB)
 		lg.circle("line", ix, iy, e.radius + 4)
 	end
 end
@@ -251,6 +261,8 @@ end
 local function drawEnemies()
 	local enemies = Enemies.enemies
 
+	lg.setLineWidth(2)
+
 	-- Interpolate enemy positions
 	prepareEnemyRenderData()
 
@@ -282,6 +294,8 @@ local function drawEnemies()
 		lg.setColor(1, 1, 1, a * 0.2)
 		lg.circle("fill", fx.x, fx.y, fx.r * scale)
 	end
+
+	lg.setLineWidth(1)
 end
 
 local function getBarrelTip(t, localTipX)
@@ -563,11 +577,13 @@ local function drawTowers()
 		lg.setColor(selR, selG, selB, 0.18)
 		lg.circle("fill", selected.x, selected.y, selected.range)
 
-		lg.setColor(colorSelected)
+		lg.setColor(selR, selG, selB)
 		lg.circle("line", selected.x, selected.y, selected.range)
 
 		lg.setLineWidth(2)
+
 		lg.rectangle("line", selected.x - size * 0.6 - pad, selected.y - size * 0.6 - pad, size * 1.2 + pad * 2, size * 1.2 + pad * 2, 6 + pad, 6 + pad)
+
 		lg.setLineWidth(1)
 	end
 

@@ -17,11 +17,13 @@ local function resetContext(tower)
 	ctx.tower = tower
 
 	local hit = ctx.hit
+
 	for k in pairs(hit) do
 		hit[k] = nil
 	end
 
 	local order = ctx.order
+
 	for i = 1, #order do
 		order[i] = nil
 	end
@@ -87,9 +89,8 @@ function Shock.fire(sourceTower, initialTarget)
 		local bestDist = radius2
 
 		local nearby = Spatial.queryCells(last.x, last.y)
-		local n = #nearby
 
-		for i = 1, n do
+		for i = 1, #nearby do
 			local e = nearby[i]
 
 			if not ctx.hit[e] and e.hp > 0 then

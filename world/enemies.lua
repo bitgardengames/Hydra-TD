@@ -15,6 +15,7 @@ local L = require("core.localization")
 
 local enemies = {}
 local deathFX = {}
+local deathPool = {}
 
 local colorMoney = Theme.ui.money
 
@@ -27,13 +28,33 @@ local max = math.max
 local sqrt = math.sqrt
 local floor = math.floor
 local upper = string.upper
-local tinsert = table.insert
 
 local function swapRemove(list, i)
 	local last = #list
 
 	list[i] = list[last]
 	list[last] = nil
+end
+
+local function acquireDeathFX()
+	local d = deathPool[#deathPool]
+
+	if d then
+		deathPool[#deathPool] = nil
+
+		return d
+	end
+
+	return {}
+end
+
+local function releaseDeathFX(d)
+	d.x = nil
+	d.y = nil
+	d.r = nil
+	d.t = nil
+
+	deathPool[#deathPool + 1] = d
 end
 
 local function findEnemyAt(x, y)
@@ -109,7 +130,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		State.activeBoss = e
 	end
 
-	tinsert(enemies, e)
+	enemies[#enemies + 1] = e
 end
 
 local function updateEnemies(dt)
@@ -204,7 +225,13 @@ local function updateEnemies(dt)
 
 				Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 
-				tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
+				local d = acquireDeathFX()
+				d.x = e.x
+				d.y = e.y
+				d.r = e.radius
+				d.t = 0
+
+				deathFX[#deathFX + 1] = d
 
 				State.activeBoss = nil
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
@@ -255,7 +282,13 @@ local function updateEnemies(dt)
 
 			Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 
-			tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
+			local d = acquireDeathFX()
+			d.x = e.x
+			d.y = e.y
+			d.r = e.radius
+			d.t = 0
+
+			deathFX[#deathFX + 1] = d
 
 			Spatial.removeEnemy(e)
 
@@ -396,7 +429,10 @@ local function updateEnemies(dt)
 		d.t = d.t + dt
 
 		if d.t > 0.12 then
+			local d = deathFX[i]
+
 			swapRemove(deathFX, i)
+			releaseDeathFX(d)
 		end
 	end
 end
