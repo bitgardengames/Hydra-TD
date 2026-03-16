@@ -195,6 +195,8 @@ local function update(dt)
 
 						e.slowTimer = max(e.slowTimer or 0, duration)
 						e.slowDuration = max(e.slowDuration or 0, duration)
+
+						Effects.spawnFrostBurst(p.x, p.y)
 					end
 
 					-- Poison
@@ -211,6 +213,12 @@ local function update(dt)
 						e.poisonTimer = max(e.poisonTimer or 0, duration)
 						e.poisonDuration = max(e.poisonDuration or 0, duration)
 						e.poisonSource = tower
+
+						Effects.spawnPoisonSplash(p.x, p.y)
+					end
+
+					if tower.kind == "lancer" then
+						Effects.spawnLancerHit(p.x, p.y)
 					end
 
 					if e.hitFlash <= 0 then
@@ -292,7 +300,8 @@ local function update(dt)
 					end
 				end
 
-				tinsert(Effects.splashes, {x = px, y = py, r = r, t = 0, life = 0.21})
+				--tinsert(Effects.splashes, {x = px, y = py, r = r, t = 0, life = 0.21})
+				Effects.spawnCannonImpact(tx, ty, r)
 
 				swapRemove(projectiles, i)
 
@@ -339,9 +348,18 @@ local function draw()
 			local wx, wy = wobble(p.t or 0, 1.5)
 			lg.setColor(0.6, 0.9, 0.5, a)
 			lg.circle("fill", p.x + wx, p.y + wy, p.r + 1.5)
-		else
+		else -- Lancer
+			--lg.setColor(1, 1, 1, a)
+			--lg.circle("fill", p.x, p.y, 4)
+
+			lg.push()
+			lg.translate(p.x, p.y)
+			lg.rotate(rotation)
+
 			lg.setColor(1, 1, 1, a)
-			lg.circle("fill", p.x, p.y, 4)
+			lg.ellipse("fill", 0, 0, 6, 3)
+
+			lg.pop()
 		end
 	end
 end

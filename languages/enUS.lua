@@ -157,9 +157,21 @@ return {
 
 		tower_lancer_250 = "Between the Eyes",
 		tower_slow_250 = "Stopped Cold",
-		tower_cannon_250 = "Heavy Ordnance",
+		tower_cannon_250 = "Heavy Ordnance", -- Might rename to Heavy Artillery
 		tower_shock_250 = "High Voltage",
 		tower_poison_250 = "It Adds Up",
+
+		--[[
+		tower_lancer_1000 = "Deadeye",
+		tower_slow_1000 = "Absolute Zero",
+		tower_cannon_1000 = "Blown Away",
+		tower_shock_1000 = "Chain Reaction",
+		tower_poison_1000 = "Lethal Dose",
+		--]]
+
+		campaign_easy = "First Steps",
+		campaign_normal = "Holding the Line",
+		campaign_hard = "Last Stand",
 	},
 
 	achievementDesc = {
@@ -175,6 +187,10 @@ return {
 		tower_cannon_250 = "Defeat 250 enemies with the Cannon.",
 		tower_shock_250 = "Defeat 250 enemies with the Shock tower.",
 		tower_poison_250 = "Defeat 250 enemies with the Poison tower.",
+
+		campaign_easy = "Complete the campaign on Easy.",
+		campaign_normal = "Complete the campaign on Normal.",
+		campaign_hard = "Complete the campaign on Hard.",
 	},
 
 	overlay = {
