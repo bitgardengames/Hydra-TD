@@ -8,25 +8,43 @@ local TILE = Constants.TILE
 local CELL_SIZE = TILE * 2
 local INV_CELL = 1 / CELL_SIZE
 
--- grid[cx][cy] = {enemies}
-Spatial.grid = {}
+local grid = {}
+Spatial.grid = grid
 
--- Reusable query buffer
 local queryBuffer = {}
 
-function Spatial.clear()
-	local grid = Spatial.grid
-
-	for cx in pairs(grid) do
-		grid[cx] = nil
+-- Fast buffer clear (faster than reverse loop)
+local function clearBuffer(buf)
+	for i = 1, #buf do
+		buf[i] = nil
 	end
 end
 
-function Spatial.insert(e)
-	local cx = floor(e.x * INV_CELL)
-	local cy = floor(e.y * INV_CELL)
+local function removeFromCell(e)
+	local cell = e.cell
 
-	local grid = Spatial.grid
+	if not cell then
+		return
+	end
+
+	local list = cell
+	local idx = e.cellIndex
+
+	local last = #list
+	local lastEnemy = list[last]
+
+	list[idx] = lastEnemy
+	list[last] = nil
+
+	if idx ~= last then
+		lastEnemy.cellIndex = idx
+	end
+
+	e.cell = nil
+	e.cellIndex = nil
+end
+
+local function getCell(cx, cy)
 	local col = grid[cx]
 
 	if not col then
@@ -41,42 +59,57 @@ function Spatial.insert(e)
 		col[cy] = cell
 	end
 
-	cell[#cell + 1] = e
+	return cell
 end
 
-function Spatial.rebuild(enemies)
-	Spatial.clear()
+local function insertIntoCell(e, cx, cy)
+	local cell = getCell(cx, cy)
 
-	for i = 1, #enemies do
-		Spatial.insert(enemies[i])
+	local idx = #cell + 1
+	cell[idx] = e
+
+	e.cell = cell
+	e.cellIndex = idx
+	e.cellX = cx
+	e.cellY = cy
+end
+
+function Spatial.updateEnemy(e)
+	local cx = floor(e.x * INV_CELL)
+	local cy = floor(e.y * INV_CELL)
+
+	if e.cellX == cx and e.cellY == cy then
+		return
 	end
+
+	removeFromCell(e)
+	insertIntoCell(e, cx, cy)
+end
+
+function Spatial.removeEnemy(e)
+	removeFromCell(e)
 end
 
 function Spatial.queryCells(x, y)
 	local results = queryBuffer
-
-	-- Clear buffer
-	for i = 1, #results do
-		results[i] = nil
-	end
+	clearBuffer(results)
 
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
 
-	local grid = Spatial.grid
+	local count = 0
 
-	for dx = -1, 1 do
+	for dx = -2, 2 do
 		local col = grid[cx + dx]
 
 		if col then
-			for dy = -1, 1 do
+			for dy = -2, 2 do
 				local cell = col[cy + dy]
 
 				if cell then
-					local n = #cell
-
-					for i = 1, n do
-						results[#results + 1] = cell[i]
+					for i = 1, #cell do
+						count = count + 1
+						results[count] = cell[i]
 					end
 				end
 			end

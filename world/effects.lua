@@ -24,7 +24,7 @@ Effects.frost = {}
 Effects.poison = {}
 Effects.lancer = {}
 
-local zapJitter = 4
+local zapJitter = 3
 local halfJitter = zapJitter * 0.5
 
 local function jitter(amount)
@@ -58,41 +58,98 @@ local function release(pool, obj)
 	pool[#pool + 1] = obj
 end
 
+local zapSegPool = {}
+
+local function acquireZapSeg()
+	local seg = zapSegPool[#zapSegPool]
+
+	if seg then
+		zapSegPool[#zapSegPool] = nil
+		return seg
+	end
+
+	return {}
+end
+
+local function releaseZapSeg(seg)
+	seg.x1 = nil
+	seg.y1 = nil
+	seg.x2 = nil
+	seg.y2 = nil
+
+	zapSegPool[#zapSegPool + 1] = seg
+end
+
+local function clearZapSegs(segs)
+	if not segs then
+		return
+	end
+
+	for i = #segs, 1, -1 do
+		local seg = segs[i]
+		segs[i] = nil
+		releaseZapSeg(seg)
+	end
+end
+
+local function releaseZap(z)
+	clearZapSegs(z.segs)
+	z.x = nil
+	z.y = nil
+	z.t = nil
+	z.life = nil
+
+	zapPool[#zapPool + 1] = z
+end
+
 -- Zaps
 function Effects.spawnZapEffect(x, y, chain)
-	local segs = {}
+	local z = acquire(zapPool)
+	local segs = z.segs
+
+	if not segs then
+		segs = {}
+		z.segs = segs
+	else
+		clearZapSegs(segs)
+	end
 
 	if chain then
 		for i = 1, #chain do
-			local seg = chain[i]
-			local from = seg.from
-			local to = seg.to
+			local link = chain[i]
+			local from = link.from
+			local to = link.to
 
 			if to and to.x and to.y then
-				local x1, y1
+				local seg = acquireZapSeg()
 
 				if from then
-					x1 = from.x
-					y1 = from.renderY or from.y
+					seg.x1 = from.x
+					seg.y1 = from.renderY or from.y
 				else
-					x1 = x
-					y1 = y
+					seg.x1 = x
+					seg.y1 = y
 				end
 
-				segs[#segs + 1] = {x1 = x1, y1 = y1, x2 = to.x, y2 = to.y}
+				seg.x2 = to.x
+				seg.y2 = to.y
+
+				segs[#segs + 1] = seg
 			end
 		end
 	end
 
 	if #segs == 0 then
-		segs[1] = {x1 = x, y1 = y, x2 = x, y2 = y}
+		local seg = acquireZapSeg()
+		seg.x1 = x
+		seg.y1 = y
+		seg.x2 = x
+		seg.y2 = y
+		segs[1] = seg
 	end
-
-	local z = acquire(zapPool)
 
 	z.x = x
 	z.y = y
-	z.segs = segs
 	z.t = 0
 	z.life = 0.12
 
@@ -269,14 +326,7 @@ function Effects.update(dt)
 
 		if z.t >= z.life then
 			swapRemove(zaps, i)
-
-			if z.segs then
-				for j = #z.segs, 1, -1 do
-					z.segs[j] = nil
-				end
-			end
-
-			release(zapPool, z)
+			releaseZap(z)
 		end
 	end
 
@@ -448,11 +498,25 @@ function Effects.draw()
 				lg.setLineWidth(w)
 				lg.setColor(0.6, 0.9, 1.0, a * jumpA)
 
-				local mx = (x1 + x2) * 0.5 + jitter(8)
-				local my = (y1 + y2) * 0.5 + jitter(8)
+				-- number of bends in the lightning
+				local bends = random(1, 2)
 
-				lg.line(x1 + jx1, y1 + jy1, mx, my)
-				lg.line(mx, my, x2 + jx2, y2 + jy2)
+				local px = x1 + jx1
+				local py = y1 + jy1
+
+				for b = 1, bends do
+					local t = b / (bends + 1)
+
+					local bx = x1 + (x2 - x1) * t + jitter(10)
+					local by = y1 + (y2 - y1) * t + jitter(10)
+
+					lg.line(px, py, bx, by)
+
+					px = bx
+					py = by
+				end
+
+				lg.line(px, py, x2 + jx2, y2 + jy2)
 
 				-- Core
 				lg.setLineWidth(w * 0.4)
@@ -460,7 +524,7 @@ function Effects.draw()
 				lg.line(x1, y1, x2, y2)
 
 				-- Tiny fork
-				if random() < 0.65 then
+				if random() < 0.45 then
 					local bx = (x1 + x2) * 0.5
 					local by = (y1 + y2) * 0.5
 
@@ -556,7 +620,9 @@ function Effects.clear()
 	end
 
 	for i = #Effects.zaps, 1, -1 do
+		local z = Effects.zaps[i]
 		Effects.zaps[i] = nil
+		releaseZap(z)
 	end
 
 	for i = #Effects.frost, 1, -1 do

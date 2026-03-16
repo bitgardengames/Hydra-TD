@@ -51,19 +51,9 @@ local function prepareEnemyRenderData()
 	for i = 1, #enemies do
 		local e = enemies[i]
 
-		-- Interpolate distance
-		local d = lerp(e.prevDist or e.dist, e.dist, a)
-		local segHint = e.prevSeg or e.seg or 1
-
-		local x, y = MapMod.sampleAtDist(d, segHint)
-
-		-- Interpolate animation time
-		local animT = lerp(e.prevAnimT or e.animT, e.animT, a)
-
-		-- Store render-only values
-		e.rx = x
-		e.ry = y
-		e.rAnimT = animT
+		e.rx = lerp(e.prevX or e.x, e.x, a)
+		e.ry = lerp(e.prevY or e.y, e.y, a)
+		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
 	end
 end
 

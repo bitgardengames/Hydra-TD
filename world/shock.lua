@@ -87,8 +87,9 @@ function Shock.fire(sourceTower, initialTarget)
 		local bestDist = radius2
 
 		local nearby = Spatial.queryCells(last.x, last.y)
+		local n = #nearby
 
-		for i = 1, #nearby do
+		for i = 1, n do
 			local e = nearby[i]
 
 			if not ctx.hit[e] and e.hp > 0 then

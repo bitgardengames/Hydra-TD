@@ -10,7 +10,7 @@ local min = math.min
 local sin = math.sin
 local abs = math.abs
 local sqrt = math.sqrt
-local floor = floor
+local floor = math.floor
 
 local tile = Constants.TILE
 local gridW = Constants.GRID_W

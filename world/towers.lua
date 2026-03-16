@@ -341,7 +341,7 @@ local function updateTowers(dt)
 				end
 
 				local futureDist = (target.dist or 0) + (target.speed or 0) * leadTime
-				local nx, ny = MapMod.sampleAtDist(futureDist) -- careful: MapMod vs WorldMap (see note below)
+				local nx, ny = MapMod.sampleAtDist(futureDist)
 
 				ax = ax + (nx - target.x)
 				ay = ay + (ny - target.y)
@@ -352,9 +352,21 @@ local function updateTowers(dt)
 
 			local dx = ax - t.x
 			local dy = ay - t.y
+
 			local targetAngle = atan2(dy, dx)
 
-			aimDiff = (targetAngle - t.angle + pi) % (pi * 2) - pi
+			local prevTargetAngle = t.targetAngle or targetAngle
+			local delta = targetAngle - prevTargetAngle
+
+			if delta > pi then
+				targetAngle = targetAngle - 2 * pi
+			elseif delta < -pi then
+				targetAngle = targetAngle + 2 * pi
+			end
+
+			t.targetAngle = targetAngle
+
+			aimDiff = targetAngle - t.angle
 
 			if t.canRotate then
 				local recoilT = t.recoil / (t.recoilStrength or 1)
@@ -382,7 +394,7 @@ local function updateTowers(dt)
 
 					local dx = ax - t.x
 					local dy = ay - t.y
-					local targetAngle = atan2(dy, dx)
+					local targetAngle = t.targetAngle
 					local diff = (targetAngle - t.angle + pi) % (pi * 2) - pi
 
 					canFire = abs(diff) <= FIRE_ANGLE_EPS

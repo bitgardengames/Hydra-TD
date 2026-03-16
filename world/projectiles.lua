@@ -3,6 +3,7 @@ local Sound = require("systems.sound")
 local Effects = require("world.effects")
 local Enemies = require("world.enemies")
 local WorldMap = require("world.map")
+local Spatial = require("world.spatial_grid")
 
 local projectiles = {}
 local projectilePool = {}
@@ -44,9 +45,15 @@ local function acquireProjectile()
 end
 
 local function releaseProjectile(p)
-	for k in pairs(p) do -- Can we/should we avoid pairs?
-		p[k] = nil
-	end
+	p.x = nil
+	p.y = nil
+	p.target = nil
+	p.sourceTower = nil
+	p.tx = nil
+	p.ty = nil
+	p.slow = nil
+	p.poison = nil
+	p.splash = nil
 
 	projectilePool[#projectilePool + 1] = p
 end
@@ -294,8 +301,11 @@ local function update(dt)
 				local tower = p.sourceTower
 				local kind = p.sourceKind
 
-				for j = #enemies, 1, -1 do
-					local e = enemies[j]
+				local nearby = Spatial.queryCells(px, py)
+				local n = #nearby
+
+				for j = 1, n do
+					local e = nearby[j]
 					local ex, ey = e.x, e.y
 					local dx2 = ex - px
 					local dy2 = ey - py

@@ -37,8 +37,9 @@ function Targeting.findProgressTarget(tower)
 	local r2 = tower.range2
 
 	local nearby = Spatial.queryCells(tower.x, tower.y)
+	local n = #nearby
 
-	for i = 1, #nearby do
+	for i = 1, n do
 		local e = nearby[i]
 
 		if e.hp > 0 and not e.dying then
@@ -48,7 +49,7 @@ function Targeting.findProgressTarget(tower)
 			if dx * dx + dy * dy <= r2 then
 				local prog = e.dist
 
-				if e.slowTimer and e.slowTimer > 0 then
+				if e.slowTimer > 0 then
 					prog = prog - 5
 				end
 

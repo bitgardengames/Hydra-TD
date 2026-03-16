@@ -5,6 +5,7 @@ local Util = require("core.util")
 local State = require("core.state")
 local Effects = require("world.effects")
 local MapMod = require("world.map")
+local Spatial = require("world.spatial_grid")
 local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
 local DifficultyCurve = require("systems.difficulty_curve")
@@ -208,6 +209,8 @@ local function updateEnemies(dt)
 				State.activeBoss = nil
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
 
+				Spatial.removeEnemy(e)
+
 				swapRemove(enemies, i)
 			end
 
@@ -254,6 +257,8 @@ local function updateEnemies(dt)
 
 			tinsert(deathFX, {x = e.x, y = e.y, r = e.radius, t = 0})
 
+			Spatial.removeEnemy(e)
+
 			swapRemove(enemies, i)
 
 			goto continue
@@ -296,10 +301,6 @@ local function updateEnemies(dt)
 			e.dist = totalLen
 		end
 
-		-- Sample world position from path
-		local pathWorld = pathWorld
-		local pathDist = MapMod.map.pathDist
-
 		local seg = e.seg
 		local nextDist = pathDist[seg + 1]
 
@@ -320,6 +321,8 @@ local function updateEnemies(dt)
 
 		e.x = ax + (bx - ax) * t
 		e.y = ay + (by - ay) * t
+
+		Spatial.updateEnemy(e)
 
 		-- Reached end of path
 		if e.dist >= totalLen then
@@ -357,6 +360,8 @@ local function updateEnemies(dt)
 				State.livesAnim = livesAnim + (1 - livesAnim) * 0.6
 
 				--Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
+
+				Spatial.removeEnemy(e)
 
 				swapRemove(enemies, i)
 
@@ -398,6 +403,9 @@ end
 
 local function clear()
 	for i = #enemies, 1, -1 do
+		local e = enemies[i]
+
+		Spatial.removeEnemy(e)
 		enemies[i] = nil
 	end
 
