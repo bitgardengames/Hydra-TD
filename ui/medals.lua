@@ -22,6 +22,10 @@ local silver = Theme.medal.silver
 local gold = Theme.medal.gold
 local outlineW = Theme.outline.width
 local colorOutline = Theme.outline.color
+local lighting = Theme.lighting
+local highlightOffset = lighting.highlightOffset
+local highlightScale = lighting.highlightScale
+local darkMul = lighting.shadowMul
 
 local COLORS = {
 	{bronze[1], bronze[2], bronze[3]},
@@ -186,9 +190,17 @@ local function drawMedal(x, y, tier, earned, r, scale, glint, yOffset)
 		lg.setColor(colorOutline)
 		lg.circle("fill", x, y + yOffset, radius + outlineW)
 
-		-- Medal
-		lg.setColor(c)
+		-- Base (shadowed)
+		lg.setColor(c[1] * darkMul, c[2] * darkMul, c[3] * darkMul)
 		lg.circle("fill", x, y + yOffset, radius)
+
+		-- Top highlight (same model as trees/towers)
+		local hx = x
+		local hy = y + yOffset - radius * highlightOffset
+		local hr = radius * highlightScale
+
+		lg.setColor(c)
+		lg.circle("fill", hx, hy, hr)
 
 		-- Soft highlight
 		lg.setColor(1, 1, 1, 0.10)

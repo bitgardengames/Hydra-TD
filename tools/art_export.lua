@@ -183,6 +183,8 @@ function Export.exportEnemies()
 					def = def,
 					x = 0,
 					y = 0,
+					prevX = 0,
+					prevY = 0,
 					boss = def.boss or false,
 
 					hp = 0,
@@ -1038,7 +1040,7 @@ end
 function Export.run()
 	ensureDirs()
 	--Export.exportTowers()
-	--Export.exportEnemies()
+	Export.exportEnemies()
 	--Export.exportBanners()
 	--Export.exportAppIcons()
 	--Export.exportSocialAvatar()
@@ -1048,8 +1050,8 @@ function Export.run()
 	--require("ui.glyphs").exportSheet("glyphs.png", {cols = 6})
 
 	-- Patching images
-	Export.exportPatchHeader()
-	Export.exportPatchCover("World Detail Update")
+	--Export.exportPatchHeader()
+	--Export.exportPatchCover("World Detail Update")
 
 	love.event.quit()
 end

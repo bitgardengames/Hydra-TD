@@ -24,6 +24,11 @@ local colorPoison = Theme.projectiles.poison -- Can use Theme.tower.poison alter
 local colorSlow = Theme.projectiles.slow
 local towerShadow = Theme.towerShadow
 
+local lighting = Theme.lighting
+local darkMul = lighting.shadowMul
+local highlightOffset = lighting.highlightOffset
+local highlightScale = lighting.highlightScale
+
 local outR, outG, outB = outlineColor[1], outlineColor[2], outlineColor[3]
 local eR, eG, eB = enemyBody[1], enemyBody[2], enemyBody[3]
 local esR, esG, esB, esA = enemyShadow[1], enemyShadow[2], enemyShadow[3], enemyShadow[4]
@@ -97,16 +102,27 @@ local function drawEnemy(e)
 	lg.setColor(outR, outG, outB, enemyAlpha)
 	lg.circle("fill", ix, iy, e.radius + 3)
 
-	-- Fill
+	-- Body lighting (canonical system)
+	local r = e.radius
+
+	-- Base (shadowed)
+	lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul)
+	lg.circle("fill", ix, iy, r)
+
+	-- Top highlight
+	local hx = ix
+	local hy = iy - r * highlightOffset
+	local hr = r * highlightScale
+
 	lg.setColor(eR, eG, eB, enemyAlpha)
-	lg.circle("fill", ix, iy, e.radius)
+	lg.circle("fill", hx, hy, hr)
 
     -- Hit flash
     if e.hitFlash > 0 then
         local a = min(1, e.hitFlash / 0.05)
 
-        lg.setColor(1.0, 0.95, 0.9, a * 0.35)
-        lg.circle("fill", ix, iy, e.radius + 1)
+        lg.setColor(0.92, 0.96, 1.0, a * 0.35)
+        lg.circle("fill", ix, iy, e.radius + 2)
     end
 
 	-- Slow (frost shell + shards)
@@ -137,43 +153,50 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
-    -- Eyes
-    local eyeSep = e.radius * 0.38
-    local eyeSize = max(1.6, e.radius * 0.16)
-    local eyeY = iy - e.radius * 0.22
+	-- Eyes
+	local eyeSep = e.radius * 0.38
+	local eyeSize = max(1.6, e.radius * 0.16)
+	local eyeY = iy - e.radius * 0.22
 
-    lg.setColor(efR, efG, efB, enemyAlpha)
+	lg.setColor(efR, efG, efB, enemyAlpha)
 
-    if e.boss and e.dying then
-        local bigR = eyeSize + 1
-        local smallR = max(2, eyeSize - 1)
-        local p = 1 - (e.deathT / e.deathDur)
-        local pop = 1 + (1 - (p * p)) * 0.15
+	if e.boss and e.dying then
+		local bigR = eyeSize + 1
+		local smallR = max(2, eyeSize - 1)
+		local p = 1 - (e.deathT / e.deathDur)
+		local pop = 1 + (1 - (p * p)) * 0.15
 
-        lg.push()
-        lg.translate(ix, eyeY)
-        lg.scale(pop, pop)
+		lg.push()
+		lg.translate(ix, eyeY)
+		lg.scale(pop, pop)
 
-        lg.setLineWidth(3)
-        lg.circle("line", -eyeSep, 0, bigR)
-        lg.circle("fill", eyeSep, 0, smallR)
+		lg.setLineWidth(3)
 
-        lg.setLineWidth(1)
-        lg.pop()
-    elseif e.boss then
-        local browLen = eyeSize * 2.5
-        local browDrop = eyeSize * 0.85
-        local browTension = sin(animT * 1.6) * 0.6
-        local browLift = eyeSize * 0.35
-        local browIn = eyeSize * 0.35
+		lg.setColor(0.9, 0.9, 0.9, enemyAlpha)
+		lg.circle("fill", -eyeSep, 0, bigR + 1)
 
-        lg.circle("fill", ix - eyeSep, eyeY, eyeSize)
-        lg.circle("fill", ix + eyeSep, eyeY, eyeSize)
+		lg.setColor(efR, efG, efB, enemyAlpha)
 
-        lg.line(ix - eyeSep - browLen * 0.65 + browIn, eyeY - browDrop - browLift, ix - eyeSep + browLen * 0.35 + browIn, eyeY - browDrop * 0.15 + browTension - browLift)
+		lg.circle("line", -eyeSep, 0, bigR)
+		lg.circle("fill", eyeSep, 0, smallR)
 
-        lg.line(ix + eyeSep - browLen * 0.35 - browIn, eyeY - browDrop * 0.15 + browTension - browLift, ix + eyeSep + browLen * 0.65 - browIn, eyeY - browDrop - browLift)
-    else
+		lg.setLineWidth(1)
+		lg.pop()
+	elseif e.boss then
+		local browLen = eyeSize * 2.5
+		local browDrop = eyeSize * 0.85
+		local browTension = sin(animT * 1.6) * 0.6
+		local browLift = eyeSize * 0.35
+		local browIn = eyeSize * 0.35
+
+		lg.circle("fill", ix - eyeSep, eyeY, eyeSize)
+		lg.circle("fill", ix + eyeSep, eyeY, eyeSize)
+
+		lg.setLineWidth(2)
+
+		lg.line(ix - eyeSep - browLen * 0.65 + browIn, eyeY - browDrop - browLift, ix - eyeSep + browLen * 0.35 + browIn, eyeY - browDrop * 0.15 + browTension - browLift)
+		lg.line(ix + eyeSep - browLen * 0.35 - browIn, eyeY - browDrop * 0.15 + browTension - browLift, ix + eyeSep + browLen * 0.65 - browIn, eyeY - browDrop - browLift)
+	else
 		-- Eye direction follows movement
 		local strength = 1.2 * e.slowFactor
 		local dx = e.x - e.prevX
@@ -463,6 +486,13 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	local outlineA = alpha
 	local bodyA = alpha
 
+	-- Track shapes
+	local rInner = nil
+	local rectInner = nil
+	local rectRadius = 0
+	local rectRotation = 0
+
+	-- Base
 	lg.push()
 	lg.translate(cx, cy)
 
@@ -472,65 +502,138 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 
 	lg.translate(-recoil, 0)
 
-	-- Cannon
 	if kind == "cannon" then
 		local rOuter = size * 0.42 + outlineW * 0.5
-		local rInner = rOuter - outlineW
-		local barrelH = size * 0.28
+		rInner = rOuter - outlineW
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.circle("fill", 0, 0, rOuter)
 
-		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
+		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
 		lg.circle("fill", 0, 0, rInner)
+	elseif kind == "shock" then
+		local rOuter = size * 0.36 + outlineW * 0.5
+		rInner = rOuter - outlineW
 
 		lg.setColor(outR, outG, outB, outlineA)
-		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
+		lg.circle("fill", 0, 0, rOuter)
+
+		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
+		lg.circle("fill", 0, 0, rInner)
+
+	elseif kind == "poison" then
+		local rOuter = size * 0.38 + outlineW * 0.5
+		rInner = rOuter - outlineW
+
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.circle("fill", 0, 0, rOuter)
+
+		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
+		lg.circle("fill", 0, 0, rInner)
 	elseif kind == "slow" then
-		lg.rotate(pi / 4)
+		rectRotation = pi / 4
+
+		lg.rotate(rectRotation)
 
 		local o = size * 0.34 + outlineW * 0.5
 		local i = o - outlineW
 
+		rectInner = i
+		rectRadius = 3
+
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", -o, -o, o * 2, o * 2, 3 + outlineW * 0.5, 3 + outlineW * 0.5)
 
-		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
-		lg.rectangle("fill", -i, -i, i * 2, i * 2, 3 - outlineW * 0.25, 3 - outlineW * 0.25)
-	elseif kind == "shock" then
-		local rOuter = size * 0.36 + outlineW * 0.5
-		local rInner = rOuter - outlineW
+		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
+		lg.rectangle("fill", -i, -i, i * 2, i * 2, 3)
+	elseif kind == "lancer" then
+		local o = size * 0.35 + outlineW * 0.5
+		local i = o - outlineW
+
+		rectInner = i
+		rectRadius = 5 - outlineW * 0.25
 
 		lg.setColor(outR, outG, outB, outlineA)
-		lg.circle("fill", 0, 0, rOuter)
+		lg.rectangle("fill", -o, -o, o * 2, o * 2, 5 + outlineW * 0.5, 5 + outlineW * 0.5)
+
+		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
+		lg.rectangle("fill", -i, -i, i * 2, i * 2, rectRadius)
+	end
+
+	lg.pop()
+
+	-- Highlight
+	local ca = cos(angle)
+	local sa = sin(angle)
+
+	local baseX = cx - recoil * ca
+	local baseY = cy - recoil * sa
+
+	-- Round highlights (Cannon, Shock, Poison)
+	if rInner then
+		local hx = baseX
+		local hy = baseY - rInner * highlightOffset
+		local hr = rInner * highlightScale
 
 		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
-		lg.circle("fill", 0, 0, rInner)
+		lg.circle("fill", hx, hy, hr)
+	end
+
+	-- Lancer/Slow highlights
+	if rectInner then
+		local topX = 0
+		local topY = -1
+
+		local offset = rectInner * highlightOffset
+
+		local hx = baseX + topX * offset
+		local hy = baseY + topY * offset
+		local hr = rectRadius * highlightScale
+
+		local hw = rectInner * 2 * highlightScale
+		local hh = rectInner * 2 * highlightScale
+
+		lg.push()
+		lg.translate(hx, hy)
+
+		-- Match tower rotation
+		if def.canRotate then
+			lg.rotate(angle)
+		end
+
+		-- Apply slow's internal rotation
+		if rectRotation ~= 0 then
+			lg.rotate(rectRotation)
+		end
+
+		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
+		lg.rectangle("fill", -hw * 0.5, -hh * 0.5, hw, hh, hr)
+
+		lg.pop()
+	end
+
+	-- Details
+	lg.push()
+	lg.translate(cx, cy)
+
+	if def.canRotate then
+		lg.rotate(angle)
+	end
+
+	lg.translate(-recoil, 0)
+
+	if kind == "cannon" then
+		local barrelH = size * 0.28
+
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
 	elseif kind == "poison" then
-		local rOuter = size * 0.38 + outlineW * 0.5
-		local rInner = rOuter - outlineW
-
-		lg.setColor(outR, outG, outB, outlineA)
-		lg.circle("fill", 0, 0, rOuter)
-
-		lg.setColor(color[1] * tintR, color[2] * tintG, color[3] * tintB, bodyA)
-		lg.circle("fill", 0, 0, rInner)
-
 		local pulse = fireAnim * (1 - fireAnim) * 4
 		local sacRadius = size * 0.16 + pulse
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.circle("fill", size * 0.26, 0, sacRadius)
-	else -- Lancer
-		local o = size * 0.35 + outlineW * 0.5
-		local i = o - outlineW
-
-		lg.setColor(outR, outG, outB, outlineA)
-		lg.rectangle("fill", -o, -o, o * 2, o * 2, 5 + outlineW * 0.5, 5 + outlineW * 0.5)
-
-		lg.setColor(color[1]*tintR, color[2]*tintG, color[3]*tintB, bodyA)
-		lg.rectangle("fill", -i, -i, i * 2, i * 2, 5 - outlineW * 0.25, 5 - outlineW * 0.25)
-
+	elseif kind == "lancer" then
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.32, -size * 0.08, size * 0.58, size * 0.16, 2, 2)
 	end

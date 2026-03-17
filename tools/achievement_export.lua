@@ -110,7 +110,7 @@ local function drawCampaignMedal(tier)
 
 	-- tier text
 	local text = roman[tier]
-	local pad = 22
+	local pad = 20
 
 	Fonts.set("achievement")
 
@@ -119,7 +119,7 @@ local function drawCampaignMedal(tier)
 
 	lg.setColor(colorText)
 
-	Text.printShadow(text, pad, SIZE - h + 2, {ox = 2, oy = 2})
+	Text.printShadow(text, pad, SIZE - h + 8, {ox = 2, oy = 2})
 
 	lg.pop()
 end
@@ -280,7 +280,7 @@ local function drawKillTier(enemyType, isDead, tierNumber)
 	lg.push()
 	lg.origin()
 
-	local pad = 22
+	local pad = 16
 	local text = tostring(tierNumber)
 
 	Fonts.set("achievement")
@@ -290,7 +290,7 @@ local function drawKillTier(enemyType, isDead, tierNumber)
 
 	lg.setColor(colorText)
 
-	Text.printShadow(text, pad, SIZE - h + 2, {ox = 2, oy = 2})
+	Text.printShadow(text, pad, SIZE - h + 8, {ox = 2, oy = 2})
 
 	lg.pop()
 end
@@ -452,7 +452,7 @@ function Export.run()
 	Fonts.load()
 
 	-- Add a new font for our artwork
-	Fonts.achievement = love.graphics.newFont("assets/fonts/PTSans.ttf", 72)
+	Fonts.achievement = love.graphics.newFont("assets/fonts/PTSans.ttf", 82) -- 72
 
 	-- Add a new fake enemy type just for artwork sizing
 	EnemyDefs.fakeEntry = {

@@ -11,6 +11,14 @@ local trunk = Theme.world.treeTrunk
 local trunkOutline = Theme.world.treeTrunkOutline
 local styles = Theme.world.treeStyles
 local outlineW = Theme.outline.width
+local lighting = Theme.lighting
+local highlightOffset = lighting.highlightOffset
+local highlightScale = lighting.highlightScale
+local darkMul = lighting.shadowMul
+local shadow = Theme.shadow
+local shA = shadow.alpha
+local shW = shadow.width
+local shH = shadow.height
 
 local TILE = Constants.TILE
 local GRID_W = Constants.GRID_W
@@ -137,33 +145,59 @@ function Trees.draw()
 
 		local trunkY = canopyY + rOuter * 0.72
 
-		-- shadow
-		lg.setColor(0, 0, 0, 0.18)
-		lg.ellipse("fill", x, y + rOuter * 1.4, rOuter * 1.4, rOuter * 0.5)
+		-- Shadow
+		local shadowY = y + rOuter * shW
+		local shadowW = rOuter * shW
+		local shadowH = rOuter * shH
 
-		-- trunk outline
+		lg.setColor(0, 0, 0, shA)
+		lg.ellipse("fill", x, shadowY, shadowW, shadowH)
+
+		-- Trunk outline
 		lg.setColor(trunkOutline)
 		lg.rectangle("fill", x - two * 0.5, trunkY, two, tho, 2 * s)
 
-		-- trunk fill
+		-- Trunk fill
 		lg.setColor(trunk)
 		lg.rectangle("fill", x - tw * 0.5, trunkY + outlineW, tw, th, 2 * s)
 
 		if t.shape == 1 then
+			-- Outline
 			lg.setColor(style.outline)
 			lg.circle("fill", x, canopyY, rOuter)
 
-			lg.setColor(style.fill)
+			-- Base
+			lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
 			lg.circle("fill", x, canopyY, rInner)
+
+			-- Top highlight
+			local hx = x
+			local hy = canopyY - rInner * highlightOffset
+			local hr = rInner * highlightScale
+
+			lg.setColor(style.fill)
+			lg.circle("fill", hx, hy, hr)
 		else
 			local outerRadius = 8 * s + outlineW * 0.5
 			local innerRadius = outerRadius - outlineW
 
+			-- Outline
 			lg.setColor(style.outline)
 			lg.rectangle("fill", x - rOuter, canopyY - rOuter, rOuter * 2, rOuter * 2, outerRadius)
 
-			lg.setColor(style.fill)
+			-- Base
+			lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
 			lg.rectangle("fill", x - rInner, canopyY - rInner, rInner * 2, rInner * 2, innerRadius)
+
+			-- Top highlight
+			local hx = x
+			local hy = canopyY - rInner * highlightOffset
+
+			local hw = rInner * 2 * highlightScale
+			local hh = rInner * 2 * highlightScale
+
+			lg.setColor(style.fill)
+			lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
 		end
 	end
 end

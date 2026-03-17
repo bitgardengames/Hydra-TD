@@ -5,8 +5,20 @@ local function lighten(c, amt)
 end
 
 Theme.outline = {
-    color = {0.1, 0.1, 0.11, 1},
+    color = {0.09, 0.09, 0.1, 1},
     width = 3,
+}
+
+Theme.lighting = {
+	shadowMul = 0.68,
+	highlightOffset = 0.12,
+	highlightScale = 0.88,
+}
+
+Theme.shadow = {
+	alpha = 0.18,
+	width = 1.4,
+	height = 0.4,
 }
 
 Theme.terrain = {
