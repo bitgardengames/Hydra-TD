@@ -1,6 +1,8 @@
+local Config = require("tools.trailer.config")
+
 local recorder = {
     frame = 0,
-    enabled = false,
+    enabled = Config.recorder or false,
 }
 
 local format = string.format

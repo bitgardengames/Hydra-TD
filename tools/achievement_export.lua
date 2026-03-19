@@ -161,10 +161,7 @@ end
 
 local function drawTower(kind)
 	centerAndScale(function()
-		DrawEntities.drawTowerBase(kind, 0, 0, 1, 1, 1, 1, 0)
-		DrawEntities.drawTowerCore(kind, 0, 0, -pi / 4, 0, 1, 1,1,1, 0)
-
-		lg.setColor(1, 1, 1, 1)
+		DrawEntities.drawTowerVisual(kind, 0, 0, -pi / 4, 0, 1)
 
 	end, TOWER_SCALE)
 end

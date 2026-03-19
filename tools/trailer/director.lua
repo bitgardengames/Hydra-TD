@@ -25,6 +25,8 @@ local floor = math.floor
 
 local lg = love.graphics
 
+local SW, SH = lg.getDimensions()
+
 local HERO_FONT_SIZE = 148
 local CTA_FONT_SIZE = 120
 local FLOATER_FONT_SIZE = 60
@@ -388,6 +390,75 @@ local function drawFadedBannerForText(text, font, y, alpha)
 	end
 end
 
+local function drawVignette(w, h, strength)
+	local maxInset = math.min(w, h) * 0.06
+	local baseAlpha = strength or 0.025
+
+	local steps = 32 -- or even 48 (still cheap, this runs once per frame)
+
+	for i = 1, steps do
+		local t = i / steps
+		local inset = t * maxInset
+
+		-- smoother falloff (ease curve)
+		local falloff = (1 - t)
+		falloff = falloff * falloff * falloff -- cubic
+
+		local alpha = baseAlpha * falloff
+
+		lg.setColor(0, 0, 0, alpha)
+
+		lg.rectangle("fill", 0, 0, w, inset)
+		lg.rectangle("fill", 0, h - inset, w, inset)
+		lg.rectangle("fill", 0, inset, inset, h - inset * 2)
+		lg.rectangle("fill", w - inset, inset, inset, h - inset * 2)
+	end
+end
+
+function Director.runScreenshotBatch(entries, prefix)
+	assert(entries and #entries > 0, "No screenshot entries provided")
+
+	Director._shotBatch = {
+		entries = entries,
+		prefix = prefix or "shot",
+		index = 1,
+		capturing = false,
+		done = false,
+	}
+
+	local function loadFrozen(entryIndex)
+		local entry = entries[entryIndex]
+
+		if not entry then
+			return false
+		end
+
+		local shot = entry.shot
+		local targetFrame = entry.frame
+
+		assert(shot, "Missing shot")
+		assert(targetFrame, "Missing frame")
+
+		print(("[%d/%d] Loading shot: %s"):format(entryIndex, #entries, shot))
+		print("Seeking to frame:", targetFrame)
+
+		Director.load(shot)
+
+		for f = 1, targetFrame do
+			Director.stepFixed(STEP_DT)
+		end
+
+		Director.scrub.enabled = true
+		Director.scrub.playing = false
+		Director.scrub.frame = targetFrame
+
+		return true
+	end
+
+	Director._loadFrozenBatchShot = loadFrozen
+	loadFrozen(1)
+end
+
 function Director.draw()
 	if Director.shot.type ~= "logo" then
 		if HeroExport.draw(function()
@@ -406,6 +477,7 @@ function Director.draw()
 			Draw.drawUI()
 		else
 			lg.setFont(FONT_FLOATERS)
+			--Fonts.set("floaters")
 
 			Floaters.draw()
 		end
@@ -420,6 +492,7 @@ function Director.draw()
 		--lg.rectangle("fill", 0, 0, sw, sh)
 		Camera.begin()
 		DrawWorld.drawGrass()
+		DrawWorld.drawScatter()
 		Camera.finish()
 		Camera.present()
 	end
@@ -538,6 +611,22 @@ function Director.draw()
 		lg.setColor(0, 0, 0, alpha)
 		lg.rectangle("fill", 0, 0, lg.getWidth(), lg.getHeight())
 		lg.setColor(1, 1, 1, 1)
+	end
+
+	if Config.vignette then
+		drawVignette(SW, SH, 0.04)
+	end
+
+	if Director.scrub.playing then -- Director.scrub.enabled
+		local frame = Director.scrub.frame
+		local time = frame / FPS
+
+		lg.setColor(0, 0, 0, 0.6)
+		lg.rectangle("fill", 10, 10, 180, 60, 6)
+
+		lg.setColor(1, 1, 1, 1)
+		lg.print(string.format("Frame: %d", frame), 20, 20)
+		lg.print(string.format("Time: %.2f", time), 20, 40)
 	end
 end
 

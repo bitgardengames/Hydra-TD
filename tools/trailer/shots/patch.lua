@@ -22,7 +22,7 @@ local adjustY = tile
 
 return {
 	map = 99,
-	duration = 10.0,
+	duration = 8.0,
 
 	scene = {
 		towers = {
@@ -31,12 +31,14 @@ return {
 			
 			{kind = "poison", gx = 18, gy = 9},
 			{kind = "lancer", gx = 19, gy = 9},
+			
+			{kind = "slow", gx = 20, gy = 7},
 		},
 
 		wave = {
-			index = 6,
+			index = 4,
 			start = true,
-			warmup = 8.0,
+			warmup = 9.0,
 		},
 	},
 
@@ -46,7 +48,7 @@ return {
 
 	camera = Camera.pan({
 		duration = 7.0,
-		from = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 2.0},
-		to = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 2.0}
+		from = {x = mapCX + adjustX - 32, y = mapCY - adjustY - 36, zoom = 1.4},
+		to = {x = mapCX + adjustX - 32, y = mapCY - adjustY - 36, zoom = 1.4}
 	}),
 }

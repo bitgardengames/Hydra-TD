@@ -170,7 +170,7 @@ end
 
 -- Rendering Helpers
 local function drawVignette(w, h)
-	local steps = 12
+	local steps = 32
 	local maxInset = math.min(w, h) * 0.06
 
 	for i = 1, steps do

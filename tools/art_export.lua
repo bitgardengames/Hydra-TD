@@ -133,8 +133,8 @@ function Export.exportTowers()
 	local REF_ICON_SIZE = 64
 
 	local POSES = {
-		idle = -math.pi / 2, -- straight up
-		action = -math.pi / 4, -- acrtion
+		idle = -math.pi / 2,
+		action = -math.pi / 4,
 	}
 
 	for kind in pairs(TowersDefs) do
@@ -150,14 +150,13 @@ function Export.exportTowers()
 				lg.translate(size * 0.5, size * 0.5)
 				lg.scale(scale, scale)
 
-				DrawEntities.drawTowerBase(kind, 0, 0, {alpha = 1, shadow = false})
-
-				DrawEntities.drawTowerCore(kind, 0, 0, {angle = angle, alpha = 1, shadow = false})
+				-- Single source of truth
+				DrawEntities.drawTowerVisual(kind, 0, 0, angle, 0, 1)
 
 				lg.pop()
 				lg.setCanvas()
 
-				exportCanvas(canvas, string.format( "%s/tower_%s_%s_%d", TOWER_DIR, kind, poseName, size))
+				exportCanvas(canvas, string.format("%s/tower_%s_%s_%d", TOWER_DIR, kind, poseName, size))
 			end
 		end
 	end
@@ -1040,8 +1039,8 @@ end
 function Export.run()
 	ensureDirs()
 	--Export.exportTowers()
-	Export.exportEnemies()
-	--Export.exportBanners()
+	--Export.exportEnemies()
+	Export.exportBanners()
 	--Export.exportAppIcons()
 	--Export.exportSocialAvatar()
 	--Export.exportCogSocialAvatar()

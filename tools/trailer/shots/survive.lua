@@ -38,8 +38,8 @@ return {
 	actions = {
 		{t = 0, fn = Actions.setMoney(9999)},
 		{t = 0, fn = Actions.upgradeTowerAt(19, 10, 2)},
-		{t = 0, fn = Actions.upgradeTowerAt(19, 11, 2)},
-		{t = 0, fn = Actions.upgradeTowerAt(18, 13, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(19, 11, 3)},
+		{t = 0, fn = Actions.upgradeTowerAt(18, 13, 2)},
 		{t = 0, fn = Actions.upgradeTowerAt(20, 11, 1)},
 	},
 

@@ -161,9 +161,7 @@ local function drawTitleLayout(originX, originY, layoutScale, lancerScale, gap, 
 	lg.translate(baseX + lancerVisualW * 0.5, midY)
 	lg.scale(lancerScale, lancerScale)
 
-	Entities.drawTowerBase("lancer", 0, 0, alpha, 1, 1, 1)
-
-	Entities.drawTowerCore("lancer", 0, 0, angle, 0, alpha, 1, 1, 1, 0)
+	Entities.drawTowerVisual("lancer", 0, 0, angle, 1, alpha)
 
 	lg.pop()
 

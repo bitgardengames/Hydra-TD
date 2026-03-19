@@ -45,6 +45,9 @@ local outlineWidth = Theme.outline.width
 local TILE = Constants.TILE
 local HALF_PI = pi / 2
 
+local sampleAtDist = MapMod.sampleAtDist
+local towerDefs = Towers.TowerDefs
+
 local function lerp(a, b, t)
 	return a + (b - a) * t
 end
@@ -56,8 +59,11 @@ local function prepareEnemyRenderData()
 	for i = 1, #enemies do
 		local e = enemies[i]
 
-		e.rx = lerp(e.prevX or e.x, e.x, a)
-		e.ry = lerp(e.prevY or e.y, e.y, a)
+		local d = lerp(e.prevDist or e.dist, e.dist, a)
+		local x, y = sampleAtDist(d, e.prevSeg)
+
+		e.rx = x
+		e.ry = y
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
 	end
 end
@@ -198,7 +204,6 @@ local function drawEnemy(e)
 		lg.line(ix + eyeSep - browLen * 0.35 - browIn, eyeY - browDrop * 0.15 + browTension - browLift, ix + eyeSep + browLen * 0.65 - browIn, eyeY - browDrop - browLift)
 	else
 		-- Eye direction follows movement
-		local strength = 1.2 * e.slowFactor
 		local dx = e.x - e.prevX
 		local dy = e.y - e.prevY
 
@@ -209,10 +214,9 @@ local function drawEnemy(e)
 		if dy > m then dy = m end
 		if dy < -m then dy = -m end
 
-		local ex = dx * strength
-		local ey = dy * strength
+		local ex = dx
+		local ey = dy
 
-		-- Draw pupils
 		lg.circle("fill", ix - eyeSep + ex, eyeY + ey, eyeSize)
 		lg.circle("fill", ix + eyeSep + ex, eyeY + ey, eyeSize)
     end
@@ -433,7 +437,7 @@ local size = TILE * 0.42
 local pad = 2
 
 local function drawTowerBase(kind, cx, cy, alpha, tintR, tintG, tintB, height)
-	local def = Towers.TowerDefs[kind]
+	local def = towerDefs[kind]
 
 	if not def then
 		return
@@ -467,7 +471,7 @@ end
 
 -- Draw tower core shape
 local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, tintB, fireAnim)
-	local def = Towers.TowerDefs[kind]
+	local def = towerDefs[kind]
 
 	if not def then
 		return
@@ -641,13 +645,56 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	lg.pop()
 end
 
+local function drawTowerBaseHighlight(kind, cx, cy, alpha)
+	local def = towerDefs[kind]
+
+	if not def then
+		return
+	end
+
+	alpha = alpha or 1
+
+	local c = def.color
+
+	local baseOuter = size * 0.6 + outlineWidth * 0.5
+	local baseInner = baseOuter - outlineWidth
+	local innerRadius = 6 - outlineWidth * 0.25
+
+	local hx = cx
+	local hy = cy - baseInner * highlightOffset
+	local hw = baseInner * 2 * highlightScale
+	local hh = baseInner * 2 * highlightScale
+
+	lg.setColor(c[1], c[2], c[3], alpha)
+	lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
+end
+
+local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
+	angle = angle or -HALF_PI
+	recoil = recoil or 0
+	alpha = alpha or 1
+
+	-- Base (shadowed)
+	drawTowerBase(kind, cx, cy, alpha, darkMul, darkMul, darkMul)
+
+	-- Highlight (your missing piece in title)
+	drawTowerBaseHighlight(kind, cx, cy, alpha)
+
+	-- Core (includes its own highlight + details)
+	drawTowerCore(kind, cx, cy, angle, recoil, alpha, 1, 1, 1, 0)
+end
+
+local function drawTowerInstance(t, cx, renderY)
+	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
+end
+
 -- Draw tower placement ghost
 local function drawTowerGhost()
 	if not State.placing or not State.hoverGX or not State.hoverGY then
 		return
 	end
 
-	local def = Towers.TowerDefs[State.placing]
+	local def = towerDefs[State.placing]
 
 	if not def then
 		return
@@ -717,11 +764,8 @@ local function drawTowers()
 			drawTowerBase(t.kind, cx, groundY, 1, 0.2, 0.2, 0.2, groundY - renderY)
 		end
 
-		-- Base (moving)
-		drawTowerBase(t.kind, cx, renderY, 1, 1, 1, 1)
-
-		-- Colored body
-		drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, 1, 1, 1, 1, t.fireAnim)
+		-- Top
+		drawTowerInstance(t, cx, renderY)
 
 		drawTowerFX(t)
 
@@ -739,5 +783,6 @@ return {
 	drawTowerBase = drawTowerBase,
 	drawTowerCore = drawTowerCore,
 	drawTowerGhost = drawTowerGhost,
+	drawTowerVisual = drawTowerVisual,
 	drawTowers = drawTowers,
 }

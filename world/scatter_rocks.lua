@@ -12,6 +12,10 @@ local treeAt = Trees.hasTreeAt
 
 local styles = Theme.world.rockStyles
 local outlineW = Theme.outline.width
+local lighting = Theme.lighting
+local darkMul = lighting.shadowMul
+local highlightOffset = lighting.highlightOffset
+local highlightScale = lighting.highlightScale
 
 local TILE = Constants.TILE
 local GRID_W = Constants.GRID_W
@@ -82,24 +86,12 @@ function Rocks.generate()
 		local x = cx + random(-18, 18)
 		local y = cy + random(-18, 18)
 
-		local rock = {
-			x = x,
-			y = y,
-			style = random(#styles),
-
-			-- slightly larger upper bound
-			scale = 0.90 + random() * 0.80,
-
-			-- 30% chance of a paired rock
-			pair = random() < 0.30
-		}
+		local rock = {x = x, y = y, style = random(#styles), scale = 0.90 + random() * 0.80, pair = random() < 0.26} -- 26% pair chance
 
 		if rock.pair then
 			rock.pairOffsetX = random(-18, 18)
 			rock.pairOffsetY = random(-18, 18)
-
-			-- paired rock is usually smaller
-			rock.pairScale = 0.75 + random() * 0.55
+			rock.pairScale = 0.75 + random() * 0.55 -- Paired rock is usually smaller
 		end
 
 		Rocks.list[#Rocks.list + 1] = rock
@@ -111,11 +103,29 @@ end
 
 function Rocks.draw()
 	local rocks = Rocks.list
-	if #rocks == 0 then return end
+
+	if #rocks == 0 then
+		return
+	end
 
 	for i = 1, #rocks do
 		local r = rocks[i]
 		local style = styles[r.style]
+
+		if not style or not style.fill or not style.outline then
+			goto continue
+		end
+
+		local fill = style.fill
+		local outline = style.outline
+
+		local rCol = fill[1]
+		local gCol = fill[2]
+		local bCol = fill[3]
+
+		local oR = outline[1]
+		local oG = outline[2]
+		local oB = outline[3]
 
 		local x = r.x
 		local y = r.y
@@ -130,15 +140,24 @@ function Rocks.draw()
 		local outerRadius = 5 * s + outlineW * 0.5
 		local innerRadius = outerRadius - outlineW
 
-		-- outline
-		lg.setColor(style.outline)
+		-- Outline
+		lg.setColor(oR, oG, oB, 1)
 		lg.rectangle("fill", x - wOuter * 0.5, y - hOuter * 0.5, wOuter, hOuter, outerRadius)
 
-		-- fill
-		lg.setColor(style.fill)
+		-- Fill (shadowed base)
+		lg.setColor(rCol * darkMul, gCol * darkMul, bCol * darkMul, 1)
 		lg.rectangle("fill", x - wInner * 0.5, y - hInner * 0.5, wInner, hInner, innerRadius)
 
-		-- paired rock
+		-- Highlight
+		local hx = x
+		local hy = y - hInner * 0.5 * highlightOffset
+		local hw = wInner * highlightScale
+		local hh = hInner * highlightScale
+
+		lg.setColor(rCol, gCol, bCol, 1)
+		lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
+
+		-- Paired rock
 		if r.pair then
 			local ps = s * r.pairScale
 			local px = x + r.pairOffsetX
@@ -150,16 +169,28 @@ function Rocks.draw()
 			local pwInner = pwOuter - outlineW * 2
 			local phInner = phOuter - outlineW * 2
 
-			local baseRadius = 5 * ps
-			local outerRadius = baseRadius + outlineW * 0.5
-			local innerRadius = baseRadius - outlineW * 0.25
+			local pairOuterRadius = 5 * ps + outlineW * 0.5
+			local pairInnerRadius = pairOuterRadius - outlineW
 
-			lg.setColor(style.outline)
-			lg.rectangle("fill", px - pwOuter * 0.5, py - phOuter * 0.5, pwOuter, phOuter, outerRadius)
+			-- Outline
+			lg.setColor(oR, oG, oB, 1)
+			lg.rectangle("fill", px - pwOuter * 0.5, py - phOuter * 0.5, pwOuter, phOuter, pairOuterRadius)
 
-			lg.setColor(style.fill)
-			lg.rectangle("fill", px - pwInner * 0.5, py - phInner * 0.5, pwInner, phInner, innerRadius)
+			-- Fill
+			lg.setColor(rCol * darkMul, gCol * darkMul, bCol * darkMul, 1)
+			lg.rectangle("fill", px - pwInner * 0.5, py - phInner * 0.5, pwInner, phInner, pairInnerRadius)
+
+			-- Highlight
+			local phx = px
+			local phy = py - phInner * 0.5 * highlightOffset
+			local phw = pwInner * highlightScale
+			local phh = phInner * highlightScale
+
+			lg.setColor(rCol, gCol, bCol, 1)
+			lg.rectangle("fill", phx - phw * 0.5, phy - phh * 0.5, phw, phh, pairInnerRadius)
 		end
+
+		::continue::
 	end
 end
 

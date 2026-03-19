@@ -21,7 +21,8 @@ local colorMoney = Theme.ui.money
 
 local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
-local tick = 0.5 -- seconds per poison tick
+local POISON_TICK = 0.5 -- seconds per poison tick
+local EPS = 0.0001
 
 local min = math.min
 local max = math.max
@@ -173,12 +174,12 @@ local function updateEnemies(dt)
 			e.poisonTimer = e.poisonTimer - dt
 			e.poisonTickTimer = (e.poisonTickTimer or 0) + dt
 
-			if e.poisonTickTimer >= tick then
-				local ticks = floor(e.poisonTickTimer / tick)
-				e.poisonTickTimer = e.poisonTickTimer - ticks * tick
+			if e.poisonTickTimer >= POISON_TICK then
+				local ticks = floor(e.poisonTickTimer / POISON_TICK)
+				e.poisonTickTimer = e.poisonTickTimer - ticks * POISON_TICK
 
 				local poisonMult = (e.modifiers and e.modifiers.poison) or 1.0
-				local dmg = e.poisonDPS * e.poisonStacks * poisonMult * tick * ticks
+				local dmg = e.poisonDPS * e.poisonStacks * poisonMult * POISON_TICK * ticks
 
 				e.hp = e.hp - dmg
 
@@ -338,7 +339,7 @@ local function updateEnemies(dt)
 		local nextDist = pathDist[seg + 1]
 
 		-- Only search forward if needed
-		while seg < pathLen - 1 and nextDist <= e.dist do
+		while seg < pathLen - 1 and nextDist <= e.dist + EPS do
 			seg = seg + 1
 			nextDist = pathDist[seg + 1]
 		end
@@ -350,7 +351,14 @@ local function updateEnemies(dt)
 
 		local segStart = pathDist[seg]
 		local segEnd = nextDist
-		local t = (e.dist - segStart) / (segEnd - segStart)
+		local denom = segEnd - segStart
+		local t = 0
+
+		if denom > 0 then
+			local d = min(e.dist, segEnd)
+
+			t = (d - segStart) / denom
+		end
 
 		e.x = ax + (bx - ax) * t
 		e.y = ay + (by - ay) * t
