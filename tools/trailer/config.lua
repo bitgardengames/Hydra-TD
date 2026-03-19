@@ -3,7 +3,7 @@ return {
 	sequence = "steam_trailer",
 	startShot = "patch",
 
-	recorder = false,
+	recorder = true,
 
 	showUI = false,
 	showFloaters = true, -- NYI

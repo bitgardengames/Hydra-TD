@@ -48,7 +48,7 @@ return {
 
 	camera = Camera.pan({
 		duration = 7.0,
-		from = {x = mapCX + adjustX - 32, y = mapCY - adjustY - 36, zoom = 1.4},
-		to = {x = mapCX + adjustX - 32, y = mapCY - adjustY - 36, zoom = 1.4}
+		from = {x = mapCX + adjustX - 32, y = mapCY - adjustY + 22, zoom = 4},
+		to = {x = mapCX + adjustX - 32, y = mapCY - adjustY + 22, zoom = 4}
 	}),
 }

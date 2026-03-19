@@ -128,7 +128,7 @@ local function drawEnemy(e)
         local a = min(1, e.hitFlash / 0.05)
 
         lg.setColor(0.92, 0.96, 1.0, a * 0.35)
-        lg.circle("fill", ix, iy, e.radius + 2)
+        lg.circle("fill", ix, iy, e.radius)
     end
 
 	-- Slow (frost shell + shards)
