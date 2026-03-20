@@ -16,7 +16,7 @@ return {
 
     scene = {
         wave = {
-			index = 2,
+			index = 3,
             start = true,
             warmup = 10.0,
         },

@@ -108,7 +108,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		hitFlash = 0,
 		dying = false,
 		deathT = 0,
-		deathDur = 0.3,
+		deathDur = 0.35,
 		spawnFade = 0.12,
 		exitFade = nil,
 		alpha = 1,
@@ -396,6 +396,7 @@ local function updateEnemies(dt)
 				end
 
 				State.lives = State.lives - 1
+				State.waveLeaks = State.waveLeaks + 1
 
 				local livesAnim = State.livesAnim or 0
 				State.livesAnim = livesAnim + (1 - livesAnim) * 0.6

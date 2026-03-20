@@ -14,7 +14,6 @@ function Sim.update(dt)
 		return
 	end
 
-	Waves.updatePrep(dt)
 	Waves.updateSpawner(dt)
 	Enemies.updateEnemies(dt)
 	Towers.updateTowers(dt)

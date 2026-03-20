@@ -54,8 +54,7 @@ function Waves.startWave()
 	local map = Maps[State.mapIndex]
 	local mapMult = State.mapCoverageMult or 1.0
 
-	State.wave = State.wave + 1
-	State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
+	State.waveLeaks = 0
 
 	if State.mode == "game" then -- Make sure the background scene doesn't set the status
 		local diffKey = Difficulty.key()
@@ -131,20 +130,6 @@ function Waves.updateSpawner(dt)
 
 	if spawner.remaining <= 0 then
 		spawner.active = false
-	end
-end
-
--- Prep + helpers
-function Waves.updatePrep(dt)
-	if not State.inPrep then
-		return
-	end
-
-	State.prepTimer = State.prepTimer - dt
-
-	if State.prepTimer <= 0 then
-		State.prepTimer = 0
-		Waves.startWave()
 	end
 end
 

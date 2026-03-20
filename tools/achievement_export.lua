@@ -38,24 +38,23 @@ local roman = {
 }
 
 local ribbonColors = {
-	[1] = { fill = {0.86, 0.18, 0.22}, outline = {0.42, 0.08, 0.09} }, -- bronze (red)
-	[2] = { fill = {0.26, 0.46, 0.90}, outline = {0.14, 0.26, 0.52} }, -- silver (blue)
-	[3] = { fill = {0.12, 0.32, 0.70}, outline = {0.06, 0.16, 0.40} }, -- gold (dark blue)
+	[1] = {0.18, 0.42, 0.26}, -- bronze (green)
+	[2] = {0.22, 0.40, 0.78}, -- silver (blue)
+	[3] = {0.62, 0.16, 0.18}, -- gold (red)
 }
 
 local function drawMedalRibbons(cx, cy, radius, tier)
 	local visualRadius = radius * MEDAL_SCALE
 
 	local ribbonLen = visualRadius * 2.4
-	local ribbonW = visualRadius * 0.56
+	local ribbonW = visualRadius * 0.72 -- thicker (was 0.56)
 	local angle = math.rad(26)
 
 	local attachY = cy - visualRadius * 0.52
-	local attachOffsetX = visualRadius * 0.34 -- maybe .36
+	local attachOffsetX = visualRadius * 0.34
 
-	local rc = ribbonColors[tier]
+	local fillColor = ribbonColors[tier]
 	local outlineColor = Theme.outline.color
-	local fillColor = rc.fill
 
 	local outlineW = Theme.outline.width * MEDAL_SCALE
 
@@ -66,25 +65,18 @@ local function drawMedalRibbons(cx, cy, radius, tier)
 
 		-- outline
 		lg.setColor(outlineColor)
-		lg.rectangle(
-			"fill",
-			-ribbonW * 0.5 - outlineW,
-			-ribbonLen,
-			ribbonW + outlineW * 2,
-			ribbonLen + outlineW * 2,
-			4
-		)
+		lg.rectangle("fill", -ribbonW * 0.5 - outlineW, -ribbonLen, ribbonW + outlineW * 2, ribbonLen + outlineW * 2, 4)
 
 		-- fill
 		lg.setColor(fillColor)
-		lg.rectangle(
-			"fill",
-			-ribbonW * 0.5,
-			-ribbonLen + outlineW,
-			ribbonW,
-			ribbonLen,
-			3
-		)
+		lg.rectangle("fill", -ribbonW * 0.5, -ribbonLen + outlineW, ribbonW, ribbonLen, 3)
+
+		-- center stripe (subtle contrast)
+		local stripeW = ribbonW * 0.28
+
+		lg.setColor(fillColor[1] * 0.7, fillColor[2] * 0.7, fillColor[3] * 0.7, 1)
+
+		lg.rectangle("fill", -stripeW * 0.5, -ribbonLen + outlineW, stripeW, ribbonLen, 2)
 
 		lg.pop()
 	end
@@ -92,7 +84,6 @@ local function drawMedalRibbons(cx, cy, radius, tier)
 	ribbon(cx - attachOffsetX, attachY, -angle)
 	ribbon(cx + attachOffsetX, attachY, angle)
 end
-
 
 local function drawCampaignMedal(tier)
 	local cx = SIZE * 0.5

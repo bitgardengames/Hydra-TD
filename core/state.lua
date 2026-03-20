@@ -10,10 +10,10 @@ local state = {
 
 	mapIndex = 1,
 	worldMapIndex = 1,
-	wave = 0,
+	wave = 1,
 	waveAnim = 1,
+	waveLeaks = 0,
 	inPrep = true,
-	prepTimer = 6.0,
 
 	paused = false,
 	pauseT = 0,

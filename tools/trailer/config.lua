@@ -1,9 +1,9 @@
 return {
-	mode = "single", -- sequence, single, screenshots
+	mode = "sequence", -- sequence, single, screenshots
 	sequence = "steam_trailer",
 	startShot = "patch",
 
-	recorder = true,
+	recorder = false,
 
 	showUI = false,
 	showFloaters = true, -- NYI

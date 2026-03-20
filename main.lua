@@ -19,6 +19,7 @@ local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
 local Sim = require("core.sim")
 local Tooltip = require("ui.tooltip")
+local Messages = require("ui.messages")
 local Draw = require("render.draw")
 local Glyphs = require("ui.glyphs")
 local DrawWorld = require("render.draw_world")
@@ -35,6 +36,7 @@ local Rumble = require("systems.rumble")
 local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
 local Steam = require("core.steam")
+local L = require("core.localization")
 
 local lg = love.graphics
 local lk = love.keyboard
@@ -82,6 +84,11 @@ end
 function resetGame()
 	--State.worldMapIndex = 1 -- Map override
 
+	--Messages.add("Reset game", 0.6, 1.0, 0.6)
+	Messages.add("Perfect Wave +$30", 0.55, 0.95, 0.55)
+	Messages.add("You cannot place towers on the path.", 0.95, 0.55, 0.55)
+	Messages.add("Not enough money.", 0.95, 0.55, 0.55)
+
     -- Clear world state
     Enemies.clear()
     Towers.clear()
@@ -115,10 +122,9 @@ function resetGame()
     State.moneyLerp = State.money
     State.lives = diff.startLives
     State.score = 0
-    State.wave = 0
+    State.wave = 1
 
     State.inPrep = true
-    State.prepTimer = 6.0
     State.paused = false
     State.speed = 1
 
@@ -250,6 +256,7 @@ function love.update(dt)
 	State.placingFade = p * p * (3 - 2 * p)
 
 	Tooltip.update(dt)
+	Messages.update(dt)
 
 	-- Loss condition
 	if State.lives <= 0 and not State.gameOver then
@@ -293,9 +300,17 @@ function love.update(dt)
 			return
 		end
 
+		if State.waveLeaks == 0 then
+			local bonus = 10 + State.wave * 2
+			State.money = State.money + bonus
+
+			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
+		end
+
 		-- Otherwise continue as normal
+		State.wave = State.wave + 1
+		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 		State.inPrep = true
-		State.prepTimer = 6.0
 	end
 end
 

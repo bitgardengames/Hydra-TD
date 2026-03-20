@@ -13,7 +13,7 @@ Maps[0] = {
 }
 
 return {
-	map = 0, -- Using 13 isn't future proof
+	map = 0,
 	duration = 5.0,
 
 	scene = {
@@ -24,7 +24,7 @@ return {
 		},
 
 		wave = {
-			index = 1,
+			index = 2,
 			start = true,
 			warmup = 14,
 		},

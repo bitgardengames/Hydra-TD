@@ -284,7 +284,6 @@ local function keypressed(key)
 			State.victory = false
 			State.endless = true
 			State.inPrep = true
-			State.prepTimer = 6.0
 
 			return
 		elseif key == Hotkeys.kb.actions.nextMap then
@@ -322,7 +321,6 @@ local function keypressed(key)
 		State.speed = (State.speed == 1) and 4 or 1
 	elseif key == Hotkeys.kb.actions.skipPrep then
 		if State.inPrep then
-			State.prepTimer = 0
 			Waves.startWave()
 		end
 	elseif key == Hotkeys.kb.actions.upgrade then
@@ -431,7 +429,6 @@ local function gamepadpressed(joystick, button)
 	-- Skip prep
 	if action == "skipPrep" then
 		if State.inPrep then
-			State.prepTimer = 0
 			Waves.startWave()
 		end
 

@@ -5,7 +5,7 @@ Constants.IS_DEMO = false
 
 -- Version
 Constants.VERSION = "1.0.9" -- major.minor.patch
-Constants.BUILD = 10
+Constants.BUILD = 11
 Constants.VERSION_STRING = string.format("v%s (build %d)%s", Constants.VERSION, Constants.BUILD, Constants.IS_DEMO and " - Demo" or "")
 
 -- Display

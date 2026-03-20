@@ -49,6 +49,22 @@ local rank = {
 	hard = 3,
 }
 
+local function unlock(id)
+	local meta = Save.data.meta
+
+	if meta.unlockedAchievements[id] then
+		return
+	end
+
+	meta.unlockedAchievements[id] = true
+
+	if Steam.loaded then
+		Steam.unlockAchievement(id)
+	end
+
+	Save.flush()
+end
+
 local function isDifficultyAtLeast(completedDifficulty, targetDifficulty)
 	return (rank[completedDifficulty] or 0) >= (rank[targetDifficulty] or 0)
 end
@@ -89,22 +105,6 @@ function Achievements.checkCampaignCompletion()
 	if hasCompletedBaseCampaign("hard") then
 		unlock("CAMPAIGN_HARD")
 	end
-end
-
-local function unlock(id)
-	local meta = Save.data.meta
-
-	if meta.unlockedAchievements[id] then
-		return
-	end
-
-	meta.unlockedAchievements[id] = true
-
-	if Steam.loaded then
-		Steam.unlockAchievement(id)
-	end
-
-	Save.flush()
 end
 
 -- Enemy kills

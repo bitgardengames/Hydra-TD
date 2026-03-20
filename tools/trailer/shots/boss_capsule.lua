@@ -16,7 +16,7 @@ return {
         },
 
         wave = {
-			index = 10,
+			index = 11,
             start = true,
             warmup = 34,
         },

@@ -80,14 +80,12 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 
 	-- Prep / spawning block
 	if State.inPrep then
-		local t = floor(State.prepTimer * 10 + 0.5) / 10
 		local prepCache = hudCache.prep
 		local skipKey = Hotkeys.getDisplay("skipPrep")
 
-		if prepCache.value ~= t or prepCache.action ~= skipKey then
-			prepCache.value = t
+		if prepCache.action ~= skipKey then
 			prepCache.action = skipKey
-			prepCache.text = L("hud.prep", t, skipKey)
+			prepCache.text = L("hud.prep", skipKey)
 		end
 
 		lg.setColor(cg1, cg2, cg3, 1)
