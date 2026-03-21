@@ -9,6 +9,8 @@ function Bootstrap.initFull()
 	local Camera = require("core.camera")
 	local Steam = require("core.steam")
 	local Sound = require("systems.sound")
+	local MapPreviewCache = require("world.map_preview_cache")
+	local Menu = require("ui.menu.menu")
 
 	Save.load()
 	Difficulty.set(Save.data.settings.difficulty)
@@ -19,6 +21,8 @@ function Bootstrap.initFull()
 	Steam.load()
 	Sound.load()
 	Sound.playMusic("menu")
+	MapPreviewCache.buildAll(520, 312)
+	Menu.load()
 
 	Steam.setRichPresence(L("presence.menu"))
 

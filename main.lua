@@ -181,7 +181,6 @@ function love.load(arg)
 		require("tools.capsule_export").run()
 	else
 	    require("core.bootstrap").initFull()
-		require("ui.menu.menu").load()
 
 		Steam.setOverlayHook(pauseGame)
 	end

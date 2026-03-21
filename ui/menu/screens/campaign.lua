@@ -6,6 +6,7 @@ local Theme = require("core.theme")
 local State = require("core.state")
 local Save = require("core.save")
 local Maps = require("world.map_defs")
+local MapPreviewCache = require("world.map_preview_cache")
 local Text = require("ui.text")
 local Button = require("ui.button")
 local Medals = require("ui.medals")
@@ -23,8 +24,6 @@ local Screen = {}
 
 -- Colors
 local colorText = Theme.ui.text
-local colorPath = Theme.terrain.path
-local colorGrass = Theme.terrain.grass
 local colorPanel = Theme.ui.panel
 local colorShadow = Theme.ui.shadow
 local colorDim = Theme.ui.screenDim
@@ -54,8 +53,6 @@ local btnW = 240
 local btnH = 42
 local gap = 62
 
-local PREVIEW_ZOOM = 1.3
-
 -- Arrow navigation
 local ARROW_SIZE = 20
 local ARROW_OFFSET = 48
@@ -63,7 +60,6 @@ local ARROW_ALPHA = 0.85
 local ARROW_HOVER = 1.0
 
 -- State
-local mapPreviews = {}
 local campaignButtons = {}
 
 -- Helpers
@@ -105,60 +101,6 @@ local function drawTriangleWithShadow(points, color)
 	lg.polygon("fill", unpack(points))
 end
 
--- Map preview generation
-local function buildMapPreview(mapDef)
-	local w, h = 520, 312
-	local canvas = lg.newCanvas(w, h)
-
-	lg.setCanvas(canvas)
-	lg.clear(0, 0, 0, 0)
-
-	local tileW = w / Constants.GRID_W * PREVIEW_ZOOM
-	local tileH = h / Constants.GRID_H * PREVIEW_ZOOM
-
-	local mapW = Constants.GRID_W * tileW
-	local mapH = Constants.GRID_H * tileH
-
-	local offsetX = (w - mapW) * 0.5
-	local offsetY = (h - mapH) * 0.5
-
-	lg.setColor(colorGrass)
-	lg.rectangle("fill", offsetX, offsetY, mapW, mapH)
-
-	lg.setColor(colorPath)
-	lg.setLineWidth(4 * PREVIEW_ZOOM)
-
-	for i = 1, #mapDef.path - 1 do
-		local ax, ay = mapDef.path[i][1], mapDef.path[i][2]
-		local bx, by = mapDef.path[i + 1][1], mapDef.path[i + 1][2]
-
-		lg.line(offsetX + (ax - 0.5) * tileW, offsetY + (ay - 0.5) * tileH, offsetX + (bx - 0.5) * tileW, offsetY + (by - 0.5) * tileH)
-	end
-
-	lg.setLineWidth(1)
-	lg.setCanvas()
-
-	return canvas
-end
-
-local function clearMapPreviews()
-	for i, canvas in ipairs(mapPreviews) do
-		if canvas and canvas.release then
-			canvas:release()
-		end
-
-		mapPreviews[i] = nil
-	end
-end
-
-local function rebuildMapPreviews()
-	clearMapPreviews()
-
-	for i, map in ipairs(Maps) do
-		mapPreviews[i] = buildMapPreview(map)
-	end
-end
-
 local function getMapStats(mapId)
 	local stats = Save.data.mapStats
 
@@ -187,9 +129,6 @@ end
 
 -- Load
 function Screen.load()
-	-- Build previews once
-	rebuildMapPreviews()
-
 	campaignButtons = {
 		{
 			id = "play",
@@ -235,7 +174,13 @@ function Screen.update(dt)
 	Medals.update(dt)
 
 	local index = State.mapIndex
-	local preview = mapPreviews[index]
+	local map = Maps[index]
+	local preview = MapPreviewCache.get(map.id)
+
+	if not preview then
+		return
+	end
+
 	local pw, ph = preview:getWidth(), preview:getHeight()
 
 	-- Layout
@@ -270,8 +215,12 @@ function Screen.draw()
 	local index = State.mapIndex
 	local map = Maps[index]
 	local mapCount = #Maps
+	local preview = MapPreviewCache.get(map.id)
 
-	local preview = mapPreviews[index]
+	if not preview then
+		return
+	end
+
 	local pw, ph = preview:getWidth(), preview:getHeight()
 
 	local cx = floor(sw * 0.5)
@@ -307,6 +256,7 @@ function Screen.draw()
 	local alpha = locked and 0.35 or 1.0
 
 	lg.setColor(1, 1, 1, alpha)
+
 	lg.draw(preview, previewX, previewY)
 
 	-- Completion medals
@@ -460,7 +410,13 @@ function Screen.mousepressed(x, y, button)
 	if button == 1 then
 		local sw, sh = lg.getDimensions()
 		local index = State.mapIndex
-		local preview = mapPreviews[index]
+		local map = Maps[index]
+		local preview = MapPreviewCache.get(map.id)
+
+		if not preview then
+			return
+		end
+
 		local pw, ph = preview:getWidth(), preview:getHeight()
 
 		local cx = floor(sw * 0.5)
@@ -605,7 +561,7 @@ function Screen.gamepadpressed(joystick, button)
 end
 
 function Screen.resize(w, h)
-	rebuildMapPreviews()
+	--MapPreviewCache.buildAll(520, 312)
 end
 
 return Screen
