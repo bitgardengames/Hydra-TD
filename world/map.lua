@@ -15,6 +15,8 @@ local map = {
 	isPath = {},
 	path = {},
 	pathWorld = {},
+	samples = {},
+	sampleStep = 4, -- pixels (2–4 ideal)
 }
 
 local currentMap = nil
@@ -210,6 +212,56 @@ local function loadPath(points)
 	State.mapCoverageMult = map.coverageMult
 end
 
+local function buildSamples()
+	local pathWorld = map.pathWorld
+	local samples = {}
+	map.samples = samples
+
+	local step = map.sampleStep
+	local total = map.totalWorldLength
+
+	local seg = 1
+	local segStartDist = 0
+
+	for d = 0, total, step do
+		-- Advance segment (NO while loop)
+		while true do
+			local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
+			local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
+
+			local dx = bx - ax
+			local dy = by - ay
+			local segLen = sqrt(dx * dx + dy * dy)
+
+			if d <= segStartDist + segLen or seg >= #pathWorld - 1 then
+				break
+			end
+
+			segStartDist = segStartDist + segLen
+			seg = seg + 1
+		end
+
+		local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
+		local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
+
+		local dx = bx - ax
+		local dy = by - ay
+		local segLen = sqrt(dx * dx + dy * dy)
+
+		local t = 0
+		if segLen > 0 then
+			t = (d - segStartDist) / segLen
+		end
+
+		local x = ax + dx * t
+		local y = ay + dy * t
+
+		samples[#samples + 1] = {x, y}
+	end
+
+	map.sampleCount = #samples
+end
+
 local function buildPath(mapDef)
 	currentMap = mapDef
 
@@ -217,6 +269,7 @@ local function buildPath(mapDef)
 	--map.terrain = mapDef.terrain or {}
 
 	loadPath(mapDef.path)
+	buildSamples()
 
 	map.palette = Theme.terrain
 end
@@ -225,83 +278,37 @@ local function getPalette()
 	return map.palette
 end
 
-function sampleAtDist(dist)
-	local pathWorld = map.pathWorld
-	local pathDist = map.pathDist
-	local total = map.totalWorldLength
+local function sampleFast(dist)
+	local samples = map.samples
+	local step = map.sampleStep
 
-	if not pathDist then
-		return 0, 0, 1
-	end
-
-	local n = #pathDist
-
-	if n == 0 then
-		return 0, 0, 1
+	if not samples or #samples == 0 then
+		return 0, 0
 	end
 
 	if dist <= 0 then
-		local p = pathWorld[1]
-		return p[1], p[2], 1
+		local p = samples[1]
+
+		return p[1], p[2]
 	end
+
+	local total = map.totalWorldLength
 
 	if dist >= total then
-		local p = pathWorld[n]
-		return p[1], p[2], n - 1
+		local p = samples[#samples]
+
+		return p[1], p[2]
 	end
 
-	local seg = 1
+	local idx = dist / step
+	local i = floor(idx) + 1
 
-	if seg < 1 then
-		seg = 1
-	elseif seg > n - 1 then
-		seg = n - 1
-	end
+	local a = samples[i]
+	local b = samples[i + 1] or a
 
-	while seg > 1 and pathDist[seg] > dist do
-		seg = seg - 1
-	end
+	local t = idx - floor(idx)
 
-	-- Advance segment only if necessary
-	local nextDist = pathDist[seg + 1]
-
-	while seg < n - 1 and nextDist <= dist do
-		seg = seg + 1
-		nextDist = pathDist[seg + 1]
-	end
-
-	local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
-	local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
-
-	local segStart = pathDist[seg]
-	local segEnd = nextDist
-
-	local denom = segEnd - segStart
-
-	local t = 0
-
-	if denom > 0 then
-		t = (dist - segStart) / denom
-	end
-
-	return ax + (bx - ax) * t, ay + (by - ay) * t, seg
-end
-
-local function sampleDirAtDist(dist, hintSeg)
-	local x1, y1, seg = sampleAtDist(dist, hintSeg)
-	local x2, y2 = sampleAtDist(dist + 8, seg) -- 8px lookahead for direction
-
-	local dx = x2 - x1
-	local dy = y2 - y1
-	local d2 = dx * dx + dy * dy
-
-	if d2 <= 0.000001 then
-		return 1, 0, seg
-	end
-
-	local inv = 1 / sqrt(d2)
-
-	return dx * inv, dy * inv, seg
+	return a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t
 end
 
 return {
@@ -314,6 +321,5 @@ return {
 	setBlocked = setBlocked,
 	isBlocked = isBlocked,
 	clearBlocked = clearBlocked,
-	sampleAtDist = sampleAtDist,
-	sampleDirAtDist = sampleDirAtDist,
+	sampleFast = sampleFast,
 }

@@ -46,7 +46,7 @@ local outlineWidth = Theme.outline.width
 local TILE = Constants.TILE
 local HALF_PI = pi / 2
 
-local sampleAtDist = MapMod.sampleAtDist
+local sampleFast = MapMod.sampleFast
 local towerDefs = Towers.TowerDefs
 
 local function lerp(a, b, t)
@@ -61,7 +61,7 @@ local function prepareEnemyRenderData()
 		local e = enemies[i]
 
 		local d = lerp(e.prevDist or e.dist, e.dist, a)
-		local x, y = sampleAtDist(d)
+		local x, y = sampleFast(d)
 
 		e.rx = x
 		e.ry = y

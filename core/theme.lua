@@ -5,7 +5,7 @@ local function lighten(c, amt)
 end
 
 -- Variant switch
-Theme.variant = "halloween" -- "default", "halloween", "winter", "autumn"
+Theme.variant = "default" -- "default", "halloween", "winter", "autumn"
 -- Could consider lunar, martian, candy
 
 -- Base Theme

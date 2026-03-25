@@ -36,6 +36,8 @@ local function swapRemove(list, i)
 	list[last] = nil
 end
 
+local sampleFast = MapMod.sampleFast
+
 local function findEnemyAt(x, y)
 	for i = 1, #enemies do
 		local e = enemies[i]
@@ -98,8 +100,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		prevAnimT = 0,
 		dist = 0,
 		prevDist = 0,
-		seg = idx or 1,
-		prevSeg = idx or 1,
 		modifiers = def.modifiers,
 		slowFactor = 1,
 		slowTimer = 0,
@@ -326,41 +326,14 @@ local function updateEnemies(dt)
 		e.prevY = e.y
 
 		-- Store previous distance/segment (render will interpolate distance, then sample)
-		e.prevSeg = e.seg
 		e.prevDist = e.dist
 		e.dist = e.dist + e.speed * dt
 
-		if e.dist >= totalLen then
-			e.dist = totalLen
+		if e.dist > map.totalWorldLength then
+			e.dist = map.totalWorldLength
 		end
 
-		local seg = e.seg
-		local nextDist = pathDist[seg + 1]
-
-		-- Only search forward if needed
-		while seg < pathLen - 1 and nextDist <= e.dist + EPS do
-			seg = seg + 1
-			nextDist = pathDist[seg + 1]
-		end
-
-		e.seg = seg
-
-		local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
-		local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
-
-		local segStart = pathDist[seg]
-		local segEnd = nextDist
-		local denom = segEnd - segStart
-		local t = 0
-
-		if denom > 0 then
-			local d = min(e.dist, segEnd)
-
-			t = (d - segStart) / denom
-		end
-
-		e.x = ax + (bx - ax) * t
-		e.y = ay + (by - ay) * t
+		e.x, e.y = sampleFast(e.dist)
 
 		Spatial.updateEnemy(e)
 

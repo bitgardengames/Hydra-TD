@@ -2,13 +2,14 @@ local State = require("core.state")
 local Sound = require("systems.sound")
 local Effects = require("world.effects")
 local Enemies = require("world.enemies")
-local WorldMap = require("world.map")
+local MapMod = require("world.map")
 local Spatial = require("world.spatial_grid")
 
 local projectiles = {}
 local projectilePool = {}
 
 local lg = love.graphics
+local sampleFast = MapMod.sampleFast
 
 local pi = math.pi
 local sqrt = math.sqrt
@@ -98,7 +99,7 @@ local function spawn(fromTower, targetEnemy)
 		end
 
 		local futureDist = (targetEnemy.dist or 0) + (targetEnemy.speed or 0) * leadTime
-		local nx, ny = WorldMap.sampleAtDist(futureDist)
+		local nx, ny = sampleFast(futureDist)
 
 		tx = tx + (nx - targetEnemy.x)
 		ty = ty + (ny - targetEnemy.y)

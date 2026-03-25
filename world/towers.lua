@@ -37,6 +37,7 @@ local enemies = Enemies.enemies
 
 local findTarget = Targeting.findProgressTarget
 local isValidTarget = Targeting.isValidTarget
+local sampleFast = MapMod.sampleFast
 
 local FIRE_ANGLE_EPS = math.rad(6)
 
@@ -353,7 +354,7 @@ local function updateTowers(dt)
 				end
 
 				local futureDist = (target.dist or 0) + (target.speed or 0) * leadTime
-				local nx, ny = MapMod.sampleAtDist(futureDist)
+				local nx, ny = sampleFast(futureDist)
 
 				ax = ax + (nx - target.x)
 				ay = ay + (ny - target.y)
