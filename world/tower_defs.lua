@@ -54,7 +54,7 @@ return {
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 16,
 		projSpeed = 360,
-		turnSpeed = 10,
+		turnSpeed = 11,
 		color = Theme.tower.poison,
 		canRotate = true,
 		poison = {
@@ -86,7 +86,7 @@ return {
 		color = Theme.tower.cannon,
 		canRotate = true,
 		splash = {
-			radius = 42, -- AoE radius in pixels
+			radius = 48, -- AoE radius in pixels
 			falloff = 0.45, -- % damage applied at edge
 		},
 		upgrade = {
@@ -104,11 +104,11 @@ return {
 		range = 3.5 * Constants.TILE,
 		fireRate = 1.2,
 		damage = 9,
-		recoilStrength = 0,
-		recoilDecay = 0,
-		turnSpeed = 20,
+		recoilStrength = Constants.TILE * 0.03,
+		recoilDecay = 5, -- Dramatic because the recoil is so small
+		turnSpeed = 9,
 		color = Theme.tower.shock,
-		canRotate = false,
+		canRotate = true,
 		chain = {
 			jumps = 3, -- number of additional enemies
 			radius = 56, -- max distance between jumps
@@ -118,6 +118,30 @@ return {
 			dmgMult = 2.2,
 			rangeAdd = 0.06 * Constants.TILE,
 			fireMult = 1.0, -- 1.04
+		}
+	},
+
+	plasma = {
+		nameKey = "tower.plasma",
+		descKey = "towerDesc.plasma",
+		cost = 75,
+		range = 3.5 * Constants.TILE,
+		fireRate = 0.7,
+		damage = 5,
+		recoilStrength = Constants.TILE * 0.14,
+		recoilDecay = 18,
+		projSpeed = 140,
+		turnSpeed = 8,
+		color = Theme.tower.plasma,
+		canRotate = true,
+		plasma = {
+			radius = 10,
+			tickRate = 0.1,
+		},
+		upgrade = {
+			dmgMult = 2.2,
+			rangeAdd = 0.08 * Constants.TILE,
+			fireMult = 1.0,
 		}
 	},
 }

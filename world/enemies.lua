@@ -14,8 +14,6 @@ local Achievements = require("systems.achievements")
 local L = require("core.localization")
 
 local enemies = {}
-local deathFX = {}
-local deathPool = {}
 
 local colorMoney = Theme.ui.money
 
@@ -24,6 +22,7 @@ local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 local POISON_TICK = 0.5 -- seconds per poison tick
 local EPS = 0.0001
 
+local abs = math.abs
 local min = math.min
 local max = math.max
 local sqrt = math.sqrt
@@ -35,27 +34,6 @@ local function swapRemove(list, i)
 
 	list[i] = list[last]
 	list[last] = nil
-end
-
-local function acquireDeathFX()
-	local d = deathPool[#deathPool]
-
-	if d then
-		deathPool[#deathPool] = nil
-
-		return d
-	end
-
-	return {}
-end
-
-local function releaseDeathFX(d)
-	d.x = nil
-	d.y = nil
-	d.r = nil
-	d.t = nil
-
-	deathPool[#deathPool + 1] = d
 end
 
 local function findEnemyAt(x, y)
@@ -106,9 +84,13 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		radius = def.radius,
 		radius2 = def.radius * def.radius,
 		hitFlash = 0,
+		hitOffsetX = 0,
+		hitOffsetY = 0,
+		hitVelX = 0,
+		hitVelY = 0,
 		dying = false,
 		deathT = 0,
-		deathDur = 0.35,
+		deathDur = 0.4,
 		spawnFade = 0.12,
 		exitFade = nil,
 		alpha = 1,
@@ -226,13 +208,7 @@ local function updateEnemies(dt)
 
 				Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 
-				local d = acquireDeathFX()
-				d.x = e.x
-				d.y = e.y
-				d.r = e.radius
-				d.t = 0
-
-				deathFX[#deathFX + 1] = d
+				--Effects.spawnEnemyDeath(e.x, e.y, e.radius)
 
 				State.activeBoss = nil
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
@@ -283,13 +259,7 @@ local function updateEnemies(dt)
 
 			Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 
-			local d = acquireDeathFX()
-			d.x = e.x
-			d.y = e.y
-			d.r = e.radius
-			d.t = 0
-
-			deathFX[#deathFX + 1] = d
+			Effects.spawnEnemyDeath(e.x, e.y, e.radius)
 
 			Spatial.removeEnemy(e)
 
@@ -321,6 +291,35 @@ local function updateEnemies(dt)
 				e.hitFlash = 0
 			end
 		end
+
+		-- Hit offset (impulse + critically damped return)
+		e.hitVelX = e.hitVelX or 0
+		e.hitVelY = e.hitVelY or 0
+		e.hitOffsetX = e.hitOffsetX or 0
+		e.hitOffsetY = e.hitOffsetY or 0
+
+		e.prevHitOffsetX = e.hitOffsetX
+		e.prevHitOffsetY = e.hitOffsetY
+
+		-- Integrate velocity
+		e.hitOffsetX = e.hitOffsetX + e.hitVelX
+		e.hitOffsetY = e.hitOffsetY + e.hitVelY
+
+		-- damping (kills energy)
+		local damping = 0.9
+		e.hitVelX = e.hitVelX * damping
+		e.hitVelY = e.hitVelY * damping
+
+		-- soft return to center
+		local returnStrength = 0.2
+		e.hitOffsetX = e.hitOffsetX * (1 - returnStrength)
+		e.hitOffsetY = e.hitOffsetY * (1 - returnStrength)
+
+		-- deadzone
+		if abs(e.hitOffsetX) < 0.01 then e.hitOffsetX = 0 end
+		if abs(e.hitOffsetY) < 0.01 then e.hitOffsetY = 0 end
+		if abs(e.hitVelX) < 0.01 then e.hitVelX = 0 end
+		if abs(e.hitVelY) < 0.01 then e.hitVelY = 0 end
 
 		-- Store previous position for interpolation
 		e.prevX = e.x
@@ -431,19 +430,6 @@ local function updateEnemies(dt)
 
 		::continue::
 	end
-
-	-- Death ring
-	for i = #deathFX, 1, -1 do
-		local d = deathFX[i]
-		d.t = d.t + dt
-
-		if d.t > 0.12 then
-			local d = deathFX[i]
-
-			swapRemove(deathFX, i)
-			releaseDeathFX(d)
-		end
-	end
 end
 
 local function clear()
@@ -453,15 +439,10 @@ local function clear()
 		Spatial.removeEnemy(e)
 		enemies[i] = nil
 	end
-
-	for i = #deathFX, 1, -1 do
-		deathFX[i] = nil
-	end
 end
 
 return {
 	enemies = enemies,
-	deathFX = deathFX,
 	EnemyDefs = EnemyDefs,
 	findEnemyAt = findEnemyAt,
 	spawnEnemy = spawnEnemy,

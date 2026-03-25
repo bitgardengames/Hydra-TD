@@ -1,3 +1,4 @@
+local Constants = require("core.constants")
 local Theme = require("core.theme")
 local TowerDefs = require("world.tower_defs")
 local Util = require("core.util")
@@ -19,6 +20,8 @@ local towers = {}
 
 local pi = math.pi
 local abs = math.abs
+local cos = math.cos
+local sin = math.sin
 local atan2 = math.atan2
 local min = math.min
 local max = math.max
@@ -37,13 +40,21 @@ local isValidTarget = Targeting.isValidTarget
 
 local FIRE_ANGLE_EPS = math.rad(6)
 
-local shopOrder = {
-	"slow",
-	"lancer",
-	"poison",
-	"cannon",
-	"shock",
-}
+local function getShockOrigin(t)
+	local size = Constants.TILE * 0.42
+	local tipX = size * 0.40
+
+	local localX = tipX - (t.recoil or 0)
+	local localY = 0
+
+	local ca = cos(t.angle)
+	local sa = sin(t.angle)
+
+	local worldX = t.x + (localX * ca - localY * sa)
+	local worldY = t.renderY + (localX * sa + localY * ca)
+
+	return worldX, worldY
+end
 
 local function addTower(kind, gx, gy)
 	local def = TowerDefs[kind]
@@ -98,6 +109,7 @@ local function addTower(kind, gx, gy)
 		splash = def.splash and {radius = def.splash.radius, falloff = def.splash.falloff} or nil,
 		chain = def.chain and {jumps = def.chain.jumps, radius = def.chain.radius, falloff = def.chain.falloff} or nil,
 		poison = def.poison and {dps = def.poison.dps, dur = def.poison.dur, maxStacks = def.poison.maxStacks} or nil,
+		plasma = def.plasma and {radius = def.plasma.radius, tickRate = def.plasma.tickRate} or nil,
 	}
 
 	State.money = State.money - def.cost
@@ -407,10 +419,11 @@ local function updateTowers(dt)
 
 						-- Always show feedback for a Shock fire
 						if zapOrder and #zapOrder > 0 then
-							Effects.spawnZapEffect(t.x, t.y, zapOrder)
+							local mx, my = getShockOrigin(t)
+							Effects.spawnZapEffect(mx, my, zapOrder)
 						else
 							-- Fallback: single-target zap
-							Effects.spawnZapEffect(t.x, t.y, {{from = t, to = target}})
+							Effects.spawnZapEffect(t.x, t.renderY, {{from = t, to = target}})
 						end
 					else
 						Projectiles.spawn(t, target)
@@ -441,7 +454,6 @@ end
 
 return {
 	towers = towers,
-	shopOrder = shopOrder,
 	TowerDefs = TowerDefs,
 	addTower = addTower,
 	getUpgradeCost = getUpgradeCost,

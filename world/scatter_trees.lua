@@ -80,12 +80,71 @@ function Trees.generate()
 	local seed = 65432 + State.worldMapIndex * 977
 	rng:setSeed(seed + 1)
 
-	local count = 48
+	local count = 54
 
+	-- Primary clusters
+	local clusters = {}
+	local clusterCount = random(3, 5)
+
+	for i = 1, clusterCount do
+		clusters[#clusters + 1] = {
+			gx = random(3, GRID_W - 2),
+			gy = random(3, GRID_H - 2),
+			radius = random(2, 4),
+		}
+	end
+
+	-- Smaller groups
+	local microClusters = {}
+	local microCount = random(4, 8)
+
+	for i = 1, microCount do
+		microClusters[#microClusters + 1] = {
+			gx = random(2, GRID_W - 1),
+			gy = random(2, GRID_H - 1),
+			radius = random(1, 2),
+		}
+	end
+
+	local function inCluster(gx, gy)
+		for i = 1, #clusters do
+			local c = clusters[i]
+			local dx = gx - c.gx
+			local dy = gy - c.gy
+
+			if dx * dx + dy * dy <= c.radius * c.radius then
+				return true
+			end
+		end
+
+		for i = 1, #microClusters do
+			local c = microClusters[i]
+			local dx = gx - c.gx
+			local dy = gy - c.gy
+
+			if dx * dx + dy * dy <= c.radius * c.radius then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	-- Generation
 	while #Trees.list < count do
 		local gx = random(2, GRID_W - 1)
 		local gy = random(2, GRID_H - 1)
 
+		local isCluster = inCluster(gx, gy)
+
+		-- Individuals
+		if not isCluster then
+			if random() < 0.55 then
+				goto continue
+			end
+		end
+
+		-- Path avoidance
 		if nearPath(gx, gy) then
 			goto continue
 		end
@@ -94,8 +153,12 @@ function Trees.generate()
 			goto continue
 		end
 
-		local x = (gx - 0.5) * TILE
-		local y = (gy - 0.5) * TILE
+		-- Offset
+		local cx = (gx - 0.5) * TILE
+		local cy = (gy - 0.5) * TILE
+
+		local x = cx + random(-10, 10)
+		local y = cy + random(-10, 10)
 
 		Trees.list[#Trees.list + 1] = {
 			x = x,
@@ -104,7 +167,7 @@ function Trees.generate()
 			gy = gy,
 			style = random(#styles),
 			shape = random(2),
-			scale = 0.8 + random() * 0.6
+			scale = 0.8 + random() * 0.6,
 		}
 
 		setOccupied(gx, gy)

@@ -27,7 +27,10 @@ return {
 		{t = 0, fn = Actions.upgradeTowerAt(18, 7, 2)},
 		{t = 0, fn = Actions.upgradeTowerAt(16, 7, 2)},
 		{t = 0, fn = Actions.upgradeTowerAt(17, 9, 3)},
+		{t = 0, fn = Actions.setLives(15)},
 
-		{t = 0, fn = Actions.setMoney(92)},
+		{t = 0.1, fn = Actions.setMoney(278)},
+
+		{t = 0.1, fn = Actions.selectTower(16, 7)},
     },
 }

@@ -1,7 +1,7 @@
 return {
 	mode = "sequence", -- sequence, single, screenshots
 	sequence = "steam_trailer",
-	startShot = "patch",
+	startShot = "plasma_intro",
 
 	recorder = false,
 

@@ -41,6 +41,7 @@ return {
 		{t = 0, fn = Actions.upgradeTowerAt(19, 11, 3)},
 		{t = 0, fn = Actions.upgradeTowerAt(18, 13, 2)},
 		{t = 0, fn = Actions.upgradeTowerAt(20, 11, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(16, 13, 1)},
 	},
 
 	camera = function(ctx)

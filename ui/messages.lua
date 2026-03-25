@@ -159,7 +159,7 @@ function Messages.draw()
 		lg.translate(-cx, -cy)
 
 		-- backdrop
-		lg.setColor(0.125, 0.125, 0.125, 0.65 * alpha * dim)
+		lg.setColor(0.125, 0.125, 0.125, 0.75 * alpha * dim)
 		lg.rectangle("fill", X - PADDING_X, yy - PADDING_Y, w, boxH, 6)
 
 		-- text (shadowed)

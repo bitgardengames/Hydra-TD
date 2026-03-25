@@ -1038,9 +1038,9 @@ end
 
 function Export.run()
 	ensureDirs()
-	--Export.exportTowers()
+	Export.exportTowers()
 	--Export.exportEnemies()
-	Export.exportBanners()
+	--Export.exportBanners()
 	--Export.exportAppIcons()
 	--Export.exportSocialAvatar()
 	--Export.exportCogSocialAvatar()

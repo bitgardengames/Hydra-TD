@@ -218,16 +218,14 @@ local function buildPath(mapDef)
 
 	loadPath(mapDef.path)
 
-	local name = mapDef.palette or "default"
-
-	map.palette = Theme.palettes[name] or Theme.palettes.default
+	map.palette = Theme.terrain
 end
 
 local function getPalette()
 	return map.palette
 end
 
-function sampleAtDist(dist, hintSeg)
+function sampleAtDist(dist)
 	local pathWorld = map.pathWorld
 	local pathDist = map.pathDist
 	local total = map.totalWorldLength
@@ -252,7 +250,7 @@ function sampleAtDist(dist, hintSeg)
 		return p[1], p[2], n - 1
 	end
 
-	local seg = hintSeg or 1
+	local seg = 1
 
 	if seg < 1 then
 		seg = 1
@@ -260,7 +258,11 @@ function sampleAtDist(dist, hintSeg)
 		seg = n - 1
 	end
 
-	-- advance segment only if necessary
+	while seg > 1 and pathDist[seg] > dist do
+		seg = seg - 1
+	end
+
+	-- Advance segment only if necessary
 	local nextDist = pathDist[seg + 1]
 
 	while seg < n - 1 and nextDist <= dist do

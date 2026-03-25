@@ -5,6 +5,8 @@ local Spatial = require("world.spatial_grid")
 local Shock = {}
 
 local dist2 = Util.dist2
+local random = love.math.random
+local sqrt = math.sqrt
 
 -- Reusable context
 local ctx = {
@@ -34,6 +36,7 @@ local function addLink(from, to)
 	local i = #order + 1
 
 	local link = order[i]
+
 	if not link then
 		link = {}
 		order[i] = link
@@ -49,6 +52,32 @@ local function zapEnemy(from, e, dmg)
 
 	if e.hitFlash <= 0 then
 		e.hitFlash = 0.05
+	end
+
+	-- Subtle nudge
+	if not e.boss then
+		local dx, dy
+
+		if from then
+			dx = e.x - from.x
+			dy = e.y - from.y
+		else
+			-- First hit from tower
+			dx = e.x - sourceTower.x
+			dy = e.y - sourceTower.y
+		end
+
+		local len = sqrt(dx * dx + dy * dy)
+
+		if len > 0 then
+			dx = dx / len
+			dy = dy / len
+		end
+
+		local strength = 0.25
+
+		e.hitVelX = (e.hitVelX or 0) + dx * strength
+		e.hitVelY = (e.hitVelY or 0) + dy * strength
 	end
 
 	addLink(from, e)
@@ -67,6 +96,7 @@ function Shock.fire(sourceTower, initialTarget)
 	end
 
 	local chain = sourceTower.chain
+
 	if not chain then
 		return nil
 	end

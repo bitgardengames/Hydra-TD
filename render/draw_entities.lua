@@ -5,6 +5,7 @@ local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
 
+local random = love.math.random
 local lg = love.graphics
 local sin = math.sin
 local min = math.min
@@ -60,18 +61,20 @@ local function prepareEnemyRenderData()
 		local e = enemies[i]
 
 		local d = lerp(e.prevDist or e.dist, e.dist, a)
-		local x, y = sampleAtDist(d, e.prevSeg)
+		local x, y = sampleAtDist(d)
 
 		e.rx = x
 		e.ry = y
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
+		e.rHitOffsetX = lerp(e.prevHitOffsetX or e.hitOffsetX or 0, e.hitOffsetX or 0, a)
+		e.rHitOffsetY = lerp(e.prevHitOffsetY or e.hitOffsetY or 0, e.hitOffsetY or 0, a)
 	end
 end
 
 -- Draw a single enemy
 local function drawEnemy(e)
-	local ix = e.rx or 0
-	local iy = e.ry or 0
+	local ix = (e.rx or 0) + (e.rHitOffsetX or 0)
+	local iy = (e.ry or 0) + (e.rHitOffsetY or 0)
 	local animT = e.rAnimT or 0
     local enemyAlpha = e.alpha
 
@@ -127,7 +130,7 @@ local function drawEnemy(e)
     if e.hitFlash > 0 then
         local a = min(1, e.hitFlash / 0.05)
 
-        lg.setColor(0.92, 0.96, 1.0, a * 0.35)
+        lg.setColor(0.92, 0.96, 1.0, a * 0.55)
         lg.circle("fill", ix, iy, e.radius)
     end
 
@@ -214,11 +217,8 @@ local function drawEnemy(e)
 		if dy > m then dy = m end
 		if dy < -m then dy = -m end
 
-		local ex = dx
-		local ey = dy
-
-		lg.circle("fill", ix - eyeSep + ex, eyeY + ey, eyeSize)
-		lg.circle("fill", ix + eyeSep + ex, eyeY + ey, eyeSize)
+		lg.circle("fill", ix - eyeSep + dx, eyeY + dy, eyeSize)
+		lg.circle("fill", ix + eyeSep + dx, eyeY + dy, eyeSize)
     end
 
 	-- Selection Ring
@@ -238,38 +238,40 @@ local function drawEnemyHealth(e)
 
 	local w = e.boss and 44 or 28
 	local h = e.boss and 7 or 5
+
 	local ix = e.rx
 	local iy = e.ry
+
 	local bx = ix - w / 2
 	local by = iy - e.radius - (e.boss and 18 or 12)
 
 	local t = max(0, e.hp / e.maxHp)
 
-	local r, g
+	-- Muted health color
+	local r, g, b
 
 	if t > 0.5 then
 		local p = (t - 0.5) / 0.5
-
-		r, g = 1 - p, 1
+		r = 0.85 - p * 0.55
+		g = 0.75 + p * 0.20
+		b = 0.20
 	else
 		local p = t / 0.5
-
-		r, g = 1, p
+		r = 0.85
+		g = 0.45 + p * 0.30
+		b = 0.20
 	end
 
 	-- Background
 	lg.setColor(0, 0, 0, 0.5)
 	lg.rectangle("fill", bx, by, w, h, 3, 3)
 
-	-- Fill
 	local fillW = w * t
 
 	if fillW > 0 then
-		-- Keep a minimum width so it never collapses visually
 		local minW = 4
 		local visibleW = max(fillW, minW)
 
-		-- Fade out near zero instead of shrinking into a square
 		local alphaScale = 1
 
 		if t < 0.10 then
@@ -278,13 +280,27 @@ local function drawEnemyHealth(e)
 
 		local radius = min(3, visibleW * 0.5, h * 0.5)
 
-		lg.setColor(r * 0.9 + 0.05, g * 0.9 + 0.05, 0.15, 0.9 * alphaScale)
-
+		-- Base
+		lg.setColor(r * darkMul, g * darkMul, b * darkMul, 0.9 * alphaScale)
 		lg.rectangle("fill", bx, by, visibleW, h, radius, radius)
+
+		-- Highlight
+		local hw = visibleW * 0.92
+		local hh = h * highlightScale
+		local hx = bx + visibleW * 0.5
+		local hy = by + (hh * 0.5)
+
+		-- Clamp height so it never spills out the bar
+		if hh > h then
+			hh = h
+		end
+
+		lg.setColor(r, g, b, 0.9 * alphaScale)
+		lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, radius)
 	end
 end
 
--- Draw all enemies + death FX
+-- Draw all enemies
 local function drawEnemies()
 	local enemies = Enemies.enemies
 
@@ -305,21 +321,6 @@ local function drawEnemies()
 		local e = enemies[i]
 
 		drawEnemyHealth(e)
-	end
-
-	local deathFX = Enemies.deathFX
-
-	for i = 1, #deathFX do
-		local fx = deathFX[i]
-		local p = fx.t / 0.14
-		local a = (1 - p) * 0.6
-		local scale = 1 + p * 0.25
-
-		lg.setColor(1, 1, 1, a)
-		lg.circle("line", fx.x, fx.y, fx.r * scale)
-
-		lg.setColor(1, 1, 1, a * 0.2)
-		lg.circle("fill", fx.x, fx.y, fx.r * scale)
 	end
 
 	lg.setLineWidth(1)
@@ -370,10 +371,10 @@ local function drawSlowFX(t)
 	local mx, my = getBarrelTip(t, tipX)
 
 	local p = 1 - a
-	local radius = 3 + p * 10
+	local radius = 4 + p * 14
 	local alpha = 0.9 * (a * a)
 
-	lg.setLineWidth(2 + a * 1.5)
+	lg.setLineWidth(2 + a * 2)
 	--lg.setColor(sr, sg, sb, alpha)
 	lg.setColor(0.92, 0.92, 0.96, alpha)
 	lg.circle("line", mx, my, radius)
@@ -384,23 +385,53 @@ end
 
 local function drawShockFX(t)
 	local size = TILE * 0.42
-	local outerR = size * 0.36
-	local coreR  = size * 0.08
+	local barrelLen = size * 0.52
+	local offset = size * 0.12
 
-	if t.windUp and t.windUp > 0 then
-		local tNorm = 1 - (t.windUp / 0.08)
-		local charge = tNorm * tNorm
+	local tipX = size * 0.28 + barrelLen
 
-		local ringR = outerR + (coreR - outerR) * charge
-		local alpha = 0.25 + charge * 0.75
+	local ca = cos(t.angle)
+	local sa = sin(t.angle)
 
-		lg.setLineWidth(2)
-		lg.setColor(1, 1, 1, alpha)
-		lg.circle("line", t.x, t.renderY, ringR)
+	lg.setLineWidth(2)
 
-		lg.setColor(1, 1, 1, charge * 0.4)
-		lg.circle("fill", t.x, t.renderY, coreR * (1 + charge * 0.4))
+	for i = -1, 1, 2 do
+		local oy = offset * i
+
+		local localX = tipX - (t.recoil or 0)
+		local localY = oy
+
+		local mx = t.x + (localX * ca - localY * sa)
+		local my = t.renderY + (localX * sa + localY * ca)
+
+		-- BUILD (flicker / jitter)
+		if t.windUp and t.windUp > 0 then
+			local p = 1 - (t.windUp / 0.08)
+
+			-- small random flicker
+			if random() < (0.4 + p * 0.4) then
+				local j = 1.5
+
+				lg.setColor(0.7, 0.95, 1.0, 0.5 + p * 0.5)
+				lg.circle("fill", mx + random(-j, j), my + random(-j, j), 2 + p)
+			end
+		end
+
+		-- Release
+		local a = t.fireAnim or 0
+
+		if a > 0 then
+			local p = 1 - a
+
+			local r = 2 + p * 4
+			local alpha = 0.7 * a
+
+			lg.setColor(0.6, 0.9, 1.0, alpha)
+			lg.circle("line", mx, my, r)
+		end
 	end
+
+	lg.setLineWidth(1)
 end
 
 local function drawCannonFX(t)
@@ -411,14 +442,55 @@ local function drawCannonFX(t)
 	end
 
 	local size = TILE * 0.42
-	local tipX = size * 0.80
+	local tipX = size * 0.85
 
 	local mx, my = getBarrelTip(t, tipX)
 
-	local r = 4 + (1 - a) * 4
+	local p = 1 - a
 
-	lg.setColor(0.9, 0.9, 0.9, 0.75 * a)
-	lg.circle("fill", mx, my, r)
+	-- Expand outward
+	local r = 6 + p * 10
+
+	-- Stronger early, softer late
+	local alpha = 0.85 * (a * a)
+
+	lg.setLineWidth(2)
+
+	-- Main ring
+	lg.setColor(1.0, 0.9, 0.7, alpha)
+	lg.circle("line", mx, my, r)
+
+	-- Optional inner glow (very subtle, helps impact feel)
+	lg.setColor(1.0, 0.8, 0.6, alpha * 0.25)
+	lg.circle("fill", mx, my, r * 0.5)
+
+	lg.setLineWidth(1)
+end
+
+local function drawPlasmaFX(t)
+	local a = t.fireAnim
+
+	if a <= 0 then
+		return
+	end
+
+	local size = TILE * 0.48
+	local tipX = size * 0.85
+
+	local mx, my = getBarrelTip(t, tipX)
+
+	local p = 1 - a
+
+	local r = 6 + p * 10
+	local alpha = a * a
+
+	lg.setLineWidth(2)
+
+	-- Main ring
+	lg.setColor(0.9, 0.6, 1.0, alpha)
+	lg.circle("line", mx, my, r)
+
+	lg.setLineWidth(1)
 end
 
 local function drawTowerFX(t)
@@ -430,6 +502,8 @@ local function drawTowerFX(t)
 		drawLancerFX(t)
 	elseif t.kind == "slow" then
 		drawSlowFX(t)
+	elseif t.kind == "plasma" then
+		drawPlasmaFX(t)
 	end
 end
 
@@ -524,7 +598,6 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 
 		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
 		lg.circle("fill", 0, 0, rInner)
-
 	elseif kind == "poison" then
 		local rOuter = size * 0.38 + outlineW * 0.5
 		rInner = rOuter - outlineW
@@ -562,6 +635,18 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 
 		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
 		lg.rectangle("fill", -i, -i, i * 2, i * 2, rectRadius)
+	elseif kind == "plasma" then
+		local o = size * 0.38 + outlineW * 0.5
+		local i = o - outlineW
+
+		rectInner = i
+		rectRadius = 4 - outlineW * 0.25
+
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.rectangle("fill", -o, -o, o * 2, o * 2, 5 + outlineW * 0.5, 5 + outlineW * 0.5)
+
+		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
+		lg.rectangle("fill", -i, -i, i * 2, i * 2, rectRadius)
 	end
 
 	lg.pop()
@@ -583,7 +668,7 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 		lg.circle("fill", hx, hy, hr)
 	end
 
-	-- Lancer/Slow highlights
+	-- Lancer/Slow/Plasma highlights
 	if rectInner then
 		local topX = 0
 		local topY = -1
@@ -631,6 +716,17 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
+	elseif kind == "shock" then
+		local barrelLen = size * 0.52
+		local barrelW = size * 0.12
+		local offset = size * 0.12
+
+		for i = -1, 1, 2 do
+			local oy = offset * i
+
+			lg.setColor(outR, outG, outB, outlineA)
+			lg.rectangle("fill", size * 0.28, oy - barrelW * 0.5, barrelLen, barrelW, 2, 2)
+		end
 	elseif kind == "poison" then
 		local pulse = fireAnim * (1 - fireAnim) * 4
 		local sacRadius = size * 0.16 + pulse
@@ -640,6 +736,25 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	elseif kind == "lancer" then
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.32, -size * 0.08, size * 0.58, size * 0.16, 2, 2)
+	elseif kind == "slow" then
+		local ex = rectInner
+		local ey = 0
+
+		local s = rectInner * 0.5
+
+		lg.push()
+		lg.translate(ex, ey)
+		lg.rotate(pi / 4)
+
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.rectangle("fill", -s, -s, s * 2, s * 2, 2)
+
+		lg.pop()
+	elseif kind == "plasma" then
+		local barrelH = size * 0.24
+
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.58, barrelH, 3, 3)
 	end
 
 	lg.pop()

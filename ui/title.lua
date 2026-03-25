@@ -23,7 +23,15 @@ local SERVO_SPEED = 1.8
 
 local TITLE_TEXT = "HYDRA TD"
 
-local colorLancer = Theme.tower.lancer
+local SHOW_TOWER = true
+local TOWER_TYPE = "lancer"
+
+if love.math.random() < 0.01 then
+	local towers = {"cannon", "shock", "poison", "plasma", "slow"}
+	TOWER_TYPE = towers[love.math.random(1, #towers)]
+end
+
+local colorLancer = Theme.tower[TOWER_TYPE]
 local colorOutline = Theme.outline.color
 
 local titleCache = {
@@ -157,13 +165,15 @@ local function drawTitleLayout(originX, originY, layoutScale, lancerScale, gap, 
 	lg.scale(layoutScale, layoutScale)
 
 	-- Lancer
-	lg.push()
-	lg.translate(baseX + lancerVisualW * 0.5, midY)
-	lg.scale(lancerScale, lancerScale)
+	if SHOW_TOWER then
+		lg.push()
+		lg.translate(baseX + lancerVisualW * 0.5, midY)
+		lg.scale(lancerScale, lancerScale)
 
-	Entities.drawTowerVisual("lancer", 0, 0, angle, 1, alpha)
+		Entities.drawTowerVisual(TOWER_TYPE, 0, 0, angle, 0, alpha)
 
-	lg.pop()
+		lg.pop()
+	end
 
 	-- Text
 	lg.setColor(1, 1, 1, alpha)

@@ -17,7 +17,10 @@ local min = math.min
 local max = math.max
 local sin = math.sin
 local cos = math.cos
+local abs = math.abs
 local tinsert = table.insert
+
+local pulseSpeed = 3.0
 
 local function swapRemove(list, i)
 	local last = #list
@@ -30,6 +33,26 @@ local EPS = 0.000001
 
 local function wobble(t, amp)
 	return sin(t * 6.0) * amp, cos(t * 4.5) * amp
+end
+
+local function addHitOffset(e, hitX, hitY)
+	local dx = e.x - hitX
+	local dy = e.y - hitY
+
+	local len = sqrt(dx * dx + dy * dy)
+
+	if len > 0 then
+		dx = dx / len
+		dy = dy / len
+	else
+		dx, dy = 0, -1
+	end
+
+	local strength = 0.35
+
+	-- accumulate velocity instead of replacing state
+	e.hitVelX = (e.hitVelX or 0) + dx * strength
+	e.hitVelY = (e.hitVelY or 0) + dy * strength
 end
 
 local function acquireProjectile()
@@ -47,6 +70,8 @@ end
 local function releaseProjectile(p)
 	p.x = nil
 	p.y = nil
+	p.vx = nil
+	p.vy = nil
 	p.target = nil
 	p.sourceTower = nil
 	p.tx = nil
@@ -54,6 +79,7 @@ local function releaseProjectile(p)
 	p.slow = nil
 	p.poison = nil
 	p.splash = nil
+	p.plasma = nil
 
 	projectilePool[#projectilePool + 1] = p
 end
@@ -83,14 +109,13 @@ local function spawn(fromTower, targetEnemy)
 	p.x = fromTower.x
 	p.y = fromTower.renderY or fromTower.y
 	p.r = 4.5
-	p.life = 2.0
+	p.life = 3.0
 	p.t = 0
 	p.rotation = fromTower.angle or 0
 	p.sourceTower = fromTower
 	p.sourceKind = fromTower.kind
 	p.speed = fromTower.projSpeed or 0
 	p.damage = fromTower.damage
-	p.mode = isCannon and "ground" or "homing"
 	p.target = targetEnemy
 	p.lastTX = targetEnemy.x
 	p.lastTY = targetEnemy.y
@@ -99,10 +124,36 @@ local function spawn(fromTower, targetEnemy)
 	p.splash = fromTower.splash
 	p.slow = fromTower.slow
 	p.poison = fromTower.poison
+	p.plasma = fromTower.plasma
+
+	if fromTower.plasma then
+		p.hitTimer = 0
+		p.hitCooldown = p.plasma.tickRate or 0.2
+		p.r = p.plasma.radius
+		p.pulse = 0
+		p.pulseDir = 1
+	end
 
 	p.hitRadius = p.r + targetEnemy.radius
 	p.hitRadius2 = p.hitRadius * p.hitRadius
 	p.impactRadius2 = (p.r + 1) * (p.r + 1)
+
+	if fromTower.plasma ~= nil then
+		local ang = fromTower.angle or 0
+
+		p.vx = cos(ang)
+		p.vy = sin(ang)
+
+		--p.life = 1.0
+	end
+
+	if isCannon then
+		p.mode = "ground"
+	elseif fromTower.plasma ~= nil then
+		p.mode = "linear"
+	else
+		p.mode = "homing"
+	end
 
 	if fromTower.slow then
 		local base = fromTower.projSpeed or 0
@@ -248,6 +299,10 @@ local function update(dt)
 						e.hitFlash = 0.05
 					end
 
+					if not e.boss then
+						addHitOffset(e, p.x, p.y)
+					end
+
 					State.addDamage(p.sourceKind, dmg, e.boss == true)
 				end
 
@@ -327,6 +382,10 @@ local function update(dt)
 							e.hitFlash = 0.05
 						end
 
+						if not e.boss then
+							addHitOffset(e, px, py)
+						end
+
 						State.addDamage(kind, dmg, e.boss == true)
 					end
 				end
@@ -342,6 +401,65 @@ local function update(dt)
 			end
 		end
 
+		-- Linear projectiles (Plasma)
+		if p.mode == "linear" then
+			local speed = p.speed or 0
+
+			p.x = p.x + p.vx * speed * dt
+			p.y = p.y + p.vy * speed * dt
+
+			-- Tick timer
+			p.hitTimer = (p.hitTimer or 0) - dt
+
+			p.pulse = p.pulse + p.pulseDir * pulseSpeed * dt
+
+			if p.pulse >= 1 then
+				p.pulse = 1
+				p.pulseDir = -1
+			elseif p.pulse <= 0 then
+				p.pulse = 0
+				p.pulseDir = 1
+			end
+
+			if p.hitTimer <= 0 then
+				local nearby = Spatial.queryCells(p.x, p.y)
+
+				for j = 1, #nearby do
+					local e = nearby[j]
+
+					if e.hp > 0 then
+						local dx = e.x - p.x
+						local dy = e.y - p.y
+
+						if dx * dx + dy * dy <= p.hitRadius2 then
+							local dmg = p.damage
+
+							e.hp = e.hp - dmg
+
+							local tower = p.sourceTower
+							tower.damageDealt = tower.damageDealt + dmg
+							e.lastHitTower = tower
+
+							if e.hitFlash <= 0 then
+								e.hitFlash = 0.05
+							end
+
+							if not e.boss then
+								addHitOffset(e, p.x, p.y)
+							end
+
+							State.addDamage(p.sourceKind, dmg, e.boss == true)
+
+							Effects.spawnPlasmaHit(p.x, p.y, p.vx, p.vy)
+						end
+					end
+				end
+
+				-- Reset AFTER processing all enemies
+				p.hitTimer = p.hitCooldown
+			end
+		end
+
 		::continue::
 	end
 end
@@ -350,7 +468,15 @@ local function draw()
 	for i = 1, #projectiles do
 		local p = projectiles[i]
 		local rotation = 0
-		local a = min(1, p.t * 10)
+		local fadeStart = 0.2 -- seconds before death to start fading
+
+		local lifeAlpha = 1
+
+		if p.life < fadeStart then
+			lifeAlpha = p.life / fadeStart
+		end
+
+		local a = min(1, p.t * 10) * lifeAlpha
 
 		-- Aim at target (or last known)
 		if p.mode == "homing" then
@@ -381,10 +507,25 @@ local function draw()
 			local wx, wy = wobble(p.t or 0, 1.5)
 			lg.setColor(0.6, 0.9, 0.5, a)
 			lg.circle("fill", p.x + wx, p.y + wy, p.r + 1.5)
-		else -- Lancer
-			--lg.setColor(1, 1, 1, a)
-			--lg.circle("fill", p.x, p.y, 4)
+		elseif p.plasma then
+			lg.push()
+			lg.translate(p.x, p.y)
 
+			local pulse = p.pulse or 0
+
+			local outerR = 8 + pulse * 1.2
+			local innerR = 4.5 + pulse * 0.6
+
+			-- Outer glow
+			lg.setColor(0.85, 0.55, 1.0, a)
+			lg.circle("fill", 0, 0, outerR)
+
+			-- Inner core
+			lg.setColor(1, 0.75, 1.0, a * 0.9)
+			lg.circle("fill", 0, 0, innerR)
+
+			lg.pop()
+		else -- Lancer
 			lg.push()
 			lg.translate(p.x, p.y)
 			lg.rotate(rotation)

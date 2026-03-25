@@ -30,7 +30,10 @@ return {
 		{t = 0, fn = Actions.upgradeTowerAt(19, 7, 1)},
 		{t = 0, fn = Actions.upgradeTowerAt(20, 7, 2)},
 		{t = 0, fn = Actions.upgradeTowerAt(18, 8, 1)},
+		{t = 0, fn = Actions.setLives(7)},
 
-		{t = 0, fn = Actions.setMoney(101)},
+		{t = 0.1, fn = Actions.setMoney(101)},
+
+		{t = 10, fn = Actions.selectEnemy(3)},
     },
 }

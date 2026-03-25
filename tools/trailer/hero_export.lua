@@ -80,7 +80,7 @@ HeroExport.subjectScale = 0.7
 HeroExport.verticalBias = 0.1
 HeroExport.frameLift = 66
 HeroExport.extraZoom = 3.0
-HeroExport.titleDrop = 0.24
+HeroExport.titleDrop = 0.28
 
 HeroExport.captureX = 0
 HeroExport.captureY = 0
@@ -235,7 +235,6 @@ end
 
 -- Render the world to a target canvas size using the SAME framing rules,
 function HeroExport.renderWorldToCanvas(w, h, renderWorldFn)
-
     -- Save live camera state
     local prevCanvas = Camera.canvas
     local prevWx = Camera.wx
@@ -348,10 +347,10 @@ function HeroExport.exportAllFromCanvas(srcCanvas)
 
 		if not HeroExport.TEXTLESS_BANNERS[name] then
 			lg.setBlendMode("alpha")
-			lg.setColor(1,1,1,1)
+			lg.setColor(1, 1, 1, 1)
 
 			Title.invalidateCache()
-			Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, b.h * 0.16)
+			Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, b.h * 0.14)
 		end
 
 		lg.setCanvas()
@@ -365,10 +364,10 @@ function HeroExport.exportAllFromCanvas(srcCanvas)
 			if logo then
 				local tCanvas = lg.newCanvas(b.w, b.h, {msaa = 8})
 				lg.setCanvas(tCanvas)
-				lg.clear(0,0,0,0)
+				lg.clear(0, 0, 0, 0)
 
 				lg.setBlendMode("alpha")
-				lg.setColor(1,1,1,1)
+				lg.setColor(1, 1, 1, 1)
 				lg.draw(logo, 0, 0)
 
 				lg.setCanvas()

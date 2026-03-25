@@ -84,11 +84,6 @@ end
 function resetGame()
 	--State.worldMapIndex = 1 -- Map override
 
-	--Messages.add("Reset game", 0.6, 1.0, 0.6)
-	Messages.add("Perfect Wave +$30", 0.55, 0.95, 0.55)
-	Messages.add("You cannot place towers on the path.", 0.95, 0.55, 0.55)
-	Messages.add("Not enough money.", 0.95, 0.55, 0.55)
-
     -- Clear world state
     Enemies.clear()
     Towers.clear()
@@ -123,6 +118,7 @@ function resetGame()
     State.lives = diff.startLives
     State.score = 0
     State.wave = 1
+	State.waveLeaks = 0
 
     State.inPrep = true
     State.paused = false
@@ -278,6 +274,19 @@ function love.update(dt)
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
 		if State.wave == 20 and not State.endless then
+			-- No Leak Achievement
+			if State.waveLeaks == 0 then
+				local diff = Difficulty.key()
+
+				if diff == "normal" then
+					Achievements.unlock("NO_LEAK_NORMAL")
+					print("NO_LEAK_NORMAL")
+				elseif diff == "hard" then
+					Achievements.unlock("NO_LEAK_HARD")
+					print("NO_LEAK_HARD")
+				end
+			end
+
 			-- Save
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
 			Save.data.furthestIndex = max(Save.data.furthestIndex, nextMapIndex)
@@ -300,7 +309,7 @@ function love.update(dt)
 		end
 
 		if State.waveLeaks == 0 then
-			local bonus = 10 + State.wave * 2
+			local bonus = 6 + State.wave * 2
 			State.money = State.money + bonus
 
 			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)

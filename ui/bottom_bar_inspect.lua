@@ -220,6 +220,18 @@ local function formatStat(value)
 	return format("%.1f", rounded)
 end
 
+local forceShow = true
+
+function Inspect.overrideAnimation(v)
+	forceShow = v
+
+	if v ~= false then
+		inspectAnim = 1
+	else
+		inspectAnim = 0
+	end
+end
+
 function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 	local hasInspect = State.selectedTower ~= nil or State.selectedEnemy ~= nil
 
@@ -227,7 +239,10 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 	-- Critically damped style snap
 	local speed = 18
-	inspectAnim = inspectAnim + (inspectTarget - inspectAnim) * min(1, dt * speed)
+
+	--if not forceShow then
+		inspectAnim = inspectAnim + (inspectTarget - inspectAnim) * min(1, dt * speed)
+	--end
 
 	-- Clamp to avoid micro drift
 	if abs(inspectAnim - inspectTarget) < 0.001 then

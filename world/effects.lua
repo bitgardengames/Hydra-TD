@@ -7,6 +7,7 @@ local cos = math.cos
 local min = math.min
 local max = math.max
 local sqrt = math.sqrt
+local atan2 = math.atan2
 local pi = math.pi
 
 local function swapRemove(list, i)
@@ -23,8 +24,10 @@ Effects.zaps = {}
 Effects.frost = {}
 Effects.poison = {}
 Effects.lancer = {}
+Effects.death = {}
+Effects.plasmaParticles = {}
 
-local zapJitter = 3
+local zapJitter = 4
 local halfJitter = zapJitter * 0.5
 
 local function jitter(amount)
@@ -38,12 +41,15 @@ local zapPool = {}
 local frostPool = {}
 local poisonPool = {}
 local lancerPool = {}
+local deathPool = {}
+local plasmaParticlePool = {}
 
 local function acquire(pool)
 	local obj = pool[#pool]
 
 	if obj then
 		pool[#pool] = nil
+
 		return obj
 	end
 
@@ -123,16 +129,30 @@ function Effects.spawnZapEffect(x, y, chain)
 			if to and to.x and to.y then
 				local seg = acquireZapSeg()
 
-				if from then
+				--[[if from then
 					seg.x1 = from.x
 					seg.y1 = from.renderY or from.y
 				else
 					seg.x1 = x
 					seg.y1 = y
+				end]]
+
+				if i == 1 then
+					-- First segment comes from the provided origin
+					seg.x1 = x
+					seg.y1 = y
+				elseif from then
+					-- Chained segments still use enemy positions
+					seg.x1 = from.rx or from.x
+					seg.y1 = from.renderY or from.ry or from.y
+					--seg.y1 = from.renderY or from.ry
+				else
+					seg.x1 = x
+					seg.y1 = y
 				end
 
-				seg.x2 = to.x
-				seg.y2 = to.y
+				seg.x2 = to.rx or to.x
+				seg.y2 = to.ry or to.y
 
 				segs[#segs + 1] = seg
 			end
@@ -151,7 +171,7 @@ function Effects.spawnZapEffect(x, y, chain)
 	z.x = x
 	z.y = y
 	z.t = 0
-	z.life = 0.12
+	z.life = 0.16
 
 	Effects.zaps[#Effects.zaps + 1] = z
 
@@ -225,9 +245,9 @@ end
 
 -- Frost
 function Effects.spawnFrostBurst(x, y)
-	for i = 1, 6 do
+	for i = 1, 9 do
 		local a = random() * pi * 2
-		local sp = 80 + random() * 80
+		local sp = 100 + random() * 100
 
 		local f = acquire(frostPool)
 
@@ -235,11 +255,11 @@ function Effects.spawnFrostBurst(x, y)
 		f.y = y
 		f.vx = cos(a) * sp
 		f.vy = sin(a) * sp
-		f.r = random(2,3)
+		f.r = random(2,4)
 		f.rot = random() * pi
-		f.vr = (random() - 0.5) * 6
+		f.vr = (random() - 0.5) * 8
 		f.t = 0
-		f.life = 0.18
+		f.life = 0.22
 
 		Effects.frost[#Effects.frost + 1] = f
 	end
@@ -247,9 +267,9 @@ end
 
 -- Poison
 function Effects.spawnPoisonSplash(x, y)
-	for i = 1, 5 do
+	for i = 1, 7 do -- was 5
 		local a = random() * pi * 2
-		local sp = 70 + random() * 70
+		local sp = 90 + random() * 90
 
 		local p = acquire(poisonPool)
 
@@ -257,9 +277,9 @@ function Effects.spawnPoisonSplash(x, y)
 		p.y = y
 		p.vx = cos(a) * sp
 		p.vy = sin(a) * sp
-		p.r = random(2,3)
+		p.r = random(2, 4)
 		p.t = 0
-		p.life = 0.20
+		p.life = 0.24
 
 		Effects.poison[#Effects.poison + 1] = p
 	end
@@ -267,9 +287,9 @@ end
 
 -- Lancer
 function Effects.spawnLancerHit(x, y)
-	for i = 1, 4 do
+	for i = 1, 6 do
 		local a = random() * pi * 2
-		local sp = 120 + random() * 80
+		local sp = 150 + random() * 110
 
 		local l = acquire(lancerPool)
 
@@ -277,12 +297,48 @@ function Effects.spawnLancerHit(x, y)
 		l.y = y
 		l.vx = cos(a) * sp
 		l.vy = sin(a) * sp
-		l.len = random(5,7)
+		l.len = random(6, 9)
 		l.t = 0
-		l.life = 0.12
+		l.life = 0.14
 
 		Effects.lancer[#Effects.lancer + 1] = l
 	end
+end
+
+-- Plasma
+function Effects.spawnPlasmaHit(x, y, vx, vy)
+	for i = 1, 8 do
+		local p = acquire(plasmaParticlePool)
+
+		local ang = random() * pi * 2
+		--local spd = 70 + random() * 90
+		local spd = 80 + random() * 120
+
+		p.x = x
+		p.y = y
+		p.vx = cos(ang) * spd
+		p.vy = sin(ang) * spd
+
+		p.drag = 0.92 + random() * 0.02
+		p.r = random(2, 4)
+
+		p.t = 0
+		p.life = 0.24
+
+		Effects.plasmaParticles[#Effects.plasmaParticles + 1] = p
+	end
+end
+
+function Effects.spawnEnemyDeath(x, y, r)
+	local d = acquire(deathPool)
+
+	d.x = x
+	d.y = y
+	d.r = r or 10
+	d.t = 0
+	d.life = 0.18
+
+	Effects.death[#Effects.death + 1] = d
 end
 
 function Effects.update(dt)
@@ -361,8 +417,8 @@ function Effects.update(dt)
 		p.x = p.x + p.vx * dt
 		p.y = p.y + p.vy * dt
 
-		p.vx = p.vx * 0.94
-		p.vy = p.vy * 0.94
+		p.vx = p.vx * (p.drag or 0.94)
+		p.vy = p.vy * (p.drag or 0.94)
 
 		if p.t >= p.life then
 			swapRemove(poison, i)
@@ -386,6 +442,38 @@ function Effects.update(dt)
 		if l.t >= l.life then
 			swapRemove(lancer, i)
 			release(lancerPool, l)
+		end
+	end
+
+	local plasmaParticles = Effects.plasmaParticles
+
+	for i = #plasmaParticles, 1, -1 do
+		local p = plasmaParticles[i]
+
+		p.t = p.t + dt
+
+		p.x = p.x + p.vx * dt
+		p.y = p.y + p.vy * dt
+
+		if p.t >= p.life then
+			local dead = plasmaParticles[i]
+
+			plasmaParticles[i] = plasmaParticles[#plasmaParticles]
+			plasmaParticles[#plasmaParticles] = nil
+			release(plasmaParticlePool, dead)
+		end
+	end
+
+	local death = Effects.death
+
+	for i = #death, 1, -1 do
+		local d = death[i]
+
+		d.t = d.t + dt
+
+		if d.t >= d.life then
+			swapRemove(death, i)
+			release(deathPool, d)
 		end
 	end
 end
@@ -477,53 +565,95 @@ function Effects.draw()
 				local jx = jitter(halfJitter)
 				local jy = jitter(halfJitter)
 
-				-- Spark
-				local radius = 2 * (1 - t) + 1
+				-- Spark (unchanged)
+				local radius = 2.5 * (1 - t) + 1
 				lg.setColor(0.7, 0.95, 1.0, 0.7 * a * jumpA)
 				lg.circle("fill", x2 + jx, y2 + jy, radius)
 
-				local w = (3 * (1 - t) + 1) * (0.8 - 0.4 * u)
+				local w = (3 * (1 - t) + 1) * (0.9 - 0.35 * u)
 
 				-- Soft glow
 				lg.setLineWidth(w * 2.4)
-				lg.setColor(0.5, 0.85, 1.0, 0.12 * a * jumpA)
+				lg.setColor(0.5, 0.85, 1.0, 0.18 * a * jumpA)
 				lg.line(x1, y1, x2, y2)
 
-				-- main lightning strand
-				local jx1 = jitter(zapJitter)
-				local jy1 = jitter(zapJitter)
-				local jx2 = jitter(zapJitter)
-				local jy2 = jitter(zapJitter)
-
+				-- Main lightning strand (anchored endpoints)
 				lg.setLineWidth(w)
 				lg.setColor(0.6, 0.9, 1.0, a * jumpA)
 
-				-- number of bends in the lightning
-				local bends = random(1, 2)
+				do
+					local bends = random(1, 2)
+					local px = x1
+					local py = y1
 
-				local px = x1 + jx1
-				local py = y1 + jy1
+					for b = 1, bends do
+						local bt = b / (bends + 1)
 
-				for b = 1, bends do
-					local t = b / (bends + 1)
+						local bx = x1 + (x2 - x1) * bt + jitter(10)
+						local by = y1 + (y2 - y1) * bt + jitter(10)
 
-					local bx = x1 + (x2 - x1) * t + jitter(10)
-					local by = y1 + (y2 - y1) * t + jitter(10)
+						lg.line(px, py, bx, by)
 
-					lg.line(px, py, bx, by)
+						px = bx
+						py = by
+					end
 
-					px = bx
-					py = by
+					lg.line(px, py, x2, y2)
 				end
 
-				lg.line(px, py, x2 + jx2, y2 + jy2)
+				-- Additional beam (slightly offset, also anchored)
+				lg.setLineWidth(w * 0.65)
+				lg.setColor(0.7, 0.95, 1.0, 0.55 * a * jumpA)
 
-				-- Core
+				do
+					local offset = 2.5
+					local ox = jitter(offset)
+					local oy = jitter(offset)
+
+					local bends = random(1, 2)
+					local px = x1
+					local py = y1
+
+					for b = 1, bends do
+						local bt = b / (bends + 1)
+
+						local bx = x1 + (x2 - x1) * bt + ox + jitter(6)
+						local by = y1 + (y2 - y1) * bt + oy + jitter(6)
+
+						lg.line(px, py, bx, by)
+
+						px = bx
+						py = by
+					end
+
+					lg.line(px, py, x2, y2)
+				end
+
+				-- Core (now jittered, but endpoints still locked)
 				lg.setLineWidth(w * 0.4)
 				lg.setColor(1, 1, 1, 0.9 * a * jumpA)
-				lg.line(x1, y1, x2, y2)
 
-				-- Tiny fork
+				do
+					local bends = 1
+					local px = x1
+					local py = y1
+
+					for b = 1, bends do
+						local bt = b / (bends + 1)
+
+						local bx = x1 + (x2 - x1) * bt + jitter(4)
+						local by = y1 + (y2 - y1) * bt + jitter(4)
+
+						lg.line(px, py, bx, by)
+
+						px = bx
+						py = by
+					end
+
+					lg.line(px, py, x2, y2)
+				end
+
+				-- Tiny fork (unchanged)
 				if random() < 0.45 then
 					local bx = (x1 + x2) * 0.5
 					local by = (y1 + y2) * 0.5
@@ -537,8 +667,7 @@ function Effects.draw()
 						diry = diry / length
 					end
 
-					-- Rotate direction by random angle
-					local angle = (random() * 0.9 + 0.35) * pi -- ~20°–160°
+					local angle = (random() * 0.9 + 0.35) * pi
 					local sign = random() < 0.5 and -1 or 1
 
 					local cosA = cos(angle * sign)
@@ -591,8 +720,15 @@ function Effects.draw()
 		local alpha = 1 - t
 		local r = p.r * (1 - t * 0.3)
 
-		lg.setColor(0.55, 0.9, 0.55, alpha)
+		--lg.setColor(0.55, 0.9, 0.55, alpha)
+		--lg.circle("fill", p.x, p.y, r)
+		
+		lg.setColor(0.35, 0.75, 0.35, alpha)
 		lg.circle("fill", p.x, p.y, r)
+
+		-- Inner core (denser, sharper)
+		lg.setColor(0.55, 0.9, 0.55, alpha)
+		lg.circle("fill", p.x, p.y, r * 0.6)
 	end
 
 	-- Lancer hit
@@ -608,6 +744,50 @@ function Effects.draw()
 
 		lg.line(l.x, l.y, l.x - l.vx * 0.02, l.y - l.vy * 0.02)
 	end
+
+	-- Plasma Particles
+	local plasmaParticles = Effects.plasmaParticles
+
+	for i = 1, #plasmaParticles do
+		local p = plasmaParticles[i]
+
+		local t = p.t / p.life
+		local a = 1 - t
+
+		local r = (p.r or 3) * (1 - t * 0.4)
+
+		-- Outer glow
+		lg.setColor(0.8, 0.5, 1.0, a * 0.35)
+		lg.circle("fill", p.x, p.y, r * 1.8)
+
+		-- Core
+		lg.setColor(0.95, 0.65, 1.0, a)
+		lg.circle("fill", p.x, p.y, r)
+	end
+
+	-- Enemy death
+	local death = Effects.death
+
+	for i = 1, #death do
+		local fx = death[i]
+
+		local t = fx.t / fx.life
+		local te = 1 - (1 - t) * (1 - t)
+		local tf = t * t
+		local a = 1 - tf
+		local r = fx.r * (1 + te * 1.1)
+
+		-- Fill
+		lg.setColor(0.88, 0.83, 0.87, a * 0.22)
+		lg.circle("fill", fx.x, fx.y, r)
+
+		-- Ring
+		lg.setLineWidth(3 * (1 - t) + 1)
+		lg.setColor(0.88, 0.83, 0.87, a * 0.88)
+		lg.circle("line", fx.x, fx.y, r)
+	end
+
+	lg.setLineWidth(1)
 end
 
 function Effects.clear()
@@ -631,6 +811,11 @@ function Effects.clear()
 
 	for i = #Effects.lancer, 1, -1 do
 		Effects.lancer[i] = nil
+	end
+
+	for i = #Effects.death, 1, -1 do
+		release(deathPool, Effects.death[i])
+		Effects.death[i] = nil
 	end
 end
 

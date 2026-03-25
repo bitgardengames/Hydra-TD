@@ -34,11 +34,41 @@ local Backdrop = {
 Backdrop.shots = {
 	{
 		duration = 14,
+		map = 3,
+		towers = {
+			{kind = "cannon", gx = 12, gy = 10, level = 3},
+			{kind = "slow", gx = 13, gy = 10, level = 2},
+			{kind = "shock", gx = 11, gy = 7, level = 4},
+			{kind = "poison", gx = 21, gy = 9, level = 2},
+			{kind = "plasma", gx = 22, gy = 12, level = 2},
+		},
+		wave = 17,
+		warmup = 20.0,
+		camera = {gx = 16, gy = 7, ox = 20, oy = 30, zoom = 2.0},
+	},
+
+	--[[{
+		duration = 14,
+		map = 7,
+		towers = {
+			{kind = "cannon", gx = 11, gy = 9, level = 3},
+			{kind = "slow", gx = 12, gy = 10, level = 2},
+			{kind = "poison", gx = 17, gy = 6, level = 4},
+			{kind = "plasma", gx = 21, gy = 11, level = 3},
+		},
+		wave = 17,
+		warmup = 20.0,
+		camera = {gx = 16, gy = 7, ox = 180, oy = 50, zoom = 2.0},
+	},]]
+
+	{
+		duration = 14,
 		map = 5,
 		towers = {
 			{kind = "lancer", gx = 12, gy = 9, level = 3},
 			{kind = "shock", gx = 22, gy = 9, level = 3},
 			{kind = "shock", gx = 13, gy = 9, level = 3},
+			{kind = "plasma", gx = 22, gy = 7, level = 3},
 		},
 		wave = 11,
 		warmup = 55.0,
@@ -50,8 +80,9 @@ Backdrop.shots = {
 		map = 2,
 		towers = {
 			{kind = "cannon", gx = 12, gy = 7, level = 2},
-			{kind = "shock", gx = 12, gy = 11},
+			{kind = "shock", gx = 12, gy = 11, level = 2},
 			{kind = "poison", gx = 22, gy = 7, level = 2},
+			--{kind = "plasma", gx = 22, gy = 12, level = 3},
 		},
 		wave = 5,
 		warmup = 26.0,
@@ -64,8 +95,9 @@ Backdrop.shots = {
 		towers = {
 			{kind = "cannon", gx = 12, gy = 7, level = 3},
 			{kind = "slow", gx = 12, gy = 11, level = 2},
-			{kind = "poison", gx = 22, gy = 8, level = 4},
+			--{kind = "poison", gx = 22, gy = 8, level = 4},
 			{kind = "lancer", gx = 23, gy = 9, level = 3},
+			{kind = "plasma", gx = 21, gy = 9, level = 3},
 		},
 		wave = 13,
 		warmup = 20.0,
@@ -77,7 +109,7 @@ Backdrop.shots = {
 		map = 10,
 		towers = {
 			{kind = "cannon", gx = 12, gy = 8, level = 3},
-			{kind = "lancer", gx = 12, gy = 10},
+			{kind = "lancer", gx = 12, gy = 10, level = 2},
 			{kind = "poison", gx = 21, gy = 8, level = 4},
 			{kind = "lancer", gx = 23, gy = 8, level = 3},
 		},

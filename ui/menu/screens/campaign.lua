@@ -5,6 +5,7 @@ local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
 local Save = require("core.save")
+local MapMod = require("world.map")
 local Maps = require("world.map_defs")
 local MapPreviewCache = require("world.map_preview_cache")
 local Text = require("ui.text")
@@ -65,6 +66,94 @@ local campaignButtons = {}
 -- Helpers
 local function isMapLocked(i)
 	return not Save.isMapUnlocked(i, Maps[i].id)
+end
+
+local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
+	local path = entry.pathWorld
+	if not path or #path < 2 then return end
+
+	local mapW = Constants.GRID_W * Constants.TILE
+	local mapH = Constants.GRID_H * Constants.TILE
+
+	local function toScreen(entry, previewX, previewY, pw, ph, wx, wy)
+		-- same logic as MapRender
+		local winW, winH = love.graphics.getDimensions()
+
+		local sx = pw / winW
+		local sy = ph / winH
+
+		local z = Camera.wscale
+
+		local mapW = entry.mapW
+		local mapH = entry.mapH
+
+		local cx = mapW * 0.5
+		local cy = mapH * 0.5
+
+		local camWX = cx - (winW / (2 * z))
+		local camWY = cy - (winH / (2 * z))
+
+		-- apply camera transform
+		local screenX = (wx - camWX) * z
+		local screenY = (wy - camWY) * z
+
+		-- apply canvas scaling
+		screenX = screenX * sx
+		screenY = screenY * sy
+
+		return previewX + screenX,
+			   previewY + screenY
+	end
+
+	-- Precompute segment lengths
+	local lengths = {}
+	local totalLen = 0
+
+	for i = 1, #path - 1 do
+		local x1, y1 = toScreen(entry, previewX, previewY, pw, ph, path[i][1], path[i][2])
+		local x2, y2 = toScreen(entry, previewX, previewY, pw, ph, path[i+1][1], path[i+1][2])
+
+		local dx = x2 - x1
+		local dy = y2 - y1
+		local len = math.sqrt(dx*dx + dy*dy)
+
+		lengths[i] = len
+		totalLen = totalLen + len
+	end
+
+	if totalLen <= 0 then return end
+
+	-- Animate along path
+	local speed = 120
+	local dist = (pulseT * speed) % totalLen
+
+	local acc = 0
+
+	for i = 1, #lengths do
+		local segLen = lengths[i]
+
+		if dist <= acc + segLen then
+			local t = (dist - acc) / segLen
+
+			local x1, y1 = toScreen(entry, previewX, previewY, pw, ph, path[i][1], path[i][2])
+			local x2, y2 = toScreen(entry, previewX, previewY, pw, ph, path[i+1][1], path[i+1][2])
+
+			local px = x1 + (x2 - x1) * t
+			local py = y1 + (y2 - y1) * t
+
+			-- Glow
+			lg.setColor(1, 1, 1, 0.2)
+			lg.circle("fill", px, py, 7)
+
+			-- Core
+			lg.setColor(1, 1, 1, 0.9)
+			lg.circle("fill", px, py, 3)
+
+			return
+		end
+
+		acc = acc + segLen
+	end
 end
 
 local function pointInTriangle(px, py, ax, ay, bx, by, cx, cy)
@@ -173,14 +262,17 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 	Medals.update(dt)
 
+	--Screen.pulseT = (Screen.pulseT or 0) + dt
+
 	local index = State.mapIndex
 	local map = Maps[index]
-	local preview = MapPreviewCache.get(map.id)
+	local entry = MapPreviewCache.get(map.id)
 
-	if not preview then
+	if not entry then
 		return
 	end
 
+	local preview = entry.canvas
 	local pw, ph = preview:getWidth(), preview:getHeight()
 
 	-- Layout
@@ -215,12 +307,13 @@ function Screen.draw()
 	local index = State.mapIndex
 	local map = Maps[index]
 	local mapCount = #Maps
-	local preview = MapPreviewCache.get(map.id)
+	local entry = MapPreviewCache.get(map.id)
 
-	if not preview then
+	if not entry then
 		return
 	end
 
+	local preview = entry.canvas
 	local pw, ph = preview:getWidth(), preview:getHeight()
 
 	local cx = floor(sw * 0.5)
@@ -258,6 +351,8 @@ function Screen.draw()
 	lg.setColor(1, 1, 1, alpha)
 
 	lg.draw(preview, previewX, previewY)
+
+	--drawPathCurrent(entry, previewX, previewY, pw, ph, Screen.pulseT or 0)
 
 	-- Completion medals
 	local stats = getMapStats(map.id)
@@ -411,12 +506,13 @@ function Screen.mousepressed(x, y, button)
 		local sw, sh = lg.getDimensions()
 		local index = State.mapIndex
 		local map = Maps[index]
-		local preview = MapPreviewCache.get(map.id)
+		local entry = MapPreviewCache.get(map.id)
 
-		if not preview then
+		if not entry then
 			return
 		end
 
+		local preview = entry.canvas
 		local pw, ph = preview:getWidth(), preview:getHeight()
 
 		local cx = floor(sw * 0.5)

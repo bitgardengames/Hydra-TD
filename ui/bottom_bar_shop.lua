@@ -1,3 +1,4 @@
+local Constants = require("core.constants")
 local State = require("core.state")
 local Towers = require("world.towers")
 local Hotkeys = require("core.hotkeys")
@@ -43,6 +44,8 @@ local shopButtons = {}
 local shopAnims = {}
 
 local lastTooltipKey = nil
+
+local towerList = Constants.TOWER_LIST
 
 local shopTooltip = {
 	title = "",
@@ -150,7 +153,7 @@ local GLYPH_X_OFFSET = -5
 
 local totalRowWidth = SHOP_BTN_W * SHOP_COLS + GAP_X * (SHOP_COLS - 1)
 
-local totalRows = math.ceil(#Towers.shopOrder / SHOP_COLS)
+local totalRows = math.ceil(#towerList / SHOP_COLS)
 local totalHeight = totalRows * SHOP_BTN_H + (totalRows - 1) * GAP_Y
 
 function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
@@ -162,7 +165,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 	local startX = floor(panelX + (panelW - totalRowWidth) * 0.5)
 	local startY = floor(panelY + (panelH - totalHeight) * 0.5 + 3)
 
-	for i, key in ipairs(Towers.shopOrder) do
+	for i, key in ipairs(towerList) do
 		local def = Towers.TowerDefs[key]
 		local hotkeyLabel = Hotkeys.getDisplay(key)
 

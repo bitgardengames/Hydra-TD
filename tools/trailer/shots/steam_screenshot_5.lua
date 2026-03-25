@@ -24,7 +24,8 @@ return {
 
     actions = {
 		{t = 0, fn = Actions.upgradeTowerAt(18, 8, 1)},
+		{t = 0, fn = Actions.setLives(12)},
 
-		{t = 0, fn = Actions.setMoney(86)},
+		{t = 0.1, fn = Actions.setMoney(210)},
     },
 }

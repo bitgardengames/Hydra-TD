@@ -11,6 +11,7 @@ local lg = love.graphics
 
 local pi = math.pi -- Why am I optimizing a render script
 local max = math.max
+local rad = math.rad
 
 local SIZE = 256
 local REF_ICON_SIZE = 64
@@ -48,7 +49,7 @@ local function drawMedalRibbons(cx, cy, radius, tier)
 
 	local ribbonLen = visualRadius * 2.4
 	local ribbonW = visualRadius * 0.72 -- thicker (was 0.56)
-	local angle = math.rad(26)
+	local angle = rad(26)
 
 	local attachY = cy - visualRadius * 0.52
 	local attachOffsetX = visualRadius * 0.34
@@ -148,6 +149,141 @@ local function centerAndScale(fn, scale, adjusty)
     fn()
 
     lg.pop()
+end
+
+local function drawDroplet(cx, cy, r, tier)
+	local outlineW = Theme.outline.width
+	local darkMul = Theme.lighting.shadowMul
+	local highlightOffset = Theme.lighting.highlightOffset
+	local highlightScale = Theme.lighting.highlightScale
+
+	local fr, fg, fb = 0.72, 0.88, 0.96
+
+	if tier == 1 then
+		fr, fg, fb = 0.72, 0.88, 0.96
+	else
+		fr, fg, fb = 0.96, 0.38, 0.32
+	end
+
+	local or_, og, ob = unpack(Theme.outline.color)
+
+	-- Shape
+	local bodyR = r * 0.64
+	local circleY = cy + r * 0.18
+	local baseY = circleY - bodyR * 0.25
+	local outerBaseY = baseY - outlineW
+
+	local tipY = cy - r * 1.05
+	local halfW = bodyR * 0.80
+
+	-- Triangle points (inner)
+	local ax, ay = cx, tipY
+	local bx, by = cx - halfW, baseY
+	local cx2, cy2 = cx + halfW, baseY
+
+	-- Outer triangle
+	local function expandTriangle(ax, ay, bx, by, cx, cy, amount)
+		local function perp(x1, y1, x2, y2)
+			local dx, dy = x2 - x1, y2 - y1
+			local len = math.sqrt(dx*dx + dy*dy)
+			if len == 0 then return 0, 0 end
+			return -dy / len, dx / len
+		end
+
+		local nx1, ny1 = perp(ax, ay, bx, by)
+		local nx2, ny2 = perp(bx, by, cx, cy)
+		local nx3, ny3 = perp(cx, cy, ax, ay)
+
+		return
+			ax + (nx1 + nx3) * amount, ay + (ny1 + ny3) * amount,
+			bx + (nx1 + nx2) * amount, by + (ny1 + ny2) * amount,
+			cx + (nx2 + nx3) * amount, cy + (ny2 + ny3) * amount
+	end
+
+	local outerAx, outerAy, outerBx, outerBy, outerCx, outerCy = expandTriangle(ax, ay, cx - halfW, outerBaseY, cx + halfW, outerBaseY, outlineW * 2)
+
+	local outerR = bodyR + outlineW * 0.5
+	local maxHalfW = outerR * 0.98
+
+	local function clampX(x)
+		return math.max(cx - maxHalfW, math.min(cx + maxHalfW, x))
+	end
+
+	outerBx = clampX(outerBx)
+	outerCx = clampX(outerCx)
+
+	local innerR = outerR - outlineW
+
+	-- Outline
+	lg.setColor(or_, og, ob)
+
+	lg.circle("fill", cx, circleY, outerR)
+
+	lg.polygon("fill",
+		outerAx, outerAy,
+		outerBx, outerBy,
+		outerCx, outerCy
+	)
+
+	-- Inner
+	lg.setColor(fr * darkMul, fg * darkMul, fb * darkMul)
+
+	lg.circle("fill", cx, circleY, innerR)
+
+	lg.polygon("fill",
+		ax, ay,
+		bx, by,
+		cx2, cy2
+	)
+
+	-- Highlight
+	local hy = circleY - innerR * highlightOffset - 1
+
+	lg.setColor(fr, fg, fb)
+	lg.circle("fill", cx, hy, innerR * highlightScale)
+
+	lg.push()
+	lg.translate(cx, hy)
+	lg.scale(highlightScale, highlightScale)
+
+	lg.polygon("fill",
+		0, tipY - circleY,
+		-halfW, baseY - circleY,
+		halfW, baseY - circleY
+	)
+
+	lg.pop()
+end
+
+local function drawNoSymbol(cx, cy, r)
+	local thickness = r * 0.23
+	local len = r * 2.2
+
+	lg.setColor(Theme.outline.color)
+
+	lg.push()
+	lg.translate(cx, cy)
+	lg.rotate(rad(45))
+
+	lg.rectangle("fill",
+		-len * 0.5,
+		-thickness * 0.5,
+		len,
+		thickness,
+		thickness * 0.4,
+		thickness * 0.4
+	)
+
+	lg.pop()
+end
+
+local function drawNoLeaksIcon(tier)
+	local REF_RADIUS = 18
+
+	centerAndScale(function()
+		drawDroplet(0, 0, REF_RADIUS, tier)
+		drawNoSymbol(0, 0, REF_RADIUS)
+	end, TOWER_SCALE, 22)
 end
 
 local function drawTower(kind)
@@ -320,6 +456,13 @@ local achievements = {
     },
 
     {
+        id = "TOWER_PLASMA_250",
+        render = function()
+            drawTower("plasma")
+        end
+    },
+
+    {
         id = "BOSS_KILL_1",
         render = function()
 			drawKillTier("boss", true)
@@ -374,6 +517,20 @@ local achievements = {
             drawCampaignMedal(3)
         end
     },
+
+	{
+		id = "NO_LEAKS_NORMAL",
+		render = function()
+			drawNoLeaksIcon(1)
+		end
+	},
+
+	{
+		id = "NO_LEAKS_HARD",
+		render = function()
+			drawNoLeaksIcon(2)
+		end
+	},
 }
 
 local lockedShader = love.graphics.newShader([[

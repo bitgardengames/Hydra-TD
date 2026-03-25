@@ -14,4 +14,13 @@ Constants.GRID_W = 34
 Constants.GRID_H = 16
 Constants.UI_H = 155
 
+Constants.TOWER_LIST = {
+	"slow",
+	"lancer",
+	"poison",
+	"cannon",
+	"shock",
+	"plasma",
+}
+
 return Constants

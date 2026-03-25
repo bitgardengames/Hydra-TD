@@ -1,12 +1,19 @@
 local Theme = {}
 
 local function lighten(c, amt)
-    return {math.min(1, c[1] + amt), math.min(1, c[2] + amt), math.min(1, c[3] + amt), c[4] or 1}
+	return {math.min(1, c[1] + amt), math.min(1, c[2] + amt), math.min(1, c[3] + amt), c[4] or 1}
 end
 
+-- Variant switch
+Theme.variant = "halloween" -- "default", "halloween", "winter", "autumn"
+-- Could consider lunar, martian, candy
+
+-- Base Theme
+Theme.grid = {0.16, 0.17, 0.2, 0.1}
+
 Theme.outline = {
-    color = {0.09, 0.09, 0.1, 1},
-    width = 3,
+	color = {0.09, 0.09, 0.1, 1},
+	width = 3,
 }
 
 Theme.lighting = {
@@ -23,20 +30,10 @@ Theme.shadow = {
 
 Theme.terrain = {
 	bg = {0.06, 0.07, 0.09},
-
-	-- Normal
 	grass = {0.28, 0.58, 0.34},
 	path = {0.64, 0.63, 0.60},
 	pathOutline = {0.36, 0.35, 0.32},
 	water = {0.20, 0.42, 0.55},
-
-	-- Halloween
-	--grass = {0.27, 0.18, 0.36},
-	--path = {0.20, 0.14, 0.16},
-
-	-- Winter
-	--grass = {0.86, 0.91, 0.95},
-	--path = {0.52, 0.66, 0.76},
 }
 
 Theme.world = {
@@ -44,109 +41,24 @@ Theme.world = {
 	treeTrunkOutline = {0.22, 0.16, 0.10},
 
 	treeStyles = {
-		-- bright spring
-		{
-			fill = {0.46, 0.78, 0.48},
-			outline = {0.20, 0.44, 0.26},
-		},
-
-		-- balanced green
-		{
-			fill = {0.40, 0.72, 0.42},
-			outline = {0.18, 0.40, 0.22},
-		},
-
-		-- darker forest
-		{
-			fill = {0.32, 0.62, 0.36},
-			outline = {0.14, 0.34, 0.18},
-		},
-
-		-- slightly yellow green
-		{
-			fill = {0.54, 0.78, 0.44},
-			outline = {0.28, 0.46, 0.22},
-		},
-
-		-- muted moss
-		{
-			fill = {0.36, 0.66, 0.38},
-			outline = {0.16, 0.36, 0.20},
-		},
+		{fill = {0.46, 0.78, 0.48}, outline = {0.20, 0.44, 0.26}},
+		{fill = {0.40, 0.72, 0.42}, outline = {0.18, 0.40, 0.22}},
+		{fill = {0.32, 0.62, 0.36}, outline = {0.14, 0.34, 0.18}},
+		{fill = {0.54, 0.78, 0.44}, outline = {0.28, 0.46, 0.22}},
+		{fill = {0.36, 0.66, 0.38}, outline = {0.16, 0.36, 0.20}},
 	},
 
 	rockStyles = {
-		{
-			fill = {0.70, 0.68, 0.64},
-			outline = {0.40, 0.38, 0.35},
-		},
-
-		{
-			fill = {0.64, 0.63, 0.60},
-			outline = {0.36, 0.35, 0.32},
-		},
-
-		{
-			fill = {0.74, 0.72, 0.68},
-			outline = {0.44, 0.42, 0.38},
-		},
-
-		{
-			fill = {0.60, 0.60, 0.58},
-			outline = {0.32, 0.32, 0.30},
-		},
-
-		{
-			fill = {0.68, 0.66, 0.62},
-			outline = {0.38, 0.36, 0.33},
-		},
+		{fill = {0.70, 0.68, 0.64}, outline = {0.40, 0.38, 0.35}},
+		{fill = {0.64, 0.63, 0.60}, outline = {0.36, 0.35, 0.32}},
+		{fill = {0.74, 0.72, 0.68}, outline = {0.44, 0.42, 0.38}},
+		{fill = {0.60, 0.60, 0.58}, outline = {0.32, 0.32, 0.30}},
+		{fill = {0.68, 0.66, 0.62}, outline = {0.38, 0.36, 0.33}},
 	},
 }
-
-Theme.palettes = {
-	default = {
-		grass = {0.30, 0.58, 0.34},
-		path  = {0.63, 0.65, 0.68},
-		water = {0.25, 0.45, 0.65},
-	},
-
-	autumn = {
-		grass = {0.62, 0.50, 0.22},
-		path  = {0.70, 0.60, 0.42},
-		water = {0.26, 0.42, 0.60},
-	},
-
-	drylands = {
-		grass = {0.56, 0.52, 0.33},   -- sun-bleached grass
-		path  = {0.72, 0.67, 0.52},   -- sandy road
-		water = {0.29, 0.46, 0.62},   -- oasis blue
-	},
-
-	highlands = {
-		grass = {0.26, 0.52, 0.42},   -- alpine green
-		path  = {0.60, 0.64, 0.70},   -- cool stone
-		water = {0.22, 0.42, 0.62},
-	},
-
-	coastal = {
-		grass = {0.32, 0.60, 0.46},   -- cool sea grass
-		path  = {0.64, 0.67, 0.70},   -- pale stone path
-		water = {0.28, 0.50, 0.70},   -- brighter water
-	},
-}
-
-Theme.grid = {0.16, 0.17, 0.2, 0.1}
 
 Theme.enemy = {
-	-- Normal
 	body = {0.90, 0.40, 0.36},
-
-	-- Halloween
-	--body = {0.92, 0.46, 0.08},
-
-	-- Winter
-	--body = {0.95, 0.97, 0.99},
-
 	face = {0.07, 0.07, 0.07},
 	shadow = {0.01, 0.01, 0.01, 0.3},
 }
@@ -157,9 +69,8 @@ Theme.tower = {
 	cannon = {0.94, 0.58, 0.32},
 	shock = {0.45, 0.78, 0.98},
 	poison = {0.50, 0.82, 0.44},
+	plasma = {0.75, 0.45, 1.0},
 }
-
-Theme.towerShadow = {0.01, 0.01, 0.01, 0.3}
 
 Theme.projectiles = {
 	lancer = {0.97, 0.97, 0.97},
@@ -167,6 +78,7 @@ Theme.projectiles = {
 	cannon = {0.98, 0.8, 0.4},
 	shock = {0.45, 0.78, 0.98},
 	poison = {0.55, 0.9, 0.5},
+	plasma = {0.85, 0.55, 1.0}, -- 1.0, 0.75, 1.0
 }
 
 Theme.ui = {
@@ -174,8 +86,10 @@ Theme.ui = {
 	good = {0.35, 0.95, 0.55},
 	bad = {0.95, 0.35, 0.35},
 	warn = {0.98, 0.82, 0.30},
+
 	panel = {0.18, 0.19, 0.21, 1},
 	panel2 = {0.13, 0.14, 0.16, 1},
+
 	hovered = lighten({0.09, 0.1, 0.12}, 0.06),
 	selected = {1, 0.88, 0.4},
 
@@ -192,7 +106,6 @@ Theme.ui = {
 	wave = {0.42, 0.78, 0.92, 1},
 
 	bossHealth = {0.75, 0.15, 0.15, 0.9},
-
 	shadow = {0.01, 0.01, 0.01, 0.3},
 }
 
@@ -202,6 +115,156 @@ Theme.medal = {
 	gold = {0.98, 0.84, 0.24},
 }
 
+Theme.towerShadow = {0.01, 0.01, 0.01, 0.3}
+
 Theme.text = {}
+
+-- Variants
+Theme.variants = {
+	halloween = {
+		terrain = {
+			grass = {0.27, 0.18, 0.36},
+			path = {0.20, 0.14, 0.16},
+			pathOutline = {0.12, 0.08, 0.10},
+		},
+
+		world = {
+			treeStyles = {
+				{fill = {0.32, 0.14, 0.08}, outline = {0.18, 0.08, 0.04}},
+				{fill = {0.62, 0.24, 0.06}, outline = {0.36, 0.12, 0.04}},
+				{fill = {0.26, 0.12, 0.34}, outline = {0.14, 0.06, 0.20}},
+				{fill = {0.28, 0.26, 0.30}, outline = {0.16, 0.14, 0.18}},
+				{fill = {0.48, 0.18, 0.10}, outline = {0.28, 0.08, 0.04}},
+			},
+
+			rockStyles = {
+				{fill = {0.20, 0.18, 0.22}, outline = {0.10, 0.08, 0.12}},
+				{fill = {0.36, 0.22, 0.48}, outline = {0.18, 0.10, 0.26}},
+				{fill = {0.34, 0.42, 0.28}, outline = {0.18, 0.24, 0.14}},
+				{fill = {0.48, 0.22, 0.10}, outline = {0.28, 0.10, 0.04}},
+				{fill = {0.26, 0.24, 0.30}, outline = {0.14, 0.12, 0.18}},
+			},
+		},
+
+		enemy = {
+			body = {0.92, 0.46, 0.08},
+			face = {0.05, 0.02, 0.02},
+		},
+
+		ui = {
+			panel = {0.14, 0.10, 0.12, 1},
+			panel2 = {0.10, 0.07, 0.09, 1},
+			warn = {1.0, 0.55, 0.15},
+		},
+
+		lighting = {
+			shadowMul = 0.75,
+		},
+	},
+
+	winter = {
+		terrain = {
+			grass = {0.86, 0.91, 0.95},
+			path = {0.52, 0.66, 0.76},
+			pathOutline = {0.38, 0.50, 0.60},
+		},
+
+		world = {
+			treeStyles = {
+				{fill = {0.85, 0.90, 0.92}, outline = {0.60, 0.70, 0.75}},
+				{fill = {0.75, 0.85, 0.90}, outline = {0.50, 0.60, 0.70}},
+				{fill = {0.92, 0.94, 0.96}, outline = {0.70, 0.75, 0.80}},
+				{fill = {0.70, 0.80, 0.88}, outline = {0.45, 0.55, 0.65}},
+				{fill = {0.88, 0.92, 0.95}, outline = {0.65, 0.70, 0.75}},
+			},
+
+			rockStyles = {
+				{fill = {0.82, 0.86, 0.90}, outline = {0.60, 0.65, 0.70}},
+				{fill = {0.78, 0.82, 0.88}, outline = {0.55, 0.60, 0.65}},
+				{fill = {0.90, 0.92, 0.95}, outline = {0.70, 0.75, 0.80}},
+				{fill = {0.72, 0.78, 0.85}, outline = {0.50, 0.55, 0.60}},
+				{fill = {0.86, 0.90, 0.94}, outline = {0.65, 0.70, 0.75}},
+			},
+		},
+
+		enemy = {
+			body = {0.95, 0.97, 0.99},
+		},
+
+		ui = {
+			panel = {0.16, 0.18, 0.20, 1},
+			panel2 = {0.12, 0.14, 0.16, 1},
+		},
+
+		lighting = {
+			shadowMul = 0.6,
+			highlightScale = 0.95,
+		},
+	},
+
+	autumn = {
+		terrain = {
+			grass = {0.48, 0.56, 0.30},        -- slightly brighter + warmer
+			path = {0.66, 0.56, 0.42},         -- more golden dirt
+			pathOutline = {0.44, 0.34, 0.24},
+		},
+
+		world = {
+			treeStyles = {
+				{fill = {0.84, 0.46, 0.20}, outline = {0.52, 0.24, 0.10}}, -- brighter orange
+				{fill = {0.78, 0.36, 0.16}, outline = {0.48, 0.20, 0.08}}, -- warm orange
+				{fill = {0.70, 0.28, 0.14}, outline = {0.42, 0.16, 0.08}}, -- burnt but richer
+				{fill = {0.92, 0.64, 0.20}, outline = {0.58, 0.38, 0.12}}, -- golden pop (this carries the “happiness”)
+				{fill = {0.60, 0.40, 0.20}, outline = {0.36, 0.24, 0.12}}, -- warm brown (less gray)
+			},
+
+			rockStyles = {
+				{fill = {0.62, 0.54, 0.44}, outline = {0.38, 0.32, 0.26}},
+				{fill = {0.56, 0.50, 0.42}, outline = {0.34, 0.30, 0.26}},
+				{fill = {0.68, 0.60, 0.50}, outline = {0.42, 0.36, 0.30}},
+				{fill = {0.52, 0.46, 0.38}, outline = {0.32, 0.28, 0.24}},
+				{fill = {0.64, 0.56, 0.46}, outline = {0.40, 0.34, 0.28}},
+			},
+		},
+
+		enemy = {
+			body = {0.94, 0.52, 0.38}, -- slightly warmer / more alive
+		},
+
+		ui = {
+			panel = {0.22, 0.18, 0.13, 1},
+			panel2 = {0.18, 0.14, 0.11, 1},
+			warn = {1.0, 0.70, 0.30},
+		},
+
+		lighting = {
+			shadowMul = 0.70, -- slightly softer shadows = warmer feel
+		},
+	},
+}
+
+-- Deep merge
+local function merge(dst, src)
+	for k, v in pairs(src) do
+		if type(v) == "table" and type(dst[k]) == "table" then
+			merge(dst[k], v)
+		else
+			dst[k] = v
+		end
+	end
+end
+
+local function applyVariant()
+	local v = Theme.variants[Theme.variant]
+	if not v then return end
+
+	for section, data in pairs(v) do
+		if Theme[section] then
+			merge(Theme[section], data)
+		end
+	end
+end
+
+applyVariant()
 
 return Theme

@@ -17,8 +17,8 @@ local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
 local tile = Constants.TILE
 
-local adjustX = tile
-local adjustY = tile
+local adjustX = tile * 0.5 + 18
+local adjustY = tile + 14
 
 return {
 	map = 99,
@@ -27,10 +27,11 @@ return {
 	scene = {
 		towers = {
 			{kind = "cannon", gx = 18, gy = 7},
-			{kind = "shock", gx = 19, gy = 7},
-			
-			{kind = "poison", gx = 18, gy = 9},
-			{kind = "lancer", gx = 19, gy = 9},
+			{kind = "plasma", gx = 20, gy = 7},
+			{kind = "shock", gx = 20, gy = 6},
+
+			{kind = "shock", gx = 17, gy = 9},
+			--{kind = "poison", gx = 19, gy = 9},
 		},
 
 		wave = {
@@ -46,7 +47,10 @@ return {
 
 	camera = Camera.pan({
 		duration = 7.0,
-		from = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 2.0},
-		to = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 2.0}
+		--from = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 3.0},
+		--to = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 3.0}
+
+		from = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 3.0},
+		to = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 3.0}
 	}),
 }
