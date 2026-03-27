@@ -493,16 +493,53 @@ local function drawPlasmaFX(t)
 	lg.setLineWidth(1)
 end
 
+local function drawPoisonFX(t)
+	local a = t.fireAnim
+	if not a or a <= 0 then return end
+
+	local size = TILE * 0.42
+	local tipX = size * 0.7
+	local mx, my = getBarrelTip(t, tipX)
+
+	local p = 1 - a
+	local count = 5
+
+	for i = 1, count do
+		-- Wide spray cone
+		local spread = 3
+		local ang = t.angle + (i / count - 0.5) * spread
+
+		local dx = cos(ang)
+		local dy = sin(ang)
+
+		local dist = (5 + i * 3) * p
+
+		local x = mx + dx * dist
+		local y = my + dy * dist
+
+		local r = (2 + (i % 3)) * (1 - p * 0.4)
+
+		local alpha = (a * 1.2) * (1 - p * 0.1)
+
+		lg.setColor(0.35, 0.9, 0.45, alpha)
+		lg.circle("fill", x, y, r)
+	end
+end
+
 local function drawTowerFX(t)
-	if t.kind == "shock" then
+	local kind = t.kind
+
+	if kind == "shock" then
 		drawShockFX(t)
-	elseif t.kind == "cannon" then
+	elseif kind == "cannon" then
 		drawCannonFX(t)
-	elseif t.kind == "lancer" then
+	elseif kind == "lancer" then
 		drawLancerFX(t)
-	elseif t.kind == "slow" then
+	elseif kind == "slow" then
 		drawSlowFX(t)
-	elseif t.kind == "plasma" then
+	elseif kind == "poison" then
+		drawPoisonFX(t)
+	elseif kind == "plasma" then
 		drawPlasmaFX(t)
 	end
 end
@@ -899,5 +936,6 @@ return {
 	drawTowerCore = drawTowerCore,
 	drawTowerGhost = drawTowerGhost,
 	drawTowerVisual = drawTowerVisual,
+	drawTowerFX = drawTowerFX,
 	drawTowers = drawTowers,
 }

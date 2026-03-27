@@ -368,18 +368,16 @@ local function updateTowers(dt)
 
 			local targetAngle = atan2(dy, dx)
 
-			local prevTargetAngle = t.targetAngle or targetAngle
-			local delta = targetAngle - prevTargetAngle
-
-			if delta > pi then
-				targetAngle = targetAngle - 2 * pi
-			elseif delta < -pi then
-				targetAngle = targetAngle + 2 * pi
+			if targetAngle then
+				t.targetAngle = targetAngle
+			else
+				t.targetAngle = nil
 			end
 
-			t.targetAngle = targetAngle
+			-- Shortest angle difference
+			local diff = (targetAngle - t.angle + pi) % (pi * 2) - pi
 
-			aimDiff = targetAngle - t.angle
+			aimDiff = diff
 
 			if t.canRotate then
 				local recoilT = t.recoil / (t.recoilStrength or 1)

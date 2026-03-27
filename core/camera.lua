@@ -15,7 +15,8 @@ Camera.wscale = 1.0
 local REF_W = 1920
 local REF_H = 1080
 
-local AUTHORED_ZOOM = 1.30
+--local AUTHORED_ZOOM = 1.30
+local AUTHORED_ZOOM = 1.5
 
 -- Clamps
 local MIN_ZOOM = 0.64

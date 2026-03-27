@@ -1,8 +1,10 @@
 local Config = require("tools.trailer.config")
+local HeroExport = require("tools.trailer.hero_export")
+local Draw = require("render.draw")
 
 local recorder = {
-    frame = 0,
-    enabled = Config.recorder or false,
+	frame = 0,
+	enabled = Config.recorder or false,
 }
 
 local format = string.format
@@ -14,7 +16,22 @@ function recorder.capture()
 
 	recorder.frame = recorder.frame + 1
 
-	love.graphics.captureScreenshot(format("trailer/frames/frame_%05d.png", recorder.frame))
+	local filename = format("trailer/frames/frame_%05d.png", recorder.frame)
+
+	local canvas = HeroExport.renderWorldToCanvas(
+		Config.output.width,
+		Config.output.height,
+		function()
+			Draw.drawWorld()
+
+			if Config.showUI then
+				Draw.drawUI()
+			end
+		end
+	)
+
+	local img = canvas:newImageData()
+	img:encode("png", filename)
 end
 
 return recorder

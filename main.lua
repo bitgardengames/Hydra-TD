@@ -172,7 +172,7 @@ function love.load(arg)
 	elseif mode == "map" then
 		return require("tools.map_export.main").run()
 	elseif mode == "trailer" then
-		require("tools.trailer.main").run()
+		require("tools.trailer.trailer_main").run()
 	elseif mode == "capsule" then
 		require("tools.capsule_export").run()
 	else
@@ -273,7 +273,8 @@ function love.update(dt)
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
-		if State.wave == 20 and not State.endless then
+		--if State.wave == 20 and not State.endless then
+		if State.wave == 1 and not State.endless then
 			-- No Leak Achievement
 			if State.waveLeaks == 0 then
 				local diff = Difficulty.key()

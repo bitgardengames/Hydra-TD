@@ -25,7 +25,7 @@ local floor = math.floor
 
 local lg = love.graphics
 
-local SW, SH = lg.getDimensions()
+local SW, SH = Config.output.width, Config.output.height
 
 local HERO_FONT_SIZE = 148
 local CTA_FONT_SIZE = 120

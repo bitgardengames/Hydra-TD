@@ -722,7 +722,7 @@ function Effects.draw()
 
 		--lg.setColor(0.55, 0.9, 0.55, alpha)
 		--lg.circle("fill", p.x, p.y, r)
-		
+
 		lg.setColor(0.35, 0.75, 0.35, alpha)
 		lg.circle("fill", p.x, p.y, r)
 

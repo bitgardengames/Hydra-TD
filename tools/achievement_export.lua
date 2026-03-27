@@ -1,10 +1,16 @@
-local TowersDefs = require("world.tower_defs")
 local EnemyDefs = require("world.enemy_defs")
 local DrawEntities = require("render.draw_entities")
 local Medals = require("ui.medals")
 local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local Text = require("ui.text")
+local Enemies = require("world.enemies")
+local Projectiles = require("world.projectiles")
+local Effects = require("world.effects")
+local Spatial = require("world.spatial_grid")
+local Shock = require("world.shock")
+local Towers = require("world.towers")
+local TowerDefs = require("world.tower_defs")
 
 local Export = {}
 local lg = love.graphics
@@ -256,7 +262,7 @@ local function drawDroplet(cx, cy, r, tier)
 end
 
 local function drawNoSymbol(cx, cy, r)
-	local thickness = r * 0.23
+	local thickness = r * 0.20
 	local len = r * 2.2
 
 	lg.setColor(Theme.outline.color)
@@ -289,7 +295,148 @@ end
 local function drawTower(kind)
 	centerAndScale(function()
 		DrawEntities.drawTowerVisual(kind, 0, 0, -pi / 4, 0, 1)
+	end, TOWER_SCALE)
+end
 
+local Constants = require("core.constants")
+
+local function getShockOrigin(t)
+	local size = Constants.TILE * 0.42
+	local tipX = size * 0.40
+
+	local localX = tipX - (t.recoil or 0)
+	local localY = 0
+
+	local ca = math.cos(t.angle)
+	local sa = math.sin(t.angle)
+
+	local worldX = t.x + (localX * ca - localY * sa)
+	local worldY = t.renderY + (localX * sa + localY * ca)
+
+	return worldX, worldY
+end
+
+local function drawTowerAction(kind)
+	-- === Reset systems ===
+	Towers.clear()
+	Enemies.enemies = {}
+	Projectiles.clear()
+	Effects.clear()
+
+	-- === Create enemy ===
+	local angle = -math.pi / 4
+	local dist = 80
+
+	-- Burning random to get a better shock chain since the game is deterministic
+	love.math.random()
+
+	local enemy = {
+		x = math.cos(angle) * dist,
+		y = math.sin(angle) * dist,
+		hp = 100,
+		maxHp = 100,
+		radius = 10,
+		dist = 100,
+		speed = 0,
+		dying = false,
+		alpha = 1,
+		prevX = 0,
+		prevY = 0,
+		hitFlash = 0,
+		hitVelX = 0,
+		hitVelY = 0,
+	}
+
+	enemy.prevX = enemy.x
+	enemy.prevY = enemy.y
+
+	Spatial.updateEnemy(enemy)
+	Enemies.enemies = {enemy}
+
+	-- === Create REAL tower (important) ===
+	local def = Towers.TowerDefs[kind]
+
+	local t = {
+		kind = kind,
+		def = def,
+
+		x = 0,
+		y = 0,
+		renderY = 0,
+
+		-- required animation fields
+		height = 0,
+		prevHeight = 0,
+		spawnAnim = 0,
+		levelUpAnim = 0,
+
+		range = def.range,
+		range2 = def.range * def.range,
+
+		fireRate = def.fireRate,
+		fireInterval = 1 / def.fireRate,
+
+		damage = def.damage,
+		projSpeed = def.projSpeed,
+
+		fireAnim = 1, -- full flash
+		recoil = def.recoilStrength or 0, -- full kickback
+		cooldown = def.fireInterval, -- just fired
+		recoilStrength = def.recoilStrength or 0,
+		recoilDecay = def.recoilDecay or 18,
+
+		windUp = 0,
+		charge = 1,
+
+		damageDealt = 0,
+
+		angle = -math.pi / 4,
+		target = nil,
+		retargetT = 0,
+
+		canRotate = def.canRotate ~= false,
+		turnSpeed = def.turnSpeed or 12,
+
+		-- behaviors
+		slow   = def.onHitSlow and {factor = def.onHitSlow.factor, dur = def.onHitSlow.dur} or nil,
+		splash = def.splash and {radius = def.splash.radius, falloff = def.splash.falloff} or nil,
+		chain  = def.chain and {jumps = def.chain.jumps, radius = def.chain.radius, falloff = def.chain.falloff} or nil,
+		poison = def.poison and {dps = def.poison.dps, dur = def.poison.dur, maxStacks = def.poison.maxStacks} or nil,
+		plasma = def.plasma and {radius = def.plasma.radius, tickRate = def.plasma.tickRate} or nil,
+	}
+
+	Towers.towers = {t}
+
+	if not t.chain then
+		--Projectiles.spawn(t, enemy)
+	else
+		local zapOrder = Shock.fire(t, enemy)
+
+		if zapOrder and #zapOrder > 0 then
+			local mx, my = getShockOrigin(t)
+
+			Effects.spawnZapEffect(mx, my, zapOrder)
+		end
+	end
+
+	-- === SIMULATE REAL GAME ===
+	local dt = 1 / 120
+
+	for i = 1, 6 do
+		Towers.updateTowers(dt)
+		--Projectiles.update(dt)
+		Effects.update(dt)
+	end
+
+	-- === DRAW ===
+	centerAndScale(function()
+		DrawEntities.drawTowerVisual(t.kind, 0, 0, t.angle, t.recoil, 1)
+		DrawEntities.drawTowerFX(t)
+		--Projectiles.draw()
+
+		if t.chain then
+			Effects.draw()
+		end
 	end, TOWER_SCALE)
 end
 
@@ -428,9 +575,23 @@ local achievements = {
     },
 
     {
+        id = "TOWER_LANCER_1000",
+        render = function()
+            drawTowerAction("lancer")
+        end
+    },
+
+    {
         id = "TOWER_SLOW_250",
         render = function()
             drawTower("slow")
+        end
+    },
+
+    {
+        id = "TOWER_SLOW_1000",
+        render = function()
+            drawTowerAction("slow")
         end
     },
 
@@ -442,9 +603,23 @@ local achievements = {
     },
 
     {
+        id = "TOWER_CANNON_1000",
+        render = function()
+            drawTowerAction("cannon")
+        end
+    },
+
+    {
         id = "TOWER_SHOCK_250",
         render = function()
             drawTower("shock")
+        end
+    },
+
+    {
+        id = "TOWER_SHOCK_1000",
+        render = function()
+            drawTowerAction("shock")
         end
     },
 
@@ -456,9 +631,23 @@ local achievements = {
     },
 
     {
+        id = "TOWER_POISON_1000",
+        render = function()
+            drawTowerAction("poison")
+        end
+    },
+
+    {
         id = "TOWER_PLASMA_250",
         render = function()
             drawTower("plasma")
+        end
+    },
+
+    {
+        id = "TOWER_PLASMA_1000",
+        render = function()
+            drawTowerAction("plasma")
         end
     },
 

@@ -233,6 +233,8 @@ local function exportCanvas(canvas, filePath)
 	img:encode("png", filePath)
 end
 
+local cachedCanvas
+
 -- Render the world to a target canvas size using the SAME framing rules,
 function HeroExport.renderWorldToCanvas(w, h, renderWorldFn)
     -- Save live camera state
@@ -242,7 +244,11 @@ function HeroExport.renderWorldToCanvas(w, h, renderWorldFn)
     local prevScale = Camera.wscale
 
     -- Create export canvas
-    local canvas = lg.newCanvas(w, h, { msaa = 8 })
+	if not cachedCanvas or cachedCanvas:getWidth() ~= w or cachedCanvas:getHeight() ~= h then
+		cachedCanvas = lg.newCanvas(w, h, {msaa = 8})
+	end
+
+	local canvas = cachedCanvas
     Camera.canvas = canvas
 
     -- Live screen size
