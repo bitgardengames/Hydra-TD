@@ -21,11 +21,11 @@ return {
 
 	scene = {
 		towers = {
-			{kind = "lancer", gx = 18, gy = 13},
-			{kind = "lancer", gx = 19, gy = 11},
-			{kind = "poison", gx = 19, gy = 10},
-			{kind = "shock", gx = 16, gy = 13},
-			{kind = "cannon", gx = 20, gy = 11},
+			{kind = "lancer", gx = 18, gy = 12},
+			{kind = "lancer", gx = 19, gy = 10},
+			{kind = "poison", gx = 19, gy = 9},
+			{kind = "shock", gx = 16, gy = 12},
+			{kind = "cannon", gx = 20, gy = 10},
 		},
 
 		wave = {
@@ -37,15 +37,15 @@ return {
 
 	actions = {
 		{t = 0, fn = Actions.setMoney(9999)},
-		{t = 0, fn = Actions.upgradeTowerAt(19, 10, 2)},
-		{t = 0, fn = Actions.upgradeTowerAt(19, 11, 3)},
-		{t = 0, fn = Actions.upgradeTowerAt(18, 13, 2)},
-		{t = 0, fn = Actions.upgradeTowerAt(20, 11, 1)},
-		{t = 0, fn = Actions.upgradeTowerAt(16, 13, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(19, 9, 2)},
+		{t = 0, fn = Actions.upgradeTowerAt(19, 10, 3)},
+		{t = 0, fn = Actions.upgradeTowerAt(18, 12, 2)},
+		{t = 0, fn = Actions.upgradeTowerAt(20, 10, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(16, 12, 1)},
 	},
 
 	camera = function(ctx)
-		local driftStart = 8.0
+		local driftStart = 6.0
 		local driftDur = 2.6
 
 		local grassGX = 14

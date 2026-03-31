@@ -273,18 +273,15 @@ function love.update(dt)
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
-		--if State.wave == 20 and not State.endless then
-		if State.wave == 1 and not State.endless then
+		if State.wave == 20 and not State.endless then
 			-- No Leak Achievement
 			if State.waveLeaks == 0 then
 				local diff = Difficulty.key()
 
 				if diff == "normal" then
 					Achievements.unlock("NO_LEAK_NORMAL")
-					print("NO_LEAK_NORMAL")
 				elseif diff == "hard" then
 					Achievements.unlock("NO_LEAK_HARD")
-					print("NO_LEAK_HARD")
 				end
 			end
 
@@ -310,7 +307,7 @@ function love.update(dt)
 		end
 
 		if State.waveLeaks == 0 then
-			local bonus = 6 + State.wave * 2
+			local bonus = 2 * State.wave
 			State.money = State.money + bonus
 
 			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)

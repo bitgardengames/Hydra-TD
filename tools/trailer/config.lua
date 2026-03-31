@@ -1,9 +1,9 @@
-return {
+local Config = {
 	mode = "single", -- sequence, single, screenshots
 	sequence = "steam_trailer",
-	startShot = "plasma_intro",
+	startShot = "small_capsule_art",
 
-	recorder = true,
+	recorder = false,
 
 	showUI = false,
 	showFloaters = true, -- NYI
@@ -12,19 +12,21 @@ return {
     output = {
         --width = 1080,
         --height = 1920,
-		width = 200,
-		height = 200
+		width = 1920,
+		height = 1080,
     },
 
 	screenshots = {
 		enabled = true,
 		prefix = "store",
 		list = {
-			{shot = "steam_screenshot_1", frame = 784},
-			{shot = "steam_screenshot_2", frame = 272},
+			{shot = "steam_screenshot_1", frame = 728},
+			{shot = "steam_screenshot_2", frame = 270},
 			{shot = "steam_screenshot_3", frame = 634},
-			{shot = "steam_screenshot_4", frame = 453},
-			{shot = "steam_screenshot_5", frame = 190}, -- 355 Original
+			{shot = "steam_screenshot_4", frame = 480},
+			{shot = "steam_screenshot_5", frame = 216},
 		}
 	},
 }
+
+return Config

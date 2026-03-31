@@ -13,22 +13,22 @@ local adjustY = tile * 3.5
 
 return {
 	map = 2,
-	duration = 8.0,
+	duration = 4.0,
 
 	scene = {
 		towers = {
-			{kind = "plasma", gx = 22, gy = 12},
+			{kind = "plasma", gx = 22, gy = 11},
 		},
 
 		wave = {
 			index = 4,
 			start = true,
-			warmup = 24.0,
+			warmup = 27.0,
 		},
 	},
 
     actions = {
-		{t = 0, fn = Actions.upgradeTowerAt(22, 12, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(22, 11, 1)},
     },
 
 	camera = Camera.pan({

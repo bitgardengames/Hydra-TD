@@ -1,16 +1,15 @@
-local MapRender = {}
-
 local Constants = require("core.constants")
 local State = require("core.state")
 local Camera = require("core.camera")
 local DrawWorld = require("render.draw_world")
 local Theme = require("core.theme")
 
+local MapRender = {}
+
 local lg = love.graphics
 
 local function mapWorldSize()
-	return Constants.GRID_W * Constants.TILE,
-	       Constants.GRID_H * Constants.TILE
+	return Constants.GRID_W * Constants.TILE, Constants.GRID_H * Constants.TILE
 end
 
 -- Core render function (extracted from your exporter)
@@ -25,7 +24,7 @@ function MapRender.renderToCanvas(canvas, opts)
 	local sx = canvasW / winW
 	local sy = canvasH / winH
 
-	local z = Camera.wscale
+	local z = 1.60 or Camera.wscale
 
 	local mapW, mapH = mapWorldSize()
 	local cx = mapW * 0.5

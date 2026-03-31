@@ -18,6 +18,9 @@ local versionPad = 12
 local colorText = Theme.ui.text
 local cr, cg, cb = colorText[1], colorText[2], colorText[3]
 
+local FIXED_DT = 1 / 120
+local ACCUM = 0
+
 local Backdrop = {
     active = false,
     t = 0,
@@ -32,21 +35,6 @@ local Backdrop = {
 }
 
 Backdrop.shots = {
-	{
-		duration = 14,
-		map = 3,
-		towers = {
-			{kind = "cannon", gx = 12, gy = 10, level = 3},
-			{kind = "slow", gx = 13, gy = 10, level = 2},
-			{kind = "shock", gx = 11, gy = 7, level = 4},
-			{kind = "poison", gx = 21, gy = 9, level = 2},
-			{kind = "plasma", gx = 22, gy = 12, level = 2},
-		},
-		wave = 17,
-		warmup = 20.0,
-		camera = {gx = 16, gy = 7, ox = 20, oy = 30, zoom = 2.0},
-	},
-
 	--[[{
 		duration = 14,
 		map = 7,
@@ -63,59 +51,75 @@ Backdrop.shots = {
 
 	{
 		duration = 14,
+		map = 3,
+		towers = {
+			{kind = "cannon", gx = 12, gy = 9, level = 3},
+			{kind = "slow", gx = 13, gy = 9, level = 2},
+			{kind = "shock", gx = 11, gy = 6, level = 4},
+			{kind = "poison", gx = 21, gy = 8, level = 2},
+			{kind = "plasma", gx = 22, gy = 11, level = 2},
+		},
+		wave = 17,
+		warmup = 20.0,
+		camera = {gx = 16, gy = 7, ox = 0, oy = 0, zoom = 2.0},
+	},
+
+	{
+		duration = 14,
 		map = 5,
 		towers = {
-			{kind = "lancer", gx = 12, gy = 9, level = 3},
-			{kind = "shock", gx = 22, gy = 9, level = 2},
-			{kind = "shock", gx = 13, gy = 9, level = 3},
-			{kind = "plasma", gx = 22, gy = 7, level = 3},
+			{kind = "lancer", gx = 12, gy = 8, level = 3},
+			{kind = "shock", gx = 22, gy = 8, level = 2},
+			{kind = "shock", gx = 13, gy = 8, level = 3},
+			{kind = "plasma", gx = 22, gy = 6, level = 3},
 		},
 		wave = 11,
 		warmup = 55.0,
-		camera = {gx = 12, gy = 8, ox = 180, oy = -134, zoom = 2.0},
+		camera = {gx = 12, gy = 8, ox = 200, oy = -164, zoom = 2.0},
 	},
 
 	{
 		duration = 14,
 		map = 2,
 		towers = {
-			{kind = "cannon", gx = 12, gy = 7, level = 2},
-			{kind = "shock", gx = 12, gy = 11, level = 2},
-			{kind = "poison", gx = 22, gy = 7, level = 2},
-			--{kind = "plasma", gx = 22, gy = 12, level = 3},
+			{kind = "cannon", gx = 12, gy = 6, level = 2},
+			{kind = "shock", gx = 12, gy = 10, level = 2},
+			{kind = "poison", gx = 22, gy = 6, level = 2},
+			--{kind = "plasma", gx = 22, gy = 11, level = 3},
 		},
-		wave = 5,
+		--wave = 13,
+		wave = 6,
 		warmup = 26.0,
-		camera = {gx = 16, gy = 7, ox = 54, oy = 34, zoom = 2.0},
+		camera = {gx = 16, gy = 7, ox = 52, oy = -62, zoom = 2.0},
 	},
 
 	{
 		duration = 14,
 		map = 12,
 		towers = {
-			{kind = "cannon", gx = 12, gy = 7, level = 3},
-			{kind = "slow", gx = 12, gy = 11, level = 2},
-			--{kind = "poison", gx = 22, gy = 8, level = 4},
-			{kind = "lancer", gx = 22, gy = 8, level = 3},
-			{kind = "plasma", gx = 21, gy = 9, level = 3},
+			{kind = "cannon", gx = 12, gy = 6, level = 3},
+			{kind = "slow", gx = 12, gy = 9, level = 2},
+			--{kind = "poison", gx = 22, gy = 7, level = 4},
+			{kind = "lancer", gx = 22, gy = 7, level = 3},
+			{kind = "plasma", gx = 21, gy = 8, level = 3},
 		},
 		wave = 13,
 		warmup = 20.0,
-		camera = {gx = 16, gy = 7, ox = 0, oy = -78, zoom = 2.0},
+		camera = {gx = 16, gy = 7, ox = -24, oy = -152, zoom = 2.0},
 	},
 
 	{
 		duration = 14,
 		map = 10,
 		towers = {
-			{kind = "cannon", gx = 12, gy = 8, level = 3},
-			{kind = "lancer", gx = 12, gy = 10, level = 2},
-			{kind = "poison", gx = 21, gy = 8, level = 4},
-			{kind = "lancer", gx = 23, gy = 8, level = 3},
+			{kind = "cannon", gx = 13, gy = 5, level = 3},
+			{kind = "lancer", gx = 13, gy = 9, level = 2},
+			{kind = "poison", gx = 21, gy = 7, level = 4},
+			{kind = "lancer", gx = 23, gy = 7, level = 3},
 		},
 		wave = 13,
-		warmup = 20.0,
-		camera = {gx = 16, gy = 7, ox = 0, oy = -78, zoom = 2.0},
+		warmup = 21.0,
+		camera = {gx = 16, gy = 7, ox = 24, oy = -152, zoom = 2.0},
 	},
 }
 
@@ -167,12 +171,11 @@ function Backdrop.start(index)
 	Waves.startWave()
 
 	-- Warmup
-	local step = 1 / 60
 	local tt = 0
 
 	while tt < (shot.warmup or 0) do
-		Sim.update(step)
-		tt = tt + step
+		Sim.update(FIXED_DT)
+		tt = tt + FIXED_DT
 	end
 
 	Sound.suppressed = false
@@ -193,7 +196,7 @@ function Backdrop.update(dt)
 
 	-- Handle fade
 	if Backdrop.fadeDir ~= 0 then
-		Backdrop.fadeT = Backdrop.fadeT + dt * Backdrop.fadeDir
+		Backdrop.fadeT = Backdrop.fadeT + FIXED_DT * Backdrop.fadeDir
 
 		if Backdrop.fadeDir == 1 and Backdrop.fadeT >= Backdrop.currentFadeDur then
 			Backdrop.fadeT = Backdrop.currentFadeDur
@@ -208,9 +211,15 @@ function Backdrop.update(dt)
 		end
 	end
 
-	Backdrop.t = Backdrop.t + dt
+	ACCUM = ACCUM + dt
 
-	Sim.update(dt)
+	while ACCUM >= FIXED_DT do
+		Backdrop.t = Backdrop.t + FIXED_DT
+
+		Sim.update(FIXED_DT)
+
+		ACCUM = ACCUM - FIXED_DT
+	end
 
 	local shot = Backdrop.shots[Backdrop.shotIndex]
 

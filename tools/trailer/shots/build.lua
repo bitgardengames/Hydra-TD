@@ -7,7 +7,7 @@ local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
 local tile = Constants.TILE
 
-local adjustX = -(tile * 3.5)
+local adjustX = -(tile * 4)
 local adjustY = 0
 
 return {
@@ -30,9 +30,9 @@ return {
 
     actions = {
 		{t = 0, fn = Actions.setMoney(9999)},
-		{t = 1.50, fn = Actions.placeTower("slow", 21, 8)},
-		{t = 2.50, fn = Actions.placeTower("cannon", 20, 9)},
-        {t = 3.50, fn = Actions.placeTower("lancer", 20, 8)},
+		{t = 1.50, fn = Actions.placeTower("slow", 21, 7)},
+		{t = 2.50, fn = Actions.placeTower("cannon", 20, 8)},
+        {t = 3.50, fn = Actions.placeTower("lancer", 20, 7)},
     },
 
 	text = {

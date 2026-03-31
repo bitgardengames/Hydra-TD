@@ -66,6 +66,11 @@ HeroExport.TRANSPARENT_BANNERS = {
 HeroExport.TITLE_DROP_BY_BANNER = {
 	vertical_capsule = 0.34,
 	library_capsule = 0.36,
+	small_capsule = 0.31,
+}
+
+HeroExport.TEXT_SCALE_BIAS = {
+	small_capsule = 0.72,
 }
 
 -- State
@@ -219,7 +224,14 @@ function HeroExport.getLogoCanvas(name)
 	lg.clear(0, 0, 0, 0)
 
 	Title.invalidateCache()
-	Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, 0)
+
+	local bias = HeroExport.SCALE_BIAS[name] or 1
+
+	Title.textScaleBias = HeroExport.TEXT_SCALE_BIAS and HeroExport.TEXT_SCALE_BIAS[name] or 1
+
+	Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, 0, bias)
+
+	Title.textScaleBias = nil
 
 	lg.setCanvas()
 
@@ -411,7 +423,14 @@ function HeroExport.exportAllFromWorld(renderWorldFn)
 				lg.setBlendMode("alpha")
 				lg.setColor(1, 1, 1, 1)
 				Title.invalidateCache()
+
+				Title.invalidateCache()
+
+				Title.textScaleBias = HeroExport.TEXT_SCALE_BIAS and HeroExport.TEXT_SCALE_BIAS[name] or 1
+
 				Title.drawBannerStyle(b.w, b.h, -math.pi / 6, 1, b.h * drop)
+
+				Title.textScaleBias = nil
 			end
 
 			lg.setCanvas()

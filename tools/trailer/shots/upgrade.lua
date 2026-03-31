@@ -7,7 +7,7 @@ local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 
 local tile = Constants.TILE
 
-local adjustX = tile * 5
+local adjustX = tile * 4.2
 local adjustY = tile * 2
 
 return {
@@ -16,9 +16,9 @@ return {
 
 	scene = {
 		towers = {
-			{kind = "poison", gx = 11,  gy = 10},
-			{kind = "shock",  gx = 12, gy = 11},
-			{kind = "lancer",  gx = 13, gy = 10},
+			{kind = "poison", gx = 11,  gy = 9},
+			{kind = "shock",  gx = 12, gy = 10},
+			{kind = "lancer",  gx = 13, gy = 9},
 		},
 
 		wave = {
@@ -30,9 +30,9 @@ return {
 
 	actions = {
 		{t = 0, fn = Actions.setMoney(9999)},
-		{t = 1.50, fn = Actions.upgradeTowerAt(11,  10, 1)},
-		{t = 2.50, fn = Actions.upgradeTowerAt(12, 11, 1)},
-		{t = 3.50, fn = Actions.upgradeTowerAt(13,  10, 1)},
+		{t = 1.50, fn = Actions.upgradeTowerAt(11,  9, 1)},
+		{t = 2.50, fn = Actions.upgradeTowerAt(12, 10, 1)},
+		{t = 3.50, fn = Actions.upgradeTowerAt(13,  9, 1)},
 	},
 
 	camera = Camera.pan({

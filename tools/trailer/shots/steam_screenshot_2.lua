@@ -8,28 +8,28 @@ return {
 
 	scene = {
 		towers = {
-			{kind = "slow", gx = 12, gy = 7},
-			{kind = "cannon", gx = 13, gy = 7},
-			{kind = "lancer", gx = 20, gy = 8},
-			{kind = "slow", gx = 19, gy = 7},
-			{kind = "shock", gx = 20, gy = 7},
-			{kind = "poison", gx = 18, gy = 8},
+			{kind = "slow", gx = 12, gy = 6},
+			{kind = "cannon", gx = 13, gy = 6},
+			{kind = "lancer", gx = 20, gy = 7},
+			{kind = "slow", gx = 19, gy = 6},
+			{kind = "shock", gx = 20, gy = 6},
+			{kind = "poison", gx = 12, gy = 4},
 		},
 
 		wave = {
-			index = 17,
+			index = 18,
 			start = true,
 			warmup = 11.0,
 		},
 	},
 
     actions = {
-		{t = 0, fn = Actions.upgradeTowerAt(12, 7, 1)},
-		{t = 0, fn = Actions.upgradeTowerAt(13, 7, 2)},
-		{t = 0, fn = Actions.upgradeTowerAt(20, 8, 2)},
-		{t = 0, fn = Actions.upgradeTowerAt(19, 7, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(12, 6, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(13, 6, 2)},
 		{t = 0, fn = Actions.upgradeTowerAt(20, 7, 2)},
-		{t = 0, fn = Actions.upgradeTowerAt(18, 8, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(19, 6, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(20, 6, 2)},
+		{t = 0, fn = Actions.upgradeTowerAt(12, 4, 1)},
 		{t = 0, fn = Actions.setLives(7)},
 
 		{t = 0.1, fn = Actions.setMoney(101)},

@@ -10,8 +10,8 @@ Constants.VERSION_STRING = string.format("v%s (build %d)%s", Constants.VERSION, 
 
 -- Display
 Constants.TILE = 56
-Constants.GRID_W = 34
-Constants.GRID_H = 16
+Constants.GRID_W = 32
+Constants.GRID_H = 14
 Constants.UI_H = 155
 
 Constants.TOWER_LIST = {

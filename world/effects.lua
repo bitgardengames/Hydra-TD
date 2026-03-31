@@ -25,6 +25,7 @@ Effects.frost = {}
 Effects.poison = {}
 Effects.lancer = {}
 Effects.death = {}
+Effects.placePuffs = {}
 Effects.plasmaParticles = {}
 
 local zapJitter = 4
@@ -42,6 +43,7 @@ local frostPool = {}
 local poisonPool = {}
 local lancerPool = {}
 local deathPool = {}
+local placePuffPool = {}
 local plasmaParticlePool = {}
 
 local function acquire(pool)
@@ -55,6 +57,21 @@ local function acquire(pool)
 
 	return {}
 end
+
+--[[ is caching the n worth anything?
+local function acquire(pool)
+	local n = #pool
+	local obj = pool[n]
+
+	if obj then
+		pool[n] = nil
+
+		return obj
+	end
+
+	return {}
+end
+--]]
 
 local function release(pool, obj)
 	for k in pairs(obj) do
@@ -329,6 +346,30 @@ function Effects.spawnPlasmaHit(x, y, vx, vy)
 	end
 end
 
+-- Tower placement
+function Effects.spawnPlacePuff(x, y)
+	for i = 1, 10 do
+		local a = random() * pi * 2
+		local sp = 110 + random() * 120
+
+		local spawnR = 3 + random() * 3
+
+		local p = acquire(placePuffPool)
+
+		p.x = x + cos(a) * spawnR
+		p.y = y + sin(a) * spawnR
+
+		p.vx = cos(a) * sp
+		p.vy = sin(a) * sp * 0.9 - 4
+
+		p.r = random(2, 4)
+		p.t = 0
+		p.life = 0.45 + random() * 0.2
+
+		Effects.placePuffs[#Effects.placePuffs + 1] = p
+	end
+end
+
 function Effects.spawnEnemyDeath(x, y, r)
 	local d = acquire(deathPool)
 
@@ -464,6 +505,25 @@ function Effects.update(dt)
 		end
 	end
 
+	local placePuffs = Effects.placePuffs
+
+	for i = #placePuffs, 1, -1 do
+		local p = placePuffs[i]
+
+		p.t = p.t + dt
+
+		p.x = p.x + p.vx * dt
+		p.y = p.y + p.vy * dt
+
+		p.vx = p.vx * 0.92
+		p.vy = p.vy * 0.92
+
+		if p.t >= p.life then
+			swapRemove(placePuffs, i)
+			release(placePuffPool, p)
+		end
+	end
+
 	local death = Effects.death
 
 	for i = #death, 1, -1 do
@@ -565,7 +625,7 @@ function Effects.draw()
 				local jx = jitter(halfJitter)
 				local jy = jitter(halfJitter)
 
-				-- Spark (unchanged)
+				-- Spark
 				local radius = 2.5 * (1 - t) + 1
 				lg.setColor(0.7, 0.95, 1.0, 0.7 * a * jumpA)
 				lg.circle("fill", x2 + jx, y2 + jy, radius)
@@ -577,7 +637,7 @@ function Effects.draw()
 				lg.setColor(0.5, 0.85, 1.0, 0.18 * a * jumpA)
 				lg.line(x1, y1, x2, y2)
 
-				-- Main lightning strand (anchored endpoints)
+				-- Main lightning strand
 				lg.setLineWidth(w)
 				lg.setColor(0.6, 0.9, 1.0, a * jumpA)
 
@@ -601,7 +661,7 @@ function Effects.draw()
 					lg.line(px, py, x2, y2)
 				end
 
-				-- Additional beam (slightly offset, also anchored)
+				-- Additional beam
 				lg.setLineWidth(w * 0.65)
 				lg.setColor(0.7, 0.95, 1.0, 0.55 * a * jumpA)
 
@@ -629,7 +689,7 @@ function Effects.draw()
 					lg.line(px, py, x2, y2)
 				end
 
-				-- Core (now jittered, but endpoints still locked)
+				-- Core line
 				lg.setLineWidth(w * 0.4)
 				lg.setColor(1, 1, 1, 0.9 * a * jumpA)
 
@@ -653,7 +713,7 @@ function Effects.draw()
 					lg.line(px, py, x2, y2)
 				end
 
-				-- Tiny fork (unchanged)
+				-- Tiny fork
 				if random() < 0.45 then
 					local bx = (x1 + x2) * 0.5
 					local by = (y1 + y2) * 0.5
@@ -720,13 +780,10 @@ function Effects.draw()
 		local alpha = 1 - t
 		local r = p.r * (1 - t * 0.3)
 
-		--lg.setColor(0.55, 0.9, 0.55, alpha)
-		--lg.circle("fill", p.x, p.y, r)
-
 		lg.setColor(0.35, 0.75, 0.35, alpha)
 		lg.circle("fill", p.x, p.y, r)
 
-		-- Inner core (denser, sharper)
+		-- Inner core
 		lg.setColor(0.55, 0.9, 0.55, alpha)
 		lg.circle("fill", p.x, p.y, r * 0.6)
 	end
@@ -762,6 +819,19 @@ function Effects.draw()
 
 		-- Core
 		lg.setColor(0.95, 0.65, 1.0, a)
+		lg.circle("fill", p.x, p.y, r)
+	end
+
+	local placePuffs = Effects.placePuffs
+
+	for i = 1, #placePuffs do
+		local p = placePuffs[i]
+		local t = p.t / p.life
+
+		local alpha = (1 - t)
+		local r = p.r * (1 + t * 0.6)
+
+		lg.setColor(0.8, 0.75, 0.7, alpha * 0.5)
 		lg.circle("fill", p.x, p.y, r)
 	end
 

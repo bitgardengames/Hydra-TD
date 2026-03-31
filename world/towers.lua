@@ -43,7 +43,7 @@ local FIRE_ANGLE_EPS = math.rad(6)
 
 local function getShockOrigin(t)
 	local size = Constants.TILE * 0.42
-	local tipX = size * 0.40
+	local tipX = size * 0.39
 
 	local localX = tipX - (t.recoil or 0)
 	local localY = 0
@@ -121,6 +121,8 @@ local function addTower(kind, gx, gy)
 
 	Floaters.add(x, t.renderY - 30, "-" .. def.cost, cwR, cwG, cwB)
 
+	Effects.spawnPlacePuff(x, y)
+
 	Sound.play("towerPlaced")
 
 	Rumble.pulse(0.32, 0.055)
@@ -190,7 +192,7 @@ local function upgradeTower(t)
 
 	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
 
-	--Sound.play("towerUpgraded")
+	Sound.play("towerUpgraded")
 
 	Rumble.pulse(0.22, 0.045)
 end

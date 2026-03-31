@@ -1,5 +1,6 @@
 local Theme = require("core.theme")
 local Constants = require("core.constants")
+local Sound = require("systems.sound")
 local Text = require("ui.text")
 
 local Messages = {}
@@ -17,7 +18,6 @@ local PADDING_X = 8
 local PADDING_Y = 4
 local GAP = 4
 
--- Pool + active list
 local pool = {}
 local list = {}
 
@@ -28,11 +28,13 @@ local function getFont()
 		font = lg.getFont()
 		fontH = font:getHeight()
 	end
+
 	return font, fontH
 end
 
 local function getBaseY()
 	local _, sh = lg.getDimensions()
+
 	return sh - Constants.UI_H - 56
 end
 
@@ -77,11 +79,10 @@ function Messages.add(text, r, g, b)
 		o.targetOffset = o.targetOffset + (h + GAP)
 	end
 
-	-- Trim oldest (no table.remove shift)
+	-- Trim oldest
 	if #list > MAX then
 		local old = list[1]
 
-		-- shift manually (tiny list, faster than GC churn)
 		for i = 1, #list - 1 do
 			list[i] = list[i + 1]
 		end
@@ -89,6 +90,8 @@ function Messages.add(text, r, g, b)
 
 		free(old)
 	end
+
+	Sound.play("message")
 end
 
 function Messages.update(dt)
@@ -158,11 +161,11 @@ function Messages.draw()
 		lg.scale(sx, sy)
 		lg.translate(-cx, -cy)
 
-		-- backdrop
+		-- Backdrop
 		lg.setColor(0.125, 0.125, 0.125, 0.75 * alpha * dim)
 		lg.rectangle("fill", X - PADDING_X, yy - PADDING_Y, w, boxH, 6)
 
-		-- text (shadowed)
+		-- Text
 		lg.setColor(m.r * dim, m.g * dim, m.b * dim, alpha)
 		Text.printShadow(m.text, X, yy)
 

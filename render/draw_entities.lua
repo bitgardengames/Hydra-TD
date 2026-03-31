@@ -66,8 +66,15 @@ local function prepareEnemyRenderData()
 		e.rx = x
 		e.ry = y
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
-		e.rHitOffsetX = lerp(e.prevHitOffsetX or e.hitOffsetX or 0, e.hitOffsetX or 0, a)
-		e.rHitOffsetY = lerp(e.prevHitOffsetY or e.hitOffsetY or 0, e.hitOffsetY or 0, a)
+
+		local hx0 = e.prevHitOffsetX or e.hitOffsetX or 0
+		local hy0 = e.prevHitOffsetY or e.hitOffsetY or 0
+
+		local hx1 = e.hitOffsetX or 0
+		local hy1 = e.hitOffsetY or 0
+
+		e.rHitOffsetX = hx0 + (hx1 - hx0) * a
+		e.rHitOffsetY = hy0 + (hy1 - hy0) * a
 	end
 end
 
@@ -76,7 +83,7 @@ local function drawEnemy(e)
 	local ix = (e.rx or 0) + (e.rHitOffsetX or 0)
 	local iy = (e.ry or 0) + (e.rHitOffsetY or 0)
 	local animT = e.rAnimT or 0
-    local enemyAlpha = e.alpha
+	local enemyAlpha = e.alpha
 
     -- Boss Horns
     if e.boss then
@@ -374,16 +381,24 @@ local function drawSlowFX(t)
 	local radius = 4 + p * 14
 	local alpha = 0.9 * (a * a)
 
-	lg.setLineWidth(2 + a * 2)
-	--lg.setColor(sr, sg, sb, alpha)
+	lg.setLineWidth(2)
+
 	lg.setColor(0.92, 0.92, 0.96, alpha)
 	lg.circle("line", mx, my, radius)
 
 	lg.setColor(sr * 0.8, sg * 0.9, sb, alpha * 0.35)
 	lg.circle("fill", mx, my, radius * 0.6)
+
+	lg.setLineWidth(1)
 end
 
 local function drawShockFX(t)
+	local a = t.fireAnim
+
+	if a <= 0 then
+		return
+	end
+
 	local size = TILE * 0.42
 	local barrelLen = size * 0.52
 	local offset = size * 0.12
@@ -404,31 +419,13 @@ local function drawShockFX(t)
 		local mx = t.x + (localX * ca - localY * sa)
 		local my = t.renderY + (localX * sa + localY * ca)
 
-		-- BUILD (flicker / jitter)
-		if t.windUp and t.windUp > 0 then
-			local p = 1 - (t.windUp / 0.08)
+		local p = 1 - a
 
-			-- small random flicker
-			if random() < (0.4 + p * 0.4) then
-				local j = 1.5
+		local r = 2 + p * 4
+		local alpha = 0.7 * a
 
-				lg.setColor(0.7, 0.95, 1.0, 0.5 + p * 0.5)
-				lg.circle("fill", mx + random(-j, j), my + random(-j, j), 2 + p)
-			end
-		end
-
-		-- Release
-		local a = t.fireAnim or 0
-
-		if a > 0 then
-			local p = 1 - a
-
-			local r = 2 + p * 4
-			local alpha = 0.7 * a
-
-			lg.setColor(0.6, 0.9, 1.0, alpha)
-			lg.circle("line", mx, my, r)
-		end
+		lg.setColor(0.6, 0.9, 1.0, alpha)
+		lg.circle("line", mx, my, r)
 	end
 
 	lg.setLineWidth(1)
@@ -449,7 +446,7 @@ local function drawCannonFX(t)
 	local p = 1 - a
 
 	-- Expand outward
-	local r = 6 + p * 10
+	local r = 4 + p * 10
 
 	-- Stronger early, softer late
 	local alpha = 0.85 * (a * a)
@@ -469,28 +466,42 @@ end
 
 local function drawPlasmaFX(t)
 	local a = t.fireAnim
-
-	if a <= 0 then
-		return
-	end
+	if a <= 0 then return end
 
 	local size = TILE * 0.48
-	local tipX = size * 0.85
+	local tipX = size * 0.84
 
 	local mx, my = getBarrelTip(t, tipX)
 
 	local p = 1 - a
+	local w = 4 + p * 12
+	local h = 2 + p * 4
 
-	local r = 6 + p * 10
-	local alpha = a * a
+	local alpha = 0.8 * a * a
+	local angle = pi / 4
+
+	lg.push()
+	lg.translate(mx, my)
+
+	lg.rotate(t.angle)
 
 	lg.setLineWidth(2)
 
-	-- Main ring
+	lg.push()
+	lg.rotate(angle)
 	lg.setColor(0.9, 0.6, 1.0, alpha)
-	lg.circle("line", mx, my, r)
+	lg.ellipse("line", 0, 0, w, h)
+	lg.pop()
+
+	lg.push()
+	lg.rotate(-angle)
+	lg.setColor(0.9, 0.6, 1.0, alpha)
+	lg.ellipse("line", 0, 0, w, h)
+	lg.pop()
 
 	lg.setLineWidth(1)
+
+	lg.pop()
 end
 
 local function drawPoisonFX(t)
@@ -498,7 +509,7 @@ local function drawPoisonFX(t)
 	if not a or a <= 0 then return end
 
 	local size = TILE * 0.42
-	local tipX = size * 0.7
+	local tipX = size * 0.6
 	local mx, my = getBarrelTip(t, tipX)
 
 	local p = 1 - a
@@ -512,7 +523,7 @@ local function drawPoisonFX(t)
 		local dx = cos(ang)
 		local dy = sin(ang)
 
-		local dist = (5 + i * 3) * p
+		local dist = (7 + i * 3) * p
 
 		local x = mx + dx * dist
 		local y = my + dy * dist

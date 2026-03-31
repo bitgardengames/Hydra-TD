@@ -9,6 +9,7 @@ local projectiles = {}
 local projectilePool = {}
 
 local lg = love.graphics
+local random = love.math.random
 local sampleFast = MapMod.sampleFast
 
 local pi = math.pi
@@ -49,7 +50,7 @@ local function addHitOffset(e, hitX, hitY)
 		dx, dy = 0, -1
 	end
 
-	local strength = 0.35
+	local strength = 0.16
 
 	-- accumulate velocity instead of replacing state
 	e.hitVelX = (e.hitVelX or 0) + dx * strength
@@ -384,7 +385,16 @@ local function update(dt)
 						end
 
 						if not e.boss then
-							addHitOffset(e, px, py)
+							local blastX = ex - px
+							local blastY = ey - py
+
+							local impulseScale = 0.45 + t * 0.85
+
+							e.hitVelX = (e.hitVelX or 0) + blastX * 0.035 * impulseScale
+							e.hitVelY = (e.hitVelY or 0) + blastY * 0.035 * impulseScale
+
+							e.hitVelX = e.hitVelX + (random() * 2 - 1) * 0.18 * impulseScale
+							e.hitVelY = e.hitVelY + (random() * 2 - 1) * 0.18 * impulseScale
 						end
 
 						State.addDamage(kind, dmg, e.boss == true)

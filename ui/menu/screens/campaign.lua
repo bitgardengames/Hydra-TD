@@ -101,8 +101,7 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 		screenX = screenX * sx
 		screenY = screenY * sy
 
-		return previewX + screenX,
-			   previewY + screenY
+		return previewX + screenX, previewY + screenY
 	end
 
 	-- Precompute segment lengths

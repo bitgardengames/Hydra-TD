@@ -20,7 +20,6 @@ local colorMoney = Theme.ui.money
 local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- seconds per poison tick
-local EPS = 0.0001
 
 local abs = math.abs
 local min = math.min
@@ -28,6 +27,11 @@ local max = math.max
 local sqrt = math.sqrt
 local floor = math.floor
 local upper = string.upper
+
+local nextID = 0
+
+local damping = 0.85
+local returnStrength = 0.75
 
 local function swapRemove(list, i)
 	local last = #list
@@ -67,6 +71,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		idx = 1
 	end
 
+	nextID = nextID + 1
+
 	local e = {
 		kind = kind,
 		def = def,
@@ -88,6 +94,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		hitFlash = 0,
 		hitOffsetX = 0,
 		hitOffsetY = 0,
+		prevHitOffsetX = 0,
+		prevHitOffsetY = 0,
 		hitVelX = 0,
 		hitVelY = 0,
 		dying = false,
@@ -107,6 +115,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		poisonTimer = 0,
 		poisonDPS = 0,
 		shadow = true,
+		id = nextID,
+		shockID = 0,
 	}
 
 	if e.boss then
@@ -298,24 +308,18 @@ local function updateEnemies(dt)
 		e.hitOffsetX = e.hitOffsetX or 0
 		e.hitOffsetY = e.hitOffsetY or 0
 
-		e.prevHitOffsetX = e.hitOffsetX
-		e.prevHitOffsetY = e.hitOffsetY
-
 		-- Integrate velocity
 		e.hitOffsetX = e.hitOffsetX + e.hitVelX
 		e.hitOffsetY = e.hitOffsetY + e.hitVelY
 
-		-- damping (kills energy)
-		local damping = 0.9
+		-- Damping (kills energy)
 		e.hitVelX = e.hitVelX * damping
 		e.hitVelY = e.hitVelY * damping
 
-		-- soft return to center
-		local returnStrength = 0.2
-		e.hitOffsetX = e.hitOffsetX * (1 - returnStrength)
-		e.hitOffsetY = e.hitOffsetY * (1 - returnStrength)
+		e.hitVelX = e.hitVelX - e.hitOffsetX * returnStrength * dt
+		e.hitVelY = e.hitVelY - e.hitOffsetY * returnStrength * dt
 
-		-- deadzone
+		-- Deadzone
 		if abs(e.hitOffsetX) < 0.01 then e.hitOffsetX = 0 end
 		if abs(e.hitOffsetY) < 0.01 then e.hitOffsetY = 0 end
 		if abs(e.hitVelX) < 0.01 then e.hitVelX = 0 end
@@ -325,7 +329,10 @@ local function updateEnemies(dt)
 		e.prevX = e.x
 		e.prevY = e.y
 
-		-- Store previous distance/segment (render will interpolate distance, then sample)
+		e.prevHitOffsetX = e.hitOffsetX
+		e.prevHitOffsetY = e.hitOffsetY
+
+		-- Store previous distance (render will interpolate distance, then sample)
 		e.prevDist = e.dist
 		e.dist = e.dist + e.speed * dt
 
@@ -412,6 +419,8 @@ local function clear()
 		Spatial.removeEnemy(e)
 		enemies[i] = nil
 	end
+
+	nextID = 0
 end
 
 return {

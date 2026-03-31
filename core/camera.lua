@@ -16,11 +16,11 @@ local REF_W = 1920
 local REF_H = 1080
 
 --local AUTHORED_ZOOM = 1.30
-local AUTHORED_ZOOM = 1.5
+local AUTHORED_ZOOM = 1.6
 
 -- Clamps
 local MIN_ZOOM = 0.64
-local MAX_ZOOM = 2.0
+local MAX_ZOOM = 2.5
 
 local lg = love.graphics
 local min = math.min

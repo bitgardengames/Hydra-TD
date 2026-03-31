@@ -23,7 +23,7 @@ local SERVO_SPEED = 1.8
 
 local TITLE_TEXT = "HYDRA TD"
 
-local SHOW_TOWER = true
+local SHOW_TOWER = false
 local TOWER_TYPE = "lancer"
 
 if love.math.random() < 0.01 then
@@ -31,7 +31,7 @@ if love.math.random() < 0.01 then
 	TOWER_TYPE = towers[love.math.random(1, #towers)]
 end
 
-local colorLancer = Theme.tower[TOWER_TYPE]
+local colorTower = Theme.tower[TOWER_TYPE]
 local colorOutline = Theme.outline.color
 
 local titleCache = {
@@ -53,7 +53,7 @@ function Title.invalidateCache()
 end
 
 local function buildTitleCanvas(lancerScale)
-	local fontPx = floor(BASE_LANCER_VISUAL_W * lancerScale * FONT_RATIO)
+	local fontPx = floor(BASE_LANCER_VISUAL_W * lancerScale * FONT_RATIO * (Title.textScaleBias or 1))
 
 	if titleCache.canvas and titleCache.fontPx == fontPx then
 		return
@@ -94,7 +94,7 @@ local function buildTitleCanvas(lancerScale)
 	end
 
 	-- Fill
-	lg.setColor(colorLancer)
+	lg.setColor(colorTower)
 	lg.print(TITLE_TEXT, pad, pad)
 
 	lg.setCanvas(prevCanvas)
@@ -207,6 +207,7 @@ function Title.drawBannerStyle(w, h, angle, alpha, yOffset)
 	end
 
 	local lancerScale = min(w, h) * BANNER_LANCER_SCALE_FACTOR * horizontalBoost
+	local textScale = (Title.textScaleBias or 1)
 	local gap = (BASE_LANCER_VISUAL_W * lancerScale) * 0.16
 	local anchorY = (aspect < 0.9) and (h * 0.333 + h * 0.06) or  (h * 0.5)
 

@@ -90,6 +90,8 @@ function Spatial.removeEnemy(e)
 	removeFromCell(e)
 end
 
+local tsort = table.sort
+
 function Spatial.queryCells(x, y)
 	local results = queryBuffer
 	clearBuffer(results)
@@ -115,6 +117,10 @@ function Spatial.queryCells(x, y)
 			end
 		end
 	end
+
+	--[[tsort(results, function(a, b)
+		return a.id < b.id
+	end)]]
 
 	return results
 end

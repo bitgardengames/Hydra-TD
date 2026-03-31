@@ -175,16 +175,20 @@ function Sound.load()
 		jitter = true,
 	}
 
-	-- NYI
 	sfx.towerUpgraded = {
-		--source = la.newSource("assets/sounds/sell.wav", "static"),
+		source = la.newSource("assets/sounds/upgrade.ogg", "static"),
 	}
-	
+
+	sfx.message = {
+		source = la.newSource("assets/sounds/message.ogg", "static"),
+		jitter = true,
+		bias = 0.8,
+	}
+
 	sfx.medal = {
 		source = la.newSource("assets/sounds/medal.mp3", "static"),
 		jitter = true,
 		bias = 0.9,
-		--cooldown = 0.08,
 	}
 
 	sfx.towerSold = {
@@ -235,6 +239,20 @@ function Sound.load()
 		jitter = true,
 		bias = 0.9,
 		--cooldown = 0.09,
+	}
+
+	--[[sfx.plasma = {
+		source = la.newSource("assets/sounds/plasma.ogg", "static"),
+		jitter = true,
+		bias = 0.62,
+		--cooldown = 0.08,
+	}]]
+	
+	sfx.plasma = {
+		source = la.newSource("assets/sounds/plasma2.ogg", "static"),
+		jitter = true,
+		bias = 0.82,
+		--cooldown = 0.08,
 	}
 
 	-- Music

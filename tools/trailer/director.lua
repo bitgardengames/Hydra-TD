@@ -106,9 +106,9 @@ function Director.buildScene(scene)
 		action.done = true
 	end
 
-	if Config.showUI then
+	--[[if Config.showUI then -- Old, I have an action for this now
 		State.money = math.random(0, 120)
-	end
+	end]]
 
     -- Start wave early if requested
     if scene.wave then

@@ -18,7 +18,7 @@ local mapCY = Constants.GRID_H * Constants.TILE * 0.5
 local tile = Constants.TILE
 
 local adjustX = tile * 1.5 + 18
-local adjustY = 14 -- 13 for library capsule, 14 for main capsule
+local adjustY = 8
 
 return {
 	map = 99,
@@ -50,7 +50,7 @@ return {
 		--from = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 3.0},
 		--to = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 3.0}
 
-		from = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 3.0},
-		to = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 3.0}
+		from = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 2.6},
+		to = {x = mapCX + adjustX, y = mapCY - adjustY, zoom = 2.6}
 	}),
 }

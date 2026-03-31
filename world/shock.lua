@@ -8,21 +8,17 @@ local dist2 = Util.dist2
 local random = love.math.random
 local sqrt = math.sqrt
 
+local nextID = 0
+local EPS = 0.0001
+
 -- Reusable context
 local ctx = {
 	tower = nil,
-	hit = {},
 	order = {}
 }
 
 local function resetContext(tower)
 	ctx.tower = tower
-
-	local hit = ctx.hit
-
-	for k in pairs(hit) do
-		hit[k] = nil
-	end
 
 	local order = ctx.order
 
@@ -48,13 +44,12 @@ end
 
 local function zapEnemy(from, e, dmg)
 	e.hp = e.hp - dmg
-	ctx.hit[e] = true
 
 	if e.hitFlash <= 0 then
 		e.hitFlash = 0.05
 	end
 
-	-- Subtle nudge
+	-- Knockback and jitter
 	if not e.boss then
 		local dx, dy
 
@@ -62,29 +57,40 @@ local function zapEnemy(from, e, dmg)
 			dx = e.x - from.x
 			dy = e.y - from.y
 		else
-			-- First hit from tower
-			dx = e.x - sourceTower.x
-			dy = e.y - sourceTower.y
+			dx = e.x - ctx.tower.x
+			dy = e.y - ctx.tower.y
 		end
 
-		local len = sqrt(dx * dx + dy * dy)
+		local baseScale
 
-		if len > 0 then
-			dx = dx / len
-			dy = dy / len
+		if from == ctx.tower then
+			baseScale = 0.02
+		else
+			baseScale = 0.05
 		end
 
-		local strength = 0.25
+		dx = dx * baseScale
+		dy = dy * baseScale
 
-		e.hitVelX = (e.hitVelX or 0) + dx * strength
-		e.hitVelY = (e.hitVelY or 0) + dy * strength
+		local px = -dy
+		local py = dx
+
+		local j = (random() * 2 - 1)
+
+		dx = dx + px * j * 0.8
+		dy = dy + py * j * 0.8
+
+		local strength = 0.1
+		local impulse = strength * (0.7 + random() * 0.5)
+
+		e.hitVelX = (e.hitVelX or 0) + dx * impulse
+		e.hitVelY = (e.hitVelY or 0) + dy * impulse
 	end
 
 	addLink(from, e)
 
 	local tower = ctx.tower
 	tower.damageDealt = tower.damageDealt + dmg
-
 	e.lastHitTower = tower
 
 	State.addDamage("shock", dmg, e.boss == true)
@@ -101,11 +107,16 @@ function Shock.fire(sourceTower, initialTarget)
 		return nil
 	end
 
+
 	resetContext(sourceTower)
+
+	nextID = nextID + 1
+	local shockID = nextID
 
 	local damage = sourceTower.damage
 
 	-- First hit
+	initialTarget.shockID = shockID
 	zapEnemy(sourceTower, initialTarget, damage)
 
 	local last = initialTarget
@@ -116,28 +127,34 @@ function Shock.fire(sourceTower, initialTarget)
 		damage = damage * falloff
 
 		local best = nil
-		local bestDist = radius2
+		local bestDist = math.huge
 
 		local nearby = Spatial.queryCells(last.x, last.y)
 
 		for i = 1, #nearby do
 			local e = nearby[i]
 
-			if not ctx.hit[e] and e.hp > 0 then
+			if e.hp > 0 and not e.dying and e.shockID ~= shockID then
 				local d = dist2(last.x, last.y, e.x, e.y)
+				local diff = d - bestDist
 
-				if d <= bestDist then
+				if diff < -EPS or (diff <= EPS and (not best or e.id < best.id)) then
 					bestDist = d
 					best = e
 				end
 			end
 		end
 
-		if not best then
+		-- Stop if nothing valid or out of range
+		if not best or bestDist > radius2 then
 			break
 		end
 
+		-- Mark as hit before applying damage
+		best.shockID = shockID
+
 		zapEnemy(last, best, damage)
+
 		last = best
 	end
 

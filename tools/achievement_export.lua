@@ -262,7 +262,7 @@ local function drawDroplet(cx, cy, r, tier)
 end
 
 local function drawNoSymbol(cx, cy, r)
-	local thickness = r * 0.20
+	local thickness = r * 0.18
 	local len = r * 2.2
 
 	lg.setColor(Theme.outline.color)
@@ -276,8 +276,8 @@ local function drawNoSymbol(cx, cy, r)
 		-thickness * 0.5,
 		len,
 		thickness,
-		thickness * 0.4,
-		thickness * 0.4
+		thickness * 0.5,
+		thickness * 0.5
 	)
 
 	lg.pop()
@@ -407,7 +407,7 @@ local function drawTowerAction(kind)
 
 	Towers.towers = {t}
 
-	if not t.chain then
+	--[[if not t.chain then
 		--Projectiles.spawn(t, enemy)
 	else
 		local zapOrder = Shock.fire(t, enemy)
@@ -417,9 +417,8 @@ local function drawTowerAction(kind)
 
 			Effects.spawnZapEffect(mx, my, zapOrder)
 		end
-	end
+	end]]
 
-	-- === SIMULATE REAL GAME ===
 	local dt = 1 / 120
 
 	for i = 1, 6 do

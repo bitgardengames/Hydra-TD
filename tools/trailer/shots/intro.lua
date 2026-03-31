@@ -18,9 +18,9 @@ return {
 
 	scene = {
 		towers = {
-			{kind = "lancer", gx = 23, gy = 6},
-			{kind = "cannon", gx = 24, gy = 10},
-			{kind = "shock", gx = 26, gy = 10},
+			{kind = "lancer", gx = 23, gy = 5},
+			{kind = "cannon", gx = 24, gy = 9},
+			{kind = "shock", gx = 26, gy = 9},
 		},
 
 		wave = {
@@ -32,7 +32,7 @@ return {
 
     actions = {
 		{t = 0, fn = Actions.setMoney(9999)},
-		{t = 0, fn = Actions.upgradeTowerAt(25, 10, 1)},
+		{t = 0, fn = Actions.upgradeTowerAt(25, 9, 1)},
     },
 
 	camera = function(ctx)

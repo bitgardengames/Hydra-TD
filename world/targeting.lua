@@ -5,6 +5,8 @@ local Targeting = {}
 
 local dist2 = Util.dist2
 
+local EPS = 0.0001
+
 --[[
 	Targeting.findClosest(...)
 	Targeting.findLowestHP(...)
@@ -49,11 +51,14 @@ function Targeting.findProgressTarget(tower)
 			if dx * dx + dy * dy <= r2 then
 				local prog = e.dist
 
+				-- Slight deprioritization for slowed enemies
 				if e.slowTimer > 0 then
 					prog = prog - 5
 				end
 
-				if prog > bestProg then
+				local diff = prog - bestProg
+
+				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
 					bestProg = prog
 					best = e
 				end
