@@ -247,7 +247,7 @@ function Sound.load()
 		bias = 0.62,
 		--cooldown = 0.08,
 	}]]
-	
+
 	sfx.plasma = {
 		source = la.newSource("assets/sounds/plasma2.ogg", "static"),
 		jitter = true,

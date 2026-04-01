@@ -10,6 +10,7 @@ Hotkeys.kb = {
 		poison = "3",
 		cannon = "4",
 		shock = "5",
+		plasma = "6",
 	},
 
 	actions = {
@@ -45,6 +46,7 @@ Hotkeys.pad = {
 		--toggleMeterInfo = "leftstick",
 	},
 
+	-- I need a wheel or something, controllers don't handle this well
 	shop = {
 		dpleft = "slow",
 		dpup = "lancer",

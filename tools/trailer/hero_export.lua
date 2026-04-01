@@ -66,11 +66,13 @@ HeroExport.TRANSPARENT_BANNERS = {
 HeroExport.TITLE_DROP_BY_BANNER = {
 	vertical_capsule = 0.34,
 	library_capsule = 0.36,
+	library_header = 0.25,
 	small_capsule = 0.31,
 }
 
 HeroExport.TEXT_SCALE_BIAS = {
 	small_capsule = 0.72,
+	library_header = 0.80,
 }
 
 -- State
@@ -272,17 +274,13 @@ function HeroExport.renderWorldToCanvas(w, h, renderWorldFn)
 	-- Apply vertical lift in world space
 	local liftAmount = HeroExport.frameLift or 0
 
-	-- Positive frameLift moves scene upward visually
-	centerWorldY = centerWorldY + liftAmount
-
 	local scaleFactor = w / liveW
 	local newScale = prevScale * scaleFactor * HeroExport.extraZoom
 
-    Camera.wscale = newScale
-
-    -- Recenter camera for new canvas size
-    Camera.wx = centerWorldX - (w / (2 * newScale))
-    Camera.wy = centerWorldY - (h / (2 * newScale))
+	-- preserve exact camera position
+	Camera.wx = prevWx
+	Camera.wy = prevWy
+	Camera.wscale = newScale
 
     -- Render
     Camera.begin()

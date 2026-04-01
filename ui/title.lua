@@ -23,7 +23,7 @@ local SERVO_SPEED = 1.8
 
 local TITLE_TEXT = "HYDRA TD"
 
-local SHOW_TOWER = false
+local SHOW_TOWER = true
 local TOWER_TYPE = "lancer"
 
 if love.math.random() < 0.01 then

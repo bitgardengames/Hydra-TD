@@ -3,6 +3,7 @@ local Theme = require("core.theme")
 local MapMod = require("world.map")
 local State = require("core.state")
 local Trees = require("world.scatter_trees")
+local Cactoosia = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
 
 local lg = love.graphics
@@ -151,6 +152,7 @@ end
 local function drawScatter() -- Generic name for now, may or may not separate further, but I think it's not necessary
 	Rocks.draw()
 	Trees.draw()
+	--Cactoosia.draw()
 end
 
 local function drawPath()

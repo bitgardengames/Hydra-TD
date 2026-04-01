@@ -65,12 +65,12 @@ return {
 	},
 
 	towerDesc = {
-		lancer = "Fast single-target damage.",
-		slow = "Slows enemy movement.",
-		cannon = "Heavy splash damage.",
-		shock = "Chains lightning between enemies.",
-		poison = "Applies damage over time.",
-		plasma = "Set a description",
+		lancer = "Rapid single-target fire",
+		slow = "Chills enemies, slowing their movement",
+		cannon = "Explosive shots with heavy splash",
+		shock = "Chains lightning between targets",
+		poison = "Stacks damage over time",
+		plasma = "Burns through enemies along its path",
 	},
 
 	enemy = {

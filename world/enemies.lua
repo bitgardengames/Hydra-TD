@@ -305,12 +305,13 @@ local function updateEnemies(dt)
 		-- Hit offset (impulse + critically damped return)
 		e.hitVelX = e.hitVelX or 0
 		e.hitVelY = e.hitVelY or 0
-		e.hitOffsetX = e.hitOffsetX or 0
-		e.hitOffsetY = e.hitOffsetY or 0
+
+		e.prevHitOffsetX = e.hitOffsetX
+		e.prevHitOffsetY = e.hitOffsetY
 
 		-- Integrate velocity
-		e.hitOffsetX = e.hitOffsetX + e.hitVelX
-		e.hitOffsetY = e.hitOffsetY + e.hitVelY
+		e.hitOffsetX = e.hitOffsetX + e.hitVelX * dt
+		e.hitOffsetY = e.hitOffsetY + e.hitVelY * dt
 
 		-- Damping (kills energy)
 		e.hitVelX = e.hitVelX * damping
@@ -328,9 +329,6 @@ local function updateEnemies(dt)
 		-- Store previous position for interpolation
 		e.prevX = e.x
 		e.prevY = e.y
-
-		e.prevHitOffsetX = e.hitOffsetX
-		e.prevHitOffsetY = e.hitOffsetY
 
 		-- Store previous distance (render will interpolate distance, then sample)
 		e.prevDist = e.dist

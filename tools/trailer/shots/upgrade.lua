@@ -17,6 +17,7 @@ return {
 	scene = {
 		towers = {
 			{kind = "poison", gx = 11,  gy = 9},
+			--{kind = "plasma", gx = 9,  gy = 8},
 			{kind = "shock",  gx = 12, gy = 10},
 			{kind = "lancer",  gx = 13, gy = 9},
 		},
@@ -31,6 +32,7 @@ return {
 	actions = {
 		{t = 0, fn = Actions.setMoney(9999)},
 		{t = 1.50, fn = Actions.upgradeTowerAt(11,  9, 1)},
+		--{t = 1.50, fn = Actions.upgradeTowerAt(9,  8, 1)},
 		{t = 2.50, fn = Actions.upgradeTowerAt(12, 10, 1)},
 		{t = 3.50, fn = Actions.upgradeTowerAt(13,  9, 1)},
 	},

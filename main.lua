@@ -24,6 +24,7 @@ local Draw = require("render.draw")
 local Glyphs = require("ui.glyphs")
 local DrawWorld = require("render.draw_world")
 local Trees = require("world.scatter_trees")
+local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
 local DamageMeter = require("ui.damage_meter")
 local Input = require("ui.input")
@@ -96,6 +97,7 @@ function resetGame()
     MapMod.buildPath(Maps[State.worldMapIndex])
 
 	Rocks.generate()
+	--Cacti.generate()
 	Trees.generate()
 
 	-- Map palettes

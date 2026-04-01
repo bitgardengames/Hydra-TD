@@ -1,7 +1,7 @@
 local Config = {
-	mode = "single", -- sequence, single, screenshots
+	mode = "sequence", -- sequence, single, screenshots
 	sequence = "steam_trailer",
-	startShot = "small_capsule_art",
+	startShot = "upgrade",
 
 	recorder = false,
 

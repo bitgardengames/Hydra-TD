@@ -52,7 +52,7 @@ return {
 		local grassGY = 8
 
 		local grassWX = (grassGX + 0.5) * Constants.TILE - 43
-		local grassWY = (grassGY + 0.5) * Constants.TILE
+		local grassWY = (grassGY + 0.5) * Constants.TILE - 20
 
 		local bossLockX = nil
 		local bossLockY = nil
@@ -65,7 +65,7 @@ return {
 		local zoomDelay = 0
 		local zoomDur = 10.0
 
-		local DT = 1 / 60
+		local DT = 1 / 120
 		local camT = 0
 
 		local function getTarget()
@@ -134,12 +134,12 @@ return {
 	end,
 
 	logo = {
-		t = 10.6,
+		t = 9.6,
 		dur = 16,
 	},
 
 	text = {
 		{t = 0.8, text = "SURVIVE", dur = 3, fadeIn = 0.25, fadeOut = 0.4},
-		{t = 12, text = "Wishlist on Steam", dur = 16, fadeIn = 0.35, fadeOut = 0.45, smallText = true},
+		{t = 11, text = "Wishlist on Steam", dur = 16, fadeIn = 0.35, fadeOut = 0.45, smallText = true},
 	}
 }

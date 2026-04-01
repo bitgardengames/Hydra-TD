@@ -6,7 +6,7 @@ end
 
 -- Variant switch
 Theme.variant = "default" -- "default", "halloween", "winter", "autumn"
--- Could consider lunar, martian, candy
+-- Could consider lunar, martian, candy, sci-fi
 
 -- Base Theme
 Theme.grid = {0.16, 0.17, 0.2, 0.1}
@@ -239,6 +239,54 @@ Theme.variants = {
 
 		lighting = {
 			shadowMul = 0.70, -- slightly softer shadows = warmer feel
+		},
+	},
+
+	desert = {
+		terrain = {
+			grass = {0.82, 0.72, 0.48},        -- sand base
+			path = {0.70, 0.52, 0.34},         -- packed dirt
+			pathOutline = {0.46, 0.34, 0.22},  -- darker baked edge
+			water = {0.30, 0.60, 0.55},        -- oasis teal (optional, but nice)
+		},
+
+		world = {
+			treeTrunk = {0.46, 0.34, 0.20},
+			treeTrunkOutline = {0.28, 0.20, 0.12},
+
+			-- Think scrub / dry vegetation instead of lush trees
+			treeStyles = {
+				{fill = {0.58, 0.62, 0.30}, outline = {0.34, 0.38, 0.18}}, -- dry green
+				{fill = {0.64, 0.58, 0.26}, outline = {0.38, 0.34, 0.16}}, -- dusty olive
+				{fill = {0.72, 0.52, 0.22}, outline = {0.44, 0.30, 0.14}}, -- sunburnt
+				{fill = {0.52, 0.48, 0.24}, outline = {0.30, 0.28, 0.14}}, -- muted shrub
+				{fill = {0.78, 0.66, 0.34}, outline = {0.48, 0.42, 0.20}}, -- sandy highlight
+			},
+
+			-- Rocks carry the biome here
+			rockStyles = {
+				{fill = {0.72, 0.60, 0.44}, outline = {0.44, 0.36, 0.26}},
+				{fill = {0.66, 0.54, 0.40}, outline = {0.40, 0.32, 0.24}},
+				{fill = {0.78, 0.66, 0.50}, outline = {0.50, 0.42, 0.32}},
+				{fill = {0.60, 0.50, 0.36}, outline = {0.36, 0.28, 0.20}},
+				{fill = {0.74, 0.62, 0.46}, outline = {0.46, 0.38, 0.28}},
+			},
+		},
+
+		enemy = {
+			body = {0.92, 0.48, 0.30}, -- slightly warmer enemies (heat vibe)
+		},
+
+		ui = {
+			panel = {0.24, 0.20, 0.14, 1},
+			panel2 = {0.18, 0.15, 0.10, 1},
+			warn = {1.0, 0.74, 0.30},
+		},
+
+		lighting = {
+			shadowMul = 0.75,         -- harsher sun
+			highlightOffset = 0.14,   -- slightly stronger top light
+			highlightScale = 0.90,
 		},
 	},
 }
