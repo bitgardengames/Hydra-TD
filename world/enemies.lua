@@ -19,9 +19,13 @@ local colorMoney = Theme.ui.money
 
 local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
-local POISON_TICK = 0.5 -- seconds per poison tick
+local POISON_TICK = 0.5 -- Seconds per poison tick
+
+local drag = 0.82 -- Hit feedback
+local returnRate = 4
 
 local abs = math.abs
+local exp = math.exp
 local min = math.min
 local max = math.max
 local sqrt = math.sqrt
@@ -29,9 +33,6 @@ local floor = math.floor
 local upper = string.upper
 
 local nextID = 0
-
-local damping = 0.85
-local returnStrength = 0.75
 
 local function swapRemove(list, i)
 	local last = #list
@@ -92,12 +93,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		radius = def.radius,
 		radius2 = def.radius * def.radius,
 		hitFlash = 0,
-		hitOffsetX = 0,
-		hitOffsetY = 0,
-		prevHitOffsetX = 0,
-		prevHitOffsetY = 0,
-		hitVelX = 0,
-		hitVelY = 0,
+		lateralOffset = 0,
+		lateralVelocity = 0,
+		prevLateralOffset = 0,
 		dying = false,
 		deathT = 0,
 		deathDur = 0.4,
@@ -106,6 +104,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		alpha = 1,
 		animT = 0,
 		prevAnimT = 0,
+		simPathDX = 1,
+		simPathDY = 0,
 		dist = 0,
 		prevDist = 0,
 		modifiers = def.modifiers,
@@ -302,29 +302,12 @@ local function updateEnemies(dt)
 			end
 		end
 
-		-- Hit offset (impulse + critically damped return)
-		e.hitVelX = e.hitVelX or 0
-		e.hitVelY = e.hitVelY or 0
+		-- Hit offset
+		e.prevLateralOffset = e.lateralOffset
 
-		e.prevHitOffsetX = e.hitOffsetX
-		e.prevHitOffsetY = e.hitOffsetY
-
-		-- Integrate velocity
-		e.hitOffsetX = e.hitOffsetX + e.hitVelX * dt
-		e.hitOffsetY = e.hitOffsetY + e.hitVelY * dt
-
-		-- Damping (kills energy)
-		e.hitVelX = e.hitVelX * damping
-		e.hitVelY = e.hitVelY * damping
-
-		e.hitVelX = e.hitVelX - e.hitOffsetX * returnStrength * dt
-		e.hitVelY = e.hitVelY - e.hitOffsetY * returnStrength * dt
-
-		-- Deadzone
-		if abs(e.hitOffsetX) < 0.01 then e.hitOffsetX = 0 end
-		if abs(e.hitOffsetY) < 0.01 then e.hitOffsetY = 0 end
-		if abs(e.hitVelX) < 0.01 then e.hitVelX = 0 end
-		if abs(e.hitVelY) < 0.01 then e.hitVelY = 0 end
+		e.lateralOffset = e.lateralOffset + e.lateralVelocity * dt
+		e.lateralVelocity = e.lateralVelocity * drag
+		e.lateralOffset = e.lateralOffset * (1 - returnRate * dt)
 
 		-- Store previous position for interpolation
 		e.prevX = e.x
@@ -339,6 +322,22 @@ local function updateEnemies(dt)
 		end
 
 		e.x, e.y = sampleFast(e.dist)
+
+		local x2, y2 = sampleFast(min(e.dist + 1, map.totalWorldLength))
+
+		local pdx = x2 - e.x
+		local pdy = y2 - e.y
+		local plen2 = pdx * pdx + pdy * pdy
+
+		if plen2 > 0 then
+			local invLen = 1 / sqrt(plen2)
+
+			e.simPathDX = pdx * invLen
+			e.simPathDY = pdy * invLen
+		else
+			e.simPathDX = 1
+			e.simPathDY = 0
+		end
 
 		Spatial.updateEnemy(e)
 

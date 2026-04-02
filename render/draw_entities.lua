@@ -7,6 +7,7 @@ local MapMod = require("world.map")
 
 local random = love.math.random
 local lg = love.graphics
+local sqrt = math.sqrt
 local sin = math.sin
 local min = math.min
 local max = math.max
@@ -62,28 +63,69 @@ local function prepareEnemyRenderData()
 
 		local d = lerp(e.prevDist or e.dist, e.dist, a)
 		local x, y = sampleFast(d)
+		local x2, y2 = sampleFast(d + 1)
+
+		local dx = x2 - x
+		local dy = y2 - y
+
+		local len = dx * dx + dy * dy
+
+		if len > 0 then
+			len = 1 / sqrt(len)
+
+			e.pathDX = dx * len
+			e.pathDY = dy * len
+		else
+			e.pathDX = 1
+			e.pathDY = 0
+		end
+
+		local oldRX = e.rx or x
+		local oldRY = e.ry or y
+
+		e.prevRX = oldRX
+		e.prevRY = oldRY
 
 		e.rx = x
 		e.ry = y
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
-
-		local hx0 = e.prevHitOffsetX or e.hitOffsetX or 0
-		local hy0 = e.prevHitOffsetY or e.hitOffsetY or 0
-
-		local hx1 = e.hitOffsetX or 0
-		local hy1 = e.hitOffsetY or 0
-
-		e.rHitOffsetX = hx0 + (hx1 - hx0) * a
-		e.rHitOffsetY = hy0 + (hy1 - hy0) * a
 	end
 end
 
 -- Draw a single enemy
 local function drawEnemy(e)
-	local ix = (e.rx or 0) + (e.rHitOffsetX or 0)
-	local iy = (e.ry or 0) + (e.rHitOffsetY or 0)
+	local a = max(0, min(1, State.renderAlpha or 0))
+
+	-- Interpolate lateral offset
+	local lo = lerp(e.prevLateralOffset or e.lateralOffset, e.lateralOffset, a)
+
+	local x = e.rx
+	local y = e.ry
+
+	local x2, y2 = sampleFast((e.prevDist or e.dist) + 1)
+
+	local dx = x2 - x
+	local dy = y2 - y
+
+	local len = sqrt(dx * dx + dy * dy)
+
+	if len > 0 then
+		dx = dx / len
+		dy = dy / len
+	end
+
+	-- Perpendicular
+	local nx = -dy
+	local ny = dx
+
+	-- Apply offset
+	local ix = x + nx * lo
+	local iy = y + ny * lo
 	local animT = e.rAnimT or 0
 	local enemyAlpha = e.alpha
+
+	e.drawX = ix
+	e.drawY = iy
 
     -- Boss Horns
     if e.boss then
@@ -214,8 +256,8 @@ local function drawEnemy(e)
 		lg.line(ix + eyeSep - browLen * 0.35 - browIn, eyeY - browDrop * 0.15 + browTension - browLift, ix + eyeSep + browLen * 0.65 - browIn, eyeY - browDrop - browLift)
 	else
 		-- Eye direction follows movement
-		local dx = e.x - e.prevX
-		local dy = e.y - e.prevY
+		local dx = e.rx - (e.prevRX or e.rx)
+		local dy = e.ry - (e.prevRY or e.ry)
 
 		local m = 1.2 -- max
 
@@ -246,8 +288,8 @@ local function drawEnemyHealth(e)
 	local w = e.boss and 44 or 28
 	local h = e.boss and 7 or 5
 
-	local ix = e.rx
-	local iy = e.ry
+	local ix = e.drawX or e.rx
+	local iy = e.drawY or e.ry
 
 	local bx = ix - w / 2
 	local by = iy - e.radius - (e.boss and 18 or 12)
@@ -259,11 +301,13 @@ local function drawEnemyHealth(e)
 
 	if t > 0.5 then
 		local p = (t - 0.5) / 0.5
+
 		r = 0.85 - p * 0.55
 		g = 0.75 + p * 0.20
 		b = 0.20
 	else
 		local p = t / 0.5
+
 		r = 0.85
 		g = 0.45 + p * 0.30
 		b = 0.20

@@ -42,6 +42,39 @@ local function addLink(from, to)
 	link.to = to
 end
 
+local function applyHitImpulse(e, fromX, fromY, strength)
+	local ex = e.x
+	local ey = e.y
+
+	local dx = ex - fromX
+	local dy = ey - fromY
+
+	local len2 = dx * dx + dy * dy
+
+	if len2 > 0 then
+		local invLen = 1 / math.sqrt(len2)
+		dx = dx * invLen
+		dy = dy * invLen
+	else
+		dx = 0
+		dy = 0
+	end
+
+	-- Use SIM tangent, not render tangent
+	local tx = e.simPathDX or 1
+	local ty = e.simPathDY or 0
+
+	-- Path normal
+	local nx = -ty
+	local ny = tx
+
+	-- Project hit direction onto path normal
+	local lateral = dx * nx + dy * ny
+
+	-- Overwrite so each hit gets its own direction cleanly
+	e.lateralVelocity = lateral * strength * 90
+end
+
 local function zapEnemy(from, e, dmg)
 	e.hp = e.hp - dmg
 
@@ -51,40 +84,7 @@ local function zapEnemy(from, e, dmg)
 
 	-- Knockback and jitter
 	if not e.boss then
-		local dx, dy
-
-		if from then
-			dx = e.x - from.x
-			dy = e.y - from.y
-		else
-			dx = e.x - ctx.tower.x
-			dy = e.y - ctx.tower.y
-		end
-
-		local baseScale
-
-		if from == ctx.tower then
-			baseScale = 0.02
-		else
-			baseScale = 0.05
-		end
-
-		dx = dx * baseScale
-		dy = dy * baseScale
-
-		local px = -dy
-		local py = dx
-
-		local j = (random() * 2 - 1)
-
-		dx = dx + px * j * 0.8
-		dy = dy + py * j * 0.8
-
-		local strength = 0.1
-		local impulse = strength * (0.7 + random() * 0.5)
-
-		e.hitVelX = (e.hitVelX or 0) + dx * impulse
-		e.hitVelY = (e.hitVelY or 0) + dy * impulse
+		applyHitImpulse(e, from.x, from.y, 0.7)
 	end
 
 	addLink(from, e)

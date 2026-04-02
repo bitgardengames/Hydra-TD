@@ -37,24 +37,37 @@ local function wobble(t, amp)
 	return sin(t * 6.0) * amp, cos(t * 4.5) * amp
 end
 
-local function addHitOffset(e, hitX, hitY)
-	local dx = e.x - hitX
-	local dy = e.y - hitY
+local function applyHitImpulse(e, fromX, fromY, strength)
+	local ex = e.x
+	local ey = e.y
 
-	local len = sqrt(dx * dx + dy * dy)
+	local dx = ex - fromX
+	local dy = ey - fromY
 
-	if len > 0 then
-		dx = dx / len
-		dy = dy / len
+	local len2 = dx * dx + dy * dy
+
+	if len2 > 0 then
+		local invLen = 1 / math.sqrt(len2)
+		dx = dx * invLen
+		dy = dy * invLen
 	else
-		dx, dy = 0, -1
+		dx = 0
+		dy = 0
 	end
 
-	local strength = 0.16
+	-- Use SIM tangent, not render tangent
+	local tx = e.simPathDX or 1
+	local ty = e.simPathDY or 0
 
-	-- accumulate velocity instead of replacing state
-	e.hitVelX = (e.hitVelX or 0) + dx * strength
-	e.hitVelY = (e.hitVelY or 0) + dy * strength
+	-- Path normal
+	local nx = -ty
+	local ny = tx
+
+	-- Project hit direction onto path normal
+	local lateral = dx * nx + dy * ny
+
+	-- Overwrite so each hit gets its own direction cleanly
+	e.lateralVelocity = lateral * strength * 90
 end
 
 local function acquireProjectile()
@@ -302,7 +315,7 @@ local function update(dt)
 					end
 
 					if not e.boss then
-						addHitOffset(e, p.x, p.y)
+						applyHitImpulse(e, p.x, p.y, 0.7)
 					end
 
 					State.addDamage(p.sourceKind, dmg, e.boss == true)
@@ -385,16 +398,7 @@ local function update(dt)
 						end
 
 						if not e.boss then
-							local blastX = ex - px
-							local blastY = ey - py
-
-							local impulseScale = 0.45 + t * 0.85
-
-							e.hitVelX = (e.hitVelX or 0) + blastX * 0.035 * impulseScale
-							e.hitVelY = (e.hitVelY or 0) + blastY * 0.035 * impulseScale
-
-							e.hitVelX = e.hitVelX + (random() * 2 - 1) * 0.18 * impulseScale
-							e.hitVelY = e.hitVelY + (random() * 2 - 1) * 0.18 * impulseScale
+							applyHitImpulse(e, px, py, 1)
 						end
 
 						State.addDamage(kind, dmg, e.boss == true)
@@ -456,7 +460,7 @@ local function update(dt)
 							end
 
 							if not e.boss then
-								addHitOffset(e, p.x, p.y)
+								applyHitImpulse(e, p.x, p.y, 0.4)
 							end
 
 							State.addDamage(p.sourceKind, dmg, e.boss == true)
