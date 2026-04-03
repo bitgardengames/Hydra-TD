@@ -2,18 +2,16 @@ local State = require("core.state")
 local Steam = require("core.steam")
 local Save = require("core.save")
 
-
 local Achievements = {}
 
 local watchers = {}
-
 
 --[[
 	List of achievements
 
 	BOSS_KILL_1, BOSS_KILL_25
 	ENEMY_KILL_500, ENEMY_KILL_1500, ENEMY_KILL_3000
-	TOWER_LANCER_250, TOWER_SLOW_250, TOWER_CANNON_250, TOWER_SHOCK_250, TOWER_POISON_250
+	TOWER_LANCER_250, TOWER_SLOW_250, TOWER_CANNON_250, TOWER_SHOCK_250, TOWER_POISON_250, TOWER_PLASMA_250
 	CAMPAIGN_EASY, CAMPAIGN_NORMAL, CAMPAIGN_HARD
 --]]
 
@@ -138,6 +136,10 @@ watchers.TOWER_SHOCK_KILLS = function(value)
 end
 
 watchers.TOWER_POISON_KILLS = function(value)
+	if value >= 250 then unlock("TOWER_POISON_250") end
+end
+
+watchers.TOWER_PLASMA_KILLS = function(value)
 	if value >= 250 then unlock("TOWER_POISON_250") end
 end
 

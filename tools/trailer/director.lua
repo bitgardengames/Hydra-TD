@@ -16,6 +16,9 @@ local Enemies = require("world.enemies")
 local Floaters = require("ui.floaters")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
+local DrawEntities = require("render.draw_entities")
+local Projectiles = require("world.projectiles")
+local Effects = require("world.effects")
 
 local pi = math.pi
 local min = math.min
@@ -37,6 +40,21 @@ local FONT_FLOATERS = lg.newFont("assets/fonts/PTSans.ttf", FLOATER_FONT_SIZE) -
 
 local FPS = 60
 local STEP_DT = 1 / FPS
+
+local function drawTrailerWorld()
+	DrawWorld.drawGrass()
+	DrawWorld.drawPath()
+	DrawWorld.drawScatter()
+
+	DrawWorld.drawGrid()
+
+	DrawEntities.drawTowerGhost()
+	DrawEntities.drawTowers()
+	DrawEntities.drawEnemies()
+
+	Projectiles.draw()
+	Effects.draw()
+end
 
 local Director = {
 	t = 0,
@@ -463,13 +481,13 @@ function Director.draw()
 	if Director.shot.type ~= "logo" then
 		if HeroExport.draw(function()
 			--Camera.begin()
-			Draw.drawWorld()
+			drawTrailerWorld()
 		end) then
 			return -- Skip normal draw this frame
 		end
 
 		Camera.begin()
-		Draw.drawWorld()
+		drawTrailerWorld()
 		Camera.finish()
 		Camera.present()
 

@@ -45,14 +45,14 @@ return {
 	},
 
 	camera = function(ctx)
-		local driftStart = 6.0
-		local driftDur = 2.6
+		local driftStart = 4.6
+		local driftDur = 1.4
 
-		local grassGX = 14
-		local grassGY = 8
+		local grassGX = 11
+		local grassGY = 7
 
-		local grassWX = (grassGX + 0.5) * Constants.TILE - 43
-		local grassWY = (grassGY + 0.5) * Constants.TILE - 20
+		local grassWX = (grassGX + 0.5) * Constants.TILE + 18
+		local grassWY = (grassGY + 0.5) * Constants.TILE + 58
 
 		local bossLockX = nil
 		local bossLockY = nil
@@ -61,9 +61,9 @@ return {
 		local fx, fy = nil, nil
 
 		local zoomFrom = 3.0
-		local zoomTo = 6.0
+		local zoomTo = 10.0
 		local zoomDelay = 0
-		local zoomDur = 10.0
+		local zoomDur = 6.0
 
 		local DT = 1 / 120
 		local camT = 0
@@ -134,12 +134,12 @@ return {
 	end,
 
 	logo = {
-		t = 9.6,
+		t = 11.6,
 		dur = 16,
 	},
 
 	text = {
 		{t = 0.8, text = "SURVIVE", dur = 3, fadeIn = 0.25, fadeOut = 0.4},
-		{t = 11, text = "Wishlist on Steam", dur = 16, fadeIn = 0.35, fadeOut = 0.45, smallText = true},
+		{t = 12.6, text = "Wishlist on Steam", dur = 16, fadeIn = 0.35, fadeOut = 0.45, smallText = true},
 	}
 }

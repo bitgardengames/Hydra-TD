@@ -11,6 +11,7 @@ local State = require("core.state")
 local Save = require("core.save")
 local MapMod = require("world.map")
 local Maps = require("world.map_defs")
+local MapWorldCache = require("world.map_world_cache")
 local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local Effects = require("world.effects")
@@ -99,6 +100,8 @@ function resetGame()
 	Rocks.generate()
 	--Cacti.generate()
 	Trees.generate()
+
+	MapWorldCache.invalidate()
 
 	-- Map palettes
 	--[[local palette = MapMod.getPalette()
@@ -280,10 +283,11 @@ function love.update(dt)
 			if State.waveLeaks == 0 then
 				local diff = Difficulty.key()
 
-				if diff == "normal" then
+				if diff == "hard" then
 					Achievements.unlock("NO_LEAK_NORMAL")
-				elseif diff == "hard" then
 					Achievements.unlock("NO_LEAK_HARD")
+				elseif diff == "normal" then
+					Achievements.unlock("NO_LEAK_NORMAL")
 				end
 			end
 
@@ -324,6 +328,8 @@ end
 
 function love.draw()
 	local sw, sh = lg.getDimensions()
+
+	lg.setColor(1, 1, 1)
 
 	if State.mode == "game" or State.mode == "pause" or State.mode == "game_over" or State.mode == "victory" then
 		-- World
@@ -503,6 +509,7 @@ end
 function love.resize(w, h)
 	Scale.update()
 	Camera.resize()
+	MapWorldCache.invalidate()
 	require("ui.title").invalidateCache()
 	require("ui.menu.screens.campaign").resize(w, h)
 end

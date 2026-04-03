@@ -1,34 +1,44 @@
-local Constants = require("core.constants")
-local State = require("core.state")
-local Camera = require("core.camera")
 local DrawWorld = require("render.draw_world")
-local Theme = require("core.theme")
+local Constants = require("core.constants")
+local Camera = require("core.camera")
 
 local MapRender = {}
 
 local lg = love.graphics
 
-local function mapWorldSize()
-	return Constants.GRID_W * Constants.TILE, Constants.GRID_H * Constants.TILE
+local MAP_W = Constants.GRID_W * Constants.TILE
+local MAP_H = Constants.GRID_H * Constants.TILE
+
+function MapRender.renderWorldToCanvas(canvas, scale)
+	lg.setCanvas(canvas)
+	lg.clear(0, 0, 0, 0)
+
+	lg.push()
+	lg.origin()
+	lg.scale(scale, scale)
+
+	DrawWorld.drawGrass()
+	DrawWorld.drawPath()
+	DrawWorld.drawScatter()
+
+	lg.pop()
+	lg.setCanvas()
 end
 
--- Core render function (extracted from your exporter)
-function MapRender.renderToCanvas(canvas, opts)
-	opts = opts or {}
+function MapRender.renderGameplayFramedToCanvas(canvas)
+	local canvasW, canvasH = canvas:getDimensions()
+	local winW, winH = love.graphics.getDimensions()
 
-	local canvasW = canvas:getWidth()
-	local canvasH = canvas:getHeight()
+	local z = Camera.wscale
 
-	local winW, winH = lg.getDimensions()
+	local mapCX = MAP_W * 0.5
+	local mapCY = MAP_H * 0.5
+
+	local camWX = mapCX - (winW / (2 * z))
+	local camWY = mapCY - (winH / (2 * z))
 
 	local sx = canvasW / winW
 	local sy = canvasH / winH
-
-	local z = 1.60 or Camera.wscale
-
-	local mapW, mapH = mapWorldSize()
-	local cx = mapW * 0.5
-	local cy = mapH * 0.5
 
 	lg.setCanvas(canvas)
 	lg.clear(0, 0, 0, 0)
@@ -36,35 +46,14 @@ function MapRender.renderToCanvas(canvas, opts)
 	lg.push()
 	lg.origin()
 
+	-- Match gameplay camera framing, then scale that framed view into the preview box.
 	lg.scale(sx, sy)
 	lg.scale(z, z)
+	lg.translate(-camWX, -camWY)
 
-	local wx = cx - (winW / (2 * z))
-	local wy = cy - (winH / (2 * z))
-
-	lg.translate(-wx, -wy)
-
-	-- Render layers
-	if opts.drawGrass ~= false then
-		DrawWorld.drawGrass()
-	end
-
-	if opts.drawWater ~= false then
-		--DrawWorld.drawWater()
-	end
-
-	if opts.drawScatter ~= false then
-		DrawWorld.drawScatter()
-	end
-
-	if opts.forcePathColor then
-		DrawWorld.updatePathColor(opts.forcePathColor)
-	end
-
+	DrawWorld.drawGrass()
 	DrawWorld.drawPath()
-
-	-- restore
-	DrawWorld.updatePathColor(Theme.terrain.path)
+	DrawWorld.drawScatter()
 
 	lg.pop()
 	lg.setCanvas()

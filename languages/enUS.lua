@@ -166,16 +166,14 @@ return {
 		tower_cannon_250 = "Heavy Artillery",
 		tower_shock_250 = "High Voltage",
 		tower_poison_250 = "It Adds Up",
-		tower_plasma_250 = "Beyond Control", -- Uncontained
+		tower_plasma_250 = "Overcharge",
 
-		--[[
-		tower_lancer_1000 = "Deadeye", -- Too close to Dead End, needs attention
+		tower_lancer_1000 = "Bullseye",
 		tower_slow_1000 = "Absolute Zero",
 		tower_cannon_1000 = "Blown Away",
 		tower_shock_1000 = "Chain Reaction",
 		tower_poison_1000 = "Lethal Dose",
 		tower_plasma_1000 = "Critical Mass", -- Power Overwhelming?
-		--]]
 
 		campaign_easy = "First Steps",
 		campaign_normal = "Holding the Line",
@@ -199,6 +197,13 @@ return {
 		tower_shock_250 = "Defeat 250 enemies with the Shock tower",
 		tower_poison_250 = "Defeat 250 enemies with the Poison tower",
 		tower_plasma_250 = "Defeat 250 enemies with the Plasma tower",
+
+		tower_lancer_1000 = "Defeat 1000 enemies with the Lancer",
+		tower_slow_1000 = "Defeat 1000 enemies with the Slow tower",
+		tower_cannon_1000 = "Defeat 1000 enemies with the Cannon",
+		tower_shock_1000 = "Defeat 1000 enemies with the Shock tower",
+		tower_poison_1000 = "Defeat 1000 enemies with the Poison tower",
+		tower_plasma_1000 = "Defeat 1000 enemies with the Plasma tower",
 
 		campaign_easy = "Complete the campaign on Easy",
 		campaign_normal = "Complete the campaign on Normal",

@@ -9,9 +9,12 @@ local Floaters = require("ui.floaters")
 local Tooltip = require("ui.tooltip")
 local Fonts = require("core.fonts")
 local Messages = require("ui.messages")
+local MapWorldCache = require("world.map_world_cache")
 
 local function drawWorld()
-	DrawWorld.drawWorld()
+	MapWorldCache.build()
+	MapWorldCache.draw()
+
 	DrawWorld.drawGrid()
 
 	DrawEntities.drawTowerGhost()

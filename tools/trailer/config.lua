@@ -1,9 +1,9 @@
 local Config = {
 	mode = "sequence", -- sequence, single, screenshots
 	sequence = "steam_trailer",
-	startShot = "upgrade",
+	startShot = "survive",
 
-	recorder = false,
+	recorder = true,
 
 	showUI = false,
 	showFloaters = true, -- NYI

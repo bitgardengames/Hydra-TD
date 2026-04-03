@@ -18,8 +18,8 @@ Theme.outline = {
 
 Theme.lighting = {
 	shadowMul = 0.68,
-	highlightOffset = 0.12,
-	highlightScale = 0.88,
+	highlightOffset = 0.10,
+	highlightScale = 0.90,
 }
 
 Theme.shadow = {
@@ -156,10 +156,6 @@ Theme.variants = {
 			panel2 = {0.10, 0.07, 0.09, 1},
 			warn = {1.0, 0.55, 0.15},
 		},
-
-		lighting = {
-			shadowMul = 0.75,
-		},
 	},
 
 	winter = {
@@ -194,11 +190,6 @@ Theme.variants = {
 		ui = {
 			panel = {0.16, 0.18, 0.20, 1},
 			panel2 = {0.12, 0.14, 0.16, 1},
-		},
-
-		lighting = {
-			shadowMul = 0.6,
-			highlightScale = 0.95,
 		},
 	},
 
@@ -235,10 +226,6 @@ Theme.variants = {
 			panel = {0.22, 0.18, 0.13, 1},
 			panel2 = {0.18, 0.14, 0.11, 1},
 			warn = {1.0, 0.70, 0.30},
-		},
-
-		lighting = {
-			shadowMul = 0.70, -- slightly softer shadows = warmer feel
 		},
 	},
 
@@ -281,12 +268,6 @@ Theme.variants = {
 			panel = {0.24, 0.20, 0.14, 1},
 			panel2 = {0.18, 0.15, 0.10, 1},
 			warn = {1.0, 0.74, 0.30},
-		},
-
-		lighting = {
-			shadowMul = 0.75,         -- harsher sun
-			highlightOffset = 0.14,   -- slightly stronger top light
-			highlightScale = 0.90,
 		},
 	},
 }

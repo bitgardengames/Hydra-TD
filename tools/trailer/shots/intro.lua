@@ -21,6 +21,7 @@ return {
 			{kind = "lancer", gx = 23, gy = 7},
 			{kind = "cannon", gx = 24, gy = 9},
 			{kind = "shock", gx = 26, gy = 9},
+			{kind = "plasma", gx = 23, gy = 9},
 		},
 
 		wave = {

@@ -34,7 +34,7 @@ function MapPreviewCache.buildAll(w, h)
 
 		local canvas = lg.newCanvas(w, h, {msaa = 8})
 
-		MapRender.renderToCanvas(canvas)
+		MapRender.renderGameplayFramedToCanvas(canvas)
 
 		cache[map.id] = {
 			canvas = canvas,

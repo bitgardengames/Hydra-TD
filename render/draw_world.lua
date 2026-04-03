@@ -32,6 +32,35 @@ local colorMud = {colorGrass[1] * 0.55, colorGrass[2] * 0.45, colorGrass[3] * 0.
 
 local gridToCenter = MapMod.gridToCenter
 
+local worldCanvas = nil
+local worldCanvasZoom = nil
+
+local function rebuildWorldCanvas()
+	local w = love.graphics.getWidth()
+	local h = love.graphics.getHeight()
+
+	local zoom = Camera.zoom -- or however you store it
+
+	worldCanvas = love.graphics.newCanvas(w, h, {msaa = 8})
+
+	worldCanvasZoom = zoom
+
+	lg.setCanvas(worldCanvas)
+	lg.clear()
+
+	lg.push()
+
+	-- Apply zoom, not translation
+	lg.scale(zoom, zoom)
+
+	-- Draw world at origin-relative coordinates
+	drawWorldStatic()
+
+	lg.pop()
+
+	lg.setCanvas()
+end
+
 local function hashNoise(x, y, seed)
 	local n = sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453
 
