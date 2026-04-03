@@ -21,8 +21,7 @@ local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- Seconds per poison tick
 
-local drag = 0.82 -- Hit feedback
-local returnRate = 4
+local returnRate = 20
 
 local abs = math.abs
 local exp = math.exp
@@ -305,9 +304,18 @@ local function updateEnemies(dt)
 		-- Hit offset
 		e.prevLateralOffset = e.lateralOffset
 
+		-- Apply velocity
 		e.lateralOffset = e.lateralOffset + e.lateralVelocity * dt
-		e.lateralVelocity = e.lateralVelocity * drag
-		e.lateralOffset = e.lateralOffset * (1 - returnRate * dt)
+
+		-- Damping
+		local velDamp = 1 / (1 + 8 * dt)
+		e.lateralVelocity = e.lateralVelocity * velDamp
+
+		-- Return
+		local rt = returnRate * dt
+		local returnFactor = rt / (1 + rt)
+
+		e.lateralOffset = e.lateralOffset + (0 - e.lateralOffset) * returnFactor
 
 		-- Store previous position for interpolation
 		e.prevX = e.x
@@ -373,6 +381,7 @@ local function updateEnemies(dt)
 
 				State.lives = State.lives - 1
 				State.waveLeaks = State.waveLeaks + 1
+				State.totalLeaks = State.totalLeaks + 1
 
 				local livesAnim = State.livesAnim or 0
 				State.livesAnim = livesAnim + (1 - livesAnim) * 0.6

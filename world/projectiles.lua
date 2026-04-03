@@ -55,7 +55,7 @@ local function applyHitImpulse(e, fromX, fromY, strength)
 		dy = 0
 	end
 
-	-- Use SIM tangent, not render tangent
+	-- Use sim tangent, not render tangent
 	local tx = e.simPathDX or 1
 	local ty = e.simPathDY or 0
 
@@ -63,11 +63,27 @@ local function applyHitImpulse(e, fromX, fromY, strength)
 	local nx = -ty
 	local ny = tx
 
-	-- Project hit direction onto path normal
 	local lateral = dx * nx + dy * ny
 
-	-- Overwrite so each hit gets its own direction cleanly
-	e.lateralVelocity = lateral * strength * 90
+	-- Ensure we always get meaningful push
+	local minPush = 0.35
+
+	if lateral > -minPush and lateral < minPush then
+		-- Preserve sign, but enforce minimum magnitude
+		if lateral >= 0 then
+			lateral = minPush
+		else
+			lateral = -minPush
+		end
+	end
+
+	e.lateralVelocity = e.lateralVelocity + lateral * strength
+
+	if e.lateralVelocity > 120 then
+		e.lateralVelocity = 120
+	elseif e.lateralVelocity < -120 then
+		e.lateralVelocity = -120
+	end
 end
 
 local function acquireProjectile()
@@ -315,7 +331,7 @@ local function update(dt)
 					end
 
 					if not e.boss then
-						applyHitImpulse(e, p.x, p.y, 0.7)
+						applyHitImpulse(e, p.x, p.y, 28)
 					end
 
 					State.addDamage(p.sourceKind, dmg, e.boss == true)
@@ -398,7 +414,7 @@ local function update(dt)
 						end
 
 						if not e.boss then
-							applyHitImpulse(e, px, py, 1)
+							applyHitImpulse(e, px, py, 64)
 						end
 
 						State.addDamage(kind, dmg, e.boss == true)
@@ -460,7 +476,7 @@ local function update(dt)
 							end
 
 							if not e.boss then
-								applyHitImpulse(e, p.x, p.y, 0.4)
+								applyHitImpulse(e, p.x, p.y, 24)
 							end
 
 							State.addDamage(p.sourceKind, dmg, e.boss == true)

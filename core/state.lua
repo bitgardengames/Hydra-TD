@@ -13,6 +13,7 @@ local state = {
 	wave = 1,
 	waveAnim = 1,
 	waveLeaks = 0,
+	totalLeaks = 0,
 	inPrep = true,
 
 	paused = false,

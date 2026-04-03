@@ -12,7 +12,9 @@ local watchers = {}
 	BOSS_KILL_1, BOSS_KILL_25
 	ENEMY_KILL_500, ENEMY_KILL_1500, ENEMY_KILL_3000
 	TOWER_LANCER_250, TOWER_SLOW_250, TOWER_CANNON_250, TOWER_SHOCK_250, TOWER_POISON_250, TOWER_PLASMA_250
+	TOWER_LANCER_1000, TOWER_SLOW_1000, TOWER_CANNON_1000, TOWER_SHOCK_1000, TOWER_POISON_1000, TOWER_PLASMA_1000
 	CAMPAIGN_EASY, CAMPAIGN_NORMAL, CAMPAIGN_HARD
+	NO_LEAKS_NORMAL, NO_LEAKS_HARD
 --]]
 
 local BASE_CAMPAIGN_MAP_IDS = {
@@ -120,27 +122,33 @@ end
 
 -- Tower kills
 watchers.TOWER_LANCER_KILLS = function(value)
+	if value >= 1000 then unlock("TOWER_LANCER_1000") end
 	if value >= 250 then unlock("TOWER_LANCER_250") end
 end
 
 watchers.TOWER_SLOW_KILLS = function(value)
+	if value >= 1000 then unlock("TOWER_SLOW_1000") end
 	if value >= 250 then unlock("TOWER_SLOW_250") end
 end
 
 watchers.TOWER_CANNON_KILLS = function(value)
+	if value >= 1000 then unlock("TOWER_CANNON_1000") end
 	if value >= 250 then unlock("TOWER_CANNON_250") end
 end
 
 watchers.TOWER_SHOCK_KILLS = function(value)
+	if value >= 1000 then unlock("TOWER_SHOCK_1000") end
 	if value >= 250 then unlock("TOWER_SHOCK_250") end
 end
 
 watchers.TOWER_POISON_KILLS = function(value)
+	if value >= 1000 then unlock("TOWER_POISON_1000") end
 	if value >= 250 then unlock("TOWER_POISON_250") end
 end
 
 watchers.TOWER_PLASMA_KILLS = function(value)
-	if value >= 250 then unlock("TOWER_POISON_250") end
+	if value >= 1000 then unlock("TOWER_PLASMA_1000") end
+	if value >= 250 then unlock("TOWER_PLASMA_250") end
 end
 
 function Achievements.increment(stat, amount)
@@ -163,6 +171,10 @@ end
 function Achievements.onGameOver()
 	Achievements.checkCampaignCompletion()
 	Save.flush()
+end
+
+function Achievements.unlock(id)
+	unlock(id)
 end
 
 return Achievements

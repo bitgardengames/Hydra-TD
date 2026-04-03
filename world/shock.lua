@@ -68,11 +68,27 @@ local function applyHitImpulse(e, fromX, fromY, strength)
 	local nx = -ty
 	local ny = tx
 
-	-- Project hit direction onto path normal
 	local lateral = dx * nx + dy * ny
 
-	-- Overwrite so each hit gets its own direction cleanly
-	e.lateralVelocity = lateral * strength * 90
+	-- Ensure we always get meaningful push
+	local minPush = 0.35
+
+	if lateral > -minPush and lateral < minPush then
+		-- Preserve sign, but enforce minimum magnitude
+		if lateral >= 0 then
+			lateral = minPush
+		else
+			lateral = -minPush
+		end
+	end
+
+	e.lateralVelocity = e.lateralVelocity + lateral * strength
+
+	if e.lateralVelocity > 120 then
+		e.lateralVelocity = 120
+	elseif e.lateralVelocity < -120 then
+		e.lateralVelocity = -120
+	end
 end
 
 local function zapEnemy(from, e, dmg)
@@ -84,7 +100,7 @@ local function zapEnemy(from, e, dmg)
 
 	-- Knockback and jitter
 	if not e.boss then
-		applyHitImpulse(e, from.x, from.y, 0.7)
+		applyHitImpulse(e, from.x, from.y, 48)
 	end
 
 	addLink(from, e)

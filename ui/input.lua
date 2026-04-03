@@ -317,6 +317,9 @@ local function keypressed(key)
 	elseif key == Hotkeys.kb.shop.poison then
 		State.placing = "poison"
 		deselect()
+	elseif key == Hotkeys.kb.shop.plasma then
+		State.placing = "plasma"
+		deselect()
 	elseif key == Hotkeys.kb.actions.fastForward then
 		State.speed = (State.speed == 1) and 4 or 1
 	elseif key == Hotkeys.kb.actions.skipPrep then

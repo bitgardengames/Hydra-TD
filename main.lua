@@ -124,6 +124,7 @@ function resetGame()
     State.score = 0
     State.wave = 1
 	State.waveLeaks = 0
+	State.totalLeaks = 0
 
     State.inPrep = true
     State.paused = false
@@ -279,18 +280,6 @@ function love.update(dt)
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
 		if State.wave == 20 and not State.endless then
-			-- No Leak Achievement
-			if State.waveLeaks == 0 then
-				local diff = Difficulty.key()
-
-				if diff == "hard" then
-					Achievements.unlock("NO_LEAK_NORMAL")
-					Achievements.unlock("NO_LEAK_HARD")
-				elseif diff == "normal" then
-					Achievements.unlock("NO_LEAK_NORMAL")
-				end
-			end
-
 			-- Save
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
 			Save.data.furthestIndex = max(Save.data.furthestIndex, nextMapIndex)
@@ -302,6 +291,18 @@ function love.update(dt)
 			State.victory = true
 
 			finalizeCurrentRun(true)
+
+			-- No Leak Achievement
+			if State.totalLeaks == 0 then
+				local diff = Difficulty.key()
+
+				if diff == "hard" then
+					Achievements.unlock("NO_LEAKS_NORMAL")
+					Achievements.unlock("NO_LEAKS_HARD")
+				elseif diff == "normal" then
+					Achievements.unlock("NO_LEAKS_NORMAL")
+				end
+			end
 
 			ACCUM = 0 -- Reset frame accumulator
 			Menu.set("victory") -- All of this logic should be migrated to Victory.enter() now
