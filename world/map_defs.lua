@@ -3,7 +3,7 @@ local maps = {
 {
 	id = "riverbend",
 	nameKey = "map.riverbend",
-	palette = "default",
+	biome = "default",
 	path = {
 		{5, 7}, {13, 7},
 		{13, 3}, {19, 3},
@@ -27,7 +27,7 @@ local maps = {
 {
 	id = "switchback",
 	nameKey = "map.switchback",
-	palette = "highlands",
+	biome = "default",
 	path = {
 		{5, 7}, {15, 7},
 		{15, 3}, {21, 3},
@@ -40,7 +40,7 @@ local maps = {
 {
 	id = "highpass",
 	nameKey = "map.highpass",
-	palette = "highlands",
+	biome = "highlands",
 	path = {
 		{5, 5}, {21, 5},
 		{21, 11}, {10, 11},
@@ -57,7 +57,7 @@ local maps = {
 {
 	id = "roundabout",
 	nameKey = "map.roundabout",
-	palette = "default",
+	biome = "default",
 	path = {
 		{5, 9}, {12, 9},
 		{12, 3}, {18, 3},
@@ -74,7 +74,7 @@ local maps = {
 {
 	id = "gauntlet",
 	nameKey = "map.gauntlet",
-	palette = "drylands",
+	biome = "drylands",
 	path = {
 		{5, 11}, {19, 11},
 		{19, 7}, {24, 7},
@@ -87,7 +87,7 @@ local maps = {
 {
 	id = "snaketrail",
 	nameKey = "map.snaketrail",
-	palette = "coastal",
+	biome = "coastal",
 	path = {
 		{5, 9}, {16, 9},
 		{16, 6}, {10, 6},
@@ -109,7 +109,7 @@ local maps = {
 {
 	id = "backtrack",
 	nameKey = "map.backtrack",
-	palette = "default",
+	biome = "default",
 	path = {
 		{5, 7}, {16, 7},
 		{16, 3}, {10, 3},
@@ -126,7 +126,7 @@ local maps = {
 {
 	id = "lowvalley",
 	nameKey = "map.lowvalley",
-	palette = "coastal",
+	biome = "coastal",
 	path = {
 		{5, 5}, {17, 5},
 		{17, 3}, {25, 3},
@@ -148,7 +148,7 @@ local maps = {
 {
 	id = "circuit",
 	nameKey = "map.circuit",
-	palette = "drylands",
+	biome = "drylands",
 	path = {
 		{5, 6}, {11, 6},
 		{11, 10}, {23, 10},
@@ -169,7 +169,7 @@ local maps = {
 {
 	id = "outerloop",
 	nameKey = "map.outerloop",
-	palette = "highlands",
+	biome = "highlands",
 	path = {
 		{5, 6}, {14, 6},
 		{14, 11}, {22, 11},
@@ -187,7 +187,7 @@ local maps = {
 {
 	id = "terrace",
 	nameKey = "map.terrace",
-	palette = "coastal",
+	biome = "coastal",
 	path = {
 		{5, 3}, {14, 3},
 		{14, 11}, {20, 11},
@@ -207,7 +207,7 @@ local maps = {
 {
 	id = "highridge",
 	nameKey = "map.highridge",
-	palette = "highlands",
+	biome = "highlands",
 	path = {
 		{5, 5}, {12, 5},
 		{12, 3}, {20, 3},
@@ -221,7 +221,7 @@ local maps = {
 {
 	id = "crossflow",
 	nameKey = "map.crossflow",
-	palette = "default",
+	biome = "default",
 	path = {
 		{5, 6}, {12, 6},
 		{12, 11}, {20, 11},
@@ -242,7 +242,7 @@ local maps = {
 {
 	id = "steppingstones",
 	nameKey = "map.steppingstones",
-	palette = "coastal",
+	biome = "coastal",
 	path = {
 		{5, 5}, {14, 5},
 		{14, 8}, {10, 8},
@@ -263,7 +263,7 @@ local maps = {
 {
 	id = "twinloop",
 	nameKey = "map.twinloop",
-	palette = "default",
+	biome = "default",
 	path = {
 		{5, 7}, {12, 7},
 		{12, 3}, {20, 3},

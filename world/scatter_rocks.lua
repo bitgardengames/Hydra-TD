@@ -10,7 +10,6 @@ local lg = love.graphics
 local floor = math.floor
 local treeAt = Trees.hasTreeAt
 
-local styles = Theme.world.rockStyles
 local outlineW = Theme.outline.width
 local lighting = Theme.lighting
 local darkMul = lighting.shadowMul
@@ -20,6 +19,13 @@ local highlightScale = lighting.highlightScale
 local TILE = Constants.TILE
 local GRID_W = Constants.GRID_W
 local GRID_H = Constants.GRID_H
+
+local function getRockStyles()
+	local world = Map.getWorld()
+	local rock = world and world.rock
+
+	return (rock and rock.styles) or Theme.world.rockStyles
+end
 
 local rng = love.math.newRandomGenerator()
 
@@ -36,8 +42,8 @@ end
 local function nearPath(gx, gy)
 	local path = Map.map.isPath
 
-	for dx = -1,1 do
-		for dy = -1,1 do
+	for dx = -1, 1 do
+		for dy = -1, 1 do
 			local x = gx + dx
 			local y = gy + dy
 
@@ -58,7 +64,10 @@ function Rocks.generate()
 	local seed = 4321 + State.worldMapIndex * 977
 	rng:setSeed(seed + 2)
 
-	local count = 28
+	local count = 28 -- Should be able to modify this per biome
+
+	local styles = getRockStyles()
+
 	local occupied = {}
 
 	while #Rocks.list < count do
@@ -107,6 +116,8 @@ function Rocks.draw()
 	if #rocks == 0 then
 		return
 	end
+
+	local styles = getRockStyles()
 
 	for i = 1, #rocks do
 		local r = rocks[i]

@@ -1,6 +1,7 @@
 local Constants = require("core.constants")
 local State = require("core.state")
 local Theme = require("core.theme")
+local Biomes = require("world.biomes")
 
 local REF_COVERAGE_INDEX = 1.8
 local TILE = Constants.TILE
@@ -271,11 +272,8 @@ local function buildPath(mapDef)
 	loadPath(mapDef.path)
 	buildSamples()
 
-	map.palette = Theme.terrain
-end
-
-local function getPalette()
-	return map.palette
+	map.biomeId = mapDef.biome or mapDef.palette or "default"
+	map.biome = Biomes.resolve(mapDef)
 end
 
 local function sampleFast(dist)
@@ -311,11 +309,25 @@ local function sampleFast(dist)
 	return a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t
 end
 
+local function getBiome()
+	return map.biome
+end
+
+local function getTerrain()
+	return map.biome and map.biome.terrain
+end
+
+local function getWorld()
+	return map.biome and map.biome.world
+end
+
 return {
 	map = map,
 	makeKey = makeKey,
 	buildPath = buildPath,
-	getPalette = getPalette,
+	getBiome = getBiome,
+	getTerrain = getTerrain,
+	getWorld = getWorld,
 	canPlaceAt = canPlaceAt,
 	gridToCenter = gridToCenter,
 	setBlocked = setBlocked,

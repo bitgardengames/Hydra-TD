@@ -10,8 +10,7 @@ local canvas = nil
 local cachedScale = nil
 
 local function getMapSize()
-	return Constants.GRID_W * Constants.TILE,
-	       Constants.GRID_H * Constants.TILE
+	return Constants.GRID_W * Constants.TILE, Constants.GRID_H * Constants.TILE
 end
 
 function MapWorldCache.build()
@@ -23,11 +22,7 @@ function MapWorldCache.build()
 
 	local mapW, mapH = getMapSize()
 
-	canvas = lg.newCanvas(
-		mapW * scale,
-		mapH * scale,
-		{ msaa = 8 }
-	)
+	canvas = lg.newCanvas(mapW * scale, mapH * scale, {msaa = 8})
 
 	cachedScale = scale
 

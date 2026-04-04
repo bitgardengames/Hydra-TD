@@ -3,7 +3,7 @@ local Theme = require("core.theme")
 local MapMod = require("world.map")
 local State = require("core.state")
 local Trees = require("world.scatter_trees")
-local Cactoosia = require("world.scatter_cactus")
+local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
 
 local lg = love.graphics
@@ -17,18 +17,8 @@ local tile = Constants.TILE
 local gridW = Constants.GRID_W
 local gridH = Constants.GRID_H
 
-local colorGrass = Theme.terrain.grass
-local colorPath = Theme.terrain.path
-local colorPathOutline = Theme.terrain.pathOutline
 local colorGrid = Theme.grid
-local colorWater = Theme.terrain.water
-
 local outlineW = Theme.outline.width
-
-local colorScatterDark = {colorGrass[1] * 0.94, colorGrass[2] * 0.94, colorGrass[3] * 0.94, 1}
-local colorScatterLight = {colorGrass[1] * 1.06, colorGrass[2] * 1.06, colorGrass[3] * 1.06, 1}
-
-local colorMud = {colorGrass[1] * 0.55, colorGrass[2] * 0.45, colorGrass[3] * 0.35, 1} -- Temp. If I do mud put it into theme
 
 local gridToCenter = MapMod.gridToCenter
 
@@ -36,12 +26,12 @@ local worldCanvas = nil
 local worldCanvasZoom = nil
 
 local function rebuildWorldCanvas()
-	local w = love.graphics.getWidth()
-	local h = love.graphics.getHeight()
+	local w = lg.getWidth()
+	local h = lg.getHeight()
 
-	local zoom = Camera.zoom -- or however you store it
+	local zoom = Camera.zoom
 
-	worldCanvas = love.graphics.newCanvas(w, h, {msaa = 8})
+	worldCanvas = lg.newCanvas(w, h, {msaa = 8})
 
 	worldCanvasZoom = zoom
 
@@ -61,6 +51,16 @@ local function rebuildWorldCanvas()
 	lg.setCanvas()
 end
 
+local function getTerrain()
+	local biome = MapMod.map and MapMod.map.biome
+
+	if biome and biome.terrain then
+		return biome.terrain
+	end
+
+	return Theme.terrain
+end
+
 local function hashNoise(x, y, seed)
 	local n = sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453
 
@@ -68,8 +68,15 @@ local function hashNoise(x, y, seed)
 end
 
 local function drawGrass()
-	lg.setColor(colorGrass)
+	local terrain = getTerrain()
+
+	local grass = terrain.grass
+
+	lg.setColor(grass)
 	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
+
+	local colorScatterDark = {grass[1] * 0.94, grass[2] * 0.94, grass[3] * 0.94, 1}
+	local colorScatterLight = {grass[1] * 1.06, grass[2] * 1.06, grass[3] * 1.06, 1}
 
 	for y = 1, gridH do
 		for x = 1, gridW do
@@ -98,7 +105,10 @@ end
 
 local function isWater(gx, gy)
 	local water = MapMod.map.water
-	if not water then return false end
+
+	if not water then
+		return false
+	end
 
 	for i = 1, #water do
 		local blob = water[i]
@@ -124,7 +134,13 @@ local function drawWater()
 	local radius = 8
 	local water = MapMod.map.water
 
-	if not water then return end
+	if not water then
+		return
+	end
+
+	local terrain = getTerrain()
+
+	lg.setColor(terrain.water)
 
 	for i = 1, #water do
 		local blob = water[i]
@@ -141,8 +157,6 @@ local function drawWater()
 
 						local wx = (gx - 1) * tile
 						local wy = (gy - 1) * tile
-
-						lg.setColor(colorWater)
 
 						-- Base rounded tile
 						lg.rectangle("fill", wx, wy, tile, tile, radius, radius)
@@ -178,10 +192,25 @@ local function updateWaterColor(color)
 	colorWater = color
 end
 
-local function drawScatter() -- Generic name for now, may or may not separate further, but I think it's not necessary
-	Rocks.draw()
-	Trees.draw()
-	--Cactoosia.draw()
+local function drawScatter()
+	local biome = MapMod.map and MapMod.map.biome
+	local scatter = biome and biome.scatter
+
+	if not scatter then
+		return
+	end
+
+	if scatter.rocks and scatter.rocks.enabled then
+		Rocks.draw()
+	end
+
+	if scatter.trees and scatter.trees.enabled then
+		Trees.draw()
+	end
+
+	if scatter.cactus and scatter.cactus.enabled then
+		Cacti.draw()
+	end
 end
 
 local function drawPath()
@@ -193,8 +222,10 @@ local function drawPath()
 	local fillThickness = pathThickness - outlineW * 2
 	local halfFill = fillThickness * 0.5
 
+	local terrain = getTerrain()
+
 	-- Outline
-	lg.setColor(colorPathOutline)
+	lg.setColor(terrain.pathOutline)
 
 	for i = 1, #MapMod.map.path - 1 do
 		local a = MapMod.map.path[i]
@@ -266,7 +297,7 @@ local function drawPath()
 	end
 
 	-- Fill
-	lg.setColor(colorPath)
+	lg.setColor(terrain.path)
 
 	for i = 1, #MapMod.map.path - 1 do
 		local a = MapMod.map.path[i]

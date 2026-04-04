@@ -7,9 +7,6 @@ local Trees = {}
 
 local lg = love.graphics
 
-local trunk = Theme.world.treeTrunk
-local trunkOutline = Theme.world.treeTrunkOutline
-local styles = Theme.world.treeStyles
 local outlineW = Theme.outline.width
 local lighting = Theme.lighting
 local highlightOffset = lighting.highlightOffset
@@ -28,6 +25,30 @@ local rng = love.math.newRandomGenerator()
 
 local function random(a, b)
 	return rng:random(a, b)
+end
+
+local function getTreeWorld()
+	local world = Map.getWorld()
+
+	return world and world.tree
+end
+
+local function getTreeTrunk()
+	local tree = getTreeWorld()
+
+	return (tree and tree.trunk) or Theme.world.treeTrunk
+end
+
+local function getTreeTrunkOutline()
+	local tree = getTreeWorld()
+
+	return (tree and tree.trunkOutline) or Theme.world.treeTrunkOutline
+end
+
+local function getTreeStyles()
+	local tree = getTreeWorld()
+
+	return (tree and tree.styles) or Theme.world.treeStyles
 end
 
 Trees.list = {}
@@ -80,7 +101,10 @@ function Trees.generate()
 	local seed = 65432 + State.worldMapIndex * 977
 	rng:setSeed(seed + 1)
 
-	local count = 54
+	local count = 54 -- Should be able to adjust this too, from biome definition
+
+	local styles = getTreeStyles()
+	local shapes = getTreeWorld().shapes or {"round", "square"}
 
 	-- Primary clusters
 	local clusters = {}
@@ -166,7 +190,7 @@ function Trees.generate()
 			gx = gx,
 			gy = gy,
 			style = random(#styles),
-			shape = random(2),
+			shape = shapes[random(#shapes)],
 			scale = 0.8 + random() * 0.6,
 		}
 
@@ -187,6 +211,10 @@ function Trees.draw()
 	if #trees == 0 then
 		return
 	end
+
+	local styles = getTreeStyles()
+	local trunk = getTreeTrunk()
+	local trunkOutline = getTreeTrunkOutline()
 
 	for i = 1, #trees do
 		local t = trees[i]
@@ -224,7 +252,7 @@ function Trees.draw()
 		lg.setColor(trunk)
 		lg.rectangle("fill", x - tw * 0.5, trunkY + outlineW, tw, th, 2 * s)
 
-		if t.shape == 1 then
+		if t.shape == "round" then
 			-- Outline
 			lg.setColor(style.outline)
 			lg.circle("fill", x, canopyY, rOuter)
@@ -240,7 +268,7 @@ function Trees.draw()
 
 			lg.setColor(style.fill)
 			lg.circle("fill", hx, hy, hr)
-		else
+		elseif t.shape == "square" then
 			local outerRadius = 8 * s + outlineW * 0.5
 			local innerRadius = outerRadius - outlineW
 
@@ -261,6 +289,48 @@ function Trees.draw()
 
 			lg.setColor(style.fill)
 			lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
+		elseif t.shape == "evergreen" then
+			local layers = 3
+			local baseSize = TILE * 0.30 * s
+
+			for i = 1, layers do
+				local tScale = 1 - (i - 1) * 0.28
+				local w = baseSize * tScale
+				local h = w * 0.9
+
+				local ly = canopyY + (i - 1) * (h * 0.55)
+
+				-- Outline
+				lg.setColor(style.outline)
+				lg.polygon("fill",
+					x, ly - h,
+					x - w, ly + h,
+					x + w, ly + h
+				)
+
+				-- Base (shadowed)
+				lg.setColor(
+					style.fill[1] * darkMul,
+					style.fill[2] * darkMul,
+					style.fill[3] * darkMul
+				)
+
+				lg.polygon("fill",
+					x, ly - h + outlineW,
+					x - (w - outlineW), ly + h,
+					x + (w - outlineW), ly + h
+				)
+
+				-- Highlight (top)
+				local hy = ly - h * highlightOffset
+
+				lg.setColor(style.fill)
+				lg.polygon("fill",
+					x, hy - h * highlightScale,
+					x - w * highlightScale * 0.6, hy + h * 0.2,
+					x + w * highlightScale * 0.6, hy + h * 0.2
+				)
+			end
 		end
 	end
 end

@@ -97,23 +97,27 @@ function resetGame()
     MapMod.clearBlocked()
     MapMod.buildPath(Maps[State.worldMapIndex])
 
-	Rocks.generate()
-	--Cacti.generate()
-	Trees.generate()
+	local seed = 123456 + State.worldMapIndex * 1009
+	love.math.setRandomSeed(seed)
+
+	local biome = MapMod.map.biome
+	local scatter = biome and biome.scatter
+
+	if scatter then
+		if scatter.rocks and scatter.rocks.enabled then
+			Rocks.generate(scatter.rocks)
+		end
+
+		if scatter.trees and scatter.trees.enabled then
+			Trees.generate(scatter.trees)
+		end
+
+		if scatter.cactus and scatter.cactus.enabled then
+			Cacti.generate(scatter.cactus)
+		end
+	end
 
 	MapWorldCache.invalidate()
-
-	-- Map palettes
-	--[[local palette = MapMod.getPalette()
-
-	if palette then
-		DrawWorld.updateGrassColor(palette.grass)
-		DrawWorld.updatePathColor(palette.path)
-
-		if palette.water then
-			DrawWorld.updateWaterColor(palette.water)
-		end
-	end]]
 
 	local diff = Difficulty.get()
 

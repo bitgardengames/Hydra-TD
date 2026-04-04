@@ -37,6 +37,8 @@ local function wobble(t, amp)
 	return sin(t * 6.0) * amp, cos(t * 4.5) * amp
 end
 
+local minPush = 0.35 -- Ensure minimum push
+
 local function applyHitImpulse(e, fromX, fromY, strength)
 	local ex = e.x
 	local ey = e.y
@@ -44,18 +46,12 @@ local function applyHitImpulse(e, fromX, fromY, strength)
 	local dx = ex - fromX
 	local dy = ey - fromY
 
-	local len2 = dx * dx + dy * dy
+	-- Cheap "normalization" (no sqrt)
+	local denom = abs(dx) + abs(dy) + 1
+	dx = dx / denom
+	dy = dy / denom
 
-	if len2 > 0 then
-		local invLen = 1 / math.sqrt(len2)
-		dx = dx * invLen
-		dy = dy * invLen
-	else
-		dx = 0
-		dy = 0
-	end
-
-	-- Use sim tangent, not render tangent
+	-- Use sim tangent
 	local tx = e.simPathDX or 1
 	local ty = e.simPathDY or 0
 
@@ -65,11 +61,7 @@ local function applyHitImpulse(e, fromX, fromY, strength)
 
 	local lateral = dx * nx + dy * ny
 
-	-- Ensure we always get meaningful push
-	local minPush = 0.35
-
 	if lateral > -minPush and lateral < minPush then
-		-- Preserve sign, but enforce minimum magnitude
 		if lateral >= 0 then
 			lateral = minPush
 		else
@@ -79,6 +71,7 @@ local function applyHitImpulse(e, fromX, fromY, strength)
 
 	e.lateralVelocity = e.lateralVelocity + lateral * strength
 
+	-- Clamp
 	if e.lateralVelocity > 120 then
 		e.lateralVelocity = 120
 	elseif e.lateralVelocity < -120 then

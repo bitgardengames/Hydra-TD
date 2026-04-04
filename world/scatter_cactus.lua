@@ -8,12 +8,6 @@ local Cactus = {}
 
 local lg = love.graphics
 
-local styles = {
-	{fill = {0.34, 0.62, 0.30}, outline = {0.18, 0.34, 0.16}},
-	{fill = {0.28, 0.56, 0.26}, outline = {0.14, 0.30, 0.14}},
-	{fill = {0.40, 0.68, 0.36}, outline = {0.20, 0.38, 0.18}},
-}
-
 local outlineW = Theme.outline.width
 
 local lighting = Theme.lighting
@@ -34,6 +28,13 @@ local function rand(a, b)
 	return rng:random(a, b)
 end
 
+local function getCactusStyles()
+	local world = Map.getWorld()
+	local cactus = world and world.cactus
+
+	return (cactus and cactus.styles)
+end
+
 Cactus.list = {}
 
 function Cactus.clear()
@@ -47,8 +48,8 @@ local function nearPath(gx, gy)
 		for dy = -1, 1 do
 			local x = gx + dx
 			local y = gy + dy
-
 			local col = path[x]
+
 			if col and col[y] then
 				return true
 			end
@@ -64,7 +65,9 @@ function Cactus.generate()
 	local seed = 8888 + State.worldMapIndex * 977
 	rng:setSeed(seed)
 
-	local count = 16 + rand(0, 8)
+	local count = 16 + rand(0, 8) -- Same thing, should be able to change this per biome
+
+	local styles = getCactusStyles()
 
 	while #Cactus.list < count do
 		local gx = rand(2, GRID_W - 1)
@@ -105,7 +108,12 @@ end
 
 function Cactus.draw()
 	local list = Cactus.list
-	if #list == 0 then return end
+
+	if #list == 0 then
+		return
+	end
+
+	local styles = getCactusStyles()
 
 	for i = 1, #list do
 		local c = list[i]
@@ -126,19 +134,14 @@ function Cactus.draw()
 		lg.setColor(0, 0, 0, shA)
 		lg.ellipse("fill", x, baseY + 1, w * 1.4, h * 0.28)
 
-		-- === MAIN BODY ===
-
+		-- Main body
 		-- Outline
 		lg.setColor(style.outline)
 		lg.rectangle("fill", x - w * 0.5 - outlineW * 0.5, topY, w + outlineW, h, radius + outlineW * 0.5)
 		lg.circle("fill", x, topY, radius + outlineW * 0.5)
 
 		-- Base (shadowed)
-		lg.setColor(
-			style.fill[1] * darkMul,
-			style.fill[2] * darkMul,
-			style.fill[3] * darkMul
-		)
+		lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
 		lg.rectangle("fill", x - w * 0.5, topY, w, h, radius)
 		lg.circle("fill", x, topY, radius)
 
@@ -149,7 +152,7 @@ function Cactus.draw()
 		lg.setColor(style.fill)
 		lg.circle("fill", hx, hy, radius * highlightScale)
 
-		-- === ARMS ===
+		-- Arms
 		if c.arms then
 			local armH = h * (0.35 + c.armHeightBias * 0.25)
 			local armW = w * 0.7
@@ -158,7 +161,6 @@ function Cactus.draw()
 			for dir = -1, 1, 2 do
 				local ax = x + offsetX * dir
 				local ay = baseY - h * (0.45 + c.armHeightBias * 0.15)
-
 				local ar = armW * 0.5
 
 				-- Outline
@@ -167,11 +169,7 @@ function Cactus.draw()
 				lg.circle("fill", ax, ay - armH, ar + outlineW * 0.5)
 
 				-- Base
-				lg.setColor(
-					style.fill[1] * darkMul,
-					style.fill[2] * darkMul,
-					style.fill[3] * darkMul
-				)
+				lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
 				lg.rectangle("fill", ax - armW * 0.5, ay - armH, armW, armH, ar)
 				lg.circle("fill", ax, ay - armH, ar)
 
