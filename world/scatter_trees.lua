@@ -291,22 +291,45 @@ function Trees.draw()
 			lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
 		elseif t.shape == "evergreen" then
 			local layers = 3
-			local baseSize = TILE * 0.30 * s
+			local baseSize = TILE * 0.34 * s
 
-			for i = 1, layers do
-				local tScale = 1 - (i - 1) * 0.28
+			local yOffset = 0
+
+			for i = layers, 1, -1 do
+				local tScale = 0.6 + (i / layers) * 0.6
 				local w = baseSize * tScale
-				local h = w * 0.9
+				local h = w * 0.85
 
-				local ly = canopyY + (i - 1) * (h * 0.55)
+				local ly = canopyY - yOffset
+				yOffset = yOffset + h * 0.65
+
+				local x1, y1 = x, ly - h
+				local x2, y2 = x - w, ly + h
+				local x3, y3 = x + w, ly + h
 
 				-- Outline
 				lg.setColor(style.outline)
-				lg.polygon("fill",
-					x, ly - h,
-					x - w, ly + h,
-					x + w, ly + h
-				)
+				lg.polygon("fill", x1, y1, x2, y2, x3, y3)
+
+				-- Inset (thickness already corrected)
+				local inset = outlineW * 2.0
+				local denom = w + h * 0.35
+				local t = inset / denom
+
+				-- Lighting-aligned vertical bias
+				local biasY = h * highlightOffset * 0.6
+
+				local function insetPoint(px, py)
+					local nx = x + (px - x) * (1 - t)
+					local ny = ly + (py - ly) * (1 - t)
+
+					-- Apply downward lighting bias
+					return nx, ny + biasY
+				end
+
+				local bx1, by1 = insetPoint(x1, y1)
+				local bx2, by2 = insetPoint(x2, y2)
+				local bx3, by3 = insetPoint(x3, y3)
 
 				-- Base (shadowed)
 				lg.setColor(
@@ -314,22 +337,23 @@ function Trees.draw()
 					style.fill[2] * darkMul,
 					style.fill[3] * darkMul
 				)
+				lg.polygon("fill", bx1, by1, bx2, by2, bx3, by3)
 
-				lg.polygon("fill",
-					x, ly - h + outlineW,
-					x - (w - outlineW), ly + h,
-					x + (w - outlineW), ly + h
-				)
-
-				-- Highlight (top)
+				-- Highlight (same system)
+				local hx = x
 				local hy = ly - h * highlightOffset
 
+				local function scale(px, py)
+					return hx + (px - hx) * highlightScale,
+						   hy + (py - hy) * highlightScale
+				end
+
+				local hx1, hy1 = scale(bx1, by1)
+				local hx2, hy2 = scale(bx2, by2)
+				local hx3, hy3 = scale(bx3, by3)
+
 				lg.setColor(style.fill)
-				lg.polygon("fill",
-					x, hy - h * highlightScale,
-					x - w * highlightScale * 0.6, hy + h * 0.2,
-					x + w * highlightScale * 0.6, hy + h * 0.2
-				)
+				lg.polygon("fill", hx1, hy1, hx2, hy2, hx3, hy3)
 			end
 		end
 	end

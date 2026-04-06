@@ -79,6 +79,21 @@ local function applyHitImpulse(e, fromX, fromY, strength)
 	end
 end
 
+local function spawnImpactFX(p)
+	local x = p.lastTX or p.x
+	local y = p.lastTY or p.y
+
+	local kind = p.sourceKind
+
+	if kind == "slow" then
+		Effects.spawnFrostBurst(x, y)
+	elseif kind == "poison" then
+		Effects.spawnPoisonSplash(x, y)
+	elseif kind == "lancer" then
+		Effects.spawnLancerHit(x, y)
+	end
+end
+
 local function acquireProjectile()
 	local p = projectilePool[#projectilePool]
 
@@ -206,6 +221,7 @@ local function update(dt)
 
 		if p.life <= 0 then
 			local dead = projectiles[i]
+
 			swapRemove(projectiles, i)
 			releaseProjectile(dead)
 
@@ -332,6 +348,11 @@ local function update(dt)
 
 				-- Always remove projectile once it reaches impact position
 				local dead = projectiles[i]
+
+				if not alive then
+					spawnImpactFX(p)
+				end
+
 				swapRemove(projectiles, i)
 				releaseProjectile(dead)
 

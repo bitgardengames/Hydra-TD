@@ -3,7 +3,7 @@ local Config = {
 	sequence = "steam_trailer",
 	startShot = "survive",
 
-	recorder = true,
+	recorder = false,
 
 	showUI = false,
 	showFloaters = true, -- NYI

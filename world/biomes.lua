@@ -34,6 +34,12 @@ local function merge(dst, src)
 	return dst
 end
 
+--[[
+	More ideas;
+	Mushrooms. Either like Zangarmarsh vibes or whatever, just a trippy setting would be cool
+	Lava/brimstone/hellish
+--]]
+
 -- Biome definitions
 Biomes.defs = {
 	default = { -- Baseline, cozy fantasy
@@ -347,46 +353,61 @@ Biomes.defs = {
 
 	winter = {
 		terrain = {
-			grass = {0.86, 0.91, 0.95},
-			path = {0.52, 0.66, 0.76},
-			pathOutline = {0.38, 0.50, 0.60},
-			water = {0.70, 0.85, 0.95},
+			grass = {0.76, 0.82, 0.88},
+			path = {0.42, 0.56, 0.66},
+			pathOutline = {0.26, 0.36, 0.46},
+			water = {0.62, 0.78, 0.90},
 		},
 
 		ground = {
-			detailDensity = 0.08,
-			lightMul = 1.10,
-			darkMul = 0.90,
+			-- was 0.08 (too flat)
+			detailDensity = 0.14,
+
+			-- reduce glare slightly
+			lightMul = 1.06, -- was 1.10
+			darkMul = 0.92,  -- was 0.90
 		},
 
 		world = {
 			tree = {
-				trunk = {0.70, 0.72, 0.74},
-				trunkOutline = {0.50, 0.52, 0.54},
+				-- slightly darker trunk for grounding
+				trunk = {0.62, 0.64, 0.66},
+				trunkOutline = {0.42, 0.44, 0.46},
 				shapes = {"evergreen"},
 
 				styles = {
-					{fill = {0.90, 0.92, 0.95}, outline = {0.70, 0.75, 0.80}},
-					{fill = {0.80, 0.88, 0.92}, outline = {0.60, 0.68, 0.74}},
-					{fill = {0.75, 0.85, 0.90}, outline = {0.55, 0.65, 0.70}},
+					{fill = {0.88, 0.90, 0.93}, outline = {0.55, 0.59, 0.63}}, -- was {0.60, 0.64, 0.68}
+					{fill = {0.78, 0.86, 0.90}, outline = {0.48, 0.53, 0.57}}, -- was {0.52, 0.58, 0.62}
+					{fill = {0.72, 0.82, 0.88}, outline = {0.42, 0.48, 0.53}}, -- was {0.46, 0.52, 0.58}
 				},
 			},
 
 			rock = {
 				styles = {
-					{fill = {0.85, 0.88, 0.92}, outline = {0.65, 0.70, 0.75}},
-					{fill = {0.78, 0.82, 0.88}, outline = {0.55, 0.60, 0.65}},
+					{fill = {0.80, 0.84, 0.88}, outline = {0.55, 0.60, 0.64}}, -- was {0.60, 0.65, 0.70}
+					{fill = {0.72, 0.78, 0.84}, outline = {0.48, 0.53, 0.59}}, -- was {0.52, 0.58, 0.64}
+					{fill = {0.76, 0.80, 0.84}, outline = {0.50, 0.55, 0.61}}, -- was {0.54, 0.60, 0.66}
 				},
 			},
 		},
 
 		scatter = {
-			trees = {enabled = true, density = 0.08, cluster = 0.10},
-			rocks = {enabled = true, density = 0.06, cluster = 0.04},
+			trees = {
+				enabled = true,
+				-- slightly more presence
+				density = 0.10, -- was 0.08
+				cluster = 0.12,
+			},
+
+			rocks = {
+				enabled = true,
+				density = 0.08, -- was 0.06
+				cluster = 0.05,
+			},
 		},
 	},
 
-	candy = { -- Sprinkles would be fun for scatter instead of rocks. Could make jube jubes or whatever instead of rocks. Trees could be lollipops
+	candy = { -- Sprinkles would be fun for scatter instead of rocks. Could make jube jubes or whatever instead of rocks. Trees could be lollipops or gumdrops (dome (half-circle))
 		terrain = {
 			grass = {0.92, 0.78, 0.86}, -- soft pink base
 			path = {0.98, 0.92, 0.55}, -- creamy yellow (like frosting)

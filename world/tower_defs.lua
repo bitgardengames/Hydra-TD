@@ -8,7 +8,7 @@ return {
 		cost = 50,
 		range = 3.8 * Constants.TILE,
 		fireRate = 1.4,
-		damage = 6,
+		damage = 8,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 10,
 		projSpeed = 370,
@@ -30,7 +30,7 @@ return {
 		cost = 55,
 		range = 3.9 * Constants.TILE,
 		fireRate = 2.0, -- shots/sec
-		damage = 10,
+		damage = 12,
 		recoilStrength = Constants.TILE * 0.08,
 		recoilDecay = 18,
 		projSpeed = 460,
@@ -50,7 +50,7 @@ return {
 		cost = 60,
 		range = 3.6 * Constants.TILE,
 		fireRate = 1.6,
-		damage = 5,
+		damage = 6,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 16,
 		projSpeed = 360,
@@ -58,7 +58,7 @@ return {
 		color = Theme.tower.poison,
 		canRotate = true,
 		poison = {
-			dps = 6, -- damage per second per stack
+			dps = 8, -- damage per second per stack
 			dur = 4, -- duration per application
 			maxStacks = 4,
 		},
@@ -78,7 +78,7 @@ return {
 		cost = 65,
 		range = 3.2 * Constants.TILE,
 		fireRate = 0.85,
-		damage = 19,
+		damage = 21,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
 		projSpeed = 320,
@@ -103,7 +103,7 @@ return {
 		cost = 70,
 		range = 3.5 * Constants.TILE,
 		fireRate = 1.2,
-		damage = 9,
+		damage = 11,
 		recoilStrength = Constants.TILE * 0.03,
 		recoilDecay = 5, -- Dramatic because the recoil is so small
 		turnSpeed = 9,
@@ -127,7 +127,7 @@ return {
 		cost = 75,
 		range = 3.5 * Constants.TILE,
 		fireRate = 0.7,
-		damage = 8,
+		damage = 10,
 		recoilStrength = Constants.TILE * 0.14,
 		recoilDecay = 18,
 		projSpeed = 140,
