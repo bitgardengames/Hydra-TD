@@ -186,10 +186,38 @@ function love.load(arg)
 	elseif mode == "capsule" then
 		require("tools.capsule_export").run()
 	else
-	    require("core.bootstrap").initFull()
+		Save.load()
+
+		local settings = Save.data.settings or {}
+
+		-- Decide window mode
+		if settings.fullscreen then
+			local dmW, dmH = love.window.getDesktopDimensions()
+			local msaa = Scale.suggestMSAA(dmW, dmH) or 8
+
+			love.window.setMode(0, 0, {
+				fullscreen = true,
+				fullscreentype = "desktop",
+				vsync = 1,
+				msaa = msaa
+			})
+		else
+			local msaa = Scale.suggestMSAA(1280, 800) or 2
+
+			love.window.setMode(1280, 800, {
+				fullscreen = false,
+				resizable = true,
+				vsync = 1,
+				msaa = msaa
+			})
+		end
+
+		require("core.bootstrap").initFull()
 
 		Steam.setOverlayHook(pauseGame)
 	end
+
+	collectgarbage("collect")
 end
 
 function love.update(dt)
@@ -512,8 +540,8 @@ function love.joystickadded(joystick)
 end
 
 function love.resize(w, h)
-	Scale.update()
-	Camera.resize()
+	--Scale.update()
+	--Camera.resize()
 	MapWorldCache.invalidate()
 	require("ui.title").invalidateCache()
 	require("ui.menu.screens.campaign").resize(w, h)

@@ -58,10 +58,6 @@ function Screen.load()
 
 	Backdrop.start()
 
-	local sw, sh = love.graphics.getDimensions()
-	local cx = floor(sw * 0.5)
-	local startY = floor(sh * 0.52)
-
 	buttons = {
 		{
 			id = "play",
@@ -108,11 +104,6 @@ function Screen.load()
 			end
 		}
 	end
-
-	for i, btn in ipairs(buttons) do
-		btn.x = cx - btn.w * 0.5
-		btn.y = startY + (i - 1) * gap
-	end
 end
 
 function Screen.update(dt)
@@ -121,6 +112,12 @@ function Screen.update(dt)
 	local sw, sh = love.graphics.getDimensions()
 	local t = getTime()
 	local cx = floor(sw * 0.5)
+	local startY = floor(sh * 0.52)
+
+	for i, btn in ipairs(buttons) do
+		btn.x = cx - btn.w * 0.5
+		btn.y = startY + (i - 1) * gap
+	end
 
 	-- Startup hero pose
 	if lancerIdle.startupHold > 0 then

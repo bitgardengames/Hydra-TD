@@ -1,7 +1,7 @@
 local State = require("core.state")
 
 local Screens = {
-	menu = require("ui.menu.screens.main"),
+	menu = require("ui.menu.screens.main_menu"),
 	campaign = require("ui.menu.screens.campaign"),
 	settings = require("ui.menu.screens.settings"),
 

@@ -374,7 +374,7 @@ local function drawFadedBannerForText(text, font, y, alpha)
 
 	-- Visual tuning knobs
 	local fade = 120
-	local paddingX = 14
+	local paddingX = 20
 	local featherY = 8
 
 	lg.setFont(font)
@@ -524,7 +524,7 @@ function Director.draw()
 		local h = lg.getHeight()
 
 		-- Base layout
-		local yBase = h * 0.65
+		local yBase = h * 0.66 + 2  -- 0.65
 		local drift = 10 -- Pixels of vertical motion
 		local y = yBase
 
@@ -563,14 +563,14 @@ function Director.draw()
 			lg.setFont(FONT_HERO)
 		end
 
-		lg.setColor(1, 1, 1, alpha)
+		lg.setColor(0.95, 0.95, 0.95, alpha)
 
 		-- Shadow
 		lg.setColor(0, 0, 0, alpha * 0.35)
 		lg.printf(tb.text, 3, y + 3, w, "center")
 
 		-- Main text
-		lg.setColor(1, 1, 1, alpha)
+		lg.setColor(0.95, 0.95, 0.95, alpha)
 		lg.printf(tb.text, 0, y, w, "center")
 
 		lg.setColor(1, 1, 1, 1)

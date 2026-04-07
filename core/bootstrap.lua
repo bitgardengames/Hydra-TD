@@ -12,7 +12,6 @@ function Bootstrap.initFull()
 	local MapPreviewCache = require("world.map_preview_cache")
 	local Menu = require("ui.menu.menu")
 
-	Save.load()
 	Difficulty.set(Save.data.settings.difficulty)
 	L.load(Save.data.settings.language or "enUS")
 	Fonts.load()
@@ -27,11 +26,24 @@ function Bootstrap.initFull()
 	Steam.setRichPresence(L("presence.menu"))
 
 	require("ui.glyph_defs")
-
-	collectgarbage("collect")
 end
 
 function Bootstrap.initMinimal()
+	-- Not sure if you live here permanently
+	love.window.setMode(0, 0, {
+		fullscreen = true,
+		fullscreentype = "desktop",
+		vsync = 1,
+		msaa = 8
+	})
+
+	--[[love.window.setMode(1080, 1920, {
+		--fullscreen = true,
+		--fullscreentype = "desktop",
+		vsync = 1,
+		msaa = 8
+	})]]
+
 	local Save = require("core.save").load()
 	local Localization = require("core.localization")
 	local Sound = require("systems.sound").load()

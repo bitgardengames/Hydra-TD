@@ -45,6 +45,7 @@ function Page.load()
 			onClick = function()
 				State.paused = false
 				State.mode = "game"
+				Sound.exitPause()
 				Sound.play("uiConfirm")
 			end
 		},
@@ -59,6 +60,7 @@ function Page.load()
 				Achievements.onGameOver()
 				State.mode = "game"
 				resetGame()
+				Sound.exitPause()
 				Sound.play("uiConfirm")
 			end
 		},
@@ -76,6 +78,7 @@ function Page.load()
 				Steam.setRichPresence(L("presence.menu"))
 				Sound.exitPause()
 				Sound.play("uiConfirm")
+				Sound.playMusic("menu")
 			end
 		},
 	}

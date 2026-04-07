@@ -422,22 +422,56 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if button == 1 then
-		for i, rect in pairs(sliderRects) do
+		-- Rows
+		for i, rect in pairs(rowRects) do
 			if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
 				settingsCursor = i
-				draggingSlider = i
+
+				local row = rows[i]
+				local slider = sliderRects[i]
+
+				-- Slider
+				if row.type == "slider" and slider then
+					if x >= slider.x and x <= slider.x + slider.w then
+						local t = Util.clamp((x - slider.x) / slider.w, 0, 1)
+						row.set(t)
+						draggingSlider = i
+						return true
+					end
+				end
+
+				-- Toggle
+				if row.type == "toggle" then
+					row.set(not row.get())
+					Sound.play("uiConfirm")
+					return true
+				end
+
+				-- Discrete (difficulty)
+				if row.type == "discrete" then
+					local mid = rect.x + rect.w * 0.5
+
+					if x < mid then
+						adjustRow(row, -1)
+					else
+						adjustRow(row, 1)
+					end
+
+					return true
+				end
+
 				return true
 			end
 		end
 	end
 
+	-- Buttons (unchanged)
 	for _, btn in ipairs(buttons) do
 		if Button.mousepressed(btn, x, y, button) then
 			return true
 		end
 	end
 end
-
 function Screen.mousereleased(x, y, button)
 	if draggingSlider then
 		Sound.play("uiMove")

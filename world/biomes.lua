@@ -60,7 +60,7 @@ Biomes.defs = {
 			tree = {
 				trunk = {0.36, 0.26, 0.16},
 				trunkOutline = {0.22, 0.16, 0.10},
-				shapes = {"round", "square", "evergreen"},
+				shapes = {"round", "square"},
 
 				styles = {
 					{fill = {0.46, 0.78, 0.48}, outline = {0.20, 0.44, 0.26}},

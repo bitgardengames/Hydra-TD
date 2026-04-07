@@ -52,7 +52,7 @@ return {
 		local grassGY = 7
 
 		local grassWX = (grassGX + 0.5) * Constants.TILE + 18
-		local grassWY = (grassGY + 0.5) * Constants.TILE + 58
+		local grassWY = (grassGY + 0.5) * Constants.TILE + 68
 
 		local bossLockX = nil
 		local bossLockY = nil

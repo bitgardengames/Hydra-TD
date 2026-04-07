@@ -656,7 +656,8 @@ function Screen.gamepadpressed(joystick, button)
 end
 
 function Screen.resize(w, h)
-	--MapPreviewCache.buildAll(520, 312)
+	MapPreviewCache.buildAll(520, 312)
+	Backdrop.start()
 end
 
 return Screen

@@ -26,7 +26,7 @@ local function drawWorld()
 end
 
 local function drawUI()
-	--[[Tooltip.hide()
+	Tooltip.hide()
 
 	Fonts.set("ui")
 
@@ -39,7 +39,7 @@ local function drawUI()
 
 	Floaters.draw()
 
-	Tooltip.draw()]]
+	Tooltip.draw()
 end
 
 return {

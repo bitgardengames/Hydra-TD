@@ -18,7 +18,7 @@ function love.conf(t)
 	t.modules.physics = false
 
 	--t.window.borderless = true
-	t.window.fullscreen = true
+	--t.window.fullscreen = true
 	t.window.vsync = 1
 	t.window.msaa = 8
 end

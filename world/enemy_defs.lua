@@ -3,7 +3,7 @@ return {
 		nameKey = "enemy.grunt",
 		hp = 30,
 		speed = 70,
-		reward = 3, -- 7
+		reward = 7,
 		score = 10,
 		radius = 10,
 	},
@@ -12,7 +12,7 @@ return {
 		nameKey = "enemy.tank",
 		hp = 80,
 		speed = 45,
-		reward = 6, -- 12
+		reward = 12,
 		score = 22,
 		radius = 12,
 	},
@@ -21,7 +21,7 @@ return {
 		nameKey = "enemy.runner",
 		hp = 22,
 		speed = 95,
-		reward = 4, -- 8
+		reward = 8,
 		score = 12,
 		radius = 9,
 	},
@@ -30,7 +30,7 @@ return {
 		nameKey = "enemy.boss",
 		hp = 625,
 		speed = 45,
-		reward = 80, -- 80
+		reward = 80,
 		score = 300,
 		radius = 18,
 		boss = true,
