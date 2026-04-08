@@ -128,6 +128,10 @@ function Button.mousepressed(btn, x, y, button)
 		return
 	end
 
+	if not btn.x or not btn.y then
+		return
+	end
+
 	if pointInRect(x, y, btn.x, btn.y, btn.w, btn.h) then
 		local anim = ensureAnim(btn)
 		anim.pressed = true

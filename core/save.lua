@@ -104,6 +104,9 @@ function Save.load()
 			meta.TOWER_CANNON_KILLS = meta.TOWER_CANNON_KILLS or 0
 			meta.TOWER_SHOCK_KILLS = meta.TOWER_SHOCK_KILLS or 0
 			meta.TOWER_POISON_KILLS = meta.TOWER_POISON_KILLS or 0
+			meta.TOWER_PLASMA_KILLS = meta.TOWER_PLASMA_KILLS or 0
+
+			meta.TOWER_UPGRADES = meta.TOWER_UPGRADES or 0
 
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
 
@@ -145,6 +148,9 @@ function Save.load()
 			TOWER_CANNON_KILLS = 0,
 			TOWER_SHOCK_KILLS = 0,
 			TOWER_POISON_KILLS = 0,
+			TOWER_PLASMA_KILLS = 0,
+
+			TOWER_UPGRADES = 0,
 
 			unlockedAchievements = {},
 		},

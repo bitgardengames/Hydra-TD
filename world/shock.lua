@@ -1,6 +1,8 @@
 local Util = require("core.util")
 local State = require("core.state")
 local Spatial = require("world.spatial_grid")
+local Enemies = require("world.enemies")
+local MapMod = require("world.map")
 
 local Shock = {}
 
@@ -42,48 +44,6 @@ local function addLink(from, to)
 	link.to = to
 end
 
-local minPush = 0.35 -- Ensure minimum push
-
-local function applyHitImpulse(e, fromX, fromY, strength)
-	local ex = e.x
-	local ey = e.y
-
-	local dx = ex - fromX
-	local dy = ey - fromY
-
-	-- Cheap "normalization" (no sqrt)
-	local denom = abs(dx) + abs(dy) + 1
-	dx = dx / denom
-	dy = dy / denom
-
-	-- Use sim tangent
-	local tx = e.simPathDX or 1
-	local ty = e.simPathDY or 0
-
-	-- Path normal
-	local nx = -ty
-	local ny = tx
-
-	local lateral = dx * nx + dy * ny
-
-	if lateral > -minPush and lateral < minPush then
-		if lateral >= 0 then
-			lateral = minPush
-		else
-			lateral = -minPush
-		end
-	end
-
-	e.lateralVelocity = e.lateralVelocity + lateral * strength
-
-	-- Clamp
-	if e.lateralVelocity > 120 then
-		e.lateralVelocity = 120
-	elseif e.lateralVelocity < -120 then
-		e.lateralVelocity = -120
-	end
-end
-
 local function zapEnemy(from, e, dmg)
 	e.hp = e.hp - dmg
 
@@ -93,7 +53,17 @@ local function zapEnemy(from, e, dmg)
 
 	-- Knockback and jitter
 	if not e.boss then
-		applyHitImpulse(e, from.x, from.y, 48)
+		local nx, ny = MapMod.sampleFast(e.dist + 4)
+		local tx = nx - e.anchorX
+		local ty = ny - e.anchorY
+		local px, py = -ty, tx
+
+		if random() < 0.5 then
+			px = -px
+			py = -py
+		end
+
+		Enemies.applyHitImpulse(e, px, py, 20)
 	end
 
 	addLink(from, e)

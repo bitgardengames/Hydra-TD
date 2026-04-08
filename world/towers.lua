@@ -12,6 +12,7 @@ local Difficulty = require("systems.difficulty")
 local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local Projectiles = require("world.projectiles")
+local Achievements = require("systems.achievements")
 local Shock = require("world.shock")
 local L = require("core.localization")
 --local Steam = require("luasteam")
@@ -193,6 +194,8 @@ local function upgradeTower(t)
 	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
 
 	Sound.play("towerUpgraded")
+
+	Achievements.increment("TOWER_UPGRADES")
 
 	Rumble.pulse(0.22, 0.045)
 end

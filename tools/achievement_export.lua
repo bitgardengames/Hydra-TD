@@ -11,6 +11,15 @@ local Spatial = require("world.spatial_grid")
 local Shock = require("world.shock")
 local Towers = require("world.towers")
 local TowerDefs = require("world.tower_defs")
+local Constants = require("core.constants")
+
+--[[
+	Art concepts
+	pad lock
+	tomb stone (RIP)
+	
+	
+--]]
 
 local Export = {}
 local lg = love.graphics
@@ -94,7 +103,7 @@ end
 
 local function drawCampaignMedal(tier)
 	local cx = SIZE * 0.5
-	local cy = SIZE * 0.60   -- slightly higher than before
+	local cy = SIZE * 0.60
 	local radius = 12
 
 	lg.push()
@@ -298,8 +307,6 @@ local function drawTower(kind)
 	end, TOWER_SCALE)
 end
 
-local Constants = require("core.constants")
-
 local function getShockOrigin(t)
 	local size = Constants.TILE * 0.42
 	local tipX = size * 0.40
@@ -492,6 +499,10 @@ local function drawEnemy(kind, isDead)
         y = 0,
 		prevX = 0,
 		prevY = 0,
+		rx = 0,
+		ry = 0,
+		prevRX = 0,
+		prevRY = 0,
         boss = def.boss or false,
 
         hp = 0,
@@ -563,6 +574,280 @@ local function drawKillTier(enemyType, isDead, tierNumber)
 	Text.printShadow(text, pad, SIZE - h + 8, {ox = 2, oy = 2})
 
 	lg.pop()
+end
+
+-- Just a fake entry that we can spawn
+TowerDefs.upgradeIcon =  {
+	nameKey = "tower.cannon",
+	descKey = "towerDesc.cannon",
+	cost = 65,
+	range = 3.2 * Constants.TILE,
+	fireRate = 0.85,
+	damage = 19,
+	recoilStrength = Constants.TILE * 0.12,
+	recoilDecay = 14,
+	projSpeed = 320,
+	turnSpeed = 8,
+	color = Theme.ui.good, -- Theme.tower.cannon
+	canRotate = true,
+	splash = {
+		radius = 48, -- AoE radius in pixels
+		falloff = 0.45, -- % damage applied at edge
+	},
+	upgrade = {
+		dmgMult = 2.2,
+		rangeAdd = 0.08 * Constants.TILE,
+		fireMult = 1.0, -- 1.05
+		splashAdd = 4, -- increase AoE radius per upgrade
+	}
+}
+
+local function drawTowerUpgradeIcon(count)
+	local REF_SIZE = 18
+
+	centerAndScale(function()
+		local cx, cy = 0, 0
+
+		local level = 2
+		local height = (level - 1) * 4
+
+		-- Dark extruded base
+		DrawEntities.drawTowerBase("upgradeIcon", cx, cy, 1, 0.2, 0.2, 0.2, height)
+
+		DrawEntities.drawTowerVisual("upgradeIcon", cx, cy - height, 1)
+
+		-- ===== ARROW =====
+		local arrowH = REF_SIZE * 1.2
+		local arrowW = REF_SIZE * 0.6
+
+		local shaftW = arrowW * 0.35
+		local shaftH = arrowH * 0.75
+		local tipH   = arrowH * 0.45
+
+		local ay = cy
+		local verticalOffset = -4
+		local overlap = tipH * 0.45
+
+		lg.setColor(Theme.outline.color)
+
+		-- Shaft
+		lg.rectangle("fill",
+			cx - shaftW * 0.5,
+			ay - shaftH * 0.5 + verticalOffset,
+			shaftW,
+			shaftH,
+			2, 2
+		)
+
+		-- Arrow head using rounded rectangles
+		local headLen = tipH
+		local headW = shaftW
+
+		local tipX = cx
+		local tipY = ay - shaftH * 0.5 + verticalOffset
+
+		local inward = headW - 5 -- tweak this (0.15–0.35 range)
+
+		for i = -1, 1, 2 do
+			lg.push()
+
+			lg.translate(tipX, tipY)
+			lg.rotate(i * math.pi / 4)
+
+			-- 👇 THIS is the key line
+			lg.translate(-i * inward, 0)
+
+			lg.rectangle("fill",
+				-headW * 0.5,
+				0,
+				headW,
+				headLen,
+				2, 2
+			)
+
+			lg.pop()
+		end
+
+	end, TOWER_SCALE, 10)
+
+	if count then
+		lg.push()
+		lg.origin()
+
+		local pad = 16
+		local text = tostring(count)
+
+		Fonts.set("achievement")
+
+		local font = Fonts.get("achievement")
+		local h = font:getHeight()
+
+		lg.setColor(Theme.ui.text)
+
+		Text.printShadow(text, pad, SIZE - h + 8, {ox = 2, oy = 2})
+
+		lg.pop()
+	end
+end
+
+local function drawStopwatchIcon()
+	local REF_RADIUS = 14
+	local outlineW = Theme.outline.width
+
+	local outlineColor = Theme.outline.color
+	local lighting = Theme.lighting
+	local darkMul = lighting.shadowMul
+	local highlightOffset = lighting.highlightOffset
+	local highlightScale = lighting.highlightScale
+
+	local faceR, faceG, faceB = 0.90, 0.90, 0.88
+
+	centerAndScale(function()
+		local cx, cy = 0, 0
+		local r = REF_RADIUS
+
+		-- =================================
+		-- TOP CROWN (FIXED ATTACHMENT)
+		-- =================================
+		do
+			local crownW = r * 0.64
+			local crownH = r * 0.30
+
+			local stemH = r * 0.38
+			local stemW = r * 0.25
+
+			-- push slightly INTO circle so it connects
+			local stemTop = cy - r + 1
+
+			lg.setColor(outlineColor)
+
+			-- stem
+			lg.rectangle("fill",
+				cx - stemW * 0.5,
+				stemTop - stemH,
+				stemW,
+				stemH,
+				0, 0
+			)
+
+			-- crown block
+			lg.rectangle("fill",
+				cx - crownW * 0.5,
+				stemTop - stemH - crownH + 1,
+				crownW,
+				crownH,
+				2, 2
+			)
+		end
+
+		-- =================================
+		-- FLOATING SIDE BUTTON (NO ARM)
+		-- =================================
+		do
+			local btnW = r * 0.42
+			local btnH = r * 0.25
+
+			local angle = math.rad(45)
+
+			-- Position near top-right of the stopwatch
+			local bx = cx + r * 0.95
+			local by = cy - r * 0.91
+
+			lg.setColor(outlineColor)
+
+			lg.push()
+			lg.translate(bx, by)
+			lg.rotate(angle)
+
+			lg.rectangle("fill",
+				-btnW * 0.5,
+				-btnH * 0.5,
+				btnW,
+				btnH,
+				2, 2
+			)
+
+			lg.pop()
+		end
+		
+		-- =================================
+		-- FLOATING SIDE BUTTON (NO ARM)
+		-- =================================
+		do
+			local btnW = r * 0.42
+			local btnH = r * 0.25
+
+			local angle = math.rad(135)
+
+			-- Position near top-right of the stopwatch
+			local bx = cx - r * 0.95
+			local by = cy - r * 0.91
+
+			lg.setColor(outlineColor)
+
+			lg.push()
+			lg.translate(bx, by)
+			lg.rotate(angle)
+
+			lg.rectangle("fill",
+				-btnW * 0.5,
+				-btnH * 0.5,
+				btnW,
+				btnH,
+				2, 2
+			)
+
+			lg.pop()
+		end
+
+		-- Body
+		lg.setColor(outlineColor)
+		lg.circle("fill", cx, cy, r + outlineW)
+
+		lg.setColor(faceR * darkMul, faceG * darkMul, faceB * darkMul)
+		lg.circle("fill", cx, cy, r)
+
+		local hx = cx
+		local hy = cy - r * highlightOffset
+		local hr = r * highlightScale
+
+		lg.setColor(faceR, faceG, faceB)
+		lg.circle("fill", hx, hy, hr)
+
+		-- =================================
+		-- HANDS
+		-- =================================
+		do
+			local minuteLen = r * 0.70
+			local minuteW = 3.5
+
+			local secondLen = r * 0.9
+			local secondW = 3.5
+
+			local minuteAngle = math.rad(280)
+			local secondAngle = math.rad(45)
+
+			lg.setColor(outlineColor)
+
+			-- Minute hand
+			lg.push()
+			lg.translate(cx, cy)
+			lg.rotate(minuteAngle)
+			lg.rectangle("fill", -minuteW * 0.5, -minuteLen + 2, minuteW, minuteLen, 2, 2)
+			lg.pop()
+
+			-- Second hand
+			lg.push()
+			lg.translate(cx, cy)
+			lg.rotate(secondAngle)
+			lg.rectangle("fill", -secondW * 0.5, -secondLen + 2, secondW, secondLen, 2, 2)
+			lg.pop()
+
+			-- Center pin
+			lg.circle("fill", cx, cy, 2.5)
+		end
+
+	end, TOWER_SCALE, 15)
 end
 
 local achievements = {
@@ -717,6 +1002,27 @@ local achievements = {
 		id = "NO_LEAKS_HARD",
 		render = function()
 			drawNoLeaksIcon(2)
+		end
+	},
+
+	{
+		id = "TOWER_UPGRADE_1",
+		render = function()
+			drawTowerUpgradeIcon()
+		end
+	},
+
+	{
+		id = "TOWER_UPGRADE_100",
+		render = function()
+			drawTowerUpgradeIcon(100)
+		end
+	},
+
+	{
+		id = "LAST_SECOND",
+		render = function()
+			drawStopwatchIcon()
 		end
 	},
 }

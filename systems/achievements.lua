@@ -15,6 +15,8 @@ local watchers = {}
 	TOWER_LANCER_1000, TOWER_SLOW_1000, TOWER_CANNON_1000, TOWER_SHOCK_1000, TOWER_POISON_1000, TOWER_PLASMA_1000
 	CAMPAIGN_EASY, CAMPAIGN_NORMAL, CAMPAIGN_HARD
 	NO_LEAKS_NORMAL, NO_LEAKS_HARD
+	TOWER_UPGRADE_1, TOWER_UPGRADE_100
+	LAST_SECOND
 --]]
 
 local BASE_CAMPAIGN_MAP_IDS = {
@@ -149,6 +151,11 @@ end
 watchers.TOWER_PLASMA_KILLS = function(value)
 	if value >= 1000 then unlock("TOWER_PLASMA_1000") end
 	if value >= 250 then unlock("TOWER_PLASMA_250") end
+end
+
+watchers.TOWER_UPGRADES = function(value)
+	if value >= 100 then unlock("TOWER_UPGRADE_100") end
+	if value >= 1 then unlock("TOWER_UPGRADE_1") end
 end
 
 function Achievements.increment(stat, amount)

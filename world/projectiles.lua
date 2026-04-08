@@ -23,6 +23,7 @@ local abs = math.abs
 local tinsert = table.insert
 
 local pulseSpeed = 3.0
+local EPS = 1e-6
 
 local function swapRemove(list, i)
 	local last = #list
@@ -31,52 +32,8 @@ local function swapRemove(list, i)
 	list[last] = nil
 end
 
-local EPS = 0.000001
-
 local function wobble(t, amp)
 	return sin(t * 6.0) * amp, cos(t * 4.5) * amp
-end
-
-local minPush = 0.35 -- Ensure minimum push
-
-local function applyHitImpulse(e, fromX, fromY, strength)
-	local ex = e.x
-	local ey = e.y
-
-	local dx = ex - fromX
-	local dy = ey - fromY
-
-	-- Cheap "normalization" (no sqrt)
-	local denom = abs(dx) + abs(dy) + 1
-	dx = dx / denom
-	dy = dy / denom
-
-	-- Use sim tangent
-	local tx = e.simPathDX or 1
-	local ty = e.simPathDY or 0
-
-	-- Path normal
-	local nx = -ty
-	local ny = tx
-
-	local lateral = dx * nx + dy * ny
-
-	if lateral > -minPush and lateral < minPush then
-		if lateral >= 0 then
-			lateral = minPush
-		else
-			lateral = -minPush
-		end
-	end
-
-	e.lateralVelocity = e.lateralVelocity + lateral * strength
-
-	-- Clamp
-	if e.lateralVelocity > 120 then
-		e.lateralVelocity = 120
-	elseif e.lateralVelocity < -120 then
-		e.lateralVelocity = -120
-	end
 end
 
 local function spawnImpactFX(p)
@@ -340,7 +297,10 @@ local function update(dt)
 					end
 
 					if not e.boss then
-						applyHitImpulse(e, p.x, p.y, 28)
+						local dx = e.x - p.x
+						local dy = e.y - p.y
+
+						Enemies.applyHitImpulse(e, dx, dy, 24)
 					end
 
 					State.addDamage(p.sourceKind, dmg, e.boss == true)
@@ -428,7 +388,10 @@ local function update(dt)
 						end
 
 						if not e.boss then
-							applyHitImpulse(e, px, py, 64)
+							local dx = e.x - px
+							local dy = e.y - py
+
+							Enemies.applyHitImpulse(e, dx, dy, 40)
 						end
 
 						State.addDamage(kind, dmg, e.boss == true)
@@ -490,7 +453,10 @@ local function update(dt)
 							end
 
 							if not e.boss then
-								applyHitImpulse(e, p.x, p.y, 24)
+								local dx = e.x - p.x
+								local dy = e.y - p.y
+
+								Enemies.applyHitImpulse(e, dx, dy, 20)
 							end
 
 							State.addDamage(p.sourceKind, dmg, e.boss == true)

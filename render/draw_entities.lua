@@ -47,7 +47,6 @@ local outlineWidth = Theme.outline.width
 local TILE = Constants.TILE
 local HALF_PI = pi / 2
 
-local sampleFast = MapMod.sampleFast
 local towerDefs = Towers.TowerDefs
 
 local function lerp(a, b, t)
@@ -61,33 +60,15 @@ local function prepareEnemyRenderData()
 	for i = 1, #enemies do
 		local e = enemies[i]
 
-		local d = lerp(e.prevDist or e.dist, e.dist, a)
-		local x, y = sampleFast(d)
-		local x2, y2 = sampleFast(d + 1)
+		local x = lerp(e.prevX, e.x, a)
+		local y = lerp(e.prevY, e.y, a)
 
-		local dx = x2 - x
-		local dy = y2 - y
-
-		local len = dx * dx + dy * dy
-
-		if len > 0 then
-			len = 1 / sqrt(len)
-
-			e.pathDX = dx * len
-			e.pathDY = dy * len
-		else
-			e.pathDX = 1
-			e.pathDY = 0
-		end
-
-		local oldRX = e.rx or x
-		local oldRY = e.ry or y
-
-		e.prevRX = oldRX
-		e.prevRY = oldRY
+		e.prevRX = e.rx or x
+		e.prevRY = e.ry or y
 
 		e.rx = x
 		e.ry = y
+
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
 	end
 end
@@ -96,31 +77,8 @@ end
 local function drawEnemy(e)
 	local a = max(0, min(1, State.renderAlpha or 0))
 
-	-- Interpolate lateral offset
-	local lo = lerp(e.prevLateralOffset or e.lateralOffset, e.lateralOffset, a)
-
-	local x = e.rx
-	local y = e.ry
-
-	local x2, y2 = sampleFast((e.prevDist or e.dist) + 1)
-
-	local dx = x2 - x
-	local dy = y2 - y
-
-	local len = sqrt(dx * dx + dy * dy)
-
-	if len > 0 then
-		dx = dx / len
-		dy = dy / len
-	end
-
-	-- Perpendicular
-	local nx = -dy
-	local ny = dx
-
-	-- Apply offset
-	local ix = x + nx * lo
-	local iy = y + ny * lo
+	local ix = e.rx
+	local iy = e.ry
 	local animT = e.rAnimT or 0
 	local enemyAlpha = e.alpha
 
@@ -881,13 +839,13 @@ local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
 	recoil = recoil or 0
 	alpha = alpha or 1
 
-	-- Base (shadowed)
+	-- Base
 	drawTowerBase(kind, cx, cy, alpha, darkMul, darkMul, darkMul)
 
-	-- Highlight (your missing piece in title)
+	-- Highlight
 	drawTowerBaseHighlight(kind, cx, cy, alpha)
 
-	-- Core (includes its own highlight + details)
+	-- Core
 	drawTowerCore(kind, cx, cy, angle, recoil, alpha, 1, 1, 1, 0)
 end
 

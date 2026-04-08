@@ -154,7 +154,7 @@ return {
 	},
 
 	achievement = {
-		boss_first = "First Blood",
+		boss_1 = "First Blood",
 		boss_50 = "No Mercy",
 
 		kill_500 = "Still Standing",
@@ -177,14 +177,18 @@ return {
 
 		campaign_easy = "First Steps",
 		campaign_normal = "Holding the Line",
-		campaign_hard = "Last Stand",
+		campaign_hard = "Total Control",
 
 		no_leaks_normal = "Sealed Tight",
 		no_leaks_hard = "Dead End",
+		last_second = "Last Second",
+
+		tower_upgrade_1 = "Rising Power",
+		tower_upgrade_100 = "Built Up",
 	},
 
 	achievementDesc = {
-		boss_first = "Defeat your first boss",
+		boss_1 = "Defeat your first boss",
 		boss_50 = "Defeat 50 bosses",
 
 		kill_500 = "Defeat 500 enemies",
@@ -198,12 +202,12 @@ return {
 		tower_poison_250 = "Defeat 250 enemies with the Poison tower",
 		tower_plasma_250 = "Defeat 250 enemies with the Plasma tower",
 
-		tower_lancer_1000 = "Defeat 1000 enemies with the Lancer",
-		tower_slow_1000 = "Defeat 1000 enemies with the Slow tower",
-		tower_cannon_1000 = "Defeat 1000 enemies with the Cannon",
-		tower_shock_1000 = "Defeat 1000 enemies with the Shock tower",
-		tower_poison_1000 = "Defeat 1000 enemies with the Poison tower",
-		tower_plasma_1000 = "Defeat 1000 enemies with the Plasma tower",
+		tower_lancer_1000 = "Defeat 1,000 enemies with the Lancer",
+		tower_slow_1000 = "Defeat 1,000 enemies with the Slow tower",
+		tower_cannon_1000 = "Defeat 1,000 enemies with the Cannon",
+		tower_shock_1000 = "Defeat 1,000 enemies with the Shock tower",
+		tower_poison_1000 = "Defeat 1,000 enemies with the Poison tower",
+		tower_plasma_1000 = "Defeat 1,000 enemies with the Plasma tower",
 
 		campaign_easy = "Complete the campaign on Easy",
 		campaign_normal = "Complete the campaign on Normal",
@@ -211,6 +215,10 @@ return {
 
 		no_leaks_normal = "Complete a map on Normal without any enemies escaping",
 		no_leaks_hard = "Complete a map on Hard without any enemies escaping",
+		last_second = "Defeat an enemy at the last second before it escapes",
+
+		tower_upgrade_1 = "Upgrade a tower",
+		tower_upgrade_100 = "Upgrade towers 100 times",
 	},
 
 	overlay = {

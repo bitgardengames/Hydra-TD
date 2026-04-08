@@ -195,21 +195,11 @@ function love.load(arg)
 			local dmW, dmH = love.window.getDesktopDimensions()
 			local msaa = Scale.suggestMSAA(dmW, dmH) or 8
 
-			love.window.setMode(0, 0, {
-				fullscreen = true,
-				fullscreentype = "desktop",
-				vsync = 1,
-				msaa = msaa
-			})
+			love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
 		else
-			local msaa = Scale.suggestMSAA(1280, 800) or 2
+			local msaa = Scale.suggestMSAA(1280, 800) or 8
 
-			love.window.setMode(1280, 800, {
-				fullscreen = false,
-				resizable = true,
-				vsync = 1,
-				msaa = msaa
-			})
+			love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
 		end
 
 		require("core.bootstrap").initFull()

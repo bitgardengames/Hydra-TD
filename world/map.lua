@@ -203,6 +203,7 @@ local function loadPath(points)
 	end
 
 	map.totalWorldLength = totalDist
+	map.lastSecondThreshold = totalDist * 0.90
 
 	local coverageTiles = computeCoverageIndex(map.path, canPlaceAt)
 	local coverageIndex = coverageTiles / pathLength

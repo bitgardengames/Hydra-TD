@@ -30,7 +30,7 @@ end
 
 function Bootstrap.initMinimal()
 	-- Not sure if you live here permanently
-	love.window.setMode(0, 0, {
+	love.window.updateMode(0, 0, {
 		fullscreen = true,
 		fullscreentype = "desktop",
 		vsync = 1,

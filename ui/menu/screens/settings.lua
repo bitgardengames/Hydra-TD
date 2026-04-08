@@ -230,10 +230,10 @@ function Screen.load()
 					local sw, sh = love.graphics.getDimensions()
 					local msaa = require("core.scale").suggestMSAA(sw, sh) or 8
 
-					love.window.setMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
+					love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
 				else
 					local msaa = require("core.scale").suggestMSAA(1280, 800) or 2
-					love.window.setMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
+					love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
 				end
 
 				Save.data.settings.fullscreen = v
@@ -472,6 +472,7 @@ function Screen.mousepressed(x, y, button)
 		end
 	end
 end
+
 function Screen.mousereleased(x, y, button)
 	if draggingSlider then
 		Sound.play("uiMove")

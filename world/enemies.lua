@@ -21,7 +21,10 @@ local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- Seconds per poison tick
 
-local returnRate = 20
+local SPRING_K = 220
+local SPRING_DAMP = 26
+local MAX_SPEED = 260
+local MAX_OFFSET = 28
 
 local abs = math.abs
 local exp = math.exp
@@ -30,6 +33,7 @@ local max = math.max
 local sqrt = math.sqrt
 local floor = math.floor
 local upper = string.upper
+local random = love.math.random
 
 local nextID = 0
 
@@ -59,16 +63,13 @@ end
 local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
 	local def = EnemyDefs[kind]
 
-	local x, y, idx
+	local x, y
 
-	if spawnX and spawnY and pathIndex then
+	if spawnX and spawnY then
 		x, y = spawnX, spawnY
-		idx = pathIndex
 	else
 		local startGX, startGY = MapMod.map.path[1][1], MapMod.map.path[1][2]
-
 		x, y = MapMod.gridToCenter(startGX, startGY)
-		idx = 1
 	end
 
 	nextID = nextID + 1
@@ -76,10 +77,23 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	local e = {
 		kind = kind,
 		def = def,
+
+		-- World position
 		x = x,
 		y = y,
 		prevX = x,
 		prevY = y,
+
+		-- Path driver
+		dist = 0,
+		prevDist = 0,
+		anchorX = x,
+		anchorY = y,
+
+		-- Velocity
+		vx = 0,
+		vy = 0,
+
 		boss = def.boss or false,
 		hpScale = hpScale,
 		spdScale = spdScale,
@@ -92,9 +106,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		radius = def.radius,
 		radius2 = def.radius * def.radius,
 		hitFlash = 0,
-		lateralOffset = 0,
-		lateralVelocity = 0,
-		prevLateralOffset = 0,
 		dying = false,
 		deathT = 0,
 		deathDur = 0.4,
@@ -103,11 +114,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		alpha = 1,
 		animT = 0,
 		prevAnimT = 0,
-		simPathDX = 1,
-		simPathDY = 0,
-		dist = 0,
-		prevDist = 0,
-		modifiers = def.modifiers,
 		slowFactor = 1,
 		slowTimer = 0,
 		poisonStacks = 0,
@@ -118,20 +124,13 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		shockID = 0,
 	}
 
-	if e.boss then
-		State.activeBoss = e
-	end
-
 	enemies[#enemies + 1] = e
 end
 
 local function updateEnemies(dt)
 	local map = MapMod.map
-	local path = map.path
-	local pathWorld = map.pathWorld
-	local pathDist = map.pathDist
 	local totalLen = map.totalWorldLength
-	local pathLen = #path
+	local LastSecondThreshold = map.lastSecondThreshold
 
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
@@ -246,6 +245,10 @@ local function updateEnemies(dt)
 				goto continue
 			end
 
+			if e.dist >= LastSecondThreshold then
+				Achievements.unlock("LAST_SECOND")
+			end
+
 			-- Non-boss: immediate death
 			if e.lastHitTower then
 				e.lastHitTower.kills = e.lastHitTower.kills + 1
@@ -301,50 +304,56 @@ local function updateEnemies(dt)
 			end
 		end
 
-		-- Hit offset
-		e.prevLateralOffset = e.lateralOffset
-
-		-- Apply velocity
-		e.lateralOffset = e.lateralOffset + e.lateralVelocity * dt
-
-		-- Damping
-		local velDamp = 1 / (1 + 8 * dt)
-		e.lateralVelocity = e.lateralVelocity * velDamp
-
-		-- Return
-		local rt = returnRate * dt
-		local returnFactor = rt / (1 + rt)
-
-		e.lateralOffset = e.lateralOffset + (0 - e.lateralOffset) * returnFactor
-
-		-- Store previous position for interpolation
+		-- store previous position
 		e.prevX = e.x
 		e.prevY = e.y
-
-		-- Store previous distance (render will interpolate distance, then sample)
 		e.prevDist = e.dist
+
+		-- advance along path
 		e.dist = e.dist + e.speed * dt
 
-		if e.dist > map.totalWorldLength then
-			e.dist = map.totalWorldLength
+		if e.dist > totalLen then
+			e.dist = totalLen
 		end
 
-		e.x, e.y = sampleFast(e.dist)
+		-- anchor position (perfect path)
+		e.anchorX, e.anchorY = sampleFast(e.dist)
 
-		local x2, y2 = sampleFast(min(e.dist + 1, map.totalWorldLength))
+		-- spring toward anchor
+		local dx = e.anchorX - e.x
+		local dy = e.anchorY - e.y
 
-		local pdx = x2 - e.x
-		local pdy = y2 - e.y
-		local plen2 = pdx * pdx + pdy * pdy
+		e.vx = e.vx + dx * SPRING_K * dt
+		e.vy = e.vy + dy * SPRING_K * dt
 
-		if plen2 > 0 then
-			local invLen = 1 / sqrt(plen2)
+		-- damping
+		local damp = 1 / (1 + SPRING_DAMP * dt)
+		e.vx = e.vx * damp
+		e.vy = e.vy * damp
 
-			e.simPathDX = pdx * invLen
-			e.simPathDY = pdy * invLen
-		else
-			e.simPathDX = 1
-			e.simPathDY = 0
+		-- clamp speed
+		local v2 = e.vx * e.vx + e.vy * e.vy
+		if v2 > MAX_SPEED * MAX_SPEED then
+			local inv = MAX_SPEED / math.sqrt(v2)
+			e.vx = e.vx * inv
+			e.vy = e.vy * inv
+		end
+
+		-- integrate
+		e.x = e.x + e.vx * dt
+		e.y = e.y + e.vy * dt
+
+		-- limit how far enemy can drift from path
+		local offx = e.x - e.anchorX
+		local offy = e.y - e.anchorY
+		local off2 = offx * offx + offy * offy
+
+		if off2 > MAX_OFFSET * MAX_OFFSET then
+			local inv = MAX_OFFSET / math.sqrt(off2)
+			e.x = e.anchorX + offx * inv
+			e.y = e.anchorY + offy * inv
+			e.vx = e.vx * 0.6
+			e.vy = e.vy * 0.6
 		end
 
 		Spatial.updateEnemy(e)
@@ -429,11 +438,31 @@ local function clear()
 	nextID = 0
 end
 
+local EPS = 1e-6
+
+local function applyHitImpulse(e, dx, dy, strength)
+	local len2 = dx * dx + dy * dy
+
+	if len2 <= EPS then
+		return
+	end
+
+	local inv = 1 / sqrt(len2)
+
+	-- Damp existing velocity
+	e.vx = e.vx * 0.90
+	e.vy = e.vy * 0.90
+
+	e.vx = e.vx + dx * inv * strength
+	e.vy = e.vy + dy * inv * strength
+end
+
 return {
 	enemies = enemies,
 	EnemyDefs = EnemyDefs,
 	findEnemyAt = findEnemyAt,
 	spawnEnemy = spawnEnemy,
 	updateEnemies = updateEnemies,
+	applyHitImpulse = applyHitImpulse,
 	clear = clear,
 }
