@@ -17,7 +17,7 @@ local map = {
 	path = {},
 	pathWorld = {},
 	samples = {},
-	sampleStep = 4, -- pixels (2–4 ideal)
+	sampleStep = 1, -- pixels (2–4 ideal)
 }
 
 local currentMap = nil

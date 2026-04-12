@@ -138,7 +138,7 @@ function Director.buildScene(scene)
         end
 
         local warmup = scene.wave.warmup or 0
-        local step = 1 / 60
+        local step = 1 / 120
         local t = 0
 
         while t < warmup do

@@ -300,7 +300,7 @@ local function update(dt)
 						local dx = e.x - p.x
 						local dy = e.y - p.y
 
-						Enemies.applyHitImpulse(e, dx, dy, 24)
+						Enemies.applyHitImpulse(e, dx, dy, 2)
 					end
 
 					State.addDamage(p.sourceKind, dmg, e.boss == true)
@@ -391,14 +391,13 @@ local function update(dt)
 							local dx = e.x - px
 							local dy = e.y - py
 
-							Enemies.applyHitImpulse(e, dx, dy, 40)
+							Enemies.applyHitImpulse(e, dx, dy, 4)
 						end
 
 						State.addDamage(kind, dmg, e.boss == true)
 					end
 				end
 
-				--tinsert(Effects.splashes, {x = px, y = py, r = r, t = 0, life = 0.21})
 				Effects.spawnCannonImpact(tx, ty, r)
 
 				local dead = projectiles[i]
@@ -456,7 +455,7 @@ local function update(dt)
 								local dx = e.x - p.x
 								local dy = e.y - p.y
 
-								Enemies.applyHitImpulse(e, dx, dy, 20)
+								Enemies.applyHitImpulse(e, dx, dy, 1)
 							end
 
 							State.addDamage(p.sourceKind, dmg, e.boss == true)
@@ -515,9 +514,24 @@ local function draw()
 			lg.rectangle("fill", -4, -4, 8, 8, 2, 2)
 			lg.pop()
 		elseif p.poison then
-			local wx, wy = wobble(p.t or 0, 1.5)
+			--[[local wx, wy = wobble(p.t or 0, 1.5)
 			lg.setColor(0.6, 0.9, 0.5, a)
-			lg.circle("fill", p.x + wx, p.y + wy, p.r + 1.5)
+			lg.circle("fill", p.x + wx, p.y + wy, p.r + 1.5)]]
+
+			local wx, wy = wobble(p.t or 0, 1.5)
+
+			lg.push()
+			lg.translate(p.x + wx, p.y + wy)
+
+			-- Outer (soft glow)
+			lg.setColor(0.55, 0.85, 0.45, a)
+			lg.circle("fill", 0, 0, p.r + 1.5)
+
+			-- Inner (core)
+			lg.setColor(0.75, 1.0, 0.65, a * 0.9)
+			lg.circle("fill", 0, 0, p.r)
+
+			lg.pop()
 		elseif p.plasma then
 			lg.push()
 			lg.translate(p.x, p.y)
@@ -549,6 +563,12 @@ local function draw()
 	end
 end
 
+local function load()
+	for i = 1, 50 do
+		projectilePool[#projectilePool + 1] = {}
+	end
+end
+
 local function clear()
 	for i = #projectiles, 1, -1 do
 		projectiles[i] = nil
@@ -559,6 +579,7 @@ return {
 	projectiles = projectiles,
 	spawn = spawn,
 	update = update,
+	load = load,
 	draw = draw,
 	clear = clear,
 }

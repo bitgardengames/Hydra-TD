@@ -27,6 +27,7 @@ local DrawWorld = require("render.draw_world")
 local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
+local Mushrooms = require("world.scatter_mushrooms")
 local DamageMeter = require("ui.damage_meter")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
@@ -115,6 +116,10 @@ function resetGame()
 		if scatter.cactus and scatter.cactus.enabled then
 			Cacti.generate(scatter.cactus)
 		end
+
+		if biome.scatter.mushrooms and biome.scatter.mushrooms.enabled then
+			Mushrooms.generate()
+		end
 	end
 
 	MapWorldCache.invalidate()
@@ -129,6 +134,8 @@ function resetGame()
     State.wave = 1
 	State.waveLeaks = 0
 	State.totalLeaks = 0
+
+	State.modules = {}
 
     State.inPrep = true
     State.paused = false
@@ -210,8 +217,10 @@ function love.load(arg)
 	collectgarbage("collect")
 end
 
+local clamp = 1 / 30
+
 function love.update(dt)
-	dt = min(dt, 0.1)
+	dt = min(dt, clamp)
 
 	local mode = State.mode
 	local target = (mode == "pause") and 1 or 0
@@ -227,6 +236,18 @@ function love.update(dt)
 		Menu.updatePause(dt)
 
 		return
+	end
+
+	if State.paused then
+		return
+	end
+
+	ACCUM = ACCUM + dt
+
+	while ACCUM >= FIXED_DT do
+		Sim.update(FIXED_DT * State.speed)
+
+		ACCUM = ACCUM - FIXED_DT
 	end
 
 	if mode ~= "game" then
@@ -245,18 +266,6 @@ function love.update(dt)
 	end
 
 	Input.updateHover()
-
-	if State.paused then
-		return
-	end
-
-	ACCUM = ACCUM + dt
-
-	while ACCUM >= FIXED_DT do
-		Sim.update(FIXED_DT * State.speed)
-
-		ACCUM = ACCUM - FIXED_DT
-	end
 
 	if mode == "victory" then
 		Menu.update(dt)
@@ -301,7 +310,8 @@ function love.update(dt)
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
-		if State.wave == 20 and not State.endless then
+		--if State.wave == 20 and not State.endless then
+		if State.wave == 1 and not State.endless then
 			-- Save
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
 			Save.data.furthestIndex = max(Save.data.furthestIndex, nextMapIndex)

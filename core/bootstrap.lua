@@ -11,6 +11,8 @@ function Bootstrap.initFull()
 	local Sound = require("systems.sound")
 	local MapPreviewCache = require("world.map_preview_cache")
 	local Menu = require("ui.menu.menu")
+	local Effects = require("world.effects")
+	local Projectiles = require("world.projectiles")
 
 	Difficulty.set(Save.data.settings.difficulty)
 	L.load(Save.data.settings.language or "enUS")
@@ -22,6 +24,8 @@ function Bootstrap.initFull()
 	Sound.playMusic("menu")
 	MapPreviewCache.buildAll(520, 312)
 	Menu.load()
+	Effects.load()
+	Projectiles.load()
 
 	Steam.setRichPresence(L("presence.menu"))
 

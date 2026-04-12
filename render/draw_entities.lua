@@ -5,6 +5,7 @@ local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
 
+local getDelta = love.timer.getDelta
 local random = love.math.random
 local lg = love.graphics
 local sqrt = math.sqrt
@@ -53,6 +54,8 @@ local function lerp(a, b, t)
 	return a + (b - a) * t
 end
 
+local smooth = 18
+
 local function prepareEnemyRenderData()
 	local enemies = Enemies.enemies
 	local a = max(0, min(1, State.renderAlpha or 0))
@@ -60,14 +63,31 @@ local function prepareEnemyRenderData()
 	for i = 1, #enemies do
 		local e = enemies[i]
 
-		local x = lerp(e.prevX, e.x, a)
-		local y = lerp(e.prevY, e.y, a)
+		local d = lerp(e.prevDist or e.dist, e.dist, a)
+		local baseX, baseY = MapMod.sampleFast(d)
 
-		e.prevRX = e.rx or x
-		e.prevRY = e.ry or y
+		local nudgeX = lerp(e.prevNudgeX or e.nudgeX or 0, e.nudgeX or 0, a)
+		local nudgeY = lerp(e.prevNudgeY or e.nudgeY or 0, e.nudgeY or 0, a)
 
-		e.rx = x
-		e.ry = y
+		-- Target position (your current exact result)
+		local targetX = baseX + nudgeX
+		local targetY = baseY + nudgeY
+
+		-- Initialize render position if needed
+		e.rx = e.rx or targetX
+		e.ry = e.ry or targetY
+
+		-- Smoothing layer
+		local dt = getDelta() -- safe here for render smoothing
+
+		local t = min(1, smooth * dt)
+
+		e.rx = e.rx + (targetX - e.rx) * t
+		e.ry = e.ry + (targetY - e.ry) * t
+
+		-- Keep these for eye tracking / effects
+		e.prevRX = e.rx
+		e.prevRY = e.ry
 
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
 	end
@@ -212,6 +232,28 @@ local function drawEnemy(e)
 
 		lg.line(ix - eyeSep - browLen * 0.65 + browIn, eyeY - browDrop - browLift, ix - eyeSep + browLen * 0.35 + browIn, eyeY - browDrop * 0.15 + browTension - browLift)
 		lg.line(ix + eyeSep - browLen * 0.35 - browIn, eyeY - browDrop * 0.15 + browTension - browLift, ix + eyeSep + browLen * 0.65 - browIn, eyeY - browDrop - browLift)
+	elseif e.face == "shock" then
+		local bigR = eyeSize + 1
+		local smallR = max(2, eyeSize - 1)
+		local p = 1 - (e.faceT / e.faceDur)
+		local pop = 1 + (1 - (p * p)) * 0.15
+
+		lg.push()
+		lg.translate(ix, eyeY)
+		lg.scale(pop, pop)
+
+		lg.setLineWidth(2)
+
+		lg.setColor(0.9, 0.9, 0.9, enemyAlpha)
+		lg.circle("fill", -eyeSep, 0, bigR + 1)
+
+		lg.setColor(efR, efG, efB, enemyAlpha)
+
+		lg.circle("line", -eyeSep, 0, bigR)
+		lg.circle("fill", eyeSep, 0, smallR)
+
+		lg.setLineWidth(1)
+		lg.pop()
 	else
 		-- Eye direction follows movement
 		local dx = e.rx - (e.prevRX or e.rx)
@@ -375,7 +417,7 @@ local function drawSlowFX(t)
 	end
 
 	local size = TILE * 0.42
-	local tipX = size * 0.42
+	local tipX = size * 0.64
 
 	local mx, my = getBarrelTip(t, tipX)
 
@@ -389,7 +431,7 @@ local function drawSlowFX(t)
 	lg.circle("line", mx, my, radius)
 
 	lg.setColor(sr * 0.8, sg * 0.9, sb, alpha * 0.35)
-	lg.circle("fill", mx, my, radius * 0.6)
+	lg.circle("fill", mx, my, radius * 0.5)
 
 	lg.setLineWidth(1)
 end
@@ -441,7 +483,7 @@ local function drawCannonFX(t)
 	end
 
 	local size = TILE * 0.42
-	local tipX = size * 0.85
+	local tipX = size * 0.95
 
 	local mx, my = getBarrelTip(t, tipX)
 
@@ -471,7 +513,7 @@ local function drawPlasmaFX(t)
 	if a <= 0 then return end
 
 	local size = TILE * 0.48
-	local tipX = size * 0.84
+	local tipX = size * 0.86
 
 	local mx, my = getBarrelTip(t, tipX)
 
@@ -491,13 +533,13 @@ local function drawPlasmaFX(t)
 
 	lg.push()
 	lg.rotate(angle)
-	lg.setColor(0.9, 0.6, 1.0, alpha)
+	lg.setColor(0.96, 0.82, 1.0, alpha)
 	lg.ellipse("line", 0, 0, w, h)
 	lg.pop()
 
 	lg.push()
 	lg.rotate(-angle)
-	lg.setColor(0.9, 0.6, 1.0, alpha)
+	lg.setColor(0.96, 0.82, 1.0, alpha)
 	lg.ellipse("line", 0, 0, w, h)
 	lg.pop()
 

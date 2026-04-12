@@ -60,7 +60,7 @@ Biomes.defs = {
 			tree = {
 				trunk = {0.36, 0.26, 0.16},
 				trunkOutline = {0.22, 0.16, 0.10},
-				shapes = {"round", "square"},
+				shapes = {"square", "evergreen"},
 
 				styles = {
 					{fill = {0.46, 0.78, 0.48}, outline = {0.20, 0.44, 0.26}},
@@ -99,123 +99,9 @@ Biomes.defs = {
 		},
 	},
 
-	highlands = {
-		terrain = {
-			grass = {0.42, 0.56, 0.34},
-			path = {0.63, 0.61, 0.58},
-			pathOutline = {0.34, 0.35, 0.34},
-			water = {0.24, 0.46, 0.58},
-		},
-
-		ground = {
-			detailDensity = 0.18,
-			lightMul = 1.05,
-			darkMul = 0.95,
-		},
-
-		world = {
-			tree = {
-				trunk = {0.36, 0.26, 0.16},
-				trunkOutline = {0.22, 0.16, 0.10},
-				shapes = {"round", "square"},
-
-				styles = {
-					{fill = {0.46, 0.78, 0.48}, outline = {0.20, 0.44, 0.26}},
-					{fill = {0.40, 0.72, 0.42}, outline = {0.18, 0.40, 0.22}},
-					{fill = {0.32, 0.62, 0.36}, outline = {0.14, 0.34, 0.18}},
-					{fill = {0.54, 0.78, 0.44}, outline = {0.28, 0.46, 0.22}},
-					{fill = {0.36, 0.66, 0.38}, outline = {0.16, 0.36, 0.20}},
-				},
-			},
-
-			rock = {
-				styles = {
-					{fill = {0.70, 0.68, 0.64}, outline = {0.40, 0.38, 0.35}},
-					{fill = {0.64, 0.63, 0.60}, outline = {0.36, 0.35, 0.32}},
-					{fill = {0.74, 0.72, 0.68}, outline = {0.44, 0.42, 0.38}},
-					{fill = {0.60, 0.60, 0.58}, outline = {0.32, 0.32, 0.30}},
-					{fill = {0.68, 0.66, 0.62}, outline = {0.38, 0.36, 0.33}},
-				},
-			},
-		},
-
-		scatter = {
-			trees = {
-				enabled = true,
-				density = 0.10,
-				cluster = 0.10,
-				minDistFromPath = 1,
-			},
-
-			rocks = {
-				enabled = true,
-				density = 0.18,
-				cluster = 0.12,
-				minDistFromPath = 1,
-			},
-		},
-	},
-
-	coastal = {
-		terrain = {
-			grass = {0.30, 0.55, 0.38},
-			path = {0.66, 0.65, 0.61},
-			pathOutline = {0.37, 0.36, 0.33},
-			water = {0.22, 0.50, 0.62},
-		},
-
-		ground = {
-			detailDensity = 0.22,
-			lightMul = 1.08,
-			darkMul = 0.93,
-		},
-
-		world = {
-			tree = {
-				trunk = {0.36, 0.26, 0.16},
-				trunkOutline = {0.22, 0.16, 0.10},
-				shapes = {"round", "square"},
-
-				styles = {
-					{fill = {0.46, 0.78, 0.48}, outline = {0.20, 0.44, 0.26}},
-					{fill = {0.40, 0.72, 0.42}, outline = {0.18, 0.40, 0.22}},
-					{fill = {0.32, 0.62, 0.36}, outline = {0.14, 0.34, 0.18}},
-					{fill = {0.54, 0.78, 0.44}, outline = {0.28, 0.46, 0.22}},
-					{fill = {0.36, 0.66, 0.38}, outline = {0.16, 0.36, 0.20}},
-				},
-			},
-
-			rock = {
-				styles = {
-					{fill = {0.70, 0.68, 0.64}, outline = {0.40, 0.38, 0.35}},
-					{fill = {0.64, 0.63, 0.60}, outline = {0.36, 0.35, 0.32}},
-					{fill = {0.74, 0.72, 0.68}, outline = {0.44, 0.42, 0.38}},
-					{fill = {0.60, 0.60, 0.58}, outline = {0.32, 0.32, 0.30}},
-					{fill = {0.68, 0.66, 0.62}, outline = {0.38, 0.36, 0.33}},
-				},
-			},
-		},
-
-		scatter = {
-			trees = {
-				enabled = true,
-				density = 0.14,
-				cluster = 0.18,
-				minDistFromPath = 1,
-			},
-
-			rocks = {
-				enabled = true,
-				density = 0.08,
-				cluster = 0.04,
-				minDistFromPath = 1,
-			},
-		},
-	},
-
 	drylands = {
 		terrain = {
-			grass = {0.72, 0.63, 0.42},
+			grass = {0.78, 0.68, 0.48},
 			path = {0.67, 0.49, 0.31},
 			pathOutline = {0.42, 0.30, 0.18},
 			water = {0.30, 0.60, 0.55},
@@ -266,43 +152,54 @@ Biomes.defs = {
 
 	autumn = {
 		terrain = {
-			grass = {0.48, 0.56, 0.30},
-			path = {0.66, 0.56, 0.42},
-			pathOutline = {0.44, 0.34, 0.24},
-			water = {0.30, 0.50, 0.40},
+			grass = {0.56, 0.46, 0.24},
+			path = {0.68, 0.56, 0.38},
+			pathOutline = {0.42, 0.30, 0.20},
+			water = {0.36, 0.56, 0.48},
 		},
 
 		ground = {
-			detailDensity = 0.22,
+			detailDensity = 0.26,
 			lightMul = 1.05,
-			darkMul = 0.95,
+			darkMul = 0.92,
 		},
 
 		world = {
 			tree = {
-				trunk = {0.42, 0.28, 0.16},
-				trunkOutline = {0.24, 0.16, 0.10},
-				shapes = {"round", "square", "evergreen"},
+				trunk = {0.48, 0.30, 0.18},
+				trunkOutline = {0.28, 0.16, 0.10},
+
+				shapes = {"evergreen", "round"},
 
 				styles = {
-					{fill = {0.84, 0.46, 0.20}, outline = {0.52, 0.24, 0.10}},
-					{fill = {0.78, 0.36, 0.16}, outline = {0.48, 0.20, 0.08}},
-					{fill = {0.92, 0.64, 0.20}, outline = {0.58, 0.38, 0.12}},
-					{fill = {0.60, 0.40, 0.20}, outline = {0.36, 0.24, 0.12}},
-				},
+					{fill = {0.78, 0.22, 0.12}, outline = {0.48, 0.12, 0.06}},
+					{fill = {0.88, 0.44, 0.16}, outline = {0.54, 0.26, 0.08}},
+					{fill = {0.96, 0.72, 0.18}, outline = {0.64, 0.46, 0.10}},
+					{fill = {0.70, 0.40, 0.18}, outline = {0.42, 0.22, 0.10}},
+				}
 			},
 
 			rock = {
 				styles = {
-					{fill = {0.62, 0.54, 0.44}, outline = {0.38, 0.32, 0.26}},
-					{fill = {0.68, 0.60, 0.50}, outline = {0.42, 0.36, 0.30}},
+					-- warmer stone (sunlit, not gray)
+					{fill = {0.70, 0.60, 0.50}, outline = {0.42, 0.34, 0.28}},
+					{fill = {0.66, 0.56, 0.46}, outline = {0.40, 0.32, 0.26}},
 				},
 			},
 		},
 
 		scatter = {
-			trees = {enabled = true, density = 0.16, cluster = 0.18},
-			rocks = {enabled = true, density = 0.08, cluster = 0.05},
+			trees = {
+				enabled = true,
+				density = 0.18,
+				cluster = 0.22,
+			},
+
+			rocks = {
+				enabled = true,
+				density = 0.06, -- reduce clutter so trees shine
+				cluster = 0.05,
+			},
 		},
 	},
 
@@ -482,6 +379,58 @@ Biomes.defs = {
 			-- intentionally empty (no trees/rocks/cactus)
 		},
 	},
+
+	mushroom = {
+		terrain = {
+			grass = {0.22, 0.22, 0.30},
+			path = {0.58, 0.56, 0.64},
+			pathOutline = {0.20, 0.18, 0.26},
+
+			water = {0.36, 0.52, 0.56},
+		},
+
+		ground = {
+			detailDensity = 0.22,
+
+			-- slight lift so it doesn't feel crushed
+			lightMul = 1.05,
+			darkMul = 0.94,
+		},
+
+		world = {
+			mushroom = {
+				styles = {
+					{fill = {0.32, 0.36, 0.72}, outline = {0.18, 0.22, 0.46}},
+					{fill = {0.40, 0.52, 0.82}, outline = {0.22, 0.30, 0.52}},
+					{fill = {0.50, 0.66, 0.88}, outline = {0.30, 0.42, 0.60}},
+					{fill = {0.36, 0.60, 0.62}, outline = {0.20, 0.36, 0.38}},
+					{fill = {0.56, 0.42, 0.72}, outline = {0.30, 0.22, 0.42}},
+					{fill = {0.72, 0.44, 0.58}, outline = {0.40, 0.22, 0.32}},
+				}
+			},
+
+			rock = {
+				styles = {
+					{fill = {0.46, 0.48, 0.56}, outline = {0.26, 0.28, 0.34}},
+					{fill = {0.40, 0.42, 0.50}, outline = {0.22, 0.24, 0.30}},
+					{fill = {0.34, 0.38, 0.48}, outline = {0.20, 0.24, 0.32}},
+					{fill = {0.28, 0.32, 0.42}, outline = {0.16, 0.20, 0.28}},
+				},
+			},
+		},
+
+		scatter = {
+			mushrooms = {
+				enabled = true,
+			},
+
+			rocks = {
+				enabled = true,
+				density = 0.05,
+				cluster = 0.04,
+			},
+		},
+	}
 }
 
 -- Resolve biome for a map

@@ -17,8 +17,8 @@ local Constants = require("core.constants")
 	Art concepts
 	pad lock
 	tomb stone (RIP)
-	
-	
+	shield
+	hourglass
 --]]
 
 local Export = {}
@@ -114,19 +114,6 @@ local function drawCampaignMedal(tier)
 
 	-- medal
 	Medals.drawTier(cx, cy, tier, radius, MEDAL_SCALE)
-
-	-- tier text
-	local text = roman[tier]
-	local pad = 20
-
-	Fonts.set("achievement")
-
-	local font = Fonts.get("achievement")
-	local h = font:getHeight()
-
-	lg.setColor(colorText)
-
-	Text.printShadow(text, pad, SIZE - h + 8, {ox = 2, oy = 2})
 
 	lg.pop()
 end
@@ -489,7 +476,56 @@ local function drawDeadEyes(radius)
 	drawX(cx + eyeSep, eyeY)
 end
 
-local function drawEnemy(kind, isDead)
+local function drawPoppedEyes(radius, t)
+	local cx = 0
+	local cy = 0
+
+	local eyeSep = radius * 0.38
+	local eyeSize = math.max(1.6, radius * 0.16)
+	local eyeY = cy - radius * 0.19
+
+	-- wipe area (same idea as dead eyes)
+	local wipeW = eyeSize * 4.2
+	local wipeH = eyeSize * 2.6
+
+	local function wipeEye(x, y)
+		lg.setColor(colorBody)
+		lg.rectangle("fill", x - wipeW * 0.5, y - wipeH * 0.5, wipeW, wipeH, wipeH * 0.4)
+	end
+
+	-- 🔥 wipe BOTH original eyes first
+	wipeEye(cx - eyeSep, eyeY)
+	wipeEye(cx + eyeSep, eyeY)
+
+	-- fake "pop" progression
+	t = t or 1
+	local pop = 1 + (1 - (t * t)) * 0.18
+
+	local bigR = eyeSize + 1.1
+	local smallR = eyeSize * 0.9
+
+	lg.push()
+	lg.translate(cx, eyeY)
+	lg.scale(pop, pop)
+
+	-- LEFT EYE = POPPED
+	lg.setLineWidth(2.5)
+
+	lg.setColor(0.95, 0.95, 0.95, 1)
+	lg.circle("fill", -eyeSep, 0, bigR)
+
+	lg.setColor(colorFace)
+	lg.circle("line", -eyeSep, 0, bigR)
+
+	-- RIGHT EYE = NORMAL
+	lg.setLineWidth(1)
+	lg.setColor(colorFace)
+	lg.circle("fill", eyeSep, 0, smallR)
+
+	lg.pop()
+end
+
+local function drawEnemy(kind, isDead, fakeEyes, popped)
     local def = EnemyDefs[kind]
 
     local enemy = {
@@ -523,7 +559,7 @@ local function drawEnemy(kind, isDead)
 		seg = 1,
 		prevSeg = 1,
 
-        hitFlash = 0,
+        hitFlash = hitFlash or 0,
         dying = isDead,
         deathDur = 0.3,
         deathT = isDead and 0.3 or 0,
@@ -542,8 +578,10 @@ local function drawEnemy(kind, isDead)
     centerAndScale(function()
         DrawEntities.drawEnemy(enemy)
 
-		if isDead and kind ~= "boss" then
+		if fakeEyes then
 			drawDeadEyes(enemy.radius)
+		elseif popped then
+			drawPoppedEyes(enemy.radius, 0.6)
 		end
 
         lg.setColor(1, 1, 1, 1)
@@ -551,33 +589,16 @@ local function drawEnemy(kind, isDead)
 end
 
 -- Kill Tier Achievement Export
-local function drawKillTier(enemyType, isDead, tierNumber)
-	drawEnemy(enemyType, isDead)
-
-	if not tierNumber then
-		return
-	end
+local function drawKillTier(enemyType, isDead, fakeEyes, popped)
+	drawEnemy(enemyType, isDead, fakeEyes, popped)
 
 	lg.push()
 	lg.origin()
-
-	local pad = 16
-	local text = tostring(tierNumber)
-
-	Fonts.set("achievement")
-
-	local font = Fonts.get("achievement")
-	local h = font:getHeight()
-
-	lg.setColor(colorText)
-
-	Text.printShadow(text, pad, SIZE - h + 8, {ox = 2, oy = 2})
-
 	lg.pop()
 end
 
 -- Just a fake entry that we can spawn
-TowerDefs.upgradeIcon =  {
+TowerDefs.upgrade_1 =  {
 	nameKey = "tower.cannon",
 	descKey = "towerDesc.cannon",
 	cost = 65,
@@ -588,56 +609,55 @@ TowerDefs.upgradeIcon =  {
 	recoilDecay = 14,
 	projSpeed = 320,
 	turnSpeed = 8,
-	color = Theme.ui.good, -- Theme.tower.cannon
+	color = Theme.ui.good,
 	canRotate = true,
-	splash = {
-		radius = 48, -- AoE radius in pixels
-		falloff = 0.45, -- % damage applied at edge
-	},
-	upgrade = {
-		dmgMult = 2.2,
-		rangeAdd = 0.08 * Constants.TILE,
-		fireMult = 1.0, -- 1.05
-		splashAdd = 4, -- increase AoE radius per upgrade
-	}
 }
 
-local function drawTowerUpgradeIcon(count)
+TowerDefs.upgrade_100 =  {
+	nameKey = "tower.cannon",
+	descKey = "towerDesc.cannon",
+	cost = 65,
+	range = 3.2 * Constants.TILE,
+	fireRate = 0.85,
+	damage = 19,
+	recoilStrength = Constants.TILE * 0.12,
+	recoilDecay = 14,
+	projSpeed = 320,
+	turnSpeed = 8,
+	color = Theme.medal.gold,
+	canRotate = true,
+}
+
+local function drawTowerUpgradeIcon(kind, level)
 	local REF_SIZE = 18
 
 	centerAndScale(function()
 		local cx, cy = 0, 0
 
-		local level = 2
+		local level = level or 1
 		local height = (level - 1) * 4
 
 		-- Dark extruded base
-		DrawEntities.drawTowerBase("upgradeIcon", cx, cy, 1, 0.2, 0.2, 0.2, height)
+		DrawEntities.drawTowerBase(kind, cx, cy, 1, 0.2, 0.2, 0.2, height)
 
-		DrawEntities.drawTowerVisual("upgradeIcon", cx, cy - height, 1)
+		DrawEntities.drawTowerVisual(kind, cx, cy - height, 1)
 
-		-- ===== ARROW =====
+		-- Arrow
 		local arrowH = REF_SIZE * 1.2
 		local arrowW = REF_SIZE * 0.6
 
 		local shaftW = arrowW * 0.35
 		local shaftH = arrowH * 0.75
-		local tipH   = arrowH * 0.45
+		local tipH = arrowH * 0.45
 
 		local ay = cy
-		local verticalOffset = -4
+		local verticalOffset = -height -- -height?
 		local overlap = tipH * 0.45
 
 		lg.setColor(Theme.outline.color)
 
 		-- Shaft
-		lg.rectangle("fill",
-			cx - shaftW * 0.5,
-			ay - shaftH * 0.5 + verticalOffset,
-			shaftW,
-			shaftH,
-			2, 2
-		)
+		lg.rectangle("fill", cx - shaftW * 0.5, ay - shaftH * 0.5 + verticalOffset, shaftW, shaftH, 2, 2)
 
 		-- Arrow head using rounded rectangles
 		local headLen = tipH
@@ -646,48 +666,21 @@ local function drawTowerUpgradeIcon(count)
 		local tipX = cx
 		local tipY = ay - shaftH * 0.5 + verticalOffset
 
-		local inward = headW - 5 -- tweak this (0.15–0.35 range)
+		local inward = headW - 5
 
 		for i = -1, 1, 2 do
 			lg.push()
 
 			lg.translate(tipX, tipY)
 			lg.rotate(i * math.pi / 4)
-
-			-- 👇 THIS is the key line
 			lg.translate(-i * inward, 0)
 
-			lg.rectangle("fill",
-				-headW * 0.5,
-				0,
-				headW,
-				headLen,
-				2, 2
-			)
+			lg.rectangle("fill", -headW * 0.5, 0, headW, headLen, 2, 2)
 
 			lg.pop()
 		end
 
-	end, TOWER_SCALE, 10)
-
-	if count then
-		lg.push()
-		lg.origin()
-
-		local pad = 16
-		local text = tostring(count)
-
-		Fonts.set("achievement")
-
-		local font = Fonts.get("achievement")
-		local h = font:getHeight()
-
-		lg.setColor(Theme.ui.text)
-
-		Text.printShadow(text, pad, SIZE - h + 8, {ox = 2, oy = 2})
-
-		lg.pop()
-	end
+	end, TOWER_SCALE, level == 3 and 24 or 10)
 end
 
 local function drawStopwatchIcon()
@@ -769,7 +762,7 @@ local function drawStopwatchIcon()
 
 			lg.pop()
 		end
-		
+
 		-- =================================
 		-- FLOATING SIDE BUTTON (NO ARM)
 		-- =================================
@@ -848,6 +841,98 @@ local function drawStopwatchIcon()
 		end
 
 	end, TOWER_SCALE, 15)
+end
+
+local function drawPadlock(cx, cy, r, color)
+	local outlineW = Theme.outline.width
+	local outlineColor = Theme.outline.color
+
+	local lighting = Theme.lighting
+	local darkMul = lighting.shadowMul
+	local highlightOffset = lighting.highlightOffset
+	local highlightScale = lighting.highlightScale
+
+	local fr, fg, fb = color[1], color[2], color[3]
+
+	-- =========================
+	-- BODY (smaller, tighter)
+	-- =========================
+
+	local bodyW = r * 1.2
+	local bodyH = r * 0.9
+	local bodyX = cx - bodyW * 0.5
+	local bodyY = cy + r * 0.2
+
+	local radius = r * 0.28
+
+	-- Outline
+	lg.setColor(outlineColor)
+	lg.rectangle("fill",
+		bodyX - outlineW,
+		bodyY - outlineW,
+		bodyW + outlineW * 2,
+		bodyH + outlineW * 2,
+		radius + outlineW * 0.5,
+		radius + outlineW * 0.5
+	)
+
+	-- Base
+	lg.setColor(fr * darkMul, fg * darkMul, fb * darkMul)
+	lg.rectangle("fill",
+		bodyX,
+		bodyY,
+		bodyW,
+		bodyH,
+		radius,
+		radius
+	)
+
+	-- Highlight
+	local hx = cx
+	local hy = bodyY + bodyH * 0.35 - bodyH * highlightOffset
+	local hw = bodyW * highlightScale
+	local hh = bodyH * highlightScale
+
+	lg.setColor(fr, fg, fb)
+	lg.rectangle("fill",
+		hx - hw * 0.5,
+		hy - hh * 0.5,
+		hw,
+		hh,
+		radius * highlightScale,
+		radius * highlightScale
+	)
+
+	-- =========================
+	-- SHACKLE (fixed orientation)
+	-- =========================
+
+	local shackleR = r * 0.55
+	local shackleW = r * 0.22
+
+	local shackleY = bodyY -- sits right on top of body
+
+	-- Outline
+	lg.setColor(outlineColor)
+	lg.setLineWidth(shackleW + outlineW * 2)
+	lg.arc("line", "open",
+		cx,
+		shackleY,
+		shackleR + outlineW * 0.5,
+		math.pi, 0
+	)
+
+	-- Inner
+	lg.setColor(fr * darkMul, fg * darkMul, fb * darkMul)
+	lg.setLineWidth(shackleW)
+	lg.arc("line", "open",
+		cx,
+		shackleY,
+		shackleR,
+		math.pi, 0
+	)
+
+	lg.setLineWidth(1)
 end
 
 local achievements = {
@@ -938,35 +1023,35 @@ local achievements = {
     {
         id = "BOSS_KILL_1",
         render = function()
-			drawKillTier("boss", true)
+			drawKillTier("boss", false)
 		end
     },
 
     {
         id = "BOSS_KILL_25",
         render = function()
-			drawKillTier("boss", true, 25)
+			drawKillTier("boss", true)
 		end
     },
 
     {
         id = "ENEMY_KILL_500",
         render = function()
-			drawKillTier("fakeEntry", true, 500)
+			drawKillTier("fakeEntry", false)
 		end
     },
 
     {
         id = "ENEMY_KILL_1500",
         render = function()
-			drawKillTier("fakeEntry", true, 1500)
+			drawKillTier("fakeEntry", true, nil, true)
 		end
     },
 
     {
         id = "ENEMY_KILL_3000",
         render = function()
-			drawKillTier("fakeEntry", true, 3000)
+			drawKillTier("fakeEntry", true, true)
 		end
     },
 
@@ -1008,14 +1093,14 @@ local achievements = {
 	{
 		id = "TOWER_UPGRADE_1",
 		render = function()
-			drawTowerUpgradeIcon()
+			drawTowerUpgradeIcon("upgrade_1", 2)
 		end
 	},
 
 	{
 		id = "TOWER_UPGRADE_100",
 		render = function()
-			drawTowerUpgradeIcon(100)
+			drawTowerUpgradeIcon("upgrade_100", 2)
 		end
 	},
 
@@ -1023,6 +1108,15 @@ local achievements = {
 		id = "LAST_SECOND",
 		render = function()
 			drawStopwatchIcon()
+		end
+	},
+
+	{
+		id = "PADLOCK",
+		render = function()
+			centerAndScale(function()
+				drawPadlock(0, 0, 18, Theme.ui.good)
+			end, TOWER_SCALE)
 		end
 	},
 }
@@ -1053,7 +1147,7 @@ local function makeLockedVersion(sourceCanvas)
     lg.setColor(0.25, 0.25, 0.26, 1)
     lg.rectangle("fill", 0, 0, SIZE, SIZE)
 
-    lockedShader:send("dim", 0.85)
+    lockedShader:send("dim", 0.8) -- 0.85
     lg.setShader(lockedShader)
     lg.draw(sourceCanvas, 0, 0)
     lg.setShader()

@@ -860,32 +860,92 @@ function Effects.draw()
 	lg.setLineWidth(1)
 end
 
+function Effects.load()
+	for i = 1, 12 do
+		Effects.spawnZapEffect(0, 0, {
+			{from = {x = 0, y = 0}, to = {x = 10, y = 10}},
+			{from = {x = 10, y = 10}, to = {x = 20, y = 5}},
+		})
+	end
+
+	for i = 1, 10 do
+		Effects.spawnPlasmaHit(0, 0, 1, 0)
+		Effects.spawnCannonImpact(0, 0, 48)
+		Effects.spawnFrostBurst(0, 0)
+		Effects.spawnPoisonSplash(0, 0)
+		Effects.spawnLancerHit(0, 0)
+		Effects.spawnEnemyDeath(0, 0, 10)
+		Effects.spawnPlacePuff(0, 0)
+	end
+
+	Effects.spawnBossDeathExplosion(0, 0, 20)
+
+	Effects.spawnPlacePuff(0, 0)
+
+	Effects.clear()
+end
 function Effects.clear()
+	-- Splashes
 	for i = #Effects.splashes, 1, -1 do
+		local s = Effects.splashes[i]
 		Effects.splashes[i] = nil
+		release(splashPool, s)
 	end
 
+	-- Explosions (particles + rings)
 	for i = #Effects.explosions, 1, -1 do
+		local e = Effects.explosions[i]
 		Effects.explosions[i] = nil
+		release(explosionPool, e)
 	end
 
+	-- Zaps (already correct, keep this)
 	for i = #Effects.zaps, 1, -1 do
 		local z = Effects.zaps[i]
 		Effects.zaps[i] = nil
 		releaseZap(z)
 	end
 
+	-- Frost
 	for i = #Effects.frost, 1, -1 do
+		local f = Effects.frost[i]
 		Effects.frost[i] = nil
+		release(frostPool, f)
 	end
 
+	-- Poison
+	for i = #Effects.poison, 1, -1 do
+		local p = Effects.poison[i]
+		Effects.poison[i] = nil
+		release(poisonPool, p)
+	end
+
+	-- Lancer
 	for i = #Effects.lancer, 1, -1 do
+		local l = Effects.lancer[i]
 		Effects.lancer[i] = nil
+		release(lancerPool, l)
 	end
 
+	-- Plasma particles
+	for i = #Effects.plasmaParticles, 1, -1 do
+		local p = Effects.plasmaParticles[i]
+		Effects.plasmaParticles[i] = nil
+		release(plasmaParticlePool, p)
+	end
+
+	-- Place puffs
+	for i = #Effects.placePuffs, 1, -1 do
+		local p = Effects.placePuffs[i]
+		Effects.placePuffs[i] = nil
+		release(placePuffPool, p)
+	end
+
+	-- Enemy death
 	for i = #Effects.death, 1, -1 do
-		release(deathPool, Effects.death[i])
+		local d = Effects.death[i]
 		Effects.death[i] = nil
+		release(deathPool, d)
 	end
 end
 

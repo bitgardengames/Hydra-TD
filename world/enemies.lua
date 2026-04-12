@@ -21,10 +21,9 @@ local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- Seconds per poison tick
 
-local SPRING_K = 220
-local SPRING_DAMP = 26
-local MAX_SPEED = 260
-local MAX_OFFSET = 28
+local EPS = 1e-6
+local MAX_NUDGE = 10
+local NUDGE_DAMP = 18
 
 local abs = math.abs
 local exp = math.exp
@@ -94,6 +93,11 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		vx = 0,
 		vy = 0,
 
+		nudgeX = 0,
+		nudgeY = 0,
+		prevNudgeX = 0,
+		prevNudgeY = 0,
+
 		boss = def.boss or false,
 		hpScale = hpScale,
 		spdScale = spdScale,
@@ -122,6 +126,10 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		shadow = true,
 		id = nextID,
 		shockID = 0,
+
+		face = "normal",
+		faceT = 0,
+		faceDur = 0,
 	}
 
 	enemies[#enemies + 1] = e
@@ -304,58 +312,32 @@ local function updateEnemies(dt)
 			end
 		end
 
-		-- store previous position
+		-- Faces
+		if e.face ~= "normal" then
+			e.faceT = e.faceT + dt
+
+			if e.faceT >= e.faceDur then
+				e.face = "normal"
+			end
+		end
+
+		-- store previous values for interpolation
+		e.prevDist = e.dist
 		e.prevX = e.x
 		e.prevY = e.y
-		e.prevDist = e.dist
+		e.prevNudgeX = e.nudgeX
+		e.prevNudgeY = e.nudgeY
 
 		-- advance along path
-		e.dist = e.dist + e.speed * dt
+		e.dist = min(totalLen, e.dist + e.speed * dt)
+		e.x, e.y = sampleFast(e.dist)
 
-		if e.dist > totalLen then
-			e.dist = totalLen
-		end
+		-- visual-only nudge decay
+		local decay = math.exp(-NUDGE_DAMP * dt)
+		e.nudgeX = e.nudgeX * decay
+		e.nudgeY = e.nudgeY * decay
 
-		-- anchor position (perfect path)
-		e.anchorX, e.anchorY = sampleFast(e.dist)
-
-		-- spring toward anchor
-		local dx = e.anchorX - e.x
-		local dy = e.anchorY - e.y
-
-		e.vx = e.vx + dx * SPRING_K * dt
-		e.vy = e.vy + dy * SPRING_K * dt
-
-		-- damping
-		local damp = 1 / (1 + SPRING_DAMP * dt)
-		e.vx = e.vx * damp
-		e.vy = e.vy * damp
-
-		-- clamp speed
-		local v2 = e.vx * e.vx + e.vy * e.vy
-		if v2 > MAX_SPEED * MAX_SPEED then
-			local inv = MAX_SPEED / math.sqrt(v2)
-			e.vx = e.vx * inv
-			e.vy = e.vy * inv
-		end
-
-		-- integrate
-		e.x = e.x + e.vx * dt
-		e.y = e.y + e.vy * dt
-
-		-- limit how far enemy can drift from path
-		local offx = e.x - e.anchorX
-		local offy = e.y - e.anchorY
-		local off2 = offx * offx + offy * offy
-
-		if off2 > MAX_OFFSET * MAX_OFFSET then
-			local inv = MAX_OFFSET / math.sqrt(off2)
-			e.x = e.anchorX + offx * inv
-			e.y = e.anchorY + offy * inv
-			e.vx = e.vx * 0.6
-			e.vy = e.vy * 0.6
-		end
-
+		-- gameplay queries use path position only
 		Spatial.updateEnemy(e)
 
 		-- Reached end of path
@@ -438,8 +420,6 @@ local function clear()
 	nextID = 0
 end
 
-local EPS = 1e-6
-
 local function applyHitImpulse(e, dx, dy, strength)
 	local len2 = dx * dx + dy * dy
 
@@ -449,12 +429,16 @@ local function applyHitImpulse(e, dx, dy, strength)
 
 	local inv = 1 / sqrt(len2)
 
-	-- Damp existing velocity
-	e.vx = e.vx * 0.90
-	e.vy = e.vy * 0.90
+	e.nudgeX = e.nudgeX + dx * inv * strength
+	e.nudgeY = e.nudgeY + dy * inv * strength
 
-	e.vx = e.vx + dx * inv * strength
-	e.vy = e.vy + dy * inv * strength
+	local n2 = e.nudgeX * e.nudgeX + e.nudgeY * e.nudgeY
+
+	if n2 > MAX_NUDGE * MAX_NUDGE then
+		local s = MAX_NUDGE / sqrt(n2)
+		e.nudgeX = e.nudgeX * s
+		e.nudgeY = e.nudgeY * s
+	end
 end
 
 return {

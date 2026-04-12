@@ -49,6 +49,8 @@ local state = {
 
 	ignoreStats = false,
 
+	modules = {},
+
 	-- Combat data
 	combatStats = {
 		damageView = 0,

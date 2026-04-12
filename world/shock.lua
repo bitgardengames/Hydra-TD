@@ -8,7 +8,9 @@ local Shock = {}
 
 local dist2 = Util.dist2
 local random = love.math.random
+local max = math.max
 local abs = math.abs
+local sqrt = math.sqrt
 
 local nextID = 0
 local EPS = 0.0001
@@ -18,6 +20,24 @@ local ctx = {
 	tower = nil,
 	order = {}
 }
+
+local function getPathNormal(dist)
+	local ax, ay = MapMod.sampleFast(max(0, dist - 2))
+	local bx, by = MapMod.sampleFast(dist + 2)
+
+	local dx = bx - ax
+	local dy = by - ay
+	local len2 = dx * dx + dy * dy
+
+	if len2 <= 1e-6 then
+		return 0, -1
+	end
+
+	local inv = 1 / sqrt(len2)
+
+	-- perpendicular
+	return -dy * inv, dx * inv
+end
 
 local function resetContext(tower)
 	ctx.tower = tower
@@ -53,17 +73,18 @@ local function zapEnemy(from, e, dmg)
 
 	-- Knockback and jitter
 	if not e.boss then
-		local nx, ny = MapMod.sampleFast(e.dist + 4)
-		local tx = nx - e.anchorX
-		local ty = ny - e.anchorY
-		local px, py = -ty, tx
+		e.face = "shock"
+		e.faceT = 0
+		e.faceDur = 0.12
+
+		local nx, ny = getPathNormal(e.dist)
 
 		if random() < 0.5 then
-			px = -px
-			py = -py
+			nx = -nx
+			ny = -ny
 		end
 
-		Enemies.applyHitImpulse(e, px, py, 20)
+		Enemies.applyHitImpulse(e, nx, ny, 1)
 	end
 
 	addLink(from, e)

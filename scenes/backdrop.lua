@@ -211,15 +211,7 @@ function Backdrop.update(dt)
 		end
 	end
 
-	ACCUM = ACCUM + dt
-
-	while ACCUM >= FIXED_DT do
-		Backdrop.t = Backdrop.t + FIXED_DT
-
-		Sim.update(FIXED_DT)
-
-		ACCUM = ACCUM - FIXED_DT
-	end
+	Backdrop.t = Backdrop.t + dt
 
 	local shot = Backdrop.shots[Backdrop.shotIndex]
 

@@ -5,6 +5,7 @@ local State = require("core.state")
 local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
+local Mushrooms = require("world.scatter_mushrooms")
 
 local lg = love.graphics
 local min = math.min
@@ -192,6 +193,7 @@ local function updateWaterColor(color)
 	colorWater = color
 end
 
+-- This system is already getting ready for a rework
 local function drawScatter()
 	local biome = MapMod.map and MapMod.map.biome
 	local scatter = biome and biome.scatter
@@ -210,6 +212,10 @@ local function drawScatter()
 
 	if scatter.cactus and scatter.cactus.enabled then
 		Cacti.draw()
+	end
+
+	if scatter.mushrooms and scatter.mushrooms.enabled then
+		Mushrooms.draw()
 	end
 end
 
