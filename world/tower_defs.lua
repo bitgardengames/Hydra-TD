@@ -15,12 +15,17 @@ return {
 		turnSpeed = 10,
 		color = Theme.tower.slow,
 		canRotate = true,
-		onHitSlow = {factor = 0.5, dur = 1.5},
 		upgrade = {
 			dmgMult = 2.2,
 			rangeAdd = 0.1 * Constants.TILE,
 			fireMult = 1.0, -- 1.04
 			slowDurAdd = 0.35,
+		},
+		behaviors = {
+			{id = "move_homing"},
+			{id = "hit_damage"},
+			{id = "apply_slow", data = {factor = 0.5, dur = 1.5 }},
+			{id = "draw_slow"}
 		}
 	},
 
@@ -41,7 +46,14 @@ return {
 			dmgMult = 2.2,
 			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.0, -- 1.03
-		}
+		},
+		behaviors = {
+			{id = "move_homing"},
+			{id = "hit_circle", data = {radius = 10 }},
+			{id = "hit_damage"},
+			{id = "lancer_hit_fx"},
+			{id = "draw_lancer"}
+		},
 	},
 
 	poison = {
@@ -57,11 +69,6 @@ return {
 		turnSpeed = 11,
 		color = Theme.tower.poison,
 		canRotate = true,
-		poison = {
-			dps = 6, -- damage per second per stack
-			dur = 4, -- duration per application
-			maxStacks = 4,
-		},
 		upgrade = {
 			dmgMult = 2.2,
 			rangeAdd = 0.06 * Constants.TILE,
@@ -69,6 +76,13 @@ return {
 			poisonDurAdd = 0.25,
 			poisonDpsMult = 1.10,
 			stackAdd = 1,
+		},
+		behaviors = {
+			{id = "move_homing", data = {radius = 56}},
+			{id = "hit_circle", data = {radius = 12}},
+			{id = "hit_damage"},
+			{id = "apply_poison", data = {dps = 4, dur = 2, maxStacks = 10}},
+			{id = "draw_poison"}
 		}
 	},
 
@@ -85,15 +99,17 @@ return {
 		turnSpeed = 8,
 		color = Theme.tower.cannon,
 		canRotate = true,
-		splash = {
-			radius = 48, -- AoE radius in pixels
-			falloff = 0.45, -- % damage applied at edge
-		},
 		upgrade = {
 			dmgMult = 2.2,
 			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.0, -- 1.05
 			splashAdd = 4, -- increase AoE radius per upgrade
+		},
+		behaviors = {
+			{id = "move_homing", data = {radius = 92 }},
+			{id = "hit_circle", data = {radius = 12 }},
+			{id = "aoe_damage", data = {radius = 48 }},
+			{id = "draw_cannon" }
 		}
 	},
 
@@ -109,15 +125,15 @@ return {
 		turnSpeed = 9,
 		color = Theme.tower.shock,
 		canRotate = true,
-		chain = {
-			jumps = 3, -- number of additional enemies
-			radius = 56, -- max distance between jumps
-			falloff = 0.75 -- damage multiplier per jump
-		},
 		upgrade = {
 			dmgMult = 2.2,
 			rangeAdd = 0.06 * Constants.TILE,
 			fireMult = 1.0, -- 1.04
+		},
+		behaviors = {
+			{id = "instant_hit" },
+			{id = "hit_chain", data = {jumps = 3, radius = 56}},
+			{id = "chain_zap_fx"}
 		}
 	},
 
@@ -134,14 +150,15 @@ return {
 		turnSpeed = 8,
 		color = Theme.tower.plasma,
 		canRotate = true,
-		plasma = {
-			radius = 10,
-			tickRate = 0.1,
-		},
 		upgrade = {
 			dmgMult = 2.2,
 			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.0,
+		},
+		behaviors = {
+			{id = "move_linear", data = {dist = 300}},
+			{id = "tick_damage", data = {radius = 12, rate = 0.08}},
+			{id = "draw_plasma"}
 		}
 	},
 }

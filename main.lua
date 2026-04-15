@@ -40,6 +40,7 @@ local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
 local Steam = require("core.steam")
 local L = require("core.localization")
+local Modules = require("systems.modules")
 
 local lg = love.graphics
 local lk = love.keyboard
@@ -158,6 +159,80 @@ function resetGame()
 
     -- Waves
     Waves.resetSpawner()
+
+	Modules.clear()
+
+	-- =========================================
+	-- CHAOS TEST SETS (toggle manually)
+	-- =========================================
+
+	local TEST_SET = 0
+
+	-- =========================================
+	-- 1. LANCER: ISAAC BULLET HELL
+	-- =========================================
+	if TEST_SET == 1 or TEST_SET == "ALL" then
+		Modules.add("split_on_hit", "lancer")
+		Modules.add("growing_projectile", "lancer")
+		--Modules.add("move_wave", "lancer")
+		--Modules.add("chaos_bounce", "lancer")
+	end
+
+	-- =========================================
+	-- 2. PLASMA: LANE CONTROL MONSTER
+	-- =========================================
+	if TEST_SET == 2 or TEST_SET == "ALL" then
+		Modules.add("growing_projectile", "plasma")
+		Modules.add("tick_damage", "plasma")
+		Modules.add("move_wave", "plasma")
+		Modules.add("move_spiral", "plasma")
+		Modules.add("aoe_damage", "plasma")
+	end
+
+	-- =========================================
+	-- 3. CANNON: SCREEN CLEARER
+	-- =========================================
+	if TEST_SET == 3 or TEST_SET == "ALL" then
+		Modules.add("aoe_damage", "cannon")
+		Modules.add("split_on_hit", "cannon")
+		Modules.add("chain_hit", "cannon")
+		Modules.add("move_boomerang", "cannon")
+	end
+
+	-- =========================================
+	-- 4. SHOCK: PURE CHAOS LIGHTNING
+	-- =========================================
+	if TEST_SET == 4 or TEST_SET == "ALL" then
+		Modules.add("chain_hit", "shock")
+		Modules.add("spawn_orbitals", "shock")
+		Modules.add("static_field", "shock")
+		Modules.add("tick_damage", "shock")
+	end
+
+	-- =========================================
+	-- 5. POISON: VIRAL BUILD
+	-- =========================================
+	if TEST_SET == 5 or TEST_SET == "ALL" then
+		Modules.add("apply_poison", "poison")
+		Modules.add("infect_spread", "poison")
+		Modules.add("split_on_hit", "poison")
+		Modules.add("move_wave", "poison")
+	end
+
+	-- =========================================
+	-- 6. EVERYTHING IS BROKEN (GLOBAL FEEL TEST)
+	-- =========================================
+	if TEST_SET == 6 then
+		local towers = { "lancer", "plasma", "cannon", "shock", "poison" }
+
+		for i = 1, #towers do
+			local t = towers[i]
+
+			Modules.add("split_on_hit", t)
+			Modules.add("growing_projectile", t)
+			Modules.add("chain_hit", t)
+		end
+	end
 
 	Camera.load()
 end

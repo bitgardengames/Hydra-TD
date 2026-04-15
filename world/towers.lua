@@ -13,7 +13,6 @@ local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local Projectiles = require("world.projectiles")
 local Achievements = require("systems.achievements")
-local Shock = require("world.shock")
 local L = require("core.localization")
 --local Steam = require("luasteam")
 
@@ -107,11 +106,11 @@ local function addTower(kind, gx, gy)
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
 		sellValue = floor(def.cost * 0.75),
-		slow = def.onHitSlow and {factor = def.onHitSlow.factor, dur = def.onHitSlow.dur} or nil,
-		splash = def.splash and {radius = def.splash.radius, falloff = def.splash.falloff} or nil,
-		chain = def.chain and {jumps = def.chain.jumps, radius = def.chain.radius, falloff = def.chain.falloff} or nil,
-		poison = def.poison and {dps = def.poison.dps, dur = def.poison.dur, maxStacks = def.poison.maxStacks} or nil,
-		plasma = def.plasma and {radius = def.plasma.radius, tickRate = def.plasma.tickRate} or nil,
+		slow = def.onHitSlow,
+		splash = def.splash,
+		chain = def.chain,
+		poison = def.poison,
+		plasma = def.plasma,
 	}
 
 	State.money = State.money - def.cost
@@ -164,32 +163,6 @@ local function upgradeTower(t)
 	t.fireRate = t.fireRate * t.def.upgrade.fireMult
 	t.fireInterval = 1 / t.fireRate
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
-
-	if t.slow and t.def.upgrade.slowDurAdd then
-		t.slow.dur = t.slow.dur + t.def.upgrade.slowDurAdd
-	end
-
-	if t.splash and t.def.upgrade.splashAdd then
-		t.splash.radius = t.splash.radius + t.def.upgrade.splashAdd
-	end
-
-	if t.chain and t.def.upgrade.jumpAdd then
-		t.chain.jumps = t.chain.jumps + t.def.upgrade.jumpAdd
-	end
-
-	if t.poison then
-		if t.def.upgrade.poisonDurAdd then
-			t.poison.dur = t.poison.dur + t.def.upgrade.poisonDurAdd
-		end
-
-		if t.def.upgrade.poisonDpsMult then
-			t.poison.dps = t.poison.dps * t.def.upgrade.poisonDpsMult
-		end
-
-		if t.def.upgrade.stackAdd then
-			t.poison.maxStacks = min(6, t.poison.maxStacks + t.def.upgrade.stackAdd) -- 6 max
-		end
-	end
 
 	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
 
@@ -417,21 +390,7 @@ local function updateTowers(dt)
 				end
 
 				if canFire then
-					-- Fire
-					if t.chain and target and target.hp > 0 then
-						local zapOrder = Shock.fire(t, target)
-
-						-- Always show feedback for a Shock fire
-						if zapOrder and #zapOrder > 0 then
-							local mx, my = getShockOrigin(t)
-							Effects.spawnZapEffect(mx, my, zapOrder)
-						else
-							-- Fallback: single-target zap
-							Effects.spawnZapEffect(t.x, t.renderY, {{from = t, to = target}})
-						end
-					else
-						Projectiles.spawn(t, target)
-					end
+					Projectiles.spawn(t, target)
 
 					t.fireAnim = 1
 					t.recoil = t.recoilStrength or 0

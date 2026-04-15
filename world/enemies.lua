@@ -201,6 +201,35 @@ local function updateEnemies(dt)
 			end
 		end
 
+		-- Infect: spread poison on death
+		if e._infectSpread and e.poisonStacks and e.poisonStacks > 0 then
+			local radius = e._infectSpread.radius
+			local stackMult = e._infectSpread.stackMult
+
+			local nearby = Spatial.queryCells(e.x, e.y)
+
+			for i = 1, #nearby do
+				local other = nearby[i]
+
+				if other ~= e and other.hp > 0 then
+					local dx = other.x - e.x
+					local dy = other.y - e.y
+
+					if dx*dx + dy*dy <= radius*radius then
+						-- transfer poison, NOT damage
+						local spreadStacks = math.floor(e.poisonStacks * stackMult)
+
+						other.poisonStacks = (other.poisonStacks or 0) + spreadStacks
+						other.poisonDPS = math.max(other.poisonDPS or 0, e.poisonDPS or 0)
+						other.poisonTimer = math.max(other.poisonTimer or 0, e.poisonTimer or 0)
+						other.poisonSource = e.poisonSource
+					end
+				end
+			end
+
+			Effects.spawnPoisonSplash(e.x, e.y)
+		end
+
 		-- Boss death hold (face shown, explosion delayed)
 		if isBoss and e.dying then
 			e.deathT = e.deathT - dt

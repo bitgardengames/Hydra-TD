@@ -21,6 +21,7 @@ local Effects = {}
 Effects.splashes = {}
 Effects.explosions = {}
 Effects.zaps = {}
+Effects.zapLines = {}
 Effects.frost = {}
 Effects.poison = {}
 Effects.lancer = {}
@@ -39,6 +40,7 @@ end
 local splashPool = {}
 local explosionPool = {}
 local zapPool = {}
+local zapLinePool = {}
 local frostPool = {}
 local poisonPool = {}
 local lancerPool = {}
@@ -57,21 +59,6 @@ local function acquire(pool)
 
 	return {}
 end
-
---[[ is caching the n worth anything?
-local function acquire(pool)
-	local n = #pool
-	local obj = pool[n]
-
-	if obj then
-		pool[n] = nil
-
-		return obj
-	end
-
-	return {}
-end
---]]
 
 local function release(pool, obj)
 	for k in pairs(obj) do
@@ -193,6 +180,36 @@ function Effects.spawnZapEffect(x, y, chain)
 	Effects.zaps[#Effects.zaps + 1] = z
 
 	Sound.play("shock")
+end
+
+local function acquireZapLine()
+	local z = zapLinePool[#zapLinePool]
+	if z then
+		zapLinePool[#zapLinePool] = nil
+		return z
+	end
+	return {}
+end
+
+local function releaseZapLine(z)
+	for k in pairs(z) do
+		z[k] = nil
+	end
+	zapLinePool[#zapLinePool + 1] = z
+end
+
+function Effects.spawnZapLine(x1, y1, x2, y2)
+	local z = acquireZapLine()
+
+	z.x1 = x1
+	z.y1 = y1
+	z.x2 = x2
+	z.y2 = y2
+
+	z.t = 0
+	z.life = 0.12
+
+	Effects.zapLines[#Effects.zapLines + 1] = z
 end
 
 -- Boss Explosion
@@ -424,6 +441,20 @@ function Effects.update(dt)
 		if z.t >= z.life then
 			swapRemove(zaps, i)
 			releaseZap(z)
+		end
+	end
+
+	local zapLines = Effects.zapLines
+
+	for i = #zapLines, 1, -1 do
+		local z = zapLines[i]
+
+		z.t = z.t + dt
+
+		if z.t >= z.life then
+			zapLines[i] = zapLines[#zapLines]
+			zapLines[#zapLines] = nil
+			releaseZapLine(z)
 		end
 	end
 
@@ -749,6 +780,46 @@ function Effects.draw()
 		end
 	end
 
+	local zapLines = Effects.zapLines
+
+	for i = 1, #zapLines do
+		local z = zapLines[i]
+
+		local u = z.t / z.life
+		local a = 1.0 - u
+
+		local x1, y1 = z.x1, z.y1
+		local x2, y2 = z.x2, z.y2
+
+		local w = 3 * (0.9 - 0.35 * u)
+
+		-- glow
+		lg.setLineWidth(w * 2.2)
+		lg.setColor(0.5, 0.85, 1.0, 0.18 * a)
+		lg.line(x1, y1, x2, y2)
+
+		-- main bolt
+		lg.setLineWidth(w)
+		lg.setColor(0.6, 0.9, 1.0, a)
+
+		local mx = (x1 + x2) * 0.5 + (love.math.random() - 0.5) * 8
+		local my = (y1 + y2) * 0.5 + (love.math.random() - 0.5) * 8
+
+		lg.line(x1, y1, mx, my)
+		lg.line(mx, my, x2, y2)
+
+		-- core
+		lg.setLineWidth(w * 0.45)
+		lg.setColor(1, 1, 1, 0.9 * a)
+		lg.line(x1, y1, x2, y2)
+
+		-- hit spark
+		lg.setColor(0.7, 0.95, 1.0, 0.7 * a)
+		lg.circle("fill", x2, y2, 2.5)
+	end
+
+	lg.setLineWidth(1)
+
 	-- Frost shards
 	local frost = Effects.frost
 
@@ -868,7 +939,7 @@ function Effects.load()
 		})
 	end
 
-	for i = 1, 10 do
+	for i = 1, 32 do
 		Effects.spawnPlasmaHit(0, 0, 1, 0)
 		Effects.spawnCannonImpact(0, 0, 48)
 		Effects.spawnFrostBurst(0, 0)
@@ -876,6 +947,12 @@ function Effects.load()
 		Effects.spawnLancerHit(0, 0)
 		Effects.spawnEnemyDeath(0, 0, 10)
 		Effects.spawnPlacePuff(0, 0)
+
+		-- Can't I simplify this? Shouldn't require special cases
+		local z = acquireZapLine()
+		z.x1, z.y1, z.x2, z.y2 = 0, 0, 0, 0
+		z.life = 0
+		releaseZapLine(z)
 	end
 
 	Effects.spawnBossDeathExplosion(0, 0, 20)
@@ -946,6 +1023,28 @@ function Effects.clear()
 		local d = Effects.death[i]
 		Effects.death[i] = nil
 		release(deathPool, d)
+	end
+end
+
+function Effects.spawnFX(fx)
+	if not fx or not fx.id then
+		return
+	end
+
+	if fx.id == "zap" then
+		Effects.spawnZapEffect(fx.x, fx.y, fx.chain)
+	elseif fx.id == "cannon_impact" then
+		Effects.spawnCannonImpact(fx.x, fx.y, fx.r)
+	elseif fx.id == "frost_burst" then
+		Effects.spawnFrostBurst(fx.x, fx.y)
+	elseif fx.id == "poison_splash" then
+		Effects.spawnPoisonSplash(fx.x, fx.y)
+	elseif fx.id == "lancer_hit" then
+		Effects.spawnLancerHit(fx.x, fx.y)
+	elseif fx.id == "plasma_hit" then
+		Effects.spawnPlasmaHit(fx.x, fx.y, fx.vx or 0, fx.vy or 0)
+	elseif fx.id == "zap_line" then
+		Effects.spawnZapLine(fx.x1, fx.y1, fx.x2, fx.y2)
 	end
 end
 

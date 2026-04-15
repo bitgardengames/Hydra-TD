@@ -8,7 +8,6 @@ local Enemies = require("world.enemies")
 local Projectiles = require("world.projectiles")
 local Effects = require("world.effects")
 local Spatial = require("world.spatial_grid")
-local Shock = require("world.shock")
 local Towers = require("world.towers")
 local TowerDefs = require("world.tower_defs")
 local Constants = require("core.constants")
@@ -164,7 +163,9 @@ local function drawDroplet(cx, cy, r, tier)
 	if tier == 1 then
 		fr, fg, fb = 0.72, 0.88, 0.96
 	else
-		fr, fg, fb = 0.96, 0.38, 0.32
+		--fr, fg, fb = 0.96, 0.38, 0.32
+		local color = Theme.enemy.body
+		fr, fg, fb = color[1], color[2], color[3]
 	end
 
 	local or_, og, ob = unpack(Theme.outline.color)
@@ -294,22 +295,6 @@ local function drawTower(kind)
 	end, TOWER_SCALE)
 end
 
-local function getShockOrigin(t)
-	local size = Constants.TILE * 0.42
-	local tipX = size * 0.40
-
-	local localX = tipX - (t.recoil or 0)
-	local localY = 0
-
-	local ca = math.cos(t.angle)
-	local sa = math.sin(t.angle)
-
-	local worldX = t.x + (localX * ca - localY * sa)
-	local worldY = t.renderY + (localX * sa + localY * ca)
-
-	return worldX, worldY
-end
-
 local function drawTowerAction(kind)
 	-- === Reset systems ===
 	Towers.clear()
@@ -400,18 +385,6 @@ local function drawTowerAction(kind)
 	}
 
 	Towers.towers = {t}
-
-	--[[if not t.chain then
-		--Projectiles.spawn(t, enemy)
-	else
-		local zapOrder = Shock.fire(t, enemy)
-
-		if zapOrder and #zapOrder > 0 then
-			local mx, my = getShockOrigin(t)
-
-			Effects.spawnZapEffect(mx, my, zapOrder)
-		end
-	end]]
 
 	local dt = 1 / 120
 
@@ -693,15 +666,16 @@ local function drawStopwatchIcon()
 	local highlightOffset = lighting.highlightOffset
 	local highlightScale = lighting.highlightScale
 
-	local faceR, faceG, faceB = 0.90, 0.90, 0.88
+	--local faceR, faceG, faceB = 0.90, 0.90, 0.88
+	
+	local color = Theme.tower.lancer
+	local faceR, faceG, faceB = color[1], color[2], color[3]
 
 	centerAndScale(function()
 		local cx, cy = 0, 0
 		local r = REF_RADIUS
 
-		-- =================================
 		-- TOP CROWN (FIXED ATTACHMENT)
-		-- =================================
 		do
 			local crownW = r * 0.64
 			local crownH = r * 0.30
@@ -733,9 +707,7 @@ local function drawStopwatchIcon()
 			)
 		end
 
-		-- =================================
 		-- FLOATING SIDE BUTTON (NO ARM)
-		-- =================================
 		do
 			local btnW = r * 0.42
 			local btnH = r * 0.25
@@ -763,9 +735,7 @@ local function drawStopwatchIcon()
 			lg.pop()
 		end
 
-		-- =================================
 		-- FLOATING SIDE BUTTON (NO ARM)
-		-- =================================
 		do
 			local btnW = r * 0.42
 			local btnH = r * 0.25
@@ -807,9 +777,7 @@ local function drawStopwatchIcon()
 		lg.setColor(faceR, faceG, faceB)
 		lg.circle("fill", hx, hy, hr)
 
-		-- =================================
 		-- HANDS
-		-- =================================
 		do
 			local minuteLen = r * 0.70
 			local minuteW = 3.5
@@ -903,10 +871,7 @@ local function drawPadlock(cx, cy, r, color)
 		radius * highlightScale
 	)
 
-	-- =========================
 	-- SHACKLE (fixed orientation)
-	-- =========================
-
 	local shackleR = r * 0.55
 	local shackleW = r * 0.22
 

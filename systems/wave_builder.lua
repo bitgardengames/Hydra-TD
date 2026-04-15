@@ -4,19 +4,19 @@ local Builder = {}
 local Templates = {
 	standard = {
 		enemy = "grunt",
-		baseCount = 12,
+		baseCount = 12 * 3,
 		spacing = 0.65, -- 0.65
 	},
 
 	fast = {
 		enemy = "runner",
-		baseCount = 16,
+		baseCount = 16 * 3,
 		spacing = 0.65, -- 0.45
 	},
 
 	tanky = {
 		enemy = "tank",
-		baseCount = 10,
+		baseCount = 10 * 3,
 		spacing = 1.05, -- 1.05
 	},
 }

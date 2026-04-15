@@ -1,7 +1,9 @@
+local mult = 1
+
 return {
 	grunt = {
 		nameKey = "enemy.grunt",
-		hp = 30,
+		hp = 30 * mult,
 		speed = 70,
 		reward = 7,
 		score = 10,
@@ -10,7 +12,7 @@ return {
 
 	tank = {
 		nameKey = "enemy.tank",
-		hp = 80,
+		hp = 80 * mult,
 		speed = 45,
 		reward = 12,
 		score = 22,
@@ -19,7 +21,7 @@ return {
 
 	runner = {
 		nameKey = "enemy.runner",
-		hp = 22,
+		hp = 22 * mult,
 		speed = 95,
 		reward = 8,
 		score = 12,
@@ -28,7 +30,7 @@ return {
 
 	boss = {
 		nameKey = "enemy.boss",
-		hp = 625,
+		hp = 625 * mult,
 		speed = 45,
 		reward = 80,
 		score = 300,
