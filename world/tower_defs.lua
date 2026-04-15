@@ -78,7 +78,7 @@ return {
 			stackAdd = 1,
 		},
 		behaviors = {
-			{id = "move_homing", data = {radius = 56}},
+			{id = "move_homing"},
 			{id = "hit_circle", data = {radius = 12}},
 			{id = "hit_damage"},
 			{id = "apply_poison", data = {dps = 4, dur = 2, maxStacks = 10}},
@@ -106,7 +106,7 @@ return {
 			splashAdd = 4, -- increase AoE radius per upgrade
 		},
 		behaviors = {
-			{id = "move_homing", data = {radius = 92 }},
+			{id = "move_homing"},
 			{id = "hit_circle", data = {radius = 12 }},
 			{id = "aoe_damage", data = {radius = 48 }},
 			{id = "draw_cannon" }
@@ -143,7 +143,7 @@ return {
 		cost = 75,
 		range = 3.5 * Constants.TILE,
 		fireRate = 0.7,
-		damage = 8,
+		damage = 3,
 		recoilStrength = Constants.TILE * 0.14,
 		recoilDecay = 18,
 		projSpeed = 140,
@@ -157,7 +157,7 @@ return {
 		},
 		behaviors = {
 			{id = "move_linear", data = {dist = 300}},
-			{id = "tick_damage", data = {radius = 12, rate = 0.08}},
+			{id = "tick_damage", data = {radius = 12, rate = 0.1}},
 			{id = "draw_plasma"}
 		}
 	},

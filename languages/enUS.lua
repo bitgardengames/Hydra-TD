@@ -73,6 +73,52 @@ return {
 		plasma = "Burns through enemies along its path",
 	},
 
+	module = {
+		move_linear = "Straight Shots",
+		move_boomerang = "Boomerang",
+		move_wave = "Wave Shots",
+		move_spiral = "Spiral Shots",
+		orbit = "Orbiting Shots",
+
+		split = "Split Shots",
+		chain = "Chain Lightning",
+		aoe = "Explosive Impact",
+		tick = "Damage Over Time",
+		growth = "Growing Projectiles",
+		bounce = "Chaotic Bounce",
+
+		slow = "Chilling Hits",
+		poison = "Venom Infusion",
+		infect = "Infection Spread",
+		orbital_spawn = "Orbital Spawn",
+		static = "Static Field",
+
+		beam = "Beam Conversion",
+	},
+
+	moduleDesc = {
+		move_linear = "Projectiles travel in a straight line instead of homing.",
+		move_boomerang = "Shots fly out, then return to the tower.",
+		move_wave = "Projectiles move in a wavy pattern.",
+		move_spiral = "Shots spiral as they travel.",
+		orbit = "Projectiles orbit around the tower.",
+
+		split = "Shots split into multiple projectiles on hit.",
+		chain = "Damage jumps between nearby enemies.",
+		aoe = "Hits deal area damage.",
+		tick = "Projectiles deal damage over time in an area.",
+		growth = "Projectiles grow larger and stronger over time.",
+		bounce = "Projectiles bounce in random directions.",
+
+		slow = "Hits slow enemies.",
+		poison = "Applies stacking poison damage.",
+		infect = "Poison spreads to nearby enemies on death.",
+		orbital_spawn = "Spawns orbiting projectiles on hit.",
+		static = "Creates a damaging static field.",
+
+		beam = "Converts projectiles into continuous beams.",
+	},
+
 	enemy = {
 		grunt = "Grunt",
 		tank = "Tank",

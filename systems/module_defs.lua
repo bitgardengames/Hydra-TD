@@ -219,7 +219,10 @@ add("beam_conversion", {
 	category = "special",
 
 	apply = function(ctx)
-		ctx:replaceBehavior("move_homing", { id = "beam", data = { length = 200, width = 8 } })
+		ctx.output = "beam"
+		ctx:removeBehavior("move_homing")
+		ctx:removeBehavior("instant_hit")
+		ctx:addBehavior({ id = "beam", data = { length = 200, width = 8, rate = 0.1 } }) -- can we make the width respect any other modifiers that should increase the thickness
 	end
 })
 

@@ -41,6 +41,7 @@ local GameOver = require("ui.menu.screens.game_over")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local Modules = require("systems.modules")
+local ModulePicker = require("ui.module_picker")
 
 local lg = love.graphics
 local lk = love.keyboard
@@ -160,7 +161,12 @@ function resetGame()
     -- Waves
     Waves.resetSpawner()
 
+	-- Modules
 	Modules.clear()
+
+	State.modulePicker.active = false
+	State.modulePicker.choices = nil
+	State.modulePicker.waveOffered = 0
 
 	-- =========================================
 	-- CHAOS TEST SETS (toggle manually)
@@ -294,6 +300,32 @@ end
 
 local clamp = 1 / 30
 
+-- What is this name? lol "maybeDoSomething"
+local function maybeOfferModuleChoice()
+	if State.mode ~= "game" then
+		return
+	end
+
+	if not State.inPrep then
+		return
+	end
+
+	if State.modulePicker.active then
+		return
+	end
+
+	if State.wave <= 1 then
+		return
+	end
+
+	if State.modulePicker.waveOffered == State.wave then
+		return
+	end
+
+	State.modulePicker.waveOffered = State.wave
+	ModulePicker.open(Modules.rollChoices(3))
+end
+
 function love.update(dt)
 	dt = min(dt, clamp)
 
@@ -385,8 +417,8 @@ function love.update(dt)
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
-		--if State.wave == 20 and not State.endless then
-		if State.wave == 1 and not State.endless then
+		--if State.wave == 1 and not State.endless then
+		if State.wave == 20 and not State.endless then
 			-- Save
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
 			Save.data.furthestIndex = max(Save.data.furthestIndex, nextMapIndex)
@@ -431,6 +463,8 @@ function love.update(dt)
 		State.wave = State.wave + 1
 		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 		State.inPrep = true
+
+		maybeOfferModuleChoice()
 	end
 end
 
@@ -449,6 +483,7 @@ function love.draw()
 
 		-- UI
 		Draw.drawUI()
+		ModulePicker.draw() -- This should all be part of drawUI, not in main.lua
 
 		if State.mode == "pause" then
 			local t = State.pauseT
@@ -480,6 +515,12 @@ end
 function love.mousepressed(x, y, button)
 	if State.mode == "pause" then
 		if Menu.mousepressedPause(x, y, button) then
+			return
+		end
+	end
+
+	if ModulePicker.isActive() then
+		if ModulePicker.mousepressed(x, y, button) then
 			return
 		end
 	end
@@ -523,6 +564,12 @@ function love.keypressed(key)
 		end
 
 		lg.captureScreenshot(SCREENSHOT_DIR .. "/screenshot_" .. time .. ".png")
+	end
+
+	if ModulePicker.isActive() then
+		if ModulePicker.keypressed(key) then
+			return
+		end
 	end
 
 	if Overlay.isActive() then

@@ -60,6 +60,7 @@ local function createContext(base)
 	local ctx = {}
 
 	ctx.behaviors = copyBehaviors(base)
+	ctx.output = "projectile"
 
 	function ctx:addBehavior(b)
 		self.behaviors[#self.behaviors + 1] = b
@@ -144,17 +145,31 @@ local function rand(list)
 	return list[love.math.random(1, #list)]
 end
 
+function Modules.getDef(moduleId)
+	return ModuleDefs[moduleId]
+end
+
+function Modules.getActive()
+	return Modules.active
+end
+
 function Modules.rollChoices(count)
 	local choices = {}
+	local seen = {}
 
-	for i = 1, count do
-		local id = rand(allIds)
+	while #choices < count do
+		local moduleId = rand(allIds)
 		local target = rand(towerTypes)
+		local key = moduleId .. ":" .. target
 
-		choices[#choices + 1] = {
-			moduleId = id,
-			target = target
-		}
+		if not seen[key] then
+			seen[key] = true
+
+			choices[#choices + 1] = {
+				moduleId = moduleId,
+				target = target,
+			}
+		end
 	end
 
 	return choices

@@ -102,8 +102,8 @@ local function spawnEvent(evt)
 		p.lastTY = p.y + sin(p.angle) * 10
 	end
 
-	if evt.behaviors then
-		p.behaviors = evt.behaviors
+	if evt.context then
+		p.behaviors = evt.context.behaviors
 	else
 		local ctx = Modules.buildContext(source)
 		p.behaviors = ctx.behaviors
@@ -238,9 +238,20 @@ end
 local function processHit(p)
 	local hitTarget = p.hit
 
-	if not hitTarget or hitTarget.hp <= 0 then
+	if hitTarget and p.ignoreTarget and hitTarget == p.ignoreTarget then
 		p.hit = nil
+		return
+	end
 
+	-- allow nil target for impact-only hits
+	if not hitTarget then
+		pushEvent(p, {id = "hit", target = nil})
+		resolveEvents(p)
+		return
+	end
+
+	if hitTarget.hp <= 0 then
+		p.hit = nil
 		return
 	end
 
@@ -363,10 +374,23 @@ local function load()
 	end
 end
 
+local function spawnFromContext(t, target, ctx, overrides)
+	return spawnEvent({
+		source = t,
+		target = target,
+		behaviors = ctx.behaviors,
+
+		-- allow overrides (beam uses this)
+		speed = overrides and overrides.speed,
+		life = overrides and overrides.life,
+	})
+end
+
 return {
 	projectiles = projectiles,
 	spawn = spawn,
 	spawnEvent = spawnEvent,
+	spawnFromContext = spawnFromContext,
 	update = update,
 	draw = draw,
 	clear = clear,

@@ -1,4 +1,6 @@
-local mult = 1
+local mult = 0.5
+
+-- Modifiers here eventually would go hard
 
 return {
 	grunt = {

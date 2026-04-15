@@ -4,6 +4,16 @@ local Enemies = require("world.enemies")
 local Constants = require("core.constants")
 local Spatial = require("world.spatial_grid")
 
+--[[
+	NOTE; ALL SYSTEMS MUST WORK TOGETHER FLUIDLY. This rule cannot be broken.
+
+	Any tower should be able to emit any effect, behavior, or visual.
+
+	Any mixture of projectile + behavior + visual has to work, period.
+
+	Don't hard code things, that's already a broken contract.
+--]]
+
 local pi = math.pi
 local min = math.min
 local max = math.max
@@ -135,6 +145,7 @@ B.retarget_on_spawn = {
 -- MOVEMENT
 -- =========================
 
+-- This needs to be written better, absolutely disgusting. NO HARD CODING.
 B.move_homing = {
 	type = "movement",
 
@@ -151,37 +162,86 @@ B.move_homing = {
 			tx, ty = p.lastTX, p.lastTY
 		end
 
-		if not tx then return end
+		if not tx then
+			return
+		end
 
+		-- direction to target center
 		local dx = tx - p.x
 		local dy = ty - p.y
 
-		local d2 = dx*dx + dy*dy
-		if d2 < 1e-6 then d2 = 1e-6 end
+		local dist = sqrt(dx*dx + dy*dy)
+		if dist < 1e-6 then
+			dist = 1e-6
+		end
 
-		local dist = sqrt(d2)
+		local inv = 1 / dist
+		local nx = dx * inv
+		local ny = dy * inv
+
+		-- NEW: aim at enemy SURFACE, not center
+		local enemyRadius = (alive and e.radius) or 0
+		local targetX = tx - nx * enemyRadius
+		local targetY = ty - ny * enemyRadius
+
+		-- recompute toward surface
+		dx = targetX - p.x
+		dy = targetY - p.y
+
+		dist = sqrt(dx*dx + dy*dy)
+		if dist < 1e-6 then
+			dist = 1e-6
+		end
+
 		local step = (p.speed or 0) * dt
 
-		-- =========================================
-		-- ARRIVAL (no collision, just reaching target)
-		-- =========================================
+		-- NEW: no radius fudge
 		if dist <= step then
-			p.x, p.y = tx, ty
+			p.x, p.y = targetX, targetY
 
-			-- If target still exists, trigger hit
 			if alive then
 				p.hit = e
+			else
+				-- preserve your existing FX fallback behavior
+				if p.sourceKind == "lancer" then
+					pushEvent(p, {
+						id = "fx",
+						kind = "lancer_hit",
+						x = p.x,
+						y = p.y,
+						color = p.sourceTower and p.sourceTower.color
+					})
+				elseif p.sourceKind == "poison" then
+					pushEvent(p, {
+						id = "fx",
+						kind = "poison_splash",
+						x = p.x,
+						y = p.y,
+						color = p.sourceTower and p.sourceTower.color
+					})
+				elseif p.sourceKind == "cannon" then
+					pushEvent(p, {
+						id = "hit",
+						target = nil
+					})
+				elseif p.sourceKind == "slow" then
+					pushEvent(p, {
+						id = "fx",
+						kind = "frost_burst",
+						x = p.x,
+						y = p.y,
+						color = p.sourceTower and p.sourceTower.color
+					})
+				end
 			end
 
 			return "consume"
 		end
 
-		-- =========================================
-		-- NORMAL MOVEMENT
-		-- =========================================
-		local inv = 1 / dist
-		p.x = p.x + dx * inv * step
-		p.y = p.y + dy * inv * step
+		-- normal movement
+		local inv2 = 1 / dist
+		p.x = p.x + dx * inv2 * step
+		p.y = p.y + dy * inv2 * step
 
 		p.rotation = atan2(dy, dx)
 	end
@@ -439,6 +499,10 @@ B.move_suspend = {
 
 B.hit_damage = {
 	onHit = function(p, e)
+		if not e or e.hp <= 0 then
+			return
+		end
+
 		local dmg = getStat(p, "damage", 0)
 		emitDamage(p, e, dmg)
 	end
@@ -446,8 +510,11 @@ B.hit_damage = {
 
 B.aoe_damage = {
 	onHit = function(p, e, data)
-		local radius = data.radius or 32
+		local baseRadius = data.radius or 32
 		local falloff = data.falloff or 0.5
+
+		local scale = p._growthScale or 1
+		local radius = baseRadius * scale
 
 		local r2 = radius * radius
 		local nearby = Spatial.queryCells(p.x, p.y)
@@ -472,7 +539,7 @@ B.aoe_damage = {
 			kind = "cannon_impact",
 			x = p.x,
 			y = p.y,
-			r = radius,
+			r = radius, -- ALSO scaled for visuals
 			color = p.sourceTower and p.sourceTower.color
 		})
 	end
@@ -495,9 +562,8 @@ B.hit_circle = {
 			if e.hp > 0 and e ~= p.ignoreTarget then
 				local dx = e.x - p.x
 				local dy = e.y - p.y
-				local rr = radius + (e.radius or 0)
 
-				if dx*dx + dy*dy <= rr*rr then
+				if dx*dx + dy*dy <= radius*radius then
 					local id = e.id or e
 
 					if not p.hitSet[id] then
@@ -507,6 +573,10 @@ B.hit_circle = {
 				end
 			end
 		end
+	end,
+
+	onSpawn = function(p, data)
+		p.hitRadius = data.radius
 	end
 }
 
@@ -515,29 +585,53 @@ B.hit_chain = {
 
 	onHit = function(p, e, data)
 		local jumps = data.jumps or 3
-		local radius = data.radius or 56
+		local baseRadius = data.radius or 56
 		local falloff = data.falloff or 0.75
 
+		-- =========================================
+		-- GROWTH / SHARED SCALE
+		-- =========================================
+		local baseDamage = p._baseDamage or p.damage or 0
+		local currentDamage = p.damage or 0
+
+		local scale = 1
+		if baseDamage > 0 then
+			scale = currentDamage / baseDamage
+		end
+
+		-- optional future-proof override
+		if p._growthScale then
+			scale = p._growthScale
+		end
+
+		local radius = baseRadius * scale
+
+		-- =========================================
+		-- CHAIN LOGIC
+		-- =========================================
 		local chain = {}
 		local visited = {}
 		local current = e
-		local dmg = getStat(p, "damage", 0)
+		local dmg = currentDamage
 
 		for i = 1, jumps + 1 do
 			if not current or current.hp <= 0 then break end
 
+			-- deal damage
 			emitDamage(p, current, dmg)
 
 			local prev = chain[#chain]
 
-			chain[#chain+1] = {
+			chain[#chain + 1] = {
 				from = prev and prev.to or nil,
 				to = current
 			}
 
 			visited[current] = true
 
-			-- find next
+			-- =========================================
+			-- FIND NEXT TARGET
+			-- =========================================
 			local nextTarget = nil
 			local bestDist = radius * radius
 
@@ -559,7 +653,17 @@ B.hit_chain = {
 			end
 
 			current = nextTarget
+
+			-- =========================================
+			-- DECAY
+			-- =========================================
 			dmg = dmg * falloff
+
+			-- optional: decay radius slightly per jump (feels good)
+			radius = radius * 0.9
+
+			-- optional: decay scale influence per jump
+			scale = scale * 0.95
 		end
 
 		-- store for FX
@@ -788,9 +892,12 @@ B.link_projectiles = {
 
 B.slow_pop = {
 	onHit = function(p, e)
+		if not e or e.hp <= 0 then
+			return
+		end
+
 		if e.slowTimer and e.slowTimer > 0 then
 			local radius = 28
-
 			local nearby = Spatial.queryCells(e.x, e.y)
 
 			for i = 1, #nearby do
@@ -799,7 +906,7 @@ B.slow_pop = {
 				local dx = other.x - e.x
 				local dy = other.y - e.y
 
-				if dx*dx + dy*dy <= radius*radius then
+				if dx * dx + dy * dy <= radius * radius then
 					emitDamage(p, other, (p.damage or 0) * 0.5)
 				end
 			end
@@ -808,7 +915,8 @@ B.slow_pop = {
 				id = "fx",
 				kind = "frost_burst",
 				x = e.x,
-				y = e.y
+				y = e.y,
+				color = p.sourceTower and p.sourceTower.color
 			})
 		end
 	end
@@ -816,8 +924,13 @@ B.slow_pop = {
 
 B.frost_shatter = {
 	onHit = function(p, e, data)
-		-- Only shatter if already slowed
-		if not e.slowTimer or e.slowTimer <= 0 then return end
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		if not e.slowTimer or e.slowTimer <= 0 then
+			return
+		end
 
 		local count = data.count or 5
 		local dmgMult = data.dmgMult or 0.5
@@ -845,7 +958,8 @@ B.frost_shatter = {
 			id = "fx",
 			kind = "frost_burst",
 			x = e.x,
-			y = e.y
+			y = e.y,
+			color = p.sourceTower and p.sourceTower.color
 		})
 	end
 }
@@ -885,6 +999,10 @@ B.plasma_conductor = {
 
 B.spawn_orbital_on_hit = {
 	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
 		local count = data.count or 2
 
 		for i = 1, count do
@@ -897,6 +1015,7 @@ B.spawn_orbital_on_hit = {
 				angle = ang,
 				source = p.sourceTower,
 				damage = p.damage * 0.4,
+				ignoreTarget = e,
 				behaviors = {
 					{ id = "move_orbit", data = { radius = 32, speed = 4 } },
 					{ id = "tick_damage", data = { radius = 28, rate = 0.25 } },
@@ -911,8 +1030,37 @@ B.infect_spread = {
 	onHit = function(p, e, data)
 		e._infectSpread = {
 			radius = data.radius or 48,
-			stackMult = data.stackMult or 1
+			stackMult = data.stackMult or 1,
+			source = p.sourceTower
 		}
+	end
+}
+
+B.poison_burst_on_death = {
+	onDeath = function(e)
+		local spread = e._infectSpread
+		if not spread then return end
+
+		local nearby = Spatial.queryCells(e.x, e.y)
+		local radius = spread.radius
+		local r2 = radius * radius
+
+		for i = 1, #nearby do
+			local other = nearby[i]
+
+			if other ~= e and other.hp > 0 then
+				local dx = other.x - e.x
+				local dy = other.y - e.y
+
+				if dx*dx + dy*dy <= r2 then
+					-- APPLY POISON (not damage)
+					other.poisonStacks = (other.poisonStacks or 0) + (e.poisonStacks or 0)
+					other.poisonTimer = max(other.poisonTimer or 0, 1.5)
+				end
+			end
+		end
+
+		e._infectSpread = nil -- VERY IMPORTANT (prevents re-trigger)
 	end
 }
 
@@ -922,6 +1070,9 @@ B.growing_projectile = {
 
 		-- Cache base values ONCE
 		p._baseDamage = p.damage
+
+		-- Shared scale (for all other behaviors)
+		p._growthScale = 1
 	end,
 
 	update = function(p, dt, data)
@@ -935,12 +1086,21 @@ B.growing_projectile = {
 
 		local scale = 1 + (maxScale - 1) * t
 
-		-- Size
+		-- =========================================
+		-- SHARED SCALE
+		-- =========================================
+		p._growthScale = scale
+
+		-- =========================================
+		-- SIZE
+		-- =========================================
 		p.r = p.baseR * scale
 		p.hitRadius = p.r
 		p.hitRadius2 = p.r * p.r
 
-		-- ALWAYS scale damage
+		-- =========================================
+		-- DAMAGE
+		-- =========================================
 		p.damage = p._baseDamage * scale
 	end
 }
@@ -954,25 +1114,50 @@ B.beam = {
 			width = data.width or (p.r or 6),
 			rate = data.rate or 0.1,
 			timer = 0,
-
-			-- NEW: prevent infinite hit spam
 			hitCooldown = {}
 		}
 
-		-- Ensure direction ALWAYS exists
-		local ang = p.angle or p.sourceTower.angle or 0
-		p.vx = cos(ang)
-		p.vy = sin(ang)
+		local ang = p.angle or (p.sourceTower and p.sourceTower.angle) or 0
+		p.vx = math.cos(ang)
+		p.vy = math.sin(ang)
 		p.rotation = ang
 	end,
 
 	update = function(p, dt)
 		local b = p._beam
+		local t = p.sourceTower
+		local e = p.target
 
-		-- tick timer
+		if not t then return end
+
+		-- =========================================
+		-- GROWTH SCALE
+		-- =========================================
+		local scale = p._growthScale or 1
+		local width = b.width * scale
+
+		-- =========================================
+		-- ANCHOR
+		-- =========================================
+		p.x = t.x
+		p.y = t.renderY
+
+		if e and e.hp > 0 then
+			local dx = e.x - p.x
+			local dy = e.y - p.y
+
+			local len = math.sqrt(dx*dx + dy*dy)
+			if len > 0 then
+				p.vx = dx / len
+				p.vy = dy / len
+				p.rotation = math.atan2(dy, dx)
+				b.length = len
+			end
+		end
+
+		-- timers
 		b.timer = b.timer - dt
 
-		-- decay hit cooldowns
 		for k, v in pairs(b.hitCooldown) do
 			v = v - dt
 			if v <= 0 then
@@ -982,88 +1167,44 @@ B.beam = {
 			end
 		end
 
-		-- normalize direction
 		local vx, vy = p.vx, p.vy
-		local len = sqrt(vx*vx + vy*vy)
+		local len = math.sqrt(vx*vx + vy*vy)
 		if len == 0 then return end
 
 		vx, vy = vx / len, vy / len
 
 		local x1, y1 = p.x, p.y
-
-		-- segmented beam (allows curves)
 		local segments = 10
 
 		for s = 0, segments do
-			local t = s / segments
+			local tSeg = s / segments
 
-			-- base straight line
-			local sx = x1 + vx * b.length * t
-			local sy = y1 + vy * b.length * t
+			local sx = x1 + vx * b.length * tSeg
+			local sy = y1 + vy * b.length * tSeg
 
-			-- OPTIONAL CURVE SUPPORT (wave)
-			if p._wave then
-				local w = p._wave
-
-				local px = -w.dirY
-				local py = w.dirX
-
-				local offset = sin((p.t + t) * w.freq) * w.amp
-
-				sx = sx + px * offset
-				sy = sy + py * offset
-			end
-
-			-- OPTIONAL CURVE SUPPORT (spiral)
-			if p._spiral then
-				local sp = p._spiral
-
-				local px = -sp.dirY
-				local py = sp.dirX
-
-				local offset = sin((sp.t + t) * sp.freq) * sp.amp
-
-				sx = sx + px * offset
-				sy = sy + py * offset
-			end
-
-			-- only apply damage at tick rate
+			-- damage tick
 			if b.timer <= 0 then
 				local nearby = Spatial.queryCells(sx, sy)
 
 				for i = 1, #nearby do
-					local e = nearby[i]
+					local e2 = nearby[i]
 
-					if e.hp > 0 then
-						local ex, ey = e.x, e.y
-
-						local dx = ex - sx
-						local dy = ey - sy
+					if e2.hp > 0 then
+						local dx = e2.x - sx
+						local dy = e2.y - sy
 						local dist2 = dx*dx + dy*dy
 
-						local rr = b.width + (e.radius or 0)
+						local rr = width + (e2.radius or 0)
 
 						if dist2 <= rr*rr then
-							local id = e.id or e
+							local id = e2.id or e2
 
-							-- cooldown gate
 							if not b.hitCooldown[id] then
-								-- damage
-								emitDamage(p, e, p.damage or 0)
+								emitDamage(p, e2, p.damage or 0)
 
 								pushEvent(p, {
 									id = "hit",
-									target = e
-								})
-
-								pushEvent(p, {
-									id = "fx",
-									kind = "zap_line",
-									x1 = sx,
-									y1 = sy,
-									x2 = ex,
-									y2 = ey,
-									color = p.sourceTower and p.sourceTower.color
+									target = e2
 								})
 
 								b.hitCooldown[id] = b.rate
@@ -1082,71 +1223,47 @@ B.beam = {
 	draw = function(p, a)
 		local b = p._beam
 
+		local scale = p._growthScale or 1
+		local w = b.width * scale
+
+		local r, g, bl = getProjectileColor(p, {1, 1, 1})
+
 		local vx, vy = p.vx, p.vy
-		local len = sqrt(vx*vx + vy*vy)
+		local len = math.sqrt(vx*vx + vy*vy)
 		if len == 0 then return end
 
 		vx, vy = vx / len, vy / len
 
 		local segments = 10
-		local x1, y1 = 0, 0
 
 		for s = 1, segments do
 			local t0 = (s - 1) / segments
 			local t1 = s / segments
 
-			local xA = vx * b.length * t0
-			local yA = vy * b.length * t0
+			local xA = p.x + vx * b.length * t0
+			local yA = p.y + vy * b.length * t0
+			local xB = p.x + vx * b.length * t1
+			local yB = p.y + vy * b.length * t1
 
-			local xB = vx * b.length * t1
-			local yB = vy * b.length * t1
+			love.graphics.setLineWidth(w * 2.4)
+			love.graphics.setColor(r * 0.8, g * 0.8, bl * 1.2, a * 0.2)
+			love.graphics.line(xA, yA, xB, yB)
 
-			-- match curve logic in draw
-			if p._wave then
-				local w = p._wave
-				local px = -w.dirY
-				local py = w.dirX
+			love.graphics.setLineWidth(w)
+			love.graphics.setColor(r, g, bl, a)
+			love.graphics.line(xA, yA, xB, yB)
 
-				local oA = sin((p.t + t0) * w.freq) * w.amp
-				local oB = sin((p.t + t1) * w.freq) * w.amp
-
-				xA = xA + px * oA
-				yA = yA + py * oA
-				xB = xB + px * oB
-				yB = yB + py * oB
-			end
-
-			if p._spiral then
-				local sp = p._spiral
-				local px = -sp.dirY
-				local py = sp.dirX
-
-				local oA = sin((sp.t + t0) * sp.freq) * sp.amp
-				local oB = sin((sp.t + t1) * sp.freq) * sp.amp
-
-				xA = xA + px * oA
-				yA = yA + py * oA
-				xB = xB + px * oB
-				yB = yB + py * oB
-			end
-
-			-- glow
-			lg.setLineWidth(b.width * 2.4)
-			lg.setColor(0.8, 0.3, 1.0, a * 0.2)
-			lg.line(xA, yA, xB, yB)
-
-			-- main
-			lg.setLineWidth(b.width)
-			lg.setColor(0.9, 0.4, 1.0, a)
-			lg.line(xA, yA, xB, yB)
-
-			-- core
-			lg.setLineWidth(b.width * 0.4)
-			lg.setColor(1, 0.9, 1.0, a * 0.9)
-			lg.line(xA, yA, xB, yB)
+			love.graphics.setLineWidth(w * 0.4)
+			love.graphics.setColor(
+				math.min(1, r * 1.4),
+				math.min(1, g * 1.4),
+				math.min(1, bl * 1.4),
+				a * 0.9
+			)
+			love.graphics.line(xA, yA, xB, yB)
 		end
 
-		lg.setLineWidth(1)
+		love.graphics.setLineWidth(1)
 	end
 }
 
@@ -1156,39 +1273,45 @@ B.beam = {
 
 B.apply_slow = {
 	onHit = function(p, e, data)
-		local factor = min(data.factor, 0.9)
-		local newFactor = 1 - factor
+		if e and e.hp > 0 then
+			local factor = min(data.factor, 0.9)
+			local newFactor = 1 - factor
 
-		if not e.slowFactor or newFactor < e.slowFactor then
-			e.slowFactor = newFactor
+			if not e.slowFactor or newFactor < e.slowFactor then
+				e.slowFactor = newFactor
+			end
+
+			e.slowTimer = max(e.slowTimer or 0, data.dur)
 		end
-
-		e.slowTimer = max(e.slowTimer or 0, data.dur)
 
 		pushEvent(p, {
 			id = "fx",
 			kind = "frost_burst",
 			x = p.x,
-			y = p.y
+			y = p.y,
+			color = p.sourceTower and p.sourceTower.color
 		})
 	end
 }
 
 B.apply_poison = {
 	onHit = function(p, e, data)
-		e.poisonStacks = e.poisonStacks or 0
-		e.poisonMaxStacks = max(e.poisonMaxStacks or 0, data.maxStacks)
-		e.poisonDPS = max(e.poisonDPS or 0, data.dps)
+		if e and e.hp > 0 then
+			e.poisonStacks = e.poisonStacks or 0
+			e.poisonMaxStacks = max(e.poisonMaxStacks or 0, data.maxStacks)
+			e.poisonDPS = max(e.poisonDPS or 0, data.dps)
 
-		e.poisonStacks = min(e.poisonStacks + 1, e.poisonMaxStacks)
-		e.poisonTimer = max(e.poisonTimer or 0, data.dur)
-		e.poisonSource = p.sourceTower
+			e.poisonStacks = min(e.poisonStacks + 1, e.poisonMaxStacks)
+			e.poisonTimer = max(e.poisonTimer or 0, data.dur)
+			e.poisonSource = p.sourceTower
+		end
 
 		pushEvent(p, {
 			id = "fx",
 			kind = "poison_splash",
 			x = p.x,
-			y = p.y
+			y = p.y,
+			color = p.sourceTower and p.sourceTower.color
 		})
 	end
 }
@@ -1234,32 +1357,6 @@ B.chain_zap_fx = {
 	end
 }
 
-B.poison_burst_on_death = {
-	onDeath = function(e, data)
-		if e.poisonStacks > 0 then
-			-- Don't want hard coded fx, fix me
-			Effects.spawnFX({
-				id = "poison_splash",
-				x = e.x,
-				y = e.y
-			})
-
-			-- spread stacks instead of damage
-			local nearby = Spatial.queryCells(e.x, e.y)
-
-			for i = 1, #nearby do
-				local other = nearby[i]
-				if other.hp > 0 then
-					other.poisonStacks = min(
-						(other.poisonStacks or 0) + 1,
-						e.poisonStacks
-					)
-				end
-			end
-		end
-	end
-}
-
 -- =========================
 -- CONTINUOUS DAMAGE
 -- =========================
@@ -1295,6 +1392,18 @@ B.tick_damage = {
 
 				if dx*dx + dy*dy <= rr*rr then
 					emitDamage(p, e, p.damage or 0)
+
+					local id = e.id or e
+
+					-- only fire "hit" occasionally
+					if not p.hitCooldowns[id] then
+						pushEvent(p, {
+							id = "hit",
+							target = e
+						})
+
+						p.hitCooldowns[id] = data.hitRate or 0.35 -- tweak this
+					end
 
 					pushEvent(p, {
 						id = "fx",

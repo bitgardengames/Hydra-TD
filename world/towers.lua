@@ -13,6 +13,7 @@ local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local Projectiles = require("world.projectiles")
 local Achievements = require("systems.achievements")
+local Emissions = require("world.emissions")
 local L = require("core.localization")
 --local Steam = require("luasteam")
 
@@ -390,7 +391,7 @@ local function updateTowers(dt)
 				end
 
 				if canFire then
-					Projectiles.spawn(t, target)
+					Emissions.emit(t, target)
 
 					t.fireAnim = 1
 					t.recoil = t.recoilStrength or 0

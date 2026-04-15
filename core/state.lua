@@ -50,6 +50,11 @@ local state = {
 	ignoreStats = false,
 
 	modules = {},
+	modulePicker = {
+		active = false,
+		choices = nil,
+		waveOffered = 0,
+	},
 
 	-- Combat data
 	combatStats = {
