@@ -79,6 +79,24 @@ local function emitImpulse(p, e, px, py, strength)
 	})
 end
 
+-- visual stuff
+local function getProjectileColor(p, fallback)
+	local t = p.sourceTower
+	local c = t and t.color
+
+	if c then
+		return c[1], c[2], c[3]
+	end
+
+	return fallback[1], fallback[2], fallback[3]
+end
+
+local function colorMul(r, g, b, mul)
+	return min(1, r * mul), min(1, g * mul), min(1, b * mul)
+end
+
+-- behaviors
+
 B.retarget_on_spawn = {
 	init = function(p, data)
 		local radius = data.radius or 72
@@ -454,7 +472,8 @@ B.aoe_damage = {
 			kind = "cannon_impact",
 			x = p.x,
 			y = p.y,
-			r = radius
+			r = radius,
+			color = p.sourceTower and p.sourceTower.color
 		})
 	end
 }
@@ -463,8 +482,10 @@ B.hit_circle = {
 	type = "damage",
 
 	update = function(p, dt, data)
-		local radius = data.radius or p.hitRadius or 10
-		local r2 = radius * radius
+		local radius = data.radius
+		if radius == nil then
+			radius = p.hitRadius or p.r or 10
+		end
 
 		local nearby = Spatial.queryCells(p.x, p.y)
 
@@ -479,7 +500,6 @@ B.hit_circle = {
 				if dx*dx + dy*dy <= rr*rr then
 					local id = e.id or e
 
-					-- CRITICAL: prevent multi-hit spam
 					if not p.hitSet[id] then
 						p.hit = e
 						return "consume"
@@ -1042,7 +1062,8 @@ B.beam = {
 									x1 = sx,
 									y1 = sy,
 									x2 = ex,
-									y2 = ey
+									y2 = ey,
+									color = p.sourceTower and p.sourceTower.color
 								})
 
 								b.hitCooldown[id] = b.rate
@@ -1281,7 +1302,8 @@ B.tick_damage = {
 						x = p.x,
 						y = p.y,
 						vx = p.vx or 0,
-						vy = p.vy or 0
+						vy = p.vy or 0,
+						color = p.sourceTower and p.sourceTower.color
 					})
 				end
 			end
@@ -1297,10 +1319,17 @@ B.tick_damage = {
 
 B.draw_lancer = {
 	draw = function(p, a)
-		local rx = p.r * (6 / 4.5) -- huh? what the fuck is 6 / 4.5?
+		local rx = p.r * (6 / 4.5)
 		local ry = p.r * (3 / 4.5)
-		lg.setColor(0.97, 0.97, 0.97, a)
-		lg.ellipse("fill", 0, 0, rx, ry) -- lg.ellipse("fill", 0,0,6,3)
+
+		local r, g, b = getProjectileColor(p, {0.97, 0.97, 0.97})
+		local hr, hg, hb = colorMul(r, g, b, 1.15)
+
+		lg.setColor(r, g, b, a)
+		lg.ellipse("fill", 0, 0, rx, ry)
+
+		lg.setColor(hr, hg, hb, a * 0.7)
+		lg.ellipse("fill", -rx * 0.15, -ry * 0.15, rx * 0.65, ry * 0.65)
 	end
 }
 
@@ -1308,10 +1337,20 @@ B.draw_slow = {
 	draw = function(p, a)
 		local size = p.r * (8 / 4.5)
 		local r = p.r * (2 / 4.5)
-		lg.setColor(0.7, 0.85, 1, a)
+
+		local cr, cg, cb = getProjectileColor(p, {0.7, 0.85, 1.0})
+		local hr, hg, hb = colorMul(cr, cg, cb, 1.15)
+
+		lg.setColor(cr, cg, cb, a)
 		lg.push()
 		lg.rotate(pi / 4)
 		lg.rectangle("fill", -size / 2, -size / 2, size, size, r, r)
+		lg.pop()
+
+		lg.setColor(hr, hg, hb, a * 0.6)
+		lg.push()
+		lg.rotate(pi / 4)
+		lg.rectangle("fill", -size * 0.3, -size * 0.3, size * 0.6, size * 0.6, r, r)
 		lg.pop()
 	end
 }
@@ -1322,13 +1361,16 @@ B.draw_poison = {
 		local wy = cos(p.t * 8) * 1.5
 		local outer = p.r * ((p.baseR + 1.5) / p.baseR)
 
-		lg.push()
-		lg.translate(wx,wy)
+		local cr, cg, cb = getProjectileColor(p, {0.55, 0.85, 0.45})
+		local hr, hg, hb = colorMul(cr, cg, cb, 1.2)
 
-		lg.setColor(0.55, 0.85, 0.45, a)
+		lg.push()
+		lg.translate(wx, wy)
+
+		lg.setColor(cr, cg, cb, a)
 		lg.circle("fill", 0, 0, outer)
 
-		lg.setColor(0.75, 1.0, 0.65, a * 0.9)
+		lg.setColor(hr, hg, hb, a * 0.9)
 		lg.circle("fill", 0, 0, p.r)
 
 		lg.pop()
@@ -1341,8 +1383,14 @@ B.draw_cannon = {
 		local h = p.r * (8 / 4.5)
 		local r = p.r * (4 / 4.5)
 
-		lg.setColor(1, 0.8, 0.4, a)
+		local cr, cg, cb = getProjectileColor(p, {1.0, 0.8, 0.4})
+		local hr, hg, hb = colorMul(cr, cg, cb, 1.15)
+
+		lg.setColor(cr, cg, cb, a)
 		lg.rectangle("fill", -w / 2, -h / 2, w, h, r, r)
+
+		lg.setColor(hr, hg, hb, a * 0.6)
+		lg.rectangle("fill", -w * 0.3, -h * 0.3, w * 0.6, h * 0.6, r, r)
 	end
 }
 
@@ -1352,10 +1400,13 @@ B.draw_plasma = {
 		local outer = p.r * (8 / 4.5) + pulse * (1.2 / 4.5) * p.r
 		local inner = p.r * (4.5 / 4.5) + pulse * (0.6 / 4.5) * p.r
 
-		lg.setColor(0.85, 0.55, 1.0, a)
+		local cr, cg, cb = getProjectileColor(p, {0.85, 0.55, 1.0})
+		local hr, hg, hb = colorMul(cr, cg, cb, 1.2)
+
+		lg.setColor(cr, cg, cb, a)
 		lg.circle("fill", 0, 0, outer)
 
-		lg.setColor(1, 0.75, 1.0, a * 0.9)
+		lg.setColor(hr, hg, hb, a * 0.9)
 		lg.circle("fill", 0, 0, inner)
 	end
 }
@@ -1366,15 +1417,15 @@ B.draw_shock_orb = {
 		local outer = p.r * (10 / 4.5)
 		local inner = p.r * (5 / 4.5)
 
-		-- outer glow
-		lg.setColor(0.5, 0.85, 1.0, a * 0.4)
+		local cr, cg, cb = getProjectileColor(p, {0.6, 0.9, 1.0})
+		local hr, hg, hb = colorMul(cr, cg, cb, 1.2)
+
+		lg.setColor(cr, cg, cb, a * 0.4)
 		lg.circle("fill", 0, 0, outer)
 
-		-- core
-		lg.setColor(0.7, 0.95, 1.0, a)
+		lg.setColor(hr, hg, hb, a)
 		lg.circle("fill", 0, 0, inner)
 
-		-- jitter sparks
 		for i = 1, 3 do
 			local ang = t * 6 + i * 2
 			local r = p.r * (6 / 4.5) + sin(t * 8 + i) * (2 / 4.5) * p.r

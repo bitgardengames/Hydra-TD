@@ -181,12 +181,18 @@ local function resolveImpulse(evt)
 	end
 end
 
-local function resolveFX(evt)
+local function resolveFX(evt, p)
+	local c = evt.color
+
+	if not c and p and p.sourceTower and p.sourceTower.color then
+		c = p.sourceTower.color
+	end
+
 	Effects.spawnFX({
 		id = evt.kind,
 		x = evt.x,
 		y = evt.y,
-		r = evt.r or evt.radius,
+		r = evt.r,
 		vx = evt.vx,
 		vy = evt.vy,
 		x1 = evt.x1,
@@ -194,6 +200,7 @@ local function resolveFX(evt)
 		x2 = evt.x2,
 		y2 = evt.y2,
 		chain = evt.chain,
+		color = c
 	})
 end
 
@@ -213,7 +220,7 @@ local function resolveEvents(p)
 				elseif evt.id == "impulse" then
 					resolveImpulse(evt)
 				elseif evt.id == "fx" then
-					resolveFX(evt)
+					resolveFX(evt, p)
 				elseif evt.id == "hit" then
 					local res = PB.hit(p, evt.target)
 
