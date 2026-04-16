@@ -2,6 +2,7 @@ local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local State = require("core.state")
 local Modules = require("systems.modules")
+local DrawEntities = require("render.draw_entities")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -101,7 +102,7 @@ local function drawRoundedPanel(x, y, w, h, r, faceColor, borderColor, alpha)
 	lg.rectangle("line", x + 2, y + 2, w - 4, h - 4, r - 2, r - 2)
 end
 
-local function drawBadge(text, x, y, fill, alpha, padX, w, h)
+local function drawBadge(text, x, y, fill, alpha, padX, w, h, textColor)
 	padX = padX or 10
 	h = h or 24
 
@@ -119,7 +120,8 @@ local function drawBadge(text, x, y, fill, alpha, padX, w, h)
 	lg.setColor(0, 0, 0, 0.20 * alpha)
 	lg.rectangle("fill", x, y + h * 0.5, bw, h * 0.5, 0, 0, 10, 10)
 
-	lg.setColor(1, 1, 1, alpha)
+	local tc = textColor or Theme.ui.text
+	lg.setColor(tc[1], tc[2], tc[3], alpha)
 	lg.print(text, x + padX, y + 4)
 
 	return bw
@@ -140,129 +142,6 @@ local function drawKeyBadge(keyText, x, y, alpha)
 	Fonts.set("menu")
 	lg.setColor(1, 1, 1, alpha)
 	lg.printf(keyText, x, y + 3, 28, "center")
-end
-
-local function drawTowerSigil(kind, cx, cy, size, color, alpha, pulse)
-	local r, g, b = color[1], color[2], color[3]
-	local outline = Theme.outline.color
-	local darkMul = Theme.lighting.shadowMul
-	local highlightOffset = Theme.lighting.highlightOffset
-	local highlightScale = Theme.lighting.highlightScale
-	local s = size * pulse
-
-	lg.setColor(0, 0, 0, 0.18 * alpha)
-	lg.ellipse("fill", cx, cy + s * 0.42, s * 0.95, s * 0.28)
-
-	if kind == "cannon" then
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.circle("fill", cx, cy, s * 0.52)
-
-		lg.setColor(r * darkMul, g * darkMul, b * darkMul, alpha)
-		lg.circle("fill", cx, cy, s * 0.42)
-
-		lg.setColor(r, g, b, alpha)
-		lg.circle("fill", cx, cy - s * highlightOffset * 0.42, s * 0.42 * highlightScale)
-
-		lg.push()
-		lg.translate(cx, cy)
-		lg.rotate(-0.35)
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.rectangle("fill", s * 0.08, -s * 0.10, s * 0.52, s * 0.20, 6, 6)
-
-		lg.setColor(r * 0.82, g * 0.82, b * 0.82, alpha)
-		lg.rectangle("fill", s * 0.12, -s * 0.06, s * 0.44, s * 0.12, 5, 5)
-		lg.pop()
-	elseif kind == "shock" then
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.circle("fill", cx, cy, s * 0.48)
-
-		lg.setColor(r * darkMul, g * darkMul, b * darkMul, alpha)
-		lg.circle("fill", cx, cy, s * 0.38)
-
-		lg.setColor(r, g, b, alpha)
-		lg.circle("fill", cx, cy - s * highlightOffset * 0.38, s * 0.38 * highlightScale)
-
-		lg.setLineWidth(6)
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.line(cx + s * 0.08, cy - s * 0.12, cx + s * 0.34, cy - s * 0.26)
-		lg.line(cx + s * 0.08, cy + s * 0.12, cx + s * 0.34, cy + s * 0.26)
-
-		lg.setLineWidth(3)
-		lg.setColor(1, 1, 1, 0.75 * alpha)
-		lg.line(cx + s * 0.10, cy - s * 0.12, cx + s * 0.33, cy - s * 0.25)
-		lg.line(cx + s * 0.10, cy + s * 0.12, cx + s * 0.33, cy + s * 0.25)
-		lg.setLineWidth(1)
-	elseif kind == "poison" then
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.circle("fill", cx, cy, s * 0.48)
-
-		lg.setColor(r * darkMul, g * darkMul, b * darkMul, alpha)
-		lg.circle("fill", cx, cy, s * 0.38)
-
-		lg.setColor(r, g, b, alpha)
-		lg.circle("fill", cx, cy - s * highlightOffset * 0.38, s * 0.38 * highlightScale)
-
-		lg.setColor(1, 1, 1, 0.20 * alpha)
-		lg.circle("fill", cx + s * 0.24, cy - s * 0.22, s * 0.10)
-		lg.circle("fill", cx + s * 0.36, cy - s * 0.04, s * 0.07)
-	elseif kind == "slow" then
-		local o = s * 0.42
-
-		lg.push()
-		lg.translate(cx, cy)
-		lg.rotate(math.pi / 4)
-
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.rectangle("fill", -o, -o, o * 2, o * 2, 8, 8)
-
-		lg.setColor(r * darkMul, g * darkMul, b * darkMul, alpha)
-		lg.rectangle("fill", -o + 4, -o + 4, o * 2 - 8, o * 2 - 8, 7, 7)
-
-		lg.setColor(r, g, b, alpha)
-		lg.rectangle("fill", -o + 6, -o + 2, o * 2 - 12, o * 1.15, 6, 6)
-
-		lg.pop()
-	elseif kind == "lancer" then
-		local o = s * 0.44
-
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.rectangle("fill", cx - o, cy - o, o * 2, o * 2, 10, 10)
-
-		lg.setColor(r * darkMul, g * darkMul, b * darkMul, alpha)
-		lg.rectangle("fill", cx - o + 4, cy - o + 4, o * 2 - 8, o * 2 - 8, 8, 8)
-
-		lg.setColor(r, g, b, alpha)
-		lg.rectangle("fill", cx - o + 5, cy - o + 2, o * 2 - 10, o * 1.1, 7, 7)
-
-		lg.setColor(1, 1, 1, 0.85 * alpha)
-		lg.polygon("fill", cx + s * 0.18, cy, cx + s * 0.42, cy - s * 0.12, cx + s * 0.42, cy + s * 0.12)
-	elseif kind == "plasma" then
-		local o = s * 0.44
-
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.rectangle("fill", cx - o, cy - o, o * 2, o * 2, 10, 10)
-
-		lg.setColor(r * darkMul, g * darkMul, b * darkMul, alpha)
-		lg.rectangle("fill", cx - o + 4, cy - o + 4, o * 2 - 8, o * 2 - 8, 8, 8)
-
-		lg.setColor(r, g, b, alpha)
-		lg.rectangle("fill", cx - o + 5, cy - o + 2, o * 2 - 10, o * 1.1, 7, 7)
-
-		lg.setLineWidth(3)
-		lg.setColor(1, 0.92, 1, 0.9 * alpha)
-		lg.ellipse("line", cx, cy, s * 0.40, s * 0.16)
-		lg.ellipse("line", cx, cy, s * 0.16, s * 0.40)
-		lg.setLineWidth(1)
-	else
-		lg.setColor(outline[1], outline[2], outline[3], alpha)
-		lg.circle("fill", cx, cy, s * 0.50)
-
-		lg.setColor(r * darkMul, g * darkMul, b * darkMul, alpha)
-		lg.circle("fill", cx, cy, s * 0.40)
-
-		lg.setColor(r, g, b, alpha)
-		lg.circle("fill", cx, cy - s * highlightOffset * 0.40, s * 0.40 * highlightScale)
-	end
 end
 
 local function drawCategoryGlyph(category, x, y, color, alpha)
@@ -526,18 +405,30 @@ function ModulePicker.draw()
 			drawCategoryGlyph(category, drawX + 36, drawY + 34, towerColor, alpha)
 
 			local pulse = 1 + sin(now * 3.4 + i * 0.8) * 0.02 + hoverT * 0.03
-			drawTowerSigil(choice.target, drawX + drawW * 0.5, drawY + artH * 0.56, 39 + hoverT * 2, towerColor, alpha, pulse)
+			local towerScale = (1.85 + hoverT * 0.06) * pulse
+			local towerX = drawX + drawW * 0.5
+			local towerY = drawY + artH * 0.64
+
+			lg.setColor(0, 0, 0, (0.16 + 0.03 * hoverT) * alpha)
+			lg.ellipse("fill", towerX, towerY + 26, 44, 12)
+
+			lg.push()
+			lg.translate(towerX, towerY)
+			lg.scale(towerScale, towerScale)
+			DrawEntities.drawTowerVisual(choice.target, 0, 0, -math.pi / 2, 0, alpha)
+			lg.pop()
 
 			lg.setColor(1, 1, 1, 0.035 * alpha)
 			lg.line(drawX + 16, bodyY + 6, drawX + drawW - 16, bodyY + 6)
 
 			local badgeY = bodyY + 16
-			local leftPad = drawX + 20
-			drawBadge(getCategoryLabel(mod), leftPad, badgeY, towerColor, alpha, 9, nil, 22)
-
 			local towerChip = prettyTowerName(choice.target):upper()
 			local towerChipW = Fonts.ui:getWidth(towerChip) + 18
-			drawBadge(towerChip, drawX + drawW - towerChipW - 20, badgeY, {0.16, 0.16, 0.20}, alpha, 9, towerChipW, 22)
+			drawBadge(towerChip, drawX + 20, badgeY, towerColor, alpha, 9, towerChipW, 22)
+
+			local moduleChip = getCategoryLabel(mod)
+			local moduleChipW = Fonts.ui:getWidth(moduleChip) + 18
+			drawBadge(moduleChip, drawX + drawW - moduleChipW - 20, badgeY, {0.95, 0.95, 0.98}, alpha, 9, moduleChipW, 22, {0.10, 0.12, 0.16})
 
 			Fonts.set("menu")
 			lg.setColor(1, 1, 1, alpha)
