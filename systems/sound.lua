@@ -26,12 +26,13 @@ local function scaleVolume(v)
 end
 
 -- Play a sound effect
-function Sound.play(name)
+function Sound.play(name, opts)
 	if Sound.suppressed then
 		return
 	end
 
 	local entry = Sound.sfx[name]
+	opts = opts or {}
 
 	if not entry then
 		return
@@ -66,9 +67,9 @@ function Sound.play(name)
 	end
 
 	if entry.jitter then
-		sound:setPitch(1 + lmr(-8, 8) * 0.02)
+		sound:setPitch((opts.pitch or 1) + lmr(-8, 8) * 0.02)
 	else
-		sound:setPitch(1)
+		sound:setPitch(opts.pitch or 1)
 	end
 
 	sound:play()
