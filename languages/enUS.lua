@@ -96,6 +96,9 @@ return {
 		pierce = "Piercing Shots",
 		suspend = "Delayed Fire",
 		explode = "Explosive Hits",
+		target_low_hp = "Cull Weakest",
+		target_farthest_progress = "Lead Priority",
+		target_farthest_range = "Outer Ring",
 
 		beam = "Beam Conversion",
 	},
@@ -123,6 +126,9 @@ return {
 		pierce = "Projectiles pass through enemies without being consumed.",
 		suspend = "Shots pause briefly before firing.",
 		explode = "Hits create an explosion.",
+		target_low_hp = "Prioritizes the enemy with the lowest HP in range.",
+		target_farthest_progress = "Prioritizes enemies furthest along the path.",
+		target_farthest_range = "Prioritizes enemies farthest from the tower but still in range.",
 
 		beam = "Converts projectiles into continuous beams.",
 	},

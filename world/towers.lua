@@ -15,6 +15,7 @@ local Projectiles = require("world.projectiles")
 local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
 local L = require("core.localization")
+local Modules = require("systems.modules")
 --local Steam = require("luasteam")
 
 local towers = {}
@@ -36,7 +37,7 @@ local cwR, cwG, cwB = colorWarn[1], colorWarn[2], colorWarn[3]
 
 local enemies = Enemies.enemies
 
-local findTarget = Targeting.findProgressTarget
+local findTarget = Targeting.findTarget
 local isValidTarget = Targeting.isValidTarget
 local sampleFast = MapMod.sampleFast
 
@@ -103,6 +104,7 @@ local function addTower(kind, gx, gy)
 		levelUpAnim = 0,
 		spawnAnim = 1,
 		target = nil,
+		targetMode = Targeting.MODES.PROGRESS,
 		retargetT = 0,
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
@@ -300,7 +302,8 @@ local function updateTowers(dt)
 		-- Only search when we need a new target
 		if not target then
 			if t.retargetT <= 0 then
-				target = findTarget(t)
+				t.targetMode = Modules.getTargetMode(t.kind) or Targeting.MODES.PROGRESS
+				target = findTarget(t, t.targetMode)
 				t.retargetT = 0.10
 			end
 		end

@@ -171,6 +171,28 @@ function Modules.getActive()
 	return Modules.active
 end
 
+function Modules.getTargetMode(towerKind)
+	local mode = nil
+
+	local function pickMode(list)
+		for i = 1, #list do
+			local mod = list[i]
+			if mod and mod.targetMode then
+				mode = mod.targetMode
+			end
+		end
+	end
+
+	pickMode(Modules.active.global)
+
+	local towerList = Modules.active[towerKind]
+	if towerList then
+		pickMode(towerList)
+	end
+
+	return mode
+end
+
 function Modules.rollChoices(count)
 	local choices = {}
 	local seen = {}
