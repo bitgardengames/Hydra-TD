@@ -42,8 +42,14 @@ local revealTargetCount = 0
 local revealDelay = 0.5
 local revealDelayRemaining = 0
 
-local queueDelayBase = 0.20
+local queueDelayBase = 0.32
+local queueDelayStep = 0.12
 local queueTimer = 0
+local unlockPitches = {
+	0.94, -- bronze
+	1.00, -- silver
+	1.08, -- gold
+}
 
 local queue = {}
 local active = {}
@@ -107,10 +113,10 @@ function Medals.update(dt)
 				glint = 0,
 			}
 
-			Sound.play("medal")
+			Sound.play("medal", { pitch = unlockPitches[tier] or 1 })
 
-			-- Larger stagger per tier → more anticipation
-			queueTimer = queueDelayBase + (tier - 1) * 0.16
+			-- Bronze, then silver, then gold with increasing anticipation.
+			queueTimer = queueDelayBase + (tier - 1) * queueDelayStep
 		end
 	end
 
@@ -277,7 +283,7 @@ function Medals.drawReveal(x, y, r, g)
 		local m = active[i]
 		local mx = startX + (m.tier - 1) * step
 
-		drawMedal(mx, centerY, m.tier, true, m.scale, m.glint, m.yOffset)
+		drawMedal(mx, centerY, m.tier, true, BASE_RADIUS, m.scale, m.glint, m.yOffset)
 	end
 end
 
