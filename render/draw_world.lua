@@ -20,6 +20,8 @@ local gridH = Constants.GRID_H
 
 local colorGrid = Theme.grid
 local outlineW = Theme.outline.width
+local scatterDarkMul = 0.94
+local scatterLightMul = 1.06
 
 local gridToCenter = MapMod.gridToCenter
 
@@ -76,8 +78,12 @@ local function drawGrass()
 	lg.setColor(grass)
 	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
 
-	local colorScatterDark = {grass[1] * 0.94, grass[2] * 0.94, grass[3] * 0.94, 1}
-	local colorScatterLight = {grass[1] * 1.06, grass[2] * 1.06, grass[3] * 1.06, 1}
+	local darkR = grass[1] * scatterDarkMul
+	local darkG = grass[2] * scatterDarkMul
+	local darkB = grass[3] * scatterDarkMul
+	local lightR = grass[1] * scatterLightMul
+	local lightG = grass[2] * scatterLightMul
+	local lightB = grass[3] * scatterLightMul
 
 	for y = 1, gridH do
 		for x = 1, gridW do
@@ -90,7 +96,11 @@ local function drawGrass()
 				if r == 0 then
 					local useLight = (seed % 7) < 3
 
-					lg.setColor(useLight and colorScatterLight or colorScatterDark)
+					if useLight then
+						lg.setColor(lightR, lightG, lightB, 1)
+					else
+						lg.setColor(darkR, darkG, darkB, 1)
+					end
 
 					for i = 1, 2 do
 						local ox = (seed * (13 + i * 17)) % (tile - 8) + 4
