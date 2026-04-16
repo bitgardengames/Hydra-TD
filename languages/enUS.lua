@@ -196,6 +196,13 @@ return {
 		shortcuts = "Press R to restart • Esc for main menu",
 	},
 
+	victory = {
+		subtitle = "Defense successful",
+		medalProgress = "Difficulty medals earned",
+		hint = "Push to a higher difficulty or continue in Endless Mode for a tougher run.",
+		shortcuts = "Press N for next map • Esc for main menu",
+	},
+
 	map = {
 		riverbend = "Riverbend",
 		switchback = "Switchback",
