@@ -71,6 +71,8 @@ local function getCategoryLabel(mod)
 		return "DAMAGE"
 	elseif category == "utility" then
 		return "UTILITY"
+	elseif category == "targeting" then
+		return "TARGETING"
 	elseif category == "special" then
 		return "SPECIAL"
 	end
@@ -285,6 +287,16 @@ local function drawCategoryGlyph(category, x, y, color, alpha)
 		lg.circle("line", x, y, 11)
 		lg.line(x - 14, y, x + 14, y)
 		lg.line(x, y - 14, x, y + 14)
+		lg.setLineWidth(1)
+	elseif category == "targeting" then
+		lg.setLineWidth(3)
+		lg.setColor(r, g, b, alpha)
+		lg.circle("line", x, y, 12)
+		lg.line(x - 16, y, x - 8, y)
+		lg.line(x + 8, y, x + 16, y)
+		lg.line(x, y - 16, x, y - 8)
+		lg.line(x, y + 8, x, y + 16)
+		lg.circle("fill", x, y, 3)
 		lg.setLineWidth(1)
 	elseif category == "special" then
 		lg.setLineWidth(4)

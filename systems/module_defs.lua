@@ -1,4 +1,5 @@
 local ModuleDefs = {}
+local Targeting = require("world.targeting")
 
 -- helper for cleaner modules
 local function add(id, def)
@@ -257,6 +258,40 @@ add("explode_on_hit", {
 			id = "explode_on_hit",
 			data = { radius = 48 }
 		})
+	end
+})
+
+-- =========================
+-- TARGETING
+-- =========================
+
+add("target_low_hp", {
+	nameKey = "module.target_low_hp",
+	descKey = "moduleDesc.target_low_hp",
+	category = "targeting",
+	targetMode = Targeting.MODES.LOW_HP,
+
+	apply = function(_)
+	end
+})
+
+add("target_farthest_progress", {
+	nameKey = "module.target_farthest_progress",
+	descKey = "moduleDesc.target_farthest_progress",
+	category = "targeting",
+	targetMode = Targeting.MODES.PROGRESS,
+
+	apply = function(_)
+	end
+})
+
+add("target_farthest_range", {
+	nameKey = "module.target_farthest_range",
+	descKey = "moduleDesc.target_farthest_range",
+	category = "targeting",
+	targetMode = Targeting.MODES.FARTHEST,
+
+	apply = function(_)
 	end
 })
 
