@@ -16,6 +16,7 @@ local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
 local L = require("core.localization")
 local Modules = require("systems.modules")
+local TowerBranchDefs = require("world.tower_branch_defs")
 --local Steam = require("luasteam")
 
 local towers = {}
@@ -116,6 +117,7 @@ local function addTower(kind, gx, gy)
 		poison = def.poison,
 		plasma = def.plasma,
 		specializationId = nil,
+		branchSelections = {},
 	}
 
 	State.money = State.money - def.cost
@@ -158,17 +160,9 @@ local function upgradeTower(t, specializationId)
 	end
 
 	local diff = Difficulty.get()
-	local validChoice = false
-	local choices = t.def and t.def.upgradeChoices or {}
+	local nextLevel = (t.level or 1) + 1
 
-	for i = 1, #choices do
-		if choices[i] == specializationId then
-			validChoice = true
-			break
-		end
-	end
-
-	if not validChoice then
+	if not TowerBranchDefs.isValidChoice(t.kind, nextLevel, specializationId) then
 		return false, "invalid_choice"
 	end
 
@@ -179,6 +173,8 @@ local function upgradeTower(t, specializationId)
 	t.height = (t.level - 1) * 4
 	t.levelUpAnim = 1
 	t.specializationId = specializationId
+	t.branchSelections = t.branchSelections or {}
+	t.branchSelections[#t.branchSelections + 1] = specializationId
 	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 
