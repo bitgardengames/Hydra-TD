@@ -5,6 +5,7 @@ local MapMod = require("world.map")
 local State = require("core.state")
 local Constants = require("core.constants")
 local MapRender = require("world.map_render")
+local Camera = require("core.camera")
 
 local lg = love.graphics
 
@@ -25,6 +26,8 @@ local function clonePathWorld(path)
 end
 
 function MapPreviewCache.buildAll(w, h)
+	local winW, winH = lg.getDimensions()
+
 	for i, map in ipairs(Maps) do
 		State.worldMapIndex = i
 
@@ -41,6 +44,9 @@ function MapPreviewCache.buildAll(w, h)
 			pathWorld = clonePathWorld(MapMod.map.pathWorld),
 			mapW = mapW,
 			mapH = mapH,
+			winW = winW,
+			winH = winH,
+			camScale = Camera.wscale,
 		}
 	end
 end
