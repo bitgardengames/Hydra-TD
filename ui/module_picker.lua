@@ -347,20 +347,14 @@ local function rebuildLayout()
 end
 
 local function drawBackdropEffects(sw, sh, alpha)
-	local bandY = sh * 0.52
+	local bandY = sh * 0.55
 
-	lg.setColor(1, 1, 1, 0.035 * alpha)
-	lg.ellipse("fill", sw * 0.5, bandY, sw * 0.32, sh * 0.19)
+	lg.setColor(1, 1, 1, 0.024 * alpha)
+	lg.ellipse("fill", sw * 0.5, bandY, sw * 0.30, sh * 0.16)
 
-	lg.setColor(0, 0, 0, 0.18 * alpha)
-	lg.rectangle("fill", 0, 0, sw, sh * 0.17)
-	lg.rectangle("fill", 0, sh * 0.83, sw, sh * 0.17)
-
-	lg.setColor(1, 1, 1, 0.015 * alpha)
-	for i = 0, 12 do
-		local x = i * (sw / 12)
-		lg.rectangle("fill", x, bandY - 58, 2, 116)
-	end
+	lg.setColor(0, 0, 0, 0.22 * alpha)
+	lg.rectangle("fill", 0, 0, sw, sh * 0.19)
+	lg.rectangle("fill", 0, sh * 0.81, sw, sh * 0.19)
 end
 
 function ModulePicker.open(choices)
@@ -506,89 +500,66 @@ function ModulePicker.draw()
 			c.drawW = drawW
 			c.drawH = drawH
 
-			local radius = 18
-			local artH = drawH * 0.42
-			local bodyY = drawY + artH - 10
-			local bodyH = drawH - artH + 10
+			local radius = 20
+			local artH = drawH * 0.36
+			local bodyY = drawY + artH
 
-			local faceR, faceG, faceB = colorLerp({0.10, 0.10, 0.12}, {0.13, 0.13, 0.16}, hoverT, alpha)
-			local borderR, borderG, borderB = colorLerp(outline, towerColor, hoverT * 0.65, alpha)
+			local faceR, faceG, faceB = colorLerp({0.08, 0.09, 0.11}, {0.10, 0.11, 0.13}, hoverT, alpha)
+			local borderR, borderG, borderB = colorLerp(outline, towerColor, hoverT * 0.7, alpha)
 
-			lg.setColor(0, 0, 0, 0.22 * alpha)
-			lg.rectangle("fill", drawX + 4, drawY + 12, drawW, drawH, radius, radius)
-			lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.05 + 0.10 * hoverT) * alpha)
-			lg.rectangle("fill", drawX - 2, drawY - 2, drawW + 4, drawH + 4, radius + 2, radius + 2)
+			lg.setColor(0, 0, 0, (0.26 + 0.06 * hoverT) * alpha)
+			lg.rectangle("fill", drawX + 5, drawY + 14, drawW, drawH, radius, radius)
 
-			drawRoundedPanel(
-				drawX,
-				drawY,
-				drawW,
-				drawH,
-				radius,
-				{faceR, faceG, faceB},
-				{borderR, borderG, borderB},
-				alpha
-			)
+			lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.08 + 0.16 * hoverT) * alpha)
+			lg.rectangle("line", drawX - 2, drawY - 2, drawW + 4, drawH + 4, radius + 3, radius + 3)
 
-			local topR, topG, topB = colorMul(towerColor, lerp(0.72, 0.90, hoverT), alpha)
-			local topR2, topG2, topB2 = colorMul(towerColor, lerp(0.44, 0.58, hoverT), alpha)
+			drawRoundedPanel(drawX, drawY, drawW, drawH, radius, {faceR, faceG, faceB}, {borderR, borderG, borderB}, alpha)
 
-			lg.setColor(topR2, topG2, topB2, 0.98 * alpha)
-			lg.rectangle("fill", drawX + 10, drawY + 10, drawW - 20, artH, 14, 14)
+			local accentR, accentG, accentB = colorMul(towerColor, lerp(0.52, 0.72, hoverT), alpha)
+			lg.setColor(accentR, accentG, accentB, (0.22 + hoverT * 0.12) * alpha)
+			lg.rectangle("fill", drawX + 12, drawY + 12, drawW - 24, artH - 10, 14, 14)
 
-			lg.setColor(topR, topG, topB, 0.92 * alpha)
-			lg.rectangle("fill", drawX + 10, drawY + 10, drawW - 20, artH * 0.72, 14, 14)
+			lg.setColor(1, 1, 1, (0.05 + 0.02 * hoverT) * alpha)
+			lg.rectangle("fill", drawX + 12, drawY + 12, drawW - 24, 22, 14, 14)
 
-			lg.setColor(1, 1, 1, (0.06 + 0.04 * hoverT) * alpha)
-			lg.rectangle("fill", drawX + 10, drawY + 10, drawW - 20, artH * 0.26, 14, 14)
+			drawKeyBadge(tostring(i), drawX + drawW - 42, drawY + 16, alpha)
+			drawCategoryGlyph(category, drawX + 36, drawY + 34, towerColor, alpha)
 
-			lg.setColor(0, 0, 0, 0.16 * alpha)
-			lg.rectangle("fill", drawX + 10, drawY + artH * 0.70, drawW - 20, artH * 0.30, 0, 0, 14, 14)
+			local pulse = 1 + sin(now * 3.4 + i * 0.8) * 0.02 + hoverT * 0.03
+			drawTowerSigil(choice.target, drawX + drawW * 0.5, drawY + artH * 0.56, 39 + hoverT * 2, towerColor, alpha, pulse)
 
-			drawKeyBadge(tostring(i), drawX + drawW - 42, drawY + 18, alpha)
-			drawCategoryGlyph(category, drawX + 42, drawY + 42, {1, 1, 1}, alpha)
+			lg.setColor(1, 1, 1, 0.035 * alpha)
+			lg.line(drawX + 16, bodyY + 6, drawX + drawW - 16, bodyY + 6)
 
-			local pulse = 1 + sin(now * 4 + i * 0.7) * 0.03 + hoverT * 0.04
-			drawTowerSigil(choice.target, drawX + drawW * 0.5, drawY + artH * 0.58, 42 + hoverT * 3, towerColor, alpha, pulse)
+			local badgeY = bodyY + 16
+			local leftPad = drawX + 20
+			drawBadge(getCategoryLabel(mod), leftPad, badgeY, towerColor, alpha, 9, nil, 22)
 
-			lg.setColor(0.08, 0.08, 0.10, 0.98 * alpha)
-			lg.rectangle("fill", drawX + 10, bodyY, drawW - 20, bodyH - 10, 14, 14)
-
-			lg.setColor(1, 1, 1, 0.04 * alpha)
-			lg.rectangle("line", drawX + 10, bodyY, drawW - 20, bodyH - 10, 14, 14)
-
-			local catFill = towerColor
-			local badgeY = bodyY + 12
-			local leftPad = drawX + 22
-
-			local catW = drawBadge(getCategoryLabel(mod), leftPad, badgeY, catFill, alpha)
-			drawBadge(prettyTowerName(choice.target):upper(), leftPad + catW + 8, badgeY, {0.14, 0.14, 0.18}, alpha, 12)
-
-			Fonts.set("ui")
-			lg.setColor(towerColor[1], towerColor[2], towerColor[3], 0.95 * alpha)
-			lg.print(prettyTowerName(choice.target), drawX + 22, bodyY + 44)
+			local towerChip = prettyTowerName(choice.target):upper()
+			local towerChipW = Fonts.ui:getWidth(towerChip) + 18
+			drawBadge(towerChip, drawX + drawW - towerChipW - 20, badgeY, {0.16, 0.16, 0.20}, alpha, 9, towerChipW, 22)
 
 			Fonts.set("menu")
 			lg.setColor(1, 1, 1, alpha)
-			lg.printf(getModuleName(mod), drawX + 20, bodyY + 64, drawW - 40, "left")
+			lg.printf(getModuleName(mod), drawX + 20, bodyY + 46, drawW - 40, "left")
 
-			lg.setColor(towerColor[1], towerColor[2], towerColor[3], 0.65 * alpha)
-			lg.rectangle("fill", drawX + 22, bodyY + 102, drawW - 44, 3, 3, 3)
+			lg.setColor(towerColor[1], towerColor[2], towerColor[3], 0.70 * alpha)
+			lg.rectangle("fill", drawX + 20, bodyY + 82, drawW - 40, 2, 2, 2)
 
 			Fonts.set("ui")
-			lg.setColor(1, 1, 1, 0.82 * alpha)
-			lg.printf(getModuleDesc(mod), drawX + 22, bodyY + 116, drawW - 44, "left")
+			lg.setColor(1, 1, 1, 0.84 * alpha)
+			lg.printf(getModuleDesc(mod), drawX + 20, bodyY + 95, drawW - 40, "left")
 
 			if hovered then
-				lg.setColor(towerColor[1], towerColor[2], towerColor[3], 0.10 * alpha)
-				lg.rectangle("fill", drawX + 6, drawY + 6, drawW - 12, drawH - 12, radius, radius)
+				lg.setColor(towerColor[1], towerColor[2], towerColor[3], 0.08 * alpha)
+				lg.rectangle("fill", drawX + 8, drawY + 8, drawW - 16, drawH - 16, radius, radius)
 
-				lg.setColor(1, 1, 1, 0.08 * alpha)
-				lg.rectangle("line", drawX + 6, drawY + 6, drawW - 12, drawH - 12, radius, radius)
+				lg.setColor(1, 1, 1, 0.07 * alpha)
+				lg.rectangle("line", drawX + 8, drawY + 8, drawW - 16, drawH - 16, radius, radius)
 
 				lg.setColor(1, 1, 1, 0.85 * alpha)
 				Fonts.set("ui")
-				lg.printf("Click to Claim", drawX + 18, drawY + drawH - 32, drawW - 36, "right")
+				lg.printf("Click to Claim", drawX + 18, drawY + drawH - 30, drawW - 36, "right")
 			end
 		end
 	end
