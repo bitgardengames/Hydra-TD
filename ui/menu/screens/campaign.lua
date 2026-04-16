@@ -74,12 +74,13 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 
 	local function toScreen(wx, wy)
 		-- same logic as MapRender
-		local winW, winH = love.graphics.getDimensions()
+		local winW = entry.winW or love.graphics.getWidth()
+		local winH = entry.winH or love.graphics.getHeight()
 
 		local sx = pw / winW
 		local sy = ph / winH
 
-		local z = Camera.wscale
+		local z = entry.camScale or Camera.wscale
 
 		local mapW = entry.mapW
 		local mapH = entry.mapH
