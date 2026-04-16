@@ -27,7 +27,7 @@ function Emissions.emitBeam(t, target, ctx)
 	-- spawn a "pseudo projectile" that is stationary
 	return Projectiles.spawnFromContext(t, target, ctx, {
 		speed = 0,
-		life = 0.2 -- short-lived, refreshed by fire rate
+		life = math.max(0.12, (t.fireInterval or 0.2) * 0.9)
 	})
 end
 

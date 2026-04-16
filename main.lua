@@ -239,6 +239,9 @@ function resetGame()
 			Modules.add("chain_hit", t)
 		end
 	end
+	
+	Modules.add("beam_conversion", "lancer")
+	Modules.add("beam_conversion", "slow")
 
 	Camera.load()
 end

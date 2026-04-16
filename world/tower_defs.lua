@@ -131,8 +131,8 @@ return {
 			fireMult = 1.0, -- 1.04
 		},
 		behaviors = {
-			{id = "instant_hit" },
-			{id = "hit_chain", data = {jumps = 3, radius = 56}},
+			{id = "emit_on_target"},
+			{id = "hit_chain", data = {jumps = 4, radius = 56}},
 			{id = "chain_zap_fx"}
 		}
 	},

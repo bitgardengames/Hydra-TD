@@ -93,6 +93,10 @@ return {
 		orbital_spawn = "Orbital Spawn",
 		static = "Static Field",
 
+		pierce = "Piercing Shots",
+		suspend = "Delayed Fire",
+		explode = "Explosive Hits",
+
 		beam = "Beam Conversion",
 	},
 
@@ -115,6 +119,10 @@ return {
 		infect = "Poison spreads to nearby enemies on death.",
 		orbital_spawn = "Spawns orbiting projectiles on hit.",
 		static = "Creates a damaging static field.",
+
+		pierce = "Projectiles pass through enemies without being consumed.",
+		suspend = "Shots pause briefly before firing.",
+		explode = "Hits create an explosion.",
 
 		beam = "Converts projectiles into continuous beams.",
 	},

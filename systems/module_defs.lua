@@ -84,10 +84,20 @@ add("chain_hit", {
 	category = "damage",
 
 	apply = function(ctx)
-		ctx:addBehavior({
-			id = "hit_chain",
-			data = { jumps = 3, radius = 72 }
-		})
+		local found = false
+
+		ctx:modifyBehavior("hit_chain", function(data)
+			data.jumps = (data.jumps or 0) + 2
+			data.radius = (data.radius or 56) + 12
+			found = true
+		end)
+
+		if not found then
+			ctx:addBehavior({
+				id = "hit_chain",
+				data = { jumps = 3, radius = 72 }
+			})
+		end
 	end
 })
 
@@ -130,6 +140,7 @@ add("growing_projectile", {
 	end
 })
 
+-- Bounce isn't working currently
 add("chaos_bounce", {
 	nameKey = "module.bounce",
 	descKey = "moduleDesc.bounce",
@@ -144,6 +155,7 @@ add("chaos_bounce", {
 -- UTILITY / SYNERGY
 -- =========================
 
+-- Is it weird to give up the identity of poison/slow so easily?
 add("apply_slow", {
 	nameKey = "module.slow",
 	descKey = "moduleDesc.slow",
@@ -157,6 +169,7 @@ add("apply_slow", {
 	end
 })
 
+-- Is it weird to give up the identity of poison/slow so easily?
 add("apply_poison", {
 	nameKey = "module.poison",
 	descKey = "moduleDesc.poison",
@@ -191,7 +204,8 @@ add("spawn_orbitals", {
 	apply = function(ctx)
 		ctx:addBehavior({
 			id = "spawn_orbital_on_hit",
-			data = { count = 2 }
+			data = { count = 2 },
+			noInherit = true,
 		})
 	end
 })
@@ -209,6 +223,43 @@ add("static_field", {
 	end
 })
 
+add("pierce", {
+	nameKey = "module.pierce",
+	descKey = "moduleDesc.pierce",
+	category = "damage",
+
+	apply = function(ctx)
+		ctx:addBehavior({ id = "pierce" })
+	end
+})
+
+add("suspend_shot", {
+	nameKey = "module.suspend",
+	descKey = "moduleDesc.suspend",
+	category = "movement",
+
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "move_suspend",
+			data = { delay = 0.25 }
+		})
+	end
+})
+
+-- Isn't this the same as the aoe module?
+add("explode_on_hit", {
+	nameKey = "module.explode",
+	descKey = "moduleDesc.explode",
+	category = "damage",
+
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "explode_on_hit",
+			data = { radius = 48 }
+		})
+	end
+})
+
 -- =========================
 -- SPECIAL (SPICY)
 -- =========================
@@ -220,8 +271,7 @@ add("beam_conversion", {
 
 	apply = function(ctx)
 		ctx.output = "beam"
-		ctx:removeBehavior("move_homing")
-		ctx:removeBehavior("instant_hit")
+		ctx:removeByType("movement")
 		ctx:addBehavior({ id = "beam", data = { length = 200, width = 8, rate = 0.1 } }) -- can we make the width respect any other modifiers that should increase the thickness
 	end
 })

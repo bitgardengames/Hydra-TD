@@ -113,17 +113,35 @@ function Modules.buildContext(tower)
 	local base = tower.def.behaviors
 	local ctx = createContext(base)
 
-	-- global first
+	-- global modules
 	local global = Modules.active.global
 	for i = 1, #global do
 		global[i].apply(ctx)
 	end
 
-	-- tower specific
+	-- tower modules
 	local list = Modules.active[tower.kind]
 	if list then
 		for i = 1, #list do
 			list[i].apply(ctx)
+		end
+	end
+
+	-- =========================================
+	-- 🔥 BEAM FIX: ensure hit_damage exists
+	-- =========================================
+	if ctx.output == "beam" then
+		local hasDamage = false
+
+		for i = 1, #ctx.behaviors do
+			if ctx.behaviors[i].id == "hit_damage" then
+				hasDamage = true
+				break
+			end
+		end
+
+		if not hasDamage then
+			ctx:addBehavior({ id = "hit_damage" })
 		end
 	end
 

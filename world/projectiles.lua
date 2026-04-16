@@ -69,6 +69,8 @@ local function spawnEvent(evt)
 	p.speed = evt.speed or source.projSpeed or 0
 	p.damage = evt.damage or source.damage or 0
 
+	p.hitOrigin = evt.hitOrigin or "primary"
+
 	p.target = evt.target
 	p.ignoreTarget = evt.ignoreTarget
 
@@ -102,7 +104,9 @@ local function spawnEvent(evt)
 		p.lastTY = p.y + sin(p.angle) * 10
 	end
 
-	if evt.context then
+	if evt.behaviors then
+		p.behaviors = evt.behaviors
+	elseif evt.context then
 		p.behaviors = evt.context.behaviors
 	else
 		local ctx = Modules.buildContext(source)
@@ -222,8 +226,7 @@ local function resolveEvents(p)
 				elseif evt.id == "fx" then
 					resolveFX(evt, p)
 				elseif evt.id == "hit" then
-					local res = PB.hit(p, evt.target)
-
+					local res = PB.hit(p, evt.target, evt.ctx)
 					if res == "consume" then
 						p._consumed = true
 					end
@@ -270,7 +273,10 @@ local function processHit(p)
 
 	pushEvent(p, {
 		id = "hit",
-		target = hitTarget
+		target = hitTarget,
+		ctx = {
+			origin = p.hitOrigin or "primary"
+		}
 	})
 
 	resolveEvents(p)
@@ -378,9 +384,9 @@ local function spawnFromContext(t, target, ctx, overrides)
 	return spawnEvent({
 		source = t,
 		target = target,
-		behaviors = ctx.behaviors,
+		context = ctx,
 
-		-- allow overrides (beam uses this)
+		-- Optional overrides (used by beam, etc)
 		speed = overrides and overrides.speed,
 		life = overrides and overrides.life,
 	})

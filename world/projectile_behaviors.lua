@@ -107,6 +107,33 @@ end
 
 -- behaviors
 
+B.emit_on_target = {
+	type = "emission",
+
+	update = function(p, dt)
+		local e = p.target
+
+		if not e or e.hp <= 0 then
+			return "consume"
+		end
+
+		-- snap to target (so FX origin is correct)
+		p.x = e.x
+		p.y = e.y
+
+		-- trigger hit pipeline
+		pushEvent(p, {
+			id = "hit",
+			target = e,
+			ctx = {
+				origin = p.hitOrigin or "primary"
+			}
+		})
+
+		return "consume"
+	end
+}
+
 B.retarget_on_spawn = {
 	init = function(p, data)
 		local radius = data.radius or 72
@@ -222,7 +249,10 @@ B.move_homing = {
 				elseif p.sourceKind == "cannon" then
 					pushEvent(p, {
 						id = "hit",
-						target = nil
+						target = nil,
+						ctx = {
+							origin = p.hitOrigin or "primary"
+						}
 					})
 				elseif p.sourceKind == "slow" then
 					pushEvent(p, {
@@ -715,11 +745,10 @@ B.instant_hit = {
 			return "consume"
 		end
 
-		local id = e.id or e
-
-		-- lock position for FX
 		p.x = e.x
 		p.y = e.y
+
+		local id = e.id or e
 
 		if not p.hitSet[id] then
 			p.hit = e
@@ -998,26 +1027,36 @@ B.plasma_conductor = {
 }
 
 B.spawn_orbital_on_hit = {
-	onHit = function(p, e, data)
+	onHit = function(p, e, data, ctx)
+		if ctx and ctx.origin ~= "primary" then
+			return
+		end
+
 		if not e or e.hp <= 0 then
 			return
 		end
 
 		local count = data.count or 2
+		local spawnRadius = (e.radius or 12) + 6
 
 		for i = 1, count do
-			local ang = (i / count) * pi * 2
+			local ang = ((i - 1) / count) * pi * 2
+
+			local ox = cos(ang) * spawnRadius
+			local oy = sin(ang) * spawnRadius
 
 			pushEvent(p, {
 				id = "spawn_projectile",
-				x = e.x,
-				y = e.y,
+				hitOrigin = "secondary",
+				x = e.x + ox,
+				y = e.y + oy,
 				angle = ang,
 				source = p.sourceTower,
+				target = e,
 				damage = p.damage * 0.4,
 				ignoreTarget = e,
 				behaviors = {
-					{ id = "move_orbit", data = { radius = 32, speed = 4 } },
+					{ id = "move_enemy_orbit", data = { radius = 32 } },
 					{ id = "tick_damage", data = { radius = 28, rate = 0.25 } },
 					{ id = "draw_shock_orb" }
 				}
@@ -1106,7 +1145,7 @@ B.growing_projectile = {
 }
 
 B.beam = {
-	type = "movement",
+	type = "output",
 
 	init = function(p, data)
 		p._beam = {
@@ -1130,18 +1169,14 @@ B.beam = {
 
 		if not t then return end
 
-		-- =========================================
-		-- GROWTH SCALE
-		-- =========================================
 		local scale = p._growthScale or 1
 		local width = b.width * scale
 
-		-- =========================================
-		-- ANCHOR
-		-- =========================================
+		-- lock beam to tower
 		p.x = t.x
 		p.y = t.renderY
 
+		-- aim at target if exists
 		if e and e.hp > 0 then
 			local dx = e.x - p.x
 			local dy = e.y - p.y
@@ -1155,7 +1190,7 @@ B.beam = {
 			end
 		end
 
-		-- timers
+		-- cooldown timer
 		b.timer = b.timer - dt
 
 		for k, v in pairs(b.hitCooldown) do
@@ -1182,7 +1217,6 @@ B.beam = {
 			local sx = x1 + vx * b.length * tSeg
 			local sy = y1 + vy * b.length * tSeg
 
-			-- damage tick
 			if b.timer <= 0 then
 				local nearby = Spatial.queryCells(sx, sy)
 
@@ -1193,18 +1227,16 @@ B.beam = {
 						local dx = e2.x - sx
 						local dy = e2.y - sy
 						local dist2 = dx*dx + dy*dy
-
 						local rr = width + (e2.radius or 0)
 
 						if dist2 <= rr*rr then
 							local id = e2.id or e2
 
 							if not b.hitCooldown[id] then
-								emitDamage(p, e2, p.damage or 0)
-
 								pushEvent(p, {
 									id = "hit",
-									target = e2
+									target = e2,
+									ctx = { origin = "beam" }
 								})
 
 								b.hitCooldown[id] = b.rate
@@ -1222,48 +1254,63 @@ B.beam = {
 
 	draw = function(p, a)
 		local b = p._beam
+		if not b then return end
 
 		local scale = p._growthScale or 1
 		local w = b.width * scale
 
-		local r, g, bl = getProjectileColor(p, {1, 1, 1})
+		-- =========================================
+		-- 🎨 TOWER COLOR
+		-- =========================================
+		local t = p.sourceTower
+		local c = t and t.color or {1, 1, 1}
 
-		local vx, vy = p.vx, p.vy
-		local len = math.sqrt(vx*vx + vy*vy)
-		if len == 0 then return end
+		local r, g, bcol = c[1], c[2], c[3]
 
-		vx, vy = vx / len, vy / len
+		-- darker outer glow
+		local dr = r * 0.45
+		local dg = g * 0.45
+		local db = bcol * 0.45
 
-		local segments = 10
+		-- bright core
+		local cr = math.min(1, r * 1.4)
+		local cg = math.min(1, g * 1.4)
+		local cb = math.min(1, bcol * 1.4)
 
-		for s = 1, segments do
-			local t0 = (s - 1) / segments
-			local t1 = s / segments
+		local len = b.length or 0
+		if len <= 0 then return end
 
-			local xA = p.x + vx * b.length * t0
-			local yA = p.y + vy * b.length * t0
-			local xB = p.x + vx * b.length * t1
-			local yB = p.y + vy * b.length * t1
+		local xA, yA = 0, 0
+		local xB, yB = len, 0
 
-			love.graphics.setLineWidth(w * 2.4)
-			love.graphics.setColor(r * 0.8, g * 0.8, bl * 1.2, a * 0.2)
-			love.graphics.line(xA, yA, xB, yB)
+		-- =========================================
+		-- OUTER GLOW
+		-- =========================================
+		lg.setLineWidth(w * 2.6)
+		lg.setColor(dr, dg, db, a * 0.25)
+		lg.line(xA, yA, xB, yB)
 
-			love.graphics.setLineWidth(w)
-			love.graphics.setColor(r, g, bl, a)
-			love.graphics.line(xA, yA, xB, yB)
+		-- =========================================
+		-- MAIN BEAM
+		-- =========================================
+		lg.setLineWidth(w)
+		lg.setColor(r, g, bcol, a)
+		lg.line(xA, yA, xB, yB)
 
-			love.graphics.setLineWidth(w * 0.4)
-			love.graphics.setColor(
-				math.min(1, r * 1.4),
-				math.min(1, g * 1.4),
-				math.min(1, bl * 1.4),
-				a * 0.9
-			)
-			love.graphics.line(xA, yA, xB, yB)
-		end
+		-- =========================================
+		-- HOT CORE
+		-- =========================================
+		lg.setLineWidth(w * 0.4)
+		lg.setColor(cr, cg, cb, a * 0.9)
+		lg.line(xA, yA, xB, yB)
 
-		love.graphics.setLineWidth(1)
+		-- =========================================
+		-- MUZZLE GLOW
+		-- =========================================
+		lg.setColor(r, g, bcol, a * 0.35)
+		lg.circle("fill", 0, 0, w * 0.9)
+
+		lg.setLineWidth(1)
 	end
 }
 
@@ -1399,7 +1446,10 @@ B.tick_damage = {
 					if not p.hitCooldowns[id] then
 						pushEvent(p, {
 							id = "hit",
-							target = e
+							target = e,
+							ctx = {
+								origin = p.hitOrigin or "primary"
+							}
 						})
 
 						p.hitCooldowns[id] = data.hitRate or 0.35 -- tweak this
@@ -1661,16 +1711,15 @@ function ProjectileBehaviors.update(p, dt)
 	end
 end
 
-function ProjectileBehaviors.hit(p, e)
-	if p._didHit then return end
-	p._didHit = true
+function ProjectileBehaviors.hit(p, e, ctx)
+	ctx = ctx or { origin = p.hitOrigin or "primary" }
 
 	for i = 1, #p.behaviors do
 		local b = p.behaviors[i]
 		local def = B[b.id]
 
 		if def and def.onHit then
-			def.onHit(p, e, b.data)
+			def.onHit(p, e, b.data, ctx)
 		end
 	end
 end
