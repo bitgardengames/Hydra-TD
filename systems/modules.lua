@@ -1,5 +1,6 @@
 local Constants = require("core.constants")
 local ModuleDefs = require("systems.module_defs")
+local TowerBranchDefs = require("world.tower_branch_defs")
 
 local Modules = {}
 
@@ -127,10 +128,19 @@ function Modules.buildContext(tower)
 		end
 	end
 
-	-- tower specialization preset
-	local specializationId = tower and tower.specializationId
-	if specializationId then
-		local specialization = ModuleDefs[specializationId]
+	-- tower branch modules (selected through upgrade tiers)
+	local branchSelections = tower and tower.branchSelections
+	if branchSelections then
+		for i = 1, #branchSelections do
+			local moduleId = branchSelections[i]
+			local branchMod = ModuleDefs[moduleId]
+			if branchMod and branchMod.apply then
+				branchMod.apply(ctx)
+			end
+		end
+	elseif tower and tower.specializationId then
+		-- backward compatibility for older saves
+		local specialization = ModuleDefs[tower.specializationId]
 		if specialization and specialization.apply then
 			specialization.apply(ctx)
 		end
@@ -182,11 +192,13 @@ end
 
 function Modules.getTargetMode(towerOrKind)
 	local towerKind = towerOrKind
-	local specializationId = nil
+	local branchSelections = nil
+	local legacySpecializationId = nil
 
 	if type(towerOrKind) == "table" then
 		towerKind = towerOrKind.kind
-		specializationId = towerOrKind.specializationId
+		branchSelections = towerOrKind.branchSelections
+		legacySpecializationId = towerOrKind.specializationId
 	end
 
 	local mode = nil
@@ -207,10 +219,17 @@ function Modules.getTargetMode(towerOrKind)
 		pickMode(towerList)
 	end
 
-	if specializationId then
-		local specialization = ModuleDefs[specializationId]
-		if specialization and specialization.targetMode then
-			mode = specialization.targetMode
+	if branchSelections then
+		for i = 1, #branchSelections do
+			local mod = ModuleDefs[branchSelections[i]]
+			if mod and mod.targetMode then
+				mode = mod.targetMode
+			end
+		end
+	elseif legacySpecializationId then
+		local mod = ModuleDefs[legacySpecializationId]
+		if mod and mod.targetMode then
+			mode = mod.targetMode
 		end
 	end
 
@@ -218,15 +237,22 @@ function Modules.getTargetMode(towerOrKind)
 end
 
 function Modules.rollTowerUpgradeChoices(tower)
-	if not tower or not tower.def or not tower.def.upgradeChoices then
+	if not tower or not tower.kind then
+		return {}
+	end
+
+	local nextLevel = (tower.level or 1) + 1
+	local branchChoices = TowerBranchDefs.getChoices(tower.kind, nextLevel)
+
+	if not branchChoices then
 		return {}
 	end
 
 	local out = {}
 
-	for i = 1, #tower.def.upgradeChoices do
-		local moduleId = tower.def.upgradeChoices[i]
-		if moduleId ~= tower.specializationId and ModuleDefs[moduleId] then
+	for i = 1, #branchChoices do
+		local moduleId = branchChoices[i]
+		if ModuleDefs[moduleId] then
 			out[#out + 1] = {
 				moduleId = moduleId,
 				target = tower.kind,
