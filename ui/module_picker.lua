@@ -310,12 +310,12 @@ local function rebuildLayout()
 	local sw, sh = lg.getDimensions()
 	local count = #State.modulePicker.choices
 
-	local cardW = 274
-	local cardH = 238
-	local gap = 26
+	local gap = clamp(sw * 0.022, 18, 30)
+	local cardW = clamp((sw - 180 - gap * (count - 1)) / max(count, 1), 232, 300)
+	local cardH = clamp(sh * 0.40, 224, 264)
 	local totalW = count * cardW + (count - 1) * gap
 	local startX = (sw - totalW) * 0.5
-	local y = sh * 0.5 - cardH * 0.28
+	local y = sh * 0.5 - cardH * 0.24
 
 	for i = 1, count do
 		local x = startX + (i - 1) * (cardW + gap)
@@ -331,6 +331,23 @@ local function rebuildLayout()
 			drawW = cardW,
 			drawH = cardH,
 		}
+	end
+end
+
+local function drawBackdropEffects(sw, sh, alpha)
+	local bandY = sh * 0.52
+
+	lg.setColor(1, 1, 1, 0.035 * alpha)
+	lg.ellipse("fill", sw * 0.5, bandY, sw * 0.32, sh * 0.19)
+
+	lg.setColor(0, 0, 0, 0.18 * alpha)
+	lg.rectangle("fill", 0, 0, sw, sh * 0.17)
+	lg.rectangle("fill", 0, sh * 0.83, sw, sh * 0.17)
+
+	lg.setColor(1, 1, 1, 0.015 * alpha)
+	for i = 0, 12 do
+		local x = i * (sw / 12)
+		lg.rectangle("fill", x, bandY - 58, 2, 116)
 	end
 end
 
@@ -420,14 +437,30 @@ function ModulePicker.draw()
 
 	lg.setColor(dim[1], dim[2], dim[3], 0.84 * overlayT)
 	lg.rectangle("fill", 0, 0, sw, sh)
+	drawBackdropEffects(sw, sh, overlayT)
 
 	Fonts.set("menu")
 	lg.setColor(text[1], text[2], text[3], overlayT)
-	lg.printf("Wave Reward", 0, sh * 0.16, sw, "center")
+	lg.printf("Wave Reward", 0, sh * 0.135, sw, "center")
 
 	Fonts.set("ui")
 	lg.setColor(1, 1, 1, 0.75 * overlayT)
-	lg.printf("Choose 1 Module  •  Press 1, 2, or 3", 0, sh * 0.16 + 36, sw, "center")
+	lg.printf("Choose 1 Module", 0, sh * 0.135 + 34, sw, "center")
+
+	local hintW = 276
+	local hintH = 30
+	local hintX = sw * 0.5 - hintW * 0.5
+	local hintY = sh * 0.135 + 58
+
+	lg.setColor(0, 0, 0, 0.24 * overlayT)
+	lg.rectangle("fill", hintX, hintY + 2, hintW, hintH, 12, 12)
+	lg.setColor(0.14, 0.14, 0.18, 0.9 * overlayT)
+	lg.rectangle("fill", hintX, hintY, hintW, hintH, 12, 12)
+	lg.setColor(1, 1, 1, 0.12 * overlayT)
+	lg.rectangle("line", hintX, hintY, hintW, hintH, 12, 12)
+
+	lg.setColor(1, 1, 1, 0.82 * overlayT)
+	lg.printf("Press 1, 2, or 3 • Click a card", hintX, hintY + 6, hintW, "center")
 
 	local choices = State.modulePicker.choices or {}
 
@@ -471,6 +504,8 @@ function ModulePicker.draw()
 
 			lg.setColor(0, 0, 0, 0.22 * alpha)
 			lg.rectangle("fill", drawX + 4, drawY + 12, drawW, drawH, radius, radius)
+			lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.05 + 0.10 * hoverT) * alpha)
+			lg.rectangle("fill", drawX - 2, drawY - 2, drawW + 4, drawH + 4, radius + 2, radius + 2)
 
 			drawRoundedPanel(
 				drawX,
@@ -514,8 +549,8 @@ function ModulePicker.draw()
 			local badgeY = bodyY + 12
 			local leftPad = drawX + 22
 
-			drawBadge(getCategoryLabel(mod), leftPad, badgeY, catFill, alpha)
-			drawBadge(prettyTowerName(choice.target):upper(), leftPad + 96, badgeY, {0.14, 0.14, 0.18}, alpha, 12)
+			local catW = drawBadge(getCategoryLabel(mod), leftPad, badgeY, catFill, alpha)
+			drawBadge(prettyTowerName(choice.target):upper(), leftPad + catW + 8, badgeY, {0.14, 0.14, 0.18}, alpha, 12)
 
 			Fonts.set("ui")
 			lg.setColor(towerColor[1], towerColor[2], towerColor[3], 0.95 * alpha)
@@ -538,6 +573,10 @@ function ModulePicker.draw()
 
 				lg.setColor(1, 1, 1, 0.08 * alpha)
 				lg.rectangle("line", drawX + 6, drawY + 6, drawW - 12, drawH - 12, radius, radius)
+
+				lg.setColor(1, 1, 1, 0.85 * alpha)
+				Fonts.set("ui")
+				lg.printf("Click to Claim", drawX + 18, drawY + drawH - 32, drawW - 36, "right")
 			end
 		end
 	end
