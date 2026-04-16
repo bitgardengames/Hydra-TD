@@ -1,13 +1,12 @@
-local Constants = require("core.constants")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
 local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
 local Save = require("core.save")
-local MapMod = require("world.map")
 local Maps = require("world.map_defs")
 local MapPreviewCache = require("world.map_preview_cache")
+local Camera = require("core.camera")
 local Text = require("ui.text")
 local Button = require("ui.button")
 local Medals = require("ui.medals")
@@ -62,6 +61,7 @@ local ARROW_HOVER = 1.0
 
 -- State
 local campaignButtons = {}
+local pulseTime = 0
 
 -- Helpers
 local function isMapLocked(i)
@@ -72,10 +72,7 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 	local path = entry.pathWorld
 	if not path or #path < 2 then return end
 
-	local mapW = Constants.GRID_W * Constants.TILE
-	local mapH = Constants.GRID_H * Constants.TILE
-
-	local function toScreen(entry, previewX, previewY, pw, ph, wx, wy)
+	local function toScreen(wx, wy)
 		-- same logic as MapRender
 		local winW, winH = love.graphics.getDimensions()
 
@@ -106,11 +103,17 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 
 	-- Precompute segment lengths
 	local lengths = {}
+	local points = {}
 	local totalLen = 0
 
-	for i = 1, #path - 1 do
-		local x1, y1 = toScreen(entry, previewX, previewY, pw, ph, path[i][1], path[i][2])
-		local x2, y2 = toScreen(entry, previewX, previewY, pw, ph, path[i+1][1], path[i+1][2])
+	for i = 1, #path do
+		local px, py = toScreen(path[i][1], path[i][2])
+		points[i] = {px, py}
+	end
+
+	for i = 1, #points - 1 do
+		local x1, y1 = points[i][1], points[i][2]
+		local x2, y2 = points[i + 1][1], points[i + 1][2]
 
 		local dx = x2 - x1
 		local dy = y2 - y1
@@ -123,8 +126,10 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 	if totalLen <= 0 then return end
 
 	-- Animate along path
-	local speed = 120
+	local speed = 140
 	local dist = (pulseT * speed) % totalLen
+	local tailDist = 55
+	local tailMaxAlpha = 0.28
 
 	local acc = 0
 
@@ -134,15 +139,46 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 		if dist <= acc + segLen then
 			local t = (dist - acc) / segLen
 
-			local x1, y1 = toScreen(entry, previewX, previewY, pw, ph, path[i][1], path[i][2])
-			local x2, y2 = toScreen(entry, previewX, previewY, pw, ph, path[i+1][1], path[i+1][2])
+			local x1, y1 = points[i][1], points[i][2]
+			local x2, y2 = points[i + 1][1], points[i + 1][2]
 
 			local px = x1 + (x2 - x1) * t
 			local py = y1 + (y2 - y1) * t
 
-			-- Glow
-			lg.setColor(1, 1, 1, 0.2)
-			lg.circle("fill", px, py, 7)
+			-- Tail glow along the travelled section for a subtle routing cue.
+			local tail = 0
+
+			while tail < tailDist do
+				local trailDist = dist - tail
+				if trailDist < 0 then
+					trailDist = trailDist + totalLen
+				end
+
+				local trailAcc = 0
+				local trailX, trailY = px, py
+
+				for seg = 1, #lengths do
+					local trailSegLen = lengths[seg]
+
+					if trailDist <= trailAcc + trailSegLen then
+						local trailT = (trailDist - trailAcc) / trailSegLen
+						local tx1, ty1 = points[seg][1], points[seg][2]
+						local tx2, ty2 = points[seg + 1][1], points[seg + 1][2]
+						trailX = tx1 + (tx2 - tx1) * trailT
+						trailY = ty1 + (ty2 - ty1) * trailT
+						break
+					end
+
+					trailAcc = trailAcc + trailSegLen
+				end
+
+				local fade = 1 - (tail / tailDist)
+				local alpha = tailMaxAlpha * fade * fade
+				local radius = 4 + fade * 2
+				lg.setColor(1, 1, 1, alpha)
+				lg.circle("fill", trailX, trailY, radius)
+				tail = tail + 8
+			end
 
 			-- Core
 			lg.setColor(1, 1, 1, 0.9)
@@ -255,13 +291,13 @@ function Screen.load()
 end
 
 function Screen.update(dt)
+	pulseTime = pulseTime + dt
+
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 
 	Backdrop.update(dt)
 	Medals.update(dt)
-
-	--Screen.pulseT = (Screen.pulseT or 0) + dt
 
 	local index = State.mapIndex
 	local map = Maps[index]
@@ -351,7 +387,7 @@ function Screen.draw()
 
 	lg.draw(preview, previewX, previewY)
 
-	--drawPathCurrent(entry, previewX, previewY, pw, ph, Screen.pulseT or 0)
+	drawPathCurrent(entry, previewX, previewY, pw, ph, pulseTime)
 
 	-- Completion medals
 	local stats = getMapStats(map.id)
