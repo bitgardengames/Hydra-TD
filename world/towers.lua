@@ -106,6 +106,7 @@ local function addTower(kind, gx, gy)
 		retargetT = 0,
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
+		color = def.color,
 		sellValue = floor(def.cost * 0.75),
 		slow = def.onHitSlow,
 		splash = def.splash,

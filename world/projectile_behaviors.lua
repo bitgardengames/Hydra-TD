@@ -1253,64 +1253,49 @@ B.beam = {
 	end,
 
 	draw = function(p, a)
-		local b = p._beam
-		if not b then return end
+		local beam = p._beam
+		if not beam then return end
 
 		local scale = p._growthScale or 1
-		local w = b.width * scale
-
-		-- =========================================
-		-- 🎨 TOWER COLOR
-		-- =========================================
-		local t = p.sourceTower
-		local c = t and t.color or {1, 1, 1}
-
-		local r, g, bcol = c[1], c[2], c[3]
-
-		-- darker outer glow
-		local dr = r * 0.45
-		local dg = g * 0.45
-		local db = bcol * 0.45
-
-		-- bright core
-		local cr = math.min(1, r * 1.4)
-		local cg = math.min(1, g * 1.4)
-		local cb = math.min(1, bcol * 1.4)
-
-		local len = b.length or 0
+		local width = beam.width * scale
+		local len = beam.length or 0
 		if len <= 0 then return end
 
-		local xA, yA = 0, 0
-		local xB, yB = len, 0
+		local tower = p.sourceTower
+		local c = tower and tower.color or {1, 1, 1}
+		local r, g, bcol = c[1], c[2], c[3]
 
-		-- =========================================
-		-- OUTER GLOW
-		-- =========================================
-		lg.setLineWidth(w * 2.6)
-		lg.setColor(dr, dg, db, a * 0.25)
-		lg.line(xA, yA, xB, yB)
+		local glowR, glowG, glowB = r * 0.5, g * 0.5, bcol * 0.5
+		local coreR = min(1, r * 1.35)
+		local coreG = min(1, g * 1.35)
+		local coreB = min(1, bcol * 1.35)
 
-		-- =========================================
-		-- MAIN BEAM
-		-- =========================================
-		lg.setLineWidth(w)
-		lg.setColor(r, g, bcol, a)
-		lg.line(xA, yA, xB, yB)
+		local glowH = width * 2.6
+		local bodyH = width * 1.3
+		local coreH = width * 0.62
 
-		-- =========================================
-		-- HOT CORE
-		-- =========================================
-		lg.setLineWidth(w * 0.4)
-		lg.setColor(cr, cg, cb, a * 0.9)
-		lg.line(xA, yA, xB, yB)
+		local function drawBeamBody(h, cr, cg, cb, alpha)
+			local y = -h * 0.5
+			local radius = h * 0.5
+			lg.setColor(cr, cg, cb, alpha)
+			lg.rectangle("fill", 0, y, len, h, radius, radius, 12)
+		end
 
-		-- =========================================
-		-- MUZZLE GLOW
-		-- =========================================
+		-- soft outer glow
+		drawBeamBody(glowH, glowR, glowG, glowB, a * 0.20)
+		-- main body
+		drawBeamBody(bodyH, r, g, bcol, a * 0.92)
+		-- bright center core
+		drawBeamBody(coreH, coreR, coreG, coreB, a * 0.95)
+
+		-- muzzle and tip bloom to keep it feeling energetic
 		lg.setColor(r, g, bcol, a * 0.35)
-		lg.circle("fill", 0, 0, w * 0.9)
+		lg.circle("fill", 0, 0, bodyH * 0.52)
+		lg.circle("fill", len, 0, bodyH * 0.45)
 
-		lg.setLineWidth(1)
+		lg.setColor(coreR, coreG, coreB, a * 0.55)
+		lg.circle("fill", 0, 0, coreH * 0.7)
+		lg.circle("fill", len, 0, coreH * 0.62)
 	end
 }
 
