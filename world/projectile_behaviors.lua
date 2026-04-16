@@ -105,6 +105,37 @@ local function colorMul(r, g, b, mul)
 	return min(1, r * mul), min(1, g * mul), min(1, b * mul)
 end
 
+local function getTowerMuzzle(t)
+	if not t then
+		return 0, 0
+	end
+
+	local size = Constants.TILE * 0.42
+	local kind = t.kind
+	local tipX = size * 0.9
+
+	if kind == "cannon" then
+		tipX = size * 0.95
+	elseif kind == "shock" then
+		tipX = size * (0.28 + 0.52)
+	elseif kind == "slow" then
+		tipX = size * 0.64
+	elseif kind == "poison" then
+		tipX = size * 0.6
+	elseif kind == "plasma" then
+		tipX = (Constants.TILE * 0.48) * 0.86
+	end
+
+	local localX = tipX - (t.recoil or 0)
+	local ca = cos(t.angle or 0)
+	local sa = sin(t.angle or 0)
+
+	local x = t.x + localX * ca
+	local y = (t.renderY or t.y) + localX * sa
+
+	return x, y
+end
+
 -- behaviors
 
 B.emit_on_target = {
@@ -1172,9 +1203,8 @@ B.beam = {
 		local scale = p._growthScale or 1
 		local width = b.width * scale
 
-		-- lock beam to tower
-		p.x = t.x
-		p.y = t.renderY
+		-- lock beam to muzzle tip
+		p.x, p.y = getTowerMuzzle(t)
 
 		-- aim at target if exists
 		if e and e.hp > 0 then
@@ -1236,7 +1266,11 @@ B.beam = {
 								pushEvent(p, {
 									id = "hit",
 									target = e2,
-									ctx = { origin = "beam" }
+									ctx = {
+										origin = "beam",
+										hitX = sx,
+										hitY = sy
+									}
 								})
 
 								b.hitCooldown[id] = b.rate
@@ -1698,6 +1732,11 @@ end
 
 function ProjectileBehaviors.hit(p, e, ctx)
 	ctx = ctx or { origin = p.hitOrigin or "primary" }
+	local oldX, oldY = p.x, p.y
+
+	if ctx.hitX and ctx.hitY then
+		p.x, p.y = ctx.hitX, ctx.hitY
+	end
 
 	for i = 1, #p.behaviors do
 		local b = p.behaviors[i]
@@ -1707,6 +1746,8 @@ function ProjectileBehaviors.hit(p, e, ctx)
 			def.onHit(p, e, b.data, ctx)
 		end
 	end
+
+	p.x, p.y = oldX, oldY
 end
 
 function ProjectileBehaviors.draw(p, a)
