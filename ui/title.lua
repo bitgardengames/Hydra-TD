@@ -63,7 +63,8 @@ local function buildTitleCanvas(lancerScale)
 
 	local prevCanvas = lg.getCanvas()
 
-	local font = lg.newFont("assets/fonts/PTSans.ttf", fontPx)
+	--local font = lg.newFont("assets/fonts/PTSans.ttf", fontPx)
+	local font = lg.newFont("assets/fonts/Fredoka_SemiCondensed-SemiBold.ttf", fontPx)
 	lg.setFont(font)
 
 	local textW = font:getWidth(TITLE_TEXT)

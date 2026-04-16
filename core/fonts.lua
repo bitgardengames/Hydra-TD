@@ -3,7 +3,8 @@ local Fonts = {}
 local current = "ui"
 
 local FONT_MAP = {
-	latin = "assets/fonts/PTSans.ttf",
+	--latin = "assets/fonts/PTSans.ttf",
+	latin = "assets/fonts/Fredoka_SemiCondensed-SemiBold.ttf",
 	cjk = "assets/fonts/NotoSansCJK-Regular.ttc",
 	cyrillic = "assets/fonts/NotoSans-Regular.ttf",
 }
