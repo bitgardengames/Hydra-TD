@@ -127,6 +127,15 @@ function Modules.buildContext(tower)
 		end
 	end
 
+	-- tower specialization preset
+	local specializationId = tower and tower.specializationId
+	if specializationId then
+		local specialization = ModuleDefs[specializationId]
+		if specialization and specialization.apply then
+			specialization.apply(ctx)
+		end
+	end
+
 	-- =========================================
 	-- 🔥 BEAM FIX: ensure hit_damage exists
 	-- =========================================
@@ -171,7 +180,15 @@ function Modules.getActive()
 	return Modules.active
 end
 
-function Modules.getTargetMode(towerKind)
+function Modules.getTargetMode(towerOrKind)
+	local towerKind = towerOrKind
+	local specializationId = nil
+
+	if type(towerOrKind) == "table" then
+		towerKind = towerOrKind.kind
+		specializationId = towerOrKind.specializationId
+	end
+
 	local mode = nil
 
 	local function pickMode(list)
@@ -190,7 +207,34 @@ function Modules.getTargetMode(towerKind)
 		pickMode(towerList)
 	end
 
+	if specializationId then
+		local specialization = ModuleDefs[specializationId]
+		if specialization and specialization.targetMode then
+			mode = specialization.targetMode
+		end
+	end
+
 	return mode
+end
+
+function Modules.rollTowerUpgradeChoices(tower)
+	if not tower or not tower.def or not tower.def.upgradeChoices then
+		return {}
+	end
+
+	local out = {}
+
+	for i = 1, #tower.def.upgradeChoices do
+		local moduleId = tower.def.upgradeChoices[i]
+		if moduleId ~= tower.specializationId and ModuleDefs[moduleId] then
+			out[#out + 1] = {
+				moduleId = moduleId,
+				target = tower.kind,
+			}
+		end
+	end
+
+	return out
 end
 
 function Modules.rollChoices(count)

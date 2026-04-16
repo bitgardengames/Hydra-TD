@@ -159,9 +159,16 @@ function Backdrop.start(index)
 
 		if ok and t.level then
 			local tower = Towers.towers[#Towers.towers]
+			local choices = tower and tower.def and tower.def.upgradeChoices or {}
+			local choiceCount = #choices
 
-			for i = 1, (t.level - 1) do
-				Towers.upgradeTower(tower)
+			if choiceCount > 0 then
+				for i = 1, (t.level - 1) do
+					local choiceId = choices[((i - 1) % choiceCount) + 1]
+					if choiceId then
+						Towers.upgradeTower(tower, choiceId)
+					end
+				end
 			end
 		end
 	end

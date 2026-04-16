@@ -1,6 +1,8 @@
 local State = require("core.state")
 local Util = require("core.util")
 local Towers = require("world.towers")
+local Modules = require("systems.modules")
+local ModulePicker = require("ui.module_picker")
 local Hotkeys = require("core.hotkeys")
 local Glyphs = require("ui.glyphs")
 local Tooltip = require("ui.tooltip")
@@ -111,7 +113,7 @@ local inspectButtons = {
 
 			-- Only upgrade if affordable
 			if upgradeCost and State.money >= upgradeCost then
-				Towers.upgradeTower(t)
+				ModulePicker.openTowerUpgrade(t)
 			else
 				-- optional error sound / floater
 			end
@@ -417,26 +419,16 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			-- Upgrade tooltip
 			if hovered and btn.id == "upgrade" and upgradeCost then
-				local preview = Towers.getUpgradePreview(t)
-
-				if preview then
-					Tooltip.show{
-						title = L("inspect.upgradeTitle", t.level + 1),
-						rows = {
-							{
-								label = L("stats.damage"),
-								value = t.damage,
-								delta = "+" .. (preview.damage - t.damage),
-							},
-
-							{
-								label = L("stats.range"),
-								value = t.range,
-								delta = "+" .. formatStat(preview.range - t.range),
-							},
-						}
-					}
+				local specName = nil
+				if t.specializationId then
+					local mod = Modules.getDef(t.specializationId)
+					specName = mod and L(mod.nameKey) or nil
 				end
+
+				Tooltip.show({
+					title = L("inspect.upgradeTitle", t.level + 1),
+					text = specName and L("modulePicker.currentSpec", specName) or L("modulePicker.noSpec"),
+				})
 			end
 		end
     elseif State.selectedEnemy then

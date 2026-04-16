@@ -14,6 +14,7 @@ local BottomBar = require("ui.bottom_bar")
 local Cursor = require("core.cursor")
 local Sound = require("systems.sound")
 local L = require("core.localization")
+local ModulePicker = require("ui.module_picker")
 
 local getTime = love.timer.getTime
 local lm = love.mouse
@@ -328,7 +329,7 @@ local function keypressed(key)
 		end
 	elseif key == Hotkeys.kb.actions.upgrade then
 		if State.selectedTower then
-			Towers.upgradeTower(State.selectedTower)
+			ModulePicker.openTowerUpgrade(State.selectedTower)
 		end
 	elseif key == Hotkeys.kb.actions.sell then
 		if State.selectedTower then
@@ -441,7 +442,7 @@ local function gamepadpressed(joystick, button)
 	-- Upgrade tower
 	if action == "upgrade" then
 		if State.selectedTower then
-			Towers.upgradeTower(State.selectedTower)
+			ModulePicker.openTowerUpgrade(State.selectedTower)
 		end
 
 		return

@@ -54,6 +54,11 @@ local state = {
 		active = false,
 		choices = nil,
 		waveOffered = 0,
+		mode = "wave_reward",
+		title = nil,
+		subtitle = nil,
+		hint = nil,
+		tower = nil,
 	},
 
 	-- Combat data

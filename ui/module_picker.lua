@@ -2,6 +2,7 @@ local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local State = require("core.state")
 local Modules = require("systems.modules")
+local Towers = require("world.towers")
 local DrawEntities = require("render.draw_entities")
 local L = require("core.localization")
 
@@ -236,16 +237,56 @@ local function drawBackdropEffects(sw, sh, alpha)
 	lg.rectangle("fill", 0, sh * 0.81, sw, sh * 0.19)
 end
 
-function ModulePicker.open(choices)
+function ModulePicker.open(options)
+	local choices = options and options.choices or options
+
+	if not choices or #choices == 0 then
+		return false
+	end
+
 	State.modulePicker.active = true
 	State.modulePicker.choices = choices
+	State.modulePicker.mode = options and options.mode or "wave_reward"
+	State.modulePicker.title = options and options.title or nil
+	State.modulePicker.subtitle = options and options.subtitle or nil
+	State.modulePicker.hint = options and options.hint or nil
+	State.modulePicker.tower = options and options.tower or nil
 	openedAt = love.timer.getTime()
 	rebuildLayout()
+
+	return true
+end
+
+function ModulePicker.openTowerUpgrade(tower)
+	if not tower then
+		return false
+	end
+
+	local choices = Modules.rollTowerUpgradeChoices(tower)
+	local cost = Towers.getUpgradeCost(tower)
+
+	if not cost or State.money < cost then
+		return false
+	end
+
+	return ModulePicker.open({
+		mode = "tower_upgrade",
+		choices = choices,
+		tower = tower,
+		title = L("modulePicker.upgradeTitle", L(tower.def.nameKey)),
+		subtitle = L("modulePicker.upgradeSubtitle", cost),
+		hint = L("modulePicker.hint"),
+	})
 end
 
 function ModulePicker.close()
 	State.modulePicker.active = false
 	State.modulePicker.choices = nil
+	State.modulePicker.mode = "wave_reward"
+	State.modulePicker.title = nil
+	State.modulePicker.subtitle = nil
+	State.modulePicker.hint = nil
+	State.modulePicker.tower = nil
 	cards = {}
 end
 
@@ -261,7 +302,15 @@ function ModulePicker.choose(index)
 		return false
 	end
 
-	Modules.add(choice.moduleId, choice.target)
+	if picker.mode == "tower_upgrade" then
+		local ok = Towers.upgradeTower(picker.tower, choice.moduleId)
+		if not ok then
+			return false
+		end
+	else
+		Modules.add(choice.moduleId, choice.target)
+	end
+
 	ModulePicker.close()
 
 	return true
@@ -324,13 +373,18 @@ function ModulePicker.draw()
 	lg.rectangle("fill", 0, 0, sw, sh)
 	drawBackdropEffects(sw, sh, overlayT)
 
+	local picker = State.modulePicker
+	local title = picker.title or "Wave Reward"
+	local subtitle = picker.subtitle or "Choose 1 Module"
+	local hintText = picker.hint or "Press 1, 2, or 3 • Click a card"
+
 	Fonts.set("menu")
 	lg.setColor(text[1], text[2], text[3], overlayT)
-	lg.printf("Wave Reward", 0, sh * 0.135, sw, "center")
+	lg.printf(title, 0, sh * 0.135, sw, "center")
 
 	Fonts.set("ui")
 	lg.setColor(1, 1, 1, 0.75 * overlayT)
-	lg.printf("Choose 1 Module", 0, sh * 0.135 + 34, sw, "center")
+	lg.printf(subtitle, 0, sh * 0.135 + 34, sw, "center")
 
 	local hintW = 276
 	local hintH = 30
@@ -345,7 +399,7 @@ function ModulePicker.draw()
 	lg.rectangle("line", hintX, hintY, hintW, hintH, 12, 12)
 
 	lg.setColor(1, 1, 1, 0.82 * overlayT)
-	lg.printf("Press 1, 2, or 3 • Click a card", hintX, hintY + 6, hintW, "center")
+	lg.printf(hintText, hintX, hintY + 6, hintW, "center")
 
 	local choices = State.modulePicker.choices or {}
 
@@ -448,9 +502,10 @@ function ModulePicker.draw()
 				lg.setColor(1, 1, 1, 0.07 * alpha)
 				lg.rectangle("line", drawX + 8, drawY + 8, drawW - 16, drawH - 16, radius, radius)
 
+				local cta = picker.mode == "tower_upgrade" and L("modulePicker.selectCta") or "Click to Claim"
 				lg.setColor(1, 1, 1, 0.85 * alpha)
 				Fonts.set("ui")
-				lg.printf("Click to Claim", drawX + 18, drawY + drawH - 30, drawW - 36, "right")
+				lg.printf(cta, drawX + 18, drawY + drawH - 30, drawW - 36, "right")
 			end
 		end
 	end

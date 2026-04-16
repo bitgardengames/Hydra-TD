@@ -167,6 +167,11 @@ function resetGame()
 	State.modulePicker.active = false
 	State.modulePicker.choices = nil
 	State.modulePicker.waveOffered = 0
+	State.modulePicker.mode = "wave_reward"
+	State.modulePicker.title = nil
+	State.modulePicker.subtitle = nil
+	State.modulePicker.hint = nil
+	State.modulePicker.tower = nil
 
 	-- =========================================
 	-- CHAOS TEST SETS (toggle manually)
@@ -304,31 +309,6 @@ end
 local clamp = 1 / 30
 
 -- What is this name? lol "maybeDoSomething"
-local function maybeOfferModuleChoice()
-	if State.mode ~= "game" then
-		return
-	end
-
-	if not State.inPrep then
-		return
-	end
-
-	if State.modulePicker.active then
-		return
-	end
-
-	if State.wave <= 1 then
-		return
-	end
-
-	if State.modulePicker.waveOffered == State.wave then
-		return
-	end
-
-	State.modulePicker.waveOffered = State.wave
-	ModulePicker.open(Modules.rollChoices(3))
-end
-
 function love.update(dt)
 	dt = min(dt, clamp)
 
@@ -466,8 +446,6 @@ function love.update(dt)
 		State.wave = State.wave + 1
 		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 		State.inPrep = true
-
-		maybeOfferModuleChoice()
 	end
 end
 
