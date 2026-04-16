@@ -183,6 +183,19 @@ return {
 		outOfLives = "Out of lives",
 	},
 
+	gameOver = {
+		map = "Map",
+		waveReached = "Wave Reached",
+		score = "Score",
+		leaks = "Leaks",
+		livesRemaining = "Lives Remaining",
+		difficultyLabel = "Difficulty",
+		tipBossBreach = "A boss slipped through. Add focused burst damage and slows before the next boss wave.",
+		tipOutOfLives = "Leaks add up quickly. Build earlier lane coverage and upgrade your core towers sooner.",
+		tipDefault = "Adjust your tower mix and module choices to handle mid-wave pressure spikes.",
+		shortcuts = "Press R to restart • Esc for main menu",
+	},
+
 	map = {
 		riverbend = "Riverbend",
 		switchback = "Switchback",
