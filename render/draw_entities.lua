@@ -5,7 +5,6 @@ local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
 
-local getDelta = love.timer.getDelta
 local random = love.math.random
 local lg = love.graphics
 local sqrt = math.sqrt
@@ -54,8 +53,6 @@ local function lerp(a, b, t)
 	return a + (b - a) * t
 end
 
-local smooth = 18
-
 local function prepareEnemyRenderData()
 	local enemies = Enemies.enemies
 	local a = max(0, min(1, State.renderAlpha or 0))
@@ -69,21 +66,15 @@ local function prepareEnemyRenderData()
 		local nudgeX = lerp(e.prevNudgeX or e.nudgeX or 0, e.nudgeX or 0, a)
 		local nudgeY = lerp(e.prevNudgeY or e.nudgeY or 0, e.nudgeY or 0, a)
 
-		-- Target position (your current exact result)
+		-- Target position from fixed-step interpolation.
 		local targetX = baseX + nudgeX
 		local targetY = baseY + nudgeY
 
-		-- Initialize render position if needed
-		e.rx = e.rx or targetX
-		e.ry = e.ry or targetY
-
-		-- Smoothing layer
-		local dt = getDelta() -- safe here for render smoothing
-
-		local t = min(1, smooth * dt)
-
-		e.rx = e.rx + (targetX - e.rx) * t
-		e.ry = e.ry + (targetY - e.ry) * t
+		-- Write interpolated position directly.
+		-- We already interpolate between fixed simulation ticks via State.renderAlpha.
+		-- Adding a second frame-delta smoother can introduce micro-pauses/jitter.
+		e.rx = targetX
+		e.ry = targetY
 
 		-- Keep these for eye tracking / effects
 		e.prevRX = e.rx
