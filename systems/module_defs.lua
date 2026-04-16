@@ -311,4 +311,182 @@ add("beam_conversion", {
 	end
 })
 
+-- =========================
+-- TOWER SPECIALIZATIONS
+-- =========================
+
+local function addSpec(id, nameKey, descKey, behaviors, targetMode)
+	local function cloneBehaviors()
+		local out = {}
+
+		for i = 1, #behaviors do
+			local src = behaviors[i]
+			local copy = {id = src.id}
+
+			if src.noInherit then
+				copy.noInherit = true
+			end
+
+			if src.data then
+				local data = {}
+				for k, v in pairs(src.data) do
+					data[k] = v
+				end
+				copy.data = data
+			end
+
+			out[#out + 1] = copy
+		end
+
+		return out
+	end
+
+	add(id, {
+		nameKey = nameKey,
+		descKey = descKey,
+		category = "special",
+		targetMode = targetMode,
+
+		apply = function(ctx)
+			ctx.behaviors = cloneBehaviors()
+		end
+	})
+end
+
+addSpec("slow_glacier_core", "module.slow_glacier_core", "moduleDesc.slow_glacier_core", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.42, dur = 2.3}},
+	{id = "draw_slow"},
+})
+
+addSpec("slow_permafrost", "module.slow_permafrost", "moduleDesc.slow_permafrost", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.58, dur = 1.6}},
+	{id = "aoe_damage", data = {radius = 34}},
+	{id = "draw_slow"},
+})
+
+addSpec("slow_frost_nova", "module.slow_frost_nova", "moduleDesc.slow_frost_nova", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.5, dur = 1.7}},
+	{id = "spawn_static_field", data = {radius = 42}},
+	{id = "draw_slow"},
+})
+
+addSpec("lancer_deadeye", "module.lancer_deadeye", "moduleDesc.lancer_deadeye", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 9}},
+	{id = "hit_damage"},
+	{id = "lancer_hit_fx"},
+	{id = "draw_lancer"},
+}, Targeting.MODES.LOW_HP)
+
+addSpec("lancer_volley", "module.lancer_volley", "moduleDesc.lancer_volley", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "split_on_hit", data = {count = 2}, noInherit = true},
+	{id = "lancer_hit_fx"},
+	{id = "draw_lancer"},
+})
+
+addSpec("lancer_arc_lance", "module.lancer_arc_lance", "moduleDesc.lancer_arc_lance", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "hit_chain", data = {jumps = 2, radius = 54}},
+	{id = "lancer_hit_fx"},
+	{id = "draw_lancer"},
+})
+
+addSpec("poison_blight", "module.poison_blight", "moduleDesc.poison_blight", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 10}},
+	{id = "hit_damage"},
+	{id = "apply_poison", data = {dps = 6, dur = 2.4, maxStacks = 10}},
+	{id = "draw_poison"},
+})
+
+addSpec("poison_plague", "module.poison_plague", "moduleDesc.poison_plague", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 12}},
+	{id = "hit_damage"},
+	{id = "apply_poison", data = {dps = 3.5, dur = 2.0, maxStacks = 14}},
+	{id = "infect_spread", data = {radius = 52}},
+	{id = "draw_poison"},
+})
+
+addSpec("poison_neurotoxin", "module.poison_neurotoxin", "moduleDesc.poison_neurotoxin", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 11}},
+	{id = "hit_damage"},
+	{id = "apply_poison", data = {dps = 4.2, dur = 2.1, maxStacks = 10}},
+	{id = "apply_slow", data = {factor = 0.78, dur = 1.1}},
+	{id = "draw_poison"},
+})
+
+addSpec("cannon_seige", "module.cannon_seige", "moduleDesc.cannon_seige", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 12}},
+	{id = "aoe_damage", data = {radius = 58}},
+	{id = "draw_cannon"},
+}, Targeting.MODES.FARTHEST)
+
+addSpec("cannon_cluster", "module.cannon_cluster", "moduleDesc.cannon_cluster", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 10}},
+	{id = "aoe_damage", data = {radius = 38}},
+	{id = "split_on_hit", data = {count = 2}, noInherit = true},
+	{id = "draw_cannon"},
+})
+
+addSpec("cannon_aftershock", "module.cannon_aftershock", "moduleDesc.cannon_aftershock", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 11}},
+	{id = "aoe_damage", data = {radius = 44}},
+	{id = "spawn_static_field", data = {radius = 52}},
+	{id = "draw_cannon"},
+})
+
+addSpec("shock_storm", "module.shock_storm", "moduleDesc.shock_storm", {
+	{id = "emit_on_target"},
+	{id = "hit_chain", data = {jumps = 6, radius = 62}},
+	{id = "chain_zap_fx"},
+})
+
+addSpec("shock_conductor", "module.shock_conductor", "moduleDesc.shock_conductor", {
+	{id = "emit_on_target"},
+	{id = "hit_chain", data = {jumps = 3, radius = 60}},
+	{id = "spawn_static_field", data = {radius = 56}},
+	{id = "chain_zap_fx"},
+})
+
+addSpec("shock_overload", "module.shock_overload", "moduleDesc.shock_overload", {
+	{id = "emit_on_target"},
+	{id = "hit_chain", data = {jumps = 3, radius = 56}},
+	{id = "spawn_orbital_on_hit", data = {count = 2}, noInherit = true},
+	{id = "chain_zap_fx"},
+})
+
+addSpec("plasma_lance", "module.plasma_lance", "moduleDesc.plasma_lance", {
+	{id = "move_linear", data = {dist = 340}},
+	{id = "tick_damage", data = {radius = 13, rate = 0.09}},
+	{id = "draw_plasma"},
+})
+
+addSpec("plasma_supernova", "module.plasma_supernova", "moduleDesc.plasma_supernova", {
+	{id = "move_linear", data = {dist = 300}},
+	{id = "tick_damage", data = {radius = 15, rate = 0.12}},
+	{id = "aoe_damage", data = {radius = 36}},
+	{id = "draw_plasma"},
+})
+
+addSpec("plasma_vortex", "module.plasma_vortex", "moduleDesc.plasma_vortex", {
+	{id = "move_spiral", data = {amp = 12, freq = 7}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.1}},
+	{id = "growing_projectile", data = {scale = 1.8}},
+	{id = "draw_plasma"},
+})
+
 return ModuleDefs

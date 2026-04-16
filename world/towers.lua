@@ -115,6 +115,7 @@ local function addTower(kind, gx, gy)
 		chain = def.chain,
 		poison = def.poison,
 		plasma = def.plasma,
+		specializationId = nil,
 	}
 
 	State.money = State.money - def.cost
@@ -141,18 +142,35 @@ local function getUpgradeCost(tower)
     return floor(base * (exp ^ tower.level) + 0.5)
 end
 
-local function upgradeTower(t)
+local function upgradeTower(t, specializationId)
 	if not t then
-		return
+		return false, "missing_tower"
+	end
+
+	if not specializationId then
+		return false, "missing_choice"
 	end
 
 	local cost = getUpgradeCost(t)
 
 	if State.money < cost then
-		return
+		return false, "money"
 	end
 
 	local diff = Difficulty.get()
+	local validChoice = false
+	local choices = t.def and t.def.upgradeChoices or {}
+
+	for i = 1, #choices do
+		if choices[i] == specializationId then
+			validChoice = true
+			break
+		end
+	end
+
+	if not validChoice then
+		return false, "invalid_choice"
+	end
 
 	State.money = State.money - cost
 
@@ -160,12 +178,8 @@ local function upgradeTower(t)
 	t.prevHeight = t.height
 	t.height = (t.level - 1) * 4
 	t.levelUpAnim = 1
-	t.damage = t.damage * t.def.upgrade.dmgMult
-	t.range = t.range + t.def.upgrade.rangeAdd
-	t.range2 = t.range * t.range
-	t.recoil = t.def.upgrade.recoil or 0
-	t.fireRate = t.fireRate * t.def.upgrade.fireMult
-	t.fireInterval = 1 / t.fireRate
+	t.specializationId = specializationId
+	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 
 	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
@@ -175,42 +189,19 @@ local function upgradeTower(t)
 	Achievements.increment("TOWER_UPGRADES")
 
 	Rumble.pulse(0.22, 0.045)
+
+	return true
 end
 
 local function getUpgradePreview(t)
-	if not t or not t.def or not t.def.upgrade then
+	if not t or not t.def then
 		return nil
 	end
 
-	local u = t.def.upgrade
-
-	-- Start from current effective stats
-	local curDamage = t.damage or t.def.damage
-	local curFireRate = t.fireRate or t.def.fireRate
-	local curRange = t.range or t.def.range
-
-	local preview = {
-		damage = curDamage,
-		fireRate = curFireRate,
-		range = curRange,
+	return {
+		specializationId = t.specializationId,
+		nextLevel = t.level + 1,
 	}
-
-	-- Damage
-	if u.dmgMult then
-		preview.damage = curDamage * u.dmgMult
-	end
-
-	-- Fire rate
-	if u.fireMult then
-		preview.fireRate = curFireRate * u.fireMult
-	end
-
-	-- Range
-	if u.rangeAdd then
-		preview.range = curRange + u.rangeAdd
-	end
-
-	return preview
 end
 
 local function sellTower(t)

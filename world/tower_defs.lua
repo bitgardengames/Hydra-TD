@@ -21,6 +21,11 @@ return {
 			fireMult = 1.0, -- 1.04
 			slowDurAdd = 0.35,
 		},
+		upgradeChoices = {
+			"slow_glacier_core",
+			"slow_permafrost",
+			"slow_frost_nova",
+		},
 		behaviors = {
 			{id = "move_homing"},
 			{id = "hit_damage"},
@@ -46,6 +51,11 @@ return {
 			dmgMult = 2.2,
 			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.0, -- 1.03
+		},
+		upgradeChoices = {
+			"lancer_deadeye",
+			"lancer_volley",
+			"lancer_arc_lance",
 		},
 		behaviors = {
 			{id = "move_homing"},
@@ -77,6 +87,11 @@ return {
 			poisonDpsMult = 1.10,
 			stackAdd = 1,
 		},
+		upgradeChoices = {
+			"poison_blight",
+			"poison_plague",
+			"poison_neurotoxin",
+		},
 		behaviors = {
 			{id = "move_homing"},
 			{id = "hit_circle", data = {radius = 12}},
@@ -105,6 +120,11 @@ return {
 			fireMult = 1.0, -- 1.05
 			splashAdd = 4, -- increase AoE radius per upgrade
 		},
+		upgradeChoices = {
+			"cannon_seige",
+			"cannon_cluster",
+			"cannon_aftershock",
+		},
 		behaviors = {
 			{id = "move_homing"},
 			{id = "hit_circle", data = {radius = 12 }},
@@ -130,6 +150,11 @@ return {
 			rangeAdd = 0.06 * Constants.TILE,
 			fireMult = 1.0, -- 1.04
 		},
+		upgradeChoices = {
+			"shock_storm",
+			"shock_conductor",
+			"shock_overload",
+		},
 		behaviors = {
 			{id = "emit_on_target"},
 			{id = "hit_chain", data = {jumps = 4, radius = 56}},
@@ -154,6 +179,11 @@ return {
 			dmgMult = 2.2,
 			rangeAdd = 0.08 * Constants.TILE,
 			fireMult = 1.0,
+		},
+		upgradeChoices = {
+			"plasma_lance",
+			"plasma_supernova",
+			"plasma_vortex",
 		},
 		behaviors = {
 			{id = "move_linear", data = {dist = 300}},
