@@ -42,10 +42,10 @@ local lineH = 48
 local headerHeight = 36
 local headerSpacing = 30
 local footerSpacing = 22
-local tabsSpacing = 18
 local tabGap = 10
 local tabH = 36
 local tabMinW = 108
+local minRowsVisible = 6
 
 local boxX, boxY, boxW, boxH = 0, 0, 0, 0
 local titleY = 0
@@ -329,12 +329,11 @@ function Screen.update(dt)
 	rows = getActiveRows()
 	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
 
-	-- Panel sizing (content-driven)
-	local rowsBlockH = max(ROW_H, (#rows - 1) * lineH + ROW_H)
+	-- Panel sizing (keep room for future settings rows)
+	local rowsBlockH = max((minRowsVisible - 1) * lineH + ROW_H, (#rows - 1) * lineH + ROW_H)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
-	local tabsBlockH = tabH
 
-	local contentH = headerHeight + headerSpacing + rowsBlockH + footerSpacing + btnBlockH + tabsSpacing + tabsBlockH
+	local contentH = headerHeight + headerSpacing + rowsBlockH + footerSpacing + btnBlockH
 
 	boxW = ROW_W + paddingX * 2
 	boxH = contentH + paddingY * 2
@@ -350,7 +349,7 @@ function Screen.update(dt)
 
 	-- Buttons (layout in update, like pause)
 	buttonsStartY = rowsStartY + rowsBlockH + footerSpacing
-	local tabsStartY = buttonsStartY + btnBlockH + tabsSpacing
+	local tabsStartY = boxY + boxH
 
 	local tabW = max(tabMinW, floor((ROW_W - tabGap * (#tabs - 1)) / #tabs))
 	local tabsTotalW = #tabs * tabW + (#tabs - 1) * tabGap
