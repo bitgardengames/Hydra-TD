@@ -257,12 +257,16 @@ function love.update(dt)
 		return
 	end
 
+	local gameplayFrozen = ModulePicker.isActive()
+
 	ACCUM = ACCUM + dt
 
-	while ACCUM >= FIXED_DT do
-		Sim.update(FIXED_DT * State.speed)
+	if not gameplayFrozen then
+		while ACCUM >= FIXED_DT do
+			Sim.update(FIXED_DT * State.speed)
 
-		ACCUM = ACCUM - FIXED_DT
+			ACCUM = ACCUM - FIXED_DT
+		end
 	end
 
 	if mode ~= "game" then
@@ -304,6 +308,10 @@ function love.update(dt)
 
 	Tooltip.update(dt)
 	Messages.update(dt)
+
+	if gameplayFrozen then
+		return
+	end
 
 	-- Loss condition
 	if State.lives <= 0 and not State.gameOver then
