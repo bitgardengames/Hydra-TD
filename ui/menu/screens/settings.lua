@@ -1,5 +1,4 @@
 local Sound = require("systems.sound")
-local Difficulty = require("systems.difficulty")
 local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
@@ -73,19 +72,6 @@ local draggingSlider = nil
 local tabs = {}
 local activeTab = 1
 
--- Difficulty helpers
-local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
-
-local function getDifficultyIndex(key)
-	for i, v in ipairs(DIFFICULTY_ORDER) do
-		if v == key then
-			return i
-		end
-	end
-
-	return 2
-end
-
 local function adjustRow(row, dir)
 	if row.type == "slider" then
 		row.set(Util.clamp(row.get() + dir * 0.10, 0, 1))
@@ -93,15 +79,6 @@ local function adjustRow(row, dir)
 	elseif row.type == "toggle" then
 		row.set(not row.get())
 		Sound.play("uiConfirm")
-	elseif row.type == "discrete" then
-		local cur = getDifficultyIndex(row.get())
-		local next = cur + dir
-
-		if next < 1 then next = #DIFFICULTY_ORDER end
-		if next > #DIFFICULTY_ORDER then next = 1 end
-
-		row.set(DIFFICULTY_ORDER[next])
-		Sound.play("uiMove")
 	end
 end
 
@@ -183,11 +160,6 @@ local function drawToggleRow(row, x, yTop)
 	Text.printShadow(string.format("%s: %s", row.label, valueText), x, rowTextY(yTop))
 end
 
-local function drawDiscreteRow(row, x, yTop)
-	local key = row.get()
-	Text.printShadow(string.format("%s: %s", row.label, L("difficulty." .. key)), x, rowTextY(yTop))
-end
-
 local function drawInfoRow(row, x, yTop)
 	Text.printShadow(row.label, x, rowTextY(yTop))
 end
@@ -202,8 +174,6 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 		drawSliderRow(row, x, yTop, selected, hovered, index)
 	elseif row.type == "toggle" then
 		drawToggleRow(row, x, yTop)
-	elseif row.type == "discrete" then
-		drawDiscreteRow(row, x, yTop)
 	elseif row.type == "info" then
 		drawInfoRow(row, x, yTop)
 	end
@@ -238,25 +208,6 @@ function Screen.load()
 					set = function(v)
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
-					end,
-				},
-			},
-		},
-		{
-			id = "gameplay",
-			label = L("settings.tabGameplay"),
-			rows = {
-				{
-					id = "difficulty",
-					label = L("settings.difficulty"),
-					type = "discrete",
-					get = function()
-						return Save.data.settings.difficulty or Difficulty.default
-					end,
-					set = function(key)
-						Save.data.settings.difficulty = key
-						Difficulty.set(key)
-						Save.flush()
 					end,
 				},
 			},
@@ -545,19 +496,6 @@ function Screen.mousepressed(x, y, button)
 				if row.type == "toggle" then
 					row.set(not row.get())
 					Sound.play("uiConfirm")
-					return true
-				end
-
-				-- Discrete (difficulty)
-				if row.type == "discrete" then
-					local mid = rect.x + rect.w * 0.5
-
-					if x < mid then
-						adjustRow(row, -1)
-					else
-						adjustRow(row, 1)
-					end
-
 					return true
 				end
 
