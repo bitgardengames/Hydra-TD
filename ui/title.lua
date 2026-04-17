@@ -14,6 +14,8 @@ local sin = math.sin
 local BASE_LANCER_VISUAL_W = 50
 local FONT_RATIO = 0.72
 local BANNER_LANCER_SCALE_FACTOR = 0.0048
+local TITLE_CANVAS_MIN_MARGIN = 8
+local TITLE_CANVAS_MARGIN_RATIO = 0.12
 
 local ROTATE_TIME = 1.8
 local HOLD_TIME = 5.0
@@ -76,7 +78,8 @@ local function buildTitleCanvas(lancerScale)
 	local opticalH = ascent - descent
 
 	local outline = floor(5 * (lancerScale / 2) + 0.5)
-	local pad = outline + 2
+	local extraMargin = max(TITLE_CANVAS_MIN_MARGIN, floor(fontPx * TITLE_CANVAS_MARGIN_RATIO + 0.5))
+	local pad = outline + extraMargin
 
 	local canvas = lg.newCanvas(textW + pad * 2, textH + pad * 2, {msaa = 8})
 
