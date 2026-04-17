@@ -253,24 +253,18 @@ function love.update(dt)
 		return
 	end
 
-	if State.paused then
+	local gameplayFrozen = ModulePicker.isActive()
+
+	if State.paused or gameplayFrozen then
 		return
 	end
 
-	local gameplayFrozen = ModulePicker.isActive()
+	ACCUM = ACCUM + dt
 
-	if gameplayFrozen then
-		-- Don't accumulate simulation time while the module picker is open.
-		-- Otherwise, choosing late will process a large backlog in one frame.
-		ACCUM = 0
-	else
-		ACCUM = ACCUM + dt
+	while ACCUM >= FIXED_DT do
+		Sim.update(FIXED_DT * State.speed)
 
-		while ACCUM >= FIXED_DT do
-			Sim.update(FIXED_DT * State.speed)
-
-			ACCUM = ACCUM - FIXED_DT
-		end
+		ACCUM = ACCUM - FIXED_DT
 	end
 
 	if mode ~= "game" then
