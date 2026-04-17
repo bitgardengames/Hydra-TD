@@ -62,6 +62,42 @@ local ARROW_HOVER = 1.0
 -- State
 local campaignButtons = {}
 local pulseTime = 0
+local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
+
+local function getDifficultyIndex(key)
+	for i, difficultyKey in ipairs(DIFFICULTY_ORDER) do
+		if difficultyKey == key then
+			return i
+		end
+	end
+
+	return 2
+end
+
+local function cycleDifficulty(dir)
+	local current = Save.data.settings.difficulty or Difficulty.default
+	local index = getDifficultyIndex(current)
+	local nextIndex = index + dir
+
+	if nextIndex < 1 then
+		nextIndex = #DIFFICULTY_ORDER
+	elseif nextIndex > #DIFFICULTY_ORDER then
+		nextIndex = 1
+	end
+
+	local nextDifficulty = DIFFICULTY_ORDER[nextIndex]
+
+	Save.data.settings.difficulty = nextDifficulty
+	Difficulty.set(nextDifficulty)
+	Save.flush()
+	Sound.play("uiMove")
+end
+
+local function difficultyButtonLabel()
+	local current = Save.data.settings.difficulty or Difficulty.default
+
+	return format("%s: %s", L("settings.difficulty"), L("difficulty." .. current))
+end
 
 -- Helpers
 local function isMapLocked(i)
@@ -256,6 +292,16 @@ end
 function Screen.load()
 	campaignButtons = {
 		{
+			id = "difficulty",
+			label = difficultyButtonLabel(),
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				cycleDifficulty(1)
+			end
+		},
+
+		{
 			id = "play",
 			label = L("menu.play"),
 			w = btnW,
@@ -330,6 +376,9 @@ function Screen.update(dt)
 		btn.x = cx - btn.w * 0.5
 		btn.y = buttonsStartY + (i - 1) * gap
 		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
+		if btn.id == "difficulty" then
+			btn.label = difficultyButtonLabel()
+		end
 
 		Button.update(btn, Cursor.x, Cursor.y, dt)
 	end
@@ -530,6 +579,8 @@ function Screen.keypressed(key)
 		else
 			Sound.play("uiError")
 		end
+	elseif key == "up" or key == "down" then
+		cycleDifficulty(1)
 	elseif key == "escape" then
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
@@ -653,6 +704,15 @@ local function pressPlay()
 	end
 end
 
+local function pressDifficulty()
+	for _, btn in ipairs(campaignButtons) do
+		if btn.id == "difficulty" then
+			btn.onClick()
+			return
+		end
+	end
+end
+
 local function pressBack()
 	for _, btn in ipairs(campaignButtons) do
 		if btn.id == "back" then
@@ -681,6 +741,12 @@ function Screen.gamepadpressed(joystick, button)
 	-- Face buttons
 	if button == "a" then
 		pressPlay()
+
+		return true
+	end
+
+	if button == "y" then
+		pressDifficulty()
 
 		return true
 	end
