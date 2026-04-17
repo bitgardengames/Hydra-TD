@@ -334,7 +334,7 @@ function Screen.update(dt)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
 	local tabsBlockH = tabH
 
-	local contentH = headerHeight + headerSpacing + rowsBlockH + tabsSpacing + tabsBlockH + footerSpacing + btnBlockH
+	local contentH = headerHeight + headerSpacing + rowsBlockH + footerSpacing + btnBlockH + tabsSpacing + tabsBlockH
 
 	boxW = ROW_W + paddingX * 2
 	boxH = contentH + paddingY * 2
@@ -349,8 +349,8 @@ function Screen.update(dt)
 	listX = rowRectX
 
 	-- Buttons (layout in update, like pause)
-	local tabsStartY = rowsStartY + rowsBlockH + tabsSpacing
-	buttonsStartY = tabsStartY + tabsBlockH + footerSpacing
+	buttonsStartY = rowsStartY + rowsBlockH + footerSpacing
+	local tabsStartY = buttonsStartY + btnBlockH + tabsSpacing
 
 	local tabW = max(tabMinW, floor((ROW_W - tabGap * (#tabs - 1)) / #tabs))
 	local tabsTotalW = #tabs * tabW + (#tabs - 1) * tabGap
@@ -377,14 +377,6 @@ function Screen.update(dt)
 	for i, rect in pairs(rowRects) do
 		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
 			settingsCursor = i
-		end
-	end
-
-	for i, rect in pairs(tabRects) do
-		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
-			if activeTab ~= i then
-				switchTab(i)
-			end
 		end
 	end
 
@@ -492,14 +484,6 @@ function Screen.keypressed(key)
 		if row then
 			adjustRow(row, 1)
 		end
-	elseif key == "tab" then
-		local dir = love.keyboard.isDown("lshift", "rshift") and -1 or 1
-		local nextTab = activeTab + dir
-
-		if nextTab < 1 then nextTab = #tabs end
-		if nextTab > #tabs then nextTab = 1 end
-
-		switchTab(nextTab)
 	elseif key == "return" or key == "escape" then
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
@@ -524,14 +508,6 @@ function Screen.gamepadpressed(_, button)
 		adjustRow(row, -1)
 	elseif button == "dpright" then
 		adjustRow(row, 1)
-	elseif button == "leftshoulder" then
-		local nextTab = activeTab - 1
-		if nextTab < 1 then nextTab = #tabs end
-		switchTab(nextTab)
-	elseif button == "rightshoulder" then
-		local nextTab = activeTab + 1
-		if nextTab > #tabs then nextTab = 1 end
-		switchTab(nextTab)
 	elseif button == "b" then
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
