@@ -122,6 +122,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		slowTimer = 0,
 		poisonStacks = 0,
 		poisonTimer = 0,
+		poisonTickTimer = 0,
 		poisonDPS = 0,
 		shadow = true,
 		id = nextID,
@@ -170,7 +171,7 @@ local function updateEnemies(dt)
 		-- Poison ticks
 		if e.poisonStacks > 0 then
 			e.poisonTimer = e.poisonTimer - dt
-			e.poisonTickTimer = (e.poisonTickTimer or 0) + dt
+			e.poisonTickTimer = e.poisonTickTimer + dt
 
 			if e.poisonTickTimer >= POISON_TICK then
 				local ticks = floor(e.poisonTickTimer / POISON_TICK)
