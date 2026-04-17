@@ -156,9 +156,7 @@ B.emit_on_target = {
 		pushEvent(p, {
 			id = "hit",
 			target = e,
-			ctx = {
-				origin = p.hitOrigin or "primary"
-			}
+			origin = p.hitOrigin or "primary"
 		})
 
 		return "consume"
@@ -281,9 +279,7 @@ B.move_homing = {
 					pushEvent(p, {
 						id = "hit",
 						target = nil,
-						ctx = {
-							origin = p.hitOrigin or "primary"
-						}
+						origin = p.hitOrigin or "primary"
 					})
 				elseif p.sourceKind == "slow" then
 					pushEvent(p, {
@@ -1266,11 +1262,9 @@ B.beam = {
 								pushEvent(p, {
 									id = "hit",
 									target = e2,
-									ctx = {
-										origin = "beam",
-										hitX = sx,
-										hitY = sy
-									}
+									origin = "beam",
+									hitX = sx,
+									hitY = sy
 								})
 
 								b.hitCooldown[id] = b.rate
@@ -1466,9 +1460,7 @@ B.tick_damage = {
 						pushEvent(p, {
 							id = "hit",
 							target = e,
-							ctx = {
-								origin = p.hitOrigin or "primary"
-							}
+							origin = p.hitOrigin or "primary"
 						})
 
 						p.hitCooldowns[id] = data.hitRate or 0.35 -- tweak this
@@ -1731,7 +1723,14 @@ function ProjectileBehaviors.update(p, dt)
 end
 
 function ProjectileBehaviors.hit(p, e, ctx)
-	ctx = ctx or { origin = p.hitOrigin or "primary" }
+	if not ctx then
+		ctx = p._defaultHitCtx
+	end
+
+	if not ctx then
+		ctx = { origin = p.hitOrigin or "primary" }
+	end
+
 	local oldX, oldY = p.x, p.y
 
 	if ctx.hitX and ctx.hitY then
