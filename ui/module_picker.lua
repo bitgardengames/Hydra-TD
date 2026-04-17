@@ -3,7 +3,6 @@ local Fonts = require("core.fonts")
 local State = require("core.state")
 local Modules = require("systems.modules")
 local Towers = require("world.towers")
-local DrawEntities = require("render.draw_entities")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -14,9 +13,6 @@ local ModulePicker = {}
 local cards = {}
 local openedAt = 0
 
-local sin = math.sin
-local cos = math.cos
-local min = math.min
 local max = math.max
 
 local function clamp(x, a, b)
@@ -44,10 +40,6 @@ local function easeOutBack(t)
 	return 1 + c3 * (t - 1) ^ 3 + c1 * (t - 1) ^ 2
 end
 
-local function prettyTowerName(kind)
-	return L("tower." .. kind)
-end
-
 local function getModuleName(mod)
 	if mod and mod.nameKey then
 		return L(mod.nameKey)
@@ -62,24 +54,6 @@ local function getModuleDesc(mod)
 	end
 
 	return ""
-end
-
-local function getCategoryLabel(mod)
-	local category = mod and mod.category
-
-	if category == "movement" then
-		return "MOVEMENT"
-	elseif category == "damage" then
-		return "DAMAGE"
-	elseif category == "utility" then
-		return "UTILITY"
-	elseif category == "targeting" then
-		return "TARGETING"
-	elseif category == "special" then
-		return "SPECIAL"
-	end
-
-	return "MODULE"
 end
 
 local function colorMul(c, mul, a)
@@ -101,31 +75,6 @@ local function drawRoundedPanel(x, y, w, h, r, faceColor, borderColor, alpha)
 
 	lg.setColor(1, 1, 1, 0.05 * fa)
 	lg.rectangle("line", x + 2, y + 2, w - 4, h - 4, r - 2, r - 2)
-end
-
-local function drawBadge(text, x, y, fill, alpha, padX, w, h, textColor)
-	padX = padX or 10
-	h = h or 24
-
-	Fonts.set("ui")
-
-	local tw = Fonts.ui:getWidth(text)
-	local bw = w or (tw + padX * 2)
-
-	lg.setColor(0, 0, 0, 0.30 * alpha)
-	lg.rectangle("fill", x, y + 2, bw, h, 10, 10)
-
-	lg.setColor(fill[1], fill[2], fill[3], 0.95 * alpha)
-	lg.rectangle("fill", x, y, bw, h, 10, 10)
-
-	lg.setColor(0, 0, 0, 0.20 * alpha)
-	lg.rectangle("fill", x, y + h * 0.5, bw, h * 0.5, 0, 0, 10, 10)
-
-	local tc = textColor or Theme.ui.text
-	lg.setColor(tc[1], tc[2], tc[3], alpha)
-	lg.print(text, x + padX, y + 4)
-
-	return bw
 end
 
 local function drawKeyBadge(keyText, x, y, alpha)
@@ -458,42 +407,19 @@ function ModulePicker.draw()
 			drawKeyBadge(tostring(i), drawX + drawW - 42, drawY + 16, alpha)
 			drawCategoryGlyph(category, drawX + 36, drawY + 34, towerColor, alpha)
 
-			local pulse = 1 + sin(now * 3.4 + i * 0.8) * 0.02 + hoverT * 0.03
-			local towerScale = (1.85 + hoverT * 0.06) * pulse
-			local towerX = drawX + drawW * 0.5
-			local towerY = drawY + artH * 0.64
-
-			lg.setColor(0, 0, 0, (0.16 + 0.03 * hoverT) * alpha)
-			lg.ellipse("fill", towerX, towerY + 26, 44, 12)
-
-			lg.push()
-			lg.translate(towerX, towerY)
-			lg.scale(towerScale, towerScale)
-			DrawEntities.drawTowerVisual(choice.target, 0, 0, -math.pi / 2, 0, alpha)
-			lg.pop()
-
 			lg.setColor(1, 1, 1, 0.035 * alpha)
 			lg.line(drawX + 16, bodyY + 6, drawX + drawW - 16, bodyY + 6)
 
-			local badgeY = bodyY + 16
-			local towerChip = prettyTowerName(choice.target):upper()
-			local towerChipW = Fonts.ui:getWidth(towerChip) + 18
-			drawBadge(towerChip, drawX + 20, badgeY, towerColor, alpha, 9, towerChipW, 22)
-
-			local moduleChip = getCategoryLabel(mod)
-			local moduleChipW = Fonts.ui:getWidth(moduleChip) + 18
-			drawBadge(moduleChip, drawX + drawW - moduleChipW - 20, badgeY, {0.95, 0.95, 0.98}, alpha, 9, moduleChipW, 22, {0.10, 0.12, 0.16})
-
 			Fonts.set("menu")
 			lg.setColor(1, 1, 1, alpha)
-			lg.printf(getModuleName(mod), drawX + 20, bodyY + 46, drawW - 40, "left")
+			lg.printf(getModuleName(mod), drawX + 20, bodyY + 26, drawW - 40, "left")
 
 			lg.setColor(towerColor[1], towerColor[2], towerColor[3], 0.70 * alpha)
-			lg.rectangle("fill", drawX + 20, bodyY + 82, drawW - 40, 2, 2, 2)
+			lg.rectangle("fill", drawX + 20, bodyY + 62, drawW - 40, 2, 2, 2)
 
 			Fonts.set("ui")
 			lg.setColor(1, 1, 1, 0.84 * alpha)
-			lg.printf(getModuleDesc(mod), drawX + 20, bodyY + 95, drawW - 40, "left")
+			lg.printf(getModuleDesc(mod), drawX + 20, bodyY + 75, drawW - 40, "left")
 
 			if hovered then
 				lg.setColor(towerColor[1], towerColor[2], towerColor[3], 0.08 * alpha)
