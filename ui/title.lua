@@ -16,6 +16,7 @@ local FONT_RATIO = 0.72
 local BANNER_LANCER_SCALE_FACTOR = 0.0048
 local TITLE_CANVAS_MARGIN = 6
 local TITLE_CANVAS_BLEED = 3
+local OUTLINE_SAMPLE_STEP = 0.5
 
 local ROTATE_TIME = 1.8
 local HOLD_TIME = 5.0
@@ -43,6 +44,7 @@ local titleCache = {
 	textH = 0,
 	opticalH = 0,
 	pad = 0,
+	outlineOffsets = nil,
 }
 
 function Title.invalidateCache()
@@ -88,13 +90,20 @@ local function buildTitleCanvas(lancerScale)
 
 	-- Outline
 	lg.setColor(colorOutline)
+	local outlineOffsets = {}
 
-	for ox = -outline, outline do
-		for oy = -outline, outline do
-			if ox ~= 0 or oy ~= 0 then
-				lg.print(TITLE_TEXT, pad + ox, pad + oy)
+	for ox = -outline, outline, OUTLINE_SAMPLE_STEP do
+		for oy = -outline, outline, OUTLINE_SAMPLE_STEP do
+			local dist = (ox * ox + oy * oy) ^ 0.5
+
+			if dist <= outline and dist > 0 then
+				outlineOffsets[#outlineOffsets + 1] = {ox = ox, oy = oy}
 			end
 		end
+	end
+
+	for _, offset in ipairs(outlineOffsets) do
+		lg.print(TITLE_TEXT, pad + offset.ox, pad + offset.oy)
 	end
 
 	-- Fill
@@ -109,6 +118,7 @@ local function buildTitleCanvas(lancerScale)
 	titleCache.textH = textH
 	titleCache.opticalH = opticalH
 	titleCache.pad = pad
+	titleCache.outlineOffsets = outlineOffsets
 end
 
 function Title.updateLancerIdle(state, dt, timeNow)
