@@ -86,6 +86,10 @@ local function spawnEvent(evt)
 
 	p.hitSet = {}
 	p.hitCooldowns = {}
+	p._defaultHitCtx = p._defaultHitCtx or {}
+	p._defaultHitCtx.origin = p.hitOrigin
+	p._defaultHitCtx.hitX = nil
+	p._defaultHitCtx.hitY = nil
 
 	p.hitRadius = evt.hitRadius or p.r
 	p.hitRadius2 = p.hitRadius * p.hitRadius
@@ -226,7 +230,12 @@ local function resolveEvents(p)
 				elseif evt.id == "fx" then
 					resolveFX(evt, p)
 				elseif evt.id == "hit" then
-					local res = PB.hit(p, evt.target, evt.ctx)
+					local hitCtx = evt.ctx
+					if not hitCtx and (evt.origin or evt.hitX or evt.hitY) then
+						hitCtx = evt
+					end
+
+					local res = PB.hit(p, evt.target, hitCtx)
 					if res == "consume" then
 						p._consumed = true
 					end
@@ -274,9 +283,7 @@ local function processHit(p)
 	pushEvent(p, {
 		id = "hit",
 		target = hitTarget,
-		ctx = {
-			origin = p.hitOrigin or "primary"
-		}
+		origin = p.hitOrigin or "primary"
 	})
 
 	resolveEvents(p)
