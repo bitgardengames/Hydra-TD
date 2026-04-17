@@ -10,13 +10,14 @@ local max = math.max
 local rad = math.rad
 local floor = math.floor
 local sin = math.sin
+local ceil = math.ceil
 
 local BASE_LANCER_VISUAL_W = 50
 local FONT_RATIO = 0.72
 local BANNER_LANCER_SCALE_FACTOR = 0.0048
 local TITLE_CANVAS_MARGIN = 6
-local TITLE_CANVAS_BLEED = 3
-local OUTLINE_SAMPLE_STEP = 0.5
+local TITLE_CANVAS_BLEED = 4
+local OUTLINE_SAMPLE_STEP = 0.25
 
 local ROTATE_TIME = 1.8
 local HOLD_TIME = 5.0
@@ -46,6 +47,28 @@ local titleCache = {
 	pad = 0,
 	outlineOffsets = nil,
 }
+
+local function buildOutlineOffsets(radius)
+	local offsets = {}
+	local limit = ceil(radius + 1)
+
+	for oy = -limit, limit, OUTLINE_SAMPLE_STEP do
+		for ox = -limit, limit, OUTLINE_SAMPLE_STEP do
+			local dist = (ox * ox + oy * oy) ^ 0.5
+			local alpha = min(1, max(0, (radius + 0.5) - dist))
+
+			if dist > 0 and alpha > 0 then
+				offsets[#offsets + 1] = {ox = ox, oy = oy, alpha = alpha}
+			end
+		end
+	end
+
+	table.sort(offsets, function(a, b)
+		return a.alpha < b.alpha
+	end)
+
+	return offsets
+end
 
 function Title.invalidateCache()
 	if titleCache.canvas then
@@ -79,9 +102,9 @@ local function buildTitleCanvas(lancerScale)
 	local descent = font:getDescent()
 	local opticalH = ascent - descent
 
-	local outline = floor(5 * (lancerScale / 2) + 0.5)
+	local outline = max(1.0, 5 * (lancerScale / 2))
 	-- Add bleed so anti-aliased outline pixels are not clipped by canvas edges.
-	local pad = outline + TITLE_CANVAS_MARGIN + TITLE_CANVAS_BLEED
+	local pad = ceil(outline) + TITLE_CANVAS_MARGIN + TITLE_CANVAS_BLEED
 
 	local canvas = lg.newCanvas(textW + pad * 2, textH + pad * 2, {msaa = 8})
 
@@ -89,20 +112,10 @@ local function buildTitleCanvas(lancerScale)
 	lg.clear(0, 0, 0, 0)
 
 	-- Outline
-	lg.setColor(colorOutline)
-	local outlineOffsets = {}
-
-	for ox = -outline, outline, OUTLINE_SAMPLE_STEP do
-		for oy = -outline, outline, OUTLINE_SAMPLE_STEP do
-			local dist = (ox * ox + oy * oy) ^ 0.5
-
-			if dist <= outline and dist > 0 then
-				outlineOffsets[#outlineOffsets + 1] = {ox = ox, oy = oy}
-			end
-		end
-	end
+	local outlineOffsets = buildOutlineOffsets(outline)
 
 	for _, offset in ipairs(outlineOffsets) do
+		lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], (colorOutline[4] or 1) * offset.alpha)
 		lg.print(TITLE_TEXT, pad + offset.ox, pad + offset.oy)
 	end
 
