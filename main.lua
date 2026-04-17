@@ -259,9 +259,13 @@ function love.update(dt)
 
 	local gameplayFrozen = ModulePicker.isActive()
 
-	ACCUM = ACCUM + dt
+	if gameplayFrozen then
+		-- Don't accumulate simulation time while the module picker is open.
+		-- Otherwise, choosing late will process a large backlog in one frame.
+		ACCUM = 0
+	else
+		ACCUM = ACCUM + dt
 
-	if not gameplayFrozen then
 		while ACCUM >= FIXED_DT do
 			Sim.update(FIXED_DT * State.speed)
 
