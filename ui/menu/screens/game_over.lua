@@ -16,6 +16,7 @@ local lg = love.graphics
 
 local floor = math.floor
 local max = math.max
+local sin = math.sin
 
 local Screen = {}
 
@@ -45,24 +46,26 @@ local btnH = 42
 local gap = 62
 
 local headerHeight = 36
-local reasonSpacing = 36
-local statsOffset = 28
-local statsGapX = 14
-local statsGapY = 12
-local statH = 58
-local difficultyOffset = 30
-local tipOffset = 28
+local subtitleSpacing = 28
+local highlightOffset = 26
+local highlightGap = 12
+local highlightH = 56
+local recapOffset = 24
+local difficultyOffset = 22
+local tipOffset = 20
 local buttonsOffset = 42
 
 local contentStartY = 0
 local titleY = 0
 local reasonY = 0
-local statsY = 0
+local highlightsY = 0
+local recapY = 0
 local difficultyY = 0
 local tipY = 0
 local panelW = 560
 local panelX = 0
-local stats = {}
+local highlights = {}
+local recapLine = ""
 
 local function restartRun()
 	Sound.play("uiConfirm")
@@ -108,22 +111,51 @@ local function getRunTip()
 	return L("gameOver.tipDefault")
 end
 
-local function buildStats()
+local function getMomentumLabel(wave, score)
+	if wave >= 20 or score >= 2200 then
+		return L("gameOver.momentumStrong")
+	elseif wave >= 12 or score >= 1200 then
+		return L("gameOver.momentumSteady")
+	end
+
+	return L("gameOver.momentumShaky")
+end
+
+local function getRecapLine(wave, leaks, lives)
+	if lives <= 0 then
+		return L("gameOver.recapCollapse")
+	end
+
+	if leaks <= 2 and wave >= 10 then
+		return L("gameOver.recapClose")
+	end
+
+	if wave <= 5 then
+		return L("gameOver.recapEarly")
+	end
+
+	return L("gameOver.recapMid")
+end
+
+local function buildHighlights()
 	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
-	stats = {
-		{ label = L("gameOver.map"), value = getMapName() },
+	local score = State.score or 0
+	local leaks = State.totalLeaks or 0
+	local lives = max(0, State.lives or 0)
+
+	highlights = {
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
-		{ label = L("gameOver.score"), value = tostring(State.score or 0) },
-		{ label = L("gameOver.leaks"), value = tostring(State.totalLeaks or 0) },
-		{ label = L("gameOver.livesRemaining"), value = tostring(max(0, State.lives or 0)) },
-		{ label = L("gameOver.difficultyLabel"), value = getDifficultyLabel() or "--" },
+		{ label = L("gameOver.score"), value = tostring(score) },
+		{ label = L("gameOver.momentum"), value = getMomentumLabel(reachedWave, score) },
 	}
+
+	recapLine = getRecapLine(reachedWave, leaks, lives)
 end
 
 function Screen.enter()
 	t = 0
 	panelT = 0
-	buildStats()
+	buildHighlights()
 end
 
 function Screen.load()
@@ -168,15 +200,15 @@ function Screen.update(dt)
 	panelW = math.min(560, sw - 64)
 	panelX = cx - panelW * 0.5
 
-	buildStats()
+	buildHighlights()
 
 	contentStartY = floor(sh * 0.5 - 190)
 
 	titleY = contentStartY
-	reasonY = titleY + headerHeight + reasonSpacing
-	statsY = reasonY + statsOffset
-	local statRows = math.ceil(#stats / 2)
-	difficultyY = statsY + statRows * statH + (statRows - 1) * statsGapY + difficultyOffset
+	reasonY = titleY + headerHeight + subtitleSpacing
+	highlightsY = reasonY + highlightOffset
+	recapY = highlightsY + highlightH + recapOffset
+	difficultyY = recapY + difficultyOffset
 	tipY = difficultyY + tipOffset
 
 	local buttonsStartY = tipY + buttonsOffset
@@ -196,12 +228,12 @@ function Screen.draw()
 	local count = #buttons
 	local buttonsHeight = (count - 1) * gap + btnH
 
-	local statRows = math.ceil(#stats / 2)
-	local statsHeight = statRows * statH + (statRows - 1) * statsGapY
+	local highlightsHeight = highlightH
 	local contentHeight = headerHeight
-		+ reasonSpacing
-		+ statsOffset
-		+ statsHeight
+		+ subtitleSpacing
+		+ highlightOffset
+		+ highlightsHeight
+		+ recapOffset
 		+ difficultyOffset
 		+ tipOffset
 		+ buttonsOffset
@@ -243,32 +275,55 @@ function Screen.draw()
 
 	Fonts.set("menu")
 
-	-- Reason
+	-- Reason / subtitle
 	if State.endReason then
 		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
 		Text.printfShadow(State.endReason, 0, reasonY, sw, "center")
 	end
 
-	-- Summary cards
-	local cardW = (boxW - paddingX * 2 - statsGapX) * 0.5
+	-- Spotlight pulse
+	local pulse = 0.5 + 0.5 * sin(t * 2.6)
+	local orbR = 34 + pulse * 8
+	local orbY = titleY + 8
+	lg.setColor(colorBad[1], colorBad[2], colorBad[3], (0.1 + pulse * 0.06) * alpha)
+	lg.circle("fill", cx, orbY, orbR)
 
-	for i, item in ipairs(stats) do
-		local row = floor((i - 1) / 2)
-		local col = (i - 1) % 2
-		local x = boxX + paddingX + col * (cardW + statsGapX)
-		local y = statsY + row * (statH + statsGapY)
+	-- Highlight strip
+	local count = #highlights
+	local totalGap = highlightGap * (count - 1)
+	local cardW = (boxW - paddingX * 2 - totalGap) / count
 
-		lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.65 * alpha)
-		lg.rectangle("fill", x, y, cardW, statH, 10, 10)
+	for i, item in ipairs(highlights) do
+		local x = boxX + paddingX + (i - 1) * (cardW + highlightGap)
+		local y = highlightsY
 
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
+		lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.6 * alpha)
+		lg.rectangle("fill", x, y, cardW, highlightH, 10, 10)
+
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.68 * alpha)
 		Fonts.set("ui")
-		Text.printfShadow(item.label, x + 12, y + 9, cardW - 24, "left")
+		Text.printfShadow(item.label, x + 10, y + 8, cardW - 20, "left")
 
 		lg.setColor(colorButton[1], colorButton[2], colorButton[3], alpha)
 		Fonts.set("menu")
-		Text.printfShadow(item.value, x + 12, y + 29, cardW - 24, "left")
+		Text.printfShadow(item.value, x + 10, y + 28, cardW - 20, "left")
 	end
+
+	-- Recap + map/difficulty context
+	Fonts.set("menu")
+	lg.setColor(colorText[1], colorText[2], colorText[3], 0.92 * alpha)
+	Text.printfShadow(recapLine, boxX + paddingX, recapY, boxW - paddingX * 2, "center")
+
+	Fonts.set("ui")
+	lg.setColor(colorText[1], colorText[2], colorText[3], 0.74 * alpha)
+	local contextLine = string.format(
+		"%s: %s  •  %s: %s",
+		L("gameOver.map"),
+		getMapName(),
+		L("gameOver.difficultyLabel"),
+		getDifficultyLabel() or "--"
+	)
+	Text.printfShadow(contextLine, boxX + paddingX, difficultyY, boxW - paddingX * 2, "center")
 
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.8 * alpha)
