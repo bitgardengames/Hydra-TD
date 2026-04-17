@@ -15,6 +15,7 @@ local BASE_LANCER_VISUAL_W = 50
 local FONT_RATIO = 0.72
 local BANNER_LANCER_SCALE_FACTOR = 0.0048
 local TITLE_CANVAS_MARGIN = 6
+local TITLE_CANVAS_BLEED = 3
 
 local ROTATE_TIME = 1.8
 local HOLD_TIME = 5.0
@@ -77,7 +78,8 @@ local function buildTitleCanvas(lancerScale)
 	local opticalH = ascent - descent
 
 	local outline = floor(5 * (lancerScale / 2) + 0.5)
-	local pad = outline + TITLE_CANVAS_MARGIN
+	-- Add bleed so anti-aliased outline pixels are not clipped by canvas edges.
+	local pad = outline + TITLE_CANVAS_MARGIN + TITLE_CANVAS_BLEED
 
 	local canvas = lg.newCanvas(textW + pad * 2, textH + pad * 2, {msaa = 8})
 
