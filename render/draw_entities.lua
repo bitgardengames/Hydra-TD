@@ -41,7 +41,6 @@ local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]
 local goodR, goodG, goodB = colorGood[1], colorGood[2], colorGood[3]
 local badR, badG, badB = colorBad[1], colorBad[2], colorBad[3]
 local tsR, tsG, tsB, tsA = towerShadow[1], towerShadow[2], towerShadow[3], towerShadow[4]
-local poisonRimR, poisonRimG, poisonRimB = 0.35, 0.85, 0.40
 
 local outlineWidth = Theme.outline.width
 
@@ -87,6 +86,8 @@ end
 
 -- Draw a single enemy
 local function drawEnemy(e)
+	local a = max(0, min(1, State.renderAlpha or 0))
+
 	local ix = e.rx
 	local iy = e.ry
 	local animT = e.rAnimT or 0
@@ -170,7 +171,12 @@ local function drawEnemy(e)
 		local stacks = e.poisonStacks
 		local intensity = min(1.0, 0.3 + stacks * 0.12)
 
-		lg.setColor(poisonRimR, poisonRimG, poisonRimB, 0.6 * intensity * enemyAlpha)
+		-- Slightly desaturated green (less neon)
+		local pr = 0.35
+		local pg = 0.85
+		local pb = 0.40
+
+		lg.setColor(pr, pg, pb, 0.6 * intensity * enemyAlpha)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 

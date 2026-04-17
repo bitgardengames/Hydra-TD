@@ -178,7 +178,7 @@ B.retarget_on_spawn = {
 		for i = 1, #nearby do
 			local e = nearby[i]
 
-			if e and e.hp > 0 and e ~= p.ignoreTarget then
+			if e.hp > 0 and e ~= p.ignoreTarget then
 				local dx = e.x - p.x
 				local dy = e.y - p.y
 				local d2 = dx*dx + dy*dy
@@ -620,7 +620,7 @@ B.hit_circle = {
 		for i = 1, #nearby do
 			local e = nearby[i]
 
-			if e and e.hp > 0 and e ~= p.ignoreTarget then
+			if e.hp > 0 and e ~= p.ignoreTarget then
 				local dx = e.x - p.x
 				local dy = e.y - p.y
 

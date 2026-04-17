@@ -13,6 +13,13 @@ Spatial.grid = grid
 
 local queryBuffer = {}
 
+-- Fast buffer clear (faster than reverse loop)
+local function clearBuffer(buf)
+	for i = 1, #buf do
+		buf[i] = nil
+	end
+end
+
 local function removeFromCell(e)
 	local cell = e.cell
 
@@ -87,6 +94,7 @@ local tsort = table.sort
 
 function Spatial.queryCells(x, y)
 	local results = queryBuffer
+	clearBuffer(results)
 
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
@@ -109,9 +117,6 @@ function Spatial.queryCells(x, y)
 			end
 		end
 	end
-
-	-- Maintain an exact logical length without clearing the whole buffer each query.
-	results[count + 1] = nil
 
 	--[[tsort(results, function(a, b)
 		return a.id < b.id

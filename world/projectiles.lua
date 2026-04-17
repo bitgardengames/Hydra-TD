@@ -15,12 +15,6 @@ local sin = math.sin
 
 local pushEvent = PB.pushEvent
 
-local function clearTable(t)
-	for k in pairs(t) do
-		t[k] = nil
-	end
-end
-
 local function acquire()
 	local p = pool[#pool]
 
@@ -34,25 +28,9 @@ local function acquire()
 end
 
 local function release(p)
-	local hitSet = p.hitSet
-	local hitCooldowns = p.hitCooldowns
-
-	if hitSet then
-		clearTable(hitSet)
-	end
-
-	if hitCooldowns then
-		clearTable(hitCooldowns)
-	end
-
 	for k in pairs(p) do
-		if k ~= "hitSet" and k ~= "hitCooldowns" then
-			p[k] = nil
-		end
+		p[k] = nil
 	end
-
-	p.hitSet = hitSet or {}
-	p.hitCooldowns = hitCooldowns or {}
 
 	pool[#pool + 1] = p
 end
@@ -106,10 +84,8 @@ local function spawnEvent(evt)
 	p.events = nil
 	p._consumed = false
 
-	p.hitSet = p.hitSet or {}
-	p.hitCooldowns = p.hitCooldowns or {}
-	clearTable(p.hitSet)
-	clearTable(p.hitCooldowns)
+	p.hitSet = {}
+	p.hitCooldowns = {}
 
 	p.hitRadius = evt.hitRadius or p.r
 	p.hitRadius2 = p.hitRadius * p.hitRadius
