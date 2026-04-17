@@ -35,7 +35,7 @@ local function pickTargetByScore(tower, scoreFn)
 	for i = 1, n do
 		local e = nearby[i]
 
-		if e.hp > 0 and not e.dying then
+		if e and e.hp > 0 and not e.dying then
 			local dx = e.x - tower.x
 			local dy = e.y - tower.y
 			local d2 = dx * dx + dy * dy
