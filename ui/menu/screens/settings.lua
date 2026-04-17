@@ -42,6 +42,10 @@ local lineH = 48
 local headerHeight = 36
 local headerSpacing = 30
 local footerSpacing = 22
+local tabsSpacing = 18
+local tabGap = 10
+local tabH = 36
+local tabMinW = 108
 
 local boxX, boxY, boxW, boxH = 0, 0, 0, 0
 local titleY = 0
@@ -63,7 +67,11 @@ local buttons = {}
 
 local sliderRects = {}
 local rowRects = {}
+local tabRects = {}
 local draggingSlider = nil
+
+local tabs = {}
+local activeTab = 1
 
 -- Difficulty helpers
 local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
@@ -95,6 +103,23 @@ local function adjustRow(row, dir)
 		row.set(DIFFICULTY_ORDER[next])
 		Sound.play("uiMove")
 	end
+end
+
+local function switchTab(nextTab)
+	local clamped = Util.clamp(nextTab, 1, #tabs)
+
+	if clamped ~= activeTab then
+		activeTab = clamped
+		settingsCursor = 1
+		draggingSlider = nil
+		Sound.play("uiMove")
+	end
+end
+
+local function getActiveRows()
+	local tab = tabs[activeTab]
+
+	return tab and tab.rows or {}
 end
 
 -- Layout helpers
@@ -163,6 +188,10 @@ local function drawDiscreteRow(row, x, yTop)
 	Text.printShadow(string.format("%s: %s", row.label, L("difficulty." .. key)), x, rowTextY(yTop))
 end
 
+local function drawInfoRow(row, x, yTop)
+	Text.printShadow(row.label, x, rowTextY(yTop))
+end
+
 local function drawRow(row, selected, hovered, x, yTop, index)
 	rowRectFor(index, x, yTop)
 	drawRowHighlight(index, selected, hovered)
@@ -175,74 +204,103 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 		drawToggleRow(row, x, yTop)
 	elseif row.type == "discrete" then
 		drawDiscreteRow(row, x, yTop)
+	elseif row.type == "info" then
+		drawInfoRow(row, x, yTop)
 	end
 end
 
 function Screen.load()
 	settingsCursor = 1
+	activeTab = 1
 
-	rows = {
+	tabs = {
 		{
-			id = "music",
-			label = L("settings.music"),
-			type = "slider",
-			color = Theme.tower.shock,
-			get = function() return Save.data.settings.musicVolume end,
-			set = function(v)
-				Save.data.settings.musicVolume = v
-				Sound.setMusicVolume(v)
-			end,
+			id = "audio",
+			label = L("settings.tabAudio"),
+			rows = {
+				{
+					id = "music",
+					label = L("settings.music"),
+					type = "slider",
+					color = Theme.tower.shock,
+					get = function() return Save.data.settings.musicVolume end,
+					set = function(v)
+						Save.data.settings.musicVolume = v
+						Sound.setMusicVolume(v)
+					end,
+				},
+				{
+					id = "sfx",
+					label = L("settings.sfx"),
+					type = "slider",
+					color = Theme.tower.cannon,
+					get = function() return Save.data.settings.sfxVolume end,
+					set = function(v)
+						Save.data.settings.sfxVolume = v
+						Sound.setSFXVolume(v)
+					end,
+				},
+			},
 		},
-
 		{
-			id = "sfx",
-			label = L("settings.sfx"),
-			type = "slider",
-			color = Theme.tower.cannon,
-			get = function() return Save.data.settings.sfxVolume end,
-			set = function(v)
-				Save.data.settings.sfxVolume = v
-				Sound.setSFXVolume(v)
-			end,
+			id = "gameplay",
+			label = L("settings.tabGameplay"),
+			rows = {
+				{
+					id = "difficulty",
+					label = L("settings.difficulty"),
+					type = "discrete",
+					get = function()
+						return Save.data.settings.difficulty or Difficulty.default
+					end,
+					set = function(key)
+						Save.data.settings.difficulty = key
+						Difficulty.set(key)
+						Save.flush()
+					end,
+				},
+			},
 		},
-
 		{
-			id = "difficulty",
-			label = L("settings.difficulty"),
-			type = "discrete",
-			get = function()
-				return Save.data.settings.difficulty or Difficulty.default
-			end,
-			set = function(key)
-				Save.data.settings.difficulty = key
-				Difficulty.set(key)
-				Save.flush()
-			end,
+			id = "video",
+			label = L("settings.tabVideo"),
+			rows = {
+				{
+					id = "fullscreen",
+					label = L("settings.fullscreen"),
+					type = "toggle",
+					get = function() return Save.data.settings.fullscreen end,
+					set = function(v)
+						if v then
+							local sw, sh = love.graphics.getDimensions()
+							local msaa = require("core.scale").suggestMSAA(sw, sh) or 8
+
+							love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
+						else
+							local msaa = require("core.scale").suggestMSAA(1280, 800) or 2
+							love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
+						end
+
+						Save.data.settings.fullscreen = v
+
+						local sw, sh = love.graphics.getDimensions()
+						love.resize(sw, sh)
+
+						Save.flush()
+					end,
+				},
+			},
 		},
-
 		{
-			id = "fullscreen",
-			label = L("settings.fullscreen"),
-			type = "toggle",
-			get = function() return Save.data.settings.fullscreen end,
-			set = function(v)
-				if v then
-					local sw, sh = love.graphics.getDimensions()
-					local msaa = require("core.scale").suggestMSAA(sw, sh) or 8
-
-					love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
-				else
-					local msaa = require("core.scale").suggestMSAA(1280, 800) or 2
-					love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
-				end
-
-				Save.data.settings.fullscreen = v
-
-				local sw, sh = love.graphics.getDimensions()
-				love.resize(sw, sh)
-
-				Save.flush()
-			end,
+			id = "controls",
+			label = L("settings.tabControls"),
+			rows = {
+				{
+					id = "rebind_coming_soon",
+					label = L("settings.controlsComingSoon"),
+					type = "info",
+				},
+			},
 		},
 	}
 
@@ -268,11 +326,15 @@ function Screen.update(dt)
 
 	Backdrop.update(dt)
 
-	-- Panel sizing (content-driven)
-	local rowsBlockH = (#rows - 1) * lineH + ROW_H
-	local btnBlockH = buttons[1] and buttons[1].h or 0
+	rows = getActiveRows()
+	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
 
-	local contentH = headerHeight + headerSpacing + rowsBlockH + footerSpacing + btnBlockH
+	-- Panel sizing (content-driven)
+	local rowsBlockH = max(ROW_H, (#rows - 1) * lineH + ROW_H)
+	local btnBlockH = buttons[1] and buttons[1].h or 0
+	local tabsBlockH = tabH
+
+	local contentH = headerHeight + headerSpacing + rowsBlockH + tabsSpacing + tabsBlockH + footerSpacing + btnBlockH
 
 	boxW = ROW_W + paddingX * 2
 	boxH = contentH + paddingY * 2
@@ -287,7 +349,22 @@ function Screen.update(dt)
 	listX = rowRectX
 
 	-- Buttons (layout in update, like pause)
-	buttonsStartY = rowsStartY + rowsBlockH + footerSpacing
+	local tabsStartY = rowsStartY + rowsBlockH + tabsSpacing
+	buttonsStartY = tabsStartY + tabsBlockH + footerSpacing
+
+	local tabW = max(tabMinW, floor((ROW_W - tabGap * (#tabs - 1)) / #tabs))
+	local tabsTotalW = #tabs * tabW + (#tabs - 1) * tabGap
+	local tabsX = floor(cx - tabsTotalW * 0.5)
+
+	tabRects = {}
+	for i, tab in ipairs(tabs) do
+		tabRects[i] = {
+			x = tabsX + (i - 1) * (tabW + tabGap),
+			y = tabsStartY,
+			w = tabW,
+			h = tabH,
+		}
+	end
 
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
@@ -300,6 +377,14 @@ function Screen.update(dt)
 	for i, rect in pairs(rowRects) do
 		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
 			settingsCursor = i
+		end
+	end
+
+	for i, rect in pairs(tabRects) do
+		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
+			if activeTab ~= i then
+				switchTab(i)
+			end
 		end
 	end
 
@@ -364,6 +449,24 @@ function Screen.draw()
 		drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
 	end
 
+	-- Tabs
+	Fonts.set("menu")
+	for i, tab in ipairs(tabs) do
+		local rect = tabRects[i]
+		local hovered = rect and Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h
+		local active = i == activeTab
+		local fillAlpha = active and 0.22 or (hovered and 0.12 or 0.06)
+
+		lg.setColor(1, 1, 1, fillAlpha)
+		lg.rectangle("fill", rect.x, rect.y, rect.w, rect.h, 8, 8)
+
+		lg.setColor(1, 1, 1, active and 0.25 or 0.12)
+		lg.rectangle("line", rect.x, rect.y, rect.w, rect.h, 8, 8)
+
+		lg.setColor(colorText)
+		Text.printfShadow(tab.label, rect.x, rect.y + 8, rect.w, "center")
+	end
+
 	-- Button
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
@@ -389,6 +492,14 @@ function Screen.keypressed(key)
 		if row then
 			adjustRow(row, 1)
 		end
+	elseif key == "tab" then
+		local dir = love.keyboard.isDown("lshift", "rshift") and -1 or 1
+		local nextTab = activeTab + dir
+
+		if nextTab < 1 then nextTab = #tabs end
+		if nextTab > #tabs then nextTab = 1 end
+
+		switchTab(nextTab)
 	elseif key == "return" or key == "escape" then
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
@@ -413,6 +524,14 @@ function Screen.gamepadpressed(_, button)
 		adjustRow(row, -1)
 	elseif button == "dpright" then
 		adjustRow(row, 1)
+	elseif button == "leftshoulder" then
+		local nextTab = activeTab - 1
+		if nextTab < 1 then nextTab = #tabs end
+		switchTab(nextTab)
+	elseif button == "rightshoulder" then
+		local nextTab = activeTab + 1
+		if nextTab > #tabs then nextTab = 1 end
+		switchTab(nextTab)
 	elseif button == "b" then
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
@@ -422,6 +541,13 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if button == 1 then
+		for i, rect in ipairs(tabRects) do
+			if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
+				switchTab(i)
+				return true
+			end
+		end
+
 		-- Rows
 		for i, rect in pairs(rowRects) do
 			if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
@@ -457,6 +583,11 @@ function Screen.mousepressed(x, y, button)
 						adjustRow(row, 1)
 					end
 
+					return true
+				end
+
+				if row.type == "info" then
+					Sound.play("uiMove")
 					return true
 				end
 
