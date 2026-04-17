@@ -40,12 +40,6 @@ local function easeOutBack(t)
 	return 1 + c3 * (t - 1) ^ 3 + c1 * (t - 1) ^ 2
 end
 
-local function easeInOutSine(t)
-	t = clamp(t, 0, 1)
-
-	return -(math.cos(math.pi * t) - 1) * 0.5
-end
-
 local function getModuleName(mod)
 	if mod and mod.nameKey then
 		return L(mod.nameKey)
@@ -60,10 +54,6 @@ local function getModuleDesc(mod)
 	end
 
 	return ""
-end
-
-local function colorMul(c, mul, a)
-	return c[1] * mul, c[2] * mul, c[3] * mul, a or 1
 end
 
 local function colorLerp(a, b, t, alpha)
@@ -136,12 +126,6 @@ local function rebuildLayout()
 end
 
 local function drawBackdropEffects(sw, sh, alpha)
-	local bandY = sh * 0.55
-
-	lg.setColor(1, 1, 1, 0.024 * alpha)
-	lg.ellipse("fill", sw * 0.5, bandY, sw * 0.30, sh * 0.16)
-	lg.ellipse("fill", sw * 0.5, bandY + 18, sw * 0.38, sh * 0.11)
-
 	lg.setColor(0, 0, 0, 0.22 * alpha)
 	lg.rectangle("fill", 0, 0, sw, sh * 0.19)
 	lg.rectangle("fill", 0, sh * 0.81, sw, sh * 0.19)
@@ -325,17 +309,14 @@ function ModulePicker.draw()
 
 			c.hover = lerp(c.hover or 0, hovered and 1 or 0, 0.2)
 			local hoverT = c.hover
-			local floatY = math.sin(now * 2.4 + i * 0.8) * (2 + 3 * hoverT)
-			local lift = 4 + 12 * hoverT
-			local scale = 1 + 0.016 * easeInOutSine(hoverT)
 
 			local baseX = c.x
-			local baseY = c.y + (1 - smoothstep(alpha)) * 42 + floatY
+			local baseY = c.y + (1 - smoothstep(alpha)) * 42
 
-			local drawW = c.w * scale
-			local drawH = c.h * scale
+			local drawW = c.w
+			local drawH = c.h
 			local drawX = baseX - (drawW - c.w) * 0.5
-			local drawY = baseY - lift - (drawH - c.h) * 0.5
+			local drawY = baseY - (drawH - c.h) * 0.5
 
 			c.drawX = drawX
 			c.drawY = drawY
@@ -352,10 +333,6 @@ function ModulePicker.draw()
 			lg.rectangle("fill", drawX + 4, drawY + 10, drawW, drawH + 4, radius, radius)
 
 			drawRoundedPanel(drawX, drawY, drawW, drawH, radius, {faceR, faceG, faceB}, {borderR, borderG, borderB}, alpha)
-
-			local accentR, accentG, accentB = colorMul(towerColor, lerp(0.42, 0.82, hoverT), alpha)
-			lg.setColor(accentR, accentG, accentB, (0.11 + hoverT * 0.17) * alpha)
-			lg.ellipse("fill", drawX + drawW * 0.5, drawY + drawH * 0.84, drawW * 0.44, drawH * 0.24)
 
 			drawKeyBadge(tostring(i), drawX + drawW - 42, drawY + 16, alpha)
 
