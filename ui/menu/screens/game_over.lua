@@ -50,7 +50,6 @@ local subtitleSpacing = 28
 local highlightOffset = 26
 local highlightGap = 12
 local highlightH = 56
-local recapOffset = 24
 local difficultyOffset = 22
 local tipOffset = 20
 local buttonsOffset = 42
@@ -59,13 +58,11 @@ local contentStartY = 0
 local titleY = 0
 local reasonY = 0
 local highlightsY = 0
-local recapY = 0
 local difficultyY = 0
 local tipY = 0
 local panelW = 560
 local panelX = 0
 local highlights = {}
-local recapLine = ""
 
 local function restartRun()
 	Sound.play("uiConfirm")
@@ -111,45 +108,14 @@ local function getRunTip()
 	return L("gameOver.tipDefault")
 end
 
-local function getMomentumLabel(wave, score)
-	if wave >= 20 or score >= 2200 then
-		return L("gameOver.momentumStrong")
-	elseif wave >= 12 or score >= 1200 then
-		return L("gameOver.momentumSteady")
-	end
-
-	return L("gameOver.momentumShaky")
-end
-
-local function getRecapLine(wave, leaks, lives)
-	if lives <= 0 then
-		return L("gameOver.recapCollapse")
-	end
-
-	if leaks <= 2 and wave >= 10 then
-		return L("gameOver.recapClose")
-	end
-
-	if wave <= 5 then
-		return L("gameOver.recapEarly")
-	end
-
-	return L("gameOver.recapMid")
-end
-
 local function buildHighlights()
 	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
 	local score = State.score or 0
-	local leaks = State.totalLeaks or 0
-	local lives = max(0, State.lives or 0)
 
 	highlights = {
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
 		{ label = L("gameOver.score"), value = tostring(score) },
-		{ label = L("gameOver.momentum"), value = getMomentumLabel(reachedWave, score) },
 	}
-
-	recapLine = getRecapLine(reachedWave, leaks, lives)
 end
 
 function Screen.enter()
@@ -207,8 +173,7 @@ function Screen.update(dt)
 	titleY = contentStartY
 	reasonY = titleY + headerHeight + subtitleSpacing
 	highlightsY = reasonY + highlightOffset
-	recapY = highlightsY + highlightH + recapOffset
-	difficultyY = recapY + difficultyOffset
+	difficultyY = highlightsY + highlightH + difficultyOffset
 	tipY = difficultyY + tipOffset
 
 	local buttonsStartY = tipY + buttonsOffset
@@ -233,7 +198,6 @@ function Screen.draw()
 		+ subtitleSpacing
 		+ highlightOffset
 		+ highlightsHeight
-		+ recapOffset
 		+ difficultyOffset
 		+ tipOffset
 		+ buttonsOffset
@@ -309,11 +273,7 @@ function Screen.draw()
 		Text.printfShadow(item.value, x + 10, y + 28, cardW - 20, "left")
 	end
 
-	-- Recap + map/difficulty context
-	Fonts.set("menu")
-	lg.setColor(colorText[1], colorText[2], colorText[3], 0.92 * alpha)
-	Text.printfShadow(recapLine, boxX + paddingX, recapY, boxW - paddingX * 2, "center")
-
+	-- Map/difficulty context
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.74 * alpha)
 	local contextLine = string.format(
