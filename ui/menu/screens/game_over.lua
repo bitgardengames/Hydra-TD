@@ -96,18 +96,6 @@ local function getMapName()
 	return L(map.nameKey)
 end
 
-local function getRunTip()
-	if State.endReason == L("game.bossBreach") then
-		return L("gameOver.tipBossBreach")
-	end
-
-	if State.endReason == L("game.outOfLives") then
-		return L("gameOver.tipOutOfLives")
-	end
-
-	return L("gameOver.tipDefault")
-end
-
 local function buildHighlights()
 	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
 	local score = State.score or 0
@@ -285,12 +273,8 @@ function Screen.draw()
 	)
 	Text.printfShadow(contextLine, boxX + paddingX, difficultyY, boxW - paddingX * 2, "center")
 
-	Fonts.set("ui")
-	lg.setColor(colorText[1], colorText[2], colorText[3], 0.8 * alpha)
-	Text.printfShadow(getRunTip(), boxX + paddingX, tipY, boxW - paddingX * 2, "center")
-
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.6 * alpha)
-	Text.printfShadow(L("gameOver.shortcuts"), boxX + paddingX, tipY + 18, boxW - paddingX * 2, "center")
+	Text.printfShadow(L("gameOver.shortcuts"), boxX + paddingX, tipY, boxW - paddingX * 2, "center")
 
 	-- Buttons
 	for _, btn in ipairs(buttons) do
