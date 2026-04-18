@@ -23,7 +23,8 @@ local POISON_TICK = 0.5 -- Seconds per poison tick
 
 local EPS = 1e-6
 local MAX_NUDGE = 10
-local NUDGE_DAMP = 18
+local NUDGE_TARGET_DAMP = 8
+local NUDGE_FOLLOW_DAMP = 24
 
 local abs = math.abs
 local exp = math.exp
@@ -95,6 +96,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 
 		nudgeX = 0,
 		nudgeY = 0,
+		nudgeTargetX = 0,
+		nudgeTargetY = 0,
 		prevNudgeX = 0,
 		prevNudgeY = 0,
 
@@ -362,10 +365,15 @@ local function updateEnemies(dt)
 		e.dist = min(totalLen, e.dist + e.speed * dt)
 		e.x, e.y = sampleFast(e.dist)
 
-		-- visual-only nudge decay
-		local decay = math.exp(-NUDGE_DAMP * dt)
-		e.nudgeX = e.nudgeX * decay
-		e.nudgeY = e.nudgeY * decay
+		-- visual-only nudge smoothing:
+		-- 1) target eases back to path
+		-- 2) rendered nudge follows target for softer hit finish
+		local targetDecay = math.exp(-NUDGE_TARGET_DAMP * dt)
+		local follow = 1 - math.exp(-NUDGE_FOLLOW_DAMP * dt)
+		e.nudgeTargetX = e.nudgeTargetX * targetDecay
+		e.nudgeTargetY = e.nudgeTargetY * targetDecay
+		e.nudgeX = e.nudgeX + (e.nudgeTargetX - e.nudgeX) * follow
+		e.nudgeY = e.nudgeY + (e.nudgeTargetY - e.nudgeY) * follow
 
 		-- gameplay queries use path position only
 		Spatial.updateEnemy(e)
@@ -459,15 +467,15 @@ local function applyHitImpulse(e, dx, dy, strength)
 
 	local inv = 1 / sqrt(len2)
 
-	e.nudgeX = e.nudgeX + dx * inv * strength
-	e.nudgeY = e.nudgeY + dy * inv * strength
+	e.nudgeTargetX = e.nudgeTargetX + dx * inv * strength
+	e.nudgeTargetY = e.nudgeTargetY + dy * inv * strength
 
-	local n2 = e.nudgeX * e.nudgeX + e.nudgeY * e.nudgeY
+	local n2 = e.nudgeTargetX * e.nudgeTargetX + e.nudgeTargetY * e.nudgeTargetY
 
 	if n2 > MAX_NUDGE * MAX_NUDGE then
 		local s = MAX_NUDGE / sqrt(n2)
-		e.nudgeX = e.nudgeX * s
-		e.nudgeY = e.nudgeY * s
+		e.nudgeTargetX = e.nudgeTargetX * s
+		e.nudgeTargetY = e.nudgeTargetY * s
 	end
 end
 
