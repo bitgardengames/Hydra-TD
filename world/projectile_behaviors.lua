@@ -791,22 +791,43 @@ B.split_on_hit = {
 	type = "damage",
 
 	onHit = function(p, e, data)
-		local count = data.count or 3
-		local spread = data.spread or 0.5 -- radians (~30° default)
+		data = data or {}
+
+		local count = data.count or 2
+		local spread = data.spread or 0.35 -- radians (~20° total default)
 		local dmgMult = data.dmgMult or 0.6
 
-		-- Forward direction
+		-- Forward direction (toward/through target)
 		local baseVX = p.vx or cos(p.rotation or 0)
 		local baseVY = p.vy or sin(p.rotation or 0)
+		local baseMag = sqrt(baseVX * baseVX + baseVY * baseVY)
+
+		if baseMag < 1e-6 then
+			baseVX = cos(p.rotation or 0)
+			baseVY = sin(p.rotation or 0)
+			baseMag = sqrt(baseVX * baseVX + baseVY * baseVY)
+		end
+
+		if baseMag < 1e-6 then
+			baseVX, baseVY = 1, 0
+			baseMag = 1
+		end
+
+		baseVX = baseVX / baseMag
+		baseVY = baseVY / baseMag
 
 		local base = atan2(baseVY, baseVX)
+		local hitRadius = (e and e.radius) or 12
+		local spawnOffset = hitRadius + (data.spawnOffset or 6)
+		local spawnX = p.x + baseVX * spawnOffset
+		local spawnY = p.y + baseVY * spawnOffset
 
 		-- If only 1 projectile, just shoot forward
 		if count == 1 then
 			pushEvent(p, {
 				id = "spawn_projectile",
-				x = p.x,
-				y = p.y,
+				x = spawnX,
+				y = spawnY,
 				angle = base,
 				damage = (p.damage or 0) * dmgMult,
 				source = p.sourceTower,
@@ -825,8 +846,8 @@ B.split_on_hit = {
 
 			pushEvent(p, {
 				id = "spawn_projectile",
-				x = p.x,
-				y = p.y,
+				x = spawnX,
+				y = spawnY,
 				angle = ang,
 				damage = (p.damage or 0) * dmgMult,
 				source = p.sourceTower,
