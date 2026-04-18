@@ -56,11 +56,17 @@ end
 local function prepareEnemyRenderData()
 	local enemies = Enemies.enemies
 	local a = max(0, min(1, State.renderAlpha or 0))
+	local simStep = State.renderStep or 0
+	local totalLen = MapMod.map and MapMod.map.totalWorldLength or 0
 
 	for i = 1, #enemies do
 		local e = enemies[i]
+		local oldRX = e.rx or e.x
+		local oldRY = e.ry or e.y
 
-		local d = lerp(e.prevDist or e.dist, e.dist, a)
+		-- Extrapolate into the remainder of the current fixed tick so motion
+		-- stays visually continuous even for very fast (or very slow) enemies.
+		local d = min(totalLen, (e.dist or 0) + (e.speed or 0) * simStep * a)
 		local baseX, baseY = MapMod.sampleFast(d)
 
 		local nudgeX = lerp(e.prevNudgeX or e.nudgeX or 0, e.nudgeX or 0, a)
@@ -77,8 +83,8 @@ local function prepareEnemyRenderData()
 		e.ry = targetY
 
 		-- Keep these for eye tracking / effects
-		e.prevRX = e.rx
-		e.prevRY = e.ry
+		e.prevRX = oldRX
+		e.prevRY = oldRY
 
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
 	end
