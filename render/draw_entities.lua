@@ -56,7 +56,6 @@ end
 local function prepareEnemyRenderData()
 	local enemies = Enemies.enemies
 	local a = max(0, min(1, State.renderAlpha or 0))
-	local simStep = State.renderStep or 0
 	local totalLen = MapMod.map and MapMod.map.totalWorldLength or 0
 
 	for i = 1, #enemies do
@@ -64,9 +63,13 @@ local function prepareEnemyRenderData()
 		local oldRX = e.rx or e.x
 		local oldRY = e.ry or e.y
 
-		-- Extrapolate into the remainder of the current fixed tick so motion
-		-- stays visually continuous even for very fast (or very slow) enemies.
-		local d = min(totalLen, (e.dist or 0) + (e.speed or 0) * simStep * a)
+		-- Interpolate along the already-simulated path segment.
+		-- Using dist + speed * step * alpha can over/undershoot around corners
+		-- (speed direction is piecewise, not globally linear), which shows up as
+		-- jitter most noticeably on slower enemies like tanks.
+		local prevDist = e.prevDist or e.dist or 0
+		local currDist = e.dist or prevDist
+		local d = min(totalLen, lerp(prevDist, currDist, a))
 		local baseX, baseY = MapMod.sampleFast(d)
 
 		local nudgeX = lerp(e.prevNudgeX or e.nudgeX or 0, e.nudgeX or 0, a)
