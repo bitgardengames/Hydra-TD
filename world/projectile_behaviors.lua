@@ -562,6 +562,7 @@ B.hit_damage = {
 
 		local dmg = getStat(p, "damage", 0)
 		emitDamage(p, e, dmg)
+		emitImpulse(p, e, p.x, p.y, 1.5)
 	end
 }
 
@@ -587,7 +588,7 @@ B.aoe_damage = {
 				local dmg = p.damage * (falloff + (1 - falloff) * t)
 
 				emitDamage(p, other, dmg)
-				emitImpulse(p, other, p.x, p.y, 4)
+				emitImpulse(p, other, p.x, p.y, 3.2)
 			end
 		end
 
@@ -676,6 +677,7 @@ B.hit_chain = {
 
 			-- deal damage
 			emitDamage(p, current, dmg)
+			emitImpulse(p, current, p.x, p.y, 1.25)
 
 			local prev = chain[#chain]
 
