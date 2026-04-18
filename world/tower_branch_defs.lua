@@ -9,7 +9,7 @@ local defs = {
 	},
 
 	lancer = {
-		[2] = {"lancer_deadeye", "lancer_volley"},
+		[2] = {"lancer_deadeye", "split_on_hit"},
 		[3] = {"pierce", "chain_hit"},
 		[4] = {"target_low_hp", "target_farthest_progress"},
 		[5] = {"split_on_hit", "beam_conversion"},
