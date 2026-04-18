@@ -290,6 +290,7 @@ function love.update(dt)
 	end
 
 	State.renderAlpha = ACCUM / FIXED_DT
+	State.renderStep = FIXED_DT * State.speed
 
 	State.livesAnim = max(0, State.livesAnim - dt * 4.5)
 	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
