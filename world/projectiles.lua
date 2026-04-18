@@ -179,6 +179,10 @@ local function resolveDamage(p, evt)
 		return
 	end
 
+	if p.ignoreTarget and e == p.ignoreTarget then
+		return
+	end
+
 	local amount = evt.amount or 0
 
 	if amount <= 0 then
