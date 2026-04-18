@@ -162,8 +162,13 @@ local function resolveSpawnProjectile(parent, evt)
 		newP.vx = cos(ang)
 		newP.vy = sin(ang)
 
-		newP.lastTX = newP.x + newP.vx * 10
-		newP.lastTY = newP.y + newP.vy * 10
+		if evt.lastTX and evt.lastTY then
+			newP.lastTX = evt.lastTX
+			newP.lastTY = evt.lastTY
+		else
+			newP.lastTX = newP.x + newP.vx * 10
+			newP.lastTY = newP.y + newP.vy * 10
+		end
 	end
 
 	if not evt.behaviors and parent and parent.behaviors then
