@@ -209,6 +209,7 @@ local function updateEnemies(dt)
 		if e._infectSpread and e.poisonStacks and e.poisonStacks > 0 then
 			local radius = e._infectSpread.radius
 			local stackMult = e._infectSpread.stackMult
+			local radius2 = radius * radius
 
 			local nearby = Spatial.queryCells(e.x, e.y)
 
@@ -219,7 +220,7 @@ local function updateEnemies(dt)
 					local dx = other.x - e.x
 					local dy = other.y - e.y
 
-					if dx*dx + dy*dy <= radius*radius then
+					if dx*dx + dy*dy <= radius2 then
 						-- transfer poison, NOT damage
 						local spreadStacks = math.floor(e.poisonStacks * stackMult)
 
@@ -368,8 +369,8 @@ local function updateEnemies(dt)
 		-- visual-only nudge smoothing:
 		-- 1) target eases back to path
 		-- 2) rendered nudge follows target for softer hit finish
-		local targetDecay = math.exp(-NUDGE_TARGET_DAMP * dt)
-		local follow = 1 - math.exp(-NUDGE_FOLLOW_DAMP * dt)
+		local targetDecay = exp(-NUDGE_TARGET_DAMP * dt)
+		local follow = 1 - exp(-NUDGE_FOLLOW_DAMP * dt)
 		e.nudgeTargetX = e.nudgeTargetX * targetDecay
 		e.nudgeTargetY = e.nudgeTargetY * targetDecay
 		e.nudgeX = e.nudgeX + (e.nudgeTargetX - e.nudgeX) * follow

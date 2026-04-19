@@ -175,6 +175,8 @@ local function upgradeTower(t, specializationId)
 	t.specializationId = specializationId
 	t.branchSelections = t.branchSelections or {}
 	t.branchSelections[#t.branchSelections + 1] = specializationId
+	t._moduleContextCache = nil
+	t._moduleContextVersion = nil
 	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 
