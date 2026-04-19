@@ -3,9 +3,9 @@ local TowerBranchDefs = {}
 local defs = {
 	slow = {
 		[2] = {"slow_glacier_core", "slow_permafrost"},
-		[3] = {"slow_frost_nova", "frost_shatter"},
-		[4] = {"target_low_hp", "target_farthest_progress"},
-		[5] = {"static_field", "aoe_damage"},
+		[3] = {"slow_frost_nova", "slow_shatterburst"},
+		[4] = {"slow_cold_snap", "slow_black_ice"},
+		[5] = {"slow_absolute_zero", "slow_hailstorm"},
 	},
 
 	lancer = {
