@@ -132,6 +132,7 @@ function resetGame()
     State.money = diff.startMoney
     State.moneyLerp = State.money
     State.lives = diff.startLives
+	State.livesAnim = 0
     State.score = 0
     State.wave = 1
 	State.waveLeaks = 0
@@ -292,7 +293,7 @@ function love.update(dt)
 	State.renderAlpha = ACCUM / FIXED_DT
 	State.renderStep = FIXED_DT * State.speed
 
-	State.livesAnim = max(0, State.livesAnim - dt * 4.5)
+	State.livesAnim = max(0, State.livesAnim - dt * 2)
 	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
 
 	-- Placement ghost fade
