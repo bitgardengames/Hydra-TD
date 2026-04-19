@@ -31,38 +31,38 @@ local defs = {
 	},
 
 	lancer = {
-		[2] = {"lancer_deadeye", "split_on_hit"},
-		[3] = {"pierce", "chain_hit"},
+		[2] = {"lancer_deadeye", "lancer_volley"},
+		[3] = {"pierce", "move_linear"},
 		[4] = {"target_low_hp", "target_farthest_progress"},
 		[5] = {"split_on_hit", "beam_conversion"},
 	},
 
 	poison = {
 		[2] = {"poison_blight", "poison_plague"},
-		[3] = {"infect_spread", "apply_slow"},
-		[4] = {"aoe_damage", "tick_damage"},
-		[5] = {"spawn_orbitals", "growing_projectile"},
+		[3] = {"poison_neurotoxin", "infect_spread"},
+		[4] = {"tick_damage", "growing_projectile"},
+		[5] = {"spawn_orbitals", "orbit_shot"},
 	},
 
 	cannon = {
 		[2] = {"cannon_seige", "cannon_cluster"},
-		[3] = {"aoe_damage", "split_on_hit"},
-		[4] = {"target_farthest_range", "static_field"},
-		[5] = {"growing_projectile", "explode_on_hit"},
+		[3] = {"cannon_aftershock", "split_on_hit"},
+		[4] = {"target_farthest_range", "growing_projectile"},
+		[5] = {"explode_on_hit", "spawn_orbitals"},
 	},
 
 	shock = {
 		[2] = {"shock_storm", "shock_conductor"},
 		[3] = {"chain_hit", "static_field"},
-		[4] = {"fork_chain", "apply_slow"},
-		[5] = {"spawn_orbitals", "tick_damage"},
+		[4] = {"shock_overload", "target_farthest_progress"},
+		[5] = {"spawn_orbitals", "move_spiral"},
 	},
 
 	plasma = {
 		[2] = {"plasma_lance", "plasma_supernova"},
 		[3] = {"move_boomerang", "orbit_shot"},
-		[4] = {"move_spiral", "growing_projectile"},
-		[5] = {"spawn_orbitals", "explode_on_hit"},
+		[4] = {"move_spiral", "plasma_vortex"},
+		[5] = {"tick_damage", "growing_projectile"},
 	},
 }
 
