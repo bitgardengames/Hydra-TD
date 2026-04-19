@@ -376,6 +376,48 @@ addSpec("slow_frost_nova", "module.slow_frost_nova", "moduleDesc.slow_frost_nova
 	{id = "draw_slow"},
 })
 
+addSpec("slow_shatterburst", "module.slow_shatterburst", "moduleDesc.slow_shatterburst", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.52, dur = 1.4}},
+	{id = "frost_shatter", data = {count = 6, dmgMult = 0.45}},
+	{id = "draw_slow"},
+})
+
+addSpec("slow_cold_snap", "module.slow_cold_snap", "moduleDesc.slow_cold_snap", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.5, dur = 1.5}},
+	{id = "slow_pop"},
+	{id = "draw_slow"},
+}, Targeting.MODES.LOW_HP)
+
+addSpec("slow_black_ice", "module.slow_black_ice", "moduleDesc.slow_black_ice", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.46, dur = 2.0}},
+	{id = "aoe_damage", data = {radius = 38}},
+	{id = "draw_slow"},
+}, Targeting.MODES.PROGRESS)
+
+addSpec("slow_absolute_zero", "module.slow_absolute_zero", "moduleDesc.slow_absolute_zero", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.4, dur = 2.4}},
+	{id = "frost_shatter", data = {count = 8, dmgMult = 0.55}},
+	{id = "spawn_static_field", data = {radius = 48}},
+	{id = "draw_slow"},
+})
+
+addSpec("slow_hailstorm", "module.slow_hailstorm", "moduleDesc.slow_hailstorm", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.56, dur = 1.4}},
+	{id = "split_on_hit", data = {count = 2}, noInherit = true},
+	{id = "slow_pop"},
+	{id = "draw_slow"},
+})
+
 addSpec("lancer_deadeye", "module.lancer_deadeye", "moduleDesc.lancer_deadeye", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 9}},
