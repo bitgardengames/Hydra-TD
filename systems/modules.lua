@@ -14,12 +14,16 @@ Modules.active = {
 	plasma = {},
 }
 
+Modules.version = 0
+
 
 -- CORE
 function Modules.clear()
 	for k in pairs(Modules.active) do
 		Modules.active[k] = {}
 	end
+
+	Modules.version = Modules.version + 1
 end
 
 function Modules.add(moduleId, towerType)
@@ -30,6 +34,7 @@ function Modules.add(moduleId, towerType)
 	if not list then return end
 
 	list[#list + 1] = mod
+	Modules.version = Modules.version + 1
 end
 
 -- CONTEXT BUILDER
@@ -111,6 +116,15 @@ local function createContext(base)
 end
 
 function Modules.buildContext(tower)
+	if tower then
+		local cached = tower._moduleContextCache
+		local cacheVersion = tower._moduleContextVersion
+
+		if cached and cacheVersion == Modules.version then
+			return cached
+		end
+	end
+
 	local base = tower.def.behaviors
 	local ctx = createContext(base)
 
@@ -162,6 +176,11 @@ function Modules.buildContext(tower)
 		if not hasDamage then
 			ctx:addBehavior({ id = "hit_damage" })
 		end
+	end
+
+	if tower then
+		tower._moduleContextCache = ctx
+		tower._moduleContextVersion = Modules.version
 	end
 
 	return ctx
