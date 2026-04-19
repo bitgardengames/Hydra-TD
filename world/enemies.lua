@@ -414,8 +414,7 @@ local function updateEnemies(dt)
 				State.waveLeaks = State.waveLeaks + 1
 				State.totalLeaks = State.totalLeaks + 1
 
-				local livesAnim = State.livesAnim or 0
-				State.livesAnim = livesAnim + (1 - livesAnim) * 0.6
+				State.livesAnim = 1
 
 				--Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
 
