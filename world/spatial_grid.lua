@@ -3,6 +3,7 @@ local Constants = require("core.constants")
 local Spatial = {}
 
 local floor = math.floor
+local ceil = math.ceil
 local TILE = Constants.TILE
 
 local CELL_SIZE = TILE * 2
@@ -92,20 +93,31 @@ end
 
 local tsort = table.sort
 
-function Spatial.queryCells(x, y)
+function Spatial.queryCells(x, y, radius)
 	local results = queryBuffer
 	clearBuffer(results)
 
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
+	local cellRadius = 2
+
+	if radius and radius > 0 then
+		-- Keep legacy upper bound for compatibility; shrink neighborhood for small-radius queries.
+		cellRadius = ceil(radius * INV_CELL)
+		if cellRadius < 1 then
+			cellRadius = 1
+		elseif cellRadius > 2 then
+			cellRadius = 2
+		end
+	end
 
 	local count = 0
 
-	for dx = -2, 2 do
+	for dx = -cellRadius, cellRadius do
 		local col = grid[cx + dx]
 
 		if col then
-			for dy = -2, 2 do
+			for dy = -cellRadius, cellRadius do
 				local cell = col[cy + dy]
 
 				if cell then

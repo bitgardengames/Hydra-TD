@@ -171,7 +171,7 @@ B.retarget_on_spawn = {
 		local best = nil
 		local bestDist = r2
 
-		local nearby = Spatial.queryCells(p.x, p.y)
+		local nearby = Spatial.queryCells(p.x, p.y, radius)
 
 		for i = 1, #nearby do
 			local e = nearby[i]
@@ -575,7 +575,7 @@ B.aoe_damage = {
 		local radius = baseRadius * scale
 
 		local r2 = radius * radius
-		local nearby = Spatial.queryCells(p.x, p.y)
+		local nearby = Spatial.queryCells(p.x, p.y, radius)
 
 		for i = 1, #nearby do
 			local other = nearby[i]
@@ -612,7 +612,7 @@ B.hit_circle = {
 			radius = p.hitRadius or p.r or 10
 		end
 
-		local nearby = Spatial.queryCells(p.x, p.y)
+		local nearby = Spatial.queryCells(p.x, p.y, radius)
 
 		for i = 1, #nearby do
 			local e = nearby[i]
@@ -694,7 +694,7 @@ B.hit_chain = {
 			local nextTarget = nil
 			local bestDist = radius * radius
 
-			local nearby = Spatial.queryCells(current.x, current.y)
+			local nearby = Spatial.queryCells(current.x, current.y, radius)
 
 			for j = 1, #nearby do
 				local other = nearby[j]
@@ -890,7 +890,7 @@ B.tick_zap = {
 		local radius = z.radius
 		local r2 = radius * radius
 
-		local nearby = Spatial.queryCells(p.x, p.y)
+		local nearby = Spatial.queryCells(p.x, p.y, radius)
 
 		local best = nil
 		local bestDist = r2
@@ -981,7 +981,7 @@ B.slow_pop = {
 
 		if e.slowTimer and e.slowTimer > 0 then
 			local radius = 28
-			local nearby = Spatial.queryCells(e.x, e.y)
+			local nearby = Spatial.queryCells(e.x, e.y, radius)
 
 			for i = 1, #nearby do
 				local other = nearby[i]
@@ -1134,7 +1134,7 @@ B.poison_burst_on_death = {
 		local spread = e._infectSpread
 		if not spread then return end
 
-		local nearby = Spatial.queryCells(e.x, e.y)
+		local nearby = Spatial.queryCells(e.x, e.y, spread.radius)
 		local radius = spread.radius
 		local r2 = radius * radius
 
@@ -1467,7 +1467,7 @@ B.tick_damage = {
 		end
 
 		local radius = data.radius or t.radius or p.hitRadius or 12
-		local nearby = Spatial.queryCells(p.x, p.y)
+		local nearby = Spatial.queryCells(p.x, p.y, radius)
 
 		for i = 1, #nearby do
 			local e = nearby[i]
