@@ -212,8 +212,9 @@ local function updateEnemies(dt)
 			local radius2 = radius * radius
 
 			local nearby = Spatial.queryCells(e.x, e.y, radius)
+			local nearbyCount = Spatial.queryCellsCount()
 
-			for i = 1, #nearby do
+			for i = 1, nearbyCount do
 				local other = nearby[i]
 
 				if other ~= e and other.hp > 0 then

@@ -13,10 +13,10 @@ local grid = {}
 Spatial.grid = grid
 
 local queryBuffer = {}
+local queryCount = 0
 
--- Fast buffer clear (faster than reverse loop)
-local function clearBuffer(buf)
-	for i = 1, #buf do
+local function clearBufferTail(buf, startIdx, endIdx)
+	for i = startIdx, endIdx do
 		buf[i] = nil
 	end
 end
@@ -95,7 +95,7 @@ local tsort = table.sort
 
 function Spatial.queryCells(x, y, radius)
 	local results = queryBuffer
-	clearBuffer(results)
+	local prevCount = queryCount
 
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
@@ -130,11 +130,21 @@ function Spatial.queryCells(x, y, radius)
 		end
 	end
 
+	if prevCount > count then
+		clearBufferTail(results, count + 1, prevCount)
+	end
+
+	queryCount = count
+
 	--[[tsort(results, function(a, b)
 		return a.id < b.id
 	end)]]
 
 	return results
+end
+
+function Spatial.queryCellsCount()
+	return queryCount
 end
 
 return Spatial
