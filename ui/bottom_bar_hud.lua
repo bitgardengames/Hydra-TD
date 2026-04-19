@@ -73,14 +73,14 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	if livesAnim > 0 then
 		local x = infoX + LIVES_X
 		local t = 1 - livesAnim
-		local shakeX = sin(t * 42) * livesAnim * 2.4
-		local dipY = sin(t * pi * 1.6) * livesAnim * 5
+		local easedT = 1 - (1 - t) * (1 - t)
+		local dipY = sin(easedT * pi * 1.85) * livesAnim * 4.5
 		local animY = y + dipY
 
-		Text.printShadow(livesCache.text, x + shakeX, animY)
+		Text.printShadow(livesCache.text, x, animY)
 
 		lg.setColor(cl1, cl2, cl3, 0.25 + livesAnim * 0.5)
-		Text.printShadow(livesCache.text, x + shakeX * 0.6, animY + 1)
+		Text.printShadow(livesCache.text, x, animY + 1)
 	else
 		Text.printShadow(livesCache.text, infoX + LIVES_X, y)
 	end
