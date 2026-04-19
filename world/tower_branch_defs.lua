@@ -38,9 +38,9 @@ local defs = {
 
 	plasma = {
 		[2] = {"plasma_lance", "plasma_supernova"},
-		[3] = {"beam_conversion", "growing_projectile"},
-		[4] = {"move_spiral", "aoe_damage"},
-		[5] = {"tick_damage", "explode_on_hit"},
+		[3] = {"move_boomerang", "orbit_shot"},
+		[4] = {"move_spiral", "growing_projectile"},
+		[5] = {"spawn_orbitals", "explode_on_hit"},
 	},
 }
 
