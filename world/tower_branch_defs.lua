@@ -9,6 +9,17 @@ local TowerBranchDefs = {}
 	Any combination of projectile movement/fx/damage style should all work together
 	Keep descriptions clear and plain right now in terms of what they do, redo descriptions to avoid unclear phrasing
 
+	Towers should all keep their core identity, and not give it to other towers
+	example;
+	Slow should be the only tower that slows enemies
+	Poison should be the only tower that poisons enemies
+	Shock should be the only tower with chaining/zap
+	Lancer is all single target, no direct AOE or DOTS (explosives or poison for example), splitting or piercing are perfectly okay though
+	Plasma is the lane crushing damage ticker
+	Cannon should be the only one that performs radius AoE like a generic explosion
+
+
+	Feel free to change targeting, projectile movement, projectile behavior, damage dealing, etc - But always keep towers to their core fantasy
 --]]
 
 local defs = {
