@@ -73,8 +73,8 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	if livesAnim > 0 then
 		local x = infoX + LIVES_X
 		local t = 1 - livesAnim
-		local shakeX = sin(t * 42) * livesAnim * 3.5
-		local dipY = sin(t * pi) * livesAnim * 7
+		local shakeX = sin(t * 42) * livesAnim * 2.4
+		local dipY = sin(t * pi * 1.6) * livesAnim * 5
 		local animY = y + dipY
 
 		Text.printShadow(livesCache.text, x + shakeX, animY)
