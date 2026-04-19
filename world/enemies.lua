@@ -211,7 +211,7 @@ local function updateEnemies(dt)
 			local stackMult = e._infectSpread.stackMult
 			local radius2 = radius * radius
 
-			local nearby = Spatial.queryCells(e.x, e.y)
+			local nearby = Spatial.queryCells(e.x, e.y, radius)
 
 			for i = 1, #nearby do
 				local other = nearby[i]

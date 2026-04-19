@@ -29,7 +29,7 @@ local function pickTargetByScore(tower, mode)
 	local bestScore = -math.huge
 	local r2 = tower.range2
 
-	local nearby = Spatial.queryCells(tower.x, tower.y)
+	local nearby = Spatial.queryCells(tower.x, tower.y, tower.range)
 	local n = #nearby
 
 	for i = 1, n do
