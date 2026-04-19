@@ -9,6 +9,7 @@ local L = require("core.localization")
 
 local lg = love.graphics
 local floor = math.floor
+local sin = math.sin
 
 local Hud = {}
 
@@ -66,7 +67,28 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	end
 
 	lg.setColor(cl1, cl2, cl3, 1)
-	Text.printShadow(livesCache.text, infoX + LIVES_X, y)
+	local livesAnim = State.livesAnim or 0
+
+	if livesAnim > 0 then
+		local pulse = sin(livesAnim * 12)
+		local scale = 1 + livesAnim * 0.12
+		local yOffset = -livesAnim * 4
+		local x = infoX + LIVES_X
+		local animY = y + yOffset
+
+		Text.printShadow(livesCache.text, x, animY, {
+			sx = scale,
+			sy = scale,
+		})
+
+		lg.setColor(cl1, cl2, cl3, 0.25 + livesAnim * 0.5)
+		Text.printShadow(livesCache.text, x + pulse * 2, animY + 1 + pulse, {
+			sx = 1 + livesAnim * 0.08,
+			sy = 1 + livesAnim * 0.08,
+		})
+	else
+		Text.printShadow(livesCache.text, infoX + LIVES_X, y)
+	end
 
 	local waveCache = hudCache.wave
 
