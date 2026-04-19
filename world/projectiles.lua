@@ -218,27 +218,39 @@ local function resolveImpulse(evt)
 	end
 end
 
-local function resolveFX(evt, p)
-	local c = evt.color
+local function resolveFX(evt)
+	local kind = evt.kind
 
-	if not c and p and p.sourceTower and p.sourceTower.color then
-		c = p.sourceTower.color
+	if kind == "zap" then
+		Effects.spawnZapEffect(evt.x, evt.y, evt.chain)
+	elseif kind == "cannon_impact" then
+		Effects.spawnCannonImpact(evt.x, evt.y, evt.r)
+	elseif kind == "frost_burst" then
+		Effects.spawnFrostBurst(evt.x, evt.y)
+	elseif kind == "poison_splash" then
+		Effects.spawnPoisonSplash(evt.x, evt.y)
+	elseif kind == "lancer_hit" then
+		Effects.spawnLancerHit(evt.x, evt.y)
+	elseif kind == "plasma_hit" then
+		Effects.spawnPlasmaHit(evt.x, evt.y, evt.vx or 0, evt.vy or 0)
+	elseif kind == "zap_line" then
+		Effects.spawnZapLine(evt.x1, evt.y1, evt.x2, evt.y2)
+	else
+		-- Fallback for any custom effect ids.
+		Effects.spawnFX({
+			id = kind,
+			x = evt.x,
+			y = evt.y,
+			r = evt.r,
+			vx = evt.vx,
+			vy = evt.vy,
+			x1 = evt.x1,
+			y1 = evt.y1,
+			x2 = evt.x2,
+			y2 = evt.y2,
+			chain = evt.chain
+		})
 	end
-
-	Effects.spawnFX({
-		id = evt.kind,
-		x = evt.x,
-		y = evt.y,
-		r = evt.r,
-		vx = evt.vx,
-		vy = evt.vy,
-		x1 = evt.x1,
-		y1 = evt.y1,
-		x2 = evt.x2,
-		y2 = evt.y2,
-		chain = evt.chain,
-		color = c
-	})
 end
 
 local function resolveEvents(p)
@@ -257,7 +269,7 @@ local function resolveEvents(p)
 				elseif evt.id == "impulse" then
 					resolveImpulse(evt)
 				elseif evt.id == "fx" then
-					resolveFX(evt, p)
+					resolveFX(evt)
 				elseif evt.id == "hit" then
 					local hitCtx = evt.ctx
 					if not hitCtx and (evt.origin or evt.hitX or evt.hitY) then

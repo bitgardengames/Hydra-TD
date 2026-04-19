@@ -24,7 +24,7 @@ function Targeting.isValidTarget(tower, e)
 	return dx * dx + dy * dy <= tower.range2
 end
 
-local function pickTargetByScore(tower, scoreFn)
+local function pickTargetByScore(tower, mode)
 	local best = nil
 	local bestScore = -math.huge
 	local r2 = tower.range2
@@ -41,7 +41,21 @@ local function pickTargetByScore(tower, scoreFn)
 			local d2 = dx * dx + dy * dy
 
 			if d2 <= r2 then
-				local score = scoreFn(tower, e, d2)
+				local score
+
+				if mode == Targeting.MODES.LOW_HP then
+					score = -(e.hp or 0)
+				elseif mode == Targeting.MODES.FARTHEST then
+					score = d2
+				else
+					score = e.dist
+
+					-- Slight deprioritization for slowed enemies
+					if e.slowTimer > 0 then
+						score = score - 5
+					end
+				end
+
 				local diff = score - bestScore
 
 				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
@@ -57,28 +71,15 @@ end
 
 -- Target enemy furthest along the path
 function Targeting.findProgressTarget(tower)
-	return pickTargetByScore(tower, function(_, e)
-		local prog = e.dist
-
-		-- Slight deprioritization for slowed enemies
-		if e.slowTimer > 0 then
-			prog = prog - 5
-		end
-
-		return prog
-	end)
+	return pickTargetByScore(tower, Targeting.MODES.PROGRESS)
 end
 
 function Targeting.findLowestHPTarget(tower)
-	return pickTargetByScore(tower, function(_, e)
-		return -(e.hp or 0)
-	end)
+	return pickTargetByScore(tower, Targeting.MODES.LOW_HP)
 end
 
 function Targeting.findFarthestTarget(tower)
-	return pickTargetByScore(tower, function(_, _, d2)
-		return d2
-	end)
+	return pickTargetByScore(tower, Targeting.MODES.FARTHEST)
 end
 
 function Targeting.findTarget(tower, mode)
