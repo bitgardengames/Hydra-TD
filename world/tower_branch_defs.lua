@@ -1,5 +1,16 @@
 local TowerBranchDefs = {}
 
+--[[
+
+	Rules:
+	
+	Upgrades offered on the same tier should offer a real gameplay choice, there shouldn't be an obvious winner
+	All choices should be able to work with eachother - All upgrades in the tower tower must work together 
+	Any combination of projectile movement/fx/damage style should all work together
+	Keep descriptions clear and plain right now in terms of what they do, redo descriptions to avoid unclear phrasing
+
+--]]
+
 local defs = {
 	slow = {
 		[2] = {"slow_glacier_core", "slow_permafrost"},
