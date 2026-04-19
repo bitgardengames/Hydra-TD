@@ -30,37 +30,60 @@ local function pickTargetByScore(tower, mode)
 	local r2 = tower.range2
 
 	local nearby = Spatial.queryCells(tower.x, tower.y, tower.range)
-	local n = #nearby
+	local n = Spatial.queryCellsCount()
 
-	for i = 1, n do
-		local e = nearby[i]
-
-		if e.hp > 0 and not e.dying then
-			local dx = e.x - tower.x
-			local dy = e.y - tower.y
-			local d2 = dx * dx + dy * dy
-
-			if d2 <= r2 then
-				local score
-
-				if mode == Targeting.MODES.LOW_HP then
-					score = -(e.hp or 0)
-				elseif mode == Targeting.MODES.FARTHEST then
-					score = d2
-				else
-					score = e.dist
-
+	if mode == Targeting.MODES.LOW_HP then
+		for i = 1, n do
+			local e = nearby[i]
+			if e.hp > 0 and not e.dying then
+				local dx = e.x - tower.x
+				local dy = e.y - tower.y
+				local d2 = dx * dx + dy * dy
+				if d2 <= r2 then
+					local score = -(e.hp or 0)
+					local diff = score - bestScore
+					if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
+						bestScore = score
+						best = e
+					end
+				end
+			end
+		end
+	elseif mode == Targeting.MODES.FARTHEST then
+		for i = 1, n do
+			local e = nearby[i]
+			if e.hp > 0 and not e.dying then
+				local dx = e.x - tower.x
+				local dy = e.y - tower.y
+				local d2 = dx * dx + dy * dy
+				if d2 <= r2 then
+					local score = d2
+					local diff = score - bestScore
+					if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
+						bestScore = score
+						best = e
+					end
+				end
+			end
+		end
+	else
+		for i = 1, n do
+			local e = nearby[i]
+			if e.hp > 0 and not e.dying then
+				local dx = e.x - tower.x
+				local dy = e.y - tower.y
+				local d2 = dx * dx + dy * dy
+				if d2 <= r2 then
+					local score = e.dist
 					-- Slight deprioritization for slowed enemies
 					if e.slowTimer > 0 then
 						score = score - 5
 					end
-				end
-
-				local diff = score - bestScore
-
-				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
-					bestScore = score
-					best = e
+					local diff = score - bestScore
+					if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
+						bestScore = score
+						best = e
+					end
 				end
 			end
 		end

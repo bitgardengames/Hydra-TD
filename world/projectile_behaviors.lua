@@ -172,8 +172,9 @@ B.retarget_on_spawn = {
 		local bestDist = r2
 
 		local nearby = Spatial.queryCells(p.x, p.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
 
-		for i = 1, #nearby do
+		for i = 1, nearbyCount do
 			local e = nearby[i]
 
 			if e.hp > 0 and e ~= p.ignoreTarget then
@@ -576,8 +577,9 @@ B.aoe_damage = {
 
 		local r2 = radius * radius
 		local nearby = Spatial.queryCells(p.x, p.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
 
-		for i = 1, #nearby do
+		for i = 1, nearbyCount do
 			local other = nearby[i]
 			local dx = other.x - p.x
 			local dy = other.y - p.y
@@ -613,8 +615,9 @@ B.hit_circle = {
 		end
 
 		local nearby = Spatial.queryCells(p.x, p.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
 
-		for i = 1, #nearby do
+		for i = 1, nearbyCount do
 			local e = nearby[i]
 
 			if e.hp > 0 and e ~= p.ignoreTarget then
@@ -695,8 +698,9 @@ B.hit_chain = {
 			local bestDist = radius * radius
 
 			local nearby = Spatial.queryCells(current.x, current.y, radius)
+			local nearbyCount = Spatial.queryCellsCount()
 
-			for j = 1, #nearby do
+			for j = 1, nearbyCount do
 				local other = nearby[j]
 
 				if not visited[other] and other.hp > 0 then
@@ -743,8 +747,9 @@ B.fork_chain = {
 
 			if link.to and link.to.hp > 0 then
 				local nearby = Spatial.queryCells(link.to.x, link.to.y)
+				local nearbyCount = Spatial.queryCellsCount()
 
-				for j = 1, #nearby do
+				for j = 1, nearbyCount do
 					local other = nearby[j]
 
 					if other ~= link.to and other.hp > 0 then
@@ -891,11 +896,12 @@ B.tick_zap = {
 		local r2 = radius * radius
 
 		local nearby = Spatial.queryCells(p.x, p.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
 
 		local best = nil
 		local bestDist = r2
 
-		for i = 1, #nearby do
+		for i = 1, nearbyCount do
 			local e = nearby[i]
 
 			if e.hp > 0 then
@@ -982,8 +988,9 @@ B.slow_pop = {
 		if e.slowTimer and e.slowTimer > 0 then
 			local radius = 28
 			local nearby = Spatial.queryCells(e.x, e.y, radius)
+			local nearbyCount = Spatial.queryCellsCount()
 
-			for i = 1, #nearby do
+			for i = 1, nearbyCount do
 				local other = nearby[i]
 
 				local dx = other.x - e.x
@@ -1135,10 +1142,11 @@ B.poison_burst_on_death = {
 		if not spread then return end
 
 		local nearby = Spatial.queryCells(e.x, e.y, spread.radius)
+		local nearbyCount = Spatial.queryCellsCount()
 		local radius = spread.radius
 		local r2 = radius * radius
 
-		for i = 1, #nearby do
+		for i = 1, nearbyCount do
 			local other = nearby[i]
 
 			if other ~= e and other.hp > 0 then
@@ -1272,8 +1280,9 @@ B.beam = {
 
 			if b.timer <= 0 then
 				local nearby = Spatial.queryCells(sx, sy)
+				local nearbyCount = Spatial.queryCellsCount()
 
-				for i = 1, #nearby do
+				for i = 1, nearbyCount do
 					local e2 = nearby[i]
 
 					if e2.hp > 0 then
@@ -1468,8 +1477,9 @@ B.tick_damage = {
 
 		local radius = data.radius or t.radius or p.hitRadius or 12
 		local nearby = Spatial.queryCells(p.x, p.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
 
-		for i = 1, #nearby do
+		for i = 1, nearbyCount do
 			local e = nearby[i]
 
 			if e.hp > 0 then
