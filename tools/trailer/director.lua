@@ -34,9 +34,11 @@ local HERO_FONT_SIZE = 148
 local CTA_FONT_SIZE = 120
 local FLOATER_FONT_SIZE = 60
 
-local FONT_HERO = lg.newFont("assets/fonts/PTSans.ttf", HERO_FONT_SIZE)
-local FONT_CTA = lg.newFont("assets/fonts/PTSans.ttf", CTA_FONT_SIZE)
-local FONT_FLOATERS = lg.newFont("assets/fonts/PTSans.ttf", FLOATER_FONT_SIZE) -- Make floaters slightly more dramatic
+local FONT = "assets/fonts/Fredoka_SemiCondensed-SemiBold.ttf" -- "assets/fonts/PTSans.ttf"
+
+local FONT_HERO = lg.newFont(FONT, HERO_FONT_SIZE)
+local FONT_CTA = lg.newFont(FONT, CTA_FONT_SIZE)
+local FONT_FLOATERS = lg.newFont(FONT, FLOATER_FONT_SIZE) -- Make floaters slightly more dramatic
 
 local FPS = 60
 local STEP_DT = 1 / FPS
