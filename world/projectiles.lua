@@ -146,6 +146,92 @@ local function spawnEvent(evt)
 	return p
 end
 
+local function spawnDirect(source, target, context, speed, life)
+	if not source then
+		return nil
+	end
+
+	local p = acquire()
+
+	p.x = source.x
+	p.y = source.renderY or source.y
+
+	p.r = 4.5
+	p.baseR = p.r
+	p.scale = 1
+
+	p.life = life or 3
+	p.t = 0
+
+	p.sourceTower = source
+	p.sourceKind = source.kind
+
+	p.speed = speed or source.projSpeed or 0
+	p.damage = source.damage or 0
+
+	p.hitOrigin = "primary"
+
+	p.target = target
+	p.ignoreTarget = nil
+
+	p.angle = source.angle or 0
+	p.rotation = p.angle
+
+	p.vx = nil
+	p.vy = nil
+
+	p.hit = nil
+	p.events = nil
+	p._consumed = false
+
+	local hitSet = p.hitSet
+	if hitSet then
+		clearTable(hitSet)
+	else
+		hitSet = {}
+		p.hitSet = hitSet
+	end
+
+	local hitCooldowns = p.hitCooldowns
+	if hitCooldowns then
+		clearTable(hitCooldowns)
+	else
+		hitCooldowns = {}
+		p.hitCooldowns = hitCooldowns
+	end
+
+	p._defaultHitCtx = p._defaultHitCtx or {}
+	p._defaultHitCtx.origin = "primary"
+	p._defaultHitCtx.hitX = nil
+	p._defaultHitCtx.hitY = nil
+
+	p.hitRadius = p.r
+	p.hitRadius2 = p.r * p.r
+
+	if target then
+		p.lastTX = target.x
+		p.lastTY = target.y
+	else
+		p.lastTX = p.x + cos(p.angle) * 10
+		p.lastTY = p.y + sin(p.angle) * 10
+	end
+
+	if context then
+		p.behaviors = context.behaviors
+	else
+		local ctx = Modules.buildContext(source)
+		p.behaviors = ctx.behaviors
+	end
+
+	PB.init(p)
+
+	Sound.play(source.kind)
+
+	projectiles[#projectiles + 1] = p
+
+	return p
+end
+
 local function resolveSpawnProjectile(parent, evt)
 	local newP = spawnEvent(evt)
 
@@ -349,10 +435,7 @@ local function updateHitCooldowns(p, dt)
 end
 
 local function spawn(t, e)
-	spawnEvent({
-		source = t,
-		target = e
-	})
+	spawnDirect(t, e)
 end
 
 local function update(dt)
@@ -429,15 +512,9 @@ local function load()
 end
 
 local function spawnFromContext(t, target, ctx, overrides)
-	return spawnEvent({
-		source = t,
-		target = target,
-		context = ctx,
-
-		-- Optional overrides (used by beam, etc)
-		speed = overrides and overrides.speed,
-		life = overrides and overrides.life,
-	})
+	local speed = overrides and overrides.speed
+	local life = overrides and overrides.life
+	return spawnDirect(t, target, ctx, speed, life)
 end
 
 return {
