@@ -36,6 +36,8 @@ local upper = string.upper
 local random = love.math.random
 
 local nextID = 0
+local INV_SPAWN_FADE_DUR = 1 / 0.12
+local INV_EXIT_FADE_DUR = 1 / 0.10
 
 local function swapRemove(list, i)
 	local last = #list
@@ -143,6 +145,8 @@ local function updateEnemies(dt)
 	local map = MapMod.map
 	local totalLen = map.totalWorldLength
 	local LastSecondThreshold = map.lastSecondThreshold
+	local targetDecay = exp(-NUDGE_TARGET_DAMP * dt)
+	local follow = 1 - exp(-NUDGE_FOLLOW_DAMP * dt)
 
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
@@ -160,13 +164,13 @@ local function updateEnemies(dt)
 		local alphaIn = 1
 
 		if e.spawnFade and e.spawnFade > 0 then
-			alphaIn = 1 - (e.spawnFade / 0.12)
+			alphaIn = 1 - (e.spawnFade * INV_SPAWN_FADE_DUR)
 		end
 
 		local alphaOut = 1
 
 		if e.exitFade and e.exitFade > 0 then
-			alphaOut = e.exitFade / 0.10
+			alphaOut = e.exitFade * INV_EXIT_FADE_DUR
 		end
 
 		e.alpha = min(alphaIn, alphaOut)
@@ -364,21 +368,28 @@ local function updateEnemies(dt)
 		e.prevNudgeY = e.nudgeY
 
 		-- advance along path
-		e.dist = min(totalLen, e.dist + e.speed * dt)
-		e.x, e.y = sampleFast(e.dist)
+		local oldDist = e.dist
+		local newDist = min(totalLen, oldDist + e.speed * dt)
+		e.dist = newDist
+
+		local moved = abs(newDist - oldDist) > EPS
+
+		if moved then
+			e.x, e.y = sampleFast(newDist)
+		end
 
 		-- visual-only nudge smoothing:
 		-- 1) target eases back to path
 		-- 2) rendered nudge follows target for softer hit finish
-		local targetDecay = exp(-NUDGE_TARGET_DAMP * dt)
-		local follow = 1 - exp(-NUDGE_FOLLOW_DAMP * dt)
 		e.nudgeTargetX = e.nudgeTargetX * targetDecay
 		e.nudgeTargetY = e.nudgeTargetY * targetDecay
 		e.nudgeX = e.nudgeX + (e.nudgeTargetX - e.nudgeX) * follow
 		e.nudgeY = e.nudgeY + (e.nudgeTargetY - e.nudgeY) * follow
 
 		-- gameplay queries use path position only
-		Spatial.updateEnemy(e)
+		if moved then
+			Spatial.updateEnemy(e)
+		end
 
 		-- Reached end of path
 		if e.dist >= totalLen then
