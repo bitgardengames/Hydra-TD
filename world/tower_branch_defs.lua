@@ -55,7 +55,7 @@ local defs = {
 		[2] = {"shock_storm", "shock_conductor"},
 		[3] = {"chain_hit", "static_field"},
 		[4] = {"shock_overload", "target_farthest_progress"},
-		[5] = {"spawn_orbitals", "move_spiral"},
+		[5] = {"spawn_orbitals", "explode_on_hit"},
 	},
 
 	plasma = {
