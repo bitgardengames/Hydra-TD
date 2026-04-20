@@ -45,6 +45,8 @@ local tabGap = 10
 local tabH = 36
 local tabMinW = 108
 local minRowsVisible = 6
+local tabOuterRadius = 12
+local tabInnerRadius = 10
 
 local boxX, boxY, boxW, boxH = 0, 0, 0, 0
 local titleY = 0
@@ -397,13 +399,18 @@ function Screen.draw()
 		local rect = tabRects[i]
 		local hovered = rect and Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h
 		local active = i == activeTab
-		local fillAlpha = active and 0.22 or (hovered and 0.12 or 0.06)
+		local highlightAlpha = active and 0.12 or (hovered and 0.07 or 0)
 
-		lg.setColor(1, 1, 1, fillAlpha)
-		lg.rectangle("fill", rect.x, rect.y, rect.w, rect.h, 8, 8)
+		lg.setColor(colorOutline)
+		lg.rectangle("fill", rect.x - outlineW, rect.y - outlineW, rect.w + outlineW * 2, rect.h + outlineW * 2, tabOuterRadius, tabOuterRadius)
 
-		lg.setColor(1, 1, 1, active and 0.25 or 0.12)
-		lg.rectangle("line", rect.x, rect.y, rect.w, rect.h, 8, 8)
+		lg.setColor(colorBackdrop)
+		lg.rectangle("fill", rect.x, rect.y, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
+
+		if highlightAlpha > 0 then
+			lg.setColor(1, 1, 1, highlightAlpha)
+			lg.rectangle("fill", rect.x, rect.y, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
+		end
 
 		lg.setColor(colorText)
 		Text.printfShadow(tab.label, rect.x, rect.y + 8, rect.w, "center")
