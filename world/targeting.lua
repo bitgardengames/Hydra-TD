@@ -1,9 +1,6 @@
-local Util = require("core.util")
 local Spatial = require("world.spatial_grid")
 
 local Targeting = {}
-
-local dist2 = Util.dist2
 
 local EPS = 0.0001
 
@@ -28,16 +25,18 @@ local function pickTargetByScore(tower, mode)
 	local best = nil
 	local bestScore = -math.huge
 	local r2 = tower.range2
+	local tx = tower.x
+	local ty = tower.y
 
-	local nearby = Spatial.queryCells(tower.x, tower.y, tower.range)
+	local nearby = Spatial.queryCells(tx, ty, tower.range)
 	local n = Spatial.queryCellsCount()
 
 	if mode == Targeting.MODES.LOW_HP then
 		for i = 1, n do
 			local e = nearby[i]
 			if e.hp > 0 and not e.dying then
-				local dx = e.x - tower.x
-				local dy = e.y - tower.y
+				local dx = e.x - tx
+				local dy = e.y - ty
 				local d2 = dx * dx + dy * dy
 				if d2 <= r2 then
 					local score = -(e.hp or 0)
@@ -53,8 +52,8 @@ local function pickTargetByScore(tower, mode)
 		for i = 1, n do
 			local e = nearby[i]
 			if e.hp > 0 and not e.dying then
-				local dx = e.x - tower.x
-				local dy = e.y - tower.y
+				local dx = e.x - tx
+				local dy = e.y - ty
 				local d2 = dx * dx + dy * dy
 				if d2 <= r2 then
 					local score = d2
@@ -70,8 +69,8 @@ local function pickTargetByScore(tower, mode)
 		for i = 1, n do
 			local e = nearby[i]
 			if e.hp > 0 and not e.dying then
-				local dx = e.x - tower.x
-				local dy = e.y - tower.y
+				local dx = e.x - tx
+				local dy = e.y - ty
 				local d2 = dx * dx + dy * dy
 				if d2 <= r2 then
 					local score = e.dist

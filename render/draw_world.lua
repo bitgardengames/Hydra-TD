@@ -195,6 +195,8 @@ end
 
 local function drawPath()
 	local pathThickness = tile
+	local path = MapMod.map.path
+	local pathLen = #path
 
 	local outlineThickness = pathThickness
 	local halfOutline = outlineThickness * 0.5
@@ -207,9 +209,9 @@ local function drawPath()
 	-- Outline
 	lg.setColor(terrain.pathOutline)
 
-	for i = 1, #MapMod.map.path - 1 do
-		local a = MapMod.map.path[i]
-		local b = MapMod.map.path[i + 1]
+	for i = 1, pathLen - 1 do
+		local a = path[i]
+		local b = path[i + 1]
 
 		local ax, ay = gridToCenter(a[1], a[2])
 		local bx, by = gridToCenter(b[1], b[2])
@@ -220,12 +222,12 @@ local function drawPath()
 		local trimA, trimB = false, false
 
 		if i > 1 then
-			local p = MapMod.map.path[i - 1]
+			local p = path[i - 1]
 			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
 		end
 
-		if i < #MapMod.map.path - 1 then
-			local n = MapMod.map.path[i + 2]
+		if i < pathLen - 1 then
+			local n = path[i + 2]
 			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
 		end
 
@@ -260,10 +262,10 @@ local function drawPath()
 		end
 	end
 
-	for i = 2, #MapMod.map.path - 1 do
-		local prev = MapMod.map.path[i - 1]
-		local cur = MapMod.map.path[i]
-		local next = MapMod.map.path[i + 1]
+	for i = 2, pathLen - 1 do
+		local prev = path[i - 1]
+		local cur = path[i]
+		local next = path[i + 1]
 
 		local dx1 = cur[1] - prev[1]
 		local dy1 = cur[2] - prev[2]
@@ -279,9 +281,9 @@ local function drawPath()
 	-- Fill
 	lg.setColor(terrain.path)
 
-	for i = 1, #MapMod.map.path - 1 do
-		local a = MapMod.map.path[i]
-		local b = MapMod.map.path[i + 1]
+	for i = 1, pathLen - 1 do
+		local a = path[i]
+		local b = path[i + 1]
 
 		local ax, ay = gridToCenter(a[1], a[2])
 		local bx, by = gridToCenter(b[1], b[2])
@@ -292,12 +294,12 @@ local function drawPath()
 		local trimA, trimB = false, false
 
 		if i > 1 then
-			local p = MapMod.map.path[i - 1]
+			local p = path[i - 1]
 			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
 		end
 
-		if i < #MapMod.map.path - 1 then
-			local n = MapMod.map.path[i + 2]
+		if i < pathLen - 1 then
+			local n = path[i + 2]
 			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
 		end
 
@@ -332,10 +334,10 @@ local function drawPath()
 		end
 	end
 
-	for i = 2, #MapMod.map.path - 1 do
-		local prev = MapMod.map.path[i - 1]
-		local cur = MapMod.map.path[i]
-		local next = MapMod.map.path[i + 1]
+	for i = 2, pathLen - 1 do
+		local prev = path[i - 1]
+		local cur = path[i]
+		local next = path[i + 1]
 
 		local dx1 = cur[1] - prev[1]
 		local dy1 = cur[2] - prev[2]
