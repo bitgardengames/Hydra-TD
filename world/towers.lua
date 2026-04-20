@@ -43,6 +43,7 @@ local isValidTarget = Targeting.isValidTarget
 local sampleFast = MapMod.sampleFast
 
 local FIRE_ANGLE_EPS = math.rad(6)
+local RETARGET_INTERVAL = 0.10
 
 local function getShockOrigin(t)
 	local size = Constants.TILE * 0.42
@@ -258,19 +259,22 @@ local function updateTowers(dt)
 
 		-- Animation progress
 		local riseAnim = t.levelUpAnim or 0
-		local p = 1 - riseAnim
-		local ease = p * p * (3 - 2 * p)
-		local prev = t.prevHeight or 0
-		local animatedHeight = prev + (t.height - prev) * ease
+		local animatedHeight
+		if riseAnim > 0 then
+			local p = 1 - riseAnim
+			local ease = p * p * (3 - 2 * p)
+			local prev = t.prevHeight or 0
+			animatedHeight = prev + (t.height - prev) * ease
+		else
+			animatedHeight = t.height
+		end
 
 		-- Spawn animation
 		local spawn = t.spawnAnim or 0
-		local pSpawn = 1 - spawn
-		local easeSpawn = pSpawn * pSpawn * (3 - 2 * pSpawn)
-
 		local bodyY = t.y
-
 		if spawn > 0 then
+			local pSpawn = 1 - spawn
+			local easeSpawn = pSpawn * pSpawn * (3 - 2 * pSpawn)
 			bodyY = bodyY - ((1 - easeSpawn) * 8)
 		end
 
@@ -293,7 +297,7 @@ local function updateTowers(dt)
 			if t.retargetT <= 0 then
 				t.targetMode = Modules.getTargetMode(t.kind) or Targeting.MODES.PROGRESS
 				target = findTarget(t, t.targetMode)
-				t.retargetT = 0.10
+				t.retargetT = RETARGET_INTERVAL
 			end
 		end
 
