@@ -429,13 +429,17 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		local statusY = bodyY + 24
 
 		-- Slow
-		if e.slowTimer > 0 and e.slowDuration > 0 then
-			statusY = statusY + drawStatusBar(cs1, cs2, cs3, e.slowTimer, e.slowDuration, bodyX, statusY, now)
+		local slowTimer = e.slowTimer or 0
+		local slowDuration = e.slowDuration or 0
+		if slowTimer > 0 and slowDuration > 0 then
+			statusY = statusY + drawStatusBar(cs1, cs2, cs3, slowTimer, slowDuration, bodyX, statusY, now)
 		end
 
 		-- Poison
-		if e.poisonTimer > 0 and e.poisonDuration > 0 then
-			statusY = statusY + drawStatusBar(cp1, cp2, cp3, e.poisonTimer, e.poisonDuration, bodyX, statusY, now)
+		local poisonTimer = e.poisonTimer or 0
+		local poisonDuration = e.poisonDuration or 0
+		if poisonTimer > 0 and poisonDuration > 0 then
+			statusY = statusY + drawStatusBar(cp1, cp2, cp3, poisonTimer, poisonDuration, bodyX, statusY, now)
 		end
     end
 end
