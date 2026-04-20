@@ -1767,19 +1767,27 @@ function ProjectileBehaviors.buildChildBehaviors(parentBehaviors)
 		end
 	end
 
-	-- CRITICAL SAFETY: ensure child can actually hit something
-	local hasHit = false
+	-- CRITICAL SAFETY: ensure child can actually collide and apply damage.
+	local hasHitDetector = false
+	local hasHitDamage = false
 
 	for i = 1, #out do
 		local id = out[i].id
 
-		if id == "hit_damage" or id == "hit_circle" or id == "instant_hit" then
-			hasHit = true
-			break
+		if id == "hit_circle" or id == "instant_hit" or id == "emit_on_target" then
+			hasHitDetector = true
+		end
+
+		if id == "hit_damage" or id == "aoe_damage" or id == "hit_chain" then
+			hasHitDamage = true
 		end
 	end
 
-	if not hasHit then
+	if not hasHitDetector then
+		out[#out + 1] = { id = "hit_circle", data = { radius = 10 } }
+	end
+
+	if not hasHitDamage then
 		out[#out + 1] = { id = "hit_damage" }
 	end
 
@@ -1821,16 +1829,25 @@ function ProjectileBehaviors.hit(p, e, ctx)
 		p.x, p.y = ctx.hitX, ctx.hitY
 	end
 
+	local shouldConsume = false
+
 	for i = 1, #p.behaviors do
 		local b = p.behaviors[i]
 		local def = B[b.id]
 
 		if def and def.onHit then
-			def.onHit(p, e, b.data, ctx)
+			local result = def.onHit(p, e, b.data, ctx)
+			if result == "consume" then
+				shouldConsume = true
+			end
 		end
 	end
 
 	p.x, p.y = oldX, oldY
+
+	if shouldConsume then
+		return "consume"
+	end
 end
 
 function ProjectileBehaviors.draw(p, a)
