@@ -4,12 +4,15 @@ local Targeting = {}
 
 local EPS = 0.0001
 local HUGE_NEG = -math.huge
+local queryCells = Spatial.queryCells
+local queryCellsCount = Spatial.queryCellsCount
 
 Targeting.MODES = {
 	PROGRESS = "progress",
 	LOW_HP = "low_hp",
 	FARTHEST = "farthest",
 }
+local MODES = Targeting.MODES
 
 function Targeting.isValidTarget(tower, e)
 	if not e or e.hp <= 0 or e.dying then
@@ -29,10 +32,10 @@ local function pickTargetByScore(tower, mode)
 	local tx = tower.x
 	local ty = tower.y
 
-	local nearby = Spatial.queryCells(tx, ty, tower.range)
-	local n = Spatial.queryCellsCount()
-	local lowHpMode = mode == Targeting.MODES.LOW_HP
-	local farthestMode = mode == Targeting.MODES.FARTHEST
+	local nearby = queryCells(tx, ty, tower.range)
+	local n = queryCellsCount()
+	local lowHpMode = mode == MODES.LOW_HP
+	local farthestMode = mode == MODES.FARTHEST
 
 	for i = 1, n do
 		local e = nearby[i]
@@ -73,21 +76,21 @@ end
 
 -- Target enemy furthest along the path
 function Targeting.findProgressTarget(tower)
-	return pickTargetByScore(tower, Targeting.MODES.PROGRESS)
+	return pickTargetByScore(tower, MODES.PROGRESS)
 end
 
 function Targeting.findLowestHPTarget(tower)
-	return pickTargetByScore(tower, Targeting.MODES.LOW_HP)
+	return pickTargetByScore(tower, MODES.LOW_HP)
 end
 
 function Targeting.findFarthestTarget(tower)
-	return pickTargetByScore(tower, Targeting.MODES.FARTHEST)
+	return pickTargetByScore(tower, MODES.FARTHEST)
 end
 
 function Targeting.findTarget(tower, mode)
-	if mode == Targeting.MODES.LOW_HP then
+	if mode == MODES.LOW_HP then
 		return Targeting.findLowestHPTarget(tower)
-	elseif mode == Targeting.MODES.FARTHEST then
+	elseif mode == MODES.FARTHEST then
 		return Targeting.findFarthestTarget(tower)
 	end
 
