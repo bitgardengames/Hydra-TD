@@ -253,11 +253,10 @@ local function updateEnemies(dt)
 
 			if e.deathT <= 0 then
 				if e.lastHitTower then
-					e.lastHitTower.kills = e.lastHitTower.kills + 1
-
-					local statName = "TOWER_" .. upper(e.lastHitTower.kind) .. "_KILLS"
-
-					Achievements.increment(statName)
+					local killer = e.lastHitTower
+					killer.kills = killer.kills + 1
+					killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
+					Achievements.increment(killer._killsStatName)
 				end
 
 				Achievements.increment("BOSSES_KILLED")
@@ -305,11 +304,10 @@ local function updateEnemies(dt)
 
 			-- Non-boss: immediate death
 			if e.lastHitTower then
-				e.lastHitTower.kills = e.lastHitTower.kills + 1
-
-				local statName = "TOWER_" .. upper(e.lastHitTower.kind) .. "_KILLS"
-
-				Achievements.increment(statName)
+				local killer = e.lastHitTower
+				killer.kills = killer.kills + 1
+				killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
+				Achievements.increment(killer._killsStatName)
 			end
 
 			Achievements.increment("ENEMIES_KILLED")
