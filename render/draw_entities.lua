@@ -48,6 +48,7 @@ local TILE = Constants.TILE
 local HALF_PI = pi / 2
 
 local towerDefs = Towers.TowerDefs
+local sampleFast = MapMod.sampleFast
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
@@ -70,7 +71,7 @@ local function prepareEnemyRenderData()
 		local prevDist = e.prevDist or e.dist or 0
 		local currDist = e.dist or prevDist
 		local d = min(totalLen, lerp(prevDist, currDist, a))
-		local baseX, baseY = MapMod.sampleFast(d)
+		local baseX, baseY = sampleFast(d)
 
 		local nudgeX = lerp(e.prevNudgeX or e.nudgeX or 0, e.nudgeX or 0, a)
 		local nudgeY = lerp(e.prevNudgeY or e.nudgeY or 0, e.nudgeY or 0, a)
