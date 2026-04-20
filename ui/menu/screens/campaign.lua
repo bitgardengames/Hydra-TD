@@ -58,6 +58,8 @@ local ARROW_SIZE = 20
 local ARROW_OFFSET = 48
 local ARROW_ALPHA = 0.85
 local ARROW_HOVER = 1.0
+local PATH_TRIM_START = 26
+local PATH_TRIM_END = 26
 
 -- State
 local campaignButtons = {}
@@ -164,7 +166,14 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 
 	-- Animate along path
 	local speed = 140
-	local dist = (pulseT * speed) % totalLen
+	local trimStart = math.min(PATH_TRIM_START, totalLen * 0.45)
+	local trimEnd = math.min(PATH_TRIM_END, totalLen * 0.45)
+	local animLen = totalLen - trimStart - trimEnd
+	if animLen <= 0 then
+		return
+	end
+
+	local dist = trimStart + ((pulseT * speed) % animLen)
 	local tailDist = 55
 	local tailMaxAlpha = 0.28
 
@@ -186,10 +195,7 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 			local tail = 0
 
 			while tail < tailDist do
-				local trailDist = dist - tail
-				if trailDist < 0 then
-					trailDist = trailDist + totalLen
-				end
+				local trailDist = math.max(trimStart, dist - tail)
 
 				local trailAcc = 0
 				local trailX, trailY = px, py
