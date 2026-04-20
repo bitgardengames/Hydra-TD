@@ -3,6 +3,7 @@ local Spatial = require("world.spatial_grid")
 local Targeting = {}
 
 local EPS = 0.0001
+local HUGE_NEG = -math.huge
 
 Targeting.MODES = {
 	PROGRESS = "progress",
@@ -23,66 +24,45 @@ end
 
 local function pickTargetByScore(tower, mode)
 	local best = nil
-	local bestScore = -math.huge
+	local bestScore = HUGE_NEG
 	local r2 = tower.range2
 	local tx = tower.x
 	local ty = tower.y
 
 	local nearby = Spatial.queryCells(tx, ty, tower.range)
 	local n = Spatial.queryCellsCount()
+	local lowHpMode = mode == Targeting.MODES.LOW_HP
+	local farthestMode = mode == Targeting.MODES.FARTHEST
 
-	if mode == Targeting.MODES.LOW_HP then
-		for i = 1, n do
-			local e = nearby[i]
-			if e.hp > 0 and not e.dying then
-				local dx = e.x - tx
-				local dy = e.y - ty
-				local d2 = dx * dx + dy * dy
-				if d2 <= r2 then
-					local score = -(e.hp or 0)
-					local diff = score - bestScore
-					if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
-						bestScore = score
-						best = e
-					end
-				end
-			end
-		end
-	elseif mode == Targeting.MODES.FARTHEST then
-		for i = 1, n do
-			local e = nearby[i]
-			if e.hp > 0 and not e.dying then
-				local dx = e.x - tx
-				local dy = e.y - ty
-				local d2 = dx * dx + dy * dy
-				if d2 <= r2 then
-					local score = d2
-					local diff = score - bestScore
-					if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
-						bestScore = score
-						best = e
-					end
-				end
-			end
-		end
-	else
-		for i = 1, n do
-			local e = nearby[i]
-			if e.hp > 0 and not e.dying then
-				local dx = e.x - tx
-				local dy = e.y - ty
-				local d2 = dx * dx + dy * dy
-				if d2 <= r2 then
-					local score = e.dist
+	for i = 1, n do
+		local e = nearby[i]
+
+		if e.hp > 0 and not e.dying then
+			local dx = e.x - tx
+			local dy = e.y - ty
+			local d2 = dx * dx + dy * dy
+
+			if d2 <= r2 then
+				local score
+
+				if lowHpMode then
+					score = -e.hp
+				elseif farthestMode then
+					score = d2
+				else
+					score = e.dist
+
 					-- Slight deprioritization for slowed enemies
 					if e.slowTimer > 0 then
 						score = score - 5
 					end
-					local diff = score - bestScore
-					if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
-						bestScore = score
-						best = e
-					end
+				end
+
+				local diff = score - bestScore
+
+				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
+					bestScore = score
+					best = e
 				end
 			end
 		end
