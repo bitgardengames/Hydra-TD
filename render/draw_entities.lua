@@ -11,6 +11,7 @@ local sqrt = math.sqrt
 local sin = math.sin
 local min = math.min
 local max = math.max
+local abs = math.abs
 local cos = math.cos
 local pi = math.pi
 
@@ -49,6 +50,8 @@ local HALF_PI = pi / 2
 
 local towerDefs = Towers.TowerDefs
 local sampleFast = MapMod.sampleFast
+local EYE_SMOOTH = 0.35
+local EYE_DEADZONE = 0.03
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
@@ -89,6 +92,12 @@ local function prepareEnemyRenderData()
 		-- Keep these for eye tracking / effects
 		e.prevRX = oldRX
 		e.prevRY = oldRY
+
+		-- Smoothed render velocity for eye direction, to reduce high-frequency jitter.
+		local rawDX = targetX - oldRX
+		local rawDY = targetY - oldRY
+		e.eyeDX = (e.eyeDX or rawDX) + (rawDX - (e.eyeDX or rawDX)) * EYE_SMOOTH
+		e.eyeDY = (e.eyeDY or rawDY) + (rawDY - (e.eyeDY or rawDY)) * EYE_SMOOTH
 
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
 	end
@@ -257,15 +266,18 @@ local function drawEnemy(e)
 		lg.pop()
 	else
 		-- Eye direction follows movement
-		local dx = e.rx - (e.prevRX or e.rx)
-		local dy = e.ry - (e.prevRY or e.ry)
+		local dx = e.eyeDX or (e.rx - (e.prevRX or e.rx))
+		local dy = e.eyeDY or (e.ry - (e.prevRY or e.ry))
 
 		local m = 1.2 -- max
 
-		if dx > m then dx = m end
-		if dx < -m then dx = -m end
-		if dy > m then dy = m end
-		if dy < -m then dy = -m end
+		-- Tiny movement deadzone to avoid twitching when almost stationary.
+		if abs(dx) < EYE_DEADZONE then dx = 0 end
+		if abs(dy) < EYE_DEADZONE then dy = 0 end
+
+		-- Soft clamp avoids hard pops at limit.
+		dx = (dx * m) / (abs(dx) + m)
+		dy = (dy * m) / (abs(dy) + m)
 
 		lg.circle("fill", ix - eyeSep + dx, eyeY + dy, eyeSize)
 		lg.circle("fill", ix + eyeSep + dx, eyeY + dy, eyeSize)

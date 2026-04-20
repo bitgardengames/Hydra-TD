@@ -232,11 +232,12 @@ function love.load(arg)
 	collectgarbage("collect")
 end
 
-local clamp = 1 / 30
+local MAX_FRAME_DT = 1 / 15
+local MAX_SIM_STEPS = 8
 
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
-	dt = min(dt, clamp)
+	dt = min(dt, MAX_FRAME_DT)
 
 	local mode = State.mode
 	local target = (mode == "pause") and 1 or 0
@@ -262,10 +263,19 @@ function love.update(dt)
 
 	ACCUM = ACCUM + dt
 
-	while ACCUM >= FIXED_DT do
+	local steps = 0
+
+	while ACCUM >= FIXED_DT and steps < MAX_SIM_STEPS do
 		Sim.update(FIXED_DT * State.speed)
 
 		ACCUM = ACCUM - FIXED_DT
+		steps = steps + 1
+	end
+
+	-- If we are still behind (large hitch), drop the oldest excess simulation time.
+	-- This avoids prolonged "slow-motion catch-up" that feels like movement lag.
+	if ACCUM >= FIXED_DT then
+		ACCUM = ACCUM % FIXED_DT
 	end
 
 	if mode ~= "game" then
