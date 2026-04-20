@@ -153,24 +153,28 @@ local function updateEnemies(dt)
 		local isBoss = e.boss
 
 		-- Spawn fade-in
-		if e.spawnFade and e.spawnFade > 0 then
-			e.spawnFade = e.spawnFade - dt
+		local spawnFade = e.spawnFade
+		if spawnFade and spawnFade > 0 then
+			spawnFade = spawnFade - dt
 
-			if e.spawnFade < 0 then
-				e.spawnFade = 0
+			if spawnFade < 0 then
+				spawnFade = 0
 			end
+
+			e.spawnFade = spawnFade
 		end
 
 		local alphaIn = 1
 
-		if e.spawnFade and e.spawnFade > 0 then
-			alphaIn = 1 - (e.spawnFade * INV_SPAWN_FADE_DUR)
+		if spawnFade and spawnFade > 0 then
+			alphaIn = 1 - (spawnFade * INV_SPAWN_FADE_DUR)
 		end
 
 		local alphaOut = 1
+		local exitFade = e.exitFade
 
-		if e.exitFade and e.exitFade > 0 then
-			alphaOut = e.exitFade * INV_EXIT_FADE_DUR
+		if exitFade and exitFade > 0 then
+			alphaOut = exitFade * INV_EXIT_FADE_DUR
 		end
 
 		e.alpha = min(alphaIn, alphaOut)
@@ -331,14 +335,17 @@ local function updateEnemies(dt)
 		end
 
 		-- Slow
-		if e.slowTimer > 0 then
-			e.slowTimer = e.slowTimer - dt
+		local slowTimer = e.slowTimer
+		if slowTimer > 0 then
+			slowTimer = slowTimer - dt
 
-			if e.slowTimer <= 0 then
-				e.slowTimer = 0
+			if slowTimer <= 0 then
+				slowTimer = 0
 				e.slowDuration = 0
 				e.slowFactor = 1.0
 			end
+
+			e.slowTimer = slowTimer
 		end
 
 		e.speed = e.baseSpeed * e.slowFactor

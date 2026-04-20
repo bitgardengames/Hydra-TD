@@ -46,19 +46,15 @@ local function pickTargetByScore(tower, mode)
 			local d2 = dx * dx + dy * dy
 
 			if d2 <= r2 then
-				local score
+				local score = e.dist
 
 				if lowHpMode then
 					score = -e.hp
 				elseif farthestMode then
 					score = d2
-				else
-					score = e.dist
-
+				elseif e.slowTimer > 0 then
 					-- Slight deprioritization for slowed enemies
-					if e.slowTimer > 0 then
-						score = score - 5
-					end
+					score = score - 5
 				end
 
 				local diff = score - bestScore
