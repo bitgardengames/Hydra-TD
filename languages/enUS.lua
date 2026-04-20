@@ -172,7 +172,7 @@ return {
 		lancer_arc_lance = "Hits chain to nearby enemies.",
 		poison_blight = "Poison deals higher damage per stack, but allows fewer total stacks.",
 		poison_plague = "Poison deals lower damage per stack, but allows many more total stacks.",
-		poison_neurotoxin = "Poisoned hits also briefly slow targets.",
+		poison_neurotoxin = "Poisoned hits deal focused stacking toxin damage.",
 		cannon_seige = "Targets the farthest enemy in range and uses a larger blast radius.",
 		cannon_cluster = "Explosions split into secondary projectiles after impact.",
 		cannon_aftershock = "Impacts leave a static field that damages enemies over time.",
