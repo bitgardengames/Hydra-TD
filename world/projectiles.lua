@@ -21,6 +21,14 @@ local function clearTable(t)
 	end
 end
 
+local function releaseEvent(evt)
+	if not evt then
+		return
+	end
+
+	clearTable(evt)
+end
+
 local function nextHitSetStamp(p)
 	local stamp = (p.hitSetStamp or 0) + 1
 
@@ -58,8 +66,35 @@ local function acquire()
 end
 
 local function release(p)
+	local hitSet = p.hitSet
+	local hitCooldowns = p.hitCooldowns
+	local events = p.events
+	local defaultHitCtx = p._defaultHitCtx
+
 	for k in pairs(p) do
 		p[k] = nil
+	end
+
+	if hitSet then
+		clearTable(hitSet)
+		p.hitSet = hitSet
+	end
+
+	if hitCooldowns then
+		clearTable(hitCooldowns)
+		p.hitCooldowns = hitCooldowns
+	end
+
+	if events then
+		clearTable(events)
+		p.events = events
+		p.eventRead = 1
+		p.eventCount = 0
+	end
+
+	if defaultHitCtx then
+		clearTable(defaultHitCtx)
+		p._defaultHitCtx = defaultHitCtx
 	end
 
 	pool[#pool + 1] = p
@@ -111,7 +146,11 @@ local function spawnEvent(evt)
 	p.vy = evt.vy
 
 	p.hit = nil
-	p.events = nil
+	p.eventRead = 1
+	p.eventCount = 0
+	if p.events then
+		clearTable(p.events)
+	end
 	p._consumed = false
 	p.hasHit = projectileHasHit
 	p.markHit = markProjectileHit
@@ -206,7 +245,11 @@ local function spawnDirect(source, target, context, speed, life)
 	p.vy = nil
 
 	p.hit = nil
-	p.events = nil
+	p.eventRead = 1
+	p.eventCount = 0
+	if p.events then
+		clearTable(p.events)
+	end
 	p._consumed = false
 	p.hasHit = projectileHasHit
 	p.markHit = markProjectileHit
@@ -366,38 +409,49 @@ local function resolveFX(evt)
 end
 
 local function resolveEvents(p)
-	while p.events and #p.events > 0 do
-		local list = p.events
-		p.events = nil
+	local list = p.events
+	if not list then
+		return
+	end
 
-		for i = 1, #list do
-			local evt = list[i]
+	local read = p.eventRead or 1
+	local count = p.eventCount or 0
 
-			if evt and evt.id then
-				if evt.id == "spawn_projectile" then
-					resolveSpawnProjectile(p, evt)
-				elseif evt.id == "damage" then
-					resolveDamage(p, evt)
-				elseif evt.id == "impulse" then
-					resolveImpulse(evt)
-				elseif evt.id == "fx" then
-					resolveFX(evt)
-				elseif evt.id == "hit" then
-					local hitCtx = evt.ctx
-					if not hitCtx and (evt.origin or evt.hitX or evt.hitY) then
-						hitCtx = evt
-					end
+	while read <= count do
+		local evt = list[read]
+		list[read] = nil
+		read = read + 1
 
-					local res = PB.hit(p, evt.target, hitCtx)
-					if res == "consume" then
-						p._consumed = true
-					end
-				elseif evt.id == "consume" then
+		if evt and evt.id then
+			if evt.id == "spawn_projectile" then
+				resolveSpawnProjectile(p, evt)
+			elseif evt.id == "damage" then
+				resolveDamage(p, evt)
+			elseif evt.id == "impulse" then
+				resolveImpulse(evt)
+			elseif evt.id == "fx" then
+				resolveFX(evt)
+			elseif evt.id == "hit" then
+				local hitCtx = evt.ctx
+				if not hitCtx and (evt.origin or evt.hitX or evt.hitY) then
+					hitCtx = evt
+				end
+
+				local res = PB.hit(p, evt.target, hitCtx)
+				if res == "consume" then
 					p._consumed = true
 				end
+			elseif evt.id == "consume" then
+				p._consumed = true
 			end
 		end
+
+		releaseEvent(evt)
+		count = p.eventCount or 0
 	end
+
+	p.eventRead = 1
+	p.eventCount = 0
 end
 
 local function processHit(p)

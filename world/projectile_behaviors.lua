@@ -58,8 +58,17 @@ local function pushEvent(p, evt)
 	if not p or not evt then return end
 	if not evt.id then return end
 
-	p.events = p.events or {}
-	p.events[#p.events + 1] = evt
+	local events = p.events
+	if not events then
+		events = {}
+		p.events = events
+		p.eventRead = 1
+		p.eventCount = 0
+	end
+
+	local count = (p.eventCount or 0) + 1
+	events[count] = evt
+	p.eventCount = count
 end
 
 ProjectileBehaviors.pushEvent = pushEvent
