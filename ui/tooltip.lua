@@ -2,7 +2,6 @@ local Theme = require("core.theme")
 local Text = require("ui.text")
 local Fonts = require("core.fonts")
 local Cursor = require("core.cursor")
-local Constants = require("core.constants")
 
 local lg = love.graphics
 local max = math.max

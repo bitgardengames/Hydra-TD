@@ -1,4 +1,3 @@
-local Theme = require("core.theme")
 local Constants = require("core.constants")
 local Sound = require("systems.sound")
 local Text = require("ui.text")

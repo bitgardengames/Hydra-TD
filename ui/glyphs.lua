@@ -1,5 +1,4 @@
 local Theme = require("core.theme")
-local Fonts = require("core.fonts")
 
 local lg = love.graphics
 local floor = math.floor
@@ -32,12 +31,10 @@ local currentPlatform = "xbox"
 
 -- Base visual parameters
 local BASE_H = 24
-local PAD = 4
 local RADIUS = 2
 
 -- Colors
 local colorFill = Theme.ui.panel
-local colorText = Theme.ui.text
 
 function Glyphs.setPlatform(platform)
 	if platformMaps[platform] then
