@@ -15,12 +15,6 @@ Spatial.grid = grid
 local queryBuffer = {}
 local queryCount = 0
 
-local function clearBufferTail(buf, startIdx, endIdx)
-	for i = startIdx, endIdx do
-		buf[i] = nil
-	end
-end
-
 local function removeFromCell(e)
 	local cell = e.cell
 
@@ -95,7 +89,6 @@ local tsort = table.sort
 
 function Spatial.queryCells(x, y, radius)
 	local results = queryBuffer
-	local prevCount = queryCount
 
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
@@ -128,10 +121,6 @@ function Spatial.queryCells(x, y, radius)
 				end
 			end
 		end
-	end
-
-	if prevCount > count then
-		clearBufferTail(results, count + 1, prevCount)
 	end
 
 	queryCount = count
