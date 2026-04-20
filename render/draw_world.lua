@@ -26,32 +26,6 @@ local gridToCenter = MapMod.gridToCenter
 local worldCanvas = nil
 local worldCanvasZoom = nil
 
-local function rebuildWorldCanvas()
-	local w = lg.getWidth()
-	local h = lg.getHeight()
-
-	local zoom = Camera.zoom
-
-	worldCanvas = lg.newCanvas(w, h, {msaa = 8})
-
-	worldCanvasZoom = zoom
-
-	lg.setCanvas(worldCanvas)
-	lg.clear()
-
-	lg.push()
-
-	-- Apply zoom, not translation
-	lg.scale(zoom, zoom)
-
-	-- Draw world at origin-relative coordinates
-	drawWorldStatic()
-
-	lg.pop()
-
-	lg.setCanvas()
-end
-
 local function getTerrain()
 	local biome = MapMod.map and MapMod.map.biome
 

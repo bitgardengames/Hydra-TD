@@ -55,28 +55,6 @@ local function clearBlocked()
 	map.water = {}
 end
 
-local function isWaterTile(gx, gy)
-	local water = map.water
-
-	if not water then
-		return false
-	end
-
-	for i = 1, #water do
-		local blob = water[i]
-		local bx, by, r = blob[1], blob[2], blob[3]
-
-		local dx = gx - bx
-		local dy = gy - by
-
-		if dx * dx + dy * dy <= r * r then
-			return true
-		end
-	end
-
-	return false
-end
-
 local function canPlaceAt(gx, gy)
 	if not gx then
 		return false
