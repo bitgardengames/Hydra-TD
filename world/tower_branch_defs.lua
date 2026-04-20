@@ -34,7 +34,7 @@ local defs = {
 		[2] = {"lancer_deadeye", "lancer_volley"},
 		[3] = {"pierce", "move_linear"},
 		[4] = {"target_low_hp", "target_farthest_progress"},
-		[5] = {"split_on_hit", "chain_hit"}, -- Can we make a linear pierce for lancer
+		[5] = {"chaos_bounce", "chain_hit"}, -- Can we make a linear pierce for lancer
 	},
 
 	poison = {
