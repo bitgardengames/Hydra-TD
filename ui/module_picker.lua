@@ -60,21 +60,42 @@ local function colorLerp(a, b, t, alpha)
 	return lerp(a[1], b[1], t), lerp(a[2], b[2], t), lerp(a[3], b[3], t), alpha or 1
 end
 
-local function drawFlatCard(x, y, w, h, r, bodyColor, edgeColor, alpha)
+local outlineW = Theme.outline.width
+local baseRadius = 6 * 3
+local outerRadius = baseRadius + outlineW * 0.5
+local innerRadius = baseRadius - outlineW * 0.25
+local outerSmallRadius = 6 + outlineW * 0.5
+local innerSmallRadius = 6 - outlineW * 0.25
+
+local function drawPanelCard(x, y, w, h, bodyColor, panelColor, edgeColor, alpha)
 	local fa = alpha or 1
 
-	lg.setColor(bodyColor[1], bodyColor[2], bodyColor[3], fa)
-	lg.rectangle("fill", x, y, w, h, r, r)
+	lg.setColor(edgeColor[1], edgeColor[2], edgeColor[3], fa)
+	lg.rectangle("fill", x - outlineW, y - outlineW, w + outlineW * 2, h + outlineW * 2, outerRadius)
 
-	lg.setColor(edgeColor[1], edgeColor[2], edgeColor[3], 0.8 * fa)
-	lg.rectangle("line", x, y, w, h, r, r)
+	lg.setColor(bodyColor[1], bodyColor[2], bodyColor[3], fa)
+	lg.rectangle("fill", x, y, w, h, innerRadius)
+
+	local panelX = x + 12
+	local panelY = y + 12
+	local panelW = w - 24
+	local panelH = 28
+
+	lg.setColor(edgeColor[1], edgeColor[2], edgeColor[3], fa)
+	lg.rectangle("fill", panelX - outlineW, panelY - outlineW, panelW + outlineW * 2, panelH + outlineW * 2, outerSmallRadius)
+
+	lg.setColor(panelColor[1], panelColor[2], panelColor[3], fa)
+	lg.rectangle("fill", panelX, panelY, panelW, panelH, innerSmallRadius)
 end
 
 local function drawKeyBadge(keyText, x, y, alpha)
-	local fill = {0.17, 0.17, 0.21}
+	local fill = Theme.ui.button
 
 	lg.setColor(fill[1], fill[2], fill[3], 0.95 * alpha)
-	lg.rectangle("fill", x, y, 24, 24, 7, 7)
+	lg.rectangle("fill", x - outlineW, y - outlineW, 24 + outlineW * 2, 24 + outlineW * 2, outerSmallRadius)
+
+	lg.setColor(fill[1] * 0.75, fill[2] * 0.75, fill[3] * 0.75, 0.95 * alpha)
+	lg.rectangle("fill", x, y, 24, 24, innerSmallRadius)
 
 	Fonts.set("menu")
 	lg.setColor(1, 1, 1, alpha)
@@ -314,16 +335,25 @@ function ModulePicker.draw()
 			c.drawW = drawW
 			c.drawH = drawH
 
-			local radius = 16
 			local bodyY = drawY + 18
 
-			local faceR, faceG, faceB = colorLerp({0.10, 0.11, 0.13}, {0.12, 0.13, 0.15}, hoverT * 0.7, alpha)
-			local borderR, borderG, borderB = colorLerp({outline[1], outline[2], outline[3]}, towerColor, hoverT * 0.45, alpha)
+			local faceR, faceG, faceB = colorLerp(Theme.ui.backdrop, Theme.ui.panel, hoverT * 0.6, alpha)
+			local panelR, panelG, panelB = colorLerp(Theme.ui.panel2, Theme.ui.panel, hoverT * 0.35, alpha)
+			local borderR, borderG, borderB = colorLerp({outline[1], outline[2], outline[3]}, towerColor, hoverT * 0.4, alpha)
 
-			drawFlatCard(drawX, drawY, drawW, drawH, radius, {faceR, faceG, faceB}, {borderR, borderG, borderB}, alpha)
+			drawPanelCard(
+				drawX,
+				drawY,
+				drawW,
+				drawH,
+				{faceR, faceG, faceB},
+				{panelR, panelG, panelB},
+				{borderR, borderG, borderB},
+				alpha
+			)
 
 			lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.35 + 0.25 * hoverT) * alpha)
-			lg.rectangle("fill", drawX, drawY, drawW, 3, radius, radius)
+			lg.rectangle("fill", drawX, drawY, drawW, 3, innerRadius, innerRadius)
 
 			drawKeyBadge(tostring(i), drawX + drawW - 34, drawY + 12, alpha)
 
@@ -338,7 +368,7 @@ function ModulePicker.draw()
 			if hovered then
 				local pulse = 0.5 + 0.5 * math.sin(now * 8 + i)
 				lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.14 + 0.08 * pulse) * alpha)
-				lg.rectangle("line", drawX - 2, drawY - 2, drawW + 4, drawH + 4, radius + 2, radius + 2)
+				lg.rectangle("line", drawX - 2, drawY - 2, drawW + 4, drawH + 4, innerRadius + 2, innerRadius + 2)
 
 				local cta = picker.mode == "tower_upgrade" and L("modulePicker.selectCta") or "Click to Claim"
 				lg.setColor(1, 1, 1, (0.72 + 0.20 * pulse) * alpha)
