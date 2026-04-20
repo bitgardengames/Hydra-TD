@@ -16,6 +16,7 @@ local floor = math.floor
 local min = math.min
 local max = math.max
 local abs = math.abs
+local sin = math.sin
 
 local Screen = {}
 
@@ -44,6 +45,8 @@ local footerSpacing = 22
 local tabGap = 10
 local tabH = 36
 local tabMinW = 108
+local tabOffsetY = 3
+local tabAnimSpeed = 12
 local minRowsVisible = 6
 local tabOuterRadius = 12
 local tabInnerRadius = 10
@@ -73,6 +76,8 @@ local draggingSlider = nil
 
 local tabs = {}
 local activeTab = 1
+local tabAnim = {}
+local tabTime = 0
 
 local function adjustRow(row, dir)
 	if row.type == "slider" then
@@ -184,6 +189,7 @@ end
 function Screen.load()
 	settingsCursor = 1
 	activeTab = 1
+	tabTime = 0
 
 	tabs = {
 		{
@@ -270,6 +276,11 @@ function Screen.load()
 			end
 		}
 	}
+
+	tabAnim = {}
+	for i = 1, #tabs do
+		tabAnim[i] = (i == activeTab) and 1 or 0
+	end
 end
 
 function Screen.update(dt)
@@ -281,6 +292,7 @@ function Screen.update(dt)
 
 	rows = getActiveRows()
 	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
+	tabTime = tabTime + dt
 
 	-- Panel sizing (keep room for future settings rows)
 	local rowsBlockH = max((minRowsVisible - 1) * lineH + ROW_H, (#rows - 1) * lineH + ROW_H)
@@ -302,7 +314,7 @@ function Screen.update(dt)
 
 	-- Buttons (layout in update, like pause)
 	buttonsStartY = rowsStartY + rowsBlockH + footerSpacing
-	local tabsStartY = boxY + boxH
+	local tabsStartY = boxY + boxH + tabOffsetY
 
 	local tabW = max(tabMinW, floor((ROW_W - tabGap * (#tabs - 1)) / #tabs))
 	local tabsTotalW = #tabs * tabW + (#tabs - 1) * tabGap
@@ -316,6 +328,13 @@ function Screen.update(dt)
 			w = tabW,
 			h = tabH,
 		}
+	end
+
+	for i, rect in ipairs(tabRects) do
+		local hovered = Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h
+		local target = (i == activeTab) and 1 or (hovered and 0.65 or 0)
+		local a = tabAnim[i] or 0
+		tabAnim[i] = a + (target - a) * min(1, dt * tabAnimSpeed)
 	end
 
 	for i, btn in ipairs(buttons) do
@@ -399,21 +418,27 @@ function Screen.draw()
 		local rect = tabRects[i]
 		local hovered = rect and Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h
 		local active = i == activeTab
-		local highlightAlpha = active and 0.12 or (hovered and 0.07 or 0)
+		local anim = tabAnim[i] or 0
+		local wobble = active and (sin(tabTime * 4 + i * 0.6) * 0.5 + 0.5) or 0
+		local highlightAlpha = 0.05 + anim * 0.08 + wobble * 0.02
+		local yOffset = active and -1 or (hovered and -0.5 or 0)
+		local drawY = rect.y + yOffset
 
 		lg.setColor(colorOutline)
-		lg.rectangle("fill", rect.x - outlineW, rect.y - outlineW, rect.w + outlineW * 2, rect.h + outlineW * 2, tabOuterRadius, tabOuterRadius)
+		lg.rectangle("fill", rect.x - outlineW, drawY - outlineW, rect.w + outlineW * 2, rect.h + outlineW * 2, tabOuterRadius, tabOuterRadius)
 
 		lg.setColor(colorBackdrop)
-		lg.rectangle("fill", rect.x, rect.y, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
+		lg.rectangle("fill", rect.x, drawY, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
 
 		if highlightAlpha > 0 then
 			lg.setColor(1, 1, 1, highlightAlpha)
-			lg.rectangle("fill", rect.x, rect.y, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
+			lg.rectangle("fill", rect.x, drawY, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
 		end
 
+		local textY = drawY + (rect.h - lg.getFont():getHeight()) * 0.5
+
 		lg.setColor(colorText)
-		Text.printfShadow(tab.label, rect.x, rect.y + 8, rect.w, "center")
+		Text.printfShadow(tab.label, rect.x, textY, rect.w, "center")
 	end
 
 	-- Button
