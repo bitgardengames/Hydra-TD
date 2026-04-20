@@ -176,6 +176,16 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 	local dist = trimStart + ((pulseT * speed) % animLen)
 	local tailDist = 55
 	local tailMaxAlpha = 0.28
+	local fadeWindow = math.min(36, animLen * 0.2)
+	local fadeIn = 1
+	local fadeOut = 1
+
+	if fadeWindow > 0 then
+		fadeIn = math.min(1, (dist - trimStart) / fadeWindow)
+		fadeOut = math.min(1, (trimStart + animLen - dist) / fadeWindow)
+	end
+
+	local headAlphaScale = math.min(fadeIn, fadeOut)
 
 	local acc = 0
 
@@ -224,7 +234,7 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 			end
 
 			-- Core
-			lg.setColor(1, 1, 1, 0.9)
+			lg.setColor(1, 1, 1, 0.9 * headAlphaScale)
 			lg.circle("fill", px, py, 3)
 
 			return
