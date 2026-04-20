@@ -60,34 +60,25 @@ local function colorLerp(a, b, t, alpha)
 	return lerp(a[1], b[1], t), lerp(a[2], b[2], t), lerp(a[3], b[3], t), alpha or 1
 end
 
-local function drawRoundedPanel(x, y, w, h, r, faceColor, borderColor, alpha)
+local function drawFlatCard(x, y, w, h, r, bodyColor, edgeColor, alpha)
 	local fa = alpha or 1
 
-	lg.setColor(borderColor[1], borderColor[2], borderColor[3], fa)
+	lg.setColor(bodyColor[1], bodyColor[2], bodyColor[3], fa)
 	lg.rectangle("fill", x, y, w, h, r, r)
 
-	lg.setColor(faceColor[1], faceColor[2], faceColor[3], fa)
-	lg.rectangle("fill", x + 2, y + 2, w - 4, h - 4, r - 2, r - 2)
-
-	lg.setColor(1, 1, 1, 0.05 * fa)
-	lg.rectangle("line", x + 2, y + 2, w - 4, h - 4, r - 2, r - 2)
+	lg.setColor(edgeColor[1], edgeColor[2], edgeColor[3], 0.8 * fa)
+	lg.rectangle("line", x, y, w, h, r, r)
 end
 
 local function drawKeyBadge(keyText, x, y, alpha)
-	local fill = {0.14, 0.14, 0.18}
+	local fill = {0.17, 0.17, 0.21}
 
-	lg.setColor(0, 0, 0, 0.28 * alpha)
-	lg.rectangle("fill", x, y + 2, 28, 28, 9, 9)
-
-	lg.setColor(fill[1], fill[2], fill[3], 1 * alpha)
-	lg.rectangle("fill", x, y, 28, 28, 9, 9)
-
-	lg.setColor(1, 1, 1, 0.10 * alpha)
-	lg.rectangle("line", x, y, 28, 28, 9, 9)
+	lg.setColor(fill[1], fill[2], fill[3], 0.95 * alpha)
+	lg.rectangle("fill", x, y, 24, 24, 7, 7)
 
 	Fonts.set("menu")
 	lg.setColor(1, 1, 1, alpha)
-	lg.printf(keyText, x, y + 3, 28, "center")
+	lg.printf(keyText, x, y + 1, 24, "center")
 end
 
 local function rebuildLayout()
@@ -311,10 +302,10 @@ function ModulePicker.draw()
 			local hoverT = c.hover
 
 			local baseX = c.x
-			local baseY = c.y + (1 - smoothstep(alpha)) * 42
+			local baseY = c.y + (1 - smoothstep(alpha)) * 34 - hoverT * 4
 
-			local drawW = c.w
-			local drawH = c.h
+			local drawW = c.w * lerp(0.95, 1.0, intro)
+			local drawH = c.h * lerp(0.95, 1.0, intro)
 			local drawX = baseX - (drawW - c.w) * 0.5
 			local drawY = baseY - (drawH - c.h) * 0.5
 
@@ -323,31 +314,31 @@ function ModulePicker.draw()
 			c.drawW = drawW
 			c.drawH = drawH
 
-			local radius = 20
-			local bodyY = drawY + 24
+			local radius = 16
+			local bodyY = drawY + 18
 
-			local faceR, faceG, faceB = colorLerp({0.08, 0.09, 0.11}, {0.10, 0.11, 0.13}, hoverT, alpha)
-			local borderR, borderG, borderB = colorLerp(outline, towerColor, hoverT * 0.7, alpha)
+			local faceR, faceG, faceB = colorLerp({0.10, 0.11, 0.13}, {0.12, 0.13, 0.15}, hoverT * 0.7, alpha)
+			local borderR, borderG, borderB = colorLerp({outline[1], outline[2], outline[3]}, towerColor, hoverT * 0.45, alpha)
 
-			lg.setColor(0, 0, 0, (0.20 + 0.10 * hoverT) * alpha)
-			lg.rectangle("fill", drawX + 4, drawY + 10, drawW, drawH + 4, radius, radius)
+			drawFlatCard(drawX, drawY, drawW, drawH, radius, {faceR, faceG, faceB}, {borderR, borderG, borderB}, alpha)
 
-			drawRoundedPanel(drawX, drawY, drawW, drawH, radius, {faceR, faceG, faceB}, {borderR, borderG, borderB}, alpha)
+			lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.35 + 0.25 * hoverT) * alpha)
+			lg.rectangle("fill", drawX, drawY, drawW, 3, radius, radius)
 
-			drawKeyBadge(tostring(i), drawX + drawW - 42, drawY + 16, alpha)
+			drawKeyBadge(tostring(i), drawX + drawW - 34, drawY + 12, alpha)
 
 			Fonts.set("menu")
 			lg.setColor(1, 1, 1, alpha)
-			lg.printf(getModuleName(mod), drawX + 20, bodyY + 8, drawW - 40, "left")
+			lg.printf(getModuleName(mod), drawX + 18, bodyY + 6, drawW - 36, "left")
 
 			Fonts.set("ui")
 			lg.setColor(1, 1, 1, 0.84 * alpha)
-			lg.printf(getModuleDesc(mod), drawX + 20, bodyY + 48, drawW - 40, "left")
+			lg.printf(getModuleDesc(mod), drawX + 18, bodyY + 42, drawW - 36, "left")
 
 			if hovered then
 				local pulse = 0.5 + 0.5 * math.sin(now * 8 + i)
-				lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.10 + 0.06 * pulse) * alpha)
-				lg.rectangle("line", drawX - 4, drawY - 4, drawW + 8, drawH + 8, radius + 4, radius + 4)
+				lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.14 + 0.08 * pulse) * alpha)
+				lg.rectangle("line", drawX - 2, drawY - 2, drawW + 4, drawH + 4, radius + 2, radius + 2)
 
 				local cta = picker.mode == "tower_upgrade" and L("modulePicker.selectCta") or "Click to Claim"
 				lg.setColor(1, 1, 1, (0.72 + 0.20 * pulse) * alpha)
