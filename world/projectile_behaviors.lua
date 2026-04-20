@@ -1088,6 +1088,8 @@ B.spawn_static_field = {
 
 B.pierce = {
 	init = function(p, data)
+		data = data or {}
+
 		p.pierce = {
 			maxHits = data.maxHits or -1, -- -1 = infinite
 			hits = 0,
