@@ -55,6 +55,16 @@ local function sorter(a, b)
 	return a.dmg > b.dmg
 end
 
+local function buildEntryText(entry, name, pct)
+	if entry.lastTextDmg ~= entry.dmg or entry.lastTextPct ~= pct then
+		entry.text = format("%s %s (%.0f%%)", name, formatNum(entry.dmg), pct * 100)
+		entry.lastTextDmg = entry.dmg
+		entry.lastTextPct = pct
+	end
+
+	return entry.text
+end
+
 function DamageMeter.draw()
 	if not State.combatStats or not State.combatStats.showDamageMeter then
 		return
@@ -101,12 +111,21 @@ function DamageMeter.draw()
 		return
 	end
 
-	-- update damage values
+	-- update damage values and detect whether ordering can change
+	local needsSort = false
+
 	for _, entry in ipairs(list) do
-		entry.dmg = dmgTable[entry.kind] or 0
+		local newDmg = dmgTable[entry.kind] or 0
+
+		if newDmg ~= entry.dmg then
+			entry.dmg = newDmg
+			needsSort = true
+		end
 	end
 
-	tsort(list, sorter)
+	if needsSort then
+		tsort(list, sorter)
+	end
 
 	-- layout
 	local sw = lg.getWidth()
@@ -168,7 +187,7 @@ function DamageMeter.draw()
 				entry.displayPct = pct
 			end
 
-			local text = format("%s %s (%.0f%%)", name, formatNum(entry.dmg), pct * 100)
+			local text = buildEntryText(entry, name, pct)
 
 			lg.setColor(def.color[1], def.color[2], def.color[3], 0.25)
 			lg.rectangle("fill", x, y, maxBarW, barH, innerSmallRadius)
