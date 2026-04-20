@@ -209,30 +209,33 @@ local function updateEnemies(dt)
 			end
 		end
 
-		-- Infect: spread poison on death
-		if e._infectSpread and e.poisonStacks and e.poisonStacks > 0 then
+		-- Infect: spread poison once on death
+		if e._infectSpread and not e._infectDidSpread and e.hp <= 0 and e.poisonStacks and e.poisonStacks > 0 then
+			e._infectDidSpread = true
+
 			local radius = e._infectSpread.radius
 			local stackMult = e._infectSpread.stackMult
 			local radius2 = radius * radius
+			local spreadStacks = floor(e.poisonStacks * stackMult)
 
-			local nearby = Spatial.queryCells(e.x, e.y, radius)
-			local nearbyCount = Spatial.queryCellsCount()
+			if spreadStacks > 0 then
+				local nearby = Spatial.queryCells(e.x, e.y, radius)
+				local nearbyCount = Spatial.queryCellsCount()
 
-			for i = 1, nearbyCount do
-				local other = nearby[i]
+				for i = 1, nearbyCount do
+					local other = nearby[i]
 
-				if other ~= e and other.hp > 0 then
-					local dx = other.x - e.x
-					local dy = other.y - e.y
+					if other ~= e and other.hp > 0 then
+						local dx = other.x - e.x
+						local dy = other.y - e.y
 
-					if dx*dx + dy*dy <= radius2 then
-						-- transfer poison, NOT damage
-						local spreadStacks = math.floor(e.poisonStacks * stackMult)
-
-						other.poisonStacks = (other.poisonStacks or 0) + spreadStacks
-						other.poisonDPS = math.max(other.poisonDPS or 0, e.poisonDPS or 0)
-						other.poisonTimer = math.max(other.poisonTimer or 0, e.poisonTimer or 0)
-						other.poisonSource = e.poisonSource
+						if dx * dx + dy * dy <= radius2 then
+							-- transfer poison, NOT damage
+							other.poisonStacks = (other.poisonStacks or 0) + spreadStacks
+							other.poisonDPS = max(other.poisonDPS or 0, e.poisonDPS or 0)
+							other.poisonTimer = max(other.poisonTimer or 0, e.poisonTimer or 0)
+							other.poisonSource = e.poisonSource
+						end
 					end
 				end
 			end
