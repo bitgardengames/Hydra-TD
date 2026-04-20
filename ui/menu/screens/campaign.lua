@@ -226,7 +226,7 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 				end
 
 				local fade = 1 - (tail / tailDist)
-				local alpha = tailMaxAlpha * fade * fade
+				local alpha = tailMaxAlpha * fade * fade * headAlphaScale
 				local radius = 4 + fade * 2
 				lg.setColor(1, 1, 1, alpha)
 				lg.circle("fill", trailX, trailY, radius)
