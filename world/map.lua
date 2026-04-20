@@ -259,7 +259,13 @@ local function sampleFast(dist)
 	local samples = map.samples
 	local step = map.sampleStep
 
-	if not samples or #samples == 0 then
+	if not samples then
+		return 0, 0
+	end
+
+	local sampleCount = map.sampleCount or #samples
+
+	if sampleCount == 0 then
 		return 0, 0
 	end
 
@@ -272,18 +278,19 @@ local function sampleFast(dist)
 	local total = map.totalWorldLength
 
 	if dist >= total then
-		local p = samples[#samples]
+		local p = samples[sampleCount]
 
 		return p[1], p[2]
 	end
 
 	local idx = dist / step
-	local i = floor(idx) + 1
+	local idxFloor = floor(idx)
+	local i = idxFloor + 1
 
 	local a = samples[i]
 	local b = samples[i + 1] or a
 
-	local t = idx - floor(idx)
+	local t = idx - idxFloor
 
 	return a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t
 end
