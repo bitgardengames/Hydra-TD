@@ -8,7 +8,6 @@ local Projectiles = require("world.projectiles")
 local Effects = require("world.effects")
 local DrawWorld = require("render.draw_world")
 local Spatial = require("world.spatial_grid")
-local Shock = require("world.shock")
 local DrawEntities = require("render.draw_entities")
 local Camera = require("core.camera")
 local Constants = require("core.constants")
@@ -188,6 +187,8 @@ function Export.exportEnemies()
 					y = 0,
 					prevX = 0,
 					prevY = 0,
+					rx = 0,
+					ry = 0,
 					boss = def.boss or false,
 
 					hp = 0,
@@ -1044,22 +1045,6 @@ local SIZE = 256
 local REF_ICON_SIZE = 64
 local TOWER_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.5 scale
 
-local function getShockOrigin(t)
-	local size = Constants.TILE * 0.42
-	local tipX = size * 0.40
-
-	local localX = tipX - (t.recoil or 0)
-	local localY = 0
-
-	local ca = math.cos(t.angle)
-	local sa = math.sin(t.angle)
-
-	local worldX = t.x + (localX * ca - localY * sa)
-	local worldY = t.renderY + (localX * sa + localY * ca)
-
-	return worldX, worldY
-end
-
 function Export.exportTowerFiringAnimations()
 	local SIZE = 256
 	local FRAMES = 30
@@ -1121,16 +1106,16 @@ function Export.exportTowerFiringAnimations()
 		local t = Towers.towers[1]
 
 		-- === Force the actual shot once ===
-		if t.chain then
+		--[[if t.chain then
 			local zapOrder = Shock.fire(t, enemy)
 
 			if zapOrder and #zapOrder > 0 then
 				local mx, my = getShockOrigin(t)
 				Effects.spawnZapEffect(mx, my, zapOrder)
 			end
-		else
+		else]]
 			Projectiles.spawn(t, enemy)
-		end
+		--end
 
 		-- === Export evolving frames ===
 		for frame = 1, FRAMES do
@@ -1270,15 +1255,15 @@ function Export.exportTowerFiringAnimations()
 					t.recoil = t.recoilStrength
 
 					-- spawn actual shot ONCE
-					if t.chain then
+					--[[if t.chain then
 						local zapOrder = Shock.fire(t, enemy)
 						if zapOrder and #zapOrder > 0 then
 							local mx, my = getShockOrigin(t)
 							Effects.spawnZapEffect(mx, my, zapOrder)
 						end
-					else
+					else]]
 						Projectiles.spawn(t, enemy)
-					end
+					--end
 				end
 
 			-- =========================
@@ -1321,8 +1306,8 @@ end
 function Export.run()
 	ensureDirs()
 	--Export.exportTowers()
-	Export.exportTowerFiringAnimations()
-	--Export.exportEnemies()
+	--Export.exportTowerFiringAnimations()
+	Export.exportEnemies()
 	--Export.exportBanners()
 	--Export.exportAppIcons()
 	--Export.exportSocialAvatar()

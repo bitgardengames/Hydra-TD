@@ -97,8 +97,8 @@ end
 local function drawEnemy(e)
 	local a = max(0, min(1, State.renderAlpha or 0))
 
-	local ix = e.rx or e.x or 0
-	local iy = e.ry or e.y or 0
+	local ix = e.rx
+	local iy = e.ry
 	local animT = e.rAnimT or 0
 	local enemyAlpha = e.alpha
 
@@ -256,8 +256,8 @@ local function drawEnemy(e)
 		lg.pop()
 	else
 		-- Eye direction follows movement
-		local dx = ix - (e.prevRX or ix)
-		local dy = iy - (e.prevRY or iy)
+		local dx = e.rx - (e.prevRX or e.rx)
+		local dy = e.ry - (e.prevRY or e.ry)
 
 		local m = 1.2 -- max
 

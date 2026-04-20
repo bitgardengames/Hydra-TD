@@ -1072,8 +1072,37 @@ B.spawn_static_field = {
 }
 
 B.pierce = {
-	onHit = function(p, e)
-		-- do nothing, let projectile continue
+	init = function(p, data)
+		p.pierce = {
+			maxHits = data.maxHits or -1, -- -1 = infinite
+			hits = 0,
+			hitTargets = {}
+		}
+
+		p.allowRepeatHits = true
+	end,
+
+	canHit = function(p, enemy)
+		local pierce = p.pierce
+		if not pierce then
+			return true
+		end
+
+		return not pierce.hitTargets[enemy]
+	end,
+
+	onHit = function(p, enemy, data)
+		local pierce = p.pierce
+		if not pierce then
+			return
+		end
+
+		pierce.hitTargets[enemy] = true
+		pierce.hits = pierce.hits + 1
+
+		if pierce.maxHits > 0 and pierce.hits >= pierce.maxHits then
+			p.dead = true
+		end
 	end
 }
 

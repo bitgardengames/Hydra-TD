@@ -34,28 +34,28 @@ local defs = {
 		[2] = {"lancer_deadeye", "lancer_volley"},
 		[3] = {"pierce", "move_linear"},
 		[4] = {"target_low_hp", "target_farthest_progress"},
-		[5] = {"split_on_hit", "beam_conversion"},
+		[5] = {"split_on_hit", "chain_hit"}, -- Can we make a linear pierce for lancer
 	},
 
 	poison = {
 		[2] = {"poison_blight", "poison_plague"},
 		[3] = {"poison_neurotoxin", "infect_spread"},
 		[4] = {"tick_damage", "growing_projectile"},
-		[5] = {"spawn_orbitals", "orbit_shot"},
+		[5] = {"spawn_orbitals", "infect_spread"},
 	},
 
 	cannon = {
 		[2] = {"cannon_seige", "cannon_cluster"},
 		[3] = {"cannon_aftershock", "split_on_hit"},
 		[4] = {"target_farthest_range", "growing_projectile"},
-		[5] = {"explode_on_hit", "spawn_orbitals"},
+		[5] = {"chain_hit", "spawn_orbitals"},
 	},
 
 	shock = {
 		[2] = {"shock_storm", "shock_conductor"},
 		[3] = {"chain_hit", "static_field"},
 		[4] = {"shock_overload", "target_farthest_progress"},
-		[5] = {"spawn_orbitals", "explode_on_hit"},
+		[5] = {"spawn_orbitals", "chain_hit"},
 	},
 
 	plasma = {
