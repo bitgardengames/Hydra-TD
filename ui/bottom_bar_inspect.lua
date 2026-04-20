@@ -194,18 +194,6 @@ local function drawStatusBar(r, g, b, timer, duration, x, y, now)
 	return BAR_H + STATUS_GAP
 end
 
-local function formatModifier(label, value, suffix)
-	if not value or value == 1 then
-		return nil
-	end
-
-	local delta = (value - 1) * 100
-	local sign = delta > 0 and "+" or "-"
-	local pct = abs(floor(delta + 0.5))
-
-	return ("%s%d%% %s %s"):format(sign, pct, label, suffix)
-end
-
 local function formatStat(value)
 	if not value then
 		return value

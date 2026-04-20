@@ -233,10 +233,6 @@ function Export.exportEnemies()
 end
 
 -- Banner helpers
-local function isVerticalBanner(w, h)
-	return h / w > 1.15
-end
-
 local function drawOutlinedText(text, x, y, font, opts)
 	opts = opts or {}
 
