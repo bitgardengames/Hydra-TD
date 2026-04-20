@@ -230,6 +230,7 @@ add("pierce", {
 	category = "damage",
 
 	apply = function(ctx)
+		ctx:replaceBehavior("move_homing", { id = "move_linear" })
 		ctx:addBehavior({ id = "pierce" })
 	end
 })

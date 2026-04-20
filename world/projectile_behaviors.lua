@@ -89,6 +89,18 @@ local function emitImpulse(p, e, px, py, strength)
 	})
 end
 
+local function canHitTarget(p, enemy)
+	for i = 1, #p.behaviors do
+		local b = p.behaviors[i]
+		local def = B[b.id]
+		if def and def.canHit and not def.canHit(p, enemy, b.data) then
+			return false
+		end
+	end
+
+	return true
+end
+
 -- visual stuff
 local function getProjectileColor(p, fallback)
 	local t = p.sourceTower
@@ -627,9 +639,12 @@ B.hit_circle = {
 				if dx*dx + dy*dy <= radius*radius then
 					local id = e.id or e
 
-					if not p.hitSet[id] then
+					if not p.hitSet[id] and canHitTarget(p, e) then
 						p.hit = e
-						return "consume"
+
+						if p.consumeOnHit ~= false then
+							return "consume"
+						end
 					end
 				end
 			end
@@ -784,7 +799,7 @@ B.instant_hit = {
 
 		local id = e.id or e
 
-		if not p.hitSet[id] then
+		if not p.hitSet[id] and canHitTarget(p, e) then
 			p.hit = e
 		end
 
@@ -1080,6 +1095,7 @@ B.pierce = {
 		}
 
 		p.allowRepeatHits = true
+		p.consumeOnHit = false
 	end,
 
 	canHit = function(p, enemy)
