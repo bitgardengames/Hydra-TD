@@ -231,6 +231,20 @@ add("pierce", {
 
 	apply = function(ctx)
 		ctx:replaceBehavior("move_homing", { id = "move_linear" })
+
+		local hasHitDetector = false
+		for i = 1, #ctx.behaviors do
+			local id = ctx.behaviors[i].id
+			if id == "hit_circle" or id == "instant_hit" or id == "emit_on_target" then
+				hasHitDetector = true
+				break
+			end
+		end
+
+		if not hasHitDetector then
+			ctx:addBehavior({ id = "hit_circle", data = { radius = 10 } })
+		end
+
 		ctx:addBehavior({ id = "pierce" })
 	end
 })
