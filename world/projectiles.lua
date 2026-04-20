@@ -21,6 +21,30 @@ local function clearTable(t)
 	end
 end
 
+local function nextHitSetStamp(p)
+	local stamp = (p.hitSetStamp or 0) + 1
+
+	if stamp >= 2147483647 then
+		stamp = 1
+
+		local hitSet = p.hitSet
+		if hitSet then
+			clearTable(hitSet)
+		end
+	end
+
+	p.hitSetStamp = stamp
+	return stamp
+end
+
+local function markProjectileHit(p, id)
+	p.hitSet[id] = p.hitSetStamp
+end
+
+local function projectileHasHit(p, id)
+	return p.hitSet[id] == p.hitSetStamp
+end
+
 local function acquire()
 	local p = pool[#pool]
 
@@ -89,14 +113,15 @@ local function spawnEvent(evt)
 	p.hit = nil
 	p.events = nil
 	p._consumed = false
+	p.hasHit = projectileHasHit
+	p.markHit = markProjectileHit
 
 	local hitSet = p.hitSet
-	if hitSet then
-		clearTable(hitSet)
-	else
+	if not hitSet then
 		hitSet = {}
 		p.hitSet = hitSet
 	end
+	nextHitSetStamp(p)
 
 	local hitCooldowns = p.hitCooldowns
 	if hitCooldowns then
@@ -183,14 +208,15 @@ local function spawnDirect(source, target, context, speed, life)
 	p.hit = nil
 	p.events = nil
 	p._consumed = false
+	p.hasHit = projectileHasHit
+	p.markHit = markProjectileHit
 
 	local hitSet = p.hitSet
-	if hitSet then
-		clearTable(hitSet)
-	else
+	if not hitSet then
 		hitSet = {}
 		p.hitSet = hitSet
 	end
+	nextHitSetStamp(p)
 
 	local hitCooldowns = p.hitCooldowns
 	if hitCooldowns then
@@ -399,12 +425,12 @@ local function processHit(p)
 	local id = hitTarget.id or hitTarget
 	local multiHit = p.allowRepeatHits == true
 
-	if not multiHit and p.hitSet[id] then
+	if not multiHit and projectileHasHit(p, id) then
 		return
 	end
 
 	if not multiHit then
-		p.hitSet[id] = true
+		markProjectileHit(p, id)
 	end
 
 	pushEvent(p, {

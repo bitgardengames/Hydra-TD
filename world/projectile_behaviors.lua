@@ -101,6 +101,14 @@ local function canHitTarget(p, enemy)
 	return true
 end
 
+local function projectileHasHit(p, id)
+	if p.hasHit then
+		return p.hasHit(p, id)
+	end
+
+	return p.hitSet[id] == true
+end
+
 -- visual stuff
 local function getProjectileColor(p, fallback)
 	local t = p.sourceTower
@@ -639,7 +647,7 @@ B.hit_circle = {
 				if dx*dx + dy*dy <= radius*radius then
 					local id = e.id or e
 
-					if not p.hitSet[id] and canHitTarget(p, e) then
+					if not projectileHasHit(p, id) and canHitTarget(p, e) then
 						p.hit = e
 
 						if p.consumeOnHit ~= false then
@@ -799,7 +807,7 @@ B.instant_hit = {
 
 		local id = e.id or e
 
-		if not p.hitSet[id] and canHitTarget(p, e) then
+		if not projectileHasHit(p, id) and canHitTarget(p, e) then
 			p.hit = e
 		end
 
