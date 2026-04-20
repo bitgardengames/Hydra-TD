@@ -352,9 +352,6 @@ function ModulePicker.draw()
 				alpha
 			)
 
-			lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.35 + 0.25 * hoverT) * alpha)
-			lg.rectangle("fill", drawX, drawY, drawW, 3, innerRadius, innerRadius)
-
 			drawKeyBadge(tostring(i), drawX + drawW - 34, drawY + 12, alpha)
 
 			Fonts.set("menu")
