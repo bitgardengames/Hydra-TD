@@ -41,9 +41,19 @@ local enemies = Enemies.enemies
 local findTarget = Targeting.findTarget
 local isValidTarget = Targeting.isValidTarget
 local sampleFast = MapMod.sampleFast
+local getTargetMode = Modules.getTargetMode
 
 local FIRE_ANGLE_EPS = math.rad(6)
 local RETARGET_INTERVAL = 0.10
+
+local function refreshTargetModeCache(t)
+	local modulesVersion = Modules.version
+
+	if t._targetModeVersion ~= modulesVersion then
+		t.targetMode = getTargetMode(t.kind) or Targeting.MODES.PROGRESS
+		t._targetModeVersion = modulesVersion
+	end
+end
 
 local function getShockOrigin(t)
 	local size = Constants.TILE * 0.42
@@ -107,6 +117,7 @@ local function addTower(kind, gx, gy)
 		spawnAnim = 1,
 		target = nil,
 		targetMode = Targeting.MODES.PROGRESS,
+		_targetModeVersion = nil,
 		retargetT = 0,
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
@@ -179,6 +190,7 @@ local function upgradeTower(t, specializationId)
 	t._moduleContextCache = nil
 	t._moduleContextVersion = nil
 	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
+	t._targetModeVersion = Modules.version
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 
 	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
@@ -282,6 +294,7 @@ local function updateTowers(dt)
 
 		-- Retarget cooldown
 		t.retargetT = (t.retargetT or 0) - dt
+		refreshTargetModeCache(t)
 
 		local target = t.target
 
@@ -295,7 +308,6 @@ local function updateTowers(dt)
 		-- Only search when we need a new target
 		if not target then
 			if t.retargetT <= 0 then
-				t.targetMode = Modules.getTargetMode(t.kind) or Targeting.MODES.PROGRESS
 				target = findTarget(t, t.targetMode)
 				t.retargetT = RETARGET_INTERVAL
 			end
