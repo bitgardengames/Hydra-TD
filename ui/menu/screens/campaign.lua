@@ -58,8 +58,8 @@ local ARROW_SIZE = 20
 local ARROW_OFFSET = 48
 local ARROW_ALPHA = 0.85
 local ARROW_HOVER = 1.0
-local PATH_TRIM_START = 26
-local PATH_TRIM_END = 26
+local PATH_TRIM_START = 34
+local PATH_TRIM_END = 72
 
 -- State
 local campaignButtons = {}
