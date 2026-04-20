@@ -735,34 +735,6 @@ local function drawStopwatchIcon()
 			lg.pop()
 		end
 
-		-- FLOATING SIDE BUTTON (NO ARM)
-		do
-			local btnW = r * 0.42
-			local btnH = r * 0.25
-
-			local angle = math.rad(135)
-
-			-- Position near top-right of the stopwatch
-			local bx = cx - r * 0.95
-			local by = cy - r * 0.91
-
-			lg.setColor(outlineColor)
-
-			lg.push()
-			lg.translate(bx, by)
-			lg.rotate(angle)
-
-			lg.rectangle("fill",
-				-btnW * 0.5,
-				-btnH * 0.5,
-				btnW,
-				btnH,
-				2, 2
-			)
-
-			lg.pop()
-		end
-
 		-- Body
 		lg.setColor(outlineColor)
 		lg.circle("fill", cx, cy, r + outlineW)
@@ -1076,14 +1048,14 @@ local achievements = {
 		end
 	},
 
-	{
+	--[[{
 		id = "PADLOCK",
 		render = function()
 			centerAndScale(function()
 				drawPadlock(0, 0, 18, Theme.ui.good)
 			end, TOWER_SCALE)
 		end
-	},
+	},]]
 }
 
 local lockedShader = love.graphics.newShader([[
