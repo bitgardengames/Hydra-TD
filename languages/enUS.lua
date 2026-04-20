@@ -90,7 +90,7 @@ return {
 		aoe = "Explosive Impact",
 		tick = "Damage Over Time",
 		growth = "Growing Projectiles",
-		bounce = "Chaotic Bounce",
+		bounce = "Ricochet",
 
 		slow = "Chilling Hits",
 		poison = "Venom Infusion",
@@ -143,7 +143,7 @@ return {
 		aoe = "Hits deal area damage.",
 		tick = "Projectiles deal damage over time in an area.",
 		growth = "Projectiles grow larger and stronger over time.",
-		bounce = "Projectiles bounce in random directions.",
+		bounce = "Projectiles ricochet after impact.",
 
 		slow = "Hits slow enemies.",
 		poison = "Applies stacking poison damage.",
