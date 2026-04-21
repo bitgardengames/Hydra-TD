@@ -87,6 +87,7 @@ return {
 
 		split = "Split Shots",
 		chain = "Chain Lightning",
+		chain_fork = "Arc Fork",
 		aoe = "Explosive Impact",
 		tick = "Damage Over Time",
 		growth = "Growing Projectiles",
@@ -140,6 +141,7 @@ return {
 
 		split = "Shots split into multiple projectiles on hit.",
 		chain = "Damage jumps between nearby enemies.",
+		chain_fork = "Chain hits fork once to nearby enemies for reduced damage.",
 		aoe = "Hits deal area damage.",
 		tick = "Projectiles deal damage over time in an area.",
 		growth = "Projectiles grow larger and stronger over time.",
