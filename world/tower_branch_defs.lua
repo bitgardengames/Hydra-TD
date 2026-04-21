@@ -52,7 +52,7 @@ local defs = {
 	},
 
 	shock = {
-		[2] = {"shock_storm", "shock_conductor"},
+		[2] = {"shock_storm", "chain_fork"},
 		[3] = {"chain_hit", "chain_fork"},
 		[4] = {"shock_overload", "target_farthest_progress"},
 		[5] = {"spawn_orbitals", "chain_hit"},
