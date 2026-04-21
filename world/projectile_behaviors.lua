@@ -771,24 +771,34 @@ B.fork_chain = {
 
 	onHit = function(p, e, data)
 		if not p._chain then return end
+		data = data or {}
+		local radius = data.radius or 48
+		local radius2 = radius * radius
+		local dmgMult = data.dmgMult or 0.35
 
 		local forks = {}
+		local claimed = {}
 
 		for i = 1, #p._chain do
 			local link = p._chain[i]
 
 			if link.to and link.to.hp > 0 then
-				local nearby = Spatial.queryCells(link.to.x, link.to.y)
+				local nearby = Spatial.queryCells(link.to.x, link.to.y, radius)
 				local nearbyCount = Spatial.queryCellsCount()
 
 				for j = 1, nearbyCount do
 					local other = nearby[j]
+					local dx = other.x - link.to.x
+					local dy = other.y - link.to.y
+					local d2 = dx * dx + dy * dy
 
-					if other ~= link.to and other.hp > 0 then
+					if other ~= link.to and other.hp > 0 and d2 <= radius2 and not claimed[other] then
 						forks[#forks + 1] = {
 							from = link.to,
 							to = other
 						}
+						claimed[other] = true
+						emitDamage(p, other, (p.damage or 0) * dmgMult)
 						break
 					end
 				end

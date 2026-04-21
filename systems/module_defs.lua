@@ -102,6 +102,19 @@ add("chain_hit", {
 	end
 })
 
+add("chain_fork", {
+	nameKey = "module.chain_fork",
+	descKey = "moduleDesc.chain_fork",
+	category = "damage",
+
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "fork_chain",
+			data = {radius = 52, dmgMult = 0.35}
+		})
+	end
+})
+
 add("aoe_damage", {
 	nameKey = "module.aoe",
 	descKey = "moduleDesc.aoe",
