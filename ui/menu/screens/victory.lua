@@ -328,13 +328,9 @@ function Screen.draw()
 	local titleY = boxY + paddingY
 
 	Fonts.set("title")
-	local pulse = 0.85 + sin(t * 5.2) * 0.15
 	lg.setColor(colorGood[1], colorGood[2], colorGood[3], alpha)
 	Text.printfShadow(L("game.victory"), 0, titleY, sw, "center")
 
-	Fonts.set("menu")
-	lg.setColor(colorGood[1], colorGood[2], colorGood[3], 0.66 * alpha * pulse)
-	Text.printfShadow(L("victory.subtitle"), 0, titleY + headerHeight + 2, sw, "center")
 
 	local statsY = titleY + headerHeight + subheadSpacing
 	local cardW = (boxW - paddingX * 2 - statsGapX) * 0.5
