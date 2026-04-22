@@ -18,7 +18,6 @@ local L = require("core.localization")
 local lg = love.graphics
 local floor = math.floor
 local format = string.format
-local upper = string.upper
 
 local Screen = {}
 
@@ -292,13 +291,13 @@ local function getCompletionString(mapId)
 	end
 
 	if s.completedDifficulty then
-		local diff = s.completedDifficulty:gsub("^%l", upper)
+		local diff = L("difficulty." .. s.completedDifficulty)
 
-		return format("Completed: %s • Best: %d", diff, s.bestWave or 0)
+		return L("campaign.completedBest", diff, s.bestWave or 0)
 	end
 
 	if s.bestWave and s.bestWave > 0 then
-		return format("Best: %d", s.bestWave)
+		return L("campaign.best", s.bestWave)
 	end
 
 	return nil

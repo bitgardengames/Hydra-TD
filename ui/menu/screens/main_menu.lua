@@ -61,7 +61,7 @@ function Screen.load()
 	buttons = {
 		{
 			id = "play",
-			label = "Play",
+			label = L("menu.play"),
 			w = btnW,
 			h = btnH,
 			onClick = function()
@@ -72,7 +72,7 @@ function Screen.load()
 
 		{
 			id = "settings",
-			label = "Settings",
+			label = L("menu.settings"),
 			w = btnW,
 			h = btnH,
 			onClick = function()
@@ -83,7 +83,7 @@ function Screen.load()
 
 		{
 			id = "quit",
-			label = "Quit",
+			label = L("menu.quit"),
 			w = btnW,
 			h = btnH,
 			onClick = function()
