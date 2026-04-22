@@ -634,6 +634,94 @@ B.aoe_damage = {
 	end
 }
 
+B.cannon_shockwave = {
+	onHit = function(p, _, data)
+		local radius = data.radius or 54
+		local impulse = data.impulse or 4.8
+		local r2 = radius * radius
+
+		local nearby = Spatial.queryCells(p.x, p.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
+
+		for i = 1, nearbyCount do
+			local other = nearby[i]
+			if other.hp > 0 then
+				local dx = other.x - p.x
+				local dy = other.y - p.y
+				if dx * dx + dy * dy <= r2 then
+					emitImpulse(p, other, p.x, p.y, impulse)
+				end
+			end
+		end
+	end
+}
+
+B.cannon_damage_scale = {
+	init = function(p, data)
+		p.damage = (p.damage or 0) * (data.mult or 1)
+	end
+}
+
+B.cannon_carpet_fire = {
+	init = function(p, data)
+		if p.hitOrigin == "carpet_child" then
+			return
+		end
+
+		p._carpetFire = {
+			tA = data.delayA or 0.08,
+			tB = data.delayB or 0.16,
+			spread = data.spread or 0.16,
+			firedA = false,
+			firedB = false,
+		}
+	end,
+
+	update = function(p, dt)
+		local c = p._carpetFire
+		if not c then
+			return
+		end
+
+		c.tA = c.tA - dt
+		c.tB = c.tB - dt
+
+		local source = p.sourceTower
+		if not source then
+			return
+		end
+
+		local function spawnWithOffset(offset)
+			local x, y = getTowerMuzzle(source)
+			local tx = (p.target and p.target.x) or p.lastTX or (x + cos(p.angle or 0) * 100)
+			local ty = (p.target and p.target.y) or p.lastTY or (y + sin(p.angle or 0) * 100)
+			local ang = atan2(ty - y, tx - x) + offset
+
+			pushEvent(p, {
+				id = "spawn_projectile",
+				source = source,
+				x = x,
+				y = y,
+				angle = ang,
+				lastTX = tx,
+				lastTY = ty,
+				damage = p.damage,
+				hitOrigin = "carpet_child",
+			})
+		end
+
+		if not c.firedA and c.tA <= 0 then
+			c.firedA = true
+			spawnWithOffset(-c.spread)
+		end
+
+		if not c.firedB and c.tB <= 0 then
+			c.firedB = true
+			spawnWithOffset(c.spread)
+		end
+	end
+}
+
 B.hit_circle = {
 	type = "damage",
 

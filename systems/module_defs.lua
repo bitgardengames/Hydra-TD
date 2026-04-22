@@ -638,27 +638,95 @@ addSpec("poison_neurotoxin", "module.poison_neurotoxin", "moduleDesc.poison_neur
 	{id = "draw_poison"},
 })
 
-addSpec("cannon_seige", "module.cannon_seige", "moduleDesc.cannon_seige", {
+addSpec("cannon_siege_shells", "module.cannon_siege_shells", "moduleDesc.cannon_siege_shells", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 12}},
-	{id = "aoe_damage", data = {radius = 58}},
+	{id = "aoe_damage", data = {radius = 62}},
 	{id = "draw_cannon"},
 }, Targeting.MODES.FARTHEST)
 
-addSpec("cannon_cluster", "module.cannon_cluster", "moduleDesc.cannon_cluster", {
+addSpec("cannon_rapid_mortar", "module.cannon_rapid_mortar", "moduleDesc.cannon_rapid_mortar", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 10}},
-	{id = "aoe_damage", data = {radius = 38}},
-	{id = "split_on_hit", data = {count = 2}, noInherit = true},
+	{id = "aoe_damage", data = {radius = 34}},
+	{id = "cannon_damage_scale", data = {mult = 0.72}},
 	{id = "draw_cannon"},
 })
 
-addSpec("cannon_aftershock", "module.cannon_aftershock", "moduleDesc.cannon_aftershock", {
+addSpec("cannon_cluster_payload", "module.cannon_cluster_payload", "moduleDesc.cannon_cluster_payload", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 10}},
+	{id = "aoe_damage", data = {radius = 40}},
+	{id = "split_on_hit", data = {count = 3, spread = 0.5, dmgMult = 0.45}, noInherit = true},
+	{id = "draw_cannon"},
+})
+
+addSpec("cannon_shockwave", "module.cannon_shockwave", "moduleDesc.cannon_shockwave", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "aoe_damage", data = {radius = 44}},
-	{id = "spawn_static_field", data = {radius = 52}},
+	{id = "cannon_shockwave", data = {radius = 56, impulse = 5.4}},
 	{id = "draw_cannon"},
+})
+
+addSpec("cannon_long_fuse", "module.cannon_long_fuse", "moduleDesc.cannon_long_fuse", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 12}},
+	{id = "aoe_damage", data = {radius = 48}},
+	{id = "draw_cannon"},
+}, Targeting.MODES.FARTHEST)
+
+addSpec("cannon_frontline_burst", "module.cannon_frontline_burst", "moduleDesc.cannon_frontline_burst", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 12}},
+	{id = "aoe_damage", data = {radius = 48}},
+	{id = "draw_cannon"},
+}, Targeting.MODES.PROGRESS)
+
+addSpec("cannon_mega_shell", "module.cannon_mega_shell", "moduleDesc.cannon_mega_shell", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 14}},
+	{id = "aoe_damage", data = {radius = 82}},
+	{id = "cannon_damage_scale", data = {mult = 2.4}},
+	{id = "draw_cannon"},
+})
+
+addSpec("cannon_carpet_fire", "module.cannon_carpet_fire", "moduleDesc.cannon_carpet_fire", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 11}},
+	{id = "aoe_damage", data = {radius = 42}},
+	{id = "cannon_damage_scale", data = {mult = 0.75}},
+	{id = "cannon_carpet_fire", data = {delayA = 0.09, delayB = 0.18, spread = 0.18}},
+	{id = "draw_cannon"},
+})
+
+-- Legacy cannon branch ids (save compatibility)
+add("cannon_seige", {
+	nameKey = "module.cannon_seige",
+	descKey = "moduleDesc.cannon_seige",
+	category = "special",
+	targetMode = Targeting.MODES.FARTHEST,
+	apply = function(ctx)
+		ModuleDefs.cannon_siege_shells.apply(ctx)
+	end
+})
+
+add("cannon_cluster", {
+	nameKey = "module.cannon_cluster",
+	descKey = "moduleDesc.cannon_cluster",
+	category = "special",
+	apply = function(ctx)
+		ModuleDefs.cannon_cluster_payload.apply(ctx)
+	end
+})
+
+add("cannon_aftershock", {
+	nameKey = "module.cannon_aftershock",
+	descKey = "moduleDesc.cannon_aftershock",
+	category = "special",
+	apply = function(ctx)
+		ModuleDefs.cannon_shockwave.apply(ctx)
+	end
 })
 
 addSpec("shock_storm_coil", "module.shock_storm_coil", "moduleDesc.shock_storm_coil", {
