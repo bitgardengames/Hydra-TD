@@ -45,10 +45,10 @@ local defs = {
 	},
 
 	cannon = {
-		[2] = {"cannon_seige", "cannon_cluster"},
-		[3] = {"cannon_aftershock", "split_on_hit"},
-		[4] = {"target_farthest_range", "growing_projectile"},
-		[5] = {"chain_hit", "spawn_orbitals"},
+		[2] = {"cannon_siege_shells", "cannon_rapid_mortar"},
+		[3] = {"cannon_cluster_payload", "cannon_shockwave"},
+		[4] = {"cannon_long_fuse", "cannon_frontline_burst"},
+		[5] = {"cannon_mega_shell", "cannon_carpet_fire"},
 	},
 
 	shock = {

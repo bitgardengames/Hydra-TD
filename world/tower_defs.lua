@@ -123,9 +123,9 @@ return {
 			splashAdd = 4, -- increase AoE radius per upgrade
 		},
 		upgradeChoices = {
-			"cannon_seige",
-			"cannon_cluster",
-			"cannon_aftershock",
+			"cannon_siege_shells",
+			"cannon_rapid_mortar",
+			"cannon_cluster_payload",
 		},
 		behaviors = {
 			{id = "move_homing"},
