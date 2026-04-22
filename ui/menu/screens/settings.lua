@@ -274,10 +274,39 @@ local function switchTab(nextTab)
 
 	if clamped ~= activeTab then
 		activeTab = clamped
-		settingsCursor = 1
+		local nextRows = tabs[activeTab] and tabs[activeTab].rows or {}
+		settingsCursor = Util.clamp(1, 1, max(1, #nextRows))
 		draggingSlider = nil
 		closeCapture()
 		Sound.play("uiMove")
+	end
+end
+
+local function keyboardTabDirection(key)
+	if key == "q" or key == "[" then
+		return -1
+	end
+
+	if key == "e" or key == "]" then
+		return 1
+	end
+
+	if key == "tab" then
+		if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+			return -1
+		end
+
+		return 1
+	end
+end
+
+local function gamepadTabDirection(button)
+	if button == "leftshoulder" then
+		return -1
+	end
+
+	if button == "rightshoulder" then
+		return 1
 	end
 end
 
@@ -693,6 +722,10 @@ function Screen.draw()
 		Text.printfShadow(tab.label, rect.x, textY, rect.w, "center")
 	end
 
+	local tabHint = Cursor.usingVirtual and L("settings.tabSwitchHintGamepad") or L("settings.tabSwitchHintKeyboard")
+	lg.setColor(colorText)
+	Text.printfShadow(tabHint, listX, tabRects[1].y + tabH + 10, ROW_W, "center")
+
 	-- Button
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
@@ -705,7 +738,14 @@ function Screen.draw()
 end
 
 function Screen.keypressed(key)
+	local tabDir = keyboardTabDirection(key)
+
 	if capturingRowId then
+		if tabDir then
+			switchTab(activeTab + tabDir)
+			return
+		end
+
 		local row = rows[settingsCursor]
 		if not row or row.id ~= capturingRowId then
 			for _, candidate in ipairs(rows) do
@@ -753,6 +793,11 @@ function Screen.keypressed(key)
 		return
 	end
 
+	if tabDir then
+		switchTab(activeTab + tabDir)
+		return
+	end
+
 	if key == "up" then
 		settingsCursor = max(1, settingsCursor - 1)
 		Sound.play("uiMove")
@@ -782,7 +827,14 @@ function Screen.keypressed(key)
 end
 
 function Screen.gamepadpressed(_, button)
+	local tabDir = gamepadTabDirection(button)
+
 	if capturingRowId then
+		if tabDir then
+			switchTab(activeTab + tabDir)
+			return
+		end
+
 		local row = rows[settingsCursor]
 
 		if not row or row.id ~= capturingRowId then
@@ -828,6 +880,11 @@ function Screen.gamepadpressed(_, button)
 			end
 		end
 
+		return
+	end
+
+	if tabDir then
+		switchTab(activeTab + tabDir)
 		return
 	end
 
