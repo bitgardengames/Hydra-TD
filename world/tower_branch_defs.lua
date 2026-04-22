@@ -39,9 +39,9 @@ local defs = {
 
 	poison = {
 		[2] = {"poison_blight", "poison_plague"},
-		[3] = {"poison_neurotoxin", "infect_spread"},
-		[4] = {"tick_damage", "growing_projectile"},
-		[5] = {"spawn_orbitals", "infect_spread"},
+		[3] = {"poison_neurotoxin", "poison_venom_burst"},
+		[4] = {"poison_cull_weak", "poison_corrupt_strong"},
+		[5] = {"poison_hemotoxin", "poison_pandemic"},
 	},
 
 	cannon = {

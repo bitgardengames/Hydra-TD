@@ -210,6 +210,71 @@ add("infect_spread", {
 	end
 })
 
+add("poison_venom_burst", {
+	nameKey = "module.poison_venom_burst",
+	descKey = "moduleDesc.poison_venom_burst",
+	category = "special",
+
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "infect_spread",
+			data = { radius = 56, stackMult = 1.0 }
+		})
+	end
+})
+
+add("poison_cull_weak", {
+	nameKey = "module.poison_cull_weak",
+	descKey = "moduleDesc.poison_cull_weak",
+	category = "special",
+	targetMode = Targeting.MODES.LOW_HP,
+
+	apply = function(ctx)
+		ctx:modifyBehavior("apply_poison", function(data)
+			data.maxStacks = (data.maxStacks or 10) + 2
+		end)
+	end
+})
+
+add("poison_corrupt_strong", {
+	nameKey = "module.poison_corrupt_strong",
+	descKey = "moduleDesc.poison_corrupt_strong",
+	category = "special",
+	targetMode = Targeting.MODES.HIGH_HP,
+
+	apply = function(ctx)
+		ctx:modifyBehavior("apply_poison", function(data)
+			data.dps = (data.dps or 4) * 1.08
+		end)
+	end
+})
+
+add("poison_hemotoxin", {
+	nameKey = "module.poison_hemotoxin",
+	descKey = "moduleDesc.poison_hemotoxin",
+	category = "special",
+
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "poison_hemotoxin",
+			data = { missingHpMult = 1.0 }
+		})
+	end
+})
+
+add("poison_pandemic", {
+	nameKey = "module.poison_pandemic",
+	descKey = "moduleDesc.poison_pandemic",
+	category = "special",
+
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "infect_spread",
+			data = { radius = 64, stackMult = 0.8, repeat = true }
+		})
+	end
+})
+
 add("spawn_orbitals", {
 	nameKey = "module.orbital_spawn",
 	descKey = "moduleDesc.orbital_spawn",
@@ -569,6 +634,7 @@ addSpec("poison_neurotoxin", "module.poison_neurotoxin", "moduleDesc.poison_neur
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "hit_damage"},
 	{id = "apply_poison", data = {dps = 4.2, dur = 2.1, maxStacks = 10}},
+	{id = "poison_neurotoxin", data = {factor = 0.12, dur = 1.1}},
 	{id = "draw_poison"},
 })
 
