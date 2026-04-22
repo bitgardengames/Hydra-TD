@@ -237,6 +237,23 @@ local function adjustRow(row, dir)
 	if row.type == "slider" then
 		row.set(Util.clamp(row.get() + dir * 0.10, 0, 1))
 		Sound.play("uiMove")
+	elseif row.type == "choice" then
+		local options = row.options or {}
+		local current = row.get()
+		local index = 1
+
+		for i, value in ipairs(options) do
+			if value == current then
+				index = i
+				break
+			end
+		end
+
+		local nextIndex = Util.clamp(index + dir, 1, #options)
+		if options[nextIndex] and nextIndex ~= index then
+			row.set(options[nextIndex])
+			Sound.play("uiMove")
+		end
 	elseif row.type == "toggle" then
 		row.set(not row.get())
 		Sound.play("uiConfirm")
@@ -326,6 +343,11 @@ local function drawToggleRow(row, x, yTop)
 	Text.printShadow(string.format("%s: %s", row.label, valueText), x, rowTextY(yTop))
 end
 
+local function drawChoiceRow(row, x, yTop)
+	local valueText = row.getLabel()
+	Text.printShadow(string.format("%s: %s", row.label, valueText), x, rowTextY(yTop))
+end
+
 local function drawInfoRow(row, x, yTop)
 	Text.printShadow(row.label, x, rowTextY(yTop))
 end
@@ -349,12 +371,74 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 		drawSliderRow(row, x, yTop, selected, hovered, index)
 	elseif row.type == "toggle" then
 		drawToggleRow(row, x, yTop)
+	elseif row.type == "choice" then
+		drawChoiceRow(row, x, yTop)
 	elseif row.type == "keybind" then
 		drawKeybindRow(row, x, yTop)
 	elseif row.type == "action" then
 		drawActionRow(row, x, yTop)
 	elseif row.type == "info" then
 		drawInfoRow(row, x, yTop)
+	end
+end
+
+local resolutionPresets = {
+	{key = "1024x576", w = 1024, h = 576},
+	{key = "1280x720", w = 1280, h = 720},
+	{key = "1366x768", w = 1366, h = 768},
+	{key = "1600x900", w = 1600, h = 900},
+	{key = "1920x1080", w = 1920, h = 1080},
+}
+
+local function findResolutionPreset(key)
+	for _, preset in ipairs(resolutionPresets) do
+		if preset.key == key then
+			return preset
+		end
+	end
+
+	return resolutionPresets[2]
+end
+
+local function applyVideoSettings()
+	local settings = Save.data.settings
+	local displayMode = settings.displayMode or "fullscreen_borderless"
+	local vsync = settings.vsync and 1 or 0
+	local desktopW, desktopH = love.window.getDesktopDimensions()
+	local currentW, currentH = love.graphics.getDimensions()
+
+	if displayMode == "fullscreen_borderless" then
+		local msaa = require("core.scale").suggestMSAA(desktopW, desktopH) or 8
+		love.window.updateMode(0, 0, {
+			fullscreen = true,
+			fullscreentype = "desktop",
+			resizable = true,
+			vsync = vsync,
+			msaa = msaa,
+		})
+		return
+	end
+
+	local preset = findResolutionPreset(settings.windowedResolution)
+	local targetW = min(preset.w, desktopW)
+	local targetH = min(preset.h, desktopH)
+	local msaa = require("core.scale").suggestMSAA(targetW, targetH) or 2
+	local ok = love.window.updateMode(targetW, targetH, {
+		fullscreen = false,
+		resizable = true,
+		vsync = vsync,
+		msaa = msaa,
+	})
+
+	if not ok then
+		local fallbackW = min(currentW, desktopW)
+		local fallbackH = min(currentH, desktopH)
+		love.window.updateMode(fallbackW, fallbackH, {
+			fullscreen = false,
+			resizable = true,
+			vsync = vsync,
+			msaa = require("core.scale").suggestMSAA(fallbackW, fallbackH) or 2,
+		})
 	end
 end
 
@@ -400,26 +484,61 @@ function Screen.load()
 			label = L("settings.tabVideo"),
 			rows = {
 				{
-					id = "fullscreen",
-					label = L("settings.fullscreen"),
-					type = "toggle",
-					get = function() return Save.data.settings.fullscreen end,
+					id = "displayMode",
+					label = L("settings.displayMode"),
+					type = "choice",
+					options = {"fullscreen_borderless", "windowed"},
+					get = function()
+						return Save.data.settings.displayMode
+					end,
 					set = function(v)
-						if v then
-							local sw, sh = love.graphics.getDimensions()
-							local msaa = require("core.scale").suggestMSAA(sw, sh) or 8
-
-							love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
-						else
-							local msaa = require("core.scale").suggestMSAA(1280, 800) or 2
-							love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
-						end
-
-						Save.data.settings.fullscreen = v
-
+						Save.data.settings.displayMode = v
+						applyVideoSettings()
 						local sw, sh = love.graphics.getDimensions()
 						love.resize(sw, sh)
+						Save.flush()
+					end,
+					getLabel = function()
+						return L("settings.displayMode." .. (Save.data.settings.displayMode or "fullscreen_borderless"))
+					end,
+				},
+				{
+					id = "windowedResolution",
+					label = L("settings.windowedResolution"),
+					type = "choice",
+					options = {"1024x576", "1280x720", "1366x768", "1600x900", "1920x1080"},
+					get = function()
+						return Save.data.settings.windowedResolution
+					end,
+					set = function(v)
+						Save.data.settings.windowedResolution = v
+						applyVideoSettings()
+						local sw, sh = love.graphics.getDimensions()
+						love.resize(sw, sh)
+						Save.flush()
+					end,
+					getLabel = function()
+						local mode = Save.data.settings.displayMode or "fullscreen_borderless"
+						local key = Save.data.settings.windowedResolution or "1280x720"
+						local resolutionText = L("settings.resolutionPreset." .. key)
 
+						if mode ~= "windowed" then
+							return string.format("%s (%s)", resolutionText, L("settings.windowedOnly"))
+						end
+
+						return resolutionText
+					end,
+				},
+				{
+					id = "vsync",
+					label = L("settings.vsync"),
+					type = "toggle",
+					get = function() return Save.data.settings.vsync end,
+					set = function(v)
+						Save.data.settings.vsync = v
+						applyVideoSettings()
+						local sw, sh = love.graphics.getDimensions()
+						love.resize(sw, sh)
 						Save.flush()
 					end,
 				},
@@ -858,6 +977,11 @@ function Screen.mousepressed(x, y, button)
 				if row.type == "toggle" then
 					row.set(not row.get())
 					Sound.play("uiConfirm")
+					return true
+				end
+
+				if row.type == "choice" then
+					adjustRow(row, 1)
 					return true
 				end
 
