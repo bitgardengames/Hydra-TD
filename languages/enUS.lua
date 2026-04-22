@@ -41,6 +41,8 @@ return {
 		tabControls = "Controls",
 		tabControlsKeyboard = "Controls (KBM)",
 		tabControlsGamepad = "Controls (Pad)",
+		tabSwitchHintKeyboard = "Q/E, [/] or Tab/Shift+Tab: Switch Tab",
+		tabSwitchHintGamepad = "LB/RB: Switch Tab",
 		controlPause = "Pause / Menu",
 		controlSpeed = "Toggle Speed",
 		controlStartWave = "Start Wave",
