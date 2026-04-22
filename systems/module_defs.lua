@@ -270,7 +270,7 @@ add("poison_pandemic", {
 	apply = function(ctx)
 		ctx:addBehavior({
 			id = "infect_spread",
-			data = { radius = 64, stackMult = 0.8, repeat = true }
+			data = { radius = 64, stackMult = 0.8, loop = true }
 		})
 	end
 })
