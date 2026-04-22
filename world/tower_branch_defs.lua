@@ -3,9 +3,9 @@ local TowerBranchDefs = {}
 --[[
 
 	Rules:
-	
+
 	Upgrades offered on the same tier should offer a real gameplay choice, there shouldn't be an obvious winner
-	All choices should be able to work with eachother - All upgrades in the tower tower must work together 
+	All choices should be able to work with eachother - All upgrades in the tower tower must work together
 	Any combination of projectile movement/fx/damage style should all work together
 	Keep descriptions clear and plain right now in terms of what they do, redo descriptions to avoid unclear phrasing
 
@@ -32,9 +32,9 @@ local defs = {
 
 	lancer = {
 		[2] = {"lancer_deadeye", "lancer_volley"},
-		[3] = {"pierce", "move_linear"},
+		[3] = {"pierce", "lancer_ricochet"},
 		[4] = {"target_low_hp", "target_farthest_progress"},
-		[5] = {"chaos_bounce", "chain_hit"}, -- Can we make a linear pierce for lancer
+		[5] = {"lancer_rail_lance", "lancer_arc_lance"},
 	},
 
 	poison = {

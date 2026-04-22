@@ -918,6 +918,62 @@ B.split_on_hit = {
 	end
 }
 
+B.lancer_ricochet = {
+	onHit = function(p, e, data)
+		local radius = data.radius or 90
+		local r2 = radius * radius
+
+		local nearby = Spatial.queryCells(e.x, e.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
+
+		local best = nil
+		local bestDist = r2
+
+		for i = 1, nearbyCount do
+			local other = nearby[i]
+
+			if other ~= e and other.hp > 0 then
+				local dx = other.x - e.x
+				local dy = other.y - e.y
+				local d2 = dx*dx + dy*dy
+
+				if d2 < bestDist then
+					bestDist = d2
+					best = other
+				end
+			end
+		end
+
+		if best then
+			pushEvent(p, {
+				id = "spawn_projectile",
+				x = e.x,
+				y = e.y,
+				source = p.sourceTower,
+				target = best,
+				damage = p.damage * 0.8,
+				behaviors = {
+					{id = "move_homing"},
+					{id = "hit_circle", data = {radius = 10}},
+					{id = "hit_damage"},
+					{id = "lancer_hit_fx"},
+					{id = "draw_lancer"}
+				}
+			})
+		end
+	end
+}
+
+B.draw_rail_lance = {
+	draw = function(p, a)
+		local w = p.r * 3.0
+		local h = p.r * 0.9
+
+		lg.setColor(1,1,1,a)
+		lg.rectangle("fill", -w/2, -h/2, w, h, h, h)
+	end
+}
+
 B.tick_zap = {
 	type = "damage",
 
