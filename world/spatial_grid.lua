@@ -15,6 +15,43 @@ Spatial.grid = grid
 local queryBuffer = {}
 local queryCount = 0
 
+local function collectCellsInto(results, x, y, radius)
+	local cx = floor(x * INV_CELL)
+	local cy = floor(y * INV_CELL)
+	local cellRadius = 2
+
+	if radius and radius > 0 then
+		-- Keep legacy upper bound for compatibility; shrink neighborhood for small-radius queries.
+		cellRadius = ceil(radius * INV_CELL)
+		if cellRadius < 1 then
+			cellRadius = 1
+		elseif cellRadius > 2 then
+			cellRadius = 2
+		end
+	end
+
+	local count = 0
+
+	for dx = -cellRadius, cellRadius do
+		local col = grid[cx + dx]
+
+		if col then
+			for dy = -cellRadius, cellRadius do
+				local cell = col[cy + dy]
+
+				if cell then
+					for i = 1, #cell do
+						count = count + 1
+						results[count] = cell[i]
+					end
+				end
+			end
+		end
+	end
+
+	return count
+end
+
 local function removeFromCell(e)
 	local cell = e.cell
 
@@ -89,39 +126,7 @@ local tsort = table.sort
 
 function Spatial.queryCells(x, y, radius)
 	local results = queryBuffer
-
-	local cx = floor(x * INV_CELL)
-	local cy = floor(y * INV_CELL)
-	local cellRadius = 2
-
-	if radius and radius > 0 then
-		-- Keep legacy upper bound for compatibility; shrink neighborhood for small-radius queries.
-		cellRadius = ceil(radius * INV_CELL)
-		if cellRadius < 1 then
-			cellRadius = 1
-		elseif cellRadius > 2 then
-			cellRadius = 2
-		end
-	end
-
-	local count = 0
-
-	for dx = -cellRadius, cellRadius do
-		local col = grid[cx + dx]
-
-		if col then
-			for dy = -cellRadius, cellRadius do
-				local cell = col[cy + dy]
-
-				if cell then
-					for i = 1, #cell do
-						count = count + 1
-						results[count] = cell[i]
-					end
-				end
-			end
-		end
-	end
+	local count = collectCellsInto(results, x, y, radius)
 
 	queryCount = count
 
@@ -130,6 +135,10 @@ function Spatial.queryCells(x, y, radius)
 	end)]]
 
 	return results
+end
+
+function Spatial.queryCellsInto(results, x, y, radius)
+	return collectCellsInto(results, x, y, radius)
 end
 
 function Spatial.queryCellsCount()

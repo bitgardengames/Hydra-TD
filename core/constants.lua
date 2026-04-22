@@ -13,6 +13,7 @@ Constants.TILE = 56
 Constants.GRID_W = 32
 Constants.GRID_H = 14
 Constants.UI_H = 155
+Constants.TOWER_RETARGET_INTERVAL = 0.10
 
 Constants.TOWER_LIST = {
 	"slow",
