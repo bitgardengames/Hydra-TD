@@ -117,8 +117,16 @@ local function getBinding(row)
 	return Save.data.settings.keybinds.actions[row.bindingId]
 end
 
+local function getBindingSection(bindingKind)
+	if bindingKind == "shop" then
+		return Save.data.settings.keybinds.shop
+	end
+
+	return Save.data.settings.keybinds.actions
+end
+
 local function setBinding(row, key)
-	local section = Save.data.settings.keybinds[row.bindingKind]
+	local section = getBindingSection(row.bindingKind)
 	local previous = section[row.bindingId]
 	local conflictRow = nil
 
@@ -130,7 +138,7 @@ local function setBinding(row, key)
 	end
 
 	if conflictRow then
-		local conflictSection = Save.data.settings.keybinds[conflictRow.bindingKind]
+		local conflictSection = getBindingSection(conflictRow.bindingKind)
 		conflictSection[conflictRow.bindingId] = previous
 		conflictMessage = L("settings.controlConflictSwap", conflictRow.label)
 	else
