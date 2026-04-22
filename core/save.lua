@@ -132,32 +132,8 @@ function Save.load()
 			settings.sfxVolume = settings.sfxVolume or 0.20
 			settings.difficulty = settings.difficulty or "normal"
 
-			if settings.displayMode == nil then
-				if settings.fullscreen == nil or settings.fullscreen == true then
-					settings.displayMode = "fullscreen_borderless"
-				else
-					settings.displayMode = "windowed"
-				end
-			end
-
-			if settings.displayMode ~= "fullscreen_borderless" and settings.displayMode ~= "windowed" then
-				settings.displayMode = "fullscreen_borderless"
-			end
-
-			settings.windowedResolution = settings.windowedResolution or "1280x720"
-			local validResolutions = {
-				["1024x576"] = true,
-				["1280x720"] = true,
-				["1366x768"] = true,
-				["1600x900"] = true,
-				["1920x1080"] = true,
-			}
-			if not validResolutions[settings.windowedResolution] then
-				settings.windowedResolution = "1280x720"
-			end
-
-			if settings.vsync == nil then
-				settings.vsync = true
+			if settings.fullscreen == nil then
+				settings.fullscreen = true
 			end
 
 			if ensureKeybinds(settings) then
@@ -209,9 +185,7 @@ function Save.load()
 			musicVolume = 0.20,
 			sfxVolume = 0.20,
 			difficulty = "normal",
-			displayMode = "fullscreen_borderless",
-			windowedResolution = "1280x720",
-			vsync = true,
+			fullscreen = true,
 			keybinds = Hotkeys.getDefaultBindings(),
 		},
 
