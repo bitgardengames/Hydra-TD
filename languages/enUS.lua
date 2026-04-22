@@ -53,6 +53,8 @@ return {
 	campaign = {
 		locked = "LOCKED",
 		mapOf = "Map %d of %d",
+		completedBest = "Completed: %s • Best: %d",
+		best = "Best: %d",
 	},
 
 	difficulty = {
