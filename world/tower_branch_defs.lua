@@ -59,10 +59,10 @@ local defs = {
 	},
 
 	plasma = {
-		[2] = {"plasma_lance", "plasma_supernova"},
-		[3] = {"move_boomerang", "orbit_shot"},
-		[4] = {"move_spiral", "plasma_vortex"},
-		[5] = {"tick_damage", "growing_projectile"},
+		[2] = {"plasma_focused_core", "plasma_unstable_core"},
+		[3] = {"plasma_boomerang_shot", "plasma_spiral_drive"},
+		[4] = {"plasma_thermal_tracking", "plasma_lane_sweep"},
+		[5] = {"plasma_supernova", "plasma_growing_mass"},
 	},
 }
 
