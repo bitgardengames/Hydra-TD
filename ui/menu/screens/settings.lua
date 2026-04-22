@@ -83,6 +83,9 @@ local capturingRowId = nil
 local conflictMessage = nil
 local pendingBindingChange = nil
 local capturingHint = nil
+local settingsDirty = false
+local settingsFlushTimer = nil
+local settingsFlushDelay = 0.2
 
 local keyboardControlsLayout = {
 	{kind = "action", id = "escape", label = "settings.controlPause"},
@@ -236,6 +239,8 @@ end
 local function adjustRow(row, dir)
 	if row.type == "slider" then
 		row.set(Util.clamp(row.get() + dir * 0.10, 0, 1))
+		settingsDirty = true
+		settingsFlushTimer = settingsFlushDelay
 		Sound.play("uiMove")
 	elseif row.type == "toggle" then
 		row.set(not row.get())
@@ -245,6 +250,23 @@ local function adjustRow(row, dir)
 	elseif row.type == "keybind" then
 		startCapture(row)
 	end
+end
+
+local function flushSettingsNow()
+	if settingsDirty then
+		Save.flush()
+		settingsDirty = false
+	end
+
+	settingsFlushTimer = nil
+end
+
+local function exitToMenu()
+	flushSettingsNow()
+	closeCapture()
+	State.mode = "menu"
+	Steam.setRichPresence(L("presence.menu"))
+	Sound.play("uiBack")
 end
 
 local function switchTab(nextTab)
@@ -363,6 +385,8 @@ function Screen.load()
 	settingsCursor = 1
 	activeTab = 1
 	tabTime = 0
+	settingsDirty = false
+	settingsFlushTimer = nil
 
 	tabs = {
 		{
@@ -378,7 +402,6 @@ function Screen.load()
 					set = function(v)
 						Save.data.settings.musicVolume = v
 						Sound.setMusicVolume(v)
-						Save.flush()
 					end,
 				},
 				{
@@ -390,7 +413,6 @@ function Screen.load()
 					set = function(v)
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
-						Save.flush()
 					end,
 				},
 			},
@@ -480,9 +502,7 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				State.mode = "menu"
-				Steam.setRichPresence(L("presence.menu"))
-				Sound.play("uiBack")
+				exitToMenu()
 			end
 		}
 	}
@@ -572,6 +592,7 @@ function Screen.update(dt)
 			local t = Util.clamp((Cursor.x - rect.x) / rect.w, 0, 1)
 
 			rows[draggingSlider].set(t)
+			settingsDirty = true
 		end
 	end
 
@@ -584,7 +605,17 @@ function Screen.update(dt)
 
 			if abs(ax) > 0.25 then
 				row.set(Util.clamp(row.get() + ax * dt * 0.7, 0, 1))
+				settingsDirty = true
+				settingsFlushTimer = settingsFlushDelay
 			end
+		end
+	end
+
+	if settingsFlushTimer then
+		settingsFlushTimer = settingsFlushTimer - dt
+
+		if settingsFlushTimer <= 0 then
+			flushSettingsNow()
 		end
 	end
 end
@@ -746,10 +777,7 @@ function Screen.keypressed(key)
 			adjustRow(row, 1)
 		end
 	elseif key == "escape" then
-		closeCapture()
-		State.mode = "menu"
-		Steam.setRichPresence(L("presence.menu"))
-		Sound.play("uiBack")
+		exitToMenu()
 	end
 end
 
@@ -820,10 +848,7 @@ function Screen.gamepadpressed(_, button)
 	elseif button == "dpright" then
 		adjustRow(row, 1)
 	elseif button == "b" then
-		closeCapture()
-		State.mode = "menu"
-		Steam.setRichPresence(L("presence.menu"))
-		Sound.play("uiBack")
+		exitToMenu()
 	end
 end
 
@@ -849,6 +874,7 @@ function Screen.mousepressed(x, y, button)
 					if x >= slider.x and x <= slider.x + slider.w then
 						local t = Util.clamp((x - slider.x) / slider.w, 0, 1)
 						row.set(t)
+						settingsDirty = true
 						draggingSlider = i
 						return true
 					end
@@ -892,7 +918,7 @@ end
 function Screen.mousereleased(x, y, button)
 	if draggingSlider then
 		Sound.play("uiMove")
-		Save.flush()
+		flushSettingsNow()
 	end
 
 	draggingSlider = nil
