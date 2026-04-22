@@ -174,6 +174,9 @@ function resetGame()
 	State.modulePicker.hint = nil
 	State.modulePicker.tower = nil
 
+	State.resetSimStats()
+	ACCUM = 0
+
 	Camera.load()
 end
 
@@ -235,6 +238,9 @@ end
 
 local MAX_FRAME_DT = 1 / 15
 local MAX_SIM_STEPS = 8
+local MAX_CARRY_TICKS = 2
+local MAX_OVERLOAD_DEBT_TICKS = 12
+local OVERLOAD_REPAY_TICKS_PER_FRAME = 0.5
 
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
@@ -273,10 +279,34 @@ function love.update(dt)
 		steps = steps + 1
 	end
 
-	-- If we are still behind (large hitch), drop the oldest excess simulation time.
-	-- This avoids prolonged "slow-motion catch-up" that feels like movement lag.
+	local simStats = State.simStats
+
+	if steps == MAX_SIM_STEPS then
+		simStats.maxStepFrames = simStats.maxStepFrames + 1
+	end
+
+	if simStats.overloadDebt > 0 then
+		local repay = min(simStats.overloadDebt, FIXED_DT * OVERLOAD_REPAY_TICKS_PER_FRAME)
+
+		simStats.overloadDebt = simStats.overloadDebt - repay
+		ACCUM = ACCUM + repay
+	end
+
+	-- If we are still behind, keep a bounded remainder and convert the rest into
+	-- debt that is repaid over multiple frames.
 	if ACCUM >= FIXED_DT then
-		ACCUM = ACCUM % FIXED_DT
+		local carryCap = FIXED_DT * MAX_CARRY_TICKS
+		local capped = min(ACCUM, carryCap)
+		local overflow = ACCUM - capped
+
+		ACCUM = capped
+
+		if overflow > 0 then
+			local maxDebt = FIXED_DT * MAX_OVERLOAD_DEBT_TICKS
+
+			simStats.overloadDebt = min(maxDebt, simStats.overloadDebt + overflow)
+			simStats.cappedSimTime = simStats.cappedSimTime + overflow
+		end
 	end
 
 	if mode ~= "game" then
@@ -299,6 +329,20 @@ function love.update(dt)
 	if mode == "victory" then
 		Menu.update(dt)
 		Overlay.update(dt)
+	end
+
+	simStats.logTimer = simStats.logTimer + dt
+
+	if simStats.logTimer >= 5 then
+		print(string.format(
+			"[sim] max-step-frames=%d capped-time=%.4fs debt=%.4fs accum=%.4fs",
+			simStats.maxStepFrames,
+			simStats.cappedSimTime,
+			simStats.overloadDebt,
+			ACCUM
+		))
+
+		simStats.logTimer = simStats.logTimer - 5
 	end
 
 	State.renderAlpha = ACCUM / FIXED_DT
