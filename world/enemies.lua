@@ -249,11 +249,11 @@ local function updateEnemies(dt)
 							other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, e.poisonMissingHpMult or 0)
 							other.poisonSource = e.poisonSource
 
-							if e._infectSpread.repeat == true then
+							if e._infectSpread["repeat"] == true then
 								other._infectSpread = {
 									radius = e._infectSpread.radius,
 									stackMult = e._infectSpread.stackMult,
-									repeat = true,
+									["repeat"] = true,
 									source = e.poisonSource
 								}
 								other._infectDidSpread = false
