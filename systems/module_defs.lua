@@ -397,66 +397,112 @@ end
 addSpec("slow_glacier_core", "module.slow_glacier_core", "moduleDesc.slow_glacier_core", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.42, dur = 2.3}},
+	{id = "apply_slow", data = {factor = 0.36, dur = 2.6}},
 	{id = "draw_slow"},
 })
 
-addSpec("slow_permafrost", "module.slow_permafrost", "moduleDesc.slow_permafrost", {
+addSpec("slow_frost_shards", "module.slow_frost_shards", "moduleDesc.slow_frost_shards", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.58, dur = 1.6}},
-	{id = "aoe_damage", data = {radius = 34}},
+	{id = "apply_slow", data = {factor = 0.65, dur = 1.1}},
+	{id = "split_on_hit", data = {count = 1}, noInherit = true},
 	{id = "draw_slow"},
 })
 
-addSpec("slow_frost_nova", "module.slow_frost_nova", "moduleDesc.slow_frost_nova", {
+addSpec("slow_shatter", "module.slow_shatter", "moduleDesc.slow_shatter", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.5, dur = 1.7}},
-	{id = "spawn_static_field", data = {radius = 42}},
+	{id = "apply_slow", data = {factor = 0.52, dur = 1.5}},
+	{id = "shatter_bonus", data = {mult = 0.55}},
 	{id = "draw_slow"},
 })
 
-addSpec("slow_shatterburst", "module.slow_shatterburst", "moduleDesc.slow_shatterburst", {
+addSpec("slow_snowball", "module.slow_snowball", "moduleDesc.slow_snowball", {
 	{id = "move_homing"},
+	{id = "pierce"},
 	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.52, dur = 1.4}},
-	{id = "frost_shatter", data = {count = 6, dmgMult = 0.45}},
+	{id = "apply_slow", data = {factor = 0.58, dur = 1.35}},
+	{id = "snowball_ramp", data = {ramp = 0.20, cap = 3.2}},
 	{id = "draw_slow"},
 })
 
-addSpec("slow_cold_snap", "module.slow_cold_snap", "moduleDesc.slow_cold_snap", {
+addSpec("slow_lead_freeze", "module.slow_lead_freeze", "moduleDesc.slow_lead_freeze", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.5, dur = 1.5}},
-	{id = "slow_pop"},
-	{id = "draw_slow"},
-}, Targeting.MODES.LOW_HP)
-
-addSpec("slow_black_ice", "module.slow_black_ice", "moduleDesc.slow_black_ice", {
-	{id = "move_homing"},
-	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.46, dur = 2.0}},
-	{id = "aoe_damage", data = {radius = 38}},
+	{id = "apply_slow", data = {factor = 0.46, dur = 1.9}},
 	{id = "draw_slow"},
 }, Targeting.MODES.PROGRESS)
+
+addSpec("slow_wide_chill", "module.slow_wide_chill", "moduleDesc.slow_wide_chill", {
+	{id = "move_homing"},
+	{id = "hit_damage"},
+	{id = "apply_slow", data = {factor = 0.58, dur = 1.35}},
+	{id = "split_on_hit", data = {count = 1}, noInherit = true},
+	{id = "draw_slow"},
+}, Targeting.MODES.DENSE)
 
 addSpec("slow_absolute_zero", "module.slow_absolute_zero", "moduleDesc.slow_absolute_zero", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.4, dur = 2.4}},
-	{id = "frost_shatter", data = {count = 8, dmgMult = 0.55}},
-	{id = "spawn_static_field", data = {radius = 48}},
+	{id = "apply_slow", data = {factor = 0.12, dur = 0.85}},
+	{id = "shatter_bonus", data = {mult = 0.35}},
 	{id = "draw_slow"},
 })
 
 addSpec("slow_hailstorm", "module.slow_hailstorm", "moduleDesc.slow_hailstorm", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.56, dur = 1.4}},
-	{id = "split_on_hit", data = {count = 2}, noInherit = true},
-	{id = "slow_pop"},
+	{id = "apply_slow", data = {factor = 0.54, dur = 1.4}},
+	{id = "split_on_hit", data = {count = 3}, noInherit = true},
 	{id = "draw_slow"},
+})
+
+-- Legacy slow branch ids (save compatibility)
+add("slow_permafrost", {
+	nameKey = "module.slow_permafrost",
+	descKey = "moduleDesc.slow_permafrost",
+	category = "special",
+	apply = function(ctx)
+		ModuleDefs.slow_frost_shards.apply(ctx)
+	end
+})
+
+add("slow_frost_nova", {
+	nameKey = "module.slow_frost_nova",
+	descKey = "moduleDesc.slow_frost_nova",
+	category = "special",
+	apply = function(ctx)
+		ModuleDefs.slow_shatter.apply(ctx)
+	end
+})
+
+add("slow_shatterburst", {
+	nameKey = "module.slow_shatterburst",
+	descKey = "moduleDesc.slow_shatterburst",
+	category = "special",
+	apply = function(ctx)
+		ModuleDefs.slow_snowball.apply(ctx)
+	end
+})
+
+add("slow_cold_snap", {
+	nameKey = "module.slow_cold_snap",
+	descKey = "moduleDesc.slow_cold_snap",
+	category = "special",
+	targetMode = Targeting.MODES.PROGRESS,
+	apply = function(ctx)
+		ModuleDefs.slow_lead_freeze.apply(ctx)
+	end
+})
+
+add("slow_black_ice", {
+	nameKey = "module.slow_black_ice",
+	descKey = "moduleDesc.slow_black_ice",
+	category = "special",
+	targetMode = Targeting.MODES.DENSE,
+	apply = function(ctx)
+		ModuleDefs.slow_wide_chill.apply(ctx)
+	end
 })
 
 addSpec("lancer_deadeye", "module.lancer_deadeye", "moduleDesc.lancer_deadeye", {

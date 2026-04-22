@@ -1110,6 +1110,49 @@ B.slow_pop = {
 	end
 }
 
+B.shatter_bonus = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		if e.slowTimer and e.slowTimer > 0 then
+			local mult = data.mult or 0.5
+			emitDamage(p, e, (p.damage or 0) * mult)
+		end
+	end
+}
+
+B.snowball_ramp = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		local hitSet = p._snowballHits
+		if not hitSet then
+			hitSet = {}
+			p._snowballHits = hitSet
+		end
+
+		if hitSet[e.id] then
+			return
+		end
+
+		hitSet[e.id] = true
+
+		local ramp = data.ramp or 0.18
+		local cap = data.cap or 2.8
+		local base = p._snowballBaseDamage or p.damage or 0
+		local stacks = (p._snowballStacks or 0) + 1
+		local mult = min(1 + stacks * ramp, cap)
+
+		p._snowballBaseDamage = base
+		p._snowballStacks = stacks
+		p.damage = base * mult
+	end
+}
+
 B.frost_shatter = {
 	onHit = function(p, e, data)
 		if not e or e.hp <= 0 then

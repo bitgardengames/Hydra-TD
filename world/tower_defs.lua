@@ -23,8 +23,8 @@ return {
 		},
 		upgradeChoices = {
 			"slow_glacier_core",
-			"slow_permafrost",
-			"slow_frost_nova",
+			"slow_frost_shards",
+			"slow_shatter",
 		},
 		behaviors = {
 			{id = "move_homing"},

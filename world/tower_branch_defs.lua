@@ -24,9 +24,9 @@ local TowerBranchDefs = {}
 
 local defs = {
 	slow = {
-		[2] = {"slow_glacier_core", "slow_permafrost"},
-		[3] = {"slow_frost_nova", "slow_shatterburst"},
-		[4] = {"slow_cold_snap", "slow_black_ice"},
+		[2] = {"slow_glacier_core", "slow_frost_shards"},
+		[3] = {"slow_shatter", "slow_snowball"},
+		[4] = {"slow_lead_freeze", "slow_wide_chill"},
 		[5] = {"slow_absolute_zero", "slow_hailstorm"},
 	},
 
