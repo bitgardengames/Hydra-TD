@@ -4,6 +4,7 @@ local Theme = require("core.theme")
 local State = require("core.state")
 local Util = require("core.util")
 local Save = require("core.save")
+local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local Button = require("ui.button")
 local Backdrop = require("scenes.backdrop")
@@ -78,6 +79,85 @@ local tabs = {}
 local activeTab = 1
 local tabAnim = {}
 local tabTime = 0
+local capturingRowId = nil
+local conflictMessage = nil
+
+local controlsLayout = {
+	{kind = "action", id = "escape", label = "settings.controlPause"},
+	{kind = "action", id = "fastForward", label = "settings.controlSpeed"},
+	{kind = "action", id = "skipPrep", label = "settings.controlStartWave"},
+	{kind = "action", id = "upgrade", label = "settings.controlUpgrade"},
+	{kind = "action", id = "sell", label = "settings.controlSell"},
+	{kind = "shop", id = "slow", label = "settings.controlPlaceSlow"},
+	{kind = "shop", id = "lancer", label = "settings.controlPlaceLancer"},
+	{kind = "shop", id = "poison", label = "settings.controlPlacePoison"},
+	{kind = "shop", id = "cannon", label = "settings.controlPlaceCannon"},
+	{kind = "shop", id = "shock", label = "settings.controlPlaceShock"},
+	{kind = "shop", id = "plasma", label = "settings.controlPlacePlasma"},
+	{kind = "action", id = "toggleMeter", label = "settings.controlDamageMeter"},
+	{kind = "action", id = "screenshot", label = "settings.controlScreenshot"},
+}
+
+local function closeCapture()
+	capturingRowId = nil
+	conflictMessage = nil
+end
+
+local function startCapture(row)
+	capturingRowId = row.id
+	conflictMessage = nil
+	Sound.play("uiMove")
+end
+
+local function getBinding(row)
+	if row.bindingKind == "shop" then
+		return Save.data.settings.keybinds.shop[row.bindingId]
+	end
+
+	return Save.data.settings.keybinds.actions[row.bindingId]
+end
+
+local function setBinding(row, key)
+	local section = Save.data.settings.keybinds[row.bindingKind]
+	local previous = section[row.bindingId]
+	local conflictRow = nil
+
+	for _, other in ipairs(rows) do
+		if other.type == "keybind" and other.id ~= row.id and getBinding(other) == key then
+			conflictRow = other
+			break
+		end
+	end
+
+	if conflictRow then
+		local conflictSection = Save.data.settings.keybinds[conflictRow.bindingKind]
+		conflictSection[conflictRow.bindingId] = previous
+		conflictMessage = L("settings.controlConflictSwap", conflictRow.label)
+	else
+		conflictMessage = nil
+	end
+
+	section[row.bindingId] = key
+	Hotkeys.refreshFromSave()
+	Save.flush()
+end
+
+local function restoreDefaultKeybinds()
+	Save.data.settings.keybinds = Hotkeys.getDefaultKeyboardBindings()
+	Hotkeys.refreshFromSave()
+	Save.flush()
+	conflictMessage = L("settings.controlsDefaultsRestored")
+	Sound.play("uiConfirm")
+end
+
+local function keybindText(row)
+	if capturingRowId == row.id then
+		return L("settings.controlListening")
+	end
+
+	local key = getBinding(row)
+	return key and key:upper() or L("settings.controlUnbound")
+end
 
 local function adjustRow(row, dir)
 	if row.type == "slider" then
@@ -86,6 +166,10 @@ local function adjustRow(row, dir)
 	elseif row.type == "toggle" then
 		row.set(not row.get())
 		Sound.play("uiConfirm")
+	elseif row.type == "action" and row.onClick then
+		row.onClick()
+	elseif row.type == "keybind" then
+		startCapture(row)
 	end
 end
 
@@ -96,6 +180,7 @@ local function switchTab(nextTab)
 		activeTab = clamped
 		settingsCursor = 1
 		draggingSlider = nil
+		closeCapture()
 		Sound.play("uiMove")
 	end
 end
@@ -171,6 +256,15 @@ local function drawInfoRow(row, x, yTop)
 	Text.printShadow(row.label, x, rowTextY(yTop))
 end
 
+local function drawKeybindRow(row, x, yTop)
+	Text.printShadow(row.label, x, rowTextY(yTop))
+	Text.printfShadow(keybindText(row), x + LABEL_W, rowTextY(yTop), SLIDER_W + 20, "right")
+end
+
+local function drawActionRow(row, x, yTop)
+	Text.printShadow(row.label, x, rowTextY(yTop))
+end
+
 local function drawRow(row, selected, hovered, x, yTop, index)
 	rowRectFor(index, x, yTop)
 	drawRowHighlight(index, selected, hovered)
@@ -181,12 +275,17 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 		drawSliderRow(row, x, yTop, selected, hovered, index)
 	elseif row.type == "toggle" then
 		drawToggleRow(row, x, yTop)
+	elseif row.type == "keybind" then
+		drawKeybindRow(row, x, yTop)
+	elseif row.type == "action" then
+		drawActionRow(row, x, yTop)
 	elseif row.type == "info" then
 		drawInfoRow(row, x, yTop)
 	end
 end
 
 function Screen.load()
+	Hotkeys.refreshFromSave()
 	settingsCursor = 1
 	activeTab = 1
 	tabTime = 0
@@ -205,6 +304,7 @@ function Screen.load()
 					set = function(v)
 						Save.data.settings.musicVolume = v
 						Sound.setMusicVolume(v)
+						Save.flush()
 					end,
 				},
 				{
@@ -216,6 +316,7 @@ function Screen.load()
 					set = function(v)
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
+						Save.flush()
 					end,
 				},
 			},
@@ -253,14 +354,25 @@ function Screen.load()
 		{
 			id = "controls",
 			label = L("settings.tabControls"),
-			rows = {
-				{
-					id = "rebind_coming_soon",
-					label = L("settings.controlsComingSoon"),
-					type = "info",
-				},
-			},
+			rows = {},
 		},
+	}
+
+	local controlRows = tabs[3].rows
+	for _, def in ipairs(controlsLayout) do
+		controlRows[#controlRows + 1] = {
+			id = string.format("bind_%s_%s", def.kind, def.id),
+			label = L(def.label),
+			type = "keybind",
+			bindingKind = def.kind,
+			bindingId = def.id,
+		}
+	end
+	controlRows[#controlRows + 1] = {
+		id = "restore_defaults",
+		label = L("settings.controlsRestoreDefaults"),
+		type = "action",
+		onClick = restoreDefaultKeybinds,
 	}
 
 	buttons = {
@@ -291,6 +403,9 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 
 	rows = getActiveRows()
+	if activeTab ~= 3 then
+		closeCapture()
+	end
 	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
 	tabTime = tabTime + dt
 
@@ -445,9 +560,40 @@ function Screen.draw()
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
+
+	if activeTab == 3 and conflictMessage then
+		lg.setColor(colorText)
+		Text.printfShadow(conflictMessage, listX, buttonsStartY - 24, ROW_W, "left")
+	end
 end
 
 function Screen.keypressed(key)
+	if capturingRowId then
+		local row = rows[settingsCursor]
+		if not row or row.id ~= capturingRowId then
+			for _, candidate in ipairs(rows) do
+				if candidate.id == capturingRowId then
+					row = candidate
+					break
+				end
+			end
+		end
+
+		if key == "backspace" then
+			closeCapture()
+			Sound.play("uiBack")
+			return
+		end
+
+		if row then
+			setBinding(row, key)
+			closeCapture()
+			Sound.play("uiConfirm")
+		end
+
+		return
+	end
+
 	if key == "up" then
 		settingsCursor = max(1, settingsCursor - 1)
 		Sound.play("uiMove")
@@ -466,7 +612,13 @@ function Screen.keypressed(key)
 		if row then
 			adjustRow(row, 1)
 		end
-	elseif key == "return" or key == "escape" then
+	elseif key == "return" then
+		local row = rows[settingsCursor]
+		if row then
+			adjustRow(row, 1)
+		end
+	elseif key == "escape" then
+		closeCapture()
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
 		Sound.play("uiBack")
@@ -491,6 +643,7 @@ function Screen.gamepadpressed(_, button)
 	elseif button == "dpright" then
 		adjustRow(row, 1)
 	elseif button == "b" then
+		closeCapture()
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
 		Sound.play("uiBack")
@@ -528,6 +681,16 @@ function Screen.mousepressed(x, y, button)
 				if row.type == "toggle" then
 					row.set(not row.get())
 					Sound.play("uiConfirm")
+					return true
+				end
+
+				if row.type == "keybind" then
+					startCapture(row)
+					return true
+				end
+
+				if row.type == "action" and row.onClick then
+					row.onClick()
 					return true
 				end
 

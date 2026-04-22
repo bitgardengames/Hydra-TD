@@ -2,8 +2,7 @@ local State = require("core.state")
 
 local Hotkeys = {}
 
--- Keyboard bindings
-Hotkeys.kb = {
+Hotkeys.defaultKb = {
 	shop = {
 		slow = "1",
 		lancer = "2",
@@ -26,6 +25,57 @@ Hotkeys.kb = {
 		screenshot = "printscreen",
 	},
 }
+
+local function cloneKeyboardBindings(src)
+	local out = {
+		shop = {},
+		actions = {},
+	}
+
+	for section, values in pairs(src) do
+		for id, key in pairs(values) do
+			out[section][id] = key
+		end
+	end
+
+	return out
+end
+
+function Hotkeys.getDefaultKeyboardBindings()
+	return cloneKeyboardBindings(Hotkeys.defaultKb)
+end
+
+function Hotkeys.applyKeyboardBindings(bindings)
+	local applied = Hotkeys.getDefaultKeyboardBindings()
+
+	if bindings and type(bindings) == "table" then
+		for section, values in pairs(applied) do
+			local incoming = bindings[section]
+			if type(incoming) == "table" then
+				for id, defaultKey in pairs(values) do
+					local key = incoming[id]
+					if type(key) == "string" and key ~= "" then
+						values[id] = key
+					else
+						values[id] = defaultKey
+					end
+				end
+			end
+		end
+	end
+
+	Hotkeys.kb = applied
+end
+
+function Hotkeys.refreshFromSave()
+	local Save = require("core.save")
+	local settings = Save.data and Save.data.settings
+	local bindings = settings and settings.keybinds
+
+	Hotkeys.applyKeyboardBindings(bindings)
+end
+
+Hotkeys.applyKeyboardBindings(nil)
 
 -- Gamepad bindings (standardized LOVE names)
 -- These names work across Xbox/PS/Switch/Steam Deck (input-wise).
