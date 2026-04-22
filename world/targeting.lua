@@ -10,6 +10,7 @@ local queryCellsCount = Spatial.queryCellsCount
 Targeting.MODES = {
 	PROGRESS = "progress",
 	LOW_HP = "low_hp",
+	HIGH_HP = "high_hp",
 	FARTHEST = "farthest",
 	DENSE = "dense",
 }
@@ -36,6 +37,7 @@ local function pickTargetByScore(tower, mode)
 	local nearby = queryCells(tx, ty, tower.range)
 	local n = queryCellsCount()
 	local lowHpMode = mode == MODES.LOW_HP
+	local highHpMode = mode == MODES.HIGH_HP
 	local farthestMode = mode == MODES.FARTHEST
 	local denseMode = mode == MODES.DENSE
 
@@ -52,6 +54,8 @@ local function pickTargetByScore(tower, mode)
 
 				if lowHpMode then
 					score = -e.hp
+				elseif highHpMode then
+					score = e.hp
 				elseif farthestMode then
 					score = d2
 				elseif denseMode then
@@ -102,6 +106,10 @@ function Targeting.findFarthestTarget(tower)
 	return pickTargetByScore(tower, MODES.FARTHEST)
 end
 
+function Targeting.findHighestHPTarget(tower)
+	return pickTargetByScore(tower, MODES.HIGH_HP)
+end
+
 function Targeting.findDenseTarget(tower)
 	return pickTargetByScore(tower, MODES.DENSE)
 end
@@ -109,6 +117,8 @@ end
 function Targeting.findTarget(tower, mode)
 	if mode == MODES.LOW_HP then
 		return Targeting.findLowestHPTarget(tower)
+	elseif mode == MODES.HIGH_HP then
+		return Targeting.findHighestHPTarget(tower)
 	elseif mode == MODES.FARTHEST then
 		return Targeting.findFarthestTarget(tower)
 	elseif mode == MODES.DENSE then

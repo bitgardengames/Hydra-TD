@@ -52,10 +52,10 @@ local defs = {
 	},
 
 	shock = {
-		[2] = {"shock_storm", "chain_fork"},
-		[3] = {"chain_hit", "chain_fork"},
-		[4] = {"shock_overload", "target_farthest_progress"},
-		[5] = {"spawn_orbitals", "chain_hit"},
+		[2] = {"shock_storm_coil", "shock_overcharge"},
+		[3] = {"shock_forked_arc", "shock_static_surge"},
+		[4] = {"shock_crowd_search", "shock_boss_focus"},
+		[5] = {"shock_thunderstorm", "shock_meltdown"},
 	},
 
 	plasma = {

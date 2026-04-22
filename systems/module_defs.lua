@@ -336,6 +336,16 @@ add("target_farthest_range", {
 	end
 })
 
+add("target_high_hp", {
+	nameKey = "module.target_high_hp",
+	descKey = "moduleDesc.target_high_hp",
+	category = "targeting",
+	targetMode = Targeting.MODES.HIGH_HP,
+
+	apply = function(_)
+	end
+})
+
 -- =========================
 -- SPECIAL (SPICY)
 -- =========================
@@ -585,24 +595,84 @@ addSpec("cannon_aftershock", "module.cannon_aftershock", "moduleDesc.cannon_afte
 	{id = "draw_cannon"},
 })
 
-addSpec("shock_storm", "module.shock_storm", "moduleDesc.shock_storm", {
+addSpec("shock_storm_coil", "module.shock_storm_coil", "moduleDesc.shock_storm_coil", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 6, radius = 62}},
+	{id = "hit_chain", data = {jumps = 7, radius = 62}},
 	{id = "chain_zap_fx"},
 })
 
-addSpec("shock_conductor", "module.shock_conductor", "moduleDesc.shock_conductor", {
+addSpec("shock_overcharge", "module.shock_overcharge", "moduleDesc.shock_overcharge", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 3, radius = 60}},
-	{id = "spawn_static_field", data = {radius = 56}},
+	{id = "hit_chain", data = {jumps = 2, radius = 54, falloff = 0.92}},
 	{id = "chain_zap_fx"},
 })
 
-addSpec("shock_overload", "module.shock_overload", "moduleDesc.shock_overload", {
+addSpec("shock_forked_arc", "module.shock_forked_arc", "moduleDesc.shock_forked_arc", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 3, radius = 56}},
-	{id = "spawn_orbital_on_hit", data = {count = 2}, noInherit = true},
+	{id = "hit_chain", data = {jumps = 4, radius = 56}},
+	{id = "fork_chain", data = {radius = 54, dmgMult = 0.35, forksPerLink = 2}},
 	{id = "chain_zap_fx"},
+})
+
+addSpec("shock_static_surge", "module.shock_static_surge", "moduleDesc.shock_static_surge", {
+	{id = "emit_on_target"},
+	{id = "hit_chain", data = {jumps = 4, radius = 56}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.2, maxStacks = 6}},
+	{id = "chain_zap_fx"},
+})
+
+addSpec("shock_crowd_search", "module.shock_crowd_search", "moduleDesc.shock_crowd_search", {
+	{id = "emit_on_target"},
+	{id = "hit_chain", data = {jumps = 4, radius = 58}},
+	{id = "chain_zap_fx"},
+}, Targeting.MODES.DENSE)
+
+addSpec("shock_boss_focus", "module.shock_boss_focus", "moduleDesc.shock_boss_focus", {
+	{id = "emit_on_target"},
+	{id = "hit_chain", data = {jumps = 3, radius = 54, falloff = 0.9}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.25, maxStacks = 7}},
+	{id = "chain_zap_fx"},
+}, Targeting.MODES.HIGH_HP)
+
+addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thunderstorm", {
+	{id = "emit_on_target"},
+	{id = "hit_chain", data = {jumps = 10, radius = 66}},
+	{id = "chain_zap_fx"},
+})
+
+addSpec("shock_meltdown", "module.shock_meltdown", "moduleDesc.shock_meltdown", {
+	{id = "emit_on_target"},
+	{id = "hit_chain", data = {jumps = 5, radius = 58}},
+	{id = "chain_endpoint_burst", data = {radius = 34, dmgMult = 0.55}},
+	{id = "chain_zap_fx"},
+})
+
+-- Legacy shock branch ids (save compatibility)
+add("shock_storm", {
+	nameKey = "module.shock_storm",
+	descKey = "moduleDesc.shock_storm",
+	category = "special",
+	apply = function(ctx)
+		ModuleDefs.shock_storm_coil.apply(ctx)
+	end
+})
+
+add("shock_conductor", {
+	nameKey = "module.shock_conductor",
+	descKey = "moduleDesc.shock_conductor",
+	category = "special",
+	apply = function(ctx)
+		ModuleDefs.shock_forked_arc.apply(ctx)
+	end
+})
+
+add("shock_overload", {
+	nameKey = "module.shock_overload",
+	descKey = "moduleDesc.shock_overload",
+	category = "special",
+	apply = function(ctx)
+		ModuleDefs.shock_overcharge.apply(ctx)
+	end
 })
 
 addSpec("plasma_lance", "module.plasma_lance", "moduleDesc.plasma_lance", {

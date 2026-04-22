@@ -153,9 +153,9 @@ return {
 			fireMult = 1.0, -- 1.04
 		},
 		upgradeChoices = {
-			"shock_storm",
-			"shock_conductor",
-			"shock_overload",
+			"shock_storm_coil",
+			"shock_overcharge",
+			"shock_forked_arc",
 		},
 		behaviors = {
 			{id = "emit_on_target"},

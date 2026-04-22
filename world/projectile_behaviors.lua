@@ -775,6 +775,7 @@ B.fork_chain = {
 		local radius = data.radius or 48
 		local radius2 = radius * radius
 		local dmgMult = data.dmgMult or 0.35
+		local forksPerLink = max(1, data.forksPerLink or 1)
 
 		local forks = {}
 		local claimed = {}
@@ -785,6 +786,8 @@ B.fork_chain = {
 			if link.to and link.to.hp > 0 then
 				local nearby = Spatial.queryCells(link.to.x, link.to.y, radius)
 				local nearbyCount = Spatial.queryCellsCount()
+
+				local forksAdded = 0
 
 				for j = 1, nearbyCount do
 					local other = nearby[j]
@@ -799,7 +802,11 @@ B.fork_chain = {
 						}
 						claimed[other] = true
 						emitDamage(p, other, (p.damage or 0) * dmgMult)
-						break
+						forksAdded = forksAdded + 1
+
+						if forksAdded >= forksPerLink then
+							break
+						end
 					end
 				end
 			end
@@ -807,6 +814,85 @@ B.fork_chain = {
 
 		for i = 1, #forks do
 			p._chain[#p._chain + 1] = forks[i]
+		end
+	end
+}
+
+B.chain_static_surge = {
+	type = "damage",
+
+	onHit = function(p, e, data)
+		if not p._chain then return end
+		data = data or {}
+
+		local bonusPerStack = data.bonusPerStack or 0.2
+		local maxStacks = data.maxStacks or 6
+		local stackMap = p.sourceTower and p.sourceTower._shockSurgeStacks
+
+		if not stackMap and p.sourceTower then
+			stackMap = {}
+			p.sourceTower._shockSurgeStacks = stackMap
+		end
+
+		if not stackMap then
+			return
+		end
+
+		for i = 1, #p._chain do
+			local target = p._chain[i].to
+			if target and target.hp > 0 then
+				local key = target.id or target
+				local stacks = min((stackMap[key] or 0) + 1, maxStacks)
+				stackMap[key] = stacks
+
+				local extraMult = (stacks - 1) * bonusPerStack
+				if extraMult > 0 then
+					emitDamage(p, target, (p.damage or 0) * extraMult)
+				end
+			end
+		end
+	end
+}
+
+B.chain_endpoint_burst = {
+	type = "damage",
+
+	onHit = function(p, e, data)
+		if not p._chain then return end
+		data = data or {}
+
+		local radius = data.radius or 32
+		local radius2 = radius * radius
+		local dmgMult = data.dmgMult or 0.5
+		local endpoints = {}
+		local hasOutgoing = {}
+
+		for i = 1, #p._chain do
+			local link = p._chain[i]
+			if link.from then
+				hasOutgoing[link.from] = true
+			end
+		end
+
+		for i = 1, #p._chain do
+			local target = p._chain[i].to
+			if target and target.hp > 0 and not hasOutgoing[target] and not endpoints[target] then
+				endpoints[target] = true
+
+				local nearby = Spatial.queryCells(target.x, target.y, radius)
+				local nearbyCount = Spatial.queryCellsCount()
+
+				for j = 1, nearbyCount do
+					local other = nearby[j]
+					if other.hp > 0 then
+						local dx = other.x - target.x
+						local dy = other.y - target.y
+						if dx * dx + dy * dy <= radius2 then
+							emitDamage(p, other, (p.damage or 0) * dmgMult)
+						end
+					end
+				end
+			end
 		end
 	end
 }
