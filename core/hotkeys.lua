@@ -26,7 +26,48 @@ Hotkeys.defaultKb = {
 	},
 }
 
+Hotkeys.defaultPad = {
+	actions = {
+		confirm = "a",
+		cancel = "b",
+		pause = "start",
+		back = "back",
+
+		fastForward = "rightshoulder",
+		skipPrep = "leftshoulder",
+
+		upgrade = "y",
+		sell = "x",
+
+		toggleMeter = "leftstick",
+		--toggleMeterInfo = "leftstick",
+	},
+
+	shop = {
+		dpleft = "slow",
+		dpup = "lancer",
+		dpdown = "poison",
+		dpright = "cannon",
+		rightstick = "shock",
+	},
+}
+
 local function cloneKeyboardBindings(src)
+	local out = {
+		shop = {},
+		actions = {},
+	}
+
+	for section, values in pairs(src) do
+		for id, key in pairs(values) do
+			out[section][id] = key
+		end
+	end
+
+	return out
+end
+
+local function cloneGamepadBindings(src)
 	local out = {
 		shop = {},
 		actions = {},
@@ -45,6 +86,17 @@ function Hotkeys.getDefaultKeyboardBindings()
 	return cloneKeyboardBindings(Hotkeys.defaultKb)
 end
 
+function Hotkeys.getDefaultGamepadBindings()
+	return cloneGamepadBindings(Hotkeys.defaultPad)
+end
+
+function Hotkeys.getDefaultBindings()
+	return {
+		keyboard = Hotkeys.getDefaultKeyboardBindings(),
+		gamepad = Hotkeys.getDefaultGamepadBindings(),
+	}
+end
+
 function Hotkeys.applyKeyboardBindings(bindings)
 	local applied = Hotkeys.getDefaultKeyboardBindings()
 
@@ -54,7 +106,9 @@ function Hotkeys.applyKeyboardBindings(bindings)
 			if type(incoming) == "table" then
 				for id, defaultKey in pairs(values) do
 					local key = incoming[id]
-					if type(key) == "string" and key ~= "" then
+					if key == "none" then
+						values[id] = nil
+					elseif type(key) == "string" and key ~= "" then
 						values[id] = key
 					else
 						values[id] = defaultKey
@@ -67,44 +121,49 @@ function Hotkeys.applyKeyboardBindings(bindings)
 	Hotkeys.kb = applied
 end
 
+function Hotkeys.applyGamepadBindings(bindings)
+	local applied = Hotkeys.getDefaultGamepadBindings()
+
+	if bindings and type(bindings) == "table" then
+		for section, values in pairs(applied) do
+			local incoming = bindings[section]
+			if type(incoming) == "table" then
+				for id, defaultAction in pairs(values) do
+					local action = incoming[id]
+					if action == "none" then
+						values[id] = nil
+					elseif type(action) == "string" and action ~= "" then
+						values[id] = action
+					else
+						values[id] = defaultAction
+					end
+				end
+			end
+		end
+	end
+
+	Hotkeys.pad = applied
+end
+
 function Hotkeys.refreshFromSave()
 	local Save = require("core.save")
 	local settings = Save.data and Save.data.settings
 	local bindings = settings and settings.keybinds
 
-	Hotkeys.applyKeyboardBindings(bindings)
+	local keyboardBindings = bindings
+	local gamepadBindings = nil
+
+	if bindings and (bindings.keyboard or bindings.gamepad) then
+		keyboardBindings = bindings.keyboard
+		gamepadBindings = bindings.gamepad
+	end
+
+	Hotkeys.applyKeyboardBindings(keyboardBindings)
+	Hotkeys.applyGamepadBindings(gamepadBindings)
 end
 
 Hotkeys.applyKeyboardBindings(nil)
-
--- Gamepad bindings (standardized LOVE names)
--- These names work across Xbox/PS/Switch/Steam Deck (input-wise).
-Hotkeys.pad = {
-	actions = {
-		confirm = "a",
-		cancel = "b",
-		pause = "start",
-		back = "back",
-
-		fastForward = "rightshoulder",
-		skipPrep = "leftshoulder",
-
-		upgrade = "y",
-		sell = "x",
-
-		toggleMeter = "leftstick",
-		--toggleMeterInfo = "leftstick",
-	},
-
-	-- I need a wheel or something, controllers don't handle this well
-	shop = {
-		dpleft = "slow",
-		dpup = "lancer",
-		dpdown = "poison",
-		dpright = "cannon",
-		rightstick = "shock",
-	},
-}
+Hotkeys.applyGamepadBindings(nil)
 
 -- Text aliases for controller buttons (for UI display)
 Hotkeys.padAliases = {

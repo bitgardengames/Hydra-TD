@@ -16,23 +16,38 @@ local function ensureKeybinds(settings)
 	local changed = false
 
 	if type(settings.keybinds) ~= "table" then
-		settings.keybinds = Hotkeys.getDefaultKeyboardBindings()
+		settings.keybinds = Hotkeys.getDefaultBindings()
 		return true
 	end
 
-	local defaults = Hotkeys.getDefaultKeyboardBindings()
+	if settings.keybinds.keyboard == nil and settings.keybinds.gamepad == nil then
+		settings.keybinds = {
+			keyboard = settings.keybinds,
+			gamepad = Hotkeys.getDefaultGamepadBindings(),
+		}
+		changed = true
+	end
 
-	for section, sectionDefaults in pairs(defaults) do
-		if type(settings.keybinds[section]) ~= "table" then
-			settings.keybinds[section] = {}
+	local defaults = Hotkeys.getDefaultBindings()
+
+	for device, deviceDefaults in pairs(defaults) do
+		if type(settings.keybinds[device]) ~= "table" then
+			settings.keybinds[device] = {}
 			changed = true
 		end
 
-		for id, defaultKey in pairs(sectionDefaults) do
-			local key = settings.keybinds[section][id]
-			if type(key) ~= "string" or key == "" then
-				settings.keybinds[section][id] = defaultKey
+		for section, sectionDefaults in pairs(deviceDefaults) do
+			if type(settings.keybinds[device][section]) ~= "table" then
+				settings.keybinds[device][section] = {}
 				changed = true
+			end
+
+			for id, defaultKey in pairs(sectionDefaults) do
+				local key = settings.keybinds[device][section][id]
+				if type(key) ~= "string" or key == "" then
+					settings.keybinds[device][section][id] = defaultKey
+					changed = true
+				end
 			end
 		end
 	end
@@ -171,7 +186,7 @@ function Save.load()
 			sfxVolume = 0.20,
 			difficulty = "normal",
 			fullscreen = true,
-			keybinds = Hotkeys.getDefaultKeyboardBindings(),
+			keybinds = Hotkeys.getDefaultBindings(),
 		},
 
 		meta = {
