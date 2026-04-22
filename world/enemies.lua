@@ -129,6 +129,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		poisonTimer = 0,
 		poisonTickTimer = 0,
 		poisonDPS = 0,
+		poisonMissingHpMult = 0,
 		shadow = true,
 		id = nextID,
 		shockID = 0,
@@ -189,7 +190,13 @@ local function updateEnemies(dt)
 				e.poisonTickTimer = e.poisonTickTimer - ticks * POISON_TICK
 
 				local poisonMult = (e.modifiers and e.modifiers.poison) or 1.0
-				local dmg = e.poisonDPS * e.poisonStacks * poisonMult * POISON_TICK * ticks
+				local baseDmg = e.poisonDPS * e.poisonStacks * poisonMult * POISON_TICK * ticks
+				local missingFrac = 0
+				if e.maxHp and e.maxHp > 0 then
+					missingFrac = max(0, (e.maxHp - e.hp) / e.maxHp)
+				end
+				local missingBonus = 1 + (missingFrac * (e.poisonMissingHpMult or 0))
+				local dmg = baseDmg * missingBonus
 
 				e.hp = e.hp - dmg
 
@@ -210,6 +217,7 @@ local function updateEnemies(dt)
 				e.poisonDPS = 0
 				e.poisonSource = nil
 				e.poisonTickTimer = 0
+				e.poisonMissingHpMult = 0
 			end
 		end
 
@@ -238,7 +246,18 @@ local function updateEnemies(dt)
 							other.poisonStacks = (other.poisonStacks or 0) + spreadStacks
 							other.poisonDPS = max(other.poisonDPS or 0, e.poisonDPS or 0)
 							other.poisonTimer = max(other.poisonTimer or 0, e.poisonTimer or 0)
+							other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, e.poisonMissingHpMult or 0)
 							other.poisonSource = e.poisonSource
+
+							if e._infectSpread.repeat == true then
+								other._infectSpread = {
+									radius = e._infectSpread.radius,
+									stackMult = e._infectSpread.stackMult,
+									repeat = true,
+									source = e.poisonSource
+								}
+								other._infectDidSpread = false
+							end
 						end
 					end
 				end

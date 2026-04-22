@@ -1390,8 +1390,36 @@ B.infect_spread = {
 		e._infectSpread = {
 			radius = data.radius or 48,
 			stackMult = data.stackMult or 1,
+			repeat = data.repeat == true,
 			source = p.sourceTower
 		}
+	end
+}
+
+B.poison_neurotoxin = {
+	onHit = function(_, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		local factor = min(data.factor or 0.1, 0.45)
+		local newFactor = 1 - factor
+
+		if not e.slowFactor or newFactor < e.slowFactor then
+			e.slowFactor = newFactor
+		end
+
+		e.slowTimer = max(e.slowTimer or 0, data.dur or 1.0)
+	end
+}
+
+B.poison_hemotoxin = {
+	onHit = function(_, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		e.poisonMissingHpMult = max(e.poisonMissingHpMult or 0, data.missingHpMult or 0.8)
 	end
 }
 
