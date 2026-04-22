@@ -1493,6 +1493,54 @@ B.growing_projectile = {
 	end
 }
 
+B.plasma_supernova_burst = {
+	init = function(p)
+		p._supernovaBurstDone = false
+	end,
+
+	update = function(p, _, data)
+		if p._supernovaBurstDone then
+			return
+		end
+
+		local triggerAt = data.triggerAt or 0.2
+		if p.life > triggerAt then
+			return
+		end
+
+		p._supernovaBurstDone = true
+
+		local radius = data.radius or 36
+		local dmg = (p.damage or 0) * (data.dmgMult or 2.0)
+
+		local nearby = Spatial.queryCells(p.x, p.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
+
+		for i = 1, nearbyCount do
+			local e = nearby[i]
+			if e.hp > 0 then
+				local dx = e.x - p.x
+				local dy = e.y - p.y
+				local r = radius + (e.radius or 0)
+
+				if dx * dx + dy * dy <= r * r then
+					emitDamage(p, e, dmg)
+				end
+			end
+		end
+
+		pushEvent(p, {
+			id = "fx",
+			kind = "plasma_hit",
+			x = p.x,
+			y = p.y,
+			color = p.sourceTower and p.sourceTower.color
+		})
+
+		return "consume"
+	end
+}
+
 B.beam = {
 	type = "output",
 
