@@ -11,6 +11,7 @@ Targeting.MODES = {
 	PROGRESS = "progress",
 	LOW_HP = "low_hp",
 	FARTHEST = "farthest",
+	DENSE = "dense",
 }
 local MODES = Targeting.MODES
 
@@ -36,6 +37,7 @@ local function pickTargetByScore(tower, mode)
 	local n = queryCellsCount()
 	local lowHpMode = mode == MODES.LOW_HP
 	local farthestMode = mode == MODES.FARTHEST
+	local denseMode = mode == MODES.DENSE
 
 	for i = 1, n do
 		local e = nearby[i]
@@ -52,6 +54,23 @@ local function pickTargetByScore(tower, mode)
 					score = -e.hp
 				elseif farthestMode then
 					score = d2
+				elseif denseMode then
+					local localRadius = 52
+					local localR2 = localRadius * localRadius
+					local crowd = 0
+
+					for j = 1, n do
+						local other = nearby[j]
+						if other.hp > 0 and not other.dying then
+							local odx = other.x - e.x
+							local ody = other.y - e.y
+							if odx * odx + ody * ody <= localR2 then
+								crowd = crowd + 1
+							end
+						end
+					end
+
+					score = crowd * 1000 + e.dist
 				elseif e.slowTimer > 0 then
 					-- Slight deprioritization for slowed enemies
 					score = score - 5
@@ -83,11 +102,17 @@ function Targeting.findFarthestTarget(tower)
 	return pickTargetByScore(tower, MODES.FARTHEST)
 end
 
+function Targeting.findDenseTarget(tower)
+	return pickTargetByScore(tower, MODES.DENSE)
+end
+
 function Targeting.findTarget(tower, mode)
 	if mode == MODES.LOW_HP then
 		return Targeting.findLowestHPTarget(tower)
 	elseif mode == MODES.FARTHEST then
 		return Targeting.findFarthestTarget(tower)
+	elseif mode == MODES.DENSE then
+		return Targeting.findDenseTarget(tower)
 	end
 
 	return Targeting.findProgressTarget(tower)
