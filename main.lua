@@ -214,15 +214,37 @@ function love.load(arg)
 		local settings = Save.data.settings or {}
 
 		-- Decide window mode
-		if settings.fullscreen then
-			local dmW, dmH = love.window.getDesktopDimensions()
-			local msaa = Scale.suggestMSAA(dmW, dmH) or 8
+		local displayMode = settings.displayMode or (settings.fullscreen and "fullscreen_borderless" or "windowed")
+		local vsync = settings.vsync and 1 or 0
+		local desktopW, desktopH = love.window.getDesktopDimensions()
 
-			love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
+		if displayMode == "fullscreen_borderless" then
+			local msaa = Scale.suggestMSAA(desktopW, desktopH) or 8
+			love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", resizable = true, vsync = vsync, msaa = msaa})
 		else
-			local msaa = Scale.suggestMSAA(1280, 800) or 8
+			local presets = {
+				["1024x576"] = {w = 1024, h = 576},
+				["1280x720"] = {w = 1280, h = 720},
+				["1366x768"] = {w = 1366, h = 768},
+				["1600x900"] = {w = 1600, h = 900},
+				["1920x1080"] = {w = 1920, h = 1080},
+			}
+			local preset = presets[settings.windowedResolution] or presets["1280x720"]
+			local targetW = min(preset.w, desktopW)
+			local targetH = min(preset.h, desktopH)
+			local msaa = Scale.suggestMSAA(targetW, targetH) or 8
+			local ok = love.window.updateMode(targetW, targetH, {fullscreen = false, resizable = true, vsync = vsync, msaa = msaa})
 
-			love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
+			if not ok then
+				local currentW, currentH = love.graphics.getDimensions()
+				local fallbackW = min(currentW, desktopW)
+				local fallbackH = min(currentH, desktopH)
+				love.window.updateMode(
+					fallbackW,
+					fallbackH,
+					{fullscreen = false, resizable = true, vsync = vsync, msaa = Scale.suggestMSAA(fallbackW, fallbackH) or 8}
+				)
+			end
 		end
 
 		require("core.bootstrap").initFull()
