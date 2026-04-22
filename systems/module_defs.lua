@@ -262,6 +262,19 @@ add("pierce", {
 	end
 })
 
+add("lancer_ricochet", {
+	nameKey = "module.lancer_ricochet",
+	descKey = "moduleDesc.lancer_ricochet",
+	category = "damage",
+
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "lancer_ricochet",
+			data = { radius = 96 }
+		})
+	end
+})
+
 add("suspend_shot", {
 	nameKey = "module.suspend",
 	descKey = "moduleDesc.suspend",
@@ -468,6 +481,15 @@ addSpec("lancer_arc_lance", "module.lancer_arc_lance", "moduleDesc.lancer_arc_la
 	{id = "hit_chain", data = {jumps = 2, radius = 54}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
+})
+
+addSpec("lancer_rail_lance", "module.lancer_rail_lance", "moduleDesc.lancer_rail_lance", {
+	{id = "move_linear"},
+	{id = "hit_circle", data = {radius = 9}},
+	{id = "hit_damage"},
+	{id = "pierce"},
+	{id = "lancer_hit_fx"},
+	{id = "draw_rail_lance"},
 })
 
 addSpec("poison_blight", "module.poison_blight", "moduleDesc.poison_blight", {

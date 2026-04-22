@@ -55,6 +55,8 @@ return {
 		upgradeChoices = {
 			"lancer_deadeye",
 			"lancer_volley",
+			"lancer_ricochet",
+			"lancer_rail_lance",
 			"lancer_arc_lance",
 		},
 		behaviors = {
