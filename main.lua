@@ -209,6 +209,7 @@ function love.load(arg)
 		require("tools.capsule_export").run()
 	else
 		Save.load()
+		Hotkeys.refreshFromSave()
 
 		local settings = Save.data.settings or {}
 
@@ -480,7 +481,7 @@ end
 function love.keypressed(key)
 	--State.inputSource = "keyboard"
 
-	if key == Hotkeys.kb.actions.screenshot then
+	if key == Hotkeys.getActionKey("screenshot") then
 		local time = os.date("%Y-%m-%d_%H-%M-%S")
 
 		if not love.filesystem.getInfo(SCREENSHOT_DIR) then

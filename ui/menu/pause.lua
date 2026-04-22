@@ -157,7 +157,7 @@ function Page.mousereleased(x, y, button)
 end
 
 function Page.keypressed(key)
-	if key == Hotkeys.kb.actions.escape then
+	if key == Hotkeys.getActionKey("escape") then
 		State.mode = "game"
 		Sound.exitPause()
 	end

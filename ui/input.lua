@@ -243,7 +243,7 @@ end
 
 local function keypressed(key)
 	-- Toggle pause
-	if key == Hotkeys.kb.actions.escape then
+	if key == Hotkeys.getActionKey("escape") then
 		if State.mode == "pause" then
 			State.mode = "game"
 			Sound.exitPause()
@@ -280,14 +280,14 @@ local function keypressed(key)
 
 	-- Victory / game over
 	if State.gameOver and State.victory then
-		if key == Hotkeys.kb.actions.endless then
+		if key == Hotkeys.getActionKey("endless") then
 			State.gameOver = false
 			State.victory = false
 			State.endless = true
 			State.inPrep = true
 
 			return
-		elseif key == Hotkeys.kb.actions.nextMap then
+		elseif key == Hotkeys.getActionKey("nextMap") then
 			local nextIndex = min(State.worldMapIndex + 1, #Maps)
 
 			State.worldMapIndex = nextIndex
@@ -303,41 +303,41 @@ local function keypressed(key)
 	end
 
 	-- Gameplay hotkeys
-	if key == Hotkeys.kb.shop.lancer then
+	if key == Hotkeys.getShopKey("lancer") then
 		State.placing = "lancer"
 		deselect()
-	elseif key == Hotkeys.kb.shop.slow then
+	elseif key == Hotkeys.getShopKey("slow") then
 		State.placing = "slow"
 		deselect()
-	elseif key == Hotkeys.kb.shop.cannon then
+	elseif key == Hotkeys.getShopKey("cannon") then
 		State.placing = "cannon"
 		deselect()
-	elseif key == Hotkeys.kb.shop.shock then
+	elseif key == Hotkeys.getShopKey("shock") then
 		State.placing = "shock"
 		deselect()
-	elseif key == Hotkeys.kb.shop.poison then
+	elseif key == Hotkeys.getShopKey("poison") then
 		State.placing = "poison"
 		deselect()
-	elseif key == Hotkeys.kb.shop.plasma then
+	elseif key == Hotkeys.getShopKey("plasma") then
 		State.placing = "plasma"
 		deselect()
-	elseif key == Hotkeys.kb.actions.fastForward then
+	elseif key == Hotkeys.getActionKey("fastForward") then
 		State.speed = (State.speed == 1) and 4 or 1
-	elseif key == Hotkeys.kb.actions.skipPrep then
+	elseif key == Hotkeys.getActionKey("skipPrep") then
 		if State.inPrep then
 			Waves.startWave()
 		end
-	elseif key == Hotkeys.kb.actions.upgrade then
+	elseif key == Hotkeys.getActionKey("upgrade") then
 		if State.selectedTower then
 			ModulePicker.openTowerUpgrade(State.selectedTower)
 		end
-	elseif key == Hotkeys.kb.actions.sell then
+	elseif key == Hotkeys.getActionKey("sell") then
 		if State.selectedTower then
 			Towers.sellTower(State.selectedTower)
 		end
-	elseif key == Hotkeys.kb.actions.toggleMeter then
+	elseif key == Hotkeys.getActionKey("toggleMeter") then
 		State.combatStats.showDamageMeter = not State.combatStats.showDamageMeter
-	elseif key == Hotkeys.kb.actions.toggleMeterInfo then
+	elseif key == Hotkeys.getActionKey("toggleMeterInfo") then
 		if State.combatStats.showDamageMeter then
 			State.combatStats.damageView = (State.combatStats.damageView + 1) % 2
 		end
