@@ -81,8 +81,10 @@ local tabAnim = {}
 local tabTime = 0
 local capturingRowId = nil
 local conflictMessage = nil
+local pendingBindingChange = nil
+local capturingHint = nil
 
-local controlsLayout = {
+local keyboardControlsLayout = {
 	{kind = "action", id = "escape", label = "settings.controlPause"},
 	{kind = "action", id = "fastForward", label = "settings.controlSpeed"},
 	{kind = "action", id = "skipPrep", label = "settings.controlStartWave"},
@@ -98,63 +100,127 @@ local controlsLayout = {
 	{kind = "action", id = "screenshot", label = "settings.controlScreenshot"},
 }
 
+local gamepadControlsLayout = {
+	{kind = "action", id = "fastForward", label = "settings.controlSpeed"},
+	{kind = "action", id = "skipPrep", label = "settings.controlStartWave"},
+	{kind = "action", id = "upgrade", label = "settings.controlUpgrade"},
+	{kind = "action", id = "sell", label = "settings.controlSell"},
+	{kind = "shop", id = "dpleft", label = "settings.controlPlaceSlow"},
+	{kind = "shop", id = "dpup", label = "settings.controlPlaceLancer"},
+	{kind = "shop", id = "dpdown", label = "settings.controlPlacePoison"},
+	{kind = "shop", id = "dpright", label = "settings.controlPlaceCannon"},
+	{kind = "shop", id = "rightstick", label = "settings.controlPlaceShock"},
+	{kind = "action", id = "toggleMeter", label = "settings.controlDamageMeter"},
+}
+
 local function closeCapture()
 	capturingRowId = nil
 	conflictMessage = nil
+	pendingBindingChange = nil
+	capturingHint = nil
 end
 
 local function startCapture(row)
 	capturingRowId = row.id
 	conflictMessage = nil
+	pendingBindingChange = nil
+	capturingHint = L("settings.controlListeningHint")
 	Sound.play("uiMove")
 end
 
 local function getBinding(row)
+	local keybinds = Save.data.settings.keybinds[row.bindingDevice]
+
 	if row.bindingKind == "shop" then
-		return Save.data.settings.keybinds.shop[row.bindingId]
+		return keybinds.shop[row.bindingId]
 	end
 
-	return Save.data.settings.keybinds.actions[row.bindingId]
+	return keybinds.actions[row.bindingId]
 end
 
-local function getBindingSection(bindingKind)
+local function getBindingSection(bindingDevice, bindingKind)
+	local keybinds = Save.data.settings.keybinds[bindingDevice]
+
 	if bindingKind == "shop" then
-		return Save.data.settings.keybinds.shop
+		return keybinds.shop
 	end
 
-	return Save.data.settings.keybinds.actions
+	return keybinds.actions
+end
+
+local function formatBindingValue(row, key)
+	if not key or key == "" or key == "none" then
+		return L("settings.controlUnbound")
+	end
+
+	if row.bindingDevice == "gamepad" then
+		return Hotkeys.padAliases[key] or key:upper()
+	end
+
+	return key:upper()
+end
+
+local function commitBindingChange(change)
+	local section = getBindingSection(change.row.bindingDevice, change.row.bindingKind)
+
+	if change.conflictRow then
+		local conflictSection = getBindingSection(change.conflictRow.bindingDevice, change.conflictRow.bindingKind)
+		conflictSection[change.conflictRow.bindingId] = change.previous
+	end
+
+	section[change.row.bindingId] = change.key
+	Hotkeys.refreshFromSave()
+	Save.flush()
 end
 
 local function setBinding(row, key)
-	local section = getBindingSection(row.bindingKind)
+	local section = getBindingSection(row.bindingDevice, row.bindingKind)
 	local previous = section[row.bindingId]
 	local conflictRow = nil
 
-	for _, other in ipairs(rows) do
-		if other.type == "keybind" and other.id ~= row.id and getBinding(other) == key then
-			conflictRow = other
-			break
+	if key and key ~= "none" then
+		for _, other in ipairs(rows) do
+			if other.type == "keybind" and other.id ~= row.id and other.bindingDevice == row.bindingDevice and getBinding(other) == key then
+				conflictRow = other
+				break
+			end
 		end
 	end
 
 	if conflictRow then
-		local conflictSection = getBindingSection(conflictRow.bindingKind)
-		conflictSection[conflictRow.bindingId] = previous
-		conflictMessage = L("settings.controlConflictSwap", conflictRow.label)
-	else
-		conflictMessage = nil
+		pendingBindingChange = {
+			row = row,
+			key = key,
+			previous = previous,
+			conflictRow = conflictRow,
+			conflictPrevious = getBinding(conflictRow),
+		}
+		conflictMessage = L(
+			"settings.controlConflictSwapPreview",
+			row.label,
+			formatBindingValue(row, previous),
+			formatBindingValue(row, key),
+			conflictRow.label,
+			formatBindingValue(conflictRow, pendingBindingChange.conflictPrevious),
+			formatBindingValue(conflictRow, previous)
+		)
+		capturingHint = L("settings.controlConflictConfirmHint")
+		Sound.play("uiMove")
+		return
 	end
 
-	section[row.bindingId] = key
-	Hotkeys.refreshFromSave()
-	Save.flush()
+	conflictMessage = nil
+	pendingBindingChange = nil
+	capturingHint = L("settings.controlListeningHint")
+	commitBindingChange({row = row, key = key, previous = previous})
 end
 
 local function restoreDefaultKeybinds()
-	Save.data.settings.keybinds = Hotkeys.getDefaultKeyboardBindings()
+	Save.data.settings.keybinds = Hotkeys.getDefaultBindings()
 	Hotkeys.refreshFromSave()
 	Save.flush()
 	conflictMessage = L("settings.controlsDefaultsRestored")
+	pendingBindingChange = nil
 	Sound.play("uiConfirm")
 end
 
@@ -164,7 +230,7 @@ local function keybindText(row)
 	end
 
 	local key = getBinding(row)
-	return key and key:upper() or L("settings.controlUnbound")
+	return formatBindingValue(row, key)
 end
 
 local function adjustRow(row, dir)
@@ -360,24 +426,48 @@ function Screen.load()
 			},
 		},
 		{
-			id = "controls",
-			label = L("settings.tabControls"),
+			id = "controlsKeyboard",
+			label = L("settings.tabControlsKeyboard"),
+			rows = {},
+		},
+		{
+			id = "controlsGamepad",
+			label = L("settings.tabControlsGamepad"),
 			rows = {},
 		},
 	}
 
-	local controlRows = tabs[3].rows
-	for _, def in ipairs(controlsLayout) do
-		controlRows[#controlRows + 1] = {
-			id = string.format("bind_%s_%s", def.kind, def.id),
+	local keyboardRows = tabs[3].rows
+	for _, def in ipairs(keyboardControlsLayout) do
+		keyboardRows[#keyboardRows + 1] = {
+			id = string.format("bind_keyboard_%s_%s", def.kind, def.id),
 			label = L(def.label),
 			type = "keybind",
+			bindingDevice = "keyboard",
 			bindingKind = def.kind,
 			bindingId = def.id,
 		}
 	end
-	controlRows[#controlRows + 1] = {
-		id = "restore_defaults",
+	keyboardRows[#keyboardRows + 1] = {
+		id = "restore_defaults_keyboard",
+		label = L("settings.controlsRestoreDefaults"),
+		type = "action",
+		onClick = restoreDefaultKeybinds,
+	}
+
+	local gamepadRows = tabs[4].rows
+	for _, def in ipairs(gamepadControlsLayout) do
+		gamepadRows[#gamepadRows + 1] = {
+			id = string.format("bind_gamepad_%s_%s", def.kind, def.id),
+			label = L(def.label),
+			type = "keybind",
+			bindingDevice = "gamepad",
+			bindingKind = def.kind,
+			bindingId = def.id,
+		}
+	end
+	gamepadRows[#gamepadRows + 1] = {
+		id = "restore_defaults_gamepad",
 		label = L("settings.controlsRestoreDefaults"),
 		type = "action",
 		onClick = restoreDefaultKeybinds,
@@ -411,7 +501,7 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 
 	rows = getActiveRows()
-	if activeTab ~= 3 then
+	if activeTab ~= 3 and activeTab ~= 4 then
 		closeCapture()
 	end
 	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
@@ -535,6 +625,14 @@ function Screen.draw()
 		drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
 	end
 
+	if capturingRowId and rows[settingsCursor] and rows[settingsCursor].id == capturingRowId then
+		local focusedRect = rowRects[settingsCursor]
+		if focusedRect then
+			lg.setColor(colorText)
+			Text.printfShadow(capturingHint or L("settings.controlListeningHint"), focusedRect.x, focusedRect.y + focusedRect.h + 6, focusedRect.w, "left")
+		end
+	end
+
 	-- Tabs
 	Fonts.set("menu")
 	for i, tab in ipairs(tabs) do
@@ -569,7 +667,7 @@ function Screen.draw()
 		Button.draw(btn)
 	end
 
-	if activeTab == 3 and conflictMessage then
+	if (activeTab == 3 or activeTab == 4) and conflictMessage then
 		lg.setColor(colorText)
 		Text.printfShadow(conflictMessage, listX, buttonsStartY - 24, ROW_W, "left")
 	end
@@ -587,16 +685,38 @@ function Screen.keypressed(key)
 			end
 		end
 
-		if key == "backspace" then
+		if key == "escape" then
 			closeCapture()
 			Sound.play("uiBack")
 			return
 		end
 
+		if pendingBindingChange then
+			if key == "return" then
+				commitBindingChange(pendingBindingChange)
+				closeCapture()
+				Sound.play("uiConfirm")
+			end
+			return
+		end
+
 		if row then
+			if key == "backspace" then
+				setBinding(row, "none")
+				closeCapture()
+				Sound.play("uiConfirm")
+				return
+			end
+
+			if row.bindingDevice ~= "keyboard" then
+				return
+			end
+
 			setBinding(row, key)
-			closeCapture()
-			Sound.play("uiConfirm")
+			if not pendingBindingChange then
+				closeCapture()
+				Sound.play("uiConfirm")
+			end
 		end
 
 		return
@@ -634,6 +754,55 @@ function Screen.keypressed(key)
 end
 
 function Screen.gamepadpressed(_, button)
+	if capturingRowId then
+		local row = rows[settingsCursor]
+
+		if not row or row.id ~= capturingRowId then
+			for _, candidate in ipairs(rows) do
+				if candidate.id == capturingRowId then
+					row = candidate
+					break
+				end
+			end
+		end
+
+		if button == "b" then
+			closeCapture()
+			Sound.play("uiBack")
+			return
+		end
+
+		if pendingBindingChange then
+			if button == "a" then
+				commitBindingChange(pendingBindingChange)
+				closeCapture()
+				Sound.play("uiConfirm")
+			end
+			return
+		end
+
+		if row then
+			if button == "back" then
+				setBinding(row, "none")
+				closeCapture()
+				Sound.play("uiConfirm")
+				return
+			end
+
+			if row.bindingDevice ~= "gamepad" then
+				return
+			end
+
+			setBinding(row, button)
+			if not pendingBindingChange then
+				closeCapture()
+				Sound.play("uiConfirm")
+			end
+		end
+
+		return
+	end
+
 	local row = rows[settingsCursor]
 
 	if not row then
