@@ -44,7 +44,7 @@ local sampleFast = MapMod.sampleFast
 local getTargetMode = Modules.getTargetMode
 
 local FIRE_ANGLE_EPS = math.rad(6)
-local RETARGET_INTERVAL = 0.10
+local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 
 local function refreshTargetModeCache(t)
 	local modulesVersion = Modules.version
