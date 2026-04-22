@@ -4,27 +4,7 @@ local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local SAVE_VERSION = 1 -- Only upgrade if save structure changes
 
-local DEFAULT_KEYBINDS = {
-	shop = {
-		slow = "1",
-		lancer = "2",
-		poison = "3",
-		cannon = "4",
-		shock = "5",
-		plasma = "6",
-	},
-	actions = {
-		escape = "escape",
-		upgrade = "u",
-		sell = "x",
-		nextMap = "n",
-		endless = "e",
-		fastForward = "tab",
-		skipPrep = "space",
-		toggleMeter = "d",
-		screenshot = "printscreen",
-	},
-}
+local Hotkeys = require("core.hotkeys")
 
 Save.data = nil
 
@@ -32,33 +12,23 @@ local format = string.format
 local rep = string.rep
 
 -- Map ID migration (old campaign -> new campaign)
-local function cloneDefaultKeybinds()
-	local out = {shop = {}, actions = {}}
-
-	for section, values in pairs(DEFAULT_KEYBINDS) do
-		for id, key in pairs(values) do
-			out[section][id] = key
-		end
-	end
-
-	return out
-end
-
 local function ensureKeybinds(settings)
 	local changed = false
 
 	if type(settings.keybinds) ~= "table" then
-		settings.keybinds = cloneDefaultKeybinds()
+		settings.keybinds = Hotkeys.getDefaultKeyboardBindings()
 		return true
 	end
 
-	for section, defaults in pairs(DEFAULT_KEYBINDS) do
+	local defaults = Hotkeys.getDefaultKeyboardBindings()
+
+	for section, sectionDefaults in pairs(defaults) do
 		if type(settings.keybinds[section]) ~= "table" then
 			settings.keybinds[section] = {}
 			changed = true
 		end
 
-		for id, defaultKey in pairs(defaults) do
+		for id, defaultKey in pairs(sectionDefaults) do
 			local key = settings.keybinds[section][id]
 			if type(key) ~= "string" or key == "" then
 				settings.keybinds[section][id] = defaultKey
@@ -201,7 +171,7 @@ function Save.load()
 			sfxVolume = 0.20,
 			difficulty = "normal",
 			fullscreen = true,
-			keybinds = cloneDefaultKeybinds(),
+			keybinds = Hotkeys.getDefaultKeyboardBindings(),
 		},
 
 		meta = {
