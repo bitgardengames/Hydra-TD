@@ -1478,7 +1478,7 @@ B.infect_spread = {
 		e._infectSpread = {
 			radius = data.radius or 48,
 			stackMult = data.stackMult or 1,
-			repeat = data.repeat == true,
+			loop = data.loop == true,
 			source = p.sourceTower
 		}
 	end
