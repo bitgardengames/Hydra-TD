@@ -197,10 +197,6 @@ end
 
 local towerTypes = Constants.TOWER_LIST
 
-local function rand(list)
-	return list[love.math.random(1, #list)]
-end
-
 function Modules.getDef(moduleId)
 	return ModuleDefs[moduleId]
 end
@@ -283,22 +279,40 @@ function Modules.rollTowerUpgradeChoices(tower)
 end
 
 function Modules.rollChoices(count)
-	local choices = {}
-	local seen = {}
+	local totalCombinations = #allIds * #towerTypes
+	if totalCombinations == 0 then
+		return {}
+	end
 
-	while #choices < count do
-		local moduleId = rand(allIds)
-		local target = rand(towerTypes)
-		local key = moduleId .. ":" .. target
+	count = math.floor(count or 0)
+	if count <= 0 then
+		return {}
+	end
 
-		if not seen[key] then
-			seen[key] = true
+	if count > totalCombinations then
+		count = totalCombinations
+	end
 
-			choices[#choices + 1] = {
+	local combinations = {}
+
+	for i = 1, #allIds do
+		local moduleId = allIds[i]
+		for j = 1, #towerTypes do
+			combinations[#combinations + 1] = {
 				moduleId = moduleId,
-				target = target,
+				target = towerTypes[j],
 			}
 		end
+	end
+
+	for i = #combinations, 2, -1 do
+		local j = love.math.random(1, i)
+		combinations[i], combinations[j] = combinations[j], combinations[i]
+	end
+
+	local choices = {}
+	for i = 1, count do
+		choices[i] = combinations[i]
 	end
 
 	return choices
