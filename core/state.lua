@@ -72,6 +72,14 @@ local state = {
 		damageAlpha = 0,
 		damageFadeSpeed = 14,
 	},
+
+	-- Fixed-step simulation instrumentation
+	simStats = {
+		maxStepFrames = 0,
+		cappedSimTime = 0,
+		overloadDebt = 0,
+		logTimer = 0,
+	},
 }
 
 function state.addDamage(kind, dmg, isBoss)
@@ -124,6 +132,15 @@ function state.resolveMapIndex(index)
 	end
 
 	return index
+end
+
+function state.resetSimStats()
+	local sim = state.simStats
+
+	sim.maxStepFrames = 0
+	sim.cappedSimTime = 0
+	sim.overloadDebt = 0
+	sim.logTimer = 0
 end
 
 return state
