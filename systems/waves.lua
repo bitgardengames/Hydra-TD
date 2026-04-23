@@ -25,6 +25,8 @@ local spawner = {
 	spawnIndex = 1,
 }
 
+local repeatListCache = {}
+
 local function beginSpawner(list, gap, hpMult, spdMult)
 	spawner.active = true
 	spawner.timer = 0
@@ -40,11 +42,24 @@ local function beginSpawner(list, gap, hpMult, spdMult)
 end
 
 local function buildRepeatList(kind, count)
+	local byKind = repeatListCache[kind]
+	if not byKind then
+		byKind = {}
+		repeatListCache[kind] = byKind
+	end
+
+	local cached = byKind[count]
+	if cached then
+		return cached
+	end
+
 	local list = {}
 
 	for i = 1, count do
 		list[i] = kind
 	end
+
+	byKind[count] = list
 
 	return list
 end
