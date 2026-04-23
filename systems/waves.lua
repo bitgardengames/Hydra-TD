@@ -15,17 +15,21 @@ local max = math.max
 local spawner = {
 	active = false,
 	remaining = 0,
+	total = 0,
 	gap = 0.6,
 	timer = 0,
 	hpMult = 1.0,
 	spdMult = 1.0,
 
-	-- Deterministic spawn list
+	-- Optional explicit deterministic spawn list.
 	spawnList = nil,
 	spawnIndex = 1,
+
+	-- Fast path for repeated single-kind waves (avoids per-wave table allocation).
+	repeatKind = nil,
 }
 
-local function beginSpawner(list, gap, hpMult, spdMult)
+local function beginSpawner(list, count, repeatKind, gap, hpMult, spdMult)
 	spawner.active = true
 	spawner.timer = 0
 	spawner.gap = gap or 0.6
@@ -34,19 +38,11 @@ local function beginSpawner(list, gap, hpMult, spdMult)
 
 	spawner.spawnList = list
 	spawner.spawnIndex = 1
-	spawner.remaining = list and #list or 0
+	spawner.repeatKind = repeatKind
+	spawner.remaining = count or 0
+	spawner.total = spawner.remaining
 
 	State.inPrep = false
-end
-
-local function buildRepeatList(kind, count)
-	local list = {}
-
-	for i = 1, count do
-		list[i] = kind
-	end
-
-	return list
 end
 
 -- Wave start
@@ -82,7 +78,7 @@ function Waves.startWave()
 		local hpMult = DifficultyCurve.getBossHpMultiplier(State.wave) * mapMult
 		local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
-		beginSpawner({bossKind}, 0, hpMult, spdMult)
+		beginSpawner(nil, 1, bossKind, 0, hpMult, spdMult)
 
 		return
 	end
@@ -94,10 +90,9 @@ function Waves.startWave()
 	local hpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult
 	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
-	local list = buildRepeatList(kind, count)
 	local gap = wave.spacing or 1.0
 
-	beginSpawner(list, gap, hpMult, spdMult)
+	beginSpawner(nil, count, kind, gap, hpMult, spdMult)
 end
 
 -- Spawning update
@@ -110,16 +105,24 @@ function Waves.updateSpawner(dt)
 
 	if spawner.timer <= 0 and spawner.remaining > 0 then
 		local list = spawner.spawnList
+		local kind = spawner.repeatKind
 
-		-- Safety
-		if not list or spawner.spawnIndex > #list then
-			spawner.remaining = 0
-			spawner.active = false
+		if list then
+			-- Safety
+			if spawner.spawnIndex > #list then
+				spawner.remaining = 0
+				spawner.active = false
+				return
+			end
 
-			return
+			kind = list[spawner.spawnIndex]
 		end
 
-		local kind = list[spawner.spawnIndex]
+		if not kind then
+			spawner.remaining = 0
+			spawner.active = false
+			return
+		end
 
 		Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
 
@@ -140,12 +143,14 @@ end
 function Waves.resetSpawner()
 	spawner.active = false
 	spawner.remaining = 0
+	spawner.total = 0
 	spawner.gap = 0.6
 	spawner.timer = 0
 	spawner.hpMult = 1.0
 	spawner.spdMult = 1.0
 	spawner.spawnList = nil
 	spawner.spawnIndex = 1
+	spawner.repeatKind = nil
 end
 
 function Waves.getSpawner()
