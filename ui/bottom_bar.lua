@@ -11,7 +11,6 @@ local getTime = love.timer.getTime
 local getDelta = love.timer.getDelta
 local floor = math.floor
 
-local colorPanel  = Theme.ui.panel
 local colorPanel2 = Theme.ui.panel2
 local colorBackdrop = Theme.ui.backdrop
 local colorOutline = Theme.outline.color

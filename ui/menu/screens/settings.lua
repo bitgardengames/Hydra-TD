@@ -33,7 +33,6 @@ local innerRadius = baseRadius - outlineW * 0.25
 
 local paddingX = 24
 local paddingY = 24
-local corner = 18
 
 local btnW = 240
 local btnH = 42

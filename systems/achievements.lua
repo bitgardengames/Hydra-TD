@@ -37,14 +37,6 @@ local BASE_CAMPAIGN_MAP_IDS = {
 	"twinloop",
 }
 
-local HIGHLANDS_CAMPAIGN_MAP_IDS = { -- NYI, Just for ideas
-	"ashfall",
-	"cliffside",
-	"forkriver",
-	"stormpass",
-	"ironvale",
-}
-
 local rank = {
 	easy = 1,
 	normal = 2,

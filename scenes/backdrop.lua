@@ -19,7 +19,6 @@ local colorText = Theme.ui.text
 local cr, cg, cb = colorText[1], colorText[2], colorText[3]
 
 local FIXED_DT = 1 / 120
-local ACCUM = 0
 
 local Backdrop = {
     active = false,

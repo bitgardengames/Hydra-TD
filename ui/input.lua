@@ -17,7 +17,6 @@ local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
 
 local getTime = love.timer.getTime
-local lm = love.mouse
 local floor = math.floor
 local min = math.min
 
