@@ -78,7 +78,6 @@ local state = {
 		maxStepFrames = 0,
 		cappedSimTime = 0,
 		overloadDebt = 0,
-		logTimer = 0,
 	},
 }
 
@@ -140,7 +139,6 @@ function state.resetSimStats()
 	sim.maxStepFrames = 0
 	sim.cappedSimTime = 0
 	sim.overloadDebt = 0
-	sim.logTimer = 0
 end
 
 return state

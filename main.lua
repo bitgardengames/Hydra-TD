@@ -331,20 +331,6 @@ function love.update(dt)
 		Overlay.update(dt)
 	end
 
-	simStats.logTimer = simStats.logTimer + dt
-
-	if simStats.logTimer >= 5 then
-		print(string.format(
-			"[sim] max-step-frames=%d capped-time=%.4fs debt=%.4fs accum=%.4fs",
-			simStats.maxStepFrames,
-			simStats.cappedSimTime,
-			simStats.overloadDebt,
-			ACCUM
-		))
-
-		simStats.logTimer = simStats.logTimer - 5
-	end
-
 	State.renderAlpha = ACCUM / FIXED_DT
 	State.renderStep = FIXED_DT * State.speed
 
