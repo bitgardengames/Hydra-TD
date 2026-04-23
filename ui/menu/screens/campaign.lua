@@ -23,7 +23,6 @@ local Screen = {}
 
 -- Colors
 local colorText = Theme.ui.text
-local colorPanel = Theme.ui.panel
 local colorShadow = Theme.ui.shadow
 local colorDim = Theme.ui.screenDim
 local colorBackdrop = Theme.ui.backdrop
@@ -41,12 +40,10 @@ local innerRadius = baseRadius - outlineW * 0.25
 local PAD_PREVIEW = 44
 local PAD_TITLE = 60
 local PAD_META = 18
-local PAD_ACTION = 26
 local TITLE_OFFSET = -22
 
 local paddingX = 28
 local paddingY = 28
-local corner = 18
 
 local btnW = 240
 local btnH = 42
@@ -54,9 +51,6 @@ local gap = 62
 
 -- Arrow navigation
 local ARROW_SIZE = 20
-local ARROW_OFFSET = 48
-local ARROW_ALPHA = 0.85
-local ARROW_HOVER = 1.0
 local PATH_TRIM_START = 34
 local PATH_TRIM_END = 72
 
