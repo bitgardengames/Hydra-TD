@@ -31,7 +31,7 @@ function Targeting.isValidTarget(tower, e)
 	return dx * dx + dy * dy <= tower.range2
 end
 
-local function pickTargetByScore(tower, mode)
+local function pickProgressTarget(tower)
 	local best = nil
 	local bestScore = HUGE_NEG
 	local r2 = tower.range2
@@ -40,10 +40,6 @@ local function pickTargetByScore(tower, mode)
 
 	local nearby = queryCells(tx, ty, tower.range)
 	local n = queryCellsCount()
-	local lowHpMode = mode == MODES.LOW_HP
-	local highHpMode = mode == MODES.HIGH_HP
-	local farthestMode = mode == MODES.FARTHEST
-	local denseMode = mode == MODES.DENSE
 
 	for i = 1, n do
 		local e = nearby[i]
@@ -56,36 +52,7 @@ local function pickTargetByScore(tower, mode)
 			if d2 <= r2 then
 				local score = e.dist
 
-				if lowHpMode then
-					score = -e.hp
-				elseif highHpMode then
-					score = e.hp
-				elseif farthestMode then
-					score = d2
-				elseif denseMode then
-					local localR2 = DENSE_LOCAL_RADIUS * DENSE_LOCAL_RADIUS
-					local crowd = 0
-					local localNearby = denseQueryBuffer
-					local localN = queryCellsInto(localNearby, e.x, e.y, DENSE_LOCAL_RADIUS)
-					if localN > DENSE_NEIGHBOR_CAP then
-						localN = DENSE_NEIGHBOR_CAP
-					end
-
-					-- Old approach scanned every in-range candidate for every candidate (O(n^2));
-					-- this bounds work to a local spatial query (+ optional cap), reducing hitch risk in large waves.
-					for j = 1, localN do
-						local other = localNearby[j]
-						if other.hp > 0 and not other.dying then
-							local odx = other.x - e.x
-							local ody = other.y - e.y
-							if odx * odx + ody * ody <= localR2 then
-								crowd = crowd + 1
-							end
-						end
-					end
-
-					score = crowd * 1000 + e.dist
-				elseif e.slowTimer > 0 then
+				if e.slowTimer > 0 then
 					-- Slight deprioritization for slowed enemies
 					score = score - 5
 				end
@@ -103,25 +70,182 @@ local function pickTargetByScore(tower, mode)
 	return best
 end
 
+local function pickLowestHPTarget(tower)
+	local best = nil
+	local bestScore = HUGE_NEG
+	local r2 = tower.range2
+	local tx = tower.x
+	local ty = tower.y
+
+	local nearby = queryCells(tx, ty, tower.range)
+	local n = queryCellsCount()
+
+	for i = 1, n do
+		local e = nearby[i]
+
+		if e.hp > 0 and not e.dying then
+			local dx = e.x - tx
+			local dy = e.y - ty
+			local d2 = dx * dx + dy * dy
+
+			if d2 <= r2 then
+				local score = -e.hp
+				local diff = score - bestScore
+
+				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
+					bestScore = score
+					best = e
+				end
+			end
+		end
+	end
+
+	return best
+end
+
+local function pickHighestHPTarget(tower)
+	local best = nil
+	local bestScore = HUGE_NEG
+	local r2 = tower.range2
+	local tx = tower.x
+	local ty = tower.y
+
+	local nearby = queryCells(tx, ty, tower.range)
+	local n = queryCellsCount()
+
+	for i = 1, n do
+		local e = nearby[i]
+
+		if e.hp > 0 and not e.dying then
+			local dx = e.x - tx
+			local dy = e.y - ty
+			local d2 = dx * dx + dy * dy
+
+			if d2 <= r2 then
+				local score = e.hp
+				local diff = score - bestScore
+
+				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
+					bestScore = score
+					best = e
+				end
+			end
+		end
+	end
+
+	return best
+end
+
+local function pickFarthestTarget(tower)
+	local best = nil
+	local bestScore = HUGE_NEG
+	local r2 = tower.range2
+	local tx = tower.x
+	local ty = tower.y
+
+	local nearby = queryCells(tx, ty, tower.range)
+	local n = queryCellsCount()
+
+	for i = 1, n do
+		local e = nearby[i]
+
+		if e.hp > 0 and not e.dying then
+			local dx = e.x - tx
+			local dy = e.y - ty
+			local d2 = dx * dx + dy * dy
+
+			if d2 <= r2 then
+				local score = d2
+				local diff = score - bestScore
+
+				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
+					bestScore = score
+					best = e
+				end
+			end
+		end
+	end
+
+	return best
+end
+
+local function pickDenseTarget(tower)
+	local best = nil
+	local bestScore = HUGE_NEG
+	local r2 = tower.range2
+	local tx = tower.x
+	local ty = tower.y
+	local localR2 = DENSE_LOCAL_RADIUS * DENSE_LOCAL_RADIUS
+	local localNearby = denseQueryBuffer
+
+	local nearby = queryCells(tx, ty, tower.range)
+	local n = queryCellsCount()
+
+	for i = 1, n do
+		local e = nearby[i]
+
+		if e.hp > 0 and not e.dying then
+			local ex = e.x
+			local ey = e.y
+			local dx = ex - tx
+			local dy = ey - ty
+			local d2 = dx * dx + dy * dy
+
+			if d2 <= r2 then
+				local crowd = 0
+				local localN = queryCellsInto(localNearby, ex, ey, DENSE_LOCAL_RADIUS)
+
+				if localN > DENSE_NEIGHBOR_CAP then
+					localN = DENSE_NEIGHBOR_CAP
+				end
+
+				-- Bound local neighbor work so dense targeting cost remains stable in heavy waves.
+				for j = 1, localN do
+					local other = localNearby[j]
+
+					if other.hp > 0 and not other.dying then
+						local odx = other.x - ex
+						local ody = other.y - ey
+
+						if odx * odx + ody * ody <= localR2 then
+							crowd = crowd + 1
+						end
+					end
+				end
+
+				local score = crowd * 1000 + e.dist
+				local diff = score - bestScore
+
+				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
+					bestScore = score
+					best = e
+				end
+			end
+		end
+	end
+
+	return best
+end
+
 -- Target enemy furthest along the path
 function Targeting.findProgressTarget(tower)
-	return pickTargetByScore(tower, MODES.PROGRESS)
+	return pickProgressTarget(tower)
 end
 
 function Targeting.findLowestHPTarget(tower)
-	return pickTargetByScore(tower, MODES.LOW_HP)
+	return pickLowestHPTarget(tower)
 end
 
 function Targeting.findFarthestTarget(tower)
-	return pickTargetByScore(tower, MODES.FARTHEST)
+	return pickFarthestTarget(tower)
 end
 
 function Targeting.findHighestHPTarget(tower)
-	return pickTargetByScore(tower, MODES.HIGH_HP)
+	return pickHighestHPTarget(tower)
 end
 
 function Targeting.findDenseTarget(tower)
-	return pickTargetByScore(tower, MODES.DENSE)
+	return pickDenseTarget(tower)
 end
 
 function Targeting.findTarget(tower, mode)
