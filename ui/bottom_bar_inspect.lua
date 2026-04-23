@@ -58,8 +58,6 @@ local IDLE_LIFT = 6
 local GLYPH_X_OFFSET = -5
 local STAT_LINE_H = 22
 
-local idleLift = 6
-
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
 local outerRadius = baseRadius + outlineW * 0.5
@@ -192,22 +190,6 @@ local function drawStatusBar(r, g, b, timer, duration, x, y, now)
 	Text.printShadow(L("ui.seconds", timer), x + BAR_W + 8, y - 2)
 
 	return BAR_H + STATUS_GAP
-end
-
-local function formatStat(value)
-	if not value then
-		return value
-	end
-
-	-- Round to 1 decimal
-	local rounded = floor(value * 10 + 0.5) / 10
-
-	-- If effectively whole number, return integer string
-	if abs(rounded - floor(rounded)) < 0.001 then
-		return tostring(floor(rounded))
-	end
-
-	return format("%.1f", rounded)
 end
 
 local forceShow = true
