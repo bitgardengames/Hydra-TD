@@ -62,57 +62,61 @@ local function copyBehaviors(list)
 	return out
 end
 
+local ContextMethods = {}
+
+function ContextMethods:addBehavior(b)
+	self.behaviors[#self.behaviors + 1] = b
+end
+
+function ContextMethods:replaceBehavior(id, newB)
+	for i = 1, #self.behaviors do
+		if self.behaviors[i].id == id then
+			self.behaviors[i] = newB
+		end
+	end
+end
+
+function ContextMethods:modifyBehavior(id, fn)
+	for i = 1, #self.behaviors do
+		local b = self.behaviors[i]
+		if b.id == id then
+			b.data = b.data or {}
+			fn(b.data)
+		end
+	end
+end
+
+function ContextMethods:removeBehavior(id)
+	for i = #self.behaviors, 1, -1 do
+		if self.behaviors[i].id == id then
+			table.remove(self.behaviors, i)
+		end
+	end
+end
+
+function ContextMethods:forEachBehavior(fn)
+	for i = 1, #self.behaviors do
+		fn(self.behaviors[i])
+	end
+end
+
+function ContextMethods:removeByType(typeName)
+	for i = #self.behaviors, 1, -1 do
+		if self.behaviors[i].type == typeName then
+			table.remove(self.behaviors, i)
+		end
+	end
+end
+
+local ContextMetatable = { __index = ContextMethods }
+
 local function createContext(base)
-	local ctx = {}
+	local ctx = {
+		behaviors = copyBehaviors(base),
+		output = "projectile",
+	}
 
-	ctx.behaviors = copyBehaviors(base)
-	ctx.output = "projectile"
-
-	function ctx:addBehavior(b)
-		self.behaviors[#self.behaviors + 1] = b
-	end
-
-	function ctx:replaceBehavior(id, newB)
-		for i = 1, #self.behaviors do
-			if self.behaviors[i].id == id then
-				self.behaviors[i] = newB
-			end
-		end
-	end
-
-	function ctx:modifyBehavior(id, fn)
-		for i = 1, #self.behaviors do
-			local b = self.behaviors[i]
-			if b.id == id then
-				b.data = b.data or {}
-				fn(b.data)
-			end
-		end
-	end
-
-	function ctx:removeBehavior(id)
-		for i = #self.behaviors, 1, -1 do
-			if self.behaviors[i].id == id then
-				table.remove(self.behaviors, i)
-			end
-		end
-	end
-
-	function ctx:forEachBehavior(fn)
-		for i = 1, #self.behaviors do
-			fn(self.behaviors[i])
-		end
-	end
-
-	function ctx:removeByType(typeName)
-		for i = #self.behaviors, 1, -1 do
-			if self.behaviors[i].type == typeName then
-				table.remove(self.behaviors, i)
-			end
-		end
-	end
-
-	return ctx
+	return setmetatable(ctx, ContextMetatable)
 end
 
 function Modules.buildContext(tower)
