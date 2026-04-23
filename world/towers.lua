@@ -1,7 +1,6 @@
 local Constants = require("core.constants")
 local Theme = require("core.theme")
 local TowerDefs = require("world.tower_defs")
-local Util = require("core.util")
 local Sound = require("systems.sound")
 local State = require("core.state")
 local MapMod = require("world.map")
@@ -11,7 +10,6 @@ local Targeting = require("world.targeting")
 local Difficulty = require("systems.difficulty")
 local Enemies = require("world.enemies")
 local Effects = require("world.effects")
-local Projectiles = require("world.projectiles")
 local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
 local L = require("core.localization")
@@ -53,22 +51,6 @@ local function refreshTargetModeCache(t)
 		t.targetMode = getTargetMode(t.kind) or Targeting.MODES.PROGRESS
 		t._targetModeVersion = modulesVersion
 	end
-end
-
-local function getShockOrigin(t)
-	local size = Constants.TILE * 0.42
-	local tipX = size * 0.39
-
-	local localX = tipX - (t.recoil or 0)
-	local localY = 0
-
-	local ca = cos(t.angle)
-	local sa = sin(t.angle)
-
-	local worldX = t.x + (localX * ca - localY * sa)
-	local worldY = t.renderY + (localX * sa + localY * ca)
-
-	return worldX, worldY
 end
 
 local function addTower(kind, gx, gy)
