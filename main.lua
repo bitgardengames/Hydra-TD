@@ -174,7 +174,6 @@ function resetGame()
 	State.modulePicker.hint = nil
 	State.modulePicker.tower = nil
 
-	State.resetSimStats()
 	ACCUM = 0
 
 	Camera.load()
@@ -238,9 +237,6 @@ end
 
 local MAX_FRAME_DT = 1 / 15
 local MAX_SIM_STEPS = 8
-local MAX_CARRY_TICKS = 2
-local MAX_OVERLOAD_DEBT_TICKS = 12
-local OVERLOAD_REPAY_TICKS_PER_FRAME = 0.5
 
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
@@ -279,34 +275,8 @@ function love.update(dt)
 		steps = steps + 1
 	end
 
-	local simStats = State.simStats
-
-	if steps == MAX_SIM_STEPS then
-		simStats.maxStepFrames = simStats.maxStepFrames + 1
-	end
-
-	if simStats.overloadDebt > 0 then
-		local repay = min(simStats.overloadDebt, FIXED_DT * OVERLOAD_REPAY_TICKS_PER_FRAME)
-
-		simStats.overloadDebt = simStats.overloadDebt - repay
-		ACCUM = ACCUM + repay
-	end
-
-	-- If we are still behind, keep a bounded remainder and convert the rest into
-	-- debt that is repaid over multiple frames.
 	if ACCUM >= FIXED_DT then
-		local carryCap = FIXED_DT * MAX_CARRY_TICKS
-		local capped = min(ACCUM, carryCap)
-		local overflow = ACCUM - capped
-
-		ACCUM = capped
-
-		if overflow > 0 then
-			local maxDebt = FIXED_DT * MAX_OVERLOAD_DEBT_TICKS
-
-			simStats.overloadDebt = min(maxDebt, simStats.overloadDebt + overflow)
-			simStats.cappedSimTime = simStats.cappedSimTime + overflow
-		end
+		ACCUM = ACCUM % FIXED_DT
 	end
 
 	if mode ~= "game" then
