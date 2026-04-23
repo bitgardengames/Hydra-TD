@@ -49,7 +49,6 @@ local TILE = Constants.TILE
 local HALF_PI = pi / 2
 
 local towerDefs = Towers.TowerDefs
-local sampleFast = MapMod.sampleFast
 local EYE_SMOOTH = 0.35
 local EYE_DEADZONE = 0.03
 
@@ -60,21 +59,16 @@ end
 local function prepareEnemyRenderData()
 	local enemies = Enemies.enemies
 	local a = max(0, min(1, State.renderAlpha or 0))
-	local totalLen = MapMod.map and MapMod.map.totalWorldLength or 0
 
 	for i = 1, #enemies do
 		local e = enemies[i]
 		local oldRX = e.rx or e.x
 		local oldRY = e.ry or e.y
 
-		-- Interpolate along the already-simulated path segment.
-		-- Using dist + speed * step * alpha can over/undershoot around corners
-		-- (speed direction is piecewise, not globally linear), which shows up as
-		-- jitter most noticeably on slower enemies like tanks.
-		local prevDist = e.prevDist or e.dist or 0
-		local currDist = e.dist or prevDist
-		local d = min(totalLen, lerp(prevDist, currDist, a))
-		local baseX, baseY = sampleFast(d)
+		-- Enemy simulation is fixed-step. Interpolate actual world positions from
+		-- previous tick to current tick for render-only smoothness.
+		local baseX = lerp(e.prevX or e.x, e.x, a)
+		local baseY = lerp(e.prevY or e.y, e.y, a)
 
 		local nudgeX = lerp(e.prevNudgeX or e.nudgeX or 0, e.nudgeX or 0, a)
 		local nudgeY = lerp(e.prevNudgeY or e.nudgeY or 0, e.nudgeY or 0, a)

@@ -26,7 +26,6 @@ local MAX_NUDGE = 10
 local NUDGE_TARGET_DAMP = 8
 local NUDGE_FOLLOW_DAMP = 24
 
-local abs = math.abs
 local exp = math.exp
 local min = math.min
 local max = math.max
@@ -46,7 +45,82 @@ local function swapRemove(list, i)
 	list[last] = nil
 end
 
-local sampleFast = MapMod.sampleFast
+local function updateEnemyPathPosition(e, pathWorld)
+	local seg = e.pathSeg or 1
+	local t = e.pathT or 0
+	local pathCount = #pathWorld
+
+	if pathCount <= 1 then
+		e.x, e.y = 0, 0
+		return
+	end
+
+	if seg >= pathCount then
+		local p = pathWorld[pathCount]
+		e.pathSeg = pathCount
+		e.pathT = 0
+		e.x, e.y = p[1], p[2]
+		return
+	end
+
+	local a = pathWorld[seg]
+	local b = pathWorld[seg + 1]
+	e.pathSeg = seg
+	e.pathT = t
+	e.x = a[1] + (b[1] - a[1]) * t
+	e.y = a[2] + (b[2] - a[2]) * t
+end
+
+local function advanceEnemyAlongPath(e, moveDist, pathWorld, totalLen)
+	if moveDist <= EPS or e.dist >= totalLen then
+		return false
+	end
+
+	local remaining = moveDist
+	local seg = e.pathSeg or 1
+	local t = e.pathT or 0
+	local moved = false
+	local pathCount = #pathWorld
+
+	while remaining > EPS and seg < pathCount do
+		local a = pathWorld[seg]
+		local b = pathWorld[seg + 1]
+		local dx = b[1] - a[1]
+		local dy = b[2] - a[2]
+		local segLen = sqrt(dx * dx + dy * dy)
+
+		if segLen <= EPS then
+			seg = seg + 1
+			t = 0
+		else
+			local leftT = 1 - t
+			local leftDist = segLen * leftT
+
+			if remaining + EPS < leftDist then
+				t = t + remaining / segLen
+				remaining = 0
+			else
+				remaining = remaining - leftDist
+				seg = seg + 1
+				t = 0
+			end
+
+			moved = true
+		end
+	end
+
+	if seg >= pathCount then
+		seg = pathCount
+		t = 0
+	end
+
+	e.pathSeg = seg
+	e.pathT = t
+	e.dist = min(totalLen, e.dist + moveDist)
+	updateEnemyPathPosition(e, pathWorld)
+
+	return moved
+end
 
 local function findEnemyAt(x, y)
 	for i = 1, #enemies do
@@ -89,6 +163,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		-- Path driver
 		dist = 0,
 		prevDist = 0,
+		pathSeg = pathIndex or 1,
+		pathT = 0,
 		anchorX = x,
 		anchorY = y,
 
@@ -139,11 +215,14 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		faceDur = 0,
 	}
 
+	updateEnemyPathPosition(e, MapMod.map.pathWorld)
+
 	enemies[#enemies + 1] = e
 end
 
 local function updateEnemies(dt)
 	local map = MapMod.map
+	local pathWorld = map.pathWorld
 	local totalLen = map.totalWorldLength
 	local LastSecondThreshold = map.lastSecondThreshold
 	local targetDecay = exp(-NUDGE_TARGET_DAMP * dt)
@@ -395,15 +474,7 @@ local function updateEnemies(dt)
 		e.prevNudgeY = e.nudgeY
 
 		-- advance along path
-		local oldDist = e.dist
-		local newDist = min(totalLen, oldDist + e.speed * dt)
-		e.dist = newDist
-
-		local moved = abs(newDist - oldDist) > EPS
-
-		if moved then
-			e.x, e.y = sampleFast(newDist)
-		end
+		local moved = advanceEnemyAlongPath(e, e.speed * dt, pathWorld, totalLen)
 
 		-- visual-only nudge smoothing:
 		-- 1) target eases back to path
