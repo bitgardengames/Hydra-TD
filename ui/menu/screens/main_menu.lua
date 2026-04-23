@@ -19,7 +19,6 @@ local min = math.min
 local rad = math.rad
 local floor = math.floor
 
-local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorOutline = Theme.outline.color
 
@@ -50,7 +49,6 @@ local gap = 62
 
 local panelPaddingX = 24
 local panelPaddingY = 24
-local panelCorner = 18
 
 function Screen.load()
 	-- Reset cursor when entering menu
