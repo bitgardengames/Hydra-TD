@@ -46,6 +46,14 @@ local getTargetMode = Modules.getTargetMode
 local FIRE_ANGLE_EPS = math.rad(6)
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 
+local function buildRetargetInterval(gx, gy)
+	-- Deterministic per-tile jitter keeps retarget work spread across frames.
+	-- Range: [0.85, 1.15] * RETARGET_INTERVAL.
+	local hash = (gx * 73856093 + gy * 19349663) % 997
+	local jitter = hash / 997
+	return RETARGET_INTERVAL * (0.85 + jitter * 0.30)
+end
+
 local function refreshTargetModeCache(t)
 	local modulesVersion = Modules.version
 
@@ -85,6 +93,7 @@ local function addTower(kind, gx, gy)
 	end
 
 	local x, y = MapMod.gridToCenter(gx, gy)
+	local retargetInterval = buildRetargetInterval(gx, gy)
 
 	local t = {
 		kind = kind,
@@ -118,7 +127,8 @@ local function addTower(kind, gx, gy)
 		target = nil,
 		targetMode = Targeting.MODES.PROGRESS,
 		_targetModeVersion = nil,
-		retargetT = 0,
+		retargetInterval = retargetInterval,
+		retargetT = retargetInterval,
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
 		color = def.color,
@@ -293,7 +303,8 @@ local function updateTowers(dt)
 		t.renderY = bodyY - animatedHeight
 
 		-- Retarget cooldown
-		t.retargetT = (t.retargetT or 0) - dt
+		local retargetInterval = t.retargetInterval or RETARGET_INTERVAL
+		t.retargetT = (t.retargetT or retargetInterval) - dt
 		refreshTargetModeCache(t)
 
 		local target = t.target
@@ -307,9 +318,11 @@ local function updateTowers(dt)
 
 		-- Only search when we need a new target
 		if not target then
-			if t.retargetT <= 0 then
+			if #enemies == 0 then
+				t.retargetT = retargetInterval
+			elseif t.retargetT <= 0 then
 				target = findTarget(t, t.targetMode)
-				t.retargetT = RETARGET_INTERVAL
+				t.retargetT = retargetInterval
 			end
 		end
 
