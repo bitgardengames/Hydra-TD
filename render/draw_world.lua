@@ -23,9 +23,6 @@ local outlineW = Theme.outline.width
 
 local gridToCenter = MapMod.gridToCenter
 
-local worldCanvas = nil
-local worldCanvasZoom = nil
-
 local function getTerrain()
 	local biome = MapMod.map and MapMod.map.biome
 

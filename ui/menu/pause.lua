@@ -28,7 +28,6 @@ local buttons = nil
 local btnW = 220
 local btnH = 42
 local gap = 62
-local corner = 18
 
 local paddingX = 24
 local paddingY = 24

@@ -9,7 +9,6 @@ local max = math.max
 local format = string.format
 
 local colorText = Theme.ui.text
-local colorPanel = Theme.ui.panel
 local colorHealth = Theme.ui.bossHealth
 local colorOutline = Theme.outline.color
 local colorBase = Theme.ui.button
