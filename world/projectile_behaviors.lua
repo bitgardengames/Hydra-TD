@@ -74,6 +74,31 @@ end
 
 ProjectileBehaviors.pushEvent = pushEvent
 
+local function takeEvent(p, id)
+	local eventPool = p and p._eventPool
+	local eventPoolCount = p and (p._eventPoolCount or 0) or 0
+	local evt
+
+	if eventPool and eventPoolCount > 0 then
+		evt = eventPool[eventPoolCount]
+		eventPool[eventPoolCount] = nil
+		p._eventPoolCount = eventPoolCount - 1
+	else
+		evt = {}
+	end
+
+	evt.id = id
+	return evt
+end
+
+ProjectileBehaviors.takeEvent = takeEvent
+
+local function emitEvent(p, id)
+	local evt = takeEvent(p, id)
+	pushEvent(p, evt)
+	return evt
+end
+
 local function getStat(p, key, fallback)
 	local t = p.sourceTower
 	if t and t[key] ~= nil then return t[key] end
@@ -82,21 +107,17 @@ local function getStat(p, key, fallback)
 end
 
 local function emitDamage(p, e, dmg)
-	pushEvent(p, {
-		id = "damage",
-		target = e,
-		amount = dmg
-	})
+	local evt = emitEvent(p, "damage")
+	evt.target = e
+	evt.amount = dmg
 end
 
 local function emitImpulse(p, e, px, py, strength)
-	pushEvent(p, {
-		id = "impulse",
-		target = e,
-		dx = e.x - px,
-		dy = e.y - py,
-		strength = strength
-	})
+	local evt = emitEvent(p, "impulse")
+	evt.target = e
+	evt.dx = e.x - px
+	evt.dy = e.y - py
+	evt.strength = strength
 end
 
 local function canHitTarget(p, enemy)
@@ -183,11 +204,9 @@ B.emit_on_target = {
 		p.y = e.y
 
 		-- trigger hit pipeline
-		pushEvent(p, {
-			id = "hit",
-			target = e,
-			origin = p.hitOrigin or "primary"
-		})
+		local evt = emitEvent(p, "hit")
+		evt.target = e
+		evt.origin = p.hitOrigin or "primary"
 
 		return "consume"
 	end
@@ -291,35 +310,27 @@ B.move_homing = {
 			else
 				-- preserve your existing FX fallback behavior
 				if p.sourceKind == "lancer" then
-					pushEvent(p, {
-						id = "fx",
-						kind = "lancer_hit",
-						x = p.x,
-						y = p.y,
-						color = p.sourceTower and p.sourceTower.color
-					})
+					local evt = emitEvent(p, "fx")
+					evt.kind = "lancer_hit"
+					evt.x = p.x
+					evt.y = p.y
+					evt.color = p.sourceTower and p.sourceTower.color
 				elseif p.sourceKind == "poison" then
-					pushEvent(p, {
-						id = "fx",
-						kind = "poison_splash",
-						x = p.x,
-						y = p.y,
-						color = p.sourceTower and p.sourceTower.color
-					})
+					local evt = emitEvent(p, "fx")
+					evt.kind = "poison_splash"
+					evt.x = p.x
+					evt.y = p.y
+					evt.color = p.sourceTower and p.sourceTower.color
 				elseif p.sourceKind == "cannon" then
-					pushEvent(p, {
-						id = "hit",
-						target = nil,
-						origin = p.hitOrigin or "primary"
-					})
+					local evt = emitEvent(p, "hit")
+					evt.target = nil
+					evt.origin = p.hitOrigin or "primary"
 				elseif p.sourceKind == "slow" then
-					pushEvent(p, {
-						id = "fx",
-						kind = "frost_burst",
-						x = p.x,
-						y = p.y,
-						color = p.sourceTower and p.sourceTower.color
-					})
+					local evt = emitEvent(p, "fx")
+					evt.kind = "frost_burst"
+					evt.x = p.x
+					evt.y = p.y
+					evt.color = p.sourceTower and p.sourceTower.color
 				end
 			end
 

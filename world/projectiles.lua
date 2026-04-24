@@ -14,6 +14,7 @@ local cos = math.cos
 local sin = math.sin
 
 local pushEvent = PB.pushEvent
+local takeEvent = PB.takeEvent
 
 local function clearTable(t)
 	for k in pairs(t) do
@@ -21,12 +22,19 @@ local function clearTable(t)
 	end
 end
 
-local function releaseEvent(evt)
+local function releaseEvent(p, evt)
 	if not evt then
 		return
 	end
 
 	clearTable(evt)
+
+	local eventPool = p and p._eventPool
+	if eventPool then
+		local count = (p._eventPoolCount or 0) + 1
+		eventPool[count] = evt
+		p._eventPoolCount = count
+	end
 end
 
 local function nextHitSetStamp(p)
@@ -70,6 +78,8 @@ local function release(p)
 	local hitCooldowns = p.hitCooldowns
 	local events = p.events
 	local defaultHitCtx = p._defaultHitCtx
+	local eventPool = p._eventPool
+	local eventPoolCount = p._eventPoolCount or 0
 
 	for k in pairs(p) do
 		p[k] = nil
@@ -95,6 +105,11 @@ local function release(p)
 	if defaultHitCtx then
 		clearTable(defaultHitCtx)
 		p._defaultHitCtx = defaultHitCtx
+	end
+
+	if eventPool then
+		p._eventPool = eventPool
+		p._eventPoolCount = eventPoolCount
 	end
 
 	pool[#pool + 1] = p
@@ -446,7 +461,7 @@ local function resolveEvents(p)
 			end
 		end
 
-		releaseEvent(evt)
+		releaseEvent(p, evt)
 		count = p.eventCount or 0
 	end
 
@@ -464,7 +479,9 @@ local function processHit(p)
 
 	-- allow nil target for impact-only hits
 	if not hitTarget then
-		pushEvent(p, {id = "hit", target = nil})
+		local evt = takeEvent(p, "hit")
+		evt.target = nil
+		pushEvent(p, evt)
 		resolveEvents(p)
 		return
 	end
@@ -487,11 +504,10 @@ local function processHit(p)
 		markProjectileHit(p, id)
 	end
 
-	pushEvent(p, {
-		id = "hit",
-		target = hitTarget,
-		origin = p.hitOrigin or "primary"
-	})
+	local evt = takeEvent(p, "hit")
+	evt.target = hitTarget
+	evt.origin = p.hitOrigin or "primary"
+	pushEvent(p, evt)
 
 	resolveEvents(p)
 end
