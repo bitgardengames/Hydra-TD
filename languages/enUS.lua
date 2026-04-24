@@ -243,7 +243,7 @@ return {
 		lancer_arc_lance = "Hits chain to nearby enemies.",
 		poison_blight = "Higher poison damage per stack, fewer max stacks.",
 		poison_plague = "Lower poison damage per stack, more max stacks.",
-		poison_neurotoxin = "Poisoned enemies are also slowed slightly.",
+		poison_neurotoxin = "Hits apply an extra poison stack.",
 		poison_venom_burst = "Poisoned kills spread stacks to nearby enemies.",
 		poison_cull_weak = "Targets low-HP enemies and builds stacks faster.",
 		poison_corrupt_strong = "Targets high-HP enemies with a small DPS boost.",

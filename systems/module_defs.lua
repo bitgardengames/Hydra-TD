@@ -632,7 +632,7 @@ addSpec("poison_neurotoxin", "module.poison_neurotoxin", "moduleDesc.poison_neur
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "hit_damage"},
 	{id = "apply_poison", data = {dps = 4.2, dur = 2.1, maxStacks = 10}},
-	{id = "poison_neurotoxin", data = {factor = 0.12, dur = 1.1}},
+	{id = "poison_neurotoxin", data = {bonusStacks = 1}},
 	{id = "draw_poison"},
 })
 

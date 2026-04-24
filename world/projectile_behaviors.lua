@@ -21,6 +21,7 @@ local sin = math.sin
 local cos = math.cos
 local sqrt = math.sqrt
 local atan2 = math.atan2
+local floor = math.floor
 local random = math.random
 
 local ProjectileBehaviors = {}
@@ -1490,14 +1491,14 @@ B.poison_neurotoxin = {
 			return
 		end
 
-		local factor = min(data.factor or 0.1, 0.45)
-		local newFactor = 1 - factor
-
-		if not e.slowFactor or newFactor < e.slowFactor then
-			e.slowFactor = newFactor
+		local bonusStacks = max(0, floor(data.bonusStacks or 0))
+		if bonusStacks <= 0 then
+			return
 		end
 
-		e.slowTimer = max(e.slowTimer or 0, data.dur or 1.0)
+		e.poisonStacks = e.poisonStacks or 0
+		e.poisonMaxStacks = e.poisonMaxStacks or e.poisonStacks
+		e.poisonStacks = min(e.poisonStacks + bonusStacks, e.poisonMaxStacks)
 	end
 }
 
