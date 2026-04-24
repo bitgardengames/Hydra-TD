@@ -308,8 +308,6 @@ add("pierce", {
 	category = "damage",
 
 	apply = function(ctx)
-		ctx:replaceBehavior("move_homing", { id = "move_linear" })
-
 		local hasHitDetector = false
 		for i = 1, #ctx.behaviors do
 			local id = ctx.behaviors[i].id
