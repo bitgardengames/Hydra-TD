@@ -43,6 +43,26 @@ local getTargetMode = Modules.getTargetMode
 
 local FIRE_ANGLE_EPS = math.rad(6)
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
+local RETARGET_HASH_MOD = 2147483647
+
+local retargetMetrics = {
+	frameCalls = 0,
+	totalCalls = 0,
+	frameCount = 0,
+	elapsed = 0,
+	callsPerSecond = 0,
+}
+
+local function positiveMod(v, m)
+	return ((v % m) + m) % m
+end
+
+local function retargetPhaseOffset(gx, gy)
+	local h = gx * 73856093 + gy * 19349663 + 83492791
+	h = positiveMod(h, RETARGET_HASH_MOD)
+
+	return (h / RETARGET_HASH_MOD) * RETARGET_INTERVAL
+end
 
 local function refreshTargetModeCache(t)
 	local modulesVersion = Modules.version
@@ -100,7 +120,7 @@ local function addTower(kind, gx, gy)
 		target = nil,
 		targetMode = Targeting.MODES.PROGRESS,
 		_targetModeVersion = nil,
-		retargetT = 0,
+		retargetT = retargetPhaseOffset(gx, gy),
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
 		color = def.color,
@@ -243,6 +263,8 @@ local function findTowerAt(gx, gy)
 end
 
 local function updateTowers(dt)
+	local frameFindTargetCalls = 0
+
 	for i = 1, #towers do
 		local t = towers[i]
 
@@ -291,7 +313,11 @@ local function updateTowers(dt)
 		if not target then
 			if t.retargetT <= 0 then
 				target = findTarget(t, t.targetMode)
-				t.retargetT = RETARGET_INTERVAL
+				frameFindTargetCalls = frameFindTargetCalls + 1
+
+				while t.retargetT <= 0 do
+					t.retargetT = t.retargetT + RETARGET_INTERVAL
+				end
 			end
 		end
 
@@ -399,16 +425,32 @@ local function updateTowers(dt)
 			end
 		end
 	end
+
+	retargetMetrics.frameCalls = frameFindTargetCalls
+	retargetMetrics.totalCalls = retargetMetrics.totalCalls + frameFindTargetCalls
+	retargetMetrics.frameCount = retargetMetrics.frameCount + 1
+	retargetMetrics.elapsed = retargetMetrics.elapsed + dt
+
+	if retargetMetrics.elapsed > 0 then
+		retargetMetrics.callsPerSecond = retargetMetrics.totalCalls / retargetMetrics.elapsed
+	end
 end
 
 local function clear()
 	for i = #towers, 1, -1 do
 		towers[i] = nil
 	end
+
+	retargetMetrics.frameCalls = 0
+	retargetMetrics.totalCalls = 0
+	retargetMetrics.frameCount = 0
+	retargetMetrics.elapsed = 0
+	retargetMetrics.callsPerSecond = 0
 end
 
 return {
 	towers = towers,
+	retargetMetrics = retargetMetrics,
 	TowerDefs = TowerDefs,
 	addTower = addTower,
 	getUpgradeCost = getUpgradeCost,
