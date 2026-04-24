@@ -1802,6 +1802,7 @@ B.apply_slow = {
 			end
 
 			e.slowTimer = max(e.slowTimer or 0, data.dur)
+			e.slowDuration = max(e.slowDuration or 0, data.dur)
 		end
 
 		pushEvent(p, {
@@ -1823,6 +1824,7 @@ B.apply_poison = {
 
 			e.poisonStacks = min(e.poisonStacks + 1, e.poisonMaxStacks)
 			e.poisonTimer = max(e.poisonTimer or 0, data.dur)
+			e.poisonDuration = max(e.poisonDuration or 0, data.dur)
 			e.poisonSource = p.sourceTower
 		end
 
