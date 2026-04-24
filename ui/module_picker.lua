@@ -69,6 +69,8 @@ local innerSmallRadius = 6 - outlineW * 0.25
 
 local function drawPanelCard(x, y, w, h, bodyColor, panelColor, edgeColor, alpha)
 	local fa = alpha or 1
+	local pad = 12
+	local panelH = 28
 
 	lg.setColor(edgeColor[1], edgeColor[2], edgeColor[3], fa)
 	lg.rectangle("fill", x - outlineW, y - outlineW, w + outlineW * 2, h + outlineW * 2, outerRadius)
@@ -76,16 +78,17 @@ local function drawPanelCard(x, y, w, h, bodyColor, panelColor, edgeColor, alpha
 	lg.setColor(bodyColor[1], bodyColor[2], bodyColor[3], fa)
 	lg.rectangle("fill", x, y, w, h, innerRadius)
 
-	local panelX = x + 12
-	local panelY = y + 12
-	local panelW = w - 24
-	local panelH = 28
+	local panelX = x + pad
+	local panelY = y + pad
+	local panelW = w - pad * 2
 
 	lg.setColor(edgeColor[1], edgeColor[2], edgeColor[3], fa)
 	lg.rectangle("fill", panelX - outlineW, panelY - outlineW, panelW + outlineW * 2, panelH + outlineW * 2, outerSmallRadius)
 
 	lg.setColor(panelColor[1], panelColor[2], panelColor[3], fa)
 	lg.rectangle("fill", panelX, panelY, panelW, panelH, innerSmallRadius)
+
+	return panelX, panelY, panelW, panelH
 end
 
 local function drawKeyBadge(keyText, x, y, alpha)
@@ -337,11 +340,11 @@ function ModulePicker.draw()
 
 			local bodyY = drawY + 18
 
-			local faceR, faceG, faceB = colorLerp(Theme.ui.backdrop, Theme.ui.panel, hoverT * 0.6, alpha)
-			local panelR, panelG, panelB = colorLerp(Theme.ui.panel2, Theme.ui.panel, hoverT * 0.35, alpha)
-			local borderR, borderG, borderB = colorLerp({outline[1], outline[2], outline[3]}, towerColor, hoverT * 0.4, alpha)
+			local faceR, faceG, faceB = colorLerp(Theme.ui.backdrop, Theme.ui.panel, hoverT * 0.3, alpha)
+			local panelR, panelG, panelB = colorLerp(Theme.ui.panel2, Theme.ui.panel2, hoverT * 0.3, alpha)
+			local borderR, borderG, borderB = colorLerp({outline[1], outline[2], outline[3]}, towerColor, hoverT * 0.2, alpha)
 
-			drawPanelCard(
+			local panelX, panelY, panelW, panelH = drawPanelCard(
 				drawX,
 				drawY,
 				drawW,
@@ -356,11 +359,12 @@ function ModulePicker.draw()
 
 			Fonts.set("menu")
 			lg.setColor(1, 1, 1, alpha)
-			lg.printf(getModuleName(mod), drawX + 18, bodyY + 6, drawW - 36, "left")
+			local titleY = panelY + math.floor((panelH - Fonts.get("menu"):getHeight()) * 0.5 + 0.5)
+			lg.printf(getModuleName(mod), panelX + 8, titleY, panelW - 42, "left")
 
 			Fonts.set("ui")
 			lg.setColor(1, 1, 1, 0.84 * alpha)
-			lg.printf(getModuleDesc(mod), drawX + 18, bodyY + 42, drawW - 36, "left")
+			lg.printf(getModuleDesc(mod), drawX + 18, bodyY + 56, drawW - 36, "left")
 
 			if hovered then
 				local pulse = 0.5 + 0.5 * math.sin(now * 8 + i)
