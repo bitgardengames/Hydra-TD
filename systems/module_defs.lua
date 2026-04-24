@@ -227,12 +227,12 @@ add("poison_cull_weak", {
 	nameKey = "module.poison_cull_weak",
 	descKey = "moduleDesc.poison_cull_weak",
 	category = "special",
-	targetMode = Targeting.MODES.LOW_HP,
 
 	apply = function(ctx)
-		ctx:modifyBehavior("apply_poison", function(data)
-			data.maxStacks = (data.maxStacks or 10) + 2
-		end)
+		ctx:addBehavior({
+			id = "poison_cull_weak",
+			data = { executeHpFrac = 0.22, minStacks = 6, dmgMult = 0.9 }
+		})
 	end
 })
 
@@ -240,12 +240,12 @@ add("poison_corrupt_strong", {
 	nameKey = "module.poison_corrupt_strong",
 	descKey = "moduleDesc.poison_corrupt_strong",
 	category = "special",
-	targetMode = Targeting.MODES.HIGH_HP,
 
 	apply = function(ctx)
-		ctx:modifyBehavior("apply_poison", function(data)
-			data.dps = (data.dps or 4) * 1.08
-		end)
+		ctx:addBehavior({
+			id = "poison_corrupt_strong",
+			data = { radius = 64, spreadStacks = 2, spreadDur = 1.4 }
+		})
 	end
 })
 

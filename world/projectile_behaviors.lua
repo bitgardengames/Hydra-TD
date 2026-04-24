@@ -1502,6 +1502,57 @@ B.poison_neurotoxin = {
 	end
 }
 
+
+B.poison_cull_weak = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		local minStacks = max(1, floor(data.minStacks or 6))
+		if (e.poisonStacks or 0) < minStacks then
+			return
+		end
+
+		local hpFrac = (e.hp or 0) / max(1, e.maxHp or 1)
+		if hpFrac > (data.executeHpFrac or 0.22) then
+			return
+		end
+
+		emitDamage(p, e, (p.damage or 0) * (data.dmgMult or 0.9))
+	end
+}
+
+B.poison_corrupt_strong = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		local nearby = Spatial.queryCells(e.x, e.y, data.radius or 64)
+		local nearbyCount = Spatial.queryCellsCount()
+		local maxTargets = 2
+		local hits = 0
+		local spreadStacks = max(1, floor(data.spreadStacks or 2))
+		local spreadDur = data.spreadDur or 1.4
+
+		for i = 1, nearbyCount do
+			if hits >= maxTargets then
+				break
+			end
+
+			local other = nearby[i]
+			if other ~= e and other.hp > 0 then
+				other.poisonStacks = min((other.poisonStacks or 0) + spreadStacks, other.poisonMaxStacks or math.huge)
+				other.poisonDPS = max(other.poisonDPS or 0, e.poisonDPS or 0)
+				other.poisonTimer = max(other.poisonTimer or 0, spreadDur)
+				other.poisonDuration = max(other.poisonDuration or 0, spreadDur)
+				other.poisonSource = p.sourceTower
+				hits = hits + 1
+			end
+		end
+	end
+}
 B.poison_hemotoxin = {
 	onHit = function(_, e, data)
 		if not e or e.hp <= 0 then
