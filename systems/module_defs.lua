@@ -582,6 +582,7 @@ addSpec("lancer_deadeye", "module.lancer_deadeye", "moduleDesc.lancer_deadeye", 
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 9}},
 	{id = "hit_damage"},
+	{id = "lancer_deadeye", data = {executeHpFrac = 0.35, bonusDmgMult = 1.0, cooldown = 1.25}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
 }, Targeting.MODES.LOW_HP)

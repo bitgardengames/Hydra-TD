@@ -1139,6 +1139,41 @@ B.lancer_ricochet = {
 	end
 }
 
+B.lancer_deadeye = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		data = data or {}
+		local hpFrac = (e.hp or 0) / max(1, e.maxHp or 1)
+		if hpFrac > (data.executeHpFrac or 0.35) then
+			return
+		end
+
+		local tower = p.sourceTower
+		local now = love.timer.getTime()
+		local cooldown = data.cooldown or 1.25
+
+		if tower then
+			tower._deadeyeExecuteAt = tower._deadeyeExecuteAt or 0
+			if now < tower._deadeyeExecuteAt then
+				return
+			end
+			tower._deadeyeExecuteAt = now + cooldown
+		end
+
+		emitDamage(p, e, (p.damage or 0) * (data.bonusDmgMult or 1.0))
+
+		pushEvent(p, {
+			id = "fx",
+			kind = "lancer_hit",
+			x = e.x,
+			y = e.y
+		})
+	end
+}
+
 B.draw_rail_lance = {
 	draw = function(p, a)
 		local w = p.r * 3.0
