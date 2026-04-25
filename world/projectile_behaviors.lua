@@ -1106,6 +1106,10 @@ B.split_on_hit = {
 
 B.lancer_ricochet = {
 	onHit = function(p, e, data)
+		if not e then
+			return
+		end
+
 		local radius = data.radius or 90
 		local r2 = radius * radius
 
@@ -1123,7 +1127,7 @@ B.lancer_ricochet = {
 				local dy = other.y - e.y
 				local d2 = dx*dx + dy*dy
 
-				if d2 < bestDist then
+				if d2 <= bestDist then
 					bestDist = d2
 					best = other
 				end
