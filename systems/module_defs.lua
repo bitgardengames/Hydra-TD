@@ -811,12 +811,14 @@ add("shock_overload", {
 addSpec("plasma_focused_core", "module.plasma_focused_core", "moduleDesc.plasma_focused_core", {
 	{id = "move_linear", data = {dist = 330}},
 	{id = "tick_damage", data = {radius = 9, rate = 0.08}},
+	{id = "projectile_radius", data = {radius = 3.8}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_unstable_core", "module.plasma_unstable_core", "moduleDesc.plasma_unstable_core", {
 	{id = "move_linear", data = {dist = 300}},
 	{id = "tick_damage", data = {radius = 16, rate = 0.14}},
+	{id = "projectile_radius", data = {radius = 5.4}},
 	{id = "draw_plasma"},
 })
 
