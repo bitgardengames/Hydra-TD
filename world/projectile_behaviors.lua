@@ -1135,13 +1135,24 @@ B.lancer_ricochet = {
 		end
 
 		if best then
+			local dx = best.x - e.x
+			local dy = best.y - e.y
+			local dist = sqrt(dx * dx + dy * dy)
+			local nx, ny = 0, 0
+
+			if dist > 0.001 then
+				nx = dx / dist
+				ny = dy / dist
+			end
+
 			pushEvent(p, {
 				id = "spawn_projectile",
-				x = e.x,
-				y = e.y,
+				x = e.x + nx * 8,
+				y = e.y + ny * 8,
 				source = p.sourceTower,
 				target = best,
 				damage = p.damage * 0.8,
+				ignoreTarget = e,
 				behaviors = {
 					{id = "move_homing"},
 					{id = "hit_circle", data = {radius = 10}},
