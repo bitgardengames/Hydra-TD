@@ -43,12 +43,40 @@ local getTargetMode = Modules.getTargetMode
 
 local FIRE_ANGLE_EPS = math.rad(6)
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
+local MAX_BRANCH_UPGRADES = 4
+
+local function applyUpgradeScaling(t)
+	local def = t and t.def
+	if not def then
+		return
+	end
+
+	local level = max(1, t.level or 1)
+	local upgrades = max(0, level - 1)
+	local upgrade = def.upgrade or {}
+	local progress = min(1, upgrades / MAX_BRANCH_UPGRADES)
+
+	local dmgMult = upgrade.dmgMult or 1
+	local fireMult = upgrade.fireMult or 1
+	local rangeAdd = upgrade.rangeAdd or 0
+
+	-- Upgrade multipliers are interpreted as "at max upgrade" values so they scale
+	-- smoothly as levels are gained.
+	local scaledDamageMult = 1 + (dmgMult - 1) * progress
+	local scaledFireMult = 1 + (fireMult - 1) * progress
+
+	t.damage = def.damage * scaledDamageMult
+	t.fireRate = def.fireRate * scaledFireMult
+	t.fireInterval = 1 / max(0.001, t.fireRate)
+	t.range = def.range + rangeAdd * upgrades
+	t.range2 = t.range * t.range
+end
 
 local function refreshTargetModeCache(t)
 	local modulesVersion = Modules.version
 
 	if t._targetModeVersion ~= modulesVersion then
-		t.targetMode = getTargetMode(t.kind) or Targeting.MODES.PROGRESS
+		t.targetMode = getTargetMode(t) or Targeting.MODES.PROGRESS
 		t._targetModeVersion = modulesVersion
 	end
 end
@@ -114,6 +142,8 @@ local function addTower(kind, gx, gy)
 		branchSelections = {},
 	}
 
+	applyUpgradeScaling(t)
+
 	State.money = State.money - def.cost
 
 	MapMod.setBlocked(gx, gy)
@@ -169,6 +199,7 @@ local function upgradeTower(t, specializationId)
 	t.specializationId = specializationId
 	t.branchSelections = t.branchSelections or {}
 	t.branchSelections[#t.branchSelections + 1] = specializationId
+	applyUpgradeScaling(t)
 	t._moduleContextCache = nil
 	t._moduleContextVersion = nil
 	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
