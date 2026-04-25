@@ -1522,12 +1522,16 @@ B.spawn_orbital_on_hit = {
 
 B.infect_spread = {
 	onHit = function(p, e, data)
-		e._infectSpread = {
-			radius = data.radius or 48,
-			stackMult = data.stackMult or 1,
-			loop = data.loop == true,
-			source = p.sourceTower
-		}
+		local spread = e._infectSpread
+		if not spread then
+			spread = {}
+			e._infectSpread = spread
+		end
+
+		spread.radius = data.radius or 48
+		spread.stackMult = data.stackMult or 1
+		spread.loop = data.loop == true
+		spread.source = p.sourceTower
 	end
 }
 
