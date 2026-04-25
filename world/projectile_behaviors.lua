@@ -2025,7 +2025,9 @@ B.chain_zap_fx = {
 B.tick_damage = {
 	init = function(p, data)
 		p.allowRepeatHits = true
-		p._tick = {
+		p._tickStates = p._tickStates or {}
+		local key = data or "__default_tick"
+		p._tickStates[key] = {
 			timer = 0,
 			rate = data.rate or 0.5,
 			radius = data.radius or p.hitRadius or 12
@@ -2033,7 +2035,21 @@ B.tick_damage = {
 	end,
 
 	update = function(p, dt, data)
-		local t = p._tick
+		local states = p._tickStates
+		if not states then
+			return
+		end
+
+		local key = data or "__default_tick"
+		local t = states[key]
+		if not t then
+			t = {
+				timer = 0,
+				rate = (data and data.rate) or 0.5,
+				radius = (data and data.radius) or p.hitRadius or 12
+			}
+			states[key] = t
+		end
 
 		t.timer = t.timer - dt
 		if t.timer > 0 then
