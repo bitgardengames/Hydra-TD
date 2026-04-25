@@ -1683,6 +1683,20 @@ B.growing_projectile = {
 	end
 }
 
+B.projectile_radius = {
+	init = function(p, data)
+		local radius = data.radius
+		if not radius then
+			return
+		end
+
+		p.r = radius
+		p.baseR = radius
+		p.hitRadius = radius
+		p.hitRadius2 = radius * radius
+	end
+}
+
 B.plasma_supernova_burst = {
 	init = function(p)
 		p._supernovaBurstDone = false
