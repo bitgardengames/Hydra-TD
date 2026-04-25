@@ -880,6 +880,15 @@ B.fork_chain = {
 		local forks = {}
 		local claimed = {}
 
+		-- Forks should be "extra side arcs", so avoid spending fork damage on
+		-- enemies already hit by the main chain.
+		for i = 1, #p._chain do
+			local chained = p._chain[i].to
+			if chained then
+				claimed[chained] = true
+			end
+		end
+
 		for i = 1, #p._chain do
 			local link = p._chain[i]
 
