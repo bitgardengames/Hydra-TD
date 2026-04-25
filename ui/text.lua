@@ -32,6 +32,21 @@ function Text.printShadow(text, x, y, opts)
 	lg.print(text, x, y, r, sx, sy, kx, ky)
 end
 
+function Text.printShadowScaled(text, x, y, sx, sy)
+	sx = sx or 1
+	sy = sy or sx
+
+	local cr, cg, cb, ca = getColor()
+
+	-- Shadow
+	lg.setColor(sr, sg, sb, ca)
+	lg.print(text, x + 1, y + 1, 0, sx, sy, 0, 0)
+
+	-- Main
+	lg.setColor(cr, cg, cb, ca)
+	lg.print(text, x, y, 0, sx, sy, 0, 0)
+end
+
 function Text.printfShadow(text, x, y, w, align, opts)
 	opts = opts or {}
 

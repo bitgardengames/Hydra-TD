@@ -110,7 +110,7 @@ local function draw()
 
 		lg.setColor(f.r, f.g, f.b, alpha)
 
-		Text.printShadow(f.text, leftX, sy, {sx = scale, sy = scale})
+		Text.printShadowScaled(f.text, leftX, sy, scale, scale)
 	end
 end
 
