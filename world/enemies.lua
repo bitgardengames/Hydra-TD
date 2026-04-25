@@ -329,12 +329,16 @@ local function updateEnemies(dt)
 							other.poisonSource = e.poisonSource
 
 							if e._infectSpread.loop == true then
-								other._infectSpread = {
-									radius = e._infectSpread.radius,
-									stackMult = e._infectSpread.stackMult,
-									loop = true,
-									source = e.poisonSource
-								}
+								local spread = other._infectSpread
+								if not spread then
+									spread = {}
+									other._infectSpread = spread
+								end
+
+								spread.radius = e._infectSpread.radius
+								spread.stackMult = e._infectSpread.stackMult
+								spread.loop = true
+								spread.source = e.poisonSource
 								other._infectDidSpread = false
 							end
 						end
