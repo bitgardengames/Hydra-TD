@@ -311,7 +311,7 @@ add("pierce", {
 		local hasHitDetector = false
 		for i = 1, #ctx.behaviors do
 			local id = ctx.behaviors[i].id
-			if id == "hit_circle" or id == "instant_hit" or id == "emit_on_target" then
+			if id == "hit_circle" or id == "hit_line" or id == "instant_hit" or id == "emit_on_target" then
 				hasHitDetector = true
 				break
 			end
@@ -321,7 +321,10 @@ add("pierce", {
 			ctx:addBehavior({ id = "hit_circle", data = { radius = 10 } })
 		end
 
-		ctx:addBehavior({ id = "pierce" })
+		ctx:addBehavior({
+			id = "pierce",
+			data = { maxHits = 3 }
+		})
 	end
 })
 
