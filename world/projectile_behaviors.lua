@@ -30,6 +30,26 @@ local B = {}
 
 local lg = love.graphics
 
+local function clearMap(t)
+	if not t then
+		return
+	end
+
+	for k in pairs(t) do
+		t[k] = nil
+	end
+end
+
+local function clearArray(t)
+	if not t then
+		return
+	end
+
+	for i = #t, 1, -1 do
+		t[i] = nil
+	end
+end
+
 -- helpers
 
 --[[
@@ -807,8 +827,21 @@ B.hit_chain = {
 		-- =========================================
 		-- CHAIN LOGIC
 		-- =========================================
-		local chain = {}
-		local visited = {}
+		local chain = p._chain
+		if chain then
+			clearArray(chain)
+		else
+			chain = {}
+			p._chain = chain
+		end
+
+		local visited = p._chainVisited
+		if visited then
+			clearMap(visited)
+		else
+			visited = {}
+			p._chainVisited = visited
+		end
 		local current = e
 		local dmg = currentDamage
 
@@ -821,10 +854,11 @@ B.hit_chain = {
 
 			local prev = chain[#chain]
 
-			chain[#chain + 1] = {
-				from = prev and prev.to or nil,
-				to = current
-			}
+			local nextIndex = #chain + 1
+			local link = chain[nextIndex] or {}
+			link.from = prev and prev.to or nil
+			link.to = current
+			chain[nextIndex] = link
 
 			visited[current] = true
 
@@ -866,7 +900,7 @@ B.hit_chain = {
 			scale = scale * 0.95
 		end
 
-		-- store for FX
+		-- store for FX (array reused across hits to reduce churn)
 		p._chain = chain
 	end
 }
@@ -882,8 +916,21 @@ B.fork_chain = {
 		local dmgMult = data.dmgMult or 0.35
 		local forksPerLink = max(1, data.forksPerLink or 1)
 
-		local forks = {}
-		local claimed = {}
+		local forks = p._forksScratch
+		if forks then
+			clearArray(forks)
+		else
+			forks = {}
+			p._forksScratch = forks
+		end
+
+		local claimed = p._claimedScratch
+		if claimed then
+			clearMap(claimed)
+		else
+			claimed = {}
+			p._claimedScratch = claimed
+		end
 
 		-- Forks should be "extra side arcs", so avoid spending fork damage on
 		-- enemies already hit by the main chain.
@@ -910,10 +957,11 @@ B.fork_chain = {
 					local d2 = dx * dx + dy * dy
 
 					if other ~= link.to and other.hp > 0 and d2 <= radius2 and not claimed[other] then
-						forks[#forks + 1] = {
-							from = link.to,
-							to = other
-						}
+						local nextFork = #forks + 1
+						local fork = forks[nextFork] or {}
+						fork.from = link.to
+						fork.to = other
+						forks[nextFork] = fork
 						claimed[other] = true
 						emitDamage(p, other, (p.damage or 0) * dmgMult)
 						forksAdded = forksAdded + 1
@@ -978,8 +1026,21 @@ B.chain_endpoint_burst = {
 		local radius = data.radius or 32
 		local radius2 = radius * radius
 		local dmgMult = data.dmgMult or 0.5
-		local endpoints = {}
-		local hasOutgoing = {}
+		local endpoints = p._endpointScratch
+		if endpoints then
+			clearMap(endpoints)
+		else
+			endpoints = {}
+			p._endpointScratch = endpoints
+		end
+
+		local hasOutgoing = p._hasOutgoingScratch
+		if hasOutgoing then
+			clearMap(hasOutgoing)
+		else
+			hasOutgoing = {}
+			p._hasOutgoingScratch = hasOutgoing
+		end
 
 		for i = 1, #p._chain do
 			local link = p._chain[i]
