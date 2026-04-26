@@ -210,17 +210,6 @@ function Modules.buildContext(tower)
 	return ctx
 end
 
--- =========================
--- RANDOM SELECTION
--- =========================
-
-local allIds = {}
-for id in pairs(ModuleDefs) do
-	allIds[#allIds + 1] = id
-end
-
-local towerTypes = Constants.TOWER_LIST
-
 function Modules.getDef(moduleId)
 	return ModuleDefs[moduleId]
 end
@@ -300,50 +289,6 @@ function Modules.rollTowerUpgradeChoices(tower)
 	end
 
 	return out
-end
-
-function Modules.rollChoices(count)
-	local totalCombinations = #allIds * #towerTypes
-	if totalCombinations == 0 then
-		return {}
-	end
-
-	count = math.floor(count or 0)
-	if count <= 0 then
-		return {}
-	end
-
-	if count > totalCombinations then
-		count = totalCombinations
-	end
-
-	local choices = {}
-	local remap = {}
-	local towerTypeCount = #towerTypes
-
-	local function decodeCombinationIndex(combinationIndex)
-		local zero = combinationIndex - 1
-		local moduleIndex = math.floor(zero / towerTypeCount) + 1
-		local towerIndex = (zero % towerTypeCount) + 1
-
-		return {
-			moduleId = allIds[moduleIndex],
-			target = towerTypes[towerIndex],
-		}
-	end
-
-	-- Partial Fisher-Yates over virtual [1..totalCombinations].
-	-- Avoids allocating/shuffling every module/target pair when only a few choices are needed.
-	for i = 1, count do
-		local j = love.math.random(i, totalCombinations)
-		local mappedI = remap[i] or i
-		local mappedJ = remap[j] or j
-
-		remap[j] = mappedI
-		choices[i] = decodeCombinationIndex(mappedJ)
-	end
-
-	return choices
 end
 
 return Modules
