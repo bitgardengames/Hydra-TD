@@ -200,7 +200,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.boss = def.boss or false
 	e.hpScale = hpScale
 	e.spdScale = spdScale
-	e.hp = def.hp * hpScale
+	e.hp = (def.hp * hpScale) or 0
 	e.maxHp = def.hp * hpScale
 	e.baseSpeed = def.speed * spdScale
 	e.speed = def.speed * spdScale
