@@ -10,6 +10,12 @@ local queryCellsInto = Spatial.queryCellsInto
 local DENSE_LOCAL_RADIUS = 52
 local DENSE_NEIGHBOR_CAP = 64
 local denseQueryBuffer = {}
+local SIMPLE_MODES = {
+	PROGRESS = 1,
+	LOW_HP = 2,
+	HIGH_HP = 3,
+	FARTHEST = 4,
+}
 
 Targeting.MODES = {
 	PROGRESS = "progress",
@@ -31,7 +37,7 @@ function Targeting.isValidTarget(tower, e)
 	return dx * dx + dy * dy <= tower.range2
 end
 
-local function pickProgressTarget(tower)
+local function pickSimpleTarget(tower, mode)
 	local best = nil
 	local bestScore = HUGE_NEG
 	local r2 = tower.range2
@@ -50,112 +56,21 @@ local function pickProgressTarget(tower)
 			local d2 = dx * dx + dy * dy
 
 			if d2 <= r2 then
-				local score = e.dist
-
-				if e.slowTimer > 0 then
-					-- Slight deprioritization for slowed enemies
-					score = score - 5
+				local score
+				if mode == SIMPLE_MODES.PROGRESS then
+					score = e.dist
+					if e.slowTimer > 0 then
+						-- Slight deprioritization for slowed enemies
+						score = score - 5
+					end
+				elseif mode == SIMPLE_MODES.LOW_HP then
+					score = -e.hp
+				elseif mode == SIMPLE_MODES.HIGH_HP then
+					score = e.hp
+				else
+					score = d2
 				end
 
-				local diff = score - bestScore
-
-				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
-					bestScore = score
-					best = e
-				end
-			end
-		end
-	end
-
-	return best
-end
-
-local function pickLowestHPTarget(tower)
-	local best = nil
-	local bestScore = HUGE_NEG
-	local r2 = tower.range2
-	local tx = tower.x
-	local ty = tower.y
-
-	local nearby = queryCells(tx, ty, tower.range)
-	local n = queryCellsCount()
-
-	for i = 1, n do
-		local e = nearby[i]
-
-		if e.hp > 0 and not e.dying then
-			local dx = e.x - tx
-			local dy = e.y - ty
-			local d2 = dx * dx + dy * dy
-
-			if d2 <= r2 then
-				local score = -e.hp
-				local diff = score - bestScore
-
-				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
-					bestScore = score
-					best = e
-				end
-			end
-		end
-	end
-
-	return best
-end
-
-local function pickHighestHPTarget(tower)
-	local best = nil
-	local bestScore = HUGE_NEG
-	local r2 = tower.range2
-	local tx = tower.x
-	local ty = tower.y
-
-	local nearby = queryCells(tx, ty, tower.range)
-	local n = queryCellsCount()
-
-	for i = 1, n do
-		local e = nearby[i]
-
-		if e.hp > 0 and not e.dying then
-			local dx = e.x - tx
-			local dy = e.y - ty
-			local d2 = dx * dx + dy * dy
-
-			if d2 <= r2 then
-				local score = e.hp
-				local diff = score - bestScore
-
-				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
-					bestScore = score
-					best = e
-				end
-			end
-		end
-	end
-
-	return best
-end
-
-local function pickFarthestTarget(tower)
-	local best = nil
-	local bestScore = HUGE_NEG
-	local r2 = tower.range2
-	local tx = tower.x
-	local ty = tower.y
-
-	local nearby = queryCells(tx, ty, tower.range)
-	local n = queryCellsCount()
-
-	for i = 1, n do
-		local e = nearby[i]
-
-		if e.hp > 0 and not e.dying then
-			local dx = e.x - tx
-			local dy = e.y - ty
-			local d2 = dx * dx + dy * dy
-
-			if d2 <= r2 then
-				local score = d2
 				local diff = score - bestScore
 
 				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
@@ -229,19 +144,19 @@ end
 
 -- Target enemy furthest along the path
 function Targeting.findProgressTarget(tower)
-	return pickProgressTarget(tower)
+	return pickSimpleTarget(tower, SIMPLE_MODES.PROGRESS)
 end
 
 function Targeting.findLowestHPTarget(tower)
-	return pickLowestHPTarget(tower)
+	return pickSimpleTarget(tower, SIMPLE_MODES.LOW_HP)
 end
 
 function Targeting.findFarthestTarget(tower)
-	return pickFarthestTarget(tower)
+	return pickSimpleTarget(tower, SIMPLE_MODES.FARTHEST)
 end
 
 function Targeting.findHighestHPTarget(tower)
-	return pickHighestHPTarget(tower)
+	return pickSimpleTarget(tower, SIMPLE_MODES.HIGH_HP)
 end
 
 function Targeting.findDenseTarget(tower)
