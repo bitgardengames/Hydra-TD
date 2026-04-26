@@ -16,6 +16,7 @@ local map = {
 	isPath = {},
 	path = {},
 	pathWorld = {},
+	pathSegLen = {},
 	samples = {},
 	sampleStep = 1, -- pixels (2–4 ideal)
 }
@@ -110,6 +111,7 @@ local function loadPath(points)
 	map.path = {}
 	map.isPath = {}
 	map.pathWorld = {}
+	map.pathSegLen = {}
 
 	local pathLength = 0 -- measured in tiles
 
@@ -170,6 +172,7 @@ local function loadPath(points)
 		local dist = sqrt(ddx * ddx + ddy * ddy)
 
 		totalDist = totalDist + dist
+		map.pathSegLen[i - 1] = dist
 		map.pathDist[i] = totalDist
 	end
 
@@ -199,12 +202,7 @@ local function buildSamples()
 	for d = 0, total, step do
 		-- Advance segment (NO while loop)
 		while true do
-			local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
-			local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
-
-			local dx = bx - ax
-			local dy = by - ay
-			local segLen = sqrt(dx * dx + dy * dy)
+			local segLen = map.pathSegLen[seg] or 0
 
 			if d <= segStartDist + segLen or seg >= #pathWorld - 1 then
 				break
@@ -219,7 +217,7 @@ local function buildSamples()
 
 		local dx = bx - ax
 		local dy = by - ay
-		local segLen = sqrt(dx * dx + dy * dy)
+		local segLen = map.pathSegLen[seg] or 0
 
 		local t = 0
 		if segLen > 0 then
