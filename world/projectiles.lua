@@ -597,9 +597,7 @@ local function load()
 	end
 end
 
-local function spawnFromContext(t, target, ctx, overrides)
-	local speed = overrides and overrides.speed
-	local life = overrides and overrides.life
+local function spawnFromContext(t, target, ctx, speed, life)
 	return spawnDirect(t, target, ctx, speed, life)
 end
 

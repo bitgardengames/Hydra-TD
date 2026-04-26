@@ -24,11 +24,10 @@ end
 -- BEAM
 -- =========================
 function Emissions.emitBeam(t, target, ctx)
-	-- spawn a "pseudo projectile" that is stationary
-	return Projectiles.spawnFromContext(t, target, ctx, {
-		speed = 0,
-		life = math.max(0.12, (t.fireInterval or 0.2) * 0.9)
-	})
+	-- Spawn a "pseudo projectile" that is stationary.
+	-- Avoid allocating a per-shot overrides table in this hot path.
+	local life = math.max(0.12, (t.fireInterval or 0.2) * 0.9)
+	return Projectiles.spawnFromContext(t, target, ctx, 0, life)
 end
 
 return Emissions
