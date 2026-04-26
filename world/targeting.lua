@@ -65,7 +65,16 @@ local function evaluateSimpleCandidate(e, c)
 end
 
 function Targeting.isValidTarget(tower, e)
-	if not e or e.hp <= 0 or e.dying then
+	if not e then
+		return false
+	end
+
+	local hp = e.hp
+	if type(hp) ~= "number" or hp <= 0 or e.dying then
+		return false
+	end
+
+	if type(e.x) ~= "number" or type(e.y) ~= "number" then
 		return false
 	end
 
