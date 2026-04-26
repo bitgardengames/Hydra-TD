@@ -165,16 +165,16 @@ end
 
 function Targeting.findTarget(tower, mode)
 	if mode == MODES.LOW_HP then
-		return Targeting.findLowestHPTarget(tower)
+		return pickSimpleTarget(tower, SIMPLE_MODES.LOW_HP)
 	elseif mode == MODES.HIGH_HP then
-		return Targeting.findHighestHPTarget(tower)
+		return pickSimpleTarget(tower, SIMPLE_MODES.HIGH_HP)
 	elseif mode == MODES.FARTHEST then
-		return Targeting.findFarthestTarget(tower)
+		return pickSimpleTarget(tower, SIMPLE_MODES.FARTHEST)
 	elseif mode == MODES.DENSE then
-		return Targeting.findDenseTarget(tower)
+		return pickDenseTarget(tower)
 	end
 
-	return Targeting.findProgressTarget(tower)
+	return pickSimpleTarget(tower, SIMPLE_MODES.PROGRESS)
 end
 
 return Targeting

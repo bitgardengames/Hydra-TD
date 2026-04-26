@@ -1,4 +1,3 @@
-local Constants = require("core.constants")
 local ModuleDefs = require("systems.module_defs")
 local TowerBranchDefs = require("world.tower_branch_defs")
 
@@ -48,7 +47,7 @@ local function copyBehaviors(list)
 			id = b.id
 		}
 
-		if b.data then
+		if b.data and next(b.data) ~= nil then
 			local d = {}
 			for k, v in pairs(b.data) do
 				d[k] = v
@@ -231,20 +230,22 @@ function Modules.getTargetMode(towerOrKind)
 
 	local mode = nil
 
-	local function pickMode(list)
-		for i = 1, #list do
-			local mod = list[i]
+	local global = Modules.active.global
+	for i = 1, #global do
+		local mod = global[i]
+		if mod and mod.targetMode then
+			mode = mod.targetMode
+		end
+	end
+
+	local towerList = Modules.active[towerKind]
+	if towerList then
+		for i = 1, #towerList do
+			local mod = towerList[i]
 			if mod and mod.targetMode then
 				mode = mod.targetMode
 			end
 		end
-	end
-
-	pickMode(Modules.active.global)
-
-	local towerList = Modules.active[towerKind]
-	if towerList then
-		pickMode(towerList)
 	end
 
 	if branchSelections then
