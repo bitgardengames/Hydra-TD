@@ -14,6 +14,7 @@ local Achievements = require("systems.achievements")
 local L = require("core.localization")
 
 local enemies = {}
+local enemyPool = {}
 
 local colorMoney = Theme.ui.money
 
@@ -43,6 +44,26 @@ local function swapRemove(list, i)
 
 	list[i] = list[last]
 	list[last] = nil
+end
+
+local function acquireEnemy()
+	local n = #enemyPool
+	local e = enemyPool[n]
+
+	if e then
+		enemyPool[n] = nil
+		return e
+	end
+
+	return {}
+end
+
+local function releaseEnemy(e)
+	for k in pairs(e) do
+		e[k] = nil
+	end
+
+	enemyPool[#enemyPool + 1] = e
 end
 
 local function updateEnemyPathPosition(e, pathWorld)
@@ -146,70 +167,70 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 
 	nextID = nextID + 1
 
-	local e = {
-		kind = kind,
-		def = def,
+	local e = acquireEnemy()
 
-		-- World position
-		x = x,
-		y = y,
-		prevX = x,
-		prevY = y,
+	e.kind = kind
+	e.def = def
 
-		-- Path driver
-		dist = 0,
-		prevDist = 0,
-		pathSeg = pathIndex or 1,
-		pathT = 0,
-		anchorX = x,
-		anchorY = y,
+	-- World position
+	e.x = x
+	e.y = y
+	e.prevX = x
+	e.prevY = y
 
-		-- Velocity
-		vx = 0,
-		vy = 0,
+	-- Path driver
+	e.dist = 0
+	e.prevDist = 0
+	e.pathSeg = pathIndex or 1
+	e.pathT = 0
+	e.anchorX = x
+	e.anchorY = y
 
-		nudgeX = 0,
-		nudgeY = 0,
-		nudgeTargetX = 0,
-		nudgeTargetY = 0,
-		prevNudgeX = 0,
-		prevNudgeY = 0,
+	-- Velocity
+	e.vx = 0
+	e.vy = 0
 
-		boss = def.boss or false,
-		hpScale = hpScale,
-		spdScale = spdScale,
-		hp = def.hp * hpScale,
-		maxHp = def.hp * hpScale,
-		baseSpeed = def.speed * spdScale,
-		speed = def.speed * spdScale,
-		reward = def.reward * (1.0 + State.wave * 0.01),
-		score = def.score,
-		radius = def.radius,
-		radius2 = def.radius * def.radius,
-		hitFlash = 0,
-		dying = false,
-		deathT = 0,
-		deathDur = 0.4,
-		spawnFade = 0.12,
-		exitFade = nil,
-		alpha = 1,
-		animT = 0,
-		prevAnimT = 0,
-		slowFactor = 1,
-		slowTimer = 0,
-		poisonStacks = 0,
-		poisonTimer = 0,
-		poisonTickTimer = 0,
-		poisonDPS = 0,
-		poisonMissingHpMult = 0,
-		shadow = true,
-		id = nextID,
-		shockID = 0,
+	e.nudgeX = 0
+	e.nudgeY = 0
+	e.nudgeTargetX = 0
+	e.nudgeTargetY = 0
+	e.prevNudgeX = 0
+	e.prevNudgeY = 0
 
-		face = "normal",
-		faceT = 0,
-		faceDur = 0,
-	}
+	e.boss = def.boss or false
+	e.hpScale = hpScale
+	e.spdScale = spdScale
+	e.hp = def.hp * hpScale
+	e.maxHp = def.hp * hpScale
+	e.baseSpeed = def.speed * spdScale
+	e.speed = def.speed * spdScale
+	e.reward = def.reward * (1.0 + State.wave * 0.01)
+	e.score = def.score
+	e.radius = def.radius
+	e.radius2 = def.radius * def.radius
+	e.hitFlash = 0
+	e.dying = false
+	e.deathT = 0
+	e.deathDur = 0.4
+	e.spawnFade = 0.12
+	e.exitFade = nil
+	e.alpha = 1
+	e.animT = 0
+	e.prevAnimT = 0
+	e.slowFactor = 1
+	e.slowTimer = 0
+	e.poisonStacks = 0
+	e.poisonTimer = 0
+	e.poisonTickTimer = 0
+	e.poisonDPS = 0
+	e.poisonMissingHpMult = 0
+	e.shadow = true
+	e.id = nextID
+	e.shockID = 0
+
+	e.face = "normal"
+	e.faceT = 0
+	e.faceDur = 0
 
 	updateEnemyPathPosition(e, MapMod.map.pathWorld)
 
@@ -374,6 +395,7 @@ local function updateEnemies(dt)
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
 
 				Spatial.removeEnemy(e)
+				releaseEnemy(e)
 
 				swapRemove(enemies, i)
 			end
@@ -425,6 +447,7 @@ local function updateEnemies(dt)
 			Effects.spawnEnemyDeath(e.x, e.y, e.radius)
 
 			Spatial.removeEnemy(e)
+			releaseEnemy(e)
 
 			swapRemove(enemies, i)
 
@@ -529,6 +552,7 @@ local function updateEnemies(dt)
 				--Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
 
 				Spatial.removeEnemy(e)
+				releaseEnemy(e)
 
 				swapRemove(enemies, i)
 
@@ -563,6 +587,7 @@ local function clear()
 		local e = enemies[i]
 
 		Spatial.removeEnemy(e)
+		releaseEnemy(e)
 		enemies[i] = nil
 	end
 
