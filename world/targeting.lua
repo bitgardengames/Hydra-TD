@@ -7,6 +7,7 @@ local HUGE_NEG = -math.huge
 local queryCells = Spatial.queryCells
 local queryCellsCount = Spatial.queryCellsCount
 local queryCellsInto = Spatial.queryCellsInto
+local forEachInCells = Spatial.forEachInCells
 local DENSE_LOCAL_RADIUS = 52
 local DENSE_NEIGHBOR_CAP = 64
 local denseQueryBuffer = {}
@@ -25,6 +26,43 @@ Targeting.MODES = {
 	DENSE = "dense",
 }
 local MODES = Targeting.MODES
+local simpleCtx = {}
+
+local function evaluateSimpleCandidate(e, c)
+	if e.hp <= 0 or e.dying then
+		return
+	end
+
+	local dx = e.x - c.tx
+	local dy = e.y - c.ty
+	local d2 = dx * dx + dy * dy
+
+	if d2 > c.r2 then
+		return
+	end
+
+	local score
+	if c.mode == SIMPLE_MODES.PROGRESS then
+		score = e.dist
+		if e.slowTimer > 0 then
+			-- Slight deprioritization for slowed enemies
+			score = score - 5
+		end
+	elseif c.mode == SIMPLE_MODES.LOW_HP then
+		score = -e.hp
+	elseif c.mode == SIMPLE_MODES.HIGH_HP then
+		score = e.hp
+	else
+		score = d2
+	end
+
+	local diff = score - c.bestScore
+
+	if diff > EPS or (diff >= -EPS and (not c.best or e.id < c.best.id)) then
+		c.bestScore = score
+		c.best = e
+	end
+end
 
 function Targeting.isValidTarget(tower, e)
 	if not e or e.hp <= 0 or e.dying then
@@ -38,50 +76,17 @@ function Targeting.isValidTarget(tower, e)
 end
 
 local function pickSimpleTarget(tower, mode)
-	local best = nil
-	local bestScore = HUGE_NEG
-	local r2 = tower.range2
-	local tx = tower.x
-	local ty = tower.y
+	local ctx = simpleCtx
+	ctx.best = nil
+	ctx.bestScore = HUGE_NEG
+	ctx.r2 = tower.range2
+	ctx.tx = tower.x
+	ctx.ty = tower.y
+	ctx.mode = mode
 
-	local nearby = queryCells(tx, ty, tower.range)
-	local n = queryCellsCount()
+	forEachInCells(tower.x, tower.y, tower.range, evaluateSimpleCandidate, ctx)
 
-	for i = 1, n do
-		local e = nearby[i]
-
-		if e.hp > 0 and not e.dying then
-			local dx = e.x - tx
-			local dy = e.y - ty
-			local d2 = dx * dx + dy * dy
-
-			if d2 <= r2 then
-				local score
-				if mode == SIMPLE_MODES.PROGRESS then
-					score = e.dist
-					if e.slowTimer > 0 then
-						-- Slight deprioritization for slowed enemies
-						score = score - 5
-					end
-				elseif mode == SIMPLE_MODES.LOW_HP then
-					score = -e.hp
-				elseif mode == SIMPLE_MODES.HIGH_HP then
-					score = e.hp
-				else
-					score = d2
-				end
-
-				local diff = score - bestScore
-
-				if diff > EPS or (diff >= -EPS and (not best or e.id < best.id)) then
-					bestScore = score
-					best = e
-				end
-			end
-		end
-	end
-
-	return best
+	return ctx.best
 end
 
 local function pickDenseTarget(tower)
