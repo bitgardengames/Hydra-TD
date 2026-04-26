@@ -58,7 +58,7 @@ local colorDim = Theme.ui.screenDim
 
 local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 
-local FIXED_DT = 1 / 120 -- Fixed step
+local FIXED_DT = 1 / 60 -- Fixed step
 local ACCUM = 0 -- Frame accumulator
 
 local SCREENSHOT_DIR = "screenshots"
@@ -173,6 +173,10 @@ function resetGame()
 	State.modulePicker.subtitle = nil
 	State.modulePicker.hint = nil
 	State.modulePicker.tower = nil
+	State.simDebug = {
+		stepsThisFrame = 0,
+		backlogClampEvents = 0,
+	}
 
 	ACCUM = 0
 
@@ -236,7 +240,8 @@ function love.load(arg)
 end
 
 local MAX_FRAME_DT = 1 / 15
-local MAX_SIM_STEPS = 8
+local MAX_SIM_STEPS = 5
+local MAX_ACCUM_BACKLOG = FIXED_DT * MAX_SIM_STEPS
 
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
@@ -267,6 +272,7 @@ function love.update(dt)
 	ACCUM = ACCUM + dt
 
 	local steps = 0
+	local backlogClamped = false
 
 	while ACCUM >= FIXED_DT and steps < MAX_SIM_STEPS do
 		Sim.update(FIXED_DT * State.speed)
@@ -275,9 +281,17 @@ function love.update(dt)
 		steps = steps + 1
 	end
 
-	if ACCUM >= FIXED_DT then
-		ACCUM = ACCUM % FIXED_DT
+	if ACCUM > MAX_ACCUM_BACKLOG then
+		ACCUM = MAX_ACCUM_BACKLOG
+		backlogClamped = true
 	end
+
+	State.simDebug = State.simDebug or {
+		stepsThisFrame = 0,
+		backlogClampEvents = 0,
+	}
+	State.simDebug.stepsThisFrame = steps
+	State.simDebug.backlogClampEvents = State.simDebug.backlogClampEvents + (backlogClamped and 1 or 0)
 
 	if mode ~= "game" then
 		Menu.update(dt)
