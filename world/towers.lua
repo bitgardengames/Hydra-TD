@@ -45,6 +45,12 @@ local FIRE_ANGLE_EPS = math.rad(6)
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_BRANCH_UPGRADES = 4
 
+local function swapRemove(list, index)
+	local last = #list
+	list[index] = list[last]
+	list[last] = nil
+end
+
 local function applyUpgradeScaling(t)
 	local def = t and t.def
 	if not def then
@@ -140,6 +146,10 @@ local function addTower(kind, gx, gy)
 		plasma = def.plasma,
 		specializationId = nil,
 		branchSelections = {},
+		_upgradePreview = {
+			specializationId = nil,
+			nextLevel = 2,
+		},
 	}
 
 	applyUpgradeScaling(t)
@@ -205,6 +215,9 @@ local function upgradeTower(t, specializationId)
 	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
 	t._targetModeVersion = Modules.version
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
+	t._upgradePreview = t._upgradePreview or {}
+	t._upgradePreview.specializationId = specializationId
+	t._upgradePreview.nextLevel = t.level + 1
 
 	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
 
@@ -222,10 +235,15 @@ local function getUpgradePreview(t)
 		return nil
 	end
 
-	return {
-		specializationId = t.specializationId,
-		nextLevel = t.level + 1,
-	}
+	local preview = t._upgradePreview
+	if not preview then
+		preview = {}
+		t._upgradePreview = preview
+	end
+	preview.specializationId = t.specializationId
+	preview.nextLevel = t.level + 1
+
+	return preview
 end
 
 local function sellTower(t)
@@ -247,8 +265,7 @@ local function sellTower(t)
 
 	for i = #towers, 1, -1 do
 		if towers[i] == t then
-			table.remove(towers, i)
-
+			swapRemove(towers, i)
 			break
 		end
 	end
