@@ -406,20 +406,10 @@ local function resolveFX(evt)
 	elseif kind == "zap_line" then
 		Effects.spawnZapLine(evt.x1, evt.y1, evt.x2, evt.y2)
 	else
-		-- Fallback for any custom effect ids.
-		Effects.spawnFX({
-			id = kind,
-			x = evt.x,
-			y = evt.y,
-			r = evt.r,
-			vx = evt.vx,
-			vy = evt.vy,
-			x1 = evt.x1,
-			y1 = evt.y1,
-			x2 = evt.x2,
-			y2 = evt.y2,
-			chain = evt.chain
-		})
+		-- Fallback for custom effect ids without allocating a transient table.
+		evt.id = kind
+		Effects.spawnFX(evt)
+		evt.id = nil
 	end
 end
 
