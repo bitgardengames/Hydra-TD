@@ -71,7 +71,7 @@ local function updateEnemyPathPosition(e, pathWorld)
 	e.y = a[2] + (b[2] - a[2]) * t
 end
 
-local function advanceEnemyAlongPath(e, moveDist, pathWorld, totalLen)
+local function advanceEnemyAlongPath(e, moveDist, pathWorld, pathSegLen, totalLen)
 	if moveDist <= EPS or e.dist >= totalLen then
 		return false
 	end
@@ -83,11 +83,7 @@ local function advanceEnemyAlongPath(e, moveDist, pathWorld, totalLen)
 	local pathCount = #pathWorld
 
 	while remaining > EPS and seg < pathCount do
-		local a = pathWorld[seg]
-		local b = pathWorld[seg + 1]
-		local dx = b[1] - a[1]
-		local dy = b[2] - a[2]
-		local segLen = sqrt(dx * dx + dy * dy)
+		local segLen = pathSegLen[seg] or 0
 
 		if segLen <= EPS then
 			seg = seg + 1
@@ -223,6 +219,7 @@ end
 local function updateEnemies(dt)
 	local map = MapMod.map
 	local pathWorld = map.pathWorld
+	local pathSegLen = map.pathSegLen
 	local totalLen = map.totalWorldLength
 	local LastSecondThreshold = map.lastSecondThreshold
 	local targetDecay = exp(-NUDGE_TARGET_DAMP * dt)
@@ -478,7 +475,7 @@ local function updateEnemies(dt)
 		e.prevNudgeY = e.nudgeY
 
 		-- advance along path
-		local moved = advanceEnemyAlongPath(e, e.speed * dt, pathWorld, totalLen)
+		local moved = advanceEnemyAlongPath(e, e.speed * dt, pathWorld, pathSegLen, totalLen)
 
 		-- visual-only nudge smoothing:
 		-- 1) target eases back to path
