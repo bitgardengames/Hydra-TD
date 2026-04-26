@@ -1209,6 +1209,61 @@ B.lancer_deadeye = {
 	end
 }
 
+B.lancer_focus_fire = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		local tower = p.sourceTower
+		if not tower then
+			return
+		end
+
+		data = data or {}
+		local now = love.timer.getTime()
+		local window = data.window or 1.1
+		local maxStacks = data.maxStacks or 4
+		local key = e.id or e
+
+		local state = tower._lancerFocusState or {target = nil, stacks = 0, expiresAt = 0}
+		local sameTarget = state.target == key and now <= (state.expiresAt or 0)
+
+		if sameTarget then
+			state.stacks = min(maxStacks, (state.stacks or 0) + 1)
+		else
+			state.target = key
+			state.stacks = 1
+		end
+		state.expiresAt = now + window
+		tower._lancerFocusState = state
+
+		local perStackMult = data.perStackMult or 0.18
+		local bonusMult = max(0, ((state.stacks or 1) - 1) * perStackMult)
+		if bonusMult <= 0 then
+			return
+		end
+
+		emitDamage(p, e, (p.damage or 0) * bonusMult)
+	end
+}
+
+B.lancer_opening_strike = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		data = data or {}
+		local hpFrac = (e.hp or 0) / max(1, e.maxHp or 1)
+		if hpFrac < (data.triggerHpFrac or 0.8) then
+			return
+		end
+
+		emitDamage(p, e, (p.damage or 0) * (data.bonusDmgMult or 0.65))
+	end
+}
+
 B.draw_rail_lance = {
 	draw = function(p, a)
 		local w = p.r * 3.0

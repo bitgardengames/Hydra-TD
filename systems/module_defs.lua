@@ -606,6 +606,24 @@ addSpec("lancer_arc_lance", "module.lancer_arc_lance", "moduleDesc.lancer_arc_la
 	{id = "draw_lancer"},
 })
 
+addSpec("lancer_focus_fire", "module.lancer_focus_fire", "moduleDesc.lancer_focus_fire", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 9}},
+	{id = "hit_damage"},
+	{id = "lancer_focus_fire", data = {window = 1.1, perStackMult = 0.18, maxStacks = 4}},
+	{id = "lancer_hit_fx"},
+	{id = "draw_lancer"},
+})
+
+addSpec("lancer_opening_strike", "module.lancer_opening_strike", "moduleDesc.lancer_opening_strike", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 9}},
+	{id = "hit_damage"},
+	{id = "lancer_opening_strike", data = {triggerHpFrac = 0.8, bonusDmgMult = 0.65}},
+	{id = "lancer_hit_fx"},
+	{id = "draw_lancer"},
+})
+
 addSpec("lancer_rail_lance", "module.lancer_rail_lance", "moduleDesc.lancer_rail_lance", {
 	{id = "move_linear"},
 	{id = "hit_circle", data = {radius = 9}},

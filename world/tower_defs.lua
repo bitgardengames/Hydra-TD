@@ -56,6 +56,8 @@ return {
 			"lancer_deadeye",
 			"lancer_volley",
 			"lancer_ricochet",
+			"lancer_focus_fire",
+			"lancer_opening_strike",
 			"lancer_rail_lance",
 			"lancer_arc_lance",
 		},

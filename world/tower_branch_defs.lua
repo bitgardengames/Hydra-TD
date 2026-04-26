@@ -33,7 +33,7 @@ local defs = {
 	lancer = {
 		[2] = {"lancer_deadeye", "lancer_volley"},
 		[3] = {"pierce", "lancer_ricochet"},
-		[4] = {"target_low_hp", "target_farthest_progress"},
+		[4] = {"lancer_focus_fire", "lancer_opening_strike"},
 		[5] = {"lancer_rail_lance", "lancer_arc_lance"},
 	},
 
