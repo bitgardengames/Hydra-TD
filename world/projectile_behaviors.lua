@@ -129,6 +129,21 @@ local function emitSpawnProjectile(p)
 	return emitEvent(p, "spawn_projectile")
 end
 
+local SHARED_BEHAVIORS_LANCER_RICOCHET = {
+	{ id = "move_homing" },
+	{ id = "hit_circle", data = { radius = 10 } },
+	{ id = "hit_damage" },
+	{ id = "lancer_hit_fx" },
+	{ id = "draw_lancer" },
+}
+
+local SHARED_BEHAVIORS_FROST_SHATTER = {
+	{ id = "move_linear" },
+	{ id = "hit_damage" },
+	{ id = "apply_slow", data = { factor = 0.35, dur = 0.8 } },
+	{ id = "draw_frost_shard" },
+}
+
 local function getStat(p, key, fallback)
 	local t = p.sourceTower
 	if t and t[key] ~= nil then return t[key] end
@@ -1132,18 +1147,16 @@ B.split_on_hit = {
 
 		-- If only 1 projectile, just shoot forward
 		if count == 1 then
-			pushEvent(p, {
-				id = "spawn_projectile",
-				x = spawnX,
-				y = spawnY,
-				angle = base,
-				lastTX = spawnX + cos(base) * (data.travelDistance or 2000),
-				lastTY = spawnY + sin(base) * (data.travelDistance or 2000),
-				damage = (p.damage or 0) * dmgMult,
-				source = p.sourceTower,
-				parent = p,
-				ignoreTarget = e,
-			})
+			local evt = emitSpawnProjectile(p)
+			evt.x = spawnX
+			evt.y = spawnY
+			evt.angle = base
+			evt.lastTX = spawnX + cos(base) * (data.travelDistance or 2000)
+			evt.lastTY = spawnY + sin(base) * (data.travelDistance or 2000)
+			evt.damage = (p.damage or 0) * dmgMult
+			evt.source = p.sourceTower
+			evt.parent = p
+			evt.ignoreTarget = e
 			return
 		end
 
@@ -1154,26 +1167,21 @@ B.split_on_hit = {
 
 			local ang = base + offset
 
-			pushEvent(p, {
-				id = "spawn_projectile",
-				x = spawnX,
-				y = spawnY,
-				angle = ang,
-				lastTX = spawnX + cos(ang) * (data.travelDistance or 2000),
-				lastTY = spawnY + sin(ang) * (data.travelDistance or 2000),
-				damage = (p.damage or 0) * dmgMult,
-				source = p.sourceTower,
-				parent = p,
-				ignoreTarget = e,
-			})
+			local evt = emitSpawnProjectile(p)
+			evt.x = spawnX
+			evt.y = spawnY
+			evt.angle = ang
+			evt.lastTX = spawnX + cos(ang) * (data.travelDistance or 2000)
+			evt.lastTY = spawnY + sin(ang) * (data.travelDistance or 2000)
+			evt.damage = (p.damage or 0) * dmgMult
+			evt.source = p.sourceTower
+			evt.parent = p
+			evt.ignoreTarget = e
 		end
 
-		pushEvent(p, {
-			id = "fx",
-			kind = "lancer_hit",
-			x = p.x,
-			y = p.y
-		})
+		local fxEvt = emitFX(p, "lancer_hit")
+		fxEvt.x = p.x
+		fxEvt.y = p.y
 
 		return "consume"
 	end
@@ -1220,22 +1228,14 @@ B.lancer_ricochet = {
 				ny = dy / dist
 			end
 
-			pushEvent(p, {
-				id = "spawn_projectile",
-				x = e.x + nx * 8,
-				y = e.y + ny * 8,
-				source = p.sourceTower,
-				target = best,
-				damage = p.damage * 0.8,
-				ignoreTarget = e,
-				behaviors = {
-					{id = "move_homing"},
-					{id = "hit_circle", data = {radius = 10}},
-					{id = "hit_damage"},
-					{id = "lancer_hit_fx"},
-					{id = "draw_lancer"}
-				}
-			})
+			local evt = emitSpawnProjectile(p)
+			evt.x = e.x + nx * 8
+			evt.y = e.y + ny * 8
+			evt.source = p.sourceTower
+			evt.target = best
+			evt.damage = p.damage * 0.8
+			evt.ignoreTarget = e
+			evt.behaviors = SHARED_BEHAVIORS_LANCER_RICOCHET
 		end
 	end
 }
@@ -1421,15 +1421,12 @@ B.link_projectiles = {
 		for i = 1, #others do
 			local o = others[i]
 
-			pushEvent(p, {
-				id = "fx",
-				kind = "zap",
-				x = p.x,
-				y = p.y,
-				chain = {
-					{ from = nil, to = o }
-				}
-			})
+			local evt = emitFX(p, "zap")
+			evt.x = p.x
+			evt.y = p.y
+			evt.chain = {
+				{ from = nil, to = o }
+			}
 		end
 	end
 }
@@ -1523,46 +1520,34 @@ B.frost_shatter = {
 		for i = 1, count do
 			local ang = random() * (pi * 2)
 
-			pushEvent(p, {
-				id = "spawn_projectile",
-				x = e.x,
-				y = e.y,
-				angle = ang,
-				damage = (p.damage or 0) * dmgMult,
-				source = p.sourceTower,
-				behaviors = {
-					{ id = "move_linear" },
-					{ id = "hit_damage" },
-					{ id = "apply_slow", data = { factor = 0.35, dur = 0.8 } },
-					{ id = "draw_frost_shard" }
-				}
-			})
+			local evt = emitSpawnProjectile(p)
+			evt.x = e.x
+			evt.y = e.y
+			evt.angle = ang
+			evt.damage = (p.damage or 0) * dmgMult
+			evt.source = p.sourceTower
+			evt.behaviors = SHARED_BEHAVIORS_FROST_SHATTER
 		end
 
-		pushEvent(p, {
-			id = "fx",
-			kind = "frost_burst",
-			x = e.x,
-			y = e.y,
-			color = p.sourceTower and p.sourceTower.color
-		})
+		local fxEvt = emitFX(p, "frost_burst")
+		fxEvt.x = e.x
+		fxEvt.y = e.y
+		fxEvt.color = p.sourceTower and p.sourceTower.color
 	end
 }
 
 B.spawn_static_field = {
 	onHit = function(p, e, data)
-		pushEvent(p, {
-			id = "spawn_projectile",
-			x = p.x,
-			y = p.y,
-			source = p.sourceTower,
-			damage = p.damage * (data.dmgMult or 0.4),
-			behaviors = {
-				{ id = "stationary" },
-				{ id = "tick_damage", data = { radius = data.radius or 48, rate = 0.3 } },
-				{ id = "draw_static_field" }
-			}
-		})
+		local evt = emitSpawnProjectile(p)
+		evt.x = p.x
+		evt.y = p.y
+		evt.source = p.sourceTower
+		evt.damage = p.damage * (data.dmgMult or 0.4)
+		evt.behaviors = {
+			{ id = "stationary" },
+			{ id = "tick_damage", data = { radius = data.radius or 48, rate = 0.3 } },
+			{ id = "draw_static_field" }
+		}
 	end
 }
 
@@ -1633,22 +1618,20 @@ B.spawn_orbital_on_hit = {
 			local ox = cos(ang) * spawnRadius
 			local oy = sin(ang) * spawnRadius
 
-			pushEvent(p, {
-				id = "spawn_projectile",
-				hitOrigin = "secondary",
-				x = e.x + ox,
-				y = e.y + oy,
-				angle = ang,
-				source = p.sourceTower,
-				target = e,
-				damage = p.damage * 0.4,
-				ignoreTarget = e,
-				behaviors = {
-					{ id = "move_enemy_orbit", data = { radius = 32 } },
-					{ id = "tick_damage", data = { radius = 28, rate = 0.25 } },
-					{ id = "draw_shock_orb" }
-				}
-			})
+			local evt = emitSpawnProjectile(p)
+			evt.hitOrigin = "secondary"
+			evt.x = e.x + ox
+			evt.y = e.y + oy
+			evt.angle = ang
+			evt.source = p.sourceTower
+			evt.target = e
+			evt.damage = p.damage * 0.4
+			evt.ignoreTarget = e
+			evt.behaviors = {
+				{ id = "move_enemy_orbit", data = { radius = 32 } },
+				{ id = "tick_damage", data = { radius = 28, rate = 0.25 } },
+				{ id = "draw_shock_orb" }
+			}
 		end
 	end
 }
@@ -1964,13 +1947,11 @@ B.beam = {
 							local id = e2.id or e2
 
 							if not b.hitCooldown[id] then
-								pushEvent(p, {
-									id = "hit",
-									target = e2,
-									origin = "beam",
-									hitX = sx,
-									hitY = sy
-								})
+								local evt = emitEvent(p, "hit")
+								evt.target = e2
+								evt.origin = "beam"
+								evt.hitX = sx
+								evt.hitY = sy
 
 								b.hitCooldown[id] = b.rate
 							end
@@ -2169,24 +2150,19 @@ B.tick_damage = {
 
 					-- only fire "hit" occasionally
 					if not p.hitCooldowns[id] then
-						pushEvent(p, {
-							id = "hit",
-							target = e,
-							origin = p.hitOrigin or "primary"
-						})
+						local hitEvt = emitEvent(p, "hit")
+						hitEvt.target = e
+						hitEvt.origin = p.hitOrigin or "primary"
 
 						p.hitCooldowns[id] = data.hitRate or 0.35 -- tweak this
 					end
 
-					pushEvent(p, {
-						id = "fx",
-						kind = "plasma_hit",
-						x = p.x,
-						y = p.y,
-						vx = p.vx or 0,
-						vy = p.vy or 0,
-						color = p.sourceTower and p.sourceTower.color
-					})
+					local fxEvt = emitFX(p, "plasma_hit")
+					fxEvt.x = p.x
+					fxEvt.y = p.y
+					fxEvt.vx = p.vx or 0
+					fxEvt.vy = p.vy or 0
+					fxEvt.color = p.sourceTower and p.sourceTower.color
 				end
 			end
 		end
