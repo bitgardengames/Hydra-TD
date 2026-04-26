@@ -48,10 +48,7 @@ local function isBlocked(gx, gy)
 end
 
 local function clearBlocked()
-	for gx in pairs(map.blocked) do
-		map.blocked[gx] = nil
-	end
-
+	map.blocked = {}
 	map.water = {}
 end
 
@@ -75,6 +72,7 @@ end
 
 local function computeCoverageIndex(path, canPlaceAtFn)
 	local covered = {}
+	local count = 0
 
 	for i = 1, #path do
 		local p = path[i]
@@ -95,18 +93,13 @@ local function computeCoverageIndex(path, canPlaceAtFn)
 							covered[gx] = col
 						end
 
-						col[gy] = true
+						if not col[gy] then
+							col[gy] = true
+							count = count + 1
+						end
 					end
 				end
 			end
-		end
-	end
-
-	local count = 0
-
-	for _, col in pairs(covered) do
-		for _ in pairs(col) do
-			count = count + 1
 		end
 	end
 
