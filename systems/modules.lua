@@ -87,10 +87,20 @@ function ContextMethods:modifyBehavior(id, fn)
 end
 
 function ContextMethods:removeBehavior(id)
-	for i = #self.behaviors, 1, -1 do
-		if self.behaviors[i].id == id then
-			table.remove(self.behaviors, i)
+	local write = 1
+	local behaviors = self.behaviors
+
+	for read = 1, #behaviors do
+		local behavior = behaviors[read]
+
+		if behavior.id ~= id then
+			behaviors[write] = behavior
+			write = write + 1
 		end
+	end
+
+	for i = #behaviors, write, -1 do
+		behaviors[i] = nil
 	end
 end
 
@@ -101,10 +111,20 @@ function ContextMethods:forEachBehavior(fn)
 end
 
 function ContextMethods:removeByType(typeName)
-	for i = #self.behaviors, 1, -1 do
-		if self.behaviors[i].type == typeName then
-			table.remove(self.behaviors, i)
+	local write = 1
+	local behaviors = self.behaviors
+
+	for read = 1, #behaviors do
+		local behavior = behaviors[read]
+
+		if behavior.type ~= typeName then
+			behaviors[write] = behavior
+			write = write + 1
 		end
+	end
+
+	for i = #behaviors, write, -1 do
+		behaviors[i] = nil
 	end
 end
 
@@ -297,26 +317,30 @@ function Modules.rollChoices(count)
 		count = totalCombinations
 	end
 
-	local combinations = {}
-
-	for i = 1, #allIds do
-		local moduleId = allIds[i]
-		for j = 1, #towerTypes do
-			combinations[#combinations + 1] = {
-				moduleId = moduleId,
-				target = towerTypes[j],
-			}
-		end
-	end
-
-	for i = #combinations, 2, -1 do
-		local j = love.math.random(1, i)
-		combinations[i], combinations[j] = combinations[j], combinations[i]
-	end
-
 	local choices = {}
+	local remap = {}
+	local towerTypeCount = #towerTypes
+
+	local function decodeCombinationIndex(combinationIndex)
+		local zero = combinationIndex - 1
+		local moduleIndex = math.floor(zero / towerTypeCount) + 1
+		local towerIndex = (zero % towerTypeCount) + 1
+
+		return {
+			moduleId = allIds[moduleIndex],
+			target = towerTypes[towerIndex],
+		}
+	end
+
+	-- Partial Fisher-Yates over virtual [1..totalCombinations].
+	-- Avoids allocating/shuffling every module/target pair when only a few choices are needed.
 	for i = 1, count do
-		choices[i] = combinations[i]
+		local j = love.math.random(i, totalCombinations)
+		local mappedI = remap[i] or i
+		local mappedJ = remap[j] or j
+
+		remap[j] = mappedI
+		choices[i] = decodeCombinationIndex(mappedJ)
 	end
 
 	return choices
