@@ -99,6 +99,16 @@ local function emitEvent(p, id)
 	return evt
 end
 
+local function emitFX(p, kind)
+	local evt = emitEvent(p, "fx")
+	evt.kind = kind
+	return evt
+end
+
+local function emitSpawnProjectile(p)
+	return emitEvent(p, "spawn_projectile")
+end
+
 local function getStat(p, key, fallback)
 	local t = p.sourceTower
 	if t and t[key] ~= nil then return t[key] end
@@ -635,14 +645,11 @@ B.aoe_damage = {
 			end
 		end
 
-		pushEvent(p, {
-			id = "fx",
-			kind = "cannon_impact",
-			x = p.x,
-			y = p.y,
-			r = radius, -- ALSO scaled for visuals
-			color = p.sourceTower and p.sourceTower.color
-		})
+		local evt = emitFX(p, "cannon_impact")
+		evt.x = p.x
+		evt.y = p.y
+		evt.r = radius -- ALSO scaled for visuals
+		evt.color = p.sourceTower and p.sourceTower.color
 	end
 }
 
@@ -709,17 +716,15 @@ B.cannon_carpet_fire = {
 			local ty = (p.target and p.target.y) or p.lastTY or (y + sin(p.angle or 0) * 100)
 			local ang = atan2(ty - y, tx - x) + offset
 
-			pushEvent(p, {
-				id = "spawn_projectile",
-				source = source,
-				x = x,
-				y = y,
-				angle = ang,
-				lastTX = tx,
-				lastTY = ty,
-				damage = p.damage,
-				hitOrigin = "carpet_child",
-			})
+			local evt = emitSpawnProjectile(p)
+			evt.source = source
+			evt.x = x
+			evt.y = y
+			evt.angle = ang
+			evt.lastTX = tx
+			evt.lastTY = ty
+			evt.damage = p.damage
+			evt.hitOrigin = "carpet_child"
 		end
 
 		if not c.firedA and c.tA <= 0 then
@@ -1200,12 +1205,9 @@ B.lancer_deadeye = {
 
 		emitDamage(p, e, (p.damage or 0) * (data.bonusDmgMult or 1.0))
 
-		pushEvent(p, {
-			id = "fx",
-			kind = "lancer_hit",
-			x = e.x,
-			y = e.y
-		})
+		local evt = emitFX(p, "lancer_hit")
+		evt.x = e.x
+		evt.y = e.y
 	end
 }
 
@@ -1317,15 +1319,12 @@ B.tick_zap = {
 		if best then
 			emitDamage(p, best, p.damage or 0)
 
-			pushEvent(p, {
-				id = "fx",
-				kind = "zap",
-				x = p.x,
-				y = p.y,
-				chain = {
-					{ from = nil, to = best }
-				}
-			})
+			local evt = emitFX(p, "zap")
+			evt.x = p.x
+			evt.y = p.y
+			evt.chain = {
+				{ from = nil, to = best }
+			}
 		end
 
 		z.timer = z.rate
@@ -1346,13 +1345,10 @@ B.explode_on_hit = {
 	type = "damage",
 
 	onHit = function(p, e, data)
-		pushEvent(p, {
-			id = "fx",
-			kind = "cannon_impact",
-			x = p.x,
-			y = p.y,
-			r = data.radius or 48
-		})
+		local evt = emitFX(p, "cannon_impact")
+		evt.x = p.x
+		evt.y = p.y
+		evt.r = data.radius or 48
 	end
 }
 
@@ -1399,13 +1395,10 @@ B.slow_pop = {
 				end
 			end
 
-			pushEvent(p, {
-				id = "fx",
-				kind = "frost_burst",
-				x = e.x,
-				y = e.y,
-				color = p.sourceTower and p.sourceTower.color
-			})
+			local evt = emitFX(p, "frost_burst")
+			evt.x = e.x
+			evt.y = e.y
+			evt.color = p.sourceTower and p.sourceTower.color
 		end
 	end
 }
@@ -1812,13 +1805,10 @@ B.plasma_supernova_burst = {
 			end
 		end
 
-		pushEvent(p, {
-			id = "fx",
-			kind = "plasma_hit",
-			x = p.x,
-			y = p.y,
-			color = p.sourceTower and p.sourceTower.color
-		})
+		local evt = emitFX(p, "plasma_hit")
+		evt.x = p.x
+		evt.y = p.y
+		evt.color = p.sourceTower and p.sourceTower.color
 
 		return "consume"
 	end
@@ -1999,13 +1989,10 @@ B.apply_slow = {
 			e.slowDuration = max(e.slowDuration or 0, data.dur)
 		end
 
-		pushEvent(p, {
-			id = "fx",
-			kind = "frost_burst",
-			x = p.x,
-			y = p.y,
-			color = p.sourceTower and p.sourceTower.color
-		})
+		local evt = emitFX(p, "frost_burst")
+		evt.x = p.x
+		evt.y = p.y
+		evt.color = p.sourceTower and p.sourceTower.color
 	end
 }
 
@@ -2022,25 +2009,19 @@ B.apply_poison = {
 			e.poisonSource = p.sourceTower
 		end
 
-		pushEvent(p, {
-			id = "fx",
-			kind = "poison_splash",
-			x = p.x,
-			y = p.y,
-			color = p.sourceTower and p.sourceTower.color
-		})
+		local evt = emitFX(p, "poison_splash")
+		evt.x = p.x
+		evt.y = p.y
+		evt.color = p.sourceTower and p.sourceTower.color
 	end
 }
 
 -- Temp, not sure if this type of effect should be handled like this or not
 B.lancer_hit_fx = {
 	onHit = function(p)
-		pushEvent(p, {
-			id = "fx",
-			kind = "lancer_hit",
-			x = p.x,
-			y = p.y
-		})
+		local evt = emitFX(p, "lancer_hit")
+		evt.x = p.x
+		evt.y = p.y
 	end
 }
 
@@ -2063,13 +2044,10 @@ B.chain_zap_fx = {
 		local originX = t.x + (localX * ca)
 		local originY = t.renderY + (localX * sa)
 
-		pushEvent(p, {
-			id = "fx",
-			kind = "zap",
-			x = originX,
-			y = originY,
-			chain = p._chain,
-		})
+		local evt = emitFX(p, "zap")
+		evt.x = originX
+		evt.y = originY
+		evt.chain = p._chain
 	end
 }
 
