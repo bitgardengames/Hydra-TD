@@ -52,6 +52,37 @@ local function collectCellsInto(results, x, y, radius)
 	return count
 end
 
+local function forEachInCells(x, y, radius, fn, context)
+	local cx = floor(x * INV_CELL)
+	local cy = floor(y * INV_CELL)
+	local cellRadius = 2
+
+	if radius and radius > 0 then
+		cellRadius = ceil(radius * INV_CELL)
+		if cellRadius < 1 then
+			cellRadius = 1
+		elseif cellRadius > 2 then
+			cellRadius = 2
+		end
+	end
+
+	for dx = -cellRadius, cellRadius do
+		local col = grid[cx + dx]
+
+		if col then
+			for dy = -cellRadius, cellRadius do
+				local cell = col[cy + dy]
+
+				if cell then
+					for i = 1, #cell do
+						fn(cell[i], context)
+					end
+				end
+			end
+		end
+	end
+end
+
 local function removeFromCell(e)
 	local cell = e.cell
 
@@ -143,6 +174,10 @@ end
 
 function Spatial.queryCellsCount()
 	return queryCount
+end
+
+function Spatial.forEachInCells(x, y, radius, fn, context)
+	forEachInCells(x, y, radius, fn, context)
 end
 
 return Spatial
