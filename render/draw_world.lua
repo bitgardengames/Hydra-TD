@@ -305,12 +305,12 @@ local function drawPath()
 			local w = abs(bx - ax)
 
 			if trimA then
-				x1 = x1 + half
-				w = w - half
+				x1 = x1 + halfFill
+				w = w - halfFill
 			end
 
 			if trimB then
-				w = w - half
+				w = w - halfFill
 			end
 
 			lg.rectangle("fill", x1, ay - halfFill, w, fillThickness)
@@ -319,12 +319,12 @@ local function drawPath()
 			local h = abs(by - ay)
 
 			if trimA then
-				y1 = y1 + half
-				h = h - half
+				y1 = y1 + halfFill
+				h = h - halfFill
 			end
 
 			if trimB then
-				h = h - half
+				h = h - halfFill
 			end
 
 			lg.rectangle("fill", ax - halfFill, y1, fillThickness, h)
