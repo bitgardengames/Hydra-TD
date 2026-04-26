@@ -304,6 +304,9 @@ B.move_homing = {
 		local e = p.target
 
 		local tx, ty
+		if e and e.hp == nil then
+			e.hp = 0
+		end
 		local alive = e and e.hp > 0
 
 		if alive then
