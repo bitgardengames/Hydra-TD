@@ -831,52 +831,52 @@ add("shock_overload", {
 
 addSpec("plasma_focused_core", "module.plasma_focused_core", "moduleDesc.plasma_focused_core", {
 	{id = "move_linear", data = {dist = 330}},
-	{id = "tick_damage", data = {radius = 9, rate = 0.08}},
+	{id = "tick_damage", data = {radius = 9, rate = 0.08, impulse = 0.45}},
 	{id = "projectile_radius", data = {radius = 3.8}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_unstable_core", "module.plasma_unstable_core", "moduleDesc.plasma_unstable_core", {
 	{id = "move_linear", data = {dist = 300}},
-	{id = "tick_damage", data = {radius = 16, rate = 0.14}},
+	{id = "tick_damage", data = {radius = 16, rate = 0.14, impulse = 0.45}},
 	{id = "projectile_radius", data = {radius = 5.4}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_boomerang_shot", "module.plasma_boomerang_shot", "moduleDesc.plasma_boomerang_shot", {
 	{id = "move_boomerang", data = {dist = 190}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.11}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.11, impulse = 0.45}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_spiral_drive", "module.plasma_spiral_drive", "moduleDesc.plasma_spiral_drive", {
 	{id = "move_spiral", data = {amp = 13, freq = 7}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.11}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.11, impulse = 0.45}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_thermal_tracking", "module.plasma_thermal_tracking", "moduleDesc.plasma_thermal_tracking", {
 	{id = "move_linear", data = {dist = 315}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.10}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.10, impulse = 0.45}},
 	{id = "draw_plasma"},
 }, Targeting.MODES.HIGH_HP)
 
 addSpec("plasma_lane_sweep", "module.plasma_lane_sweep", "moduleDesc.plasma_lane_sweep", {
 	{id = "move_linear", data = {dist = 335}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.10}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.10, impulse = 0.45}},
 	{id = "draw_plasma"},
 }, Targeting.MODES.PROGRESS)
 
 addSpec("plasma_supernova", "module.plasma_supernova", "moduleDesc.plasma_supernova", {
 	{id = "move_linear", data = {dist = 300}},
-	{id = "tick_damage", data = {radius = 13, rate = 0.12}},
+	{id = "tick_damage", data = {radius = 13, rate = 0.12, impulse = 0.45}},
 	{id = "plasma_supernova_burst", data = {radius = 42, dmgMult = 2.2, triggerAt = 0.2}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_growing_mass", "module.plasma_growing_mass", "moduleDesc.plasma_growing_mass", {
 	{id = "move_linear", data = {dist = 320}},
-	{id = "tick_damage", data = {radius = 11, rate = 0.11}},
+	{id = "tick_damage", data = {radius = 11, rate = 0.11, impulse = 0.45}},
 	{id = "growing_projectile", data = {scale = 2.35}},
 	{id = "draw_plasma"},
 })
