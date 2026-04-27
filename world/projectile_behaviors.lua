@@ -2145,6 +2145,9 @@ B.tick_damage = {
 
 				if dx*dx + dy*dy <= rr*rr then
 					emitDamage(p, e, p.damage or 0)
+					if data and data.impulse and data.impulse > 0 then
+						emitImpulse(p, e, p.x, p.y, data.impulse)
+					end
 
 					local id = e.id or e
 
