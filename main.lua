@@ -58,9 +58,6 @@ local colorDim = Theme.ui.screenDim
 
 local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 
-local FIXED_DT = 1 / 120 -- Fixed step
-local ACCUM = 0 -- Frame accumulator
-
 local SCREENSHOT_DIR = "screenshots"
 
 -- Revisit this being a global
@@ -174,11 +171,9 @@ function resetGame()
 	State.modulePicker.hint = nil
 	State.modulePicker.tower = nil
 	State.simDebug = {
-		stepsThisFrame = 0,
+		stepsThisFrame = 1,
 		backlogClampEvents = 0,
 	}
-
-	ACCUM = 0
 
 	Camera.load()
 end
@@ -240,8 +235,6 @@ function love.load(arg)
 end
 
 local MAX_FRAME_DT = 1 / 15
-local MAX_SIM_STEPS = 5
-local MAX_ACCUM_BACKLOG = FIXED_DT * MAX_SIM_STEPS
 
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
@@ -269,29 +262,13 @@ function love.update(dt)
 		return
 	end
 
-	ACCUM = ACCUM + dt
-
-	local steps = 0
-	local backlogClamped = false
-
-	while ACCUM >= FIXED_DT and steps < MAX_SIM_STEPS do
-		Sim.update(FIXED_DT * State.speed)
-
-		ACCUM = ACCUM - FIXED_DT
-		steps = steps + 1
-	end
-
-	if ACCUM > MAX_ACCUM_BACKLOG then
-		ACCUM = MAX_ACCUM_BACKLOG
-		backlogClamped = true
-	end
+	Sim.update(dt * State.speed)
 
 	State.simDebug = State.simDebug or {
-		stepsThisFrame = 0,
+		stepsThisFrame = 1,
 		backlogClampEvents = 0,
 	}
-	State.simDebug.stepsThisFrame = steps
-	State.simDebug.backlogClampEvents = State.simDebug.backlogClampEvents + (backlogClamped and 1 or 0)
+	State.simDebug.stepsThisFrame = 1
 
 	if mode ~= "game" then
 		Menu.update(dt)
@@ -315,8 +292,8 @@ function love.update(dt)
 		Overlay.update(dt)
 	end
 
-	State.renderAlpha = ACCUM / FIXED_DT
-	State.renderStep = FIXED_DT * State.speed
+	State.renderAlpha = 1
+	State.renderStep = dt * State.speed
 
 	State.livesAnim = max(0, State.livesAnim - dt * 2)
 	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
@@ -384,7 +361,6 @@ function love.update(dt)
 				end
 			end
 
-			ACCUM = 0 -- Reset frame accumulator
 			Menu.set("victory") -- All of this logic should be migrated to Victory.enter() now
 			Sound.play("victory")
 
