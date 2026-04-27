@@ -58,7 +58,7 @@ local colorDim = Theme.ui.screenDim
 
 local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 
-local FIXED_DT = 1 / 60 -- Fixed step
+local FIXED_DT = 1 / 120 -- Fixed step
 local ACCUM = 0 -- Frame accumulator
 
 local SCREENSHOT_DIR = "screenshots"
