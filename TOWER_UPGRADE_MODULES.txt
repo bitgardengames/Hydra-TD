@@ -1,0 +1,89 @@
+Hydra TD - Tower Upgrade Modules (Name + Effect)
+
+Source of truth:
+- Branch/tier mapping: world/tower_branch_defs.lua
+- Module names/effects text: languages/enUS.lua (module + moduleDesc)
+
+Slow Tower
+- Tier 2
+  - Glacier: Each hit heavily chills enemies for a long duration.
+  - Shardfall: Each hit applies a light chill and creates one shard shot.
+- Tier 3
+  - Shatter: Each hit applies a steady chill and deals extra damage to already slowed enemies.
+  - Snowball: Shots pierce through enemies, ramp up damage as they pass through crowds, and apply chill on hit.
+- Tier 4
+  - Cold Lead: Prioritizes enemies furthest along the path and applies a heavy chill.
+  - Whiteout: Targets the densest groups, applies chill, and creates one shard shot on hit.
+- Tier 5
+  - Absolute Zero: Each hit almost stops enemies and deals bonus damage to slowed targets.
+  - Hailstorm: Each hit applies chill and bursts into 3 shard shots.
+
+Lancer Tower
+- Tier 2
+  - Headhunter: Targets the lowest-HP enemy in range and triggers a heavy finishing hit against enemies below 35% HP.
+  - Splitfire: Each hit releases 2 follow-up split shots.
+- Tier 3
+  - Overpenetration: Projectiles pass through enemies without being consumed.
+  - Ricochet: Shots bounce to a nearby enemy after impact.
+- Tier 4
+  - Focus Fire: Consecutive hits on the same enemy quickly ramp bonus damage.
+  - First Blood: Hits deal heavy bonus damage to enemies above 80% HP.
+- Tier 5
+  - Rail: Shots switch to linear movement and gain pierce.
+  - Arc: Each hit chains to 2 nearby enemies.
+
+Poison Tower
+- Tier 2
+  - Blight: Applies strong poison damage with a lower stack cap.
+  - Plague Cloud: Applies weaker poison per stack, but allows many more stacks.
+- Tier 3
+  - Neuro: Applies steady poison and adds an extra stack with each hit.
+  - Venomburst: When a poisoned enemy dies, poison spreads to nearby enemies.
+- Tier 4
+  - Envenom: If a heavily poisoned target falls below 22% HP, hits trigger a toxic finishing strike.
+  - Spillover: Each hit splashes poison onto up to 2 nearby enemies, spreading stacks and duration.
+- Tier 5
+  - Hemotoxin: Poison damage scales with target missing health.
+  - Pandemic: When a poisoned enemy dies, poison spreads to nearby enemies and can keep chaining through new kills.
+
+Cannon Tower
+- Tier 2
+  - Siege: Prioritizes distant targets and uses large blast shells.
+  - Barrage: Uses smaller blasts with faster, lighter-impact shells.
+- Tier 3
+  - Cluster: Shells split into 3 smaller bomblets on impact.
+  - Shockwave: Uses wider blasts with heavier impact damage.
+- Tier 4
+  - Long Fuse: Targets enemies farthest from the tower.
+  - Frontline: Targets enemies furthest along the path.
+- Tier 5
+  - Megashell: Fires massive high-damage shells with a huge blast radius.
+  - Carpet Fire: Fires lighter shells that follow up with 2 delayed blasts.
+
+Shock Tower
+- Tier 2
+  - Stormcoil: Chain lightning jumps through many nearby enemies.
+  - Overcharge: Chain lightning makes fewer jumps but keeps more of its damage per jump.
+- Tier 3
+  - Fork Arc: Chain lightning jumps between enemies and forks into extra side arcs.
+  - Static: Repeated hits on the same target build stacking surge damage.
+- Tier 4
+  - Crowdhunt: Prioritizes dense enemy groups for better chain coverage.
+  - Kingslayer: Prioritizes high-health enemies and builds stronger surge damage on repeated hits.
+- Tier 5
+  - Thunderstorm: Chain lightning jumps across a very large group of enemies.
+  - Meltdown: Chain endpoints detonate for extra area damage.
+
+Plasma Tower
+- Tier 2
+  - Lance: Fires a focused plasma bolt that burns enemies in a tight area as it travels.
+  - Unstable: Fires a less stable plasma bolt that burns a wider area over time.
+- Tier 3
+  - Boomerang Shot: Plasma travels out, then returns.
+  - Spiral Drive: Plasma follows a spiral path.
+- Tier 4
+  - Heatseek: Prioritizes high-health enemies with a tracking plasma burn shot.
+  - Lanesweep: Prioritizes enemies furthest along the path with a long sweeping plasma burn shot.
+- Tier 5
+  - Supernova: Plasma burns while traveling, then detonates near the end of its life for a heavy burst.
+  - Starforge: Plasma grows larger as it travels, increasing its area coverage over time.
