@@ -131,8 +131,8 @@ return {
 		},
 		behaviors = {
 			{id = "move_homing"},
-			{id = "hit_circle", data = {radius = 12 }},
-			{id = "aoe_damage", data = {radius = 48 }},
+			{id = "hit_circle", data = {radius = 12}},
+			{id = "aoe_damage", data = {radius = 48}},
 			{id = "draw_cannon" }
 		}
 	},
@@ -172,7 +172,7 @@ return {
 		cost = 75,
 		range = 3.5 * Constants.TILE,
 		fireRate = 0.7,
-		damage = 3,
+		damage = 5, -- 3
 		recoilStrength = Constants.TILE * 0.14,
 		recoilDecay = 18,
 		projSpeed = 140,
