@@ -56,7 +56,7 @@ return {
 			"lancer_overdrive",
 			"lancer_volley",
 			"lancer_ricochet",
-			"lancer_focus_fire",
+			"lancer_sustained_barrage",
 			"lancer_opening_strike",
 			"lancer_rail_lance",
 			"lancer_arc_lance",

@@ -1268,7 +1268,7 @@ B.lancer_overdrive = {
 	end
 }
 
-B.lancer_focus_fire = {
+B.lancer_sustained_barrage = {
 	onHit = function(p, e, data)
 		if not e or e.hp <= 0 then
 			return
@@ -1280,30 +1280,21 @@ B.lancer_focus_fire = {
 		end
 
 		data = data or {}
-		local now = love.timer.getTime()
-		local window = data.window or 1.1
-		local maxStacks = data.maxStacks or 4
-		local key = e.id or e
+		local cycleShots = max(1, floor(data.cycleShots or 6))
+		local burstShots = min(cycleShots, max(1, floor(data.burstShots or 3)))
+		local bonusDmgMult = data.bonusDmgMult or 0.45
 
-		local state = tower._lancerFocusState or {target = nil, stacks = 0, expiresAt = 0}
-		local sameTarget = state.target == key and now <= (state.expiresAt or 0)
-
-		if sameTarget then
-			state.stacks = min(maxStacks, (state.stacks or 0) + 1)
-		else
-			state.target = key
-			state.stacks = 1
+		local shotIndex = (tower._lancerBarrageShotIndex or 0) + 1
+		if shotIndex > cycleShots then
+			shotIndex = 1
 		end
-		state.expiresAt = now + window
-		tower._lancerFocusState = state
+		tower._lancerBarrageShotIndex = shotIndex
 
-		local perStackMult = data.perStackMult or 0.18
-		local bonusMult = max(0, ((state.stacks or 1) - 1) * perStackMult)
-		if bonusMult <= 0 then
+		if shotIndex > burstShots then
 			return
 		end
 
-		emitDamage(p, e, (p.damage or 0) * bonusMult)
+		emitDamage(p, e, (p.damage or 0) * bonusDmgMult)
 	end
 }
 
