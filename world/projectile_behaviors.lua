@@ -1662,17 +1662,20 @@ B.poison_cull_weak = {
 			return
 		end
 
-		local minStacks = max(1, floor(data.minStacks or 6))
-		if (e.poisonStacks or 0) < minStacks then
+		local stacks = e.poisonStacks or 0
+		if stacks <= 0 then
 			return
 		end
 
-		local hpFrac = (e.hp or 0) / max(1, e.maxHp or 1)
-		if hpFrac > (data.executeHpFrac or 0.22) then
+		local cap = max(1, floor(data.maxBonusStacks or 10))
+		local usedStacks = min(stacks, cap)
+		local bonusPerStack = data.bonusPerStack or 0.08
+		local dmgMult = usedStacks * bonusPerStack
+		if dmgMult <= 0 then
 			return
 		end
 
-		emitDamage(p, e, (p.damage or 0) * (data.dmgMult or 0.9))
+		emitDamage(p, e, (p.damage or 0) * dmgMult)
 	end
 }
 
