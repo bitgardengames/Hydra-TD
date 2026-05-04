@@ -581,14 +581,14 @@ add("slow_black_ice", {
 	end
 })
 
-addSpec("lancer_deadeye", "module.lancer_deadeye", "moduleDesc.lancer_deadeye", {
+addSpec("lancer_overdrive", "module.lancer_overdrive", "moduleDesc.lancer_overdrive", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 9}},
 	{id = "hit_damage"},
-	{id = "lancer_deadeye", data = {executeHpFrac = 0.35, bonusDmgMult = 1.0, cooldown = 1.25}},
+	{id = "lancer_overdrive", data = {triggerEvery = 4, bonusDmgMult = 1.4}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
-}, Targeting.MODES.LOW_HP)
+})
 
 addSpec("lancer_volley", "module.lancer_volley", "moduleDesc.lancer_volley", {
 	{id = "move_homing"},

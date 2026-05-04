@@ -53,7 +53,7 @@ return {
 			fireMult = 1.0, -- 1.03
 		},
 		upgradeChoices = {
-			"lancer_deadeye",
+			"lancer_overdrive",
 			"lancer_volley",
 			"lancer_ricochet",
 			"lancer_focus_fire",

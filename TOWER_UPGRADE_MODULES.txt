@@ -20,7 +20,7 @@ Slow Tower
 
 Lancer Tower
 - Tier 2
-  - Headhunter: Targets the lowest-HP enemy in range and triggers a heavy finishing hit against enemies below 35% HP.
+  - Overdrive: Every 4th hit fires an overdrive round for +140% bonus damage.
   - Splitfire: Each hit releases 2 follow-up split shots.
 - Tier 3
   - Overpenetration: Projectiles pass through enemies without being consumed.
