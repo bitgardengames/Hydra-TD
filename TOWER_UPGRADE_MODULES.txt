@@ -40,7 +40,7 @@ Poison Tower
   - Neuro: Applies steady poison and adds an extra stack with each hit.
   - Venomburst: When a poisoned enemy dies, poison spreads to nearby enemies.
 - Tier 4
-  - Envenom: If a heavily poisoned target falls below 22% HP, hits trigger a toxic finishing strike.
+  - Envenom: Hits deal bonus direct damage based on poison stacks on the target.
   - Spillover: Each hit splashes poison onto up to 2 nearby enemies, spreading stacks and duration.
 - Tier 5
   - Hemotoxin: Poison damage scales with target missing health.
