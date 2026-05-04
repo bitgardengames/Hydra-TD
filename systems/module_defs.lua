@@ -522,8 +522,8 @@ addSpec("slow_wide_chill", "module.slow_wide_chill", "moduleDesc.slow_wide_chill
 addSpec("slow_absolute_zero", "module.slow_absolute_zero", "moduleDesc.slow_absolute_zero", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "apply_slow", data = {factor = 0.12, dur = 0.85}},
-	{id = "shatter_bonus", data = {mult = 0.35}},
+	{id = "apply_slow", data = {factor = 0.22, dur = 1.1}},
+	{id = "shatter_bonus", data = {mult = 1.05}},
 	{id = "draw_slow"},
 })
 
@@ -531,7 +531,7 @@ addSpec("slow_hailstorm", "module.slow_hailstorm", "moduleDesc.slow_hailstorm", 
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.54, dur = 1.4}},
-	{id = "split_on_hit", data = {count = 3}, noInherit = true},
+	{id = "split_on_hit", data = {count = 2, spread = 0.42, dmgMult = 0.45}, noInherit = true},
 	{id = "draw_slow"},
 })
 
