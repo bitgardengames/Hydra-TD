@@ -632,6 +632,15 @@ addSpec("lancer_opening_strike", "module.lancer_opening_strike", "moduleDesc.lan
 	{id = "draw_lancer"},
 })
 
+addSpec("lancer_sustained_barrage", "module.lancer_sustained_barrage", "moduleDesc.lancer_sustained_barrage", {
+	{id = "move_homing"},
+	{id = "hit_circle", data = {radius = 9}},
+	{id = "hit_damage"},
+	{id = "lancer_sustained_barrage", data = {cycleShots = 6, burstShots = 3, bonusDmgMult = 0.45}},
+	{id = "lancer_hit_fx"},
+	{id = "draw_lancer"},
+})
+
 addSpec("lancer_rail_lance", "module.lancer_rail_lance", "moduleDesc.lancer_rail_lance", {
 	{id = "move_linear"},
 	{id = "hit_circle", data = {radius = 9}},
