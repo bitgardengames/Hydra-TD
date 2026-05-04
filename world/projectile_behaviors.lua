@@ -722,6 +722,112 @@ B.cannon_damage_scale = {
 	end
 }
 
+
+B.cannon_long_fuse = {
+	onHit = function(p, _, data)
+		if p.hitOrigin == "long_fuse_payload" then
+			return
+		end
+
+		data = data or {}
+		local delay = data.delay or 0.45
+		local radius = data.radius or 86
+		local falloff = data.falloff or 0.52
+		local damageMult = data.damageMult or 1.55
+		local ringRadius = data.ringRadius or 54
+		local ringWidth = data.ringWidth or 22
+		local ringDamageMult = data.ringDamageMult or 1.15
+
+		local evt = emitSpawnProjectile(p)
+		evt.x = p.x
+		evt.y = p.y
+		evt.damage = p.damage
+		evt.source = p.sourceTower
+		evt.hitOrigin = "long_fuse_payload"
+		evt.behaviors = {
+			{ id = "stationary" },
+			{ id = "cannon_delayed_blast", data = {
+				delay = delay,
+				radius = radius,
+				falloff = falloff,
+				damageMult = damageMult,
+				ringRadius = ringRadius,
+				ringWidth = ringWidth,
+				ringDamageMult = ringDamageMult,
+			}},
+		}
+	end
+}
+
+B.cannon_delayed_blast = {
+	init = function(p, data)
+		p._delayedBlast = {
+			timer = max(0.01, data.delay or 0.45),
+			radius = data.radius or 86,
+			falloff = data.falloff or 0.52,
+			damageMult = data.damageMult or 1.55,
+			ringRadius = data.ringRadius or 54,
+			ringWidth = data.ringWidth or 22,
+			ringDamageMult = data.ringDamageMult or 1.15,
+			fired = false,
+		}
+	end,
+
+	update = function(p, dt)
+		local b = p._delayedBlast
+		if not b or b.fired then
+			return
+		end
+
+		b.timer = b.timer - dt
+		if b.timer > 0 then
+			return
+		end
+		b.fired = true
+
+		local radius = b.radius
+		local r2 = radius * radius
+		local ringRadius = b.ringRadius
+		local ringHalfWidth = b.ringWidth * 0.5
+		local ringInner = max(0, ringRadius - ringHalfWidth)
+		local ringOuter = ringRadius + ringHalfWidth
+		local ringInner2 = ringInner * ringInner
+		local ringOuter2 = ringOuter * ringOuter
+
+		local nearby = Spatial.queryCells(p.x, p.y, radius)
+		local nearbyCount = Spatial.queryCellsCount()
+
+		for i = 1, nearbyCount do
+			local other = nearby[i]
+			if other.hp > 0 then
+				local dx = other.x - p.x
+				local dy = other.y - p.y
+				local d2 = dx * dx + dy * dy
+				if d2 <= r2 then
+					local t = 1 - (d2 / r2)
+					local coreDmg = (p.damage or 0) * b.damageMult * (b.falloff + (1 - b.falloff) * t)
+					local ringBonus = 0
+					if d2 >= ringInner2 and d2 <= ringOuter2 then
+						ringBonus = (p.damage or 0) * b.ringDamageMult
+					end
+
+					emitDamage(p, other, coreDmg + ringBonus)
+					emitImpulse(p, other, p.x, p.y, 4.2)
+				end
+			end
+		end
+
+		local evt = emitFX(p, "cannon_impact")
+		evt.x = p.x
+		evt.y = p.y
+		evt.r = radius
+		evt.color = p.sourceTower and p.sourceTower.color
+		evt.hitOrigin = "long_fuse_payload"
+
+		p.dead = true
+		return "consume"
+	end
+}
 B.cannon_carpet_fire = {
 	init = function(p, data)
 		if p.hitOrigin == "carpet_child" then
