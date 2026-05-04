@@ -662,16 +662,17 @@ addSpec("poison_neurotoxin", "module.poison_neurotoxin", "moduleDesc.poison_neur
 
 addSpec("cannon_siege_shells", "module.cannon_siege_shells", "moduleDesc.cannon_siege_shells", {
 	{id = "move_homing"},
-	{id = "hit_circle", data = {radius = 12}},
-	{id = "aoe_damage", data = {radius = 62}},
+	{id = "hit_circle", data = {radius = 13}},
+	{id = "aoe_damage", data = {radius = 72, falloff = 0.58}},
+	{id = "cannon_damage_scale", data = {mult = 1.5}},
 	{id = "draw_cannon"},
-}, Targeting.MODES.FARTHEST)
+})
 
 addSpec("cannon_rapid_mortar", "module.cannon_rapid_mortar", "moduleDesc.cannon_rapid_mortar", {
 	{id = "move_homing"},
-	{id = "hit_circle", data = {radius = 10}},
-	{id = "aoe_damage", data = {radius = 34}},
-	{id = "cannon_damage_scale", data = {mult = 0.72}},
+	{id = "hit_circle", data = {radius = 9}},
+	{id = "aoe_damage", data = {radius = 38, falloff = 0.86}},
+	{id = "cannon_damage_scale", data = {mult = 0.68}},
 	{id = "draw_cannon"},
 })
 
