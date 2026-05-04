@@ -474,6 +474,7 @@ addSpec("slow_glacier_core", "module.slow_glacier_core", "moduleDesc.slow_glacie
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.36, dur = 2.6}},
+	{id = "shatter_bonus", data = {mult = 0.38}},
 	{id = "draw_slow"},
 })
 
