@@ -249,7 +249,7 @@ return {
 		poison_plague = "Applies weaker poison per stack, but allows many more stacks.",
 		poison_neurotoxin = "Applies steady poison and adds an extra stack with each hit.",
 		poison_venom_burst = "When a poisoned enemy dies, poison spreads to nearby enemies.",
-		poison_cull_weak = "If a heavily poisoned target falls below 22% HP, hits trigger a toxic finishing strike.",
+		poison_cull_weak = "Hits deal bonus direct damage based on poison stacks on the target.",
 		poison_corrupt_strong = "Each hit splashes poison onto up to 2 nearby enemies, spreading stacks and duration.",
 		poison_hemotoxin = "Poison damage scales with target missing health.",
 		poison_pandemic = "When a poisoned enemy dies, poison spreads to nearby enemies and can keep chaining through new kills.",

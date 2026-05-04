@@ -231,7 +231,7 @@ add("poison_cull_weak", {
 	apply = function(ctx)
 		ctx:addBehavior({
 			id = "poison_cull_weak",
-			data = { executeHpFrac = 0.22, minStacks = 6, dmgMult = 0.9 }
+			data = { maxBonusStacks = 10, bonusPerStack = 0.09 }
 		})
 	end
 })
