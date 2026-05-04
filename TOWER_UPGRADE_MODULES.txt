@@ -26,7 +26,7 @@ Lancer Tower
   - Overpenetration: Projectiles pass through enemies without being consumed.
   - Ricochet: Shots bounce to a nearby enemy after impact.
 - Tier 4
-  - Focus Fire: Consecutive hits on the same enemy quickly ramp bonus damage.
+  - Sustained Barrage: Fires in repeating burst cycles: the first 3 shots in every 6-shot cycle deal bonus damage.
   - First Blood: Hits deal heavy bonus damage to enemies above 80% HP.
 - Tier 5
   - Rail: Shots switch to linear movement and gain pierce.
