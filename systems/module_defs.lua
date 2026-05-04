@@ -782,16 +782,18 @@ addSpec("shock_static_surge", "module.shock_static_surge", "moduleDesc.shock_sta
 
 addSpec("shock_crowd_search", "module.shock_crowd_search", "moduleDesc.shock_crowd_search", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 4, radius = 58}},
+	{id = "hit_chain", data = {jumps = 5, radius = 60}},
+	{id = "fork_chain", data = {radius = 50, dmgMult = 0.25, forksPerLink = 1}},
 	{id = "chain_zap_fx"},
-}, Targeting.MODES.DENSE)
+})
 
 addSpec("shock_boss_focus", "module.shock_boss_focus", "moduleDesc.shock_boss_focus", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 3, radius = 54, falloff = 0.9}},
-	{id = "chain_static_surge", data = {bonusPerStack = 0.25, maxStacks = 7}},
+	{id = "hit_chain", data = {jumps = 3, radius = 56, falloff = 0.94}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.28, maxStacks = 8}},
+	{id = "chain_endpoint_burst", data = {radius = 28, dmgMult = 0.35}},
 	{id = "chain_zap_fx"},
-}, Targeting.MODES.HIGH_HP)
+})
 
 addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thunderstorm", {
 	{id = "emit_on_target"},
