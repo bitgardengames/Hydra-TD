@@ -82,8 +82,8 @@ Plasma Tower
   - Boomerang Shot: Plasma travels out, then returns.
   - Spiral Drive: Plasma follows a spiral path.
 - Tier 4
-  - Heatseek: Prioritizes high-health enemies with a tracking plasma burn shot.
-  - Lanesweep: Prioritizes enemies furthest along the path with a long sweeping plasma burn shot.
+  - Solar Lance: Extends plasma reach with a narrow, high-pressure burn trail for stronger long-lane damage.
+  - Corona Bloom: Compresses plasma into a volatile bloom that burns a much wider area at a faster tick rate.
 - Tier 5
   - Supernova: Plasma burns while traveling, then detonates near the end of its life for a heavy burst.
   - Starforge: Plasma grows larger as it travels, increasing its area coverage over time.
