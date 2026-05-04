@@ -1240,31 +1240,27 @@ B.lancer_ricochet = {
 	end
 }
 
-B.lancer_deadeye = {
+B.lancer_overdrive = {
 	onHit = function(p, e, data)
 		if not e or e.hp <= 0 then
 			return
 		end
 
-		data = data or {}
-		local hpFrac = (e.hp or 0) / max(1, e.maxHp or 1)
-		if hpFrac > (data.executeHpFrac or 0.35) then
+		local tower = p.sourceTower
+		if not tower then
 			return
 		end
 
-		local tower = p.sourceTower
-		local now = love.timer.getTime()
-		local cooldown = data.cooldown or 1.25
+		data = data or {}
+		local triggerEvery = max(1, floor(data.triggerEvery or 4))
+		local bonusDmgMult = data.bonusDmgMult or 1.4
+		tower._lancerOverdriveHits = (tower._lancerOverdriveHits or 0) + 1
 
-		if tower then
-			tower._deadeyeExecuteAt = tower._deadeyeExecuteAt or 0
-			if now < tower._deadeyeExecuteAt then
-				return
-			end
-			tower._deadeyeExecuteAt = now + cooldown
+		if (tower._lancerOverdriveHits % triggerEvery) ~= 0 then
+			return
 		end
 
-		emitDamage(p, e, (p.damage or 0) * (data.bonusDmgMult or 1.0))
+		emitDamage(p, e, (p.damage or 0) * bonusDmgMult)
 
 		local evt = emitFX(p, "lancer_hit")
 		evt.x = e.x
