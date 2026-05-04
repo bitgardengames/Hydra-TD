@@ -902,9 +902,9 @@ addSpec("plasma_supernova", "module.plasma_supernova", "moduleDesc.plasma_supern
 })
 
 addSpec("plasma_growing_mass", "module.plasma_growing_mass", "moduleDesc.plasma_growing_mass", {
-	{id = "move_linear", data = {dist = 320}},
-	{id = "tick_damage", data = {radius = 11, rate = 0.11, impulse = 0.45}},
-	{id = "growing_projectile", data = {scale = 2.35}},
+	{id = "move_linear", data = {dist = 340}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.095, impulse = 0.45}},
+	{id = "growing_projectile", data = {scale = 2.75}},
 	{id = "draw_plasma"},
 })
 
