@@ -370,11 +370,29 @@ return {
 		tipBossBreach = "A boss slipped through. Add focused burst damage and slows before the next boss wave.",
 		tipOutOfLives = "Leaks add up quickly. Build earlier lane coverage and upgrade your core towers sooner.",
 		tipDefault = "Adjust your tower mix and module choices to handle mid-wave pressure spikes.",
+		headline = {
+			lateWave = "So Close",
+			hardFight = "Defeat",
+		},
+		subheadline = {
+			lateWave = "You held deep into the run—tighten the final defense and finish it next attempt.",
+			hardFight = "Hard mode pressure is brutal. Refine your midgame and come back stronger.",
+		},
 		shortcuts = "Press R to restart • Esc for main menu",
 	},
 
 	victory = {
 		subtitle = "Defense successful",
+		headline = {
+			firstClear = "First Clear!",
+			repeatClear = "Cleared Again",
+			highPerformance = "Flawless Command",
+		},
+		subheadline = {
+			firstClear = "Map secured for the first time. Keep the momentum going.",
+			repeatClear = "Another successful run. Push for a cleaner or faster finish.",
+			highPerformance = "Elite run: high score, minimal leaks, and strong control.",
+		},
 		medalProgress = "Difficulty medals earned",
 		hint = "Push to a higher difficulty or continue in Endless Mode for a tougher run.",
 		shortcuts = "Press N for next map • Esc for main menu",

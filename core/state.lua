@@ -30,6 +30,7 @@ local state = {
 	endReason = nil,
 
 	previousCompletionDifficulty = nil,
+	wasFirstClear = false,
 
 	carouselT = 1,
 	carouselDir = 0,

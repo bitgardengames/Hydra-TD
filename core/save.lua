@@ -158,6 +158,7 @@ function Save.load()
 			meta.TOWER_UPGRADES = meta.TOWER_UPGRADES or 0
 
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
+			meta.clearedMaps = meta.clearedMaps or {}
 
 			-- Run map ID migration once
 			if not Save.data.mapIdMigrationDone then
@@ -203,6 +204,7 @@ function Save.load()
 			TOWER_UPGRADES = 0,
 
 			unlockedAchievements = {},
+			clearedMaps = {},
 		},
 
 		mapIdMigrationDone = true, -- new saves don't need migration

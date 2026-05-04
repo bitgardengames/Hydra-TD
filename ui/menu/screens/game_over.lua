@@ -18,6 +18,8 @@ local max = math.max
 local sin = math.sin
 
 local Screen = {}
+local selectedHeadline = nil
+local selectedSubheadline = nil
 
 -- animation
 local t = 0
@@ -105,10 +107,30 @@ local function buildHighlights()
 	}
 end
 
+local function selectGameOverMessage()
+	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
+	local totalWaves = 20 + (State.worldMapIndex or 1) * 2
+	local lateWave = reachedWave >= (totalWaves * 0.75)
+	local leaks = State.totalLeaks or 0
+	local lives = State.lives or 0
+	local diff = Difficulty.key()
+
+	if lateWave and (leaks <= 6 or lives <= 3) then
+		return L("gameOver.headline.lateWave"), L("gameOver.subheadline.lateWave")
+	end
+
+	if diff == "hard" and reachedWave >= 10 then
+		return L("gameOver.headline.hardFight"), L("gameOver.subheadline.hardFight")
+	end
+
+	return State.endTitle or L("game.gameOver"), State.endReason or L("gameOver.recapMid")
+end
+
 function Screen.enter()
 	t = 0
 	panelT = 0
 	buildHighlights()
+	selectedHeadline, selectedSubheadline = selectGameOverMessage()
 end
 
 function Screen.load()
@@ -222,14 +244,14 @@ function Screen.draw()
 	-- Title
 	Fonts.set("title")
 	lg.setColor(colorBad[1], colorBad[2], colorBad[3], alpha)
-	Text.printfShadow(State.endTitle, 0, titleY, sw, "center")
+	Text.printfShadow(selectedHeadline or State.endTitle or L("game.gameOver"), 0, titleY, sw, "center")
 
 	Fonts.set("menu")
 
 	-- Reason / subtitle
-	if State.endReason then
+	if selectedSubheadline then
 		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-		Text.printfShadow(State.endReason, 0, reasonY, sw, "center")
+		Text.printfShadow(selectedSubheadline, 0, reasonY, sw, "center")
 	end
 
 	-- Spotlight pulse
