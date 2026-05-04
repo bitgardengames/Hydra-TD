@@ -256,7 +256,7 @@ return {
 		cannon_siege_shells = "Fires fewer, heavier shells with larger blast zones and higher direct impact damage.",
 		cannon_rapid_mortar = "Fires faster, lighter shells for stronger sustained splash throughput in clustered waves.",
 		cannon_cluster_payload = "Shells split into 3 smaller bomblets on impact.",
-		cannon_shockwave = "Uses wider blasts with heavier impact damage.",
+		cannon_shockwave = "Blast impact launches enemies, then emits a damaging radial shockwave for heavy two-stage AoE bursts.",
 		cannon_long_fuse = "Shells detonate after a brief delay, creating a larger delayed blast at the impact point.",
 		cannon_frontline_burst = "Shells split into secondary close-range explosions, scaling total damage through follow-up bursts.",
 		cannon_mega_shell = "Fires massive high-damage shells with a huge blast radius.",

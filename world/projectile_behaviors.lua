@@ -692,6 +692,8 @@ B.cannon_shockwave = {
 	onHit = function(p, _, data)
 		local radius = data.radius or 54
 		local impulse = data.impulse or 4.8
+		local damageMult = data.damageMult or 0.6
+		local minFalloff = data.minFalloff or 0.35
 		local r2 = radius * radius
 
 		local nearby = Spatial.queryCells(p.x, p.y, radius)
@@ -702,7 +704,11 @@ B.cannon_shockwave = {
 			if other.hp > 0 then
 				local dx = other.x - p.x
 				local dy = other.y - p.y
-				if dx * dx + dy * dy <= r2 then
+				local d2 = dx * dx + dy * dy
+				if d2 <= r2 then
+					local t = 1 - (d2 / r2)
+					local dmg = (p.damage or 0) * damageMult * (minFalloff + (1 - minFalloff) * t)
+					emitDamage(p, other, dmg)
 					emitImpulse(p, other, p.x, p.y, impulse)
 				end
 			end
