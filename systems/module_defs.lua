@@ -368,47 +368,55 @@ add("explode_on_hit", {
 	end
 })
 
--- =========================
--- TARGETING
--- =========================
-
 add("target_low_hp", {
 	nameKey = "module.target_low_hp",
 	descKey = "moduleDesc.target_low_hp",
-	category = "targeting",
-	targetMode = Targeting.MODES.LOW_HP,
+	category = "damage",
 
-	apply = function(_)
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "lancer_opening_strike",
+			data = { triggerHpFrac = 0.45, bonusDmgMult = 0.9 }
+		})
 	end
 })
 
 add("target_farthest_progress", {
 	nameKey = "module.target_farthest_progress",
 	descKey = "moduleDesc.target_farthest_progress",
-	category = "targeting",
-	targetMode = Targeting.MODES.PROGRESS,
+	category = "damage",
 
-	apply = function(_)
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "aoe_damage",
+			data = { radius = 34, falloff = 0.84 }
+		})
 	end
 })
 
 add("target_farthest_range", {
 	nameKey = "module.target_farthest_range",
 	descKey = "moduleDesc.target_farthest_range",
-	category = "targeting",
-	targetMode = Targeting.MODES.FARTHEST,
+	category = "damage",
 
-	apply = function(_)
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "cannon_carpet_fire",
+			data = { delayA = 0.12, delayB = 0.24, spread = 0.16 }
+		})
 	end
 })
 
 add("target_high_hp", {
 	nameKey = "module.target_high_hp",
 	descKey = "moduleDesc.target_high_hp",
-	category = "targeting",
-	targetMode = Targeting.MODES.HIGH_HP,
+	category = "damage",
 
-	apply = function(_)
+	apply = function(ctx)
+		ctx:addBehavior({
+			id = "poison_corrupt_strong",
+			data = { triggerHpFrac = 0.65, splashRadius = 42, splashDps = 4.2, splashDur = 1.9, splashMaxStacks = 5 }
+		})
 	end
 })
 
