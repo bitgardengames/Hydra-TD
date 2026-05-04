@@ -861,16 +861,18 @@ addSpec("plasma_spiral_drive", "module.plasma_spiral_drive", "moduleDesc.plasma_
 })
 
 addSpec("plasma_thermal_tracking", "module.plasma_thermal_tracking", "moduleDesc.plasma_thermal_tracking", {
-	{id = "move_linear", data = {dist = 315}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.10, impulse = 0.45}},
+	{id = "move_linear", data = {dist = 360}},
+	{id = "tick_damage", data = {radius = 10, rate = 0.08, impulse = 0.5}},
+	{id = "projectile_radius", data = {radius = 4.2}},
 	{id = "draw_plasma"},
-}, Targeting.MODES.HIGH_HP)
+})
 
 addSpec("plasma_lane_sweep", "module.plasma_lane_sweep", "moduleDesc.plasma_lane_sweep", {
-	{id = "move_linear", data = {dist = 335}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.10, impulse = 0.45}},
+	{id = "move_linear", data = {dist = 290}},
+	{id = "tick_damage", data = {radius = 17, rate = 0.14, impulse = 0.4}},
+	{id = "projectile_radius", data = {radius = 6.2}},
 	{id = "draw_plasma"},
-}, Targeting.MODES.PROGRESS)
+})
 
 addSpec("plasma_supernova", "module.plasma_supernova", "moduleDesc.plasma_supernova", {
 	{id = "move_linear", data = {dist = 300}},
