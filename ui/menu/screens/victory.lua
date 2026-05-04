@@ -27,6 +27,8 @@ local sin = math.sin
 local random = love.math.random
 
 local Screen = {}
+local selectedHeadline = nil
+local selectedSubheadline = nil
 
 local buttons = nil
 local previousMedalCount = 0
@@ -83,6 +85,47 @@ local confettiColors = {
 local function getDifficultyLabel()
 	local key = Difficulty.key()
 	return L("difficulty." .. key)
+end
+
+local function getCompletionTier()
+	local completed = Save.data
+		and Save.data.mapStats
+		and Save.data.mapStats[Maps[State.worldMapIndex] and Maps[State.worldMapIndex].id or ""]
+		and Save.data.mapStats[Maps[State.worldMapIndex].id].completedDifficulty
+	return completed or "none"
+end
+
+local function selectVictoryMessage()
+	local score = State.score or 0
+	local leaks = State.totalLeaks or 0
+	local lives = State.lives or 0
+	local map = Maps[State.worldMapIndex]
+	local mapId = map and map.id or nil
+	local completionTier = getCompletionTier()
+	local diff = Difficulty.key()
+	local scoreBand = score >= 25000 and "high" or (score >= 10000 and "mid" or "low")
+
+	local firstClear = mapId and not (Save.data.meta.clearedMaps and Save.data.meta.clearedMaps[mapId]) or false
+	State.wasFirstClear = firstClear
+
+	if mapId and firstClear then
+		Save.data.meta.clearedMaps[mapId] = true
+		Save.flush()
+	end
+
+	if scoreBand == "high" and leaks == 0 and lives >= 15 then
+		return L("victory.headline.highPerformance"), L("victory.subheadline.highPerformance")
+	end
+
+	if firstClear then
+		return L("victory.headline.firstClear"), L("victory.subheadline.firstClear")
+	end
+
+	if completionTier ~= "none" or diff == "hard" then
+		return L("victory.headline.repeatClear"), L("victory.subheadline.repeatClear")
+	end
+
+	return L("game.victory"), L("victory.subtitle")
 end
 
 local function layoutButtons()
@@ -207,6 +250,7 @@ function Screen.enter()
 	buildStats()
 	resetConfetti()
 	Medals.resetAnimations()
+	selectedHeadline, selectedSubheadline = selectVictoryMessage()
 
 	previousMedalCount = Medals.getCount(State.previousCompletionDifficulty)
 	currentMedalCount = Medals.getCount(Difficulty.key())
@@ -329,7 +373,11 @@ function Screen.draw()
 
 	Fonts.set("title")
 	lg.setColor(colorGood[1], colorGood[2], colorGood[3], alpha)
-	Text.printfShadow(L("game.victory"), 0, titleY, sw, "center")
+	Text.printfShadow(selectedHeadline or L("game.victory"), 0, titleY, sw, "center")
+
+	Fonts.set("menu")
+	lg.setColor(colorText[1], colorText[2], colorText[3], 0.85 * alpha)
+	Text.printfShadow(selectedSubheadline or L("victory.subtitle"), 0, titleY + 30, sw, "center")
 
 
 	local statsY = titleY + headerHeight + subheadSpacing
