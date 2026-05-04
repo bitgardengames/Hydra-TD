@@ -506,16 +506,17 @@ addSpec("slow_lead_freeze", "module.slow_lead_freeze", "moduleDesc.slow_lead_fre
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.46, dur = 1.9}},
+	{id = "shatter_bonus", data = {mult = 0.95}},
 	{id = "draw_slow"},
-}, Targeting.MODES.PROGRESS)
+})
 
 addSpec("slow_wide_chill", "module.slow_wide_chill", "moduleDesc.slow_wide_chill", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.58, dur = 1.35}},
-	{id = "split_on_hit", data = {count = 1}, noInherit = true},
+	{id = "aoe_damage", data = {radius = 36}},
 	{id = "draw_slow"},
-}, Targeting.MODES.DENSE)
+})
 
 addSpec("slow_absolute_zero", "module.slow_absolute_zero", "moduleDesc.slow_absolute_zero", {
 	{id = "move_homing"},
