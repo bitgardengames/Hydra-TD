@@ -482,7 +482,7 @@ addSpec("slow_glacier_core", "module.slow_glacier_core", "moduleDesc.slow_glacie
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.36, dur = 2.6}},
-	{id = "shatter_bonus", data = {mult = 0.38}},
+	{id = "shatter_bonus", data = {mult = 0.45}},
 	{id = "draw_slow"},
 })
 
@@ -490,7 +490,7 @@ addSpec("slow_frost_shards", "module.slow_frost_shards", "moduleDesc.slow_frost_
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.65, dur = 1.1}},
-	{id = "split_on_hit", data = {count = 1}, noInherit = true},
+	{id = "split_on_hit", data = {count = 1, dmgMult = 0.75}, noInherit = true},
 	{id = "draw_slow"},
 })
 
@@ -498,7 +498,7 @@ addSpec("slow_shatter", "module.slow_shatter", "moduleDesc.slow_shatter", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.52, dur = 1.5}},
-	{id = "shatter_bonus", data = {mult = 0.55}},
+	{id = "shatter_bonus", data = {mult = 0.62}},
 	{id = "draw_slow"},
 })
 
@@ -507,7 +507,7 @@ addSpec("slow_snowball", "module.slow_snowball", "moduleDesc.slow_snowball", {
 	{id = "pierce"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.58, dur = 1.35}},
-	{id = "snowball_ramp", data = {ramp = 0.20, cap = 3.2}},
+	{id = "snowball_ramp", data = {ramp = 0.24, cap = 3.4}},
 	{id = "draw_slow"},
 })
 
@@ -515,7 +515,7 @@ addSpec("slow_lead_freeze", "module.slow_lead_freeze", "moduleDesc.slow_lead_fre
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.46, dur = 1.9}},
-	{id = "shatter_bonus", data = {mult = 0.95}},
+	{id = "shatter_bonus", data = {mult = 1.0}},
 	{id = "draw_slow"},
 })
 
@@ -523,7 +523,7 @@ addSpec("slow_wide_chill", "module.slow_wide_chill", "moduleDesc.slow_wide_chill
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.58, dur = 1.35}},
-	{id = "aoe_damage", data = {radius = 36}},
+	{id = "aoe_damage", data = {radius = 42}},
 	{id = "draw_slow"},
 })
 
@@ -531,7 +531,7 @@ addSpec("slow_absolute_zero", "module.slow_absolute_zero", "moduleDesc.slow_abso
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.22, dur = 1.1}},
-	{id = "shatter_bonus", data = {mult = 1.05}},
+	{id = "shatter_bonus", data = {mult = 1.1}},
 	{id = "draw_slow"},
 })
 
@@ -539,7 +539,7 @@ addSpec("slow_hailstorm", "module.slow_hailstorm", "moduleDesc.slow_hailstorm", 
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.54, dur = 1.4}},
-	{id = "split_on_hit", data = {count = 2, spread = 0.42, dmgMult = 0.45}, noInherit = true},
+	{id = "split_on_hit", data = {count = 2, spread = 0.42, dmgMult = 0.5}, noInherit = true},
 	{id = "draw_slow"},
 })
 
@@ -575,7 +575,6 @@ add("slow_cold_snap", {
 	nameKey = "module.slow_cold_snap",
 	descKey = "moduleDesc.slow_cold_snap",
 	category = "special",
-	targetMode = Targeting.MODES.PROGRESS,
 	apply = function(ctx)
 		ModuleDefs.slow_lead_freeze.apply(ctx)
 	end
@@ -585,7 +584,6 @@ add("slow_black_ice", {
 	nameKey = "module.slow_black_ice",
 	descKey = "moduleDesc.slow_black_ice",
 	category = "special",
-	targetMode = Targeting.MODES.DENSE,
 	apply = function(ctx)
 		ModuleDefs.slow_wide_chill.apply(ctx)
 	end
