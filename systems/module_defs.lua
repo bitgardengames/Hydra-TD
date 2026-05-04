@@ -532,6 +532,7 @@ addSpec("slow_absolute_zero", "module.slow_absolute_zero", "moduleDesc.slow_abso
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.22, dur = 1.1}},
 	{id = "shatter_bonus", data = {mult = 1.1}},
+	{id = "pierce", data = {maxHits = 2}},
 	{id = "draw_slow"},
 })
 
@@ -609,7 +610,7 @@ addSpec("lancer_volley", "module.lancer_volley", "moduleDesc.lancer_volley", {
 addSpec("lancer_arc_lance", "module.lancer_arc_lance", "moduleDesc.lancer_arc_lance", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "hit_chain", data = {jumps = 2, radius = 54}},
+	{id = "hit_chain", data = {jumps = 1, radius = 52}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
 })
@@ -645,7 +646,8 @@ addSpec("lancer_rail_lance", "module.lancer_rail_lance", "moduleDesc.lancer_rail
 	{id = "move_linear"},
 	{id = "hit_circle", data = {radius = 9}},
 	{id = "hit_damage"},
-	{id = "pierce"},
+	{id = "pierce", data = {maxHits = 5}},
+	{id = "lancer_rail_momentum", data = {perHitMult = 0.22, maxStacks = 4}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_rail_lance"},
 })
@@ -670,8 +672,8 @@ addSpec("poison_neurotoxin", "module.poison_neurotoxin", "moduleDesc.poison_neur
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "hit_damage"},
-	{id = "apply_poison", data = {dps = 4.2, dur = 2.1, maxStacks = 10}},
-	{id = "poison_neurotoxin", data = {bonusStacks = 1}},
+	{id = "apply_poison", data = {dps = 3.8, dur = 2.2, maxStacks = 11}},
+	{id = "poison_neurotoxin", data = {bonusStacks = 2}},
 	{id = "draw_poison"},
 })
 
@@ -729,7 +731,7 @@ addSpec("cannon_mega_shell", "module.cannon_mega_shell", "moduleDesc.cannon_mega
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 14}},
 	{id = "aoe_damage", data = {radius = 82}},
-	{id = "cannon_damage_scale", data = {mult = 2.4}},
+	{id = "cannon_damage_scale", data = {mult = 2.15}},
 	{id = "draw_cannon"},
 })
 
@@ -737,7 +739,7 @@ addSpec("cannon_carpet_fire", "module.cannon_carpet_fire", "moduleDesc.cannon_ca
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "aoe_damage", data = {radius = 42}},
-	{id = "cannon_damage_scale", data = {mult = 0.75}},
+	{id = "cannon_damage_scale", data = {mult = 0.82}},
 	{id = "cannon_carpet_fire", data = {delayA = 0.09, delayB = 0.18, spread = 0.18}},
 	{id = "draw_cannon"},
 })
@@ -822,7 +824,7 @@ addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thu
 addSpec("shock_meltdown", "module.shock_meltdown", "moduleDesc.shock_meltdown", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 5, radius = 58}},
-	{id = "chain_endpoint_burst", data = {radius = 34, dmgMult = 0.55}},
+	{id = "chain_endpoint_burst", data = {radius = 32, dmgMult = 0.48}},
 	{id = "chain_zap_fx"},
 })
 
@@ -875,8 +877,8 @@ addSpec("plasma_boomerang_shot", "module.plasma_boomerang_shot", "moduleDesc.pla
 })
 
 addSpec("plasma_spiral_drive", "module.plasma_spiral_drive", "moduleDesc.plasma_spiral_drive", {
-	{id = "move_spiral", data = {amp = 13, freq = 7}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.11, impulse = 0.45}},
+	{id = "move_spiral", data = {amp = 15, freq = 7.5}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.12, impulse = 0.45}},
 	{id = "draw_plasma"},
 })
 

@@ -1410,6 +1410,29 @@ B.lancer_sustained_barrage = {
 	end
 }
 
+
+B.lancer_rail_momentum = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		data = data or {}
+		local perHitMult = data.perHitMult or 0.2
+		local maxStacks = max(1, floor(data.maxStacks or 4))
+		local stacks = min((p._railMomentumStacks or 0) + 1, maxStacks)
+		p._railMomentumStacks = stacks
+
+		if stacks <= 1 then
+			return
+		end
+
+		local bonusMult = (stacks - 1) * perHitMult
+		if bonusMult > 0 then
+			emitDamage(p, e, (p.damage or 0) * bonusMult)
+		end
+	end
+}
 B.lancer_opening_strike = {
 	onHit = function(p, e, data)
 		if not e or e.hp <= 0 then
