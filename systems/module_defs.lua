@@ -693,17 +693,19 @@ addSpec("cannon_shockwave", "module.cannon_shockwave", "moduleDesc.cannon_shockw
 
 addSpec("cannon_long_fuse", "module.cannon_long_fuse", "moduleDesc.cannon_long_fuse", {
 	{id = "move_homing"},
-	{id = "hit_circle", data = {radius = 12}},
-	{id = "aoe_damage", data = {radius = 48}},
+	{id = "hit_circle", data = {radius = 13}},
+	{id = "aoe_damage", data = {radius = 68, falloff = 0.62}},
+	{id = "cannon_damage_scale", data = {mult = 1.15}},
 	{id = "draw_cannon"},
-}, Targeting.MODES.FARTHEST)
+})
 
 addSpec("cannon_frontline_burst", "module.cannon_frontline_burst", "moduleDesc.cannon_frontline_burst", {
 	{id = "move_homing"},
-	{id = "hit_circle", data = {radius = 12}},
-	{id = "aoe_damage", data = {radius = 48}},
+	{id = "hit_circle", data = {radius = 10}},
+	{id = "aoe_damage", data = {radius = 34, falloff = 0.7}},
+	{id = "split_on_hit", data = {count = 2, spread = 0.32, dmgMult = 0.6}, noInherit = true},
 	{id = "draw_cannon"},
-}, Targeting.MODES.PROGRESS)
+})
 
 addSpec("cannon_mega_shell", "module.cannon_mega_shell", "moduleDesc.cannon_mega_shell", {
 	{id = "move_homing"},
