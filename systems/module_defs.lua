@@ -696,16 +696,17 @@ addSpec("cannon_shockwave", "module.cannon_shockwave", "moduleDesc.cannon_shockw
 addSpec("cannon_long_fuse", "module.cannon_long_fuse", "moduleDesc.cannon_long_fuse", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 13}},
-	{id = "aoe_damage", data = {radius = 68, falloff = 0.62}},
-	{id = "cannon_damage_scale", data = {mult = 1.15}},
+	{id = "aoe_damage", data = {radius = 54, falloff = 0.66}},
+	{id = "cannon_damage_scale", data = {mult = 0.9}},
+	{id = "cannon_long_fuse", data = {delay = 0.5, radius = 88, falloff = 0.5, damageMult = 1.7, ringRadius = 56, ringWidth = 24, ringDamageMult = 1.2}},
 	{id = "draw_cannon"},
 })
 
 addSpec("cannon_frontline_burst", "module.cannon_frontline_burst", "moduleDesc.cannon_frontline_burst", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 10}},
-	{id = "aoe_damage", data = {radius = 34, falloff = 0.7}},
-	{id = "split_on_hit", data = {count = 2, spread = 0.32, dmgMult = 0.6}, noInherit = true},
+	{id = "aoe_damage", data = {radius = 36, falloff = 0.72}},
+	{id = "split_on_hit", data = {count = 3, spread = 0.36, dmgMult = 0.52}, noInherit = true},
 	{id = "draw_cannon"},
 })
 
