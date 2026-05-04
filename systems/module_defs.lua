@@ -687,8 +687,9 @@ addSpec("cannon_cluster_payload", "module.cannon_cluster_payload", "moduleDesc.c
 addSpec("cannon_shockwave", "module.cannon_shockwave", "moduleDesc.cannon_shockwave", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 11}},
-	{id = "aoe_damage", data = {radius = 44}},
-	{id = "cannon_damage_scale", data = {mult = 1.35}},
+	{id = "aoe_damage", data = {radius = 40, falloff = 0.72}},
+	{id = "cannon_damage_scale", data = {mult = 1.18}},
+	{id = "cannon_shockwave", data = {radius = 54, damageMult = 0.62, minFalloff = 0.34, impulse = 4.8}},
 	{id = "draw_cannon"},
 })
 
