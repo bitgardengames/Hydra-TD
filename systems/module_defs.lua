@@ -1,6 +1,32 @@
 local ModuleDefs = {}
 local Targeting = require("world.targeting")
 
+--[[
+	Module authoring hook contract (projectile behavior trigger model):
+	- Behaviors may expose hook fns directly: on_shot, on_hit, on_kill, on_tick(dt), on_expire.
+	- Legacy names are still honored by runtime compatibility mapping:
+	  init -> on_shot, onHit -> on_hit, onKill -> on_kill, update -> on_tick, onExpire -> on_expire.
+	- Optional per-behavior hook gating may be declared via behavior.hooks = {"on_hit", ...}.
+	  If present, runtime executes only those hooks for that behavior.
+
+	Hook payload contract:
+	- on_shot(projectile, data)
+	- on_tick(projectile, dt, data)
+	- on_hit(projectile, enemy, data, ctx)
+	- on_kill(projectile, enemy, data, ctx)
+	- on_expire(projectile, data)
+
+	Common ctx fields for hit/kill:
+	- ctx.origin: "primary" | "secondary" (or custom origin strings)
+	- ctx.hitX, ctx.hitY: optional impact override position
+	- ctx.procFlags: table for per-hit-chain guardrails (set/get booleans)
+	- ctx.procCooldowns: table namespace for per-target cooldown maps
+
+	Guardrail expectation for chained effects:
+	- Use projectile-scoped per-target cooldowns and/or ctx.procFlags to prevent
+	  infinite loops in spawned/chained procs.
+--]]
+
 -- helper for cleaner modules
 local function add(id, def)
 	def.id = id

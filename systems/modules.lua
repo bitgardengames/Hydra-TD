@@ -55,6 +55,14 @@ local function copyBehaviors(list)
 			copy.data = d
 		end
 
+		if b.hooks then
+			local hooks = {}
+			for j = 1, #b.hooks do
+				hooks[j] = b.hooks[j]
+			end
+			copy.hooks = hooks
+		end
+
 		out[#out + 1] = copy
 	end
 
@@ -64,6 +72,19 @@ end
 local ContextMethods = {}
 
 function ContextMethods:addBehavior(b)
+	self.behaviors[#self.behaviors + 1] = b
+end
+
+function ContextMethods:addHookBehavior(hookId, behavior)
+	if not behavior then
+		return
+	end
+
+	local b = behavior
+	if not b.hooks then
+		b.hooks = { hookId }
+	end
+
 	self.behaviors[#self.behaviors + 1] = b
 end
 
