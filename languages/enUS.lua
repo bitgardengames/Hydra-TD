@@ -306,15 +306,8 @@ return {
 	hud = {
 		lives = "Lives %d",
 		wave = "Wave %d",
-		waveWithTier = "Wave %d (%s)",
 		prep = "Press %s to start",
 		spawning = "Spawning %d - Alive %d",
-	},
-
-	tier = {
-		standard = "Standard",
-		hard = "Hard",
-		elite = "Elite",
 	},
 
 	messages = {
@@ -426,7 +419,7 @@ return {
 	presence = {
 		menu = "In Menu",
 		campaign = "Map Selection",
-		gameStatus = "Wave %s (%s) - %s",
+		gameStatus = "Wave %s - %s",
 	},
 
 	achievement = {

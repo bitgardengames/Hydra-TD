@@ -36,7 +36,7 @@ local STATUS_X = 260
 local hudCache = {
 	money = {value = nil, text = ""},
 	lives = {value = nil, text = ""},
-	wave = {value = nil, tier = nil, text = ""},
+	wave = {value = nil, text = ""},
 	prep = {value = nil, text = "", action = nil},
 	spawn = {remaining = nil, count = nil, text = ""},
 }
@@ -87,11 +87,9 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 
 	local waveCache = hudCache.wave
 
-	local waveTier = Waves.getCurrentWaveTier()
-	if waveCache.value ~= State.wave or waveCache.tier ~= waveTier then
+	if waveCache.value ~= State.wave then
 		waveCache.value = State.wave
-		waveCache.tier = waveTier
-		waveCache.text = L("hud.waveWithTier", State.wave, L("tier." .. waveTier))
+		waveCache.text = L("hud.wave", State.wave)
 	end
 
 	lg.setColor(ct1, ct2, ct3, 1)
