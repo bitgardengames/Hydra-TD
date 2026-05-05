@@ -48,18 +48,24 @@ local spawner = {
 	hpMult = 1.0,
 	spdMult = 1.0,
 	kind = nil,
+	queue = nil,
 }
 
-local function beginSpawner(kind, count, gap, hpMult, spdMult)
+local function beginSpawnerQueue(groups, gap, hpMult, spdMult)
 	spawner.active = true
 	spawner.timer = 0
 	spawner.gap = gap or 0.6
 	spawner.hpMult = hpMult or 1.0
 	spawner.spdMult = spdMult or 1.0
-	spawner.kind = kind
-	spawner.remaining = count or 0
+	spawner.queue = groups or {}
+	spawner.kind = nil
+	spawner.remaining = 0
 
 	State.inPrep = false
+end
+
+local function beginSpawner(kind, count, gap, hpMult, spdMult)
+	beginSpawnerQueue({{kind = kind, count = count}}, gap, hpMult, spdMult)
 end
 
 -- Wave start
@@ -115,8 +121,19 @@ function Waves.startWave()
 	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
 	local gap = wave.spacing or 1.0
+	local groups = {}
 
-	beginSpawner(kind, count, gap, hpMult, spdMult)
+	if wave.support and wave.support.spawnEarly and wave.support.count and wave.support.count > 0 then
+		groups[#groups + 1] = {kind = wave.support.kind, count = wave.support.count}
+	end
+
+	groups[#groups + 1] = {kind = kind, count = count}
+
+	if wave.support and (not wave.support.spawnEarly) and wave.support.count and wave.support.count > 0 then
+		groups[#groups + 1] = {kind = wave.support.kind, count = wave.support.count}
+	end
+
+	beginSpawnerQueue(groups, gap, hpMult, spdMult)
 end
 
 -- Spawning update
@@ -126,6 +143,13 @@ function Waves.updateSpawner(dt)
 	end
 
 	spawner.timer = spawner.timer - dt
+
+	if spawner.remaining <= 0 and spawner.queue and #spawner.queue > 0 then
+		local nextGroup = table.remove(spawner.queue, 1)
+		spawner.kind = nextGroup.kind
+		spawner.remaining = nextGroup.count or 0
+		spawner.timer = 0
+	end
 
 	if spawner.timer <= 0 and spawner.remaining > 0 then
 		local kind = spawner.kind
@@ -143,7 +167,7 @@ function Waves.updateSpawner(dt)
 		spawner.timer = spawner.gap
 	end
 
-	if spawner.remaining <= 0 then
+	if spawner.remaining <= 0 and (not spawner.queue or #spawner.queue == 0) then
 		spawner.active = false
 	end
 end
@@ -158,9 +182,18 @@ function Waves.getWaveCompletionBonus(wave, waveLeaks)
 	end
 
 	local base = 2 * wave
+	local waveDef = WaveBuilder.build(wave)
 	local bossKind = State.activeBossKind
 	local def = bossKind and EnemyDefs[bossKind] or nil
 	local mechanicWeight = (def and def.mechanicWeight) or 1.0
+
+	if waveDef and waveDef.support and waveDef.support.kind then
+		local supportDef = EnemyDefs[waveDef.support.kind]
+		local supportWeight = (supportDef and supportDef.mechanicWeight) or 1.0
+		local supportCount = max(0, waveDef.support.count or 0)
+		mechanicWeight = mechanicWeight + ((supportWeight - 1.0) * supportCount * 0.6)
+	end
+
 	local archetypeBonus = (def and def.boss and def.mechanicPackage) and 0.2 or 0
 	local milestoneBonus = (wave % 5 == 0) and 0.12 or 0
 	local mult = 1.0 + archetypeBonus + milestoneBonus + ((mechanicWeight - 1.0) * 0.75)
@@ -176,6 +209,7 @@ function Waves.resetSpawner()
 	spawner.hpMult = 1.0
 	spawner.spdMult = 1.0
 	spawner.kind = nil
+	spawner.queue = nil
 end
 
 function Waves.getSpawner()

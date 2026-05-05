@@ -30,6 +30,60 @@ return {
 		radius = 9,
 	},
 
+	support_haste = {
+		nameKey = "enemy.grunt",
+		hp = 28 * mult,
+		speed = 62,
+		reward = 13,
+		score = 20,
+		radius = 10,
+		mechanicWeight = 1.2,
+		mechanicTags = {"support", "haste_buffer", "aura"},
+		support = {
+			type = "haste_buffer",
+			radius = 96,
+			speedMult = 1.18,
+			pulse = 0.35,
+			fx = "haste_ring",
+		},
+	},
+
+	support_amp = {
+		nameKey = "enemy.grunt",
+		hp = 34 * mult,
+		speed = 55,
+		reward = 15,
+		score = 24,
+		radius = 11,
+		mechanicWeight = 1.3,
+		mechanicTags = {"support", "damage_amplifier", "aura"},
+		support = {
+			type = "damage_amplifier",
+			radius = 108,
+			dangerMult = 1.22,
+			pulse = 0.5,
+			fx = "amp_link",
+		},
+	},
+
+	support_displacer = {
+		nameKey = "enemy.grunt",
+		hp = 38 * mult,
+		speed = 58,
+		reward = 16,
+		score = 26,
+		radius = 11,
+		mechanicWeight = 1.35,
+		mechanicTags = {"support", "displacement_aura", "control"},
+		support = {
+			type = "displacement_aura",
+			radius = 90,
+			nudgeStrength = 18,
+			pulse = 0.7,
+			fx = "displace_link",
+		},
+	},
+
 	boss = {
 		nameKey = "enemy.boss",
 		hp = 625 * mult,
