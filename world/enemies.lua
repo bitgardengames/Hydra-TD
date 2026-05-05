@@ -34,6 +34,7 @@ local sqrt = math.sqrt
 local floor = math.floor
 local upper = string.upper
 local random = love.math.random
+local huge = math.huge
 
 local nextID = 0
 local INV_SPAWN_FADE_DUR = 1 / 0.12
@@ -551,9 +552,11 @@ local function updateEnemies(dt)
 					return
 				end
 
-				State.lives = State.lives - 1
-				State.waveLeaks = State.waveLeaks + 1
-				State.totalLeaks = State.totalLeaks + 1
+				local leakMult = e.leakDangerMult or 1.0
+				local leaks = max(1, floor(leakMult + 0.5))
+				State.lives = State.lives - leaks
+				State.waveLeaks = State.waveLeaks + leaks
+				State.totalLeaks = State.totalLeaks + leaks
 
 				State.livesAnim = 1
 
@@ -587,6 +590,68 @@ local function updateEnemies(dt)
 		end
 
 		::continue::
+	end
+
+	for i = 1, #enemies do
+		local e = enemies[i]
+		e.supportSpeedMult = 1.0
+		e.supportDangerMult = 1.0
+	end
+
+	for i = 1, #enemies do
+		local src = enemies[i]
+		local support = src.def and src.def.support
+
+		if support and src.hp > 0 then
+			src.supportPulseT = (src.supportPulseT or 0) - dt
+			local radius = support.radius or 0
+			local radius2 = radius * radius
+			local pulseWindow = support.pulse or 0.5
+			local bestDist2 = huge
+			local bestTarget = nil
+
+			for j = 1, #enemies do
+				local dst = enemies[j]
+
+				if dst ~= src and dst.hp > 0 then
+					local dx = dst.x - src.x
+					local dy = dst.y - src.y
+					local d2 = dx * dx + dy * dy
+
+					if d2 <= radius2 then
+						if support.speedMult then
+							dst.supportSpeedMult = max(dst.supportSpeedMult or 1.0, support.speedMult)
+						end
+
+						if support.dangerMult then
+							dst.supportDangerMult = max(dst.supportDangerMult or 1.0, support.dangerMult)
+						end
+
+						if support.nudgeStrength and dst.nudgeTargetX and dst.nudgeTargetY then
+							local inv = 1 / max(sqrt(d2), EPS)
+							dst.nudgeTargetX = dst.nudgeTargetX + dx * inv * support.nudgeStrength * dt
+							dst.nudgeTargetY = dst.nudgeTargetY + dy * inv * support.nudgeStrength * dt
+						end
+
+						if d2 < bestDist2 then
+							bestDist2 = d2
+							bestTarget = dst
+						end
+					end
+				end
+			end
+
+			if src.supportPulseT <= 0 and bestTarget then
+				src.supportPulseT = pulseWindow
+				Effects.spawnZapLine(src.x, src.y, bestTarget.x, bestTarget.y)
+			end
+		end
+	end
+
+	for i = 1, #enemies do
+		local e = enemies[i]
+		e.speed = e.baseSpeed * e.slowFactor * (e.supportSpeedMult or 1.0)
+		e.leakDangerMult = e.supportDangerMult or 1.0
 	end
 end
 

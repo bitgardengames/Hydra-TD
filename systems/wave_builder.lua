@@ -1,4 +1,5 @@
 local Builder = {}
+local Difficulty = require("systems.difficulty")
 
 -- Wave templates define structure, not difficulty
 local Templates = {
@@ -20,6 +21,27 @@ local Templates = {
 		spacing = 1.05, -- 1.05
 	},
 }
+
+local supportArchetypes = {"support_haste", "support_amp", "support_displacer"}
+
+local function supportCountFor(waveIndex)
+	if waveIndex < 4 then
+		return 0
+	end
+
+	local tier = Difficulty.key()
+	local isHardTier = tier == "hard" or tier == "elite"
+
+	if waveIndex < 12 then
+		return 1
+	end
+
+	if isHardTier then
+		return (waveIndex >= 24) and 3 or 2
+	end
+
+	return 1
+end
 
 -- Simple deterministic template selection
 local function pickTemplate(waveIndex)
@@ -50,12 +72,19 @@ function Builder.build(waveIndex)
 	end
 
 	local template = pickTemplate(waveIndex)
+	local supportCount = supportCountFor(waveIndex)
+	local supportKind = supportArchetypes[((waveIndex - 1) % #supportArchetypes) + 1]
 
 	return {
 		boss = false,
 		enemy = template.enemy,
 		count = template.baseCount,
 		spacing = template.spacing,
+		support = (supportCount > 0) and {
+			kind = supportKind,
+			count = supportCount,
+			spawnEarly = true,
+		} or nil,
 	}
 end
 
