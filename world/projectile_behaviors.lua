@@ -185,6 +185,71 @@ local function projectileHasHit(p, id)
 	return p.hitSet[id] == true
 end
 
+local HOOK_COMPAT = {
+	on_shot = "init",
+	on_tick = "update",
+	on_hit = "onHit",
+	on_kill = "onKill",
+	on_expire = "onExpire",
+}
+
+local function behaviorSupportsHook(def, behaviorData, hookId)
+	if behaviorData and behaviorData.hooks then
+		for i = 1, #behaviorData.hooks do
+			if behaviorData.hooks[i] == hookId then
+				return true
+			end
+		end
+		return false
+	end
+
+	return def[hookId] ~= nil or def[HOOK_COMPAT[hookId]] ~= nil
+end
+
+local function callBehaviorHook(def, hookId, p, a, b, c)
+	local fn = def[hookId] or def[HOOK_COMPAT[hookId]]
+	if not fn then
+		return nil
+	end
+	return fn(p, a, b, c)
+end
+
+local function consumeProjectile(p)
+	if p and not p._didExpireHook then
+		p._didExpireHook = true
+		for i = 1, #p.behaviors do
+			local b = p.behaviors[i]
+			local def = B[b.id]
+			if def and behaviorSupportsHook(def, b, "on_expire") then
+				callBehaviorHook(def, "on_expire", p, b.data)
+			end
+		end
+	end
+	return "consume"
+end
+
+local function canProcTarget(p, procKey, enemy, cooldown)
+	if not p or not procKey or not enemy then
+		return false
+	end
+	local id = enemy.id or enemy
+	p._procCooldowns = p._procCooldowns or {}
+	local map = p._procCooldowns[procKey]
+	if not map then
+		map = {}
+		p._procCooldowns[procKey] = map
+	end
+	local now = p.t or 0
+	local nextAt = map[id] or -1
+	if now < nextAt then
+		return false
+	end
+	map[id] = now + (cooldown or 0)
+	return true
+end
+
+ProjectileBehaviors.canProcTarget = canProcTarget
+
 -- visual stuff
 local function getProjectileColor(p, fallback)
 	local t = p.sourceTower
@@ -1226,6 +1291,10 @@ B.split_on_hit = {
 	type = "damage",
 
 	onHit = function(p, e, data)
+		if e and not canProcTarget(p, "split_on_hit", e, (data and data.targetCooldown) or 0.08) then
+			return
+		end
+
 		data = data or {}
 
 		local count = data.count or 2
@@ -1728,6 +1797,9 @@ B.spawn_orbital_on_hit = {
 		end
 
 		if not e or e.hp <= 0 then
+			return
+		end
+		if not canProcTarget(p, "spawn_orbital_on_hit", e, (data and data.targetCooldown) or 0.2) then
 			return
 		end
 
@@ -2530,7 +2602,9 @@ function ProjectileBehaviors.init(p)
 	for i = 1, #p.behaviors do
 		local b = p.behaviors[i]
 		local def = B[b.id]
-		if def and def.init then def.init(p, b.data) end
+		if def and behaviorSupportsHook(def, b, "on_shot") then
+			callBehaviorHook(def, "on_shot", p, b.data)
+		end
 	end
 end
 
@@ -2539,8 +2613,11 @@ function ProjectileBehaviors.update(p, dt)
 		local b = p.behaviors[i]
 		local def = B[b.id]
 
-		if def and def.update then
-			local result = def.update(p, dt, b.data)
+		if def and behaviorSupportsHook(def, b, "on_tick") then
+			local result = callBehaviorHook(def, "on_tick", p, dt, b.data)
+			if result == "consume" then
+				return consumeProjectile(p)
+			end
 			if result then return result end
 		end
 	end
@@ -2567,10 +2644,20 @@ function ProjectileBehaviors.hit(p, e, ctx)
 		local b = p.behaviors[i]
 		local def = B[b.id]
 
-		if def and def.onHit then
-			local result = def.onHit(p, e, b.data, ctx)
+		if def and behaviorSupportsHook(def, b, "on_hit") then
+			local result = callBehaviorHook(def, "on_hit", p, e, b.data, ctx)
 			if result == "consume" then
 				shouldConsume = true
+			end
+		end
+	end
+
+	if e and e.hp and e.hp <= 0 then
+		for i = 1, #p.behaviors do
+			local b = p.behaviors[i]
+			local def = B[b.id]
+			if def and behaviorSupportsHook(def, b, "on_kill") then
+				callBehaviorHook(def, "on_kill", p, e, b.data, ctx)
 			end
 		end
 	end
@@ -2578,7 +2665,7 @@ function ProjectileBehaviors.hit(p, e, ctx)
 	p.x, p.y = oldX, oldY
 
 	if shouldConsume then
-		return "consume"
+		return consumeProjectile(p)
 	end
 end
 
