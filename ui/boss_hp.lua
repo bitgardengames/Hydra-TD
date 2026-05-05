@@ -1,6 +1,7 @@
 local Theme = require("core.theme")
 local State = require("core.state")
 local Text = require("ui.text")
+local Enemies = require("world.enemies")
 
 local lg = love.graphics
 local floor = math.floor
@@ -40,6 +41,20 @@ end
 
 function BossHP.draw()
 	local boss = State.activeBoss
+
+	if type(boss) == "string" then
+		local enemies = Enemies.enemies
+
+		for i = 1, #enemies do
+			local enemy = enemies[i]
+
+			if enemy.boss == true and enemy.kind == boss and enemy.hp and enemy.hp > 0 then
+				boss = enemy
+				break
+			end
+		end
+	end
+
 	local hp = boss and boss.hp or nil
 	local maxHp = boss and boss.maxHp or nil
 
