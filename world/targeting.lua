@@ -42,18 +42,19 @@ local function evaluateSimpleCandidate(e, c)
 	end
 
 	local score
+	local priority = e.targetPriority or 0
 	if c.mode == SIMPLE_MODES.PROGRESS then
-		score = e.dist
+		score = e.dist + priority * 25
 		if e.slowTimer > 0 then
 			-- Slight deprioritization for slowed enemies
 			score = score - 5
 		end
 	elseif c.mode == SIMPLE_MODES.LOW_HP then
-		score = -e.hp
+		score = -e.hp + priority * 8
 	elseif c.mode == SIMPLE_MODES.HIGH_HP then
-		score = e.hp
+		score = e.hp + priority * 18
 	else
-		score = d2
+		score = d2 + priority * 10
 	end
 
 	local diff = score - c.bestScore
