@@ -370,13 +370,14 @@ function love.update(dt)
 		end
 
 		if State.waveLeaks == 0 then
-			local bonus = 2 * State.wave
+			local bonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
 			State.money = State.money + bonus
 
 			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
 		end
 
 		-- Otherwise continue as normal
+		State.activeBoss = nil
 		State.wave = State.wave + 1
 		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 		State.inPrep = true
