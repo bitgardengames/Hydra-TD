@@ -6,10 +6,38 @@ local DifficultyCurve = require("systems.difficulty_curve")
 local WaveBuilder = require("systems.wave_builder")
 local Steam = require("core.steam")
 local L = require("core.localization")
+local EnemyDefs = require("world.enemy_defs")
 
 local Waves = {}
 
 local max = math.max
+
+local biomeBossArchetypes = {
+	default = {"boss_summoner", "boss_displacement", "boss_suppression"},
+	autumn = {"boss_displacement", "boss_suppression", "boss_summoner"},
+	drylands = {"boss_suppression", "boss_displacement", "boss_summoner"},
+	winter = {"boss_summoner", "boss_suppression", "boss_displacement"},
+	highlands = {"boss_displacement", "boss_summoner", "boss_suppression"},
+}
+
+local mapBossOverrides = {
+	roundabout = { [1] = "boss_displacement", [2] = "boss_summoner" },
+	gauntlet = { [1] = "boss_suppression", [2] = "boss_displacement" },
+	terrace = { [1] = "boss_summoner", [2] = "boss_suppression" },
+}
+
+local function getBossByArchetype(map, bossIndex)
+	local mapOverrides = map and mapBossOverrides[map.id]
+	if mapOverrides and mapOverrides[bossIndex] then
+		return mapOverrides[bossIndex]
+	end
+
+	local biome = (map and map.biome) or "default"
+	local archetypes = biomeBossArchetypes[biome] or biomeBossArchetypes.default
+	local slot = ((bossIndex - 1) % #archetypes) + 1
+
+	return archetypes[slot]
+end
 
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
 local spawner = {
@@ -54,23 +82,28 @@ function Waves.startWave()
 	-- Boss waves
 	if wave.boss then
 		local bossKind = wave.enemy or "boss"
+		local bossIndex = math.floor(State.wave / 10)
 
 		if map and map.waves and map.waves.bosses then
-			local bossIndex = State.wave / 10
 			local bossDef = map.waves.bosses[bossIndex]
 
 			if bossDef and bossDef.type then
 				bossKind = bossDef.type
 			end
+		else
+			bossKind = getBossByArchetype(map, bossIndex)
 		end
 
 		local hpMult = DifficultyCurve.getBossHpMultiplier(State.wave) * mapMult
 		local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
+		State.activeBoss = bossKind
 		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
 
 		return
 	end
+
+	State.activeBoss = nil
 
 	-- Normal waves: single enemy kind with count + spacing
 	local count = max(1, wave.count or 1)
@@ -115,6 +148,22 @@ end
 
 function Waves.allEnemiesCleared()
 	return #Enemies.enemies == 0 and not spawner.active
+end
+
+function Waves.getWaveCompletionBonus(wave, waveLeaks)
+	if waveLeaks ~= 0 then
+		return 0
+	end
+
+	local base = 2 * wave
+	local bossKind = State.activeBoss
+	local def = bossKind and EnemyDefs[bossKind] or nil
+	local mechanicWeight = (def and def.mechanicWeight) or 1.0
+	local archetypeBonus = (def and def.boss and def.mechanicPackage) and 0.2 or 0
+	local milestoneBonus = (wave % 5 == 0) and 0.12 or 0
+	local mult = 1.0 + archetypeBonus + milestoneBonus + ((mechanicWeight - 1.0) * 0.75)
+
+	return math.floor((base * mult) + 0.5)
 end
 
 function Waves.resetSpawner()
