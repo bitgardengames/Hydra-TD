@@ -26,6 +26,62 @@ local mapBossOverrides = {
 	terrace = { [1] = "boss_summoner", [2] = "boss_suppression" },
 }
 
+local bossEncounterTemplates = {
+	boss_displacement = {
+		flankKind = "runner",
+		flankBurst = 2,
+		interval = 6.5,
+		initialDelay = 3.0,
+		maxAliveAdds = 14,
+		maxTotalAdds = 26,
+		addHpMult = 0.95,
+		addSpdMult = 1.15,
+	},
+	boss_suppression = {
+		flankKind = "tank",
+		flankBurst = 1,
+		interval = 7.2,
+		initialDelay = 4.0,
+		maxAliveAdds = 10,
+		maxTotalAdds = 18,
+		addHpMult = 1.2,
+		addSpdMult = 0.9,
+	},
+	boss_summoner = {
+		flankKind = "grunt",
+		flankBurst = 4,
+		interval = 5.8,
+		initialDelay = 2.4,
+		maxAliveAdds = 20,
+		maxTotalAdds = 34,
+		addHpMult = 0.9,
+		addSpdMult = 1.0,
+	},
+}
+
+local biomeTemplateOverrides = {
+	autumn = {
+		boss_displacement = { flankBurst = 3, interval = 5.7, addSpdMult = 1.2 },
+		boss_suppression = { interval = 6.6, maxAliveAdds = 11 },
+		boss_summoner = { flankBurst = 5, interval = 5.0, maxTotalAdds = 38 },
+	},
+	drylands = {
+		boss_displacement = { initialDelay = 2.3, maxAliveAdds = 12 },
+		boss_suppression = { flankBurst = 2, interval = 7.8, addHpMult = 1.3 },
+		boss_summoner = { flankKind = "runner", flankBurst = 3, interval = 6.8 },
+	},
+	winter = {
+		boss_displacement = { interval = 7.4, addSpdMult = 1.05 },
+		boss_suppression = { interval = 6.9, maxTotalAdds = 22 },
+		boss_summoner = { flankBurst = 4, interval = 6.2, addHpMult = 1.0 },
+	},
+	highlands = {
+		boss_displacement = { flankKind = "runner", flankBurst = 2, interval = 5.9 },
+		boss_suppression = { flankKind = "tank", flankBurst = 1, interval = 6.5, maxAliveAdds = 12 },
+		boss_summoner = { flankKind = "runner", flankBurst = 4, interval = 5.4 },
+	},
+}
+
 local function getBossByArchetype(map, bossIndex)
 	local mapOverrides = map and mapBossOverrides[map.id]
 	if mapOverrides and mapOverrides[bossIndex] then
@@ -39,6 +95,50 @@ local function getBossByArchetype(map, bossIndex)
 	return archetypes[slot]
 end
 
+local function mergeTemplate(base, override)
+	if not override then
+		return base
+	end
+
+	local out = {}
+	for k, v in pairs(base) do
+		out[k] = v
+	end
+	for k, v in pairs(override) do
+		out[k] = v
+	end
+
+	return out
+end
+
+local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
+	local base = bossEncounterTemplates[bossKind]
+	if not base then
+		return nil
+	end
+
+	local resolved = base
+	local biome = (map and map.biome) or "default"
+	local biomeOverrides = biomeTemplateOverrides[biome]
+	if biomeOverrides and biomeOverrides[bossKind] then
+		resolved = mergeTemplate(resolved, biomeOverrides[bossKind])
+	end
+
+	if map and map.waves and map.waves.encounters then
+		local mapDefs = map.waves.encounters
+		local keyed = mapDefs[bossKind]
+		local indexed = mapDefs[bossIndex]
+		if keyed then
+			resolved = mergeTemplate(resolved, keyed)
+		end
+		if indexed then
+			resolved = mergeTemplate(resolved, indexed)
+		end
+	end
+
+	return resolved
+end
+
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
 local spawner = {
 	active = false,
@@ -48,6 +148,19 @@ local spawner = {
 	hpMult = 1.0,
 	spdMult = 1.0,
 	kind = nil,
+}
+
+local bossAdds = {
+	active = false,
+	kind = nil,
+	burst = 0,
+	timer = 0,
+	interval = 0,
+	maxAlive = 0,
+	maxTotal = 0,
+	totalSpawned = 0,
+	hpMult = 1.0,
+	spdMult = 1.0,
 }
 
 local function beginSpawner(kind, count, gap, hpMult, spdMult)
@@ -101,11 +214,28 @@ function Waves.startWave()
 		State.activeBossKind = bossKind
 		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
 
+		local template = resolveBossEncounterTemplate(map, bossKind, bossIndex)
+		if template and template.flankKind then
+			bossAdds.active = true
+			bossAdds.kind = template.flankKind
+			bossAdds.burst = max(1, template.flankBurst or 1)
+			bossAdds.interval = max(1.2, template.interval or 6.0)
+			bossAdds.timer = max(0.6, template.initialDelay or (bossAdds.interval * 0.5))
+			bossAdds.maxAlive = max(1, template.maxAliveAdds or 10)
+			bossAdds.maxTotal = max(bossAdds.maxAlive, template.maxTotalAdds or bossAdds.maxAlive)
+			bossAdds.totalSpawned = 0
+			bossAdds.hpMult = (template.addHpMult or 1.0) * DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult
+			bossAdds.spdMult = (template.addSpdMult or 1.0) * DifficultyCurve.getEnemySpeedMultiplier(State.wave)
+		else
+			bossAdds.active = false
+		end
+
 		return
 	end
 
 	State.activeBoss = nil
 	State.activeBossKind = nil
+	bossAdds.active = false
 
 	-- Normal waves: single enemy kind with count + spacing
 	local count = max(1, wave.count or 1)
@@ -146,6 +276,38 @@ function Waves.updateSpawner(dt)
 	if spawner.remaining <= 0 then
 		spawner.active = false
 	end
+
+	if bossAdds.active then
+		local boss = State.activeBoss
+		local bossAlive = boss and boss.hp and boss.hp > 0 and not boss.dying
+		if not bossAlive then
+			bossAdds.active = false
+			return
+		end
+
+		bossAdds.timer = bossAdds.timer - dt
+
+		if bossAdds.timer <= 0 and bossAdds.totalSpawned < bossAdds.maxTotal then
+			local aliveAdds = 0
+			for i = 1, #Enemies.enemies do
+				local e = Enemies.enemies[i]
+				if not e.boss and e.kind == bossAdds.kind and e.hp > 0 then
+					aliveAdds = aliveAdds + 1
+				end
+			end
+
+			local available = bossAdds.maxAlive - aliveAdds
+			if available > 0 then
+				local toSpawn = max(0, math.min(bossAdds.burst, available, bossAdds.maxTotal - bossAdds.totalSpawned))
+				if toSpawn > 0 then
+					beginSpawner(bossAdds.kind, toSpawn, 0.18, bossAdds.hpMult, bossAdds.spdMult)
+					bossAdds.totalSpawned = bossAdds.totalSpawned + toSpawn
+				end
+			end
+
+			bossAdds.timer = bossAdds.interval
+		end
+	end
 end
 
 function Waves.allEnemiesCleared()
@@ -176,6 +338,16 @@ function Waves.resetSpawner()
 	spawner.hpMult = 1.0
 	spawner.spdMult = 1.0
 	spawner.kind = nil
+	bossAdds.active = false
+	bossAdds.kind = nil
+	bossAdds.burst = 0
+	bossAdds.timer = 0
+	bossAdds.interval = 0
+	bossAdds.maxAlive = 0
+	bossAdds.maxTotal = 0
+	bossAdds.totalSpawned = 0
+	bossAdds.hpMult = 1.0
+	bossAdds.spdMult = 1.0
 end
 
 function Waves.getSpawner()
