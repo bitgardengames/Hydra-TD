@@ -156,6 +156,13 @@ end
 
 local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
 	local def = EnemyDefs[kind]
+	local tier = opts and opts.tier or "standard"
+	local variant = nil
+	if tier == "elite" then
+		variant = def.eliteVariant
+	elseif tier == "hard" then
+		variant = def.hardVariant
+	end
 
 	local x, y
 
@@ -201,10 +208,12 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.boss = def.boss or false
 	e.hpScale = hpScale
 	e.spdScale = spdScale
-	e.hp = (def.hp * hpScale) or 0
-	e.maxHp = def.hp * hpScale
-	e.baseSpeed = def.speed * spdScale
-	e.speed = def.speed * spdScale
+	local hpVariantMult = (variant and variant.hpMult) or 1.0
+	local speedVariantMult = (variant and variant.speedMult) or 1.0
+	e.hp = (def.hp * hpScale * hpVariantMult) or 0
+	e.maxHp = def.hp * hpScale * hpVariantMult
+	e.baseSpeed = def.speed * spdScale * speedVariantMult
+	e.speed = def.speed * spdScale * speedVariantMult
 	e.reward = def.reward * (1.0 + State.wave * 0.01)
 	e.score = def.score
 	e.radius = def.radius
@@ -228,6 +237,21 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.shadow = true
 	e.id = nextID
 	e.shockID = 0
+	e.targetPriority = (variant and variant.targetPriority) or 0
+	e.tier = tier
+	e.modifierFlags = {}
+
+	if variant and variant.modifierFlags then
+		for k, v in pairs(variant.modifierFlags) do
+			e.modifierFlags[k] = v
+		end
+	end
+
+	if opts and opts.modifiers then
+		for k, v in pairs(opts.modifiers) do
+			e.modifierFlags[k] = v
+		end
+	end
 
 	e.face = "normal"
 	e.faceT = 0

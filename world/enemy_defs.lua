@@ -10,6 +10,8 @@ return {
 		reward = 7,
 		score = 10,
 		radius = 10,
+		hardVariant = {targetPriority = 0.08, speedMult = 1.05},
+		eliteVariant = {targetPriority = 0.16, modifierFlags = {shielded = true}},
 	},
 
 	tank = {
@@ -19,6 +21,8 @@ return {
 		reward = 12,
 		score = 22,
 		radius = 12,
+		hardVariant = {targetPriority = 0.12, hpMult = 1.08},
+		eliteVariant = {targetPriority = 0.2, modifierFlags = {shielded = true}},
 	},
 
 	runner = {
@@ -28,6 +32,8 @@ return {
 		reward = 8,
 		score = 12,
 		radius = 9,
+		hardVariant = {targetPriority = 0.1, speedMult = 1.1},
+		eliteVariant = {targetPriority = 0.18, modifierFlags = {shielded = true}},
 	},
 
 	support_haste = {

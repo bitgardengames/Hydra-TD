@@ -24,6 +24,22 @@ local Templates = {
 
 local supportArchetypes = {"support_haste", "support_amp", "support_displacer"}
 
+local function getWaveTier(waveIndex)
+	if waveIndex % 10 == 0 then
+		return "standard"
+	end
+
+	if waveIndex % 6 == 0 then
+		return "elite"
+	end
+
+	if waveIndex % 3 == 0 then
+		return "hard"
+	end
+
+	return "standard"
+end
+
 local function supportCountFor(waveIndex)
 	if waveIndex < 4 then
 		return 0
@@ -68,18 +84,21 @@ function Builder.build(waveIndex)
 			enemy = "boss",
 			count = 1,
 			spacing = 0,
+			tier = "standard",
 		}
 	end
 
 	local template = pickTemplate(waveIndex)
 	local supportCount = supportCountFor(waveIndex)
 	local supportKind = supportArchetypes[((waveIndex - 1) % #supportArchetypes) + 1]
+	local tier = getWaveTier(waveIndex)
 
 	return {
 		boss = false,
 		enemy = template.enemy,
 		count = template.baseCount,
 		spacing = template.spacing,
+		tier = tier,
 		support = (supportCount > 0) and {
 			kind = supportKind,
 			count = supportCount,
