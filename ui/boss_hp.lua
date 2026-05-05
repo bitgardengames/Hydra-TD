@@ -40,8 +40,10 @@ end
 
 function BossHP.draw()
 	local boss = State.activeBoss
+	local hp = boss and boss.hp or nil
+	local maxHp = boss and boss.maxHp or nil
 
-	if not boss or boss.hp <= 0 then
+	if type(hp) ~= "number" or type(maxHp) ~= "number" or maxHp <= 0 or hp <= 0 then
 		hpCache.hpValue = nil
 		hpCache.maxText = nil
 		hpCache.text = nil
@@ -50,7 +52,7 @@ function BossHP.draw()
 	end
 
 	if hpCache.maxText == nil then
-		hpCache.maxText = formatNum(boss.maxHp)
+		hpCache.maxText = formatNum(maxHp)
 	end
 
 	local sw, _ = lg.getDimensions()
@@ -76,14 +78,14 @@ function BossHP.draw()
 	lg.rectangle("fill", x, fy, barW, barH, innerRadius)
 
 	-- Fill
-	local hpFrac = max(0, boss.hp / boss.maxHp)
+	local hpFrac = max(0, hp / maxHp)
 	local fillW = floor(barW * hpFrac)
 
 	lg.setColor(colorHealth)
 	lg.rectangle("fill", x, fy, fillW, barH, innerRadius)
 
 	-- Text
-	local hpInt = ceil(boss.hp)
+	local hpInt = ceil(hp)
 
 	if hpCache.hpValue ~= hpInt then
 		hpCache.hpValue = hpInt
