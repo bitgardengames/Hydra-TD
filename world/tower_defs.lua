@@ -100,7 +100,7 @@ return {
 			{id = "move_homing"},
 			{id = "hit_circle", data = {radius = 12}},
 			{id = "hit_damage"},
-			{id = "apply_poison", data = {dps = 4, dur = 2, maxStacks = 10}},
+			{id = "apply_poison", data = {dps = 6, dur = 2, maxStacks = 10}},
 			{id = "draw_poison"}
 		}
 	},
