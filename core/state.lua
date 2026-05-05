@@ -22,6 +22,7 @@ local state = {
 	victory = false,
 	endless = false,
 	activeBoss = nil,
+	activeBossKind = nil,
 	speed = 1,
 
 	endT = 0,
