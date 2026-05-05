@@ -235,6 +235,11 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	updateEnemyPathPosition(e, MapMod.map.pathWorld)
 
 	enemies[#enemies + 1] = e
+
+	if e.boss then
+		State.activeBoss = e
+		State.activeBossKind = e.kind
+	end
 end
 
 local function updateEnemies(dt)
@@ -392,6 +397,7 @@ local function updateEnemies(dt)
 				--Effects.spawnEnemyDeath(e.x, e.y, e.radius)
 
 				State.activeBoss = nil
+				State.activeBossKind = nil
 				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
 
 				Spatial.removeEnemy(e)
@@ -524,6 +530,8 @@ local function updateEnemies(dt)
 
 			if e.exitFade <= 0 then
 				if isBoss then
+					State.activeBoss = nil
+					State.activeBossKind = nil
 					State.lives = 0
 					State.gameOver = true
 					State.victory = false

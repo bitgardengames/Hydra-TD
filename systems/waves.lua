@@ -97,13 +97,15 @@ function Waves.startWave()
 		local hpMult = DifficultyCurve.getBossHpMultiplier(State.wave) * mapMult
 		local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
-		State.activeBoss = bossKind
+		State.activeBoss = nil
+		State.activeBossKind = bossKind
 		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
 
 		return
 	end
 
 	State.activeBoss = nil
+	State.activeBossKind = nil
 
 	-- Normal waves: single enemy kind with count + spacing
 	local count = max(1, wave.count or 1)
@@ -156,7 +158,7 @@ function Waves.getWaveCompletionBonus(wave, waveLeaks)
 	end
 
 	local base = 2 * wave
-	local bossKind = State.activeBoss
+	local bossKind = State.activeBossKind
 	local def = bossKind and EnemyDefs[bossKind] or nil
 	local mechanicWeight = (def and def.mechanicWeight) or 1.0
 	local archetypeBonus = (def and def.boss and def.mechanicPackage) and 0.2 or 0

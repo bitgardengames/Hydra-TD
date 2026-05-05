@@ -151,6 +151,7 @@ function resetGame()
     State.victory = false
     State.endless = false
     State.activeBoss = nil
+	State.activeBossKind = nil
 
     -- Reset damage stats and cached values
 	State.resetDamage()
@@ -378,6 +379,7 @@ function love.update(dt)
 
 		-- Otherwise continue as normal
 		State.activeBoss = nil
+		State.activeBossKind = nil
 		State.wave = State.wave + 1
 		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 		State.inPrep = true
