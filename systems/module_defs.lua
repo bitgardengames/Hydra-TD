@@ -731,7 +731,7 @@ addSpec("cannon_shockwave", "module.cannon_shockwave", "moduleDesc.cannon_shockw
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "aoe_damage", data = {radius = 40, falloff = 0.72}},
-	{id = "cannon_damage_scale", data = {mult = 1.12}},
+	{id = "cannon_damage_scale", data = {mult = 0.60}},
 	{id = "cannon_shockwave", data = {radius = 54, damageMult = 0.62, minFalloff = 0.34, impulse = 4.8}},
 	{id = "draw_cannon"},
 })
