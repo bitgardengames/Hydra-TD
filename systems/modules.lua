@@ -150,6 +150,44 @@ end
 
 local ContextMetatable = { __index = ContextMethods }
 
+
+local function applyTowerUpgradeBehaviorScaling(ctx, tower)
+	if not tower or not tower.def then
+		return
+	end
+
+	local upgrade = tower.def.upgrade or {}
+	local level = math.max(1, tower.level or 1)
+	local upgrades = math.max(0, level - 1)
+	if upgrades <= 0 then
+		return
+	end
+
+	local poisonDurAdd = upgrade.poisonDurAdd or 0
+	local poisonDpsMult = upgrade.poisonDpsMult or 1
+	local stackAdd = upgrade.stackAdd or 0
+	local splashAdd = upgrade.splashAdd or 0
+
+	for i = 1, #ctx.behaviors do
+		local b = ctx.behaviors[i]
+		local data = b.data
+		if data then
+			if b.id == "apply_poison" then
+				if poisonDurAdd ~= 0 then
+					data.dur = (data.dur or 0) + poisonDurAdd * upgrades
+				end
+				if poisonDpsMult ~= 1 then
+					data.dps = (data.dps or 0) * (poisonDpsMult ^ upgrades)
+				end
+				if stackAdd ~= 0 then
+					data.maxStacks = math.max(1, (data.maxStacks or 1) + stackAdd * upgrades)
+				end
+			elseif b.id == "aoe_damage" and splashAdd ~= 0 then
+				data.radius = math.max(1, (data.radius or 1) + splashAdd * upgrades)
+			end
+		end
+	end
+end
 local function createContext(base)
 	local ctx = {
 		behaviors = copyBehaviors(base),
@@ -203,6 +241,8 @@ function Modules.buildContext(tower)
 			specialization.apply(ctx)
 		end
 	end
+
+	applyTowerUpgradeBehaviorScaling(ctx, tower)
 
 	-- =========================================
 	-- 🔥 BEAM FIX: ensure hit_damage exists
