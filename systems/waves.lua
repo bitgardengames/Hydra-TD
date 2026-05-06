@@ -11,6 +11,15 @@ local EnemyDefs = require("world.enemy_defs")
 local Waves = {}
 
 local max = math.max
+local min = math.min
+
+local DEBUG_WAVE_PATTERNS = os.getenv("HYDRA_DEBUG_WAVES") == "1"
+
+local function debugPatternLog(msg)
+	if DEBUG_WAVE_PATTERNS then
+		print("[waves] " .. msg)
+	end
+end
 
 local biomeBossArchetypes = {
 	default = {"boss_summoner", "boss_displacement", "boss_suppression"},
@@ -48,9 +57,15 @@ local spawner = {
 	hpMult = 1.0,
 	spdMult = 1.0,
 	kind = nil,
+	pattern = nil,
+	burstCount = 1,
+	burstGap = nil,
+	laneWeights = nil,
+	laneCursor = 1,
 }
 
-local function beginSpawner(kind, count, gap, hpMult, spdMult)
+
+local function beginSpawner(kind, count, gap, hpMult, spdMult, pattern, burstCount, burstGap, laneWeights)
 	spawner.active = true
 	spawner.timer = 0
 	spawner.gap = gap or 0.6
@@ -58,8 +73,26 @@ local function beginSpawner(kind, count, gap, hpMult, spdMult)
 	spawner.spdMult = spdMult or 1.0
 	spawner.kind = kind
 	spawner.remaining = count or 0
+	spawner.pattern = pattern
+	spawner.burstCount = max(1, burstCount or 1)
+	spawner.burstGap = burstGap
+	spawner.laneWeights = laneWeights
+	spawner.laneCursor = 1
 
 	State.inPrep = false
+end
+
+local function currentLaneWeight()
+	local weights = spawner.laneWeights
+
+	if type(weights) ~= "table" or #weights == 0 then
+		return 1.0
+	end
+
+	local idx = ((spawner.laneCursor - 1) % #weights) + 1
+	spawner.laneCursor = idx + 1
+
+	return max(0.05, weights[idx] or 1.0)
 end
 
 -- Wave start
@@ -115,8 +148,19 @@ function Waves.startWave()
 	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
 
 	local gap = wave.spacing or 1.0
+	local pattern = wave.spawnPattern
+	local burstCount = wave.burstCount
+	local burstGap = wave.burstGap
+	local laneWeights = wave.laneWeights
 
-	beginSpawner(kind, count, gap, hpMult, spdMult)
+	debugPatternLog(("wave %d -> pattern=%s burstCount=%s burstGap=%.3f"):format(
+		State.wave,
+		tostring(pattern or "fallback"),
+		tostring(burstCount or 1),
+		burstGap or gap
+	))
+
+	beginSpawner(kind, count, gap, hpMult, spdMult, pattern, burstCount, burstGap, laneWeights)
 end
 
 -- Spawning update
@@ -137,10 +181,39 @@ function Waves.updateSpawner(dt)
 			return
 		end
 
-		Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
+		local pattern = spawner.pattern
+		local laneWeight = currentLaneWeight()
+		local toSpawn = 1
+		local timerGap = spawner.gap * (0.9 + (0.2 * laneWeight))
 
-		spawner.remaining = spawner.remaining - 1
-		spawner.timer = spawner.gap
+		if pattern == "clustered" then
+			toSpawn = min(spawner.remaining, max(2, spawner.burstCount or 2))
+			timerGap = spawner.gap * (1.2 + (0.35 * laneWeight))
+		elseif pattern == "burst" then
+			toSpawn = min(spawner.remaining, max(2, spawner.burstCount or 3))
+			timerGap = max(spawner.gap * (1.6 + (0.4 * laneWeight)), (spawner.burstGap or 0.1) * 2)
+		elseif pattern == "lane_split" then
+			toSpawn = min(spawner.remaining, max(1, spawner.burstCount or 1))
+			timerGap = max(0.1, spawner.gap * (0.6 + (0.4 * laneWeight)))
+		elseif pattern == "distributed" then
+			toSpawn = 1
+			timerGap = spawner.gap
+		else
+			-- Compatibility fallback for maps/templates without pattern metadata
+			toSpawn = 1
+			timerGap = spawner.gap
+		end
+
+		for _ = 1, toSpawn do
+			if spawner.remaining <= 0 then
+				break
+			end
+
+			Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
+			spawner.remaining = spawner.remaining - 1
+		end
+
+		spawner.timer = timerGap
 	end
 
 	if spawner.remaining <= 0 then
@@ -176,6 +249,11 @@ function Waves.resetSpawner()
 	spawner.hpMult = 1.0
 	spawner.spdMult = 1.0
 	spawner.kind = nil
+	spawner.pattern = nil
+	spawner.burstCount = 1
+	spawner.burstGap = nil
+	spawner.laneWeights = nil
+	spawner.laneCursor = 1
 end
 
 function Waves.getSpawner()
