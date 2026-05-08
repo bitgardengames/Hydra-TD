@@ -7,6 +7,7 @@ local WaveBuilder = require("systems.wave_builder")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
+local Spatial = require("world.spatial_grid")
 
 local Waves = {}
 
@@ -288,9 +289,10 @@ function Waves.updateSpawner(dt)
 		bossAdds.timer = bossAdds.timer - dt
 
 		if bossAdds.timer <= 0 and bossAdds.totalSpawned < bossAdds.maxTotal then
+			local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, 320, true)
 			local aliveAdds = 0
-			for i = 1, #Enemies.enemies do
-				local e = Enemies.enemies[i]
+			for i = 1, nearbyCount do
+				local e = nearbyAdds[i]
 				if not e.boss and e.kind == bossAdds.kind and e.hp > 0 then
 					aliveAdds = aliveAdds + 1
 				end
