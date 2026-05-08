@@ -45,7 +45,6 @@ local getTargetMode = Modules.getTargetMode
 local FIRE_ANGLE_EPS = math.rad(6)
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_BRANCH_UPGRADES = 4
-local DEBUG_VERIFY_TOWER_INDEX = Constants.DEBUG_VERIFY_TOWER_INDEX == true
 
 local function swapRemove(list, index)
 	local last = #list
@@ -101,31 +100,6 @@ local function clearTowerIndex(t)
 	clearTowerIndexAt(t._indexGx or t.gx, t._indexGy or t.gy, t)
 	t._indexGx = nil
 	t._indexGy = nil
-end
-
-local function verifyTowerIndexIntegrity()
-	if not DEBUG_VERIFY_TOWER_INDEX then
-		return true
-	end
-
-	for gx, col in pairs(towersByCell) do
-		for gy, indexedTower in pairs(col) do
-			if indexedTower == nil or indexedTower.gx ~= gx or indexedTower.gy ~= gy then
-				error(("tower index mismatch at cell (%s,%s)"):format(tostring(gx), tostring(gy)))
-			end
-		end
-	end
-
-	for i = 1, #towers do
-		local t = towers[i]
-		local col = towersByCell[t.gx]
-
-		if not col or col[t.gy] ~= t then
-			error(("tower missing from index at cell (%s,%s)"):format(tostring(t.gx), tostring(t.gy)))
-		end
-	end
-
-	return true
 end
 
 local function applyUpgradeScaling(t)
@@ -368,7 +342,6 @@ local function findTowerAt(gx, gy)
 end
 
 local function updateTowers(dt)
-	verifyTowerIndexIntegrity()
 
 	for i = 1, #towers do
 		local t = towers[i]
