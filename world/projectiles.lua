@@ -391,6 +391,35 @@ local function resolveFX(evt)
 	end
 end
 
+local function resolveHit(p, evt)
+	local hitCtx = evt.ctx
+	if not hitCtx and (evt.origin or evt.hitX or evt.hitY) then
+		hitCtx = evt
+	end
+
+	local res = PB.hit(p, evt.target, hitCtx)
+	if res == "consume" then
+		p._consumed = true
+	end
+end
+
+local function resolveConsume(p)
+	p._consumed = true
+end
+
+local eventDispatch = {
+	spawn_projectile = resolveSpawnProjectile,
+	damage = resolveDamage,
+	impulse = function(_, evt)
+		resolveImpulse(evt)
+	end,
+	fx = function(_, evt)
+		resolveFX(evt)
+	end,
+	hit = resolveHit,
+	consume = resolveConsume,
+}
+
 local function resolveEvents(p)
 	local list = p.events
 	if not list then
@@ -406,26 +435,15 @@ local function resolveEvents(p)
 		read = read + 1
 
 		if evt and evt.id then
-			if evt.id == "spawn_projectile" then
-				resolveSpawnProjectile(p, evt)
-			elseif evt.id == "damage" then
-				resolveDamage(p, evt)
-			elseif evt.id == "impulse" then
-				resolveImpulse(evt)
-			elseif evt.id == "fx" then
-				resolveFX(evt)
-			elseif evt.id == "hit" then
-				local hitCtx = evt.ctx
-				if not hitCtx and (evt.origin or evt.hitX or evt.hitY) then
-					hitCtx = evt
+			local resolver = eventDispatch[evt.id]
+			if resolver then
+				resolver(p, evt)
+			else
+				-- Explicit fallback for dynamic/custom event ids.
+				local onEvent = p.onEvent
+				if onEvent then
+					onEvent(p, evt)
 				end
-
-				local res = PB.hit(p, evt.target, hitCtx)
-				if res == "consume" then
-					p._consumed = true
-				end
-			elseif evt.id == "consume" then
-				p._consumed = true
 			end
 		end
 
@@ -450,7 +468,6 @@ local function processHit(p)
 		local evt = takeEvent(p, "hit")
 		evt.target = nil
 		pushEvent(p, evt)
-		resolveEvents(p)
 		return
 	end
 
@@ -476,8 +493,6 @@ local function processHit(p)
 	evt.target = hitTarget
 	evt.origin = p.hitOrigin or "primary"
 	pushEvent(p, evt)
-
-	resolveEvents(p)
 end
 
 local function spawn(t, e)
