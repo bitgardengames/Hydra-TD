@@ -18,6 +18,7 @@ local TowerBranchDefs = require("world.tower_branch_defs")
 --local Steam = require("luasteam")
 
 local towers = {}
+local towersByCell = {}
 
 local pi = math.pi
 local abs = math.abs
@@ -49,6 +50,74 @@ local function swapRemove(list, index)
 	local last = #list
 	list[index] = list[last]
 	list[last] = nil
+end
+
+
+local function setTowerIndex(t)
+	if not t then
+		return
+	end
+
+	local gx, gy = t.gx, t.gy
+
+	if gx == nil or gy == nil then
+		return
+	end
+
+	local col = towersByCell[gx]
+
+	if not col then
+		col = {}
+		towersByCell[gx] = col
+	end
+
+	col[gy] = t
+	t._indexGx = gx
+	t._indexGy = gy
+end
+
+local function clearTowerIndexAt(gx, gy, expectedTower)
+	local col = towersByCell[gx]
+
+	if not col then
+		return
+	end
+
+	if expectedTower == nil or col[gy] == expectedTower then
+		col[gy] = nil
+
+		if not next(col) then
+			towersByCell[gx] = nil
+		end
+	end
+end
+
+local function clearTowerIndex(t)
+	if not t then
+		return
+	end
+
+	clearTowerIndexAt(t._indexGx or t.gx, t._indexGy or t.gy, t)
+	t._indexGx = nil
+	t._indexGy = nil
+end
+
+local function ensureTowerIndexed(t)
+	if not t then
+		return
+	end
+
+	if t._indexGx ~= t.gx or t._indexGy ~= t.gy then
+		clearTowerIndexAt(t._indexGx, t._indexGy, t)
+		setTowerIndex(t)
+		return
+	end
+
+	local col = towersByCell[t.gx]
+
+	if not col or col[t.gy] ~= t then
+		setTowerIndex(t)
+	end
 end
 
 local function applyUpgradeScaling(t)
@@ -159,6 +228,7 @@ local function addTower(kind, gx, gy)
 	MapMod.setBlocked(gx, gy)
 
 	towers[#towers + 1] = t
+	setTowerIndex(t)
 
 	Floaters.add(x, t.renderY - 30, "-" .. def.cost, cwR, cwG, cwB)
 
@@ -262,6 +332,8 @@ local function sellTower(t)
 		end
 	end
 
+	clearTowerIndex(t)
+
 	for i = #towers, 1, -1 do
 		if towers[i] == t then
 			swapRemove(towers, i)
@@ -278,20 +350,19 @@ local function sellTower(t)
 end
 
 local function findTowerAt(gx, gy)
-	for i = 1, #towers do
-		local t = towers[i]
+	local col = towersByCell[gx]
 
-		if t.gx == gx and t.gy == gy then
-			return t
-		end
+	if not col then
+		return nil
 	end
 
-	return nil
+	return col[gy]
 end
 
 local function updateTowers(dt)
 	for i = 1, #towers do
 		local t = towers[i]
+		ensureTowerIndexed(t)
 
 		t.cooldown = t.cooldown - dt
 		t.fireAnim = max(0, t.fireAnim - dt * 8)
@@ -450,13 +521,19 @@ end
 
 local function clear()
 	for i = #towers, 1, -1 do
+		clearTowerIndex(towers[i])
 		towers[i] = nil
+	end
+
+	for gx in pairs(towersByCell) do
+		towersByCell[gx] = nil
 	end
 end
 
 return {
 	towers = towers,
 	TowerDefs = TowerDefs,
+	towersByCell = towersByCell,
 	addTower = addTower,
 	getUpgradeCost = getUpgradeCost,
 	upgradeTower = upgradeTower,
