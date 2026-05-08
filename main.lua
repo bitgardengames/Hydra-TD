@@ -508,7 +508,6 @@ end
 local function detectControllerType(joystick)
 	local name = joystick:getName():lower()
 
-	--print("Controller name:", name)
 
 	-- Steam Deck
 	if name:find("steam") then

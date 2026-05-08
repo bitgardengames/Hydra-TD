@@ -637,17 +637,6 @@ function Director.draw()
 		drawVignette(SW, SH, 0.04)
 	end
 
-	if Director.scrub.playing then -- Director.scrub.enabled
-		local frame = Director.scrub.frame
-		local time = frame / FPS
-
-		lg.setColor(0, 0, 0, 0.6)
-		lg.rectangle("fill", 10, 10, 180, 60, 6)
-
-		lg.setColor(1, 1, 1, 1)
-		lg.print(string.format("Frame: %d", frame), 20, 20)
-		lg.print(string.format("Time: %.2f", time), 20, 40)
-	end
 end
 
 function love.keypressed(key)
