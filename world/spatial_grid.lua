@@ -18,6 +18,34 @@ local nestedQueryBuffer = {}
 local nestedQueryCount = 0
 local occupancyBuffer = {}
 
+local function nextStamp(ctx)
+	local stamp = ctx.stamp + 1
+	if stamp == math.maxinteger then
+		for id in pairs(ctx.seen) do
+			ctx.seen[id] = nil
+		end
+		stamp = 1
+	end
+	ctx.stamp = stamp
+	return stamp
+end
+
+local outerCollectContext = {
+	results = outerQueryBuffer,
+	count = 0,
+	dedupeById = false,
+	seen = {},
+	stamp = 0,
+}
+
+local nestedCollectContext = {
+	results = nestedQueryBuffer,
+	count = 0,
+	dedupeById = false,
+	seen = {},
+	stamp = 0,
+}
+
 local function eachNeighborInRange(x, y, radius, fn, context)
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
@@ -53,11 +81,12 @@ end
 local function collectContext(enemy, ctx)
 	if ctx.dedupeById then
 		local id = enemy.id
-		if id and ctx.seen[id] then
-			return
-		end
 		if id then
-			ctx.seen[id] = true
+			local stamp = ctx.stamp
+			if ctx.seen[id] == stamp then
+				return
+			end
+			ctx.seen[id] = stamp
 		end
 	end
 
@@ -66,23 +95,11 @@ local function collectContext(enemy, ctx)
 	ctx.count = nextCount
 end
 
-local function collectCellsInto(results, x, y, radius, dedupeById, seenIds)
-	local ctx = {
-		results = results,
-		count = 0,
-		dedupeById = dedupeById == true,
-		seen = seenIds,
-	}
-
+local function collectCellsInto(ctx, x, y, radius, dedupeById)
+	ctx.count = 0
+	ctx.dedupeById = dedupeById == true
 	if ctx.dedupeById then
-		local seen = ctx.seen
-		if not seen then
-			seen = {}
-			ctx.seen = seen
-		end
-		for id in pairs(seen) do
-			seen[id] = nil
-		end
+		nextStamp(ctx)
 	end
 
 	eachNeighborInRange(x, y, radius, collectContext, ctx)
@@ -174,7 +191,7 @@ end
 
 function Spatial.queryCells(x, y, radius, dedupeById)
 	local results = outerQueryBuffer
-	local count = collectCellsInto(results, x, y, radius, dedupeById)
+	local count = collectCellsInto(outerCollectContext, x, y, radius, dedupeById)
 
 	for i = count + 1, outerQueryCount do
 		results[i] = nil
@@ -185,7 +202,7 @@ end
 
 function Spatial.queryCellsLocal(x, y, radius, dedupeById)
 	local results = nestedQueryBuffer
-	local count = collectCellsInto(results, x, y, radius, dedupeById)
+	local count = collectCellsInto(nestedCollectContext, x, y, radius, dedupeById)
 
 	for i = count + 1, nestedQueryCount do
 		results[i] = nil
