@@ -20,20 +20,24 @@ Targeting.MODES = {
 	FARTHEST = "farthest",
 }
 local MODES = Targeting.MODES
+local MODE_ALIASES = {
+	[MODES.PROGRESS] = SIMPLE_MODES.PROGRESS,
+	[MODES.LOW_HP] = SIMPLE_MODES.LOW_HP,
+	[MODES.HIGH_HP] = SIMPLE_MODES.HIGH_HP,
+	[MODES.FARTHEST] = SIMPLE_MODES.FARTHEST,
+	[SIMPLE_MODES.PROGRESS] = SIMPLE_MODES.PROGRESS,
+	[SIMPLE_MODES.LOW_HP] = SIMPLE_MODES.LOW_HP,
+	[SIMPLE_MODES.HIGH_HP] = SIMPLE_MODES.HIGH_HP,
+	[SIMPLE_MODES.FARTHEST] = SIMPLE_MODES.FARTHEST,
+}
 local simpleCtx = {}
 
 local function normalizeMode(mode)
-	if mode == SIMPLE_MODES.PROGRESS or mode == MODES.PROGRESS or mode == nil then
+	if mode == nil then
 		return SIMPLE_MODES.PROGRESS
-	elseif mode == SIMPLE_MODES.LOW_HP or mode == MODES.LOW_HP then
-		return SIMPLE_MODES.LOW_HP
-	elseif mode == SIMPLE_MODES.HIGH_HP or mode == MODES.HIGH_HP then
-		return SIMPLE_MODES.HIGH_HP
-	elseif mode == SIMPLE_MODES.FARTHEST or mode == MODES.FARTHEST then
-		return SIMPLE_MODES.FARTHEST
 	end
 
-	return SIMPLE_MODES.PROGRESS
+	return MODE_ALIASES[mode] or SIMPLE_MODES.PROGRESS
 end
 
 local function evaluateSimpleCandidate(e, c)
