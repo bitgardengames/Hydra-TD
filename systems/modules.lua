@@ -36,6 +36,18 @@ function Modules.add(moduleId, towerType)
 	Modules.version = Modules.version + 1
 end
 
+function Modules.invalidateTower(tower)
+	if not tower then
+		return
+	end
+
+	tower._moduleContextCache = nil
+	tower._moduleContextVersion = nil
+	tower._fireProfile = nil
+	tower._fireProfileVersion = nil
+	tower._fireProfileLocalVersion = (tower._fireProfileLocalVersion or 0) + 1
+end
+
 -- CONTEXT BUILDER
 local function copyBehaviors(list)
 	local out = {}
@@ -268,6 +280,34 @@ function Modules.buildContext(tower)
 	end
 
 	return ctx
+end
+
+function Modules.getFireProfile(tower)
+	if not tower then
+		return nil
+	end
+
+	local profile = tower._fireProfile
+	local version = Modules.version
+	local localVersion = tower._fireProfileLocalVersion or 0
+
+	if profile and tower._fireProfileVersion == version and profile.localVersion == localVersion then
+		return profile
+	end
+
+	local ctx = Modules.buildContext(tower)
+	profile = {
+		output = ctx.output,
+		behaviors = ctx.behaviors,
+		version = version,
+		localVersion = localVersion,
+		tag = tostring(version) .. ":" .. tostring(localVersion),
+	}
+
+	tower._fireProfile = profile
+	tower._fireProfileVersion = version
+
+	return profile
 end
 
 function Modules.getDef(moduleId)

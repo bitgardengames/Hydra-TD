@@ -212,8 +212,8 @@ local function spawnEvent(evt)
 	elseif evt.context then
 		p.behaviors = evt.context.behaviors
 	else
-		local ctx = Modules.buildContext(source)
-		p.behaviors = ctx.behaviors
+		local fireProfile = source._fireProfile
+		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
 	end
 
 	PB.init(p)
@@ -303,8 +303,8 @@ local function spawnDirect(source, target, context, speed, life)
 	if context then
 		p.behaviors = context.behaviors
 	else
-		local ctx = Modules.buildContext(source)
-		p.behaviors = ctx.behaviors
+		local fireProfile = source._fireProfile
+		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
 	end
 
 	PB.init(p)
