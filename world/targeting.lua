@@ -8,13 +8,12 @@ local queryCells = Spatial.queryCells
 local forEachInCells = Spatial.forEachInCells
 local pointToCell = Spatial.pointToCell
 local queryOccupancy = Spatial.queryOccupancy
-local queryCellsInto = Spatial.queryCellsInto
+local queryCellsLocal = Spatial.queryCellsLocal
 local DENSE_LOCAL_RADIUS = 52
 local DENSE_NEIGHBOR_CAP = 64
 local DENSE_OCCUPANCY_RADIUS_CELLS = 1
 local DENSE_USE_OCCUPANCY = true
 local DENSE_DEBUG_COMPARE_FRAMES = 90
-local denseQueryBuffer = {}
 local denseDebugFrames = 0
 local denseDebugMismatches = 0
 local SIMPLE_MODES = {
@@ -111,8 +110,6 @@ local function pickDenseTargetLegacy(tower)
 	local tx = tower.x
 	local ty = tower.y
 	local localR2 = DENSE_LOCAL_RADIUS * DENSE_LOCAL_RADIUS
-	local localNearby = denseQueryBuffer
-
 	local nearby, n = queryCells(tx, ty, tower.range)
 
 	for i = 1, n do
@@ -127,7 +124,7 @@ local function pickDenseTargetLegacy(tower)
 
 			if d2 <= r2 then
 				local crowd = 0
-				local localN = queryCellsInto(localNearby, ex, ey, DENSE_LOCAL_RADIUS)
+				local localNearby, localN = queryCellsLocal(ex, ey, DENSE_LOCAL_RADIUS)
 
 				if localN > DENSE_NEIGHBOR_CAP then
 					localN = DENSE_NEIGHBOR_CAP

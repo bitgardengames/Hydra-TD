@@ -12,54 +12,19 @@ local INV_CELL = 1 / CELL_SIZE
 local grid = {}
 Spatial.grid = grid
 
-local queryBuffer = {}
-local queryCount = 0
-local queryMaxCount = 0
+local outerQueryBuffer = {}
+local outerQueryCount = 0
+local nestedQueryBuffer = {}
+local nestedQueryCount = 0
 local occupancyBuffer = {}
 
-local function collectCellsInto(results, x, y, radius)
+local function eachNeighborInRange(x, y, radius, fn, context)
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
 	local cellRadius = 2
 
 	if radius and radius > 0 then
 		-- Keep legacy upper bound for compatibility; shrink neighborhood for small-radius queries.
-		cellRadius = ceil(radius * INV_CELL)
-		if cellRadius < 1 then
-			cellRadius = 1
-		elseif cellRadius > 2 then
-			cellRadius = 2
-		end
-	end
-
-	local count = 0
-
-	for dx = -cellRadius, cellRadius do
-		local col = grid[cx + dx]
-
-		if col then
-			for dy = -cellRadius, cellRadius do
-				local cell = col[cy + dy]
-
-				if cell then
-					for i = 1, #cell do
-						count = count + 1
-						results[count] = cell[i]
-					end
-				end
-			end
-		end
-	end
-
-	return count
-end
-
-local function forEachInCells(x, y, radius, fn, context)
-	local cx = floor(x * INV_CELL)
-	local cy = floor(y * INV_CELL)
-	local cellRadius = 2
-
-	if radius and radius > 0 then
 		cellRadius = ceil(radius * INV_CELL)
 		if cellRadius < 1 then
 			cellRadius = 1
@@ -83,6 +48,46 @@ local function forEachInCells(x, y, radius, fn, context)
 			end
 		end
 	end
+end
+
+local function collectContext(enemy, ctx)
+	if ctx.dedupeById then
+		local id = enemy.id
+		if id and ctx.seen[id] then
+			return
+		end
+		if id then
+			ctx.seen[id] = true
+		end
+	end
+
+	local nextCount = ctx.count + 1
+	ctx.results[nextCount] = enemy
+	ctx.count = nextCount
+end
+
+local function collectCellsInto(results, x, y, radius, dedupeById, seenIds)
+	local ctx = {
+		results = results,
+		count = 0,
+		dedupeById = dedupeById == true,
+		seen = seenIds,
+	}
+
+	if ctx.dedupeById then
+		local seen = ctx.seen
+		if not seen then
+			seen = {}
+			ctx.seen = seen
+		end
+		for id in pairs(seen) do
+			seen[id] = nil
+		end
+	end
+
+	eachNeighborInRange(x, y, radius, collectContext, ctx)
+
+	return ctx.count
 end
 
 local function removeFromCell(e)
@@ -155,32 +160,38 @@ function Spatial.removeEnemy(e)
 	removeFromCell(e)
 end
 
-local tsort = table.sort
-
-function Spatial.queryCells(x, y, radius)
-	local results = queryBuffer
-	local count = collectCellsInto(results, x, y, radius)
-
-	for i = count + 1, queryMaxCount do
-		results[i] = nil
+function Spatial.beginFrame()
+	for i = 1, outerQueryCount do
+		outerQueryBuffer[i] = nil
+	end
+	for i = 1, nestedQueryCount do
+		nestedQueryBuffer[i] = nil
 	end
 
-	queryMaxCount = count
-	queryCount = count
+	outerQueryCount = 0
+	nestedQueryCount = 0
+end
 
-	--[[tsort(results, function(a, b)
-		return a.id < b.id
-	end)]]
+function Spatial.queryCells(x, y, radius, dedupeById)
+	local results = outerQueryBuffer
+	local count = collectCellsInto(results, x, y, radius, dedupeById)
 
+	for i = count + 1, outerQueryCount do
+		results[i] = nil
+	end
+	outerQueryCount = count
 	return results, count
 end
 
-function Spatial.queryCellsInto(results, x, y, radius)
-	return collectCellsInto(results, x, y, radius)
-end
+function Spatial.queryCellsLocal(x, y, radius, dedupeById)
+	local results = nestedQueryBuffer
+	local count = collectCellsInto(results, x, y, radius, dedupeById)
 
-function Spatial.queryCellsCount()
-	return queryCount
+	for i = count + 1, nestedQueryCount do
+		results[i] = nil
+	end
+	nestedQueryCount = count
+	return results, count
 end
 
 function Spatial.pointToCell(x, y)
@@ -220,7 +231,7 @@ function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 end
 
 function Spatial.forEachInCells(x, y, radius, fn, context)
-	forEachInCells(x, y, radius, fn, context)
+	eachNeighborInRange(x, y, radius, fn, context)
 end
 
 return Spatial
