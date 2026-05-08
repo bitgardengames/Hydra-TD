@@ -22,6 +22,20 @@ Targeting.MODES = {
 local MODES = Targeting.MODES
 local simpleCtx = {}
 
+local function normalizeMode(mode)
+	if mode == SIMPLE_MODES.PROGRESS or mode == MODES.PROGRESS or mode == nil then
+		return SIMPLE_MODES.PROGRESS
+	elseif mode == SIMPLE_MODES.LOW_HP or mode == MODES.LOW_HP then
+		return SIMPLE_MODES.LOW_HP
+	elseif mode == SIMPLE_MODES.HIGH_HP or mode == MODES.HIGH_HP then
+		return SIMPLE_MODES.HIGH_HP
+	elseif mode == SIMPLE_MODES.FARTHEST or mode == MODES.FARTHEST then
+		return SIMPLE_MODES.FARTHEST
+	end
+
+	return SIMPLE_MODES.PROGRESS
+end
+
 local function evaluateSimpleCandidate(e, c)
 	if e.hp <= 0 or e.dying then
 		return
@@ -94,32 +108,24 @@ end
 
 -- Target enemy furthest along the path
 function Targeting.findProgressTarget(tower)
-	return pickSimpleTarget(tower, SIMPLE_MODES.PROGRESS)
+	return Targeting.findTarget(tower, SIMPLE_MODES.PROGRESS)
 end
 
 function Targeting.findLowestHPTarget(tower)
-	return pickSimpleTarget(tower, SIMPLE_MODES.LOW_HP)
+	return Targeting.findTarget(tower, SIMPLE_MODES.LOW_HP)
 end
 
 function Targeting.findFarthestTarget(tower)
-	return pickSimpleTarget(tower, SIMPLE_MODES.FARTHEST)
+	return Targeting.findTarget(tower, SIMPLE_MODES.FARTHEST)
 end
 
 function Targeting.findHighestHPTarget(tower)
-	return pickSimpleTarget(tower, SIMPLE_MODES.HIGH_HP)
+	return Targeting.findTarget(tower, SIMPLE_MODES.HIGH_HP)
 end
 
 
 function Targeting.findTarget(tower, mode)
-	if mode == MODES.LOW_HP then
-		return pickSimpleTarget(tower, SIMPLE_MODES.LOW_HP)
-	elseif mode == MODES.HIGH_HP then
-		return pickSimpleTarget(tower, SIMPLE_MODES.HIGH_HP)
-	elseif mode == MODES.FARTHEST then
-		return pickSimpleTarget(tower, SIMPLE_MODES.FARTHEST)
-	end
-
-	return pickSimpleTarget(tower, SIMPLE_MODES.PROGRESS)
+	return pickSimpleTarget(tower, normalizeMode(mode))
 end
 
 return Targeting
