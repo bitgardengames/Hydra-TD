@@ -124,41 +124,35 @@ local function removeAt(i)
 	projectiles[#projectiles] = nil
 end
 
-local function spawnEvent(evt)
-	local source = evt.source
+local function initProjectile(p, source, opts)
+	opts = opts or {}
 
-	if not source then
-		return nil
-	end
+	p.x = opts.x or source.x
+	p.y = opts.y or source.renderY or source.y
 
-	local p = acquire()
-
-	p.x = evt.x or source.x
-	p.y = evt.y or source.renderY or source.y
-
-	p.r = evt.r or 4.5
+	p.r = opts.r or 4.5
 	p.baseR = p.r
-	p.scale = evt.scale or 1
+	p.scale = opts.scale or 1
 
-	p.life = evt.life or 3
+	p.life = opts.life or 3
 	p.t = 0
 
 	p.sourceTower = source
 	p.sourceKind = source.kind
 
-	p.speed = evt.speed or source.projSpeed or 0
-	p.damage = evt.damage or source.damage or 0
+	p.speed = opts.speed or source.projSpeed or 0
+	p.damage = opts.damage or source.damage or 0
 
-	p.hitOrigin = evt.hitOrigin or "primary"
+	p.hitOrigin = opts.hitOrigin or "primary"
 
-	p.target = evt.target
-	p.ignoreTarget = evt.ignoreTarget
+	p.target = opts.target
+	p.ignoreTarget = opts.ignoreTarget
 
-	p.angle = evt.angle or source.angle or 0
+	p.angle = opts.angle or source.angle or 0
 	p.rotation = p.angle
 
-	p.vx = evt.vx
-	p.vy = evt.vy
+	p.vx = opts.vx
+	p.vy = opts.vy
 
 	p.hit = nil
 	p.eventRead = 1
@@ -190,15 +184,15 @@ local function spawnEvent(evt)
 	p._defaultHitCtx.hitX = nil
 	p._defaultHitCtx.hitY = nil
 
-	p.hitRadius = evt.hitRadius or p.r
+	p.hitRadius = opts.hitRadius or p.r
 	p.hitRadius2 = p.hitRadius * p.hitRadius
 
 	if p.target then
 		p.lastTX = p.target.x
 		p.lastTY = p.target.y
-	elseif evt.lastTX and evt.lastTY then
-		p.lastTX = evt.lastTX
-		p.lastTY = evt.lastTY
+	elseif opts.lastTX and opts.lastTY then
+		p.lastTX = opts.lastTX
+		p.lastTY = opts.lastTY
 	elseif p.vx and p.vy then
 		p.lastTX = p.x + p.vx * 10
 		p.lastTY = p.y + p.vy * 10
@@ -207,14 +201,28 @@ local function spawnEvent(evt)
 		p.lastTY = p.y + sin(p.angle) * 10
 	end
 
-	if evt.behaviors then
-		p.behaviors = evt.behaviors
-	elseif evt.context then
-		p.behaviors = evt.context.behaviors
+	if opts.behaviors then
+		p.behaviors = opts.behaviors
+	elseif opts.context then
+		p.behaviors = opts.context.behaviors
 	else
 		local fireProfile = source._fireProfile
 		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
 	end
+
+	return p
+end
+
+local function spawnEvent(evt)
+	local source = evt.source
+
+	if not source then
+		return nil
+	end
+
+	local p = acquire()
+
+	initProjectile(p, source, evt)
 
 	PB.init(p)
 
@@ -232,80 +240,12 @@ local function spawnDirect(source, target, context, speed, life)
 
 	local p = acquire()
 
-	p.x = source.x
-	p.y = source.renderY or source.y
-
-	p.r = 4.5
-	p.baseR = p.r
-	p.scale = 1
-
-	p.life = life or 3
-	p.t = 0
-
-	p.sourceTower = source
-	p.sourceKind = source.kind
-
-	p.speed = speed or source.projSpeed or 0
-	p.damage = source.damage or 0
-
-	p.hitOrigin = "primary"
-
-	p.target = target
-	p.ignoreTarget = nil
-
-	p.angle = source.angle or 0
-	p.rotation = p.angle
-
-	p.vx = nil
-	p.vy = nil
-
-	p.hit = nil
-	p.eventRead = 1
-	p.eventCount = 0
-	if p.events then
-		clearTable(p.events)
-	end
-	p._consumed = false
-	p.hasHit = projectileHasHit
-	p.markHit = markProjectileHit
-
-	local hitSet = p.hitSet
-	if not hitSet then
-		hitSet = {}
-		p.hitSet = hitSet
-	end
-	nextHitSetStamp(p)
-
-	local hitCooldowns = p.hitCooldowns
-	if hitCooldowns then
-		clearTable(hitCooldowns)
-	else
-		hitCooldowns = {}
-		p.hitCooldowns = hitCooldowns
-	end
-
-	p._defaultHitCtx = p._defaultHitCtx or {}
-	p._defaultHitCtx.origin = "primary"
-	p._defaultHitCtx.hitX = nil
-	p._defaultHitCtx.hitY = nil
-
-	p.hitRadius = p.r
-	p.hitRadius2 = p.r * p.r
-
-	if target then
-		p.lastTX = target.x
-		p.lastTY = target.y
-	else
-		p.lastTX = p.x + cos(p.angle) * 10
-		p.lastTY = p.y + sin(p.angle) * 10
-	end
-
-	if context then
-		p.behaviors = context.behaviors
-	else
-		local fireProfile = source._fireProfile
-		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
-	end
+	initProjectile(p, source, {
+		target = target,
+		context = context,
+		speed = speed,
+		life = life,
+	})
 
 	PB.init(p)
 
