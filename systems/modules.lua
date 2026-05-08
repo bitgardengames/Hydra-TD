@@ -256,22 +256,23 @@ function Modules.buildContext(tower)
 
 	applyTowerUpgradeBehaviorScaling(ctx, tower)
 
-	-- =========================================
-	-- 🔥 BEAM FIX: ensure hit_damage exists
-	-- =========================================
-	if ctx.output == "beam" then
-		local hasDamage = false
+	-- Normalize/validate post-module behavior list in one pass.
+	local outputIsBeam = ctx.output == "beam"
+	local hasHitDamage = false
 
-		for i = 1, #ctx.behaviors do
-			if ctx.behaviors[i].id == "hit_damage" then
-				hasDamage = true
-				break
-			end
+	for i = 1, #ctx.behaviors do
+		local behavior = ctx.behaviors[i]
+
+		if outputIsBeam and behavior.id == "hit_damage" then
+			hasHitDamage = true
 		end
 
-		if not hasDamage then
-			ctx:addBehavior({ id = "hit_damage" })
-		end
+		-- Keep additional post-module behavior normalization checks here so
+		-- we avoid introducing extra independent scans over ctx.behaviors.
+	end
+
+	if outputIsBeam and not hasHitDamage then
+		ctx:addBehavior({ id = "hit_damage" })
 	end
 
 	if tower then
