@@ -13,9 +13,7 @@ local grid = {}
 Spatial.grid = grid
 
 local outerQueryBuffer = {}
-local outerQueryCount = 0
 local nestedQueryBuffer = {}
-local nestedQueryCount = 0
 local occupancyBuffer = {}
 
 local function nextStamp(ctx)
@@ -36,6 +34,7 @@ local outerCollectContext = {
 	dedupeById = false,
 	seen = {},
 	stamp = 0,
+	activeLength = 0,
 }
 
 local nestedCollectContext = {
@@ -44,6 +43,7 @@ local nestedCollectContext = {
 	dedupeById = false,
 	seen = {},
 	stamp = 0,
+	activeLength = 0,
 }
 
 local function eachNeighborInRange(x, y, radius, fn, context)
@@ -104,7 +104,13 @@ local function collectCellsInto(ctx, x, y, radius, dedupeById)
 
 	eachNeighborInRange(x, y, radius, collectContext, ctx)
 
-	return ctx.count
+	local count = ctx.count
+	for i = count + 1, ctx.activeLength do
+		ctx.results[i] = nil
+	end
+	ctx.activeLength = count
+
+	return count
 end
 
 local function removeFromCell(e)
@@ -178,37 +184,21 @@ function Spatial.removeEnemy(e)
 end
 
 function Spatial.beginFrame()
-	for i = 1, outerQueryCount do
-		outerQueryBuffer[i] = nil
-	end
-	for i = 1, nestedQueryCount do
-		nestedQueryBuffer[i] = nil
-	end
-
-	outerQueryCount = 0
-	nestedQueryCount = 0
+	-- Query buffers are shared scratch arrays: callers may read them immediately
+	-- after queryCells/queryCellsLocal returns, but should not hold long-lived references
+	-- across frames because later queries overwrite entries in-place.
+	outerCollectContext.count = 0
+	nestedCollectContext.count = 0
 end
 
 function Spatial.queryCells(x, y, radius, dedupeById)
-	local results = outerQueryBuffer
 	local count = collectCellsInto(outerCollectContext, x, y, radius, dedupeById)
-
-	for i = count + 1, outerQueryCount do
-		results[i] = nil
-	end
-	outerQueryCount = count
-	return results, count
+	return outerQueryBuffer, count
 end
 
 function Spatial.queryCellsLocal(x, y, radius, dedupeById)
-	local results = nestedQueryBuffer
 	local count = collectCellsInto(nestedCollectContext, x, y, radius, dedupeById)
-
-	for i = count + 1, nestedQueryCount do
-		results[i] = nil
-	end
-	nestedQueryCount = count
-	return results, count
+	return nestedQueryBuffer, count
 end
 
 function Spatial.pointToCell(x, y)
