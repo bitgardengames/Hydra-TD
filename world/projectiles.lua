@@ -61,6 +61,42 @@ local function projectileHasHit(p, id)
 	return p.hitSet[id] == p.hitSetStamp
 end
 
+local function getProjectileNow(p)
+	return p.t or 0
+end
+
+local function getHitCooldownExpiry(p, id, now)
+	local cds = p.hitCooldowns
+	if not cds then
+		return nil
+	end
+
+	local expiry = cds[id]
+	if not expiry then
+		return nil
+	end
+
+	now = now or getProjectileNow(p)
+	if now >= expiry then
+		cds[id] = nil
+		return nil
+	end
+
+	return expiry
+end
+
+local function setHitCooldownExpiry(p, id, cooldownDur, now)
+	local cds = p.hitCooldowns
+	if not cds then
+		cds = {}
+		p.hitCooldowns = cds
+	end
+
+	now = now or getProjectileNow(p)
+	cds[id] = now + (cooldownDur or 0)
+	return cds[id]
+end
+
 local function acquire()
 	local p = pool[#pool]
 
@@ -163,6 +199,8 @@ local function initProjectile(p, source, opts)
 	p._consumed = false
 	p.hasHit = projectileHasHit
 	p.markHit = markProjectileHit
+	p.getHitCooldownExpiry = getHitCooldownExpiry
+	p.setHitCooldownExpiry = setHitCooldownExpiry
 
 	local hitSet = p.hitSet
 	if not hitSet then
@@ -442,24 +480,6 @@ local function processHit(p)
 	resolveEvents(p)
 end
 
-local function updateHitCooldowns(p, dt)
-	local cds = p.hitCooldowns
-
-	if not cds then
-		return
-	end
-
-	for id, t in pairs(cds) do
-		t = t - dt
-
-		if t <= 0 then
-			cds[id] = nil
-		else
-			cds[id] = t
-		end
-	end
-end
-
 local function spawn(t, e)
 	spawnDirect(t, e)
 end
@@ -471,7 +491,6 @@ local function update(dt)
 		p.life = p.life - dt
 		p.t = p.t + dt
 
-		updateHitCooldowns(p, dt)
 
 		if p.life <= 0 then
 			removeAt(i)
