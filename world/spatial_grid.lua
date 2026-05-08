@@ -198,11 +198,10 @@ function Spatial.pointToCell(x, y)
 	return floor(x * INV_CELL), floor(y * INV_CELL)
 end
 
-function Spatial.queryOccupancy(cx, cy, radiusCells, out)
+local function traverseOccupancy(cx, cy, radiusCells, onCount)
 	local radius = radiusCells or 1
 	local idx = 0
 	local sum = 0
-	local counts = out or occupancyBuffer
 
 	for dx = -radius, radius do
 		local col = grid[cx + dx]
@@ -218,16 +217,32 @@ function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 				end
 			end
 
-			counts[idx] = count
 			sum = sum + count
+			if onCount then
+				onCount(idx, count)
+			end
 		end
 	end
+
+	return idx, sum
+end
+
+function Spatial.queryOccupancy(cx, cy, radiusCells, out)
+	local counts = out or occupancyBuffer
+	local idx, sum = traverseOccupancy(cx, cy, radiusCells, function(i, count)
+		counts[i] = count
+	end)
 
 	for i = idx + 1, #counts do
 		counts[i] = nil
 	end
 
 	return counts, idx, sum
+end
+
+function Spatial.queryOccupancySum(cx, cy, radiusCells)
+	local _, sum = traverseOccupancy(cx, cy, radiusCells)
+	return sum
 end
 
 function Spatial.forEachInCells(x, y, radius, fn, context)
