@@ -45,6 +45,7 @@ local getTargetMode = Modules.getTargetMode
 local FIRE_ANGLE_EPS = math.rad(6)
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_BRANCH_UPGRADES = 4
+local DEBUG_TOWER_INDEX_INTEGRITY_CHECK = Constants.DEBUG_TOWER_INDEX_INTEGRITY_CHECK == true
 
 local function swapRemove(list, index)
 	local last = #list
@@ -102,20 +103,22 @@ local function clearTowerIndex(t)
 	t._indexGy = nil
 end
 
-local function ensureTowerIndexed(t)
-	if not t then
+local function validateTowerIndex(t)
+	if not DEBUG_TOWER_INDEX_INTEGRITY_CHECK or not t then
 		return
 	end
 
-	if t._indexGx ~= t.gx or t._indexGy ~= t.gy then
+	local gx, gy = t.gx, t.gy
+
+	if t._indexGx ~= gx or t._indexGy ~= gy then
 		clearTowerIndexAt(t._indexGx, t._indexGy, t)
 		setTowerIndex(t)
 		return
 	end
 
-	local col = towersByCell[t.gx]
+	local col = towersByCell[gx]
 
-	if not col or col[t.gy] ~= t then
+	if not col or col[gy] ~= t then
 		setTowerIndex(t)
 	end
 end
@@ -362,7 +365,7 @@ end
 local function updateTowers(dt)
 	for i = 1, #towers do
 		local t = towers[i]
-		ensureTowerIndexed(t)
+		validateTowerIndex(t)
 
 		t.cooldown = t.cooldown - dt
 		t.fireAnim = max(0, t.fireAnim - dt * 8)
