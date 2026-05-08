@@ -39,20 +39,47 @@ local function hashNoise(x, y, seed)
 	return n - floor(n)
 end
 
-local function drawGrass()
-	local terrain = getTerrain()
+local grassScatterCanvas
+local grassCacheKey
+
+local function buildGrassScatterCache(terrain)
+	local map = MapMod.map
+
+	if not map or not map.isPath then
+		grassScatterCanvas = nil
+		grassCacheKey = nil
+		return
+	end
 
 	local grass = terrain.grass
+	local nextKey = table.concat({
+		tostring(map.isPath),
+		tostring(gridW),
+		tostring(gridH),
+		tostring(tile),
+		string.format("%.6f", grass[1] or 0),
+		string.format("%.6f", grass[2] or 0),
+		string.format("%.6f", grass[3] or 0),
+		string.format("%.6f", grass[4] or 1),
+	}, "|")
 
-	lg.setColor(grass)
-	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
+	if grassCacheKey == nextKey and grassScatterCanvas then
+		return
+	end
+
+	grassCacheKey = nextKey
+	grassScatterCanvas = lg.newCanvas(gridW * tile, gridH * tile)
 
 	local colorScatterDark = {grass[1] * 0.94, grass[2] * 0.94, grass[3] * 0.94, 1}
 	local colorScatterLight = {grass[1] * 1.06, grass[2] * 1.06, grass[3] * 1.06, 1}
 
+	lg.push("all")
+	lg.setCanvas(grassScatterCanvas)
+	lg.clear(0, 0, 0, 0)
+
 	for y = 1, gridH do
 		for x = 1, gridW do
-			local col = MapMod.map.isPath[x]
+			local col = map.isPath[x]
 
 			if not (col and col[y]) then
 				local seed = (x * 127 + y * 331) % 997
@@ -72,6 +99,23 @@ local function drawGrass()
 				end
 			end
 		end
+	end
+
+	lg.pop()
+end
+
+local function drawGrass()
+	local terrain = getTerrain()
+	local grass = terrain.grass
+
+	buildGrassScatterCache(terrain)
+
+	lg.setColor(grass)
+	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
+
+	if grassScatterCanvas then
+		lg.setColor(1, 1, 1, 1)
+		lg.draw(grassScatterCanvas, 0, 0)
 	end
 end
 
@@ -153,11 +197,8 @@ local function updatePathColor(color)
 	colorPath = color
 end
 
-local function updateGrassColor(color)
-	colorGrass = color
-
-	colorScatterDark = {color[1] * 0.94, color[2] * 0.94, color[3] * 0.94, 1}
-	colorScatterLight = {color[1] * 1.06, color[2] * 1.06, color[3] * 1.06, 1}
+local function updateGrassColor(_)
+	grassCacheKey = nil
 end
 
 local function updateWaterColor(color)
