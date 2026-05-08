@@ -2333,12 +2333,18 @@ B.tick_damage = {
 					local id = e.id or e
 
 					-- only fire "hit" occasionally
-					if not p.hitCooldowns[id] then
+					local cooldownActive = p.getHitCooldownExpiry and p.getHitCooldownExpiry(p, id)
+
+					if not cooldownActive then
 						local hitEvt = emitEvent(p, "hit")
 						hitEvt.target = e
 						hitEvt.origin = p.hitOrigin or "primary"
 
-						p.hitCooldowns[id] = data.hitRate or 0.35 -- tweak this
+						if p.setHitCooldownExpiry then
+							p.setHitCooldownExpiry(p, id, data.hitRate or 0.35) -- tweak this
+						else
+							p.hitCooldowns[id] = data.hitRate or 0.35 -- tweak this
+						end
 					end
 
 					local fxEvt = emitFX(p, "plasma_hit")
