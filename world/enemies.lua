@@ -140,13 +140,26 @@ local function advanceEnemyAlongPath(e, moveDist, pathWorld, pathSegLen, totalLe
 end
 
 local function findEnemyAt(x, y)
+	local candidates, candidateCount = Spatial.queryCellsLocal(x, y, 0, true)
+
+	if candidateCount == 0 then
+		return nil
+	end
+
+	local candidateStamp = {}
+	for i = 1, candidateCount do
+		candidateStamp[candidates[i]] = true
+	end
+
 	for i = 1, #enemies do
 		local e = enemies[i]
-		local dx = x - e.x
-		local dy = y - e.y
+		if candidateStamp[e] then
+			local dx = x - e.x
+			local dy = y - e.y
 
-		if dx * dx + dy * dy <= e.radius2 then
-			return e
+			if dx * dx + dy * dy <= e.radius2 then
+				return e
+			end
 		end
 	end
 
