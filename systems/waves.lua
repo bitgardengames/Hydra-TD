@@ -96,48 +96,51 @@ local function getBossByArchetype(map, bossIndex)
 	return archetypes[slot]
 end
 
-local function mergeTemplate(base, override)
-	if not override then
-		return base
-	end
-
-	local out = {}
-	for k, v in pairs(base) do
-		out[k] = v
-	end
-	for k, v in pairs(override) do
-		out[k] = v
-	end
-
-	return out
-end
-
 local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 	local base = bossEncounterTemplates[bossKind]
 	if not base then
 		return nil
 	end
 
-	local resolved = base
 	local biome = (map and map.biome) or "default"
+	local biomeOverride = nil
+	local mapKeyedOverride = nil
+	local mapIndexedOverride = nil
+
 	local biomeOverrides = biomeTemplateOverrides[biome]
-	if biomeOverrides and biomeOverrides[bossKind] then
-		resolved = mergeTemplate(resolved, biomeOverrides[bossKind])
+	if biomeOverrides then
+		biomeOverride = biomeOverrides[bossKind]
 	end
 
 	if map and map.waves and map.waves.encounters then
 		local mapDefs = map.waves.encounters
-		local keyed = mapDefs[bossKind]
-		local indexed = mapDefs[bossIndex]
-		if keyed then
-			resolved = mergeTemplate(resolved, keyed)
-		end
-		if indexed then
-			resolved = mergeTemplate(resolved, indexed)
-		end
+		mapKeyedOverride = mapDefs[bossKind]
+		mapIndexedOverride = mapDefs[bossIndex]
 	end
 
-	return resolved
+	local function readField(field)
+		if mapIndexedOverride and mapIndexedOverride[field] ~= nil then
+			return mapIndexedOverride[field]
+		end
+		if mapKeyedOverride and mapKeyedOverride[field] ~= nil then
+			return mapKeyedOverride[field]
+		end
+		if biomeOverride and biomeOverride[field] ~= nil then
+			return biomeOverride[field]
+		end
+		return base[field]
+	end
+
+	return {
+		flankKind = readField("flankKind"),
+		flankBurst = readField("flankBurst"),
+		interval = readField("interval"),
+		initialDelay = readField("initialDelay"),
+		maxAliveAdds = readField("maxAliveAdds"),
+		maxTotalAdds = readField("maxTotalAdds"),
+		addHpMult = readField("addHpMult"),
+		addSpdMult = readField("addSpdMult"),
+	}
 end
 
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
