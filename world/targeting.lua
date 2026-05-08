@@ -7,7 +7,7 @@ local HUGE_NEG = -math.huge
 local queryCells = Spatial.queryCells
 local forEachInCells = Spatial.forEachInCells
 local pointToCell = Spatial.pointToCell
-local queryOccupancy = Spatial.queryOccupancy
+local queryOccupancySum = Spatial.queryOccupancySum
 local queryCellsLocal = Spatial.queryCellsLocal
 local DENSE_LOCAL_RADIUS = 52
 local DENSE_NEIGHBOR_CAP = 64
@@ -178,7 +178,7 @@ local function pickDenseTargetOccupancy(tower)
 
 			if d2 <= r2 then
 				local cx, cy = pointToCell(ex, ey)
-				local _, _, crowd = queryOccupancy(cx, cy, DENSE_OCCUPANCY_RADIUS_CELLS)
+				local crowd = queryOccupancySum(cx, cy, DENSE_OCCUPANCY_RADIUS_CELLS)
 				local score = crowd * 1000 + e.dist
 				local diff = score - bestScore
 
