@@ -73,6 +73,52 @@ local function updateHover()
 	State.hoverGX, State.hoverGY = screenToGrid(Cursor.x, Cursor.y)
 end
 
+local function hitButton(list, x, y)
+	if not list then
+		return nil
+	end
+
+	for _, b in ipairs(list) do
+		if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+			return b
+		end
+	end
+
+	return nil
+end
+
+local function handleButtonPressRelease(list, x, y, isPress, onReleaseInside)
+	if isPress then
+		local b = hitButton(list, x, y)
+		if b and b.anim then
+			b.anim.pressed = true
+		end
+
+		return b
+	end
+
+	if not list then
+		return nil
+	end
+
+	for _, b in ipairs(list) do
+		if b.anim then
+			local wasPressed = b.anim.pressed
+			b.anim.pressed = false
+
+			if wasPressed and x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
+				if onReleaseInside then
+					onReleaseInside(b)
+				end
+
+				return b
+			end
+		end
+	end
+
+	return nil
+end
+
 local function mousepressed(x, y, button)
 	-- Menu screens
 	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" then
@@ -105,40 +151,24 @@ local function mousepressed(x, y, button)
 	if button == 1 and State.mode == "game" then
 		-- Tower shop
 		local buttons = BottomBar.getShopButtons()
+		local shopButton = handleButtonPressRelease(buttons, x, y, true)
 
-		if buttons then
-			for _, b in ipairs(buttons) do
-				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-					if b.anim then
-						b.anim.pressed = true
-					end
-
-					if b.canAfford then
-						State.placing = b.kind
-						State.selectedTower = nil
-						--Sound.play("ui_click")
-					else
-						--Sound.play("ui_deny")
-					end
-
-					return
-				end
+		if shopButton then
+			if shopButton.canAfford then
+				State.placing = shopButton.kind
+				State.selectedTower = nil
+				--Sound.play("ui_click")
+			else
+				--Sound.play("ui_deny")
 			end
+
+			return
 		end
 
 		-- Inspect panel (upgrade & sell)
 		local btns = BottomBar.getInspectButtons()
-
-		if btns then
-			for _, b in ipairs(btns) do
-				if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-					if b.anim then
-						b.anim.pressed = true
-					end
-
-					return
-				end
-			end
+		if handleButtonPressRelease(btns, x, y, true) then
+			return
 		end
 	end
 
@@ -200,40 +230,20 @@ end
 local function mousereleased(x, y, button)
 	-- Shop buttons
 	local buttons = BottomBar.getShopButtons()
-
-	if buttons then
-		for _, b in ipairs(buttons) do
-			if b.anim then
-				local wasPressed = b.anim.pressed
-				b.anim.pressed = false
-
-				if wasPressed and x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-					if b.canAfford then
-						State.placing = b.kind
-						State.selectedTower = nil
-					end
-				end
-			end
+	handleButtonPressRelease(buttons, x, y, false, function(b)
+		if b.canAfford then
+			State.placing = b.kind
+			State.selectedTower = nil
 		end
-	end
+	end)
 
 	-- Inspect buttons
 	local btns = BottomBar.getInspectButtons()
-
-	if btns then
-		for _, b in ipairs(btns) do
-			if b.anim then
-				local wasPressed = b.anim.pressed
-				b.anim.pressed = false
-
-				if wasPressed and x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-					if b.onClick then
-						b.onClick()
-					end
-				end
-			end
+	handleButtonPressRelease(btns, x, y, false, function(b)
+		if b.onClick then
+			b.onClick()
 		end
-	end
+	end)
 
 	if Menu.mousereleased then
 		Menu.mousereleased(x, y, button)
