@@ -89,6 +89,7 @@ local function clearTowerIndexAt(gx, gy, expectedTower)
 		if not next(col) then
 			towersByCell[gx] = nil
 		end
+		::continue_tower_update::
 	end
 end
 
@@ -341,38 +342,51 @@ local function findTowerAt(gx, gy)
 	return col[gy]
 end
 
+
+local function updateTowerVisuals(t, dt)
+	t.fireAnim = max(0, t.fireAnim - dt * 8)
+	t.spawnAnim = max(0, (t.spawnAnim or 0) - dt * 5)
+	t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)
+
+	local riseAnim = t.levelUpAnim or 0
+	local animatedHeight
+	if riseAnim > 0 then
+		local p = 1 - riseAnim
+		local ease = p * p * (3 - 2 * p)
+		local prev = t.prevHeight or 0
+		animatedHeight = prev + (t.height - prev) * ease
+	else
+		animatedHeight = t.height
+	end
+
+	local spawn = t.spawnAnim or 0
+	local bodyY = t.y
+	if spawn > 0 then
+		local pSpawn = 1 - spawn
+		local easeSpawn = pSpawn * pSpawn * (3 - 2 * pSpawn)
+		bodyY = bodyY - ((1 - easeSpawn) * 8)
+	end
+
+	t.renderY = bodyY - animatedHeight
+
+	local recoilDecay = t.recoilDecay or 18
+	t.recoil = max(0, t.recoil - recoilDecay * dt)
+
+	if t.cooldown > 0 then
+		local pct = 1 - (t.cooldown * t.fireInterval)
+		t.charge = max(0, min(1, pct))
+	else
+		t.charge = 1
+	end
+end
+
 local function updateTowers(dt)
 
 	for i = 1, #towers do
 		local t = towers[i]
 
 		t.cooldown = t.cooldown - dt
-		t.fireAnim = max(0, t.fireAnim - dt * 8)
-		t.spawnAnim = max(0, (t.spawnAnim or 0) - dt * 5)
-		t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)
-
-		-- Animation progress
-		local riseAnim = t.levelUpAnim or 0
-		local animatedHeight
-		if riseAnim > 0 then
-			local p = 1 - riseAnim
-			local ease = p * p * (3 - 2 * p)
-			local prev = t.prevHeight or 0
-			animatedHeight = prev + (t.height - prev) * ease
-		else
-			animatedHeight = t.height
-		end
-
-		-- Spawn animation
-		local spawn = t.spawnAnim or 0
-		local bodyY = t.y
-		if spawn > 0 then
-			local pSpawn = 1 - spawn
-			local easeSpawn = pSpawn * pSpawn * (3 - 2 * pSpawn)
-			bodyY = bodyY - ((1 - easeSpawn) * 8)
-		end
-
-		t.renderY = bodyY - animatedHeight
+		updateTowerVisuals(t, dt)
 
 		-- Retarget cooldown
 		t.retargetT = (t.retargetT or 0) - dt
@@ -388,29 +402,24 @@ local function updateTowers(dt)
 		end
 
 		-- Only search when we need a new target
-		if not target then
-			if t.retargetT <= 0 then
-				target = findTarget(t, t.targetMode)
-				t.retargetT = RETARGET_INTERVAL
-			end
+		local canRetarget = t.retargetT <= 0
+		if not target and canRetarget then
+			target = findTarget(t, t.targetMode)
+			t.retargetT = RETARGET_INTERVAL
 		end
 
 		t.target = target
 
-		-- Recoil decay (magnitude only)
-		local decay = t.recoilDecay or 18
-		t.recoil = max(0, t.recoil - decay * dt)
-
-		-- Charge builds as we approach next shot
-		if t.cooldown > 0 then
-			local pct = 1 - (t.cooldown * t.fireInterval)
-			t.charge = max(0, min(1, pct))
-		else
-			t.charge = 1
+		if not target and t.cooldown > 0 and (not t.windUp or t.windUp <= 0) then
+			goto continue_tower_update
 		end
 
 		-- Aim + rotation
 		local aimDiff = nil
+		local canRotate = t.canRotate
+		local tx, ty = t.x, t.y
+		local turnSpeedBase = t.turnSpeed or 12
+		local recoilStrength = t.recoilStrength or 1
 
 		if target then
 			local ax, ay = target.x, target.y
@@ -433,8 +442,8 @@ local function updateTowers(dt)
 			t.aimX = ax
 			t.aimY = ay
 
-			local dx = ax - t.x
-			local dy = ay - t.y
+			local dx = ax - tx
+			local dy = ay - ty
 
 			local targetAngle = atan2(dy, dx)
 
@@ -449,10 +458,10 @@ local function updateTowers(dt)
 
 			aimDiff = diff
 
-			if t.canRotate then
-				local recoilT = t.recoil / (t.recoilStrength or 1)
+			if canRotate then
+				local recoilT = t.recoil / recoilStrength
 				local recoilDamp = 1 - min(1, recoilT)
-				local turnSpeed = (t.turnSpeed or 12) * (1 + t.fireAnim * 0.35) * recoilDamp
+				local turnSpeed = turnSpeedBase * (1 + t.fireAnim * 0.35) * recoilDamp
 
 				if abs(aimDiff) > 0.001 then
 					t.angle = t.angle + aimDiff * min(1, turnSpeed * dt)
@@ -469,12 +478,12 @@ local function updateTowers(dt)
 			if t.windUp <= 0 and target then
 				local canFire = true
 
-				if t.canRotate then
+				if canRotate then
 					local ax = t.aimX or target.x
 					local ay = t.aimY or target.y
 
-					local dx = ax - t.x
-					local dy = ay - t.y
+					local dx = ax - tx
+					local dy = ay - ty
 					local targetAngle = t.targetAngle
 					local diff = (targetAngle - t.angle + pi) % (pi * 2) - pi
 
@@ -494,10 +503,12 @@ local function updateTowers(dt)
 			end
 
 		elseif t.cooldown <= 0 and target then
-			if not t.canRotate or (aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS) then
+			if not canRotate or (aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS) then
 				t.windUp = 0.08
 			end
 		end
+
+		::continue_tower_update::
 	end
 end
 
