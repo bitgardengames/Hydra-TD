@@ -389,13 +389,13 @@ local function updateTowers(dt)
 		t.cooldown = max(0, (t.cooldown or 0) - dt)
 		t.windUp = max(0, prevWindUp - dt)
 		t.retargetT = max(0, (t.retargetT or 0) - dt)
-		updateTowerVisuals(t, dt)
-
 		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
+
+		updateTowerVisuals(t, dt)
 
 		if t.cooldown > 0
 			and not t.target
-			and t.windUp <= 0
+			and (not t.windUp or t.windUp <= 0)
 			and t.retargetT > 0 then
 			goto continue_tower_update
 		end
