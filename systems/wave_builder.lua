@@ -22,17 +22,17 @@ local Templates = {
 }
 
 -- Simple deterministic template selection
+local TemplateSelectionRules = {
+	{ mod = 6, template = Templates.standard },
+	{ mod = 7, template = Templates.fast },
+	{ mod = 11, template = Templates.tanky },
+}
+
 local function pickTemplate(waveIndex)
-	if waveIndex % 6 == 0 then
-		return Templates.standard
-	end
-
-	if waveIndex % 7 == 0 then
-		return Templates.fast
-	end
-
-	if waveIndex % 11 == 0 then
-		return Templates.tanky
+	for _, rule in ipairs(TemplateSelectionRules) do
+		if waveIndex % rule.mod == 0 then
+			return rule.template
+		end
 	end
 
 	return Templates.standard
