@@ -248,6 +248,66 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	end
 end
 
+local function handleEnemyKilled(e, i, isBoss)
+	if isBoss then
+		State.activeBoss = nil
+		State.activeBossKind = nil
+		Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
+	else
+		Effects.spawnEnemyDeath(e.x, e.y, e.radius)
+	end
+
+	if State.selectedEnemy == e then
+		State.selectedEnemy = nil
+	end
+
+	local reward = floor(e.reward + 0.5)
+	State.money = State.money + reward
+	State.score = State.score + (e.score or 0)
+	Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
+
+	Achievements.increment("ENEMIES_KILLED")
+
+	if isBoss then
+		Achievements.increment("BOSSES_KILLED")
+	end
+
+	Spatial.removeEnemy(e)
+	releaseEnemy(e)
+	swapRemove(enemies, i)
+end
+
+local function handleEnemyEscaped(e, i, isBoss)
+	if isBoss then
+		State.activeBoss = nil
+		State.activeBossKind = nil
+		State.lives = 0
+		State.gameOver = true
+		State.victory = false
+		Achievements.onGameOver()
+		State.mode = "game_over"
+		State.endT = 0
+		State.endReady = false
+		State.endTitle = L("game.gameOver")
+		State.endReason = L("game.bossBreach")
+		Sound.play("gameOver")
+		Sound.playMusic("gameOver")
+	else
+		State.lives = State.lives - 1
+		State.waveLeaks = State.waveLeaks + 1
+		State.totalLeaks = State.totalLeaks + 1
+		State.livesAnim = 1
+	end
+
+	if State.selectedEnemy == e then
+		State.selectedEnemy = nil
+	end
+
+	Spatial.removeEnemy(e)
+	releaseEnemy(e)
+	swapRemove(enemies, i)
+end
+
 local function updateEnemies(dt)
 	local map = MapMod.map
 	local pathWorld = map.pathWorld
@@ -389,26 +449,7 @@ local function updateEnemies(dt)
 					Achievements.increment(killer._killsStatName)
 				end
 
-				Achievements.increment("ENEMIES_KILLED")
-				Achievements.increment("BOSSES_KILLED")
-
-				if State.selectedEnemy == e then
-					State.selectedEnemy = nil
-				end
-
-				State.activeBoss = nil
-				State.activeBossKind = nil
-				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
-
-				local reward = floor(e.reward + 0.5)
-				State.money = State.money + reward
-				State.score = State.score + (e.score or 0)
-				Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
-
-				Spatial.removeEnemy(e)
-				releaseEnemy(e)
-
-				swapRemove(enemies, i)
+				handleEnemyKilled(e, i, isBoss)
 			end
 
 			goto continue
@@ -441,23 +482,7 @@ local function updateEnemies(dt)
 				Achievements.increment(killer._killsStatName)
 			end
 
-			Achievements.increment("ENEMIES_KILLED")
-
-			if State.selectedEnemy == e then
-				State.selectedEnemy = nil
-			end
-
-			Effects.spawnEnemyDeath(e.x, e.y, e.radius)
-
-			local reward = floor(e.reward + 0.5)
-			State.money = State.money + reward
-			State.score = State.score + (e.score or 0)
-			Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
-
-			Spatial.removeEnemy(e)
-			releaseEnemy(e)
-
-			swapRemove(enemies, i)
+			handleEnemyKilled(e, i, isBoss)
 
 			goto continue
 		end
@@ -532,35 +557,11 @@ local function updateEnemies(dt)
 
 			if e.exitFade <= 0 then
 				if isBoss then
-					State.activeBoss = nil
-					State.activeBossKind = nil
-					State.lives = 0
-					State.gameOver = true
-					State.victory = false
-					Achievements.onGameOver()
-					State.mode = "game_over"
-					State.endT = 0
-					State.endReady = false
-					State.endTitle = L("game.gameOver")
-					State.endReason = L("game.bossBreach")
-					Sound.play("gameOver")
-					Sound.playMusic("gameOver")
-
-					Spatial.removeEnemy(e)
-					releaseEnemy(e)
-					swapRemove(enemies, i)
+					handleEnemyEscaped(e, i, isBoss)
 					return
 				end
 
-				State.lives = State.lives - 1
-				State.waveLeaks = State.waveLeaks + 1
-				State.totalLeaks = State.totalLeaks + 1
-				State.livesAnim = 1
-
-				Spatial.removeEnemy(e)
-				releaseEnemy(e)
-
-				swapRemove(enemies, i)
+				handleEnemyEscaped(e, i, isBoss)
 
 				goto continue
 			end
