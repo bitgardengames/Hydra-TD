@@ -14,6 +14,7 @@ Spatial.grid = grid
 
 local queryBuffer = {}
 local queryCount = 0
+local queryMaxCount = 0
 
 local function collectCellsInto(results, x, y, radius)
 	local cx = floor(x * INV_CELL)
@@ -159,13 +160,18 @@ function Spatial.queryCells(x, y, radius)
 	local results = queryBuffer
 	local count = collectCellsInto(results, x, y, radius)
 
+	for i = count + 1, queryMaxCount do
+		results[i] = nil
+	end
+
+	queryMaxCount = count
 	queryCount = count
 
 	--[[tsort(results, function(a, b)
 		return a.id < b.id
 	end)]]
 
-	return results
+	return results, count
 end
 
 function Spatial.queryCellsInto(results, x, y, radius)
