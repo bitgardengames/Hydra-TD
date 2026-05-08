@@ -144,7 +144,7 @@ local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 end
 
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
-local spawner = {
+local spawnerDefaults = {
 	active = false,
 	remaining = 0,
 	gap = 0.6,
@@ -154,7 +154,17 @@ local spawner = {
 	kind = nil,
 }
 
-local bossAdds = {
+local spawner = {
+	active = spawnerDefaults.active,
+	remaining = spawnerDefaults.remaining,
+	gap = spawnerDefaults.gap,
+	timer = spawnerDefaults.timer,
+	hpMult = spawnerDefaults.hpMult,
+	spdMult = spawnerDefaults.spdMult,
+	kind = spawnerDefaults.kind,
+}
+
+local bossAddsDefaults = {
 	active = false,
 	kind = nil,
 	burst = 0,
@@ -166,6 +176,25 @@ local bossAdds = {
 	hpMult = 1.0,
 	spdMult = 1.0,
 }
+
+local bossAdds = {
+	active = bossAddsDefaults.active,
+	kind = bossAddsDefaults.kind,
+	burst = bossAddsDefaults.burst,
+	timer = bossAddsDefaults.timer,
+	interval = bossAddsDefaults.interval,
+	maxAlive = bossAddsDefaults.maxAlive,
+	maxTotal = bossAddsDefaults.maxTotal,
+	totalSpawned = bossAddsDefaults.totalSpawned,
+	hpMult = bossAddsDefaults.hpMult,
+	spdMult = bossAddsDefaults.spdMult,
+}
+
+local function applyDefaultsInPlace(target, defaults)
+	for key, value in pairs(defaults) do
+		target[key] = value
+	end
+end
 
 local function beginSpawner(kind, count, gap, hpMult, spdMult)
 	spawner.active = true
@@ -336,23 +365,8 @@ function Waves.getWaveCompletionBonus(wave, waveLeaks)
 end
 
 function Waves.resetSpawner()
-	spawner.active = false
-	spawner.remaining = 0
-	spawner.gap = 0.6
-	spawner.timer = 0
-	spawner.hpMult = 1.0
-	spawner.spdMult = 1.0
-	spawner.kind = nil
-	bossAdds.active = false
-	bossAdds.kind = nil
-	bossAdds.burst = 0
-	bossAdds.timer = 0
-	bossAdds.interval = 0
-	bossAdds.maxAlive = 0
-	bossAdds.maxTotal = 0
-	bossAdds.totalSpawned = 0
-	bossAdds.hpMult = 1.0
-	bossAdds.spdMult = 1.0
+	applyDefaultsInPlace(spawner, spawnerDefaults)
+	applyDefaultsInPlace(bossAdds, bossAddsDefaults)
 end
 
 function Waves.getSpawner()
