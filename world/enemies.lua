@@ -256,6 +256,12 @@ local function updateEnemies(dt)
 	local LastSecondThreshold = map.lastSecondThreshold
 	local targetDecay = exp(-NUDGE_TARGET_DAMP * dt)
 	local follow = 1 - exp(-NUDGE_FOLLOW_DAMP * dt)
+	local enemyDiedEvents = {}
+	local enemyLeakedEvents = {}
+	local bossDiedEvents = {}
+	local bossBreachedEvents = {}
+	local awardMoneyEvents = {}
+	local spawnFxEvents = {}
 
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
@@ -382,28 +388,19 @@ local function updateEnemies(dt)
 			e.deathT = e.deathT - dt
 
 			if e.deathT <= 0 then
-				if e.lastHitTower then
-					local killer = e.lastHitTower
-					killer.kills = killer.kills + 1
-					killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
-					Achievements.increment(killer._killsStatName)
-				end
-
-				Achievements.increment("BOSSES_KILLED")
-				Achievements.increment("ENEMIES_KILLED") -- Bosses still count as an enemy
-
-				local reward = floor(e.reward + 0.5)
-
-				State.money = State.money + reward
-				State.score = State.score + e.score
-
-				Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
-
-				--Effects.spawnEnemyDeath(e.x, e.y, e.radius)
-
-				State.activeBoss = nil
-				State.activeBossKind = nil
-				Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
+				enemyDiedEvents[#enemyDiedEvents + 1] = {
+					enemy = e,
+					isBoss = true
+				}
+				bossDiedEvents[#bossDiedEvents + 1] = { enemy = e }
+				awardMoneyEvents[#awardMoneyEvents + 1] = {
+					enemy = e,
+					reward = floor(e.reward + 0.5)
+				}
+				spawnFxEvents[#spawnFxEvents + 1] = {
+					kind = "boss_death",
+					enemy = e
+				}
 
 				Spatial.removeEnemy(e)
 				releaseEnemy(e)
@@ -434,28 +431,18 @@ local function updateEnemies(dt)
 				Achievements.unlock("LAST_SECOND")
 			end
 
-			-- Non-boss: immediate death
-			if e.lastHitTower then
-				local killer = e.lastHitTower
-				killer.kills = killer.kills + 1
-				killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
-				Achievements.increment(killer._killsStatName)
-			end
-
-			Achievements.increment("ENEMIES_KILLED")
-
-			if State.selectedEnemy == e then
-				State.selectedEnemy = nil
-			end
-
-			local reward = floor(e.reward + 0.5)
-
-			State.money = State.money + reward
-			State.score = State.score + e.score
-
-			Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
-
-			Effects.spawnEnemyDeath(e.x, e.y, e.radius)
+			enemyDiedEvents[#enemyDiedEvents + 1] = {
+				enemy = e,
+				isBoss = false
+			}
+			awardMoneyEvents[#awardMoneyEvents + 1] = {
+				enemy = e,
+				reward = floor(e.reward + 0.5)
+			}
+			spawnFxEvents[#spawnFxEvents + 1] = {
+				kind = "enemy_death",
+				enemy = e
+			}
 
 			Spatial.removeEnemy(e)
 			releaseEnemy(e)
@@ -535,63 +522,116 @@ local function updateEnemies(dt)
 
 			if e.exitFade <= 0 then
 				if isBoss then
-					State.activeBoss = nil
-					State.activeBossKind = nil
-					State.lives = 0
-					State.gameOver = true
-					State.victory = false
-
-					Achievements.onGameOver()
-
-					State.mode = "game_over"
-
-					State.endT = 0
-					State.endReady = false
-					State.endTitle = L("game.gameOver")
-					State.endReason = L("game.bossBreach")
-
-					Sound.play("gameOver")
-					Sound.playMusic("gameOver")
-
-					return
+					bossBreachedEvents[#bossBreachedEvents + 1] = { enemy = e }
+					enemyLeakedEvents[#enemyLeakedEvents + 1] = {
+						enemy = e,
+						isBoss = true
+					}
+					Spatial.removeEnemy(e)
+					releaseEnemy(e)
+					swapRemove(enemies, i)
+					goto continue
 				end
 
-				State.lives = State.lives - 1
-				State.waveLeaks = State.waveLeaks + 1
-				State.totalLeaks = State.totalLeaks + 1
-
-				State.livesAnim = 1
-
-				--Floaters.add(e.x, e.y - 10, "-1", colorBad[1], colorBad[2], colorBad[3])
+				enemyLeakedEvents[#enemyLeakedEvents + 1] = {
+					enemy = e,
+					isBoss = false
+				}
 
 				Spatial.removeEnemy(e)
 				releaseEnemy(e)
 
 				swapRemove(enemies, i)
 
-				if State.lives <= 0 then
-					State.lives = 0
-					State.gameOver = true
-					State.victory = false
-
-					Achievements.onGameOver()
-
-					State.mode = "game_over"
-
-					State.endT = 0
-					State.endReady = false
-					State.endTitle = L("game.gameOver")
-					State.endReason = L("game.outOfLives")
-
-					Sound.play("gameOver")
-					Sound.playMusic("gameOver")
-				end
-
 				goto continue
 			end
 		end
 
 		::continue::
+	end
+
+	for i = 1, #enemyDiedEvents do
+		local evt = enemyDiedEvents[i]
+		local e = evt.enemy
+
+		if e.lastHitTower then
+			local killer = e.lastHitTower
+			killer.kills = killer.kills + 1
+			killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
+			Achievements.increment(killer._killsStatName)
+		end
+
+		Achievements.increment("ENEMIES_KILLED")
+
+		if State.selectedEnemy == e then
+			State.selectedEnemy = nil
+		end
+	end
+
+	for i = 1, #bossDiedEvents do
+		Achievements.increment("BOSSES_KILLED")
+		State.activeBoss = nil
+		State.activeBossKind = nil
+	end
+
+	for i = 1, #spawnFxEvents do
+		local evt = spawnFxEvents[i]
+		local e = evt.enemy
+		if evt.kind == "enemy_death" then
+			Effects.spawnEnemyDeath(e.x, e.y, e.radius)
+		elseif evt.kind == "boss_death" then
+			Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
+		end
+	end
+
+	for i = 1, #awardMoneyEvents do
+		local evt = awardMoneyEvents[i]
+		local e = evt.enemy
+		local reward = evt.reward
+		State.money = State.money + reward
+		State.score = State.score + e.score
+		Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
+	end
+
+	for i = 1, #enemyLeakedEvents do
+		local evt = enemyLeakedEvents[i]
+		if not evt.isBoss then
+			State.lives = State.lives - 1
+			State.waveLeaks = State.waveLeaks + 1
+			State.totalLeaks = State.totalLeaks + 1
+			State.livesAnim = 1
+		end
+	end
+
+	if #bossBreachedEvents > 0 then
+		State.activeBoss = nil
+		State.activeBossKind = nil
+		State.lives = 0
+		State.gameOver = true
+		State.victory = false
+		Achievements.onGameOver()
+		State.mode = "game_over"
+		State.endT = 0
+		State.endReady = false
+		State.endTitle = L("game.gameOver")
+		State.endReason = L("game.bossBreach")
+		Sound.play("gameOver")
+		Sound.playMusic("gameOver")
+		return
+	end
+
+	if State.lives <= 0 then
+		State.lives = 0
+		State.gameOver = true
+		State.victory = false
+		Achievements.onGameOver()
+		State.mode = "game_over"
+		State.endT = 0
+		State.endReady = false
+		State.endTitle = L("game.gameOver")
+		State.endReason = L("game.outOfLives")
+		Sound.play("gameOver")
+		Sound.playMusic("gameOver")
 	end
 end
 
