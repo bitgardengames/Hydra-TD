@@ -5,10 +5,7 @@ local Emissions = {}
 
 function Emissions.emit(t, target)
 	local profile = Modules.getFireProfile(t)
-	local ctx = profile and {
-		output = profile.output,
-		behaviors = profile.behaviors,
-	} or Modules.buildContext(t)
+	local ctx = profile or Modules.buildContext(t)
 
 	if ctx.output == "beam" then
 		return Emissions.emitBeam(t, target, ctx)
