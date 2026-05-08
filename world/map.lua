@@ -11,16 +11,19 @@ local max = math.max
 local sqrt = math.sqrt
 local floor = math.floor
 
-local map = {
-	blocked = {},
-	isPath = {},
-	path = {},
-	pathWorld = {},
-	pathSegLen = {},
-	samples = {},
-	sampleStep = 1, -- pixels (2–4 ideal)
-}
+local function newMapData()
+	return {
+		blocked = {},
+		isPath = {},
+		path = {},
+		pathWorld = {},
+		pathSegLen = {},
+		samples = {},
+		sampleStep = 1, -- pixels (2–4 ideal)
+	}
+end
 
+local map = newMapData()
 local currentMap = nil
 
 local function makeKey(gx, gy)
@@ -53,22 +56,27 @@ local function clearBlocked()
 	map.water = {}
 end
 
-local function canPlaceAt(gx, gy)
+local function canPlaceAtForMap(targetMap, gx, gy)
 	if not gx then
 		return false
 	end
 
-	local path = map.isPath[gx]
+	local path = targetMap.isPath[gx]
 
 	if path and path[gy] then
 		return false, "path"
 	end
 
-	if isBlocked(gx, gy) then
+	local col = targetMap.blocked[gx]
+	if col and col[gy] then
 		return false, "occupied"
 	end
 
 	return true
+end
+
+local function canPlaceAt(gx, gy)
+	return canPlaceAtForMap(map, gx, gy)
 end
 
 local function computeCoverageIndex(path, canPlaceAtFn)
@@ -107,11 +115,11 @@ local function computeCoverageIndex(path, canPlaceAtFn)
 	return count
 end
 
-local function loadPath(points)
-	map.path = {}
-	map.isPath = {}
-	map.pathWorld = {}
-	map.pathSegLen = {}
+local function loadPath(targetMap, points)
+	targetMap.path = {}
+	targetMap.isPath = {}
+	targetMap.pathWorld = {}
+	targetMap.pathSegLen = {}
 
 	local pathLength = 0 -- measured in tiles
 
@@ -124,85 +132,73 @@ local function loadPath(points)
 
 		local x, y = ax, ay
 
-		-- Insert first point of the segment
-		local idx = #map.path + 1
-		map.path[idx] = {x, y}
-
-		map.isPath[x] = map.isPath[x] or {}
-		map.isPath[x][y] = true
+		local idx = #targetMap.path + 1
+		targetMap.path[idx] = {x, y}
+		targetMap.isPath[x] = targetMap.isPath[x] or {}
+		targetMap.isPath[x][y] = true
 
 		while x ~= bx or y ~= by do
 			x = x + dx
 			y = y + dy
-
-			-- Each step is exactly 1 tile
 			pathLength = pathLength + 1
 
-			local j = #map.path + 1
-			map.path[j] = {x, y}
-
-			map.isPath[x] = map.isPath[x] or {}
-			map.isPath[x][y] = true
+			local j = #targetMap.path + 1
+			targetMap.path[j] = {x, y}
+			targetMap.isPath[x] = targetMap.isPath[x] or {}
+			targetMap.isPath[x][y] = true
 		end
 	end
 
-	-- Build world-space path (visuals, movement, etc.)
-	for i = 1, #map.path do
-		local p = map.path[i]
+	for i = 1, #targetMap.path do
+		local p = targetMap.path[i]
 		local wx, wy = gridToCenter(p[1], p[2])
-
-		map.pathWorld[i] = {wx, wy}
+		targetMap.pathWorld[i] = {wx, wy}
 	end
 
-	-- Store length and pressure normalization
-	map.pathLength = pathLength
-
-	map.pathDist = {}
+	targetMap.pathLength = pathLength
+	targetMap.pathDist = {}
 
 	local totalDist = 0
+	targetMap.pathDist[1] = 0
 
-	map.pathDist[1] = 0
-
-	for i = 2, #map.pathWorld do
-		local ax, ay = map.pathWorld[i - 1][1], map.pathWorld[i - 1][2]
-		local bx, by = map.pathWorld[i][1], map.pathWorld[i][2]
+	for i = 2, #targetMap.pathWorld do
+		local ax, ay = targetMap.pathWorld[i - 1][1], targetMap.pathWorld[i - 1][2]
+		local bx, by = targetMap.pathWorld[i][1], targetMap.pathWorld[i][2]
 
 		local ddx = bx - ax
 		local ddy = by - ay
 		local dist = sqrt(ddx * ddx + ddy * ddy)
 
 		totalDist = totalDist + dist
-		map.pathSegLen[i - 1] = dist
-		map.pathDist[i] = totalDist
+		targetMap.pathSegLen[i - 1] = dist
+		targetMap.pathDist[i] = totalDist
 	end
 
-	map.totalWorldLength = totalDist
-	map.lastSecondThreshold = totalDist * 0.90
+	targetMap.totalWorldLength = totalDist
+	targetMap.lastSecondThreshold = totalDist * 0.90
 
-	local coverageTiles = computeCoverageIndex(map.path, canPlaceAt)
+	local coverageTiles = computeCoverageIndex(targetMap.path, function(gx, gy)
+		return canPlaceAtForMap(targetMap, gx, gy)
+	end)
 	local coverageIndex = coverageTiles / pathLength
 	local raw = coverageIndex / REF_COVERAGE_INDEX
-
-	map.coverageMult = max(0.90, min(1.10, raw))
-
-	State.mapCoverageMult = map.coverageMult
+	targetMap.coverageMult = max(0.90, min(1.10, raw))
 end
 
-local function buildSamples()
-	local pathWorld = map.pathWorld
+local function buildSamples(targetMap)
+	local pathWorld = targetMap.pathWorld
 	local samples = {}
-	map.samples = samples
+	targetMap.samples = samples
 
-	local step = map.sampleStep
-	local total = map.totalWorldLength
+	local step = targetMap.sampleStep
+	local total = targetMap.totalWorldLength
 
 	local seg = 1
 	local segStartDist = 0
 
 	for d = 0, total, step do
-		-- Advance segment (NO while loop)
 		while true do
-			local segLen = map.pathSegLen[seg] or 0
+			local segLen = targetMap.pathSegLen[seg] or 0
 
 			if d <= segStartDist + segLen or seg >= #pathWorld - 1 then
 				break
@@ -214,75 +210,84 @@ local function buildSamples()
 
 		local ax, ay = pathWorld[seg][1], pathWorld[seg][2]
 		local bx, by = pathWorld[seg + 1][1], pathWorld[seg + 1][2]
-
 		local dx = bx - ax
 		local dy = by - ay
-		local segLen = map.pathSegLen[seg] or 0
+		local segLen = targetMap.pathSegLen[seg] or 0
 
 		local t = 0
 		if segLen > 0 then
 			t = (d - segStartDist) / segLen
 		end
 
-		local x = ax + dx * t
-		local y = ay + dy * t
-
-		samples[#samples + 1] = {x, y}
+		samples[#samples + 1] = {ax + dx * t, ay + dy * t}
 	end
 
-	map.sampleCount = #samples
+	targetMap.sampleCount = #samples
+end
+
+local function createRenderContext(mapDef)
+	local contextMap = newMapData()
+	contextMap.water = mapDef.water or {}
+
+	loadPath(contextMap, mapDef.path)
+	buildSamples(contextMap)
+
+	contextMap.biomeId = mapDef.biome or mapDef.palette or "default"
+	contextMap.biome = Biomes.resolve(mapDef)
+
+	return {
+		map = contextMap,
+		mapDef = mapDef,
+	}
 end
 
 local function buildPath(mapDef)
 	currentMap = mapDef
+	local context = createRenderContext(mapDef)
 
-	map.water = mapDef.water or {}
-	--map.terrain = mapDef.terrain or {}
+	map.water = context.map.water
+	map.path = context.map.path
+	map.isPath = context.map.isPath
+	map.pathWorld = context.map.pathWorld
+	map.pathSegLen = context.map.pathSegLen
+	map.pathLength = context.map.pathLength
+	map.pathDist = context.map.pathDist
+	map.totalWorldLength = context.map.totalWorldLength
+	map.lastSecondThreshold = context.map.lastSecondThreshold
+	map.coverageMult = context.map.coverageMult
+	map.samples = context.map.samples
+	map.sampleCount = context.map.sampleCount
+	map.biomeId = context.map.biomeId
+	map.biome = context.map.biome
 
-	loadPath(mapDef.path)
-	buildSamples()
-
-	map.biomeId = mapDef.biome or mapDef.palette or "default"
-	map.biome = Biomes.resolve(mapDef)
+	State.mapCoverageMult = map.coverageMult
 end
 
 local function sampleFast(dist)
 	local samples = map.samples
 	local step = map.sampleStep
-
 	if not samples then
 		return 0, 0
 	end
-
 	local sampleCount = map.sampleCount or #samples
-
 	if sampleCount == 0 then
 		return 0, 0
 	end
-
 	if dist <= 0 then
 		local p = samples[1]
-
 		return p[1], p[2]
 	end
-
 	local total = map.totalWorldLength
-
 	if dist >= total then
 		local p = samples[sampleCount]
-
 		return p[1], p[2]
 	end
-
 	local idx = dist / step
 	local idxFloor = floor(idx)
 	local i = idxFloor + 1
-
 	local a = samples[i]
 	local b = samples[i + 1] or a
-
 	local t = idx - idxFloor
-
 	return a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t
 end
 
@@ -302,6 +307,7 @@ return {
 	map = map,
 	makeKey = makeKey,
 	buildPath = buildPath,
+	createRenderContext = createRenderContext,
 	getBiome = getBiome,
 	getTerrain = getTerrain,
 	getWorld = getWorld,
