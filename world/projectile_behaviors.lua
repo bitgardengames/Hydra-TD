@@ -193,35 +193,66 @@ local HOOK_COMPAT = {
 	on_expire = "onExpire",
 }
 
-local function behaviorSupportsHook(def, behaviorData, hookId)
+local HOOK_IDS = {
+	"on_shot",
+	"on_tick",
+	"on_hit",
+	"on_kill",
+	"on_expire",
+}
+
+local function behaviorSupportsHook(def, behaviorData, primaryHookId, compatHookId)
 	if behaviorData and behaviorData.hooks then
 		for i = 1, #behaviorData.hooks do
-			if behaviorData.hooks[i] == hookId then
+			local hook = behaviorData.hooks[i]
+			if hook == primaryHookId or hook == compatHookId then
 				return true
 			end
 		end
 		return false
 	end
 
-	return def[hookId] ~= nil or def[HOOK_COMPAT[hookId]] ~= nil
+	return def[primaryHookId] ~= nil or (compatHookId and def[compatHookId] ~= nil)
 end
 
-local function callBehaviorHook(def, hookId, p, a, b, c)
-	local fn = def[hookId] or def[HOOK_COMPAT[hookId]]
-	if not fn then
-		return nil
+function ProjectileBehaviors.compileHooks(p)
+	local hooks = {}
+
+	for i = 1, #HOOK_IDS do
+		hooks[HOOK_IDS[i]] = {}
 	end
-	return fn(p, a, b, c)
+
+	for i = 1, #p.behaviors do
+		local b = p.behaviors[i]
+		local def = B[b.id]
+
+		if def then
+			for j = 1, #HOOK_IDS do
+				local hookId = HOOK_IDS[j]
+				local compatHookId = HOOK_COMPAT[hookId]
+
+				if behaviorSupportsHook(def, b, hookId, compatHookId) then
+					local fn = def[hookId] or def[compatHookId]
+					if fn then
+						local arr = hooks[hookId]
+						arr[#arr + 1] = { fn = fn, data = b.data }
+					end
+				end
+			end
+		end
+	end
+
+	p._hooks = hooks
 end
 
 local function consumeProjectile(p)
 	if p and not p._didExpireHook then
 		p._didExpireHook = true
-		for i = 1, #p.behaviors do
-			local b = p.behaviors[i]
-			local def = B[b.id]
-			if def and behaviorSupportsHook(def, b, "on_expire") then
-				callBehaviorHook(def, "on_expire", p, b.data)
+		local hooks = p._hooks and p._hooks.on_expire
+		if hooks then
+			for i = 1, #hooks do
+				local hook = hooks[i]
+				hook.fn(p, hook.data)
 			end
 		end
 	end
@@ -2589,22 +2620,21 @@ function ProjectileBehaviors.buildChildBehaviors(parentBehaviors)
 end
 
 function ProjectileBehaviors.init(p)
-	for i = 1, #p.behaviors do
-		local b = p.behaviors[i]
-		local def = B[b.id]
-		if def and behaviorSupportsHook(def, b, "on_shot") then
-			callBehaviorHook(def, "on_shot", p, b.data)
+	local hooks = p._hooks and p._hooks.on_shot
+	if hooks then
+		for i = 1, #hooks do
+			local hook = hooks[i]
+			hook.fn(p, hook.data)
 		end
 	end
 end
 
 function ProjectileBehaviors.update(p, dt)
-	for i = 1, #p.behaviors do
-		local b = p.behaviors[i]
-		local def = B[b.id]
-
-		if def and behaviorSupportsHook(def, b, "on_tick") then
-			local result = callBehaviorHook(def, "on_tick", p, dt, b.data)
+	local hooks = p._hooks and p._hooks.on_tick
+	if hooks then
+		for i = 1, #hooks do
+			local hook = hooks[i]
+			local result = hook.fn(p, dt, hook.data)
 			if result == "consume" then
 				return consumeProjectile(p)
 			end
@@ -2630,12 +2660,11 @@ function ProjectileBehaviors.hit(p, e, ctx)
 
 	local shouldConsume = false
 
-	for i = 1, #p.behaviors do
-		local b = p.behaviors[i]
-		local def = B[b.id]
-
-		if def and behaviorSupportsHook(def, b, "on_hit") then
-			local result = callBehaviorHook(def, "on_hit", p, e, b.data, ctx)
+	local hitHooks = p._hooks and p._hooks.on_hit
+	if hitHooks then
+		for i = 1, #hitHooks do
+			local hook = hitHooks[i]
+			local result = hook.fn(p, e, hook.data, ctx)
 			if result == "consume" then
 				shouldConsume = true
 			end
@@ -2643,11 +2672,11 @@ function ProjectileBehaviors.hit(p, e, ctx)
 	end
 
 	if e and e.hp and e.hp <= 0 then
-		for i = 1, #p.behaviors do
-			local b = p.behaviors[i]
-			local def = B[b.id]
-			if def and behaviorSupportsHook(def, b, "on_kill") then
-				callBehaviorHook(def, "on_kill", p, e, b.data, ctx)
+		local killHooks = p._hooks and p._hooks.on_kill
+		if killHooks then
+			for i = 1, #killHooks do
+				local hook = killHooks[i]
+				hook.fn(p, e, hook.data, ctx)
 			end
 		end
 	end

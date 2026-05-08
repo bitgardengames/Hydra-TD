@@ -247,6 +247,7 @@ local function initProjectile(p, source, opts)
 		local fireProfile = source._fireProfile
 		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
 	end
+	PB.compileHooks(p)
 
 	return p
 end
@@ -321,6 +322,7 @@ local function resolveSpawnProjectile(parent, evt)
 
 	if not evt.behaviors and parent and parent.behaviors then
 		newP.behaviors = PB.buildChildBehaviors(parent.behaviors)
+		PB.compileHooks(newP)
 		PB.init(newP)
 	end
 end
