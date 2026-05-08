@@ -15,6 +15,7 @@ Spatial.grid = grid
 local queryBuffer = {}
 local queryCount = 0
 local queryMaxCount = 0
+local occupancyBuffer = {}
 
 local function collectCellsInto(results, x, y, radius)
 	local cx = floor(x * INV_CELL)
@@ -180,6 +181,42 @@ end
 
 function Spatial.queryCellsCount()
 	return queryCount
+end
+
+function Spatial.pointToCell(x, y)
+	return floor(x * INV_CELL), floor(y * INV_CELL)
+end
+
+function Spatial.queryOccupancy(cx, cy, radiusCells, out)
+	local radius = radiusCells or 1
+	local idx = 0
+	local sum = 0
+	local counts = out or occupancyBuffer
+
+	for dx = -radius, radius do
+		local col = grid[cx + dx]
+
+		for dy = -radius, radius do
+			idx = idx + 1
+			local count = 0
+
+			if col then
+				local cell = col[cy + dy]
+				if cell then
+					count = #cell
+				end
+			end
+
+			counts[idx] = count
+			sum = sum + count
+		end
+	end
+
+	for i = idx + 1, #counts do
+		counts[i] = nil
+	end
+
+	return counts, idx, sum
 end
 
 function Spatial.forEachInCells(x, y, radius, fn, context)
