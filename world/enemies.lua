@@ -39,6 +39,19 @@ local nextID = 0
 local INV_SPAWN_FADE_DUR = 1 / 0.12
 local INV_EXIT_FADE_DUR = 1 / 0.10
 
+local enemyDiedEvents = {}
+local enemyLeakedEvents = {}
+local bossDiedEvents = {}
+local bossBreachedEvents = {}
+local awardMoneyEvents = {}
+local spawnFxEvents = {}
+
+local function clearBuffer(buf)
+	for i = #buf, 1, -1 do
+		buf[i] = nil
+	end
+end
+
 local function swapRemove(list, i)
 	local last = #list
 
@@ -256,12 +269,12 @@ local function updateEnemies(dt)
 	local LastSecondThreshold = map.lastSecondThreshold
 	local targetDecay = exp(-NUDGE_TARGET_DAMP * dt)
 	local follow = 1 - exp(-NUDGE_FOLLOW_DAMP * dt)
-	local enemyDiedEvents = {}
-	local enemyLeakedEvents = {}
-	local bossDiedEvents = {}
-	local bossBreachedEvents = {}
-	local awardMoneyEvents = {}
-	local spawnFxEvents = {}
+	clearBuffer(enemyDiedEvents)
+	clearBuffer(enemyLeakedEvents)
+	clearBuffer(bossDiedEvents)
+	clearBuffer(bossBreachedEvents)
+	clearBuffer(awardMoneyEvents)
+	clearBuffer(spawnFxEvents)
 
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
