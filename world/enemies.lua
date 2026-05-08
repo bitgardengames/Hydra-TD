@@ -211,7 +211,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.baseSpeed = def.speed * spdScale
 	e.speed = def.speed * spdScale
 	e.reward = def.reward * (1.0 + State.wave * 0.01)
-	e.score = def.score
+	e.score = def.score or 0
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius
 	e.hitFlash = 0
@@ -589,7 +589,7 @@ local function updateEnemies(dt)
 		local e = evt.enemy
 		local reward = evt.reward
 		State.money = State.money + reward
-		State.score = State.score + e.score
+		State.score = State.score + (e.score or 0)
 		Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 	end
 
