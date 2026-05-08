@@ -385,11 +385,21 @@ local function updateTowers(dt)
 	for i = 1, #towers do
 		local t = towers[i]
 
-		t.cooldown = t.cooldown - dt
+		local prevWindUp = t.windUp or 0
+		t.cooldown = max(0, (t.cooldown or 0) - dt)
+		t.windUp = max(0, prevWindUp - dt)
+		t.retargetT = max(0, (t.retargetT or 0) - dt)
 		updateTowerVisuals(t, dt)
 
-		-- Retarget cooldown
-		t.retargetT = (t.retargetT or 0) - dt
+		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
+
+		if t.cooldown > 0
+			and not t.target
+			and t.windUp <= 0
+			and t.retargetT > 0 then
+			goto continue_tower_update
+		end
+
 		refreshTargetModeCache(t)
 
 		local target = t.target
@@ -472,10 +482,7 @@ local function updateTowers(dt)
 		end
 
 		-- Wind-up / fire
-		if t.windUp and t.windUp > 0 then
-			t.windUp = t.windUp - dt
-
-			if t.windUp <= 0 and target then
+		if windUpCompleted and target then
 				local canFire = true
 
 				if canRotate then
@@ -500,8 +507,9 @@ local function updateTowers(dt)
 				end
 
 				t.windUp = 0
-			end
 
+		elseif t.windUp > 0 then
+			-- Keep winding up.
 		elseif t.cooldown <= 0 and target then
 			if not canRotate or (aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS) then
 				t.windUp = 0.08
