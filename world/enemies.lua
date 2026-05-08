@@ -333,8 +333,7 @@ local function updateEnemies(dt)
 			local spreadStacks = floor(e.poisonStacks * stackMult)
 
 			if spreadStacks > 0 then
-				local nearby = Spatial.queryCells(e.x, e.y, radius)
-				local nearbyCount = Spatial.queryCellsCount()
+				local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius)
 
 				for i = 1, nearbyCount do
 					local other = nearby[i]
