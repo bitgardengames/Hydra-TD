@@ -107,8 +107,7 @@ local function pickDenseTarget(tower)
 	local localR2 = DENSE_LOCAL_RADIUS * DENSE_LOCAL_RADIUS
 	local localNearby = denseQueryBuffer
 
-	local nearby = queryCells(tx, ty, tower.range)
-	local n = queryCellsCount()
+	local nearby, n = queryCells(tx, ty, tower.range)
 
 	for i = 1, n do
 		local e = nearby[i]
