@@ -390,16 +390,21 @@ local function updateEnemies(dt)
 			if e.deathT <= 0 then
 				enemyDiedEvents[#enemyDiedEvents + 1] = {
 					enemy = e,
+					lastHitTower = e.lastHitTower,
 					isBoss = true
 				}
 				bossDiedEvents[#bossDiedEvents + 1] = { enemy = e }
 				awardMoneyEvents[#awardMoneyEvents + 1] = {
-					enemy = e,
+					x = e.x,
+					y = e.y,
+					score = e.score or 0,
 					reward = floor(e.reward + 0.5)
 				}
 				spawnFxEvents[#spawnFxEvents + 1] = {
 					kind = "boss_death",
-					enemy = e
+					x = e.x,
+					y = e.y,
+					radius = e.radius
 				}
 
 				Spatial.removeEnemy(e)
@@ -433,15 +438,20 @@ local function updateEnemies(dt)
 
 			enemyDiedEvents[#enemyDiedEvents + 1] = {
 				enemy = e,
+				lastHitTower = e.lastHitTower,
 				isBoss = false
 			}
 			awardMoneyEvents[#awardMoneyEvents + 1] = {
-				enemy = e,
+				x = e.x,
+				y = e.y,
+				score = e.score or 0,
 				reward = floor(e.reward + 0.5)
 			}
 			spawnFxEvents[#spawnFxEvents + 1] = {
 				kind = "enemy_death",
-				enemy = e
+				x = e.x,
+				y = e.y,
+				radius = e.radius
 			}
 
 			Spatial.removeEnemy(e)
@@ -554,8 +564,8 @@ local function updateEnemies(dt)
 		local evt = enemyDiedEvents[i]
 		local e = evt.enemy
 
-		if e.lastHitTower then
-			local killer = e.lastHitTower
+		if evt.lastHitTower then
+			local killer = evt.lastHitTower
 			killer.kills = killer.kills + 1
 			killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
 			Achievements.increment(killer._killsStatName)
@@ -576,21 +586,19 @@ local function updateEnemies(dt)
 
 	for i = 1, #spawnFxEvents do
 		local evt = spawnFxEvents[i]
-		local e = evt.enemy
 		if evt.kind == "enemy_death" then
-			Effects.spawnEnemyDeath(e.x, e.y, e.radius)
+			Effects.spawnEnemyDeath(evt.x, evt.y, evt.radius)
 		elseif evt.kind == "boss_death" then
-			Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
+			Effects.spawnBossDeathExplosion(evt.x, evt.y, evt.radius)
 		end
 	end
 
 	for i = 1, #awardMoneyEvents do
 		local evt = awardMoneyEvents[i]
-		local e = evt.enemy
 		local reward = evt.reward
 		State.money = State.money + reward
-		State.score = State.score + (e.score or 0)
-		Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
+		State.score = State.score + evt.score
+		Floaters.add(evt.x, evt.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 	end
 
 	for i = 1, #enemyLeakedEvents do
