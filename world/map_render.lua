@@ -1,6 +1,7 @@
 local DrawWorld = require("render.draw_world")
 local Constants = require("core.constants")
 local Camera = require("core.camera")
+local MapMod = require("world.map")
 
 local MapRender = {}
 
@@ -8,6 +9,21 @@ local lg = love.graphics
 
 local MAP_W = Constants.GRID_W * Constants.TILE
 local MAP_H = Constants.GRID_H * Constants.TILE
+
+local function withRenderContext(context, fn)
+	if not context or not context.map then
+		return fn()
+	end
+
+	local previousMap = MapMod.map
+	MapMod.map = context.map
+	local ok, err = pcall(fn)
+	MapMod.map = previousMap
+
+	if not ok then
+		error(err)
+	end
+end
 
 function MapRender.renderWorldToCanvas(canvas, scale)
 	lg.setCanvas(canvas)
@@ -25,7 +41,7 @@ function MapRender.renderWorldToCanvas(canvas, scale)
 	lg.setCanvas()
 end
 
-function MapRender.renderGameplayFramedToCanvas(canvas)
+function MapRender.renderGameplayFramedToCanvas(canvas, context)
 	local canvasW, canvasH = canvas:getDimensions()
 	local winW, winH = love.graphics.getDimensions()
 
@@ -46,14 +62,15 @@ function MapRender.renderGameplayFramedToCanvas(canvas)
 	lg.push()
 	lg.origin()
 
-	-- Match gameplay camera framing, then scale that framed view into the preview box.
 	lg.scale(sx, sy)
 	lg.scale(z, z)
 	lg.translate(-camWX, -camWY)
 
-	DrawWorld.drawGrass()
-	DrawWorld.drawPath()
-	DrawWorld.drawScatter()
+	withRenderContext(context, function()
+		DrawWorld.drawGrass()
+		DrawWorld.drawPath()
+		DrawWorld.drawScatter()
+	end)
 
 	lg.pop()
 	lg.setCanvas()
