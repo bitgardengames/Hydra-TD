@@ -97,26 +97,19 @@ local function pickSimpleTarget(tower, mode)
 	return ctx.best
 end
 
--- Target enemy furthest along the path
-function Targeting.findProgressTarget(tower)
-	return Targeting.findTarget(tower, MODES.PROGRESS)
-end
-
-function Targeting.findLowestHPTarget(tower)
-	return Targeting.findTarget(tower, MODES.LOW_HP)
-end
-
-function Targeting.findFarthestTarget(tower)
-	return Targeting.findTarget(tower, MODES.FARTHEST)
-end
-
-function Targeting.findHighestHPTarget(tower)
-	return Targeting.findTarget(tower, MODES.HIGH_HP)
-end
-
-
 function Targeting.findTarget(tower, mode)
 	return pickSimpleTarget(tower, normalizeMode(mode))
+end
+
+for aliasName, mode in pairs({
+	findProgressTarget = MODES.PROGRESS,
+	findLowestHPTarget = MODES.LOW_HP,
+	findFarthestTarget = MODES.FARTHEST,
+	findHighestHPTarget = MODES.HIGH_HP,
+}) do
+	Targeting[aliasName] = function(tower)
+		return Targeting.findTarget(tower, mode)
+	end
 end
 
 return Targeting
