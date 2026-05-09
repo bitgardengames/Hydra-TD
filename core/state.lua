@@ -96,29 +96,24 @@ end
 
 function state.resetDamage()
 	local stats = state.combatStats
+	local towerList = Constants.TOWER_LIST
+	local damageByTower = {}
+	local bossDamageByTower = {}
 
 	stats.damageView = 0
 
 	stats.totalDamage = 0
 	stats.bossTotalDamage = 0
 
-	-- Clear existing keys
-	for k in pairs(stats.damageByTower) do
-		stats.damageByTower[k] = nil
-	end
-
-	for k in pairs(stats.bossDamageByTower) do
-		stats.bossDamageByTower[k] = nil
-	end
-
-	local towerList = Constants.TOWER_LIST
-
 	for i = 1, #towerList do
 		local kind = towerList[i]
 
-		stats.damageByTower[kind] = 0
-		stats.bossDamageByTower[kind] = 0
+		damageByTower[kind] = 0
+		bossDamageByTower[kind] = 0
 	end
+
+	stats.damageByTower = damageByTower
+	stats.bossDamageByTower = bossDamageByTower
 end
 
 function state.resolveMapIndex(index)
