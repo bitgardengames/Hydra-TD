@@ -119,24 +119,25 @@ local function handleButtonPressRelease(list, x, y, isPress, onReleaseInside)
 	return nil
 end
 
+local function getMousepressHandler()
+	local mode = State.mode
+
+	if mode == "menu" or mode == "campaign" or mode == "settings" or mode == "game_over" or mode == "victory" then
+		return Menu.mousepressed, true
+	end
+
+	if mode == "pause" then
+		return Menu.mousepressedPause, false
+	end
+
+	return nil, false
+end
+
 local function mousepressed(x, y, button)
-	-- Menu screens
-	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" then
-		Menu.mousepressed(x, y, button)
-
-		return
-	end
-
-	-- Overlay screens
-	if State.mode == "game_over" or State.mode == "victory" then
-		Menu.mousepressed(x, y, button)
-
-		return
-	end
-
-	-- Pause overlay
-	if State.mode == "pause" then
-		if Menu.mousepressedPause(x, y, button) then
+	local modeHandler, alwaysConsume = getMousepressHandler()
+	if modeHandler then
+		local consumed = modeHandler(x, y, button)
+		if alwaysConsume or consumed then
 			return
 		end
 	end
