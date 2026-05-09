@@ -52,22 +52,7 @@ Hotkeys.defaultPad = {
 	},
 }
 
-local function cloneKeyboardBindings(src)
-	local out = {
-		shop = {},
-		actions = {},
-	}
-
-	for section, values in pairs(src) do
-		for id, key in pairs(values) do
-			out[section][id] = key
-		end
-	end
-
-	return out
-end
-
-local function cloneGamepadBindings(src)
+local function cloneBindings(src)
 	local out = {
 		shop = {},
 		actions = {},
@@ -83,11 +68,11 @@ local function cloneGamepadBindings(src)
 end
 
 function Hotkeys.getDefaultKeyboardBindings()
-	return cloneKeyboardBindings(Hotkeys.defaultKb)
+	return cloneBindings(Hotkeys.defaultKb)
 end
 
 function Hotkeys.getDefaultGamepadBindings()
-	return cloneGamepadBindings(Hotkeys.defaultPad)
+	return cloneBindings(Hotkeys.defaultPad)
 end
 
 function Hotkeys.getDefaultBindings()
