@@ -81,10 +81,28 @@ local function copyBehaviors(list)
 	return out
 end
 
+local function rebuildBehaviorIndex(ctx)
+	local index = {}
+	local behaviors = ctx.behaviors
+
+	for i = 1, #behaviors do
+		local id = behaviors[i].id
+		if id and index[id] == nil then
+			index[id] = i
+		end
+	end
+
+	ctx._behaviorIndex = index
+end
+
 local ContextMethods = {}
 
 function ContextMethods:addBehavior(b)
 	self.behaviors[#self.behaviors + 1] = b
+
+	if b and b.id and self._behaviorIndex[b.id] == nil then
+		self._behaviorIndex[b.id] = #self.behaviors
+	end
 end
 
 function ContextMethods:addHookBehavior(hookId, behavior)
@@ -98,31 +116,24 @@ function ContextMethods:addHookBehavior(hookId, behavior)
 	end
 
 	self.behaviors[#self.behaviors + 1] = b
-end
 
-local function findBehaviorIndexById(ctx, id)
-	local behaviors = ctx.behaviors
-
-	for i = 1, #behaviors do
-		if behaviors[i].id == id then
-			return i
-		end
+	if b.id and self._behaviorIndex[b.id] == nil then
+		self._behaviorIndex[b.id] = #self.behaviors
 	end
-
-	return nil
 end
 
 function ContextMethods:replaceBehavior(id, newB)
-	local i = findBehaviorIndexById(self, id)
+	local i = self._behaviorIndex[id]
 	if not i then
 		return
 	end
 
 	self.behaviors[i] = newB
+	rebuildBehaviorIndex(self)
 end
 
 function ContextMethods:modifyBehavior(id, fn)
-	local i = findBehaviorIndexById(self, id)
+	local i = self._behaviorIndex[id]
 	if not i then
 		return
 	end
@@ -133,12 +144,13 @@ function ContextMethods:modifyBehavior(id, fn)
 end
 
 function ContextMethods:removeBehavior(id)
-	local i = findBehaviorIndexById(self, id)
+	local i = self._behaviorIndex[id]
 	if not i then
 		return
 	end
 
 	table.remove(self.behaviors, i)
+	rebuildBehaviorIndex(self)
 end
 
 function ContextMethods:forEachBehavior(fn)
@@ -153,6 +165,8 @@ function ContextMethods:removeByType(typeName)
 			table.remove(self.behaviors, i)
 		end
 	end
+
+	rebuildBehaviorIndex(self)
 end
 
 local ContextMetatable = { __index = ContextMethods }
@@ -199,7 +213,10 @@ local function createContext(base)
 	local ctx = {
 		behaviors = copyBehaviors(base),
 		output = "projectile",
+		_behaviorIndex = {},
 	}
+
+	rebuildBehaviorIndex(ctx)
 
 	return setmetatable(ctx, ContextMetatable)
 end
