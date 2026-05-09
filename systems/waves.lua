@@ -174,44 +174,79 @@ local bossAddsDefaults = {
 local spawner = {}
 local bossAdds = {}
 
-local function resetSpawner(active, remaining, gap, timer, hpMult, spdMult, kind)
-	spawner.active = active ~= nil and active or spawnerDefaults.active
-	spawner.remaining = remaining ~= nil and remaining or spawnerDefaults.remaining
-	spawner.gap = gap ~= nil and gap or spawnerDefaults.gap
-	spawner.timer = timer ~= nil and timer or spawnerDefaults.timer
-	spawner.hpMult = hpMult ~= nil and hpMult or spawnerDefaults.hpMult
-	spawner.spdMult = spdMult ~= nil and spdMult or spawnerDefaults.spdMult
+local function resetSpawner(overrides)
+	overrides = overrides or {}
+	local nextState = {
+		active = spawnerDefaults.active,
+		remaining = spawnerDefaults.remaining,
+		gap = spawnerDefaults.gap,
+		timer = spawnerDefaults.timer,
+		hpMult = spawnerDefaults.hpMult,
+		spdMult = spawnerDefaults.spdMult,
+		kind = spawnerDefaults.kind,
+	}
 
-	if select("#", active, remaining, gap, timer, hpMult, spdMult, kind) >= 7 then
-		spawner.kind = kind
-	else
-		spawner.kind = kind ~= nil and kind or spawnerDefaults.kind
+	for k, v in pairs(overrides) do
+		if v ~= nil then
+			nextState[k] = v
+		end
 	end
+
+	spawner.active = nextState.active
+	spawner.remaining = nextState.remaining
+	spawner.gap = nextState.gap
+	spawner.timer = nextState.timer
+	spawner.hpMult = nextState.hpMult
+	spawner.spdMult = nextState.spdMult
+	spawner.kind = nextState.kind
 end
 
-local function resetBossAdds(active, kind, burst, timer, interval, maxAlive, maxTotal, totalSpawned, hpMult, spdMult)
-	bossAdds.active = active ~= nil and active or bossAddsDefaults.active
-	bossAdds.burst = burst ~= nil and burst or bossAddsDefaults.burst
-	bossAdds.timer = timer ~= nil and timer or bossAddsDefaults.timer
-	bossAdds.interval = interval ~= nil and interval or bossAddsDefaults.interval
-	bossAdds.maxAlive = maxAlive ~= nil and maxAlive or bossAddsDefaults.maxAlive
-	bossAdds.maxTotal = maxTotal ~= nil and maxTotal or bossAddsDefaults.maxTotal
-	bossAdds.totalSpawned = totalSpawned ~= nil and totalSpawned or bossAddsDefaults.totalSpawned
-	bossAdds.hpMult = hpMult ~= nil and hpMult or bossAddsDefaults.hpMult
-	bossAdds.spdMult = spdMult ~= nil and spdMult or bossAddsDefaults.spdMult
+local function resetBossAdds(overrides)
+	overrides = overrides or {}
+	local nextState = {
+		active = bossAddsDefaults.active,
+		kind = bossAddsDefaults.kind,
+		burst = bossAddsDefaults.burst,
+		timer = bossAddsDefaults.timer,
+		interval = bossAddsDefaults.interval,
+		maxAlive = bossAddsDefaults.maxAlive,
+		maxTotal = bossAddsDefaults.maxTotal,
+		totalSpawned = bossAddsDefaults.totalSpawned,
+		hpMult = bossAddsDefaults.hpMult,
+		spdMult = bossAddsDefaults.spdMult,
+	}
 
-	if select("#", active, kind, burst, timer, interval, maxAlive, maxTotal, totalSpawned, hpMult, spdMult) >= 2 then
-		bossAdds.kind = kind
-	else
-		bossAdds.kind = kind ~= nil and kind or bossAddsDefaults.kind
+	for k, v in pairs(overrides) do
+		if v ~= nil then
+			nextState[k] = v
+		end
 	end
+
+	bossAdds.active = nextState.active
+	bossAdds.kind = nextState.kind
+	bossAdds.burst = nextState.burst
+	bossAdds.timer = nextState.timer
+	bossAdds.interval = nextState.interval
+	bossAdds.maxAlive = nextState.maxAlive
+	bossAdds.maxTotal = nextState.maxTotal
+	bossAdds.totalSpawned = nextState.totalSpawned
+	bossAdds.hpMult = nextState.hpMult
+	bossAdds.spdMult = nextState.spdMult
 end
 
 resetSpawner()
 resetBossAdds()
 
 local function beginSpawner(kind, count, gap, hpMult, spdMult)
-	resetSpawner(true, count or 0, gap or spawnerDefaults.gap, 0, hpMult or spawnerDefaults.hpMult, spdMult or spawnerDefaults.spdMult, kind)
+	resetSpawner({
+		active = true,
+		remaining = count or 0,
+		gap = gap or spawnerDefaults.gap,
+		timer = 0,
+		hpMult = hpMult or spawnerDefaults.hpMult,
+		spdMult = spdMult or spawnerDefaults.spdMult,
+		kind = kind,
+	})
 
 	State.inPrep = false
 end
@@ -259,18 +294,18 @@ function Waves.startWave()
 		if template and template.flankKind then
 			local interval = max(1.2, template.interval or 6.0)
 			local maxAlive = max(1, template.maxAliveAdds or 10)
-			resetBossAdds(
-				true,
-				template.flankKind,
-				max(1, template.flankBurst or 1),
-				max(0.6, template.initialDelay or (interval * 0.5)),
-				interval,
-				maxAlive,
-				max(maxAlive, template.maxTotalAdds or maxAlive),
-				0,
-				(template.addHpMult or 1.0) * DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult,
-				(template.addSpdMult or 1.0) * DifficultyCurve.getEnemySpeedMultiplier(State.wave)
-			)
+			resetBossAdds({
+				active = true,
+				kind = template.flankKind,
+				burst = max(1, template.flankBurst or 1),
+				timer = max(0.6, template.initialDelay or (interval * 0.5)),
+				interval = interval,
+				maxAlive = maxAlive,
+				maxTotal = max(maxAlive, template.maxTotalAdds or maxAlive),
+				totalSpawned = 0,
+				hpMult = (template.addHpMult or 1.0) * DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult,
+				spdMult = (template.addSpdMult or 1.0) * DifficultyCurve.getEnemySpeedMultiplier(State.wave),
+			})
 		else
 			bossAdds.active = false
 		end
