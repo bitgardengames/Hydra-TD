@@ -154,29 +154,6 @@ local spawnerDefaults = {
 	kind = nil,
 }
 
-
-local function copyTableShallow(source)
-	local copy = {}
-	for key, value in pairs(source) do
-		copy[key] = value
-	end
-
-	return copy
-end
-
-local function withDefaults(defaults, overrides)
-	local merged = copyTableShallow(defaults)
-	if overrides then
-		for key, value in pairs(overrides) do
-			merged[key] = value
-		end
-	end
-
-	return merged
-end
-
-local spawner = copyTableShallow(spawnerDefaults)
-
 local bossAddsDefaults = {
 	active = false,
 	kind = nil,
@@ -189,27 +166,37 @@ local bossAddsDefaults = {
 	hpMult = 1.0,
 	spdMult = 1.0,
 }
+local spawner = {}
+local bossAdds = {}
 
-
-local bossAdds = copyTableShallow(bossAddsDefaults)
-
-local function applyDefaultsInPlace(target, defaults, overrides)
-	local merged = withDefaults(defaults, overrides)
-	for key, value in pairs(merged) do
-		target[key] = value
-	end
+local function resetSpawner(active, remaining, gap, timer, hpMult, spdMult, kind)
+	spawner.active = active or spawnerDefaults.active
+	spawner.remaining = remaining or spawnerDefaults.remaining
+	spawner.gap = gap or spawnerDefaults.gap
+	spawner.timer = timer or spawnerDefaults.timer
+	spawner.hpMult = hpMult or spawnerDefaults.hpMult
+	spawner.spdMult = spdMult or spawnerDefaults.spdMult
+	spawner.kind = kind
 end
 
+local function resetBossAdds(active, kind, burst, timer, interval, maxAlive, maxTotal, totalSpawned, hpMult, spdMult)
+	bossAdds.active = active or bossAddsDefaults.active
+	bossAdds.kind = kind
+	bossAdds.burst = burst or bossAddsDefaults.burst
+	bossAdds.timer = timer or bossAddsDefaults.timer
+	bossAdds.interval = interval or bossAddsDefaults.interval
+	bossAdds.maxAlive = maxAlive or bossAddsDefaults.maxAlive
+	bossAdds.maxTotal = maxTotal or bossAddsDefaults.maxTotal
+	bossAdds.totalSpawned = totalSpawned or bossAddsDefaults.totalSpawned
+	bossAdds.hpMult = hpMult or bossAddsDefaults.hpMult
+	bossAdds.spdMult = spdMult or bossAddsDefaults.spdMult
+end
+
+resetSpawner()
+resetBossAdds()
+
 local function beginSpawner(kind, count, gap, hpMult, spdMult)
-	applyDefaultsInPlace(spawner, spawnerDefaults, {
-		active = true,
-		timer = 0,
-		gap = gap or spawnerDefaults.gap,
-		hpMult = hpMult or spawnerDefaults.hpMult,
-		spdMult = spdMult or spawnerDefaults.spdMult,
-		kind = kind,
-		remaining = count or 0,
-	})
+	resetSpawner(true, count or 0, gap or spawnerDefaults.gap, 0, hpMult or spawnerDefaults.hpMult, spdMult or spawnerDefaults.spdMult, kind)
 
 	State.inPrep = false
 end
@@ -257,18 +244,18 @@ function Waves.startWave()
 		if template and template.flankKind then
 			local interval = max(1.2, template.interval or 6.0)
 			local maxAlive = max(1, template.maxAliveAdds or 10)
-			applyDefaultsInPlace(bossAdds, bossAddsDefaults, {
-				active = true,
-				kind = template.flankKind,
-				burst = max(1, template.flankBurst or 1),
-				interval = interval,
-				timer = max(0.6, template.initialDelay or (interval * 0.5)),
-				maxAlive = maxAlive,
-				maxTotal = max(maxAlive, template.maxTotalAdds or maxAlive),
-				totalSpawned = 0,
-				hpMult = (template.addHpMult or 1.0) * DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult,
-				spdMult = (template.addSpdMult or 1.0) * DifficultyCurve.getEnemySpeedMultiplier(State.wave),
-			})
+			resetBossAdds(
+				true,
+				template.flankKind,
+				max(1, template.flankBurst or 1),
+				max(0.6, template.initialDelay or (interval * 0.5)),
+				interval,
+				maxAlive,
+				max(maxAlive, template.maxTotalAdds or maxAlive),
+				0,
+				(template.addHpMult or 1.0) * DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult,
+				(template.addSpdMult or 1.0) * DifficultyCurve.getEnemySpeedMultiplier(State.wave)
+			)
 		else
 			bossAdds.active = false
 		end
@@ -375,8 +362,8 @@ function Waves.getWaveCompletionBonus(wave, waveLeaks)
 end
 
 function Waves.resetSpawner()
-	applyDefaultsInPlace(spawner, spawnerDefaults)
-	applyDefaultsInPlace(bossAdds, bossAddsDefaults)
+	resetSpawner()
+	resetBossAdds()
 end
 
 function Waves.getSpawner()
