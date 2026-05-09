@@ -251,6 +251,54 @@ local function mousereleased(x, y, button)
 	end
 end
 
+local function runGameplayAction(action)
+	if action == "fastForward" then
+		State.speed = (State.speed == 1) and 4 or 1
+
+		return true
+	end
+
+	if action == "skipPrep" then
+		if State.inPrep then
+			Waves.startWave()
+		end
+
+		return true
+	end
+
+	if action == "upgrade" then
+		if State.selectedTower then
+			ModulePicker.openTowerUpgrade(State.selectedTower)
+		end
+
+		return true
+	end
+
+	if action == "sell" then
+		if State.selectedTower then
+			Towers.sellTower(State.selectedTower)
+		end
+
+		return true
+	end
+
+	if action == "toggleMeter" then
+		State.combatStats.showDamageMeter = not State.combatStats.showDamageMeter
+
+		return true
+	end
+
+	if action == "toggleMeterInfo" then
+		if State.combatStats.showDamageMeter then
+			State.combatStats.damageView = (State.combatStats.damageView + 1) % 2
+		end
+
+		return true
+	end
+
+	return false
+end
+
 local function keypressed(key)
 	-- Toggle pause
 	if key == Hotkeys.getActionKey("escape") then
@@ -331,26 +379,23 @@ local function keypressed(key)
 	elseif key == Hotkeys.getShopKey("plasma") then
 		State.placing = "plasma"
 		deselect()
-	elseif key == Hotkeys.getActionKey("fastForward") then
-		State.speed = (State.speed == 1) and 4 or 1
-	elseif key == Hotkeys.getActionKey("skipPrep") then
-		if State.inPrep then
-			Waves.startWave()
+	else
+		local action
+		if key == Hotkeys.getActionKey("fastForward") then
+			action = "fastForward"
+		elseif key == Hotkeys.getActionKey("skipPrep") then
+			action = "skipPrep"
+		elseif key == Hotkeys.getActionKey("upgrade") then
+			action = "upgrade"
+		elseif key == Hotkeys.getActionKey("sell") then
+			action = "sell"
+		elseif key == Hotkeys.getActionKey("toggleMeter") then
+			action = "toggleMeter"
+		elseif key == Hotkeys.getActionKey("toggleMeterInfo") then
+			action = "toggleMeterInfo"
 		end
-	elseif key == Hotkeys.getActionKey("upgrade") then
-		if State.selectedTower then
-			ModulePicker.openTowerUpgrade(State.selectedTower)
-		end
-	elseif key == Hotkeys.getActionKey("sell") then
-		if State.selectedTower then
-			Towers.sellTower(State.selectedTower)
-		end
-	elseif key == Hotkeys.getActionKey("toggleMeter") then
-		State.combatStats.showDamageMeter = not State.combatStats.showDamageMeter
-	elseif key == Hotkeys.getActionKey("toggleMeterInfo") then
-		if State.combatStats.showDamageMeter then
-			State.combatStats.damageView = (State.combatStats.damageView + 1) % 2
-		end
+
+		runGameplayAction(action)
 	end
 end
 
@@ -433,53 +478,7 @@ local function gamepadpressed(joystick, button)
 		return
 	end
 
-	-- Fast-forward
-	if action == "fastForward" then
-		State.speed = (State.speed == 1) and 4 or 1
-
-		return
-	end
-
-	-- Skip prep
-	if action == "skipPrep" then
-		if State.inPrep then
-			Waves.startWave()
-		end
-
-		return
-	end
-
-	-- Upgrade tower
-	if action == "upgrade" then
-		if State.selectedTower then
-			ModulePicker.openTowerUpgrade(State.selectedTower)
-		end
-
-		return
-	end
-
-	-- Sell tower
-	if action == "sell" then
-		if State.selectedTower then
-			Towers.sellTower(State.selectedTower)
-		end
-
-		return
-	end
-
-	-- Toggle damage meter
-	if action == "toggleMeter" then
-		State.combatStats.showDamageMeter = not State.combatStats.showDamageMeter
-
-		return
-	end
-
-	-- Toggle damage meter info
-	if action == "toggleMeterInfo" then
-		if State.combatStats.showDamageMeter then
-			State.combatStats.damageView = (State.combatStats.damageView + 1) % 2
-		end
-
+	if runGameplayAction(action) then
 		return
 	end
 end
