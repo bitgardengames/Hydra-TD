@@ -176,62 +176,39 @@ local bossAdds = {}
 
 local function resetSpawner(overrides)
 	overrides = overrides or {}
-	local nextState = {
-		active = spawnerDefaults.active,
-		remaining = spawnerDefaults.remaining,
-		gap = spawnerDefaults.gap,
-		timer = spawnerDefaults.timer,
-		hpMult = spawnerDefaults.hpMult,
-		spdMult = spawnerDefaults.spdMult,
-		kind = spawnerDefaults.kind,
-	}
+	spawner.active = spawnerDefaults.active
+	spawner.remaining = spawnerDefaults.remaining
+	spawner.gap = spawnerDefaults.gap
+	spawner.timer = spawnerDefaults.timer
+	spawner.hpMult = spawnerDefaults.hpMult
+	spawner.spdMult = spawnerDefaults.spdMult
+	spawner.kind = spawnerDefaults.kind
 
 	for k, v in pairs(overrides) do
 		if v ~= nil then
-			nextState[k] = v
+			spawner[k] = v
 		end
 	end
-
-	spawner.active = nextState.active
-	spawner.remaining = nextState.remaining
-	spawner.gap = nextState.gap
-	spawner.timer = nextState.timer
-	spawner.hpMult = nextState.hpMult
-	spawner.spdMult = nextState.spdMult
-	spawner.kind = nextState.kind
 end
 
 local function resetBossAdds(overrides)
 	overrides = overrides or {}
-	local nextState = {
-		active = bossAddsDefaults.active,
-		kind = bossAddsDefaults.kind,
-		burst = bossAddsDefaults.burst,
-		timer = bossAddsDefaults.timer,
-		interval = bossAddsDefaults.interval,
-		maxAlive = bossAddsDefaults.maxAlive,
-		maxTotal = bossAddsDefaults.maxTotal,
-		totalSpawned = bossAddsDefaults.totalSpawned,
-		hpMult = bossAddsDefaults.hpMult,
-		spdMult = bossAddsDefaults.spdMult,
-	}
+	bossAdds.active = bossAddsDefaults.active
+	bossAdds.kind = bossAddsDefaults.kind
+	bossAdds.burst = bossAddsDefaults.burst
+	bossAdds.timer = bossAddsDefaults.timer
+	bossAdds.interval = bossAddsDefaults.interval
+	bossAdds.maxAlive = bossAddsDefaults.maxAlive
+	bossAdds.maxTotal = bossAddsDefaults.maxTotal
+	bossAdds.totalSpawned = bossAddsDefaults.totalSpawned
+	bossAdds.hpMult = bossAddsDefaults.hpMult
+	bossAdds.spdMult = bossAddsDefaults.spdMult
 
 	for k, v in pairs(overrides) do
 		if v ~= nil then
-			nextState[k] = v
+			bossAdds[k] = v
 		end
 	end
-
-	bossAdds.active = nextState.active
-	bossAdds.kind = nextState.kind
-	bossAdds.burst = nextState.burst
-	bossAdds.timer = nextState.timer
-	bossAdds.interval = nextState.interval
-	bossAdds.maxAlive = nextState.maxAlive
-	bossAdds.maxTotal = nextState.maxTotal
-	bossAdds.totalSpawned = nextState.totalSpawned
-	bossAdds.hpMult = nextState.hpMult
-	bossAdds.spdMult = nextState.spdMult
 end
 
 resetSpawner()
