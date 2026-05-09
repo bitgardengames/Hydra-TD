@@ -103,7 +103,7 @@ local function clearTowerIndex(t)
 	t._indexGy = nil
 end
 
-local function applyUpgradeScaling(t)
+local function recomputeTowerStats(t)
 	local def = t and t.def
 	if not def then
 		return
@@ -128,6 +128,8 @@ local function applyUpgradeScaling(t)
 	t.fireInterval = 1 / max(0.001, t.fireRate)
 	t.range = def.range + rangeAdd * upgrades
 	t.range2 = t.range * t.range
+	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
+	t._targetModeVersion = Modules.version
 end
 
 local function refreshTargetModeCache(t)
@@ -165,11 +167,11 @@ local function addTower(kind, gx, gy)
 		height = 0,
 		prevHeight = 0,
 		renderY = y,
-		range = def.range,
-		range2 = def.range * def.range,
-		fireRate = def.fireRate,
-		fireInterval = 1 / def.fireRate,
-		damage = def.damage,
+		range = 0,
+		range2 = 0,
+		fireRate = 0,
+		fireInterval = 0,
+		damage = 0,
 		projSpeed = def.projSpeed,
 		cooldown = 0,
 		damageDealt = 0,
@@ -184,7 +186,7 @@ local function addTower(kind, gx, gy)
 		levelUpAnim = 0,
 		spawnAnim = 1,
 		target = nil,
-		targetMode = Targeting.MODES.PROGRESS,
+		targetMode = nil,
 		_targetModeVersion = nil,
 		retargetT = 0,
 		turnSpeed = def.turnSpeed or 12,
@@ -204,7 +206,7 @@ local function addTower(kind, gx, gy)
 		},
 	}
 
-	applyUpgradeScaling(t)
+	recomputeTowerStats(t)
 
 	State.money = State.money - def.cost
 
@@ -262,10 +264,8 @@ local function upgradeTower(t, specializationId)
 	t.specializationId = specializationId
 	t.branchSelections = t.branchSelections or {}
 	t.branchSelections[#t.branchSelections + 1] = specializationId
-	applyUpgradeScaling(t)
+	recomputeTowerStats(t)
 	Modules.invalidateTower(t)
-	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
-	t._targetModeVersion = Modules.version
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 	t._upgradePreview = t._upgradePreview or {}
 	t._upgradePreview.specializationId = specializationId
