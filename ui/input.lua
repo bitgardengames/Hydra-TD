@@ -119,6 +119,10 @@ local function handleButtonPressRelease(list, x, y, isPress, onReleaseInside)
 	return nil
 end
 
+local function handlePanelButtons(getButtons, x, y, isPress, onReleaseInside)
+	return handleButtonPressRelease(getButtons(), x, y, isPress, onReleaseInside)
+end
+
 local function getMousepressHandler()
 	local mode = State.mode
 
@@ -151,8 +155,7 @@ local function mousepressed(x, y, button)
 	-- Shop UI
 	if button == 1 and State.mode == "game" then
 		-- Tower shop
-		local buttons = BottomBar.getShopButtons()
-		local shopButton = handleButtonPressRelease(buttons, x, y, true)
+		local shopButton = handlePanelButtons(BottomBar.getShopButtons, x, y, true)
 
 		if shopButton then
 			if shopButton.canAfford then
@@ -167,8 +170,7 @@ local function mousepressed(x, y, button)
 		end
 
 		-- Inspect panel (upgrade & sell)
-		local btns = BottomBar.getInspectButtons()
-		if handleButtonPressRelease(btns, x, y, true) then
+		if handlePanelButtons(BottomBar.getInspectButtons, x, y, true) then
 			return
 		end
 	end
@@ -229,9 +231,16 @@ local function mousepressed(x, y, button)
 end
 
 local function mousereleased(x, y, button)
+	if Menu.mousereleased then
+		Menu.mousereleased(x, y, button)
+	end
+
+	if button ~= 1 or State.mode ~= "game" then
+		return
+	end
+
 	-- Shop buttons
-	local buttons = BottomBar.getShopButtons()
-	handleButtonPressRelease(buttons, x, y, false, function(b)
+	handlePanelButtons(BottomBar.getShopButtons, x, y, false, function(b)
 		if b.canAfford then
 			State.placing = b.kind
 			State.selectedTower = nil
@@ -239,16 +248,11 @@ local function mousereleased(x, y, button)
 	end)
 
 	-- Inspect buttons
-	local btns = BottomBar.getInspectButtons()
-	handleButtonPressRelease(btns, x, y, false, function(b)
+	handlePanelButtons(BottomBar.getInspectButtons, x, y, false, function(b)
 		if b.onClick then
 			b.onClick()
 		end
 	end)
-
-	if Menu.mousereleased then
-		Menu.mousereleased(x, y, button)
-	end
 end
 
 local function runGameplayAction(action)
