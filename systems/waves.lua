@@ -174,27 +174,59 @@ local bossAddsDefaults = {
 local spawner = {}
 local bossAdds = {}
 
+local function resetFromDefaults(targetTable, defaultsTable, overridesTable, explicitKeys)
+	overridesTable = overridesTable or {}
+
+	for k, v in pairs(defaultsTable) do
+		targetTable[k] = (overridesTable[k] ~= nil) and overridesTable[k] or v
+	end
+
+	if explicitKeys then
+		for k, isExplicit in pairs(explicitKeys) do
+			if isExplicit then
+				targetTable[k] = overridesTable[k]
+			end
+		end
+	end
+end
+
 local function resetSpawner(active, remaining, gap, timer, hpMult, spdMult, kind)
-	spawner.active = active or spawnerDefaults.active
-	spawner.remaining = remaining or spawnerDefaults.remaining
-	spawner.gap = gap or spawnerDefaults.gap
-	spawner.timer = timer or spawnerDefaults.timer
-	spawner.hpMult = hpMult or spawnerDefaults.hpMult
-	spawner.spdMult = spdMult or spawnerDefaults.spdMult
-	spawner.kind = kind
+	local overrides = {
+		active = active and active or nil,
+		remaining = remaining and remaining or nil,
+		gap = gap and gap or nil,
+		timer = timer and timer or nil,
+		hpMult = hpMult and hpMult or nil,
+		spdMult = spdMult and spdMult or nil,
+		kind = kind,
+	}
+	local explicit = nil
+	if select("#", active, remaining, gap, timer, hpMult, spdMult, kind) >= 7 then
+		explicit = { kind = true }
+	end
+
+	resetFromDefaults(spawner, spawnerDefaults, overrides, explicit)
 end
 
 local function resetBossAdds(active, kind, burst, timer, interval, maxAlive, maxTotal, totalSpawned, hpMult, spdMult)
-	bossAdds.active = active or bossAddsDefaults.active
-	bossAdds.kind = kind
-	bossAdds.burst = burst or bossAddsDefaults.burst
-	bossAdds.timer = timer or bossAddsDefaults.timer
-	bossAdds.interval = interval or bossAddsDefaults.interval
-	bossAdds.maxAlive = maxAlive or bossAddsDefaults.maxAlive
-	bossAdds.maxTotal = maxTotal or bossAddsDefaults.maxTotal
-	bossAdds.totalSpawned = totalSpawned or bossAddsDefaults.totalSpawned
-	bossAdds.hpMult = hpMult or bossAddsDefaults.hpMult
-	bossAdds.spdMult = spdMult or bossAddsDefaults.spdMult
+	local overrides = {
+		active = active and active or nil,
+		kind = kind,
+		burst = burst and burst or nil,
+		timer = timer and timer or nil,
+		interval = interval and interval or nil,
+		maxAlive = maxAlive and maxAlive or nil,
+		maxTotal = maxTotal and maxTotal or nil,
+		totalSpawned = totalSpawned and totalSpawned or nil,
+		hpMult = hpMult and hpMult or nil,
+		spdMult = spdMult and spdMult or nil,
+	}
+	local explicit = nil
+	if select("#", active, kind, burst, timer, interval, maxAlive, maxTotal, totalSpawned, hpMult, spdMult) >= 2 then
+		explicit = { kind = true }
+	end
+
+	resetFromDefaults(bossAdds, bossAddsDefaults, overrides, explicit)
 end
 
 resetSpawner()
