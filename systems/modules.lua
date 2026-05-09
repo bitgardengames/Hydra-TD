@@ -105,6 +105,14 @@ local function mutateBehaviors(ctx, mutator)
 	end
 end
 
+local function swapRemove(list, i)
+	local last = #list
+	if i < last then
+		list[i] = list[last]
+	end
+	list[last] = nil
+end
+
 function ContextMethods:addBehavior(b)
 	self.behaviors[#self.behaviors + 1] = b
 
@@ -162,9 +170,9 @@ function ContextMethods:removeBehavior(id)
 		return
 	end
 
-	-- Removal shifts following positions; rebuild once after mutation.
+	-- Order is not semantically required for single-id removals; swap-remove avoids shifting.
 	mutateBehaviors(self, function(behaviors)
-		table.remove(behaviors, i)
+		swapRemove(behaviors, i)
 		return true
 	end)
 end
@@ -176,18 +184,30 @@ function ContextMethods:forEachBehavior(fn)
 end
 
 function ContextMethods:removeByType(typeName)
-	-- Potentially many removals; apply edits first, then rebuild once.
+	-- Preserve hook execution order with in-place compaction; rebuild once afterward.
 	mutateBehaviors(self, function(behaviors)
-		local removed = false
+		local write = 1
+		local removed = 0
 
-		for i = #behaviors, 1, -1 do
-			if behaviors[i].type == typeName then
-				table.remove(behaviors, i)
-				removed = true
+		for read = 1, #behaviors do
+			local behavior = behaviors[read]
+			if behavior.type == typeName then
+				removed = removed + 1
+			else
+				behaviors[write] = behavior
+				write = write + 1
 			end
 		end
 
-		return removed
+		if removed == 0 then
+			return false
+		end
+
+		for i = write, #behaviors do
+			behaviors[i] = nil
+		end
+
+		return true
 	end)
 end
 
