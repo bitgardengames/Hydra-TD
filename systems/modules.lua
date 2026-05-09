@@ -97,9 +97,18 @@ end
 
 local ContextMethods = {}
 
+local function mutateBehaviors(ctx, mutator)
+	local shouldRebuild = mutator(ctx.behaviors)
+
+	if shouldRebuild then
+		rebuildBehaviorIndex(ctx)
+	end
+end
+
 function ContextMethods:addBehavior(b)
 	self.behaviors[#self.behaviors + 1] = b
 
+	-- Append keeps all existing indexes stable; maintain incrementally.
 	if b and b.id and self._behaviorIndex[b.id] == nil then
 		self._behaviorIndex[b.id] = #self.behaviors
 	end
@@ -117,6 +126,7 @@ function ContextMethods:addHookBehavior(hookId, behavior)
 
 	self.behaviors[#self.behaviors + 1] = b
 
+	-- Append keeps all existing indexes stable; maintain incrementally.
 	if b.id and self._behaviorIndex[b.id] == nil then
 		self._behaviorIndex[b.id] = #self.behaviors
 	end
@@ -128,8 +138,11 @@ function ContextMethods:replaceBehavior(id, newB)
 		return
 	end
 
-	self.behaviors[i] = newB
-	rebuildBehaviorIndex(self)
+	-- Replacement can change ids and first-occurrence mappings; rebuild once.
+	mutateBehaviors(self, function(behaviors)
+		behaviors[i] = newB
+		return true
+	end)
 end
 
 function ContextMethods:modifyBehavior(id, fn)
@@ -149,8 +162,11 @@ function ContextMethods:removeBehavior(id)
 		return
 	end
 
-	table.remove(self.behaviors, i)
-	rebuildBehaviorIndex(self)
+	-- Removal shifts following positions; rebuild once after mutation.
+	mutateBehaviors(self, function(behaviors)
+		table.remove(behaviors, i)
+		return true
+	end)
 end
 
 function ContextMethods:forEachBehavior(fn)
@@ -160,13 +176,19 @@ function ContextMethods:forEachBehavior(fn)
 end
 
 function ContextMethods:removeByType(typeName)
-	for i = #self.behaviors, 1, -1 do
-		if self.behaviors[i].type == typeName then
-			table.remove(self.behaviors, i)
-		end
-	end
+	-- Potentially many removals; apply edits first, then rebuild once.
+	mutateBehaviors(self, function(behaviors)
+		local removed = false
 
-	rebuildBehaviorIndex(self)
+		for i = #behaviors, 1, -1 do
+			if behaviors[i].type == typeName then
+				table.remove(behaviors, i)
+				removed = true
+			end
+		end
+
+		return removed
+	end)
 end
 
 local ContextMetatable = { __index = ContextMethods }
