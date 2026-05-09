@@ -6,13 +6,6 @@ local EPS = 0.0001
 local HUGE_NEG = -math.huge
 local queryCells = Spatial.queryCells
 local forEachInCells = Spatial.forEachInCells
-local SIMPLE_MODES = {
-	PROGRESS = 1,
-	LOW_HP = 2,
-	HIGH_HP = 3,
-	FARTHEST = 4,
-}
-
 Targeting.MODES = {
 	PROGRESS = "progress",
 	LOW_HP = "low_hp",
@@ -20,24 +13,18 @@ Targeting.MODES = {
 	FARTHEST = "farthest",
 }
 local MODES = Targeting.MODES
-local MODE_ALIASES = {
-	[MODES.PROGRESS] = SIMPLE_MODES.PROGRESS,
-	[MODES.LOW_HP] = SIMPLE_MODES.LOW_HP,
-	[MODES.HIGH_HP] = SIMPLE_MODES.HIGH_HP,
-	[MODES.FARTHEST] = SIMPLE_MODES.FARTHEST,
-	[SIMPLE_MODES.PROGRESS] = SIMPLE_MODES.PROGRESS,
-	[SIMPLE_MODES.LOW_HP] = SIMPLE_MODES.LOW_HP,
-	[SIMPLE_MODES.HIGH_HP] = SIMPLE_MODES.HIGH_HP,
-	[SIMPLE_MODES.FARTHEST] = SIMPLE_MODES.FARTHEST,
-}
 local simpleCtx = {}
 
 local function normalizeMode(mode)
 	if mode == nil then
-		return SIMPLE_MODES.PROGRESS
+		return MODES.PROGRESS
 	end
 
-	return MODE_ALIASES[mode] or SIMPLE_MODES.PROGRESS
+	if mode == MODES.PROGRESS or mode == MODES.LOW_HP or mode == MODES.HIGH_HP or mode == MODES.FARTHEST then
+		return mode
+	end
+
+	return MODES.PROGRESS
 end
 
 local function evaluateSimpleCandidate(e, c)
@@ -54,15 +41,15 @@ local function evaluateSimpleCandidate(e, c)
 	end
 
 	local score
-	if c.mode == SIMPLE_MODES.PROGRESS then
+	if c.mode == MODES.PROGRESS then
 		score = e.dist
 		if e.slowTimer > 0 then
 			-- Slight deprioritization for slowed enemies
 			score = score - 5
 		end
-	elseif c.mode == SIMPLE_MODES.LOW_HP then
+	elseif c.mode == MODES.LOW_HP then
 		score = -e.hp
-	elseif c.mode == SIMPLE_MODES.HIGH_HP then
+	elseif c.mode == MODES.HIGH_HP then
 		score = e.hp
 	else
 		score = d2
@@ -112,19 +99,19 @@ end
 
 -- Target enemy furthest along the path
 function Targeting.findProgressTarget(tower)
-	return Targeting.findTarget(tower, SIMPLE_MODES.PROGRESS)
+	return Targeting.findTarget(tower, MODES.PROGRESS)
 end
 
 function Targeting.findLowestHPTarget(tower)
-	return Targeting.findTarget(tower, SIMPLE_MODES.LOW_HP)
+	return Targeting.findTarget(tower, MODES.LOW_HP)
 end
 
 function Targeting.findFarthestTarget(tower)
-	return Targeting.findTarget(tower, SIMPLE_MODES.FARTHEST)
+	return Targeting.findTarget(tower, MODES.FARTHEST)
 end
 
 function Targeting.findHighestHPTarget(tower)
-	return Targeting.findTarget(tower, SIMPLE_MODES.HIGH_HP)
+	return Targeting.findTarget(tower, MODES.HIGH_HP)
 end
 
 
