@@ -13,6 +13,18 @@ local Waves = {}
 
 local max = math.max
 
+local function mergeInto(dst, src)
+	if not src then
+		return dst
+	end
+
+	for k, v in pairs(src) do
+		dst[k] = v
+	end
+
+	return dst
+end
+
 local biomeBossArchetypes = {
 	default = {"boss_summoner", "boss_displacement", "boss_suppression"},
 	autumn = {"boss_displacement", "boss_suppression", "boss_summoner"},
@@ -118,28 +130,21 @@ local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 		mapIndexedOverride = mapDefs[bossIndex]
 	end
 
-	local function readField(field)
-		if mapIndexedOverride and mapIndexedOverride[field] ~= nil then
-			return mapIndexedOverride[field]
-		end
-		if mapKeyedOverride and mapKeyedOverride[field] ~= nil then
-			return mapKeyedOverride[field]
-		end
-		if biomeOverride and biomeOverride[field] ~= nil then
-			return biomeOverride[field]
-		end
-		return base[field]
-	end
+	local resolved = {}
+	mergeInto(resolved, base)
+	mergeInto(resolved, biomeOverride)
+	mergeInto(resolved, mapKeyedOverride)
+	mergeInto(resolved, mapIndexedOverride)
 
 	return {
-		flankKind = readField("flankKind"),
-		flankBurst = readField("flankBurst"),
-		interval = readField("interval"),
-		initialDelay = readField("initialDelay"),
-		maxAliveAdds = readField("maxAliveAdds"),
-		maxTotalAdds = readField("maxTotalAdds"),
-		addHpMult = readField("addHpMult"),
-		addSpdMult = readField("addSpdMult"),
+		flankKind = resolved.flankKind,
+		flankBurst = resolved.flankBurst,
+		interval = resolved.interval,
+		initialDelay = resolved.initialDelay,
+		maxAliveAdds = resolved.maxAliveAdds,
+		maxTotalAdds = resolved.maxTotalAdds,
+		addHpMult = resolved.addHpMult,
+		addSpdMult = resolved.addSpdMult,
 	}
 end
 
