@@ -100,48 +100,45 @@ function ContextMethods:addHookBehavior(hookId, behavior)
 	self.behaviors[#self.behaviors + 1] = b
 end
 
-local function mutateBehaviors(ctx, fn)
+local function findBehaviorIndexById(ctx, id)
 	local behaviors = ctx.behaviors
-	local write = 1
 
-	for read = 1, #behaviors do
-		local current = behaviors[read]
-		local replacement, keep = fn(current, read)
-
-		if keep ~= false then
-			behaviors[write] = replacement or current
-			write = write + 1
+	for i = 1, #behaviors do
+		if behaviors[i].id == id then
+			return i
 		end
 	end
 
-	for i = #behaviors, write, -1 do
-		behaviors[i] = nil
-	end
+	return nil
 end
 
 function ContextMethods:replaceBehavior(id, newB)
-	mutateBehaviors(self, function(behavior)
-		if behavior.id == id then
-			return newB
-		end
-	end)
+	local i = findBehaviorIndexById(self, id)
+	if not i then
+		return
+	end
+
+	self.behaviors[i] = newB
 end
 
 function ContextMethods:modifyBehavior(id, fn)
-	mutateBehaviors(self, function(behavior)
-		if behavior.id == id then
-			behavior.data = behavior.data or {}
-			fn(behavior.data)
-		end
-	end)
+	local i = findBehaviorIndexById(self, id)
+	if not i then
+		return
+	end
+
+	local behavior = self.behaviors[i]
+	behavior.data = behavior.data or {}
+	fn(behavior.data)
 end
 
 function ContextMethods:removeBehavior(id)
-	mutateBehaviors(self, function(behavior)
-		if behavior.id == id then
-			return nil, false
-		end
-	end)
+	local i = findBehaviorIndexById(self, id)
+	if not i then
+		return
+	end
+
+	table.remove(self.behaviors, i)
 end
 
 function ContextMethods:forEachBehavior(fn)
@@ -151,11 +148,11 @@ function ContextMethods:forEachBehavior(fn)
 end
 
 function ContextMethods:removeByType(typeName)
-	mutateBehaviors(self, function(behavior)
-		if behavior.type == typeName then
-			return nil, false
+	for i = #self.behaviors, 1, -1 do
+		if self.behaviors[i].type == typeName then
+			table.remove(self.behaviors, i)
 		end
-	end)
+	end
 end
 
 local ContextMetatable = { __index = ContextMethods }
