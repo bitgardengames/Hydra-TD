@@ -100,33 +100,16 @@ function ContextMethods:addHookBehavior(hookId, behavior)
 	self.behaviors[#self.behaviors + 1] = b
 end
 
-function ContextMethods:replaceBehavior(id, newB)
-	for i = 1, #self.behaviors do
-		if self.behaviors[i].id == id then
-			self.behaviors[i] = newB
-		end
-	end
-end
-
-function ContextMethods:modifyBehavior(id, fn)
-	for i = 1, #self.behaviors do
-		local b = self.behaviors[i]
-		if b.id == id then
-			b.data = b.data or {}
-			fn(b.data)
-		end
-	end
-end
-
-function ContextMethods:removeBehavior(id)
+local function mutateBehaviors(ctx, fn)
+	local behaviors = ctx.behaviors
 	local write = 1
-	local behaviors = self.behaviors
 
 	for read = 1, #behaviors do
-		local behavior = behaviors[read]
+		local current = behaviors[read]
+		local replacement, keep = fn(current, read)
 
-		if behavior.id ~= id then
-			behaviors[write] = behavior
+		if keep ~= false then
+			behaviors[write] = replacement or current
 			write = write + 1
 		end
 	end
@@ -134,6 +117,31 @@ function ContextMethods:removeBehavior(id)
 	for i = #behaviors, write, -1 do
 		behaviors[i] = nil
 	end
+end
+
+function ContextMethods:replaceBehavior(id, newB)
+	mutateBehaviors(self, function(behavior)
+		if behavior.id == id then
+			return newB
+		end
+	end)
+end
+
+function ContextMethods:modifyBehavior(id, fn)
+	mutateBehaviors(self, function(behavior)
+		if behavior.id == id then
+			behavior.data = behavior.data or {}
+			fn(behavior.data)
+		end
+	end)
+end
+
+function ContextMethods:removeBehavior(id)
+	mutateBehaviors(self, function(behavior)
+		if behavior.id == id then
+			return nil, false
+		end
+	end)
 end
 
 function ContextMethods:forEachBehavior(fn)
@@ -143,21 +151,11 @@ function ContextMethods:forEachBehavior(fn)
 end
 
 function ContextMethods:removeByType(typeName)
-	local write = 1
-	local behaviors = self.behaviors
-
-	for read = 1, #behaviors do
-		local behavior = behaviors[read]
-
-		if behavior.type ~= typeName then
-			behaviors[write] = behavior
-			write = write + 1
+	mutateBehaviors(self, function(behavior)
+		if behavior.type == typeName then
+			return nil, false
 		end
-	end
-
-	for i = #behaviors, write, -1 do
-		behaviors[i] = nil
-	end
+	end)
 end
 
 local ContextMetatable = { __index = ContextMethods }
