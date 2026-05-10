@@ -8,23 +8,13 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
 local Spatial = require("world.spatial_grid")
+local Util = require("core.util")
 
 local Waves = {}
 
 local max = math.max
 
-local function mergeInto(dst, src)
-	if not src then
-		return dst
-	end
-
-	for k, v in pairs(src) do
-		dst[k] = v
-	end
-
-	return dst
-end
-
+local mergeInto = Util.resetFromDefaults
 local biomeBossArchetypes = {
 	default = {"boss_summoner", "boss_displacement", "boss_suppression"},
 	autumn = {"boss_displacement", "boss_suppression", "boss_summoner"},
@@ -175,40 +165,13 @@ local spawner = {}
 local bossAdds = {}
 
 local function resetSpawner(overrides)
-	overrides = overrides or {}
-	spawner.active = spawnerDefaults.active
-	spawner.remaining = spawnerDefaults.remaining
-	spawner.gap = spawnerDefaults.gap
-	spawner.timer = spawnerDefaults.timer
-	spawner.hpMult = spawnerDefaults.hpMult
-	spawner.spdMult = spawnerDefaults.spdMult
-	spawner.kind = spawnerDefaults.kind
-
-	for k, v in pairs(overrides) do
-		if v ~= nil then
-			spawner[k] = v
-		end
-	end
+	Util.resetFromDefaults(spawner, spawnerDefaults)
+	Util.applyNonNilOverrides(spawner, overrides)
 end
 
 local function resetBossAdds(overrides)
-	overrides = overrides or {}
-	bossAdds.active = bossAddsDefaults.active
-	bossAdds.kind = bossAddsDefaults.kind
-	bossAdds.burst = bossAddsDefaults.burst
-	bossAdds.timer = bossAddsDefaults.timer
-	bossAdds.interval = bossAddsDefaults.interval
-	bossAdds.maxAlive = bossAddsDefaults.maxAlive
-	bossAdds.maxTotal = bossAddsDefaults.maxTotal
-	bossAdds.totalSpawned = bossAddsDefaults.totalSpawned
-	bossAdds.hpMult = bossAddsDefaults.hpMult
-	bossAdds.spdMult = bossAddsDefaults.spdMult
-
-	for k, v in pairs(overrides) do
-		if v ~= nil then
-			bossAdds[k] = v
-		end
-	end
+	Util.resetFromDefaults(bossAdds, bossAddsDefaults)
+	Util.applyNonNilOverrides(bossAdds, overrides)
 end
 
 resetSpawner()
