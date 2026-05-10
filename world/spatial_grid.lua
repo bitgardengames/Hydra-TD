@@ -46,6 +46,11 @@ local nestedCollectContext = {
 	activeLength = 0,
 }
 
+local forEachContext = {
+	fn = nil,
+	context = nil,
+}
+
 local function eachNeighborInRange(cx, cy, cellRadius, onCell, context)
 	local idx = 0
 	for dx = -cellRadius, cellRadius do
@@ -59,9 +64,7 @@ local function eachNeighborInRange(cx, cy, cellRadius, onCell, context)
 	return idx
 end
 
-local function collectCellsInto(x, y, radius, onCell, context)
-	local cx = floor(x * INV_CELL)
-	local cy = floor(y * INV_CELL)
+local function queryCellRadius(radius)
 	local cellRadius = 2
 
 	if radius and radius > 0 then
@@ -74,6 +77,17 @@ local function collectCellsInto(x, y, radius, onCell, context)
 		end
 	end
 
+	return cellRadius
+end
+
+local function queryCellRadiusLocal()
+	return 2
+end
+
+local function collectCellsInto(x, y, radius, onCell, context, radiusPolicy)
+	local cx = floor(x * INV_CELL)
+	local cy = floor(y * INV_CELL)
+	local cellRadius = (radiusPolicy or queryCellRadius)(radius)
 	return eachNeighborInRange(cx, cy, cellRadius, onCell, context)
 end
 
@@ -109,22 +123,43 @@ local function collectCell(cell, _, ctx)
 	end
 end
 
-local function queryCellsInto(ctx, x, y, radius, dedupeById)
-	ctx.count = 0
-	ctx.dedupeById = dedupeById == true
-	if ctx.dedupeById then
-		nextStamp(ctx)
+local function forEachCell(cell, _, ctx)
+	if not cell then
+		return
+	end
+	local fn = ctx.fn
+	local callbackContext = ctx.context
+	local length = #cell
+	for i = 1, length do
+		fn(cell[i], callbackContext)
+	end
+end
+
+local function traverseQueryCells(x, y, radius, opts)
+	local mode = opts.mode
+	local radiusPolicy = opts.radiusPolicy
+	local dedupeById = opts.dedupeById == true
+
+	if mode == "collect" then
+		local ctx = opts.collectContext
+		ctx.count = 0
+		ctx.dedupeById = dedupeById
+		if dedupeById then
+			nextStamp(ctx)
+		end
+
+		collectCellsInto(x, y, radius, collectCell, ctx, radiusPolicy)
+
+		local count = ctx.count
+		for i = count + 1, ctx.activeLength do
+			ctx.results[i] = nil
+		end
+		ctx.activeLength = count
+		return ctx.results, count
 	end
 
-	collectCellsInto(x, y, radius, collectCell, ctx)
-
-	local count = ctx.count
-	for i = count + 1, ctx.activeLength do
-		ctx.results[i] = nil
-	end
-	ctx.activeLength = count
-
-	return count
+	local ctx = opts.callbackContext
+	collectCellsInto(x, y, radius, forEachCell, ctx, radiusPolicy)
 end
 
 local function removeFromCell(e)
@@ -203,13 +238,21 @@ function Spatial.beginFrame()
 end
 
 function Spatial.queryCells(x, y, radius, dedupeById)
-	local count = queryCellsInto(outerCollectContext, x, y, radius, dedupeById)
-	return outerQueryBuffer, count
+	return traverseQueryCells(x, y, radius, {
+		mode = "collect",
+		collectContext = outerCollectContext,
+		dedupeById = dedupeById,
+		radiusPolicy = queryCellRadius,
+	})
 end
 
 function Spatial.queryCellsLocal(x, y, radius, dedupeById)
-	local count = queryCellsInto(nestedCollectContext, x, y, radius, dedupeById)
-	return nestedQueryBuffer, count
+	return traverseQueryCells(x, y, radius, {
+		mode = "collect",
+		collectContext = nestedCollectContext,
+		dedupeById = dedupeById,
+		radiusPolicy = queryCellRadiusLocal,
+	})
 end
 
 function Spatial.pointToCell(x, y)
@@ -254,16 +297,15 @@ function Spatial.queryOccupancySum(cx, cy, radiusCells)
 end
 
 function Spatial.forEachInCells(x, y, radius, fn, context)
-	local function eachInCell(cell, _, ctx)
-		if not cell then
-			return
-		end
-		local length = #cell
-		for i = 1, length do
-			fn(cell[i], ctx)
-		end
-	end
-	collectCellsInto(x, y, radius, eachInCell, context)
+	forEachContext.fn = fn
+	forEachContext.context = context
+	traverseQueryCells(x, y, radius, {
+		mode = "callback",
+		callbackContext = forEachContext,
+		radiusPolicy = queryCellRadius,
+	})
+	forEachContext.fn = nil
+	forEachContext.context = nil
 end
 
 return Spatial
