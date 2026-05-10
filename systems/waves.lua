@@ -277,7 +277,10 @@ function Waves.updateSpawner(dt)
 
 	spawner.timer = spawner.timer - dt
 
-	if spawner.timer <= 0 and spawner.remaining > 0 then
+	local maxSpawnCatchupPerFrame = 12
+	local spawnLoops = 0
+
+	while spawner.timer <= 0 and spawner.remaining > 0 and spawnLoops < maxSpawnCatchupPerFrame do
 		local kind = spawner.kind
 
 		if not kind then
@@ -290,7 +293,12 @@ function Waves.updateSpawner(dt)
 		Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
 
 		spawner.remaining = spawner.remaining - 1
-		spawner.timer = spawner.gap
+		spawner.timer = spawner.timer + spawner.gap
+		spawnLoops = spawnLoops + 1
+	end
+
+	if spawnLoops == maxSpawnCatchupPerFrame and spawner.timer <= 0 then
+		spawner.timer = 0
 	end
 
 	if spawner.remaining <= 0 then
