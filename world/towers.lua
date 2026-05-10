@@ -128,17 +128,33 @@ local function recomputeTowerStats(t)
 	t.fireInterval = 1 / max(0.001, t.fireRate)
 	t.range = def.range + rangeAdd * upgrades
 	t.range2 = t.range * t.range
-	t.targetMode = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS
-	t._targetModeVersion = Modules.version
+	t._cache = t._cache or {}
+	t._cache.targetMode = {
+		value = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS,
+		modulesVersion = Modules.version,
+		cacheVersion = t._cacheVersion or 0,
+	}
+	t.targetMode = t._cache.targetMode.value
+	t._targetModeVersion = t._cache.targetMode.modulesVersion
 end
 
 local function refreshTargetModeCache(t)
 	local modulesVersion = Modules.version
+	local cacheVersion = t._cacheVersion or 0
+	t._cache = t._cache or {}
+	local cached = t._cache.targetMode
 
-	if t._targetModeVersion ~= modulesVersion then
-		t.targetMode = getTargetMode(t) or Targeting.MODES.PROGRESS
-		t._targetModeVersion = modulesVersion
+	if not cached or cached.modulesVersion ~= modulesVersion or cached.cacheVersion ~= cacheVersion then
+		cached = {
+			value = getTargetMode(t) or Targeting.MODES.PROGRESS,
+			modulesVersion = modulesVersion,
+			cacheVersion = cacheVersion,
+		}
+		t._cache.targetMode = cached
 	end
+
+	t.targetMode = cached.value
+	t._targetModeVersion = cached.modulesVersion
 end
 
 local function addTower(kind, gx, gy)
@@ -188,6 +204,8 @@ local function addTower(kind, gx, gy)
 		target = nil,
 		targetMode = nil,
 		_targetModeVersion = nil,
+		_cacheVersion = 0,
+		_cache = {},
 		retargetT = 0,
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,

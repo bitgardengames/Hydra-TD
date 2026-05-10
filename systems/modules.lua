@@ -15,6 +15,17 @@ Modules.active = {
 
 Modules.version = 0
 
+local function bumpTowerCacheState(tower)
+	if not tower then
+		return nil
+	end
+
+	tower._cacheVersion = (tower._cacheVersion or 0) + 1
+	tower._cache = tower._cache or {}
+
+	return tower._cache
+end
+
 
 -- CORE
 function Modules.clear()
@@ -37,14 +48,14 @@ function Modules.add(moduleId, towerType)
 end
 
 function Modules.invalidateTower(tower)
-	if not tower then
+	local cache = bumpTowerCacheState(tower)
+	if not cache then
 		return
 	end
 
-	tower._moduleContextCache = nil
-	tower._moduleContextVersion = nil
-	tower._fireProfile = nil
-	tower._fireProfileVersion = nil
+	cache.moduleContext = nil
+	cache.fireProfile = nil
+	cache.targetMode = nil
 	tower._fireProfileLocalVersion = (tower._fireProfileLocalVersion or 0) + 1
 end
 
@@ -265,11 +276,12 @@ end
 
 function Modules.buildContext(tower)
 	if tower then
-		local cached = tower._moduleContextCache
-		local cacheVersion = tower._moduleContextVersion
+		local cache = tower._cache
+		local cached = cache and cache.moduleContext
+		local cacheVersion = tower._cacheVersion or 0
 
-		if cached and cacheVersion == Modules.version then
-			return cached
+		if cached and cached.modulesVersion == Modules.version and cached.cacheVersion == cacheVersion then
+			return cached.value
 		end
 	end
 
@@ -330,8 +342,12 @@ function Modules.buildContext(tower)
 	end
 
 	if tower then
-		tower._moduleContextCache = ctx
-		tower._moduleContextVersion = Modules.version
+		tower._cache = tower._cache or {}
+		tower._cache.moduleContext = {
+			value = ctx,
+			modulesVersion = Modules.version,
+			cacheVersion = tower._cacheVersion or 0,
+		}
 	end
 
 	return ctx
@@ -342,12 +358,14 @@ function Modules.getFireProfile(tower)
 		return nil
 	end
 
-	local profile = tower._fireProfile
+	local cache = tower._cache
+	local cached = cache and cache.fireProfile
 	local version = Modules.version
+	local cacheVersion = tower._cacheVersion or 0
 	local localVersion = tower._fireProfileLocalVersion or 0
 
-	if profile and tower._fireProfileVersion == version and profile.localVersion == localVersion then
-		return profile
+	if cached and cached.modulesVersion == version and cached.cacheVersion == cacheVersion and cached.localVersion == localVersion then
+		return cached.profile
 	end
 
 	local ctx = Modules.buildContext(tower)
@@ -359,8 +377,13 @@ function Modules.getFireProfile(tower)
 		tag = tostring(version) .. ":" .. tostring(localVersion),
 	}
 
-	tower._fireProfile = profile
-	tower._fireProfileVersion = version
+	tower._cache = tower._cache or {}
+	tower._cache.fireProfile = {
+		profile = profile,
+		modulesVersion = version,
+		cacheVersion = cacheVersion,
+		localVersion = localVersion,
+	}
 
 	return profile
 end
