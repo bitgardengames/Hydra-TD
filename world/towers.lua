@@ -38,7 +38,7 @@ local cwR, cwG, cwB = colorWarn[1], colorWarn[2], colorWarn[3]
 local enemies = Enemies.enemies
 
 local findTarget = Targeting.findTarget
-local isValidTarget = Targeting.isValidTarget
+local isSemanticallyValidTarget = Targeting.isSemanticallyValidTarget
 local sampleFast = MapMod.sampleFast
 local getTargetMode = Modules.getTargetMode
 
@@ -406,7 +406,7 @@ local function updateTowers(dt)
 
 		-- Keep existing target if still valid
 		if target then
-			if not isValidTarget(t, target) then
+			if not isSemanticallyValidTarget(t, target) then
 				target = nil
 			end
 		end

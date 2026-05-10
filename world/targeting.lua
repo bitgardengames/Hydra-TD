@@ -63,17 +63,8 @@ local function evaluateSimpleCandidate(e, c)
 	end
 end
 
-function Targeting.isValidTarget(tower, e)
-	if not e then
-		return false
-	end
-
-	local hp = e.hp
-	if type(hp) ~= "number" or hp <= 0 or e.dying then
-		return false
-	end
-
-	if type(e.x) ~= "number" or type(e.y) ~= "number" then
+function Targeting.isSemanticallyValidTarget(tower, e)
+	if not e or e.hp <= 0 or e.dying then
 		return false
 	end
 
@@ -81,6 +72,20 @@ function Targeting.isValidTarget(tower, e)
 	local dy = e.y - tower.y
 
 	return dx * dx + dy * dy <= tower.range2
+end
+
+function Targeting.isTargetEntityValid(e)
+	if not e then
+		return false
+	end
+
+	return type(e.hp) == "number"
+		and type(e.x) == "number"
+		and type(e.y) == "number"
+end
+
+function Targeting.isValidTarget(tower, e)
+	return Targeting.isTargetEntityValid(e) and Targeting.isSemanticallyValidTarget(tower, e)
 end
 
 local function pickSimpleTarget(tower, mode)
