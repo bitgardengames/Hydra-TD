@@ -49,4 +49,34 @@ function Util.formatInt(n)
 	return s
 end
 
+function Util.clearTable(t)
+	for k in pairs(t) do
+		t[k] = nil
+	end
+
+	return t
+end
+
+function Util.resetFromDefaults(dst, defaults)
+	for k, v in pairs(defaults) do
+		dst[k] = v
+	end
+
+	return dst
+end
+
+function Util.applyNonNilOverrides(dst, overrides)
+	if not overrides then
+		return dst
+	end
+
+	for k, v in pairs(overrides) do
+		if v ~= nil then
+			dst[k] = v
+		end
+	end
+
+	return dst
+end
+
 return Util

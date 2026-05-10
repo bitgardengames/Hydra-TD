@@ -59,10 +59,7 @@ local function acquireEnemy()
 end
 
 local function releaseEnemy(e)
-	for k in pairs(e) do
-		e[k] = nil
-	end
-
+	Util.clearTable(e)
 	enemyPool[#enemyPool + 1] = e
 end
 

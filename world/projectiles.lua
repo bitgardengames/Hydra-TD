@@ -4,6 +4,7 @@ local Modules = require("systems.modules")
 local Effects = require("world.effects")
 local Sound = require("systems.sound")
 local PB = require("world.projectile_behaviors")
+local Util = require("core.util")
 
 local projectiles = {}
 local pool = {}
@@ -16,18 +17,12 @@ local sin = math.sin
 local pushEvent = PB.pushEvent
 local takeEvent = PB.takeEvent
 
-local function clearTable(t)
-	for k in pairs(t) do
-		t[k] = nil
-	end
-end
-
 local function releaseEvent(p, evt)
 	if not evt then
 		return
 	end
 
-	clearTable(evt)
+	Util.clearTable(evt)
 
 	local eventPool = p and p._eventPool
 	if eventPool then
@@ -45,7 +40,7 @@ local function nextHitSetStamp(p)
 
 		local hitSet = p.hitSet
 		if hitSet then
-			clearTable(hitSet)
+			Util.clearTable(hitSet)
 		end
 	end
 
@@ -112,7 +107,7 @@ end
 local function resetReusableState(p)
 	local hitSet = p.hitSet
 	if hitSet then
-		clearTable(hitSet)
+		Util.clearTable(hitSet)
 	else
 		hitSet = {}
 		p.hitSet = hitSet
@@ -120,7 +115,7 @@ local function resetReusableState(p)
 
 	local hitCooldowns = p.hitCooldowns
 	if hitCooldowns then
-		clearTable(hitCooldowns)
+		Util.clearTable(hitCooldowns)
 	else
 		hitCooldowns = {}
 		p.hitCooldowns = hitCooldowns
@@ -129,7 +124,7 @@ local function resetReusableState(p)
 	p.eventRead = 1
 	p.eventCount = 0
 	if p.events then
-		clearTable(p.events)
+		Util.clearTable(p.events)
 	end
 
 	p._consumed = false
@@ -172,7 +167,7 @@ local function release(p)
 	end
 
 	if defaultHitCtx then
-		clearTable(defaultHitCtx)
+		Util.clearTable(defaultHitCtx)
 		p._defaultHitCtx = defaultHitCtx
 	end
 
