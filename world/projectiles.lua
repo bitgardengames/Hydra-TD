@@ -109,6 +109,44 @@ local function acquire()
 	return {}
 end
 
+local function resetReusableState(p)
+	local hitSet = p.hitSet
+	if hitSet then
+		clearTable(hitSet)
+	else
+		hitSet = {}
+		p.hitSet = hitSet
+	end
+
+	local hitCooldowns = p.hitCooldowns
+	if hitCooldowns then
+		clearTable(hitCooldowns)
+	else
+		hitCooldowns = {}
+		p.hitCooldowns = hitCooldowns
+	end
+
+	p.eventRead = 1
+	p.eventCount = 0
+	if p.events then
+		clearTable(p.events)
+	end
+
+	p._consumed = false
+	p.hit = nil
+
+	p.compiledHooks = nil
+	p._hookFns = nil
+	p._hookList = nil
+
+	p._defaultHitCtx = p._defaultHitCtx or {}
+	p._defaultHitCtx.origin = nil
+	p._defaultHitCtx.hitX = nil
+	p._defaultHitCtx.hitY = nil
+
+	p._eventPoolCount = p._eventPoolCount or 0
+end
+
 local function release(p)
 	local hitSet = p.hitSet
 	local hitCooldowns = p.hitCooldowns
@@ -122,20 +160,15 @@ local function release(p)
 	end
 
 	if hitSet then
-		clearTable(hitSet)
 		p.hitSet = hitSet
 	end
 
 	if hitCooldowns then
-		clearTable(hitCooldowns)
 		p.hitCooldowns = hitCooldowns
 	end
 
 	if events then
-		clearTable(events)
 		p.events = events
-		p.eventRead = 1
-		p.eventCount = 0
 	end
 
 	if defaultHitCtx then
@@ -147,6 +180,8 @@ local function release(p)
 		p._eventPool = eventPool
 		p._eventPoolCount = eventPoolCount
 	end
+
+	resetReusableState(p)
 
 	pool[#pool + 1] = p
 end
@@ -190,37 +225,14 @@ local function initProjectile(p, source, opts)
 	p.vx = opts.vx
 	p.vy = opts.vy
 
-	p.hit = nil
-	p.eventRead = 1
-	p.eventCount = 0
-	if p.events then
-		clearTable(p.events)
-	end
-	p._consumed = false
+	resetReusableState(p)
 	p.hasHit = projectileHasHit
 	p.markHit = markProjectileHit
 	p.getHitCooldownExpiry = getHitCooldownExpiry
 	p.setHitCooldownExpiry = setHitCooldownExpiry
 
-	local hitSet = p.hitSet
-	if not hitSet then
-		hitSet = {}
-		p.hitSet = hitSet
-	end
 	nextHitSetStamp(p)
-
-	local hitCooldowns = p.hitCooldowns
-	if hitCooldowns then
-		clearTable(hitCooldowns)
-	else
-		hitCooldowns = {}
-		p.hitCooldowns = hitCooldowns
-	end
-
-	p._defaultHitCtx = p._defaultHitCtx or {}
 	p._defaultHitCtx.origin = p.hitOrigin
-	p._defaultHitCtx.hitX = nil
-	p._defaultHitCtx.hitY = nil
 
 	p.hitRadius = opts.hitRadius or p.r
 	p.hitRadius2 = p.hitRadius * p.hitRadius
