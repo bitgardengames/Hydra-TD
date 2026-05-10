@@ -46,7 +46,20 @@ local nestedCollectContext = {
 	activeLength = 0,
 }
 
-local function eachNeighborInRange(x, y, radius, fn, context)
+local function eachNeighborInRange(cx, cy, cellRadius, onCell, context)
+	local idx = 0
+	for dx = -cellRadius, cellRadius do
+		local col = grid[cx + dx]
+		for dy = -cellRadius, cellRadius do
+			idx = idx + 1
+			local cell = col and col[cy + dy] or nil
+			onCell(cell, idx, context)
+		end
+	end
+	return idx
+end
+
+local function collectCellsInto(x, y, radius, onCell, context)
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
 	local cellRadius = 2
@@ -61,21 +74,12 @@ local function eachNeighborInRange(x, y, radius, fn, context)
 		end
 	end
 
-	for dx = -cellRadius, cellRadius do
-		local col = grid[cx + dx]
+	return eachNeighborInRange(cx, cy, cellRadius, onCell, context)
+end
 
-		if col then
-			for dy = -cellRadius, cellRadius do
-				local cell = col[cy + dy]
-
-				if cell then
-					for i = 1, #cell do
-						fn(cell[i], context)
-					end
-				end
-			end
-		end
-	end
+local function traverseOccupancy(cx, cy, radiusCells, onCell, context)
+	local radius = radiusCells or 1
+	return eachNeighborInRange(cx, cy, radius, onCell, context)
 end
 
 local function collectContext(enemy, ctx)
@@ -95,14 +99,24 @@ local function collectContext(enemy, ctx)
 	ctx.count = nextCount
 end
 
-local function collectCellsInto(ctx, x, y, radius, dedupeById)
+local function collectCell(cell, _, ctx)
+	if not cell then
+		return
+	end
+	local length = #cell
+	for i = 1, length do
+		collectContext(cell[i], ctx)
+	end
+end
+
+local function queryCellsInto(ctx, x, y, radius, dedupeById)
 	ctx.count = 0
 	ctx.dedupeById = dedupeById == true
 	if ctx.dedupeById then
 		nextStamp(ctx)
 	end
 
-	eachNeighborInRange(x, y, radius, collectContext, ctx)
+	collectCellsInto(x, y, radius, collectCell, ctx)
 
 	local count = ctx.count
 	for i = count + 1, ctx.activeLength do
@@ -184,20 +198,17 @@ function Spatial.removeEnemy(e)
 end
 
 function Spatial.beginFrame()
-	-- Query buffers are shared scratch arrays: callers may read them immediately
-	-- after queryCells/queryCellsLocal returns, but should not hold long-lived references
-	-- across frames because later queries overwrite entries in-place.
 	outerCollectContext.count = 0
 	nestedCollectContext.count = 0
 end
 
 function Spatial.queryCells(x, y, radius, dedupeById)
-	local count = collectCellsInto(outerCollectContext, x, y, radius, dedupeById)
+	local count = queryCellsInto(outerCollectContext, x, y, radius, dedupeById)
 	return outerQueryBuffer, count
 end
 
 function Spatial.queryCellsLocal(x, y, radius, dedupeById)
-	local count = collectCellsInto(nestedCollectContext, x, y, radius, dedupeById)
+	local count = queryCellsInto(nestedCollectContext, x, y, radius, dedupeById)
 	return nestedQueryBuffer, count
 end
 
@@ -205,40 +216,29 @@ function Spatial.pointToCell(x, y)
 	return floor(x * INV_CELL), floor(y * INV_CELL)
 end
 
-local function traverseOccupancy(cx, cy, radiusCells, onCount)
-	local radius = radiusCells or 1
-	local idx = 0
-	local sum = 0
-
-	for dx = -radius, radius do
-		local col = grid[cx + dx]
-
-		for dy = -radius, radius do
-			idx = idx + 1
-			local count = 0
-
-			if col then
-				local cell = col[cy + dy]
-				if cell then
-					count = #cell
-				end
-			end
-
-			sum = sum + count
-			if onCount then
-				onCount(idx, count)
-			end
-		end
+local function countCellOccupancy(cell, idx, ctx)
+	local count = 0
+	if cell then
+		count = #cell
 	end
-
-	return idx, sum
+	ctx.sum = ctx.sum + count
+	local onCount = ctx.onCount
+	if onCount then
+		onCount(idx, count)
+	end
 end
 
 function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 	local counts = out or occupancyBuffer
-	local idx, sum = traverseOccupancy(cx, cy, radiusCells, function(i, count)
-		counts[i] = count
-	end)
+	local state = {
+		sum = 0,
+		onCount = function(i, count)
+			counts[i] = count
+		end,
+	}
+
+	local idx = traverseOccupancy(cx, cy, radiusCells, countCellOccupancy, state)
+	local sum = state.sum
 
 	for i = idx + 1, #counts do
 		counts[i] = nil
@@ -248,12 +248,22 @@ function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 end
 
 function Spatial.queryOccupancySum(cx, cy, radiusCells)
-	local _, sum = traverseOccupancy(cx, cy, radiusCells)
-	return sum
+	local state = { sum = 0 }
+	traverseOccupancy(cx, cy, radiusCells, countCellOccupancy, state)
+	return state.sum
 end
 
 function Spatial.forEachInCells(x, y, radius, fn, context)
-	eachNeighborInRange(x, y, radius, fn, context)
+	local function eachInCell(cell, _, ctx)
+		if not cell then
+			return
+		end
+		local length = #cell
+		for i = 1, length do
+			fn(cell[i], ctx)
+		end
+	end
+	collectCellsInto(x, y, radius, eachInCell, context)
 end
 
 return Spatial
