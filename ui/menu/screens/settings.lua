@@ -39,6 +39,7 @@ local btnH = 42
 local gap = 62
 
 local lineH = 48
+local controlsLineH = 40
 local headerHeight = 36
 local headerSpacing = 30
 local footerSpacing = 22
@@ -56,6 +57,7 @@ local titleY = 0
 local rowsStartY = 0
 local buttonsStartY = 0
 local listX = 0
+local activeLineH = lineH
 
 local LABEL_W = 180
 local SLIDER_W = 160
@@ -295,7 +297,10 @@ local function rebuildControlsRows()
 		{
 			id = "controls_device",
 			type = "action",
-			label = string.format("%s: %s", L("settings.tabControls"), deviceLabel),
+			label = string.format("%s:", L("settings.tabControls")),
+			valueLabel = deviceLabel,
+			buttonLabel = string.format("↔ %s", switchLabel),
+			renderAsButton = true,
 			onClick = function()
 				controlsDevice = controlsDevice == "keyboard" and "gamepad" or "keyboard"
 				rebuildControlsRows()
@@ -304,11 +309,6 @@ local function rebuildControlsRows()
 				conflictMessage = nil
 				Sound.play("uiMove")
 			end,
-		},
-		{
-			id = "controls_device_hint",
-			type = "info",
-			label = string.format("↔ %s", switchLabel),
 		},
 	}
 
@@ -411,6 +411,27 @@ end
 
 local function drawActionRow(row, x, yTop)
 	Text.printShadow(row.label, x, rowTextY(yTop))
+
+	if row.valueLabel then
+		Text.printfShadow(row.valueLabel, x + LABEL_W - 16, rowTextY(yTop), 130, "right")
+	end
+
+	if row.renderAsButton then
+		local buttonW = 132
+		local buttonH = ROW_H - 8
+		local buttonX = x + ROW_W - buttonW - 8
+		local buttonY = yTop + (ROW_H - buttonH) * 0.5
+
+		lg.setColor(colorOutline)
+		lg.rectangle("fill", buttonX - 1, buttonY - 1, buttonW + 2, buttonH + 2, 8, 8)
+		lg.setColor(0.20, 0.22, 0.30, 1)
+		lg.rectangle("fill", buttonX, buttonY, buttonW, buttonH, 7, 7)
+		lg.setColor(1, 1, 1, 0.08)
+		lg.rectangle("fill", buttonX, buttonY, buttonW, buttonH * 0.45, 7, 7)
+
+		lg.setColor(colorText)
+		Text.printfShadow(row.buttonLabel or row.label, buttonX, buttonY + (buttonH - lg.getFont():getHeight()) * 0.5, buttonW, "center")
+	end
 end
 
 local function drawRow(row, selected, hovered, x, yTop, index)
@@ -542,7 +563,8 @@ function Screen.update(dt)
 	tabTime = tabTime + dt
 
 	-- Panel sizing (keep room for future settings rows)
-	local rowsBlockH = max((minRowsVisible - 1) * lineH + ROW_H, (#rows - 1) * lineH + ROW_H)
+	activeLineH = (activeTab == 3) and controlsLineH or lineH
+	local rowsBlockH = max((minRowsVisible - 1) * activeLineH + ROW_H, (#rows - 1) * activeLineH + ROW_H)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
 
 	local contentH = headerHeight + headerSpacing + rowsBlockH + footerSpacing + btnBlockH
@@ -663,7 +685,7 @@ function Screen.draw()
 	Fonts.set("menu")
 
 	for i, row in ipairs(rows) do
-		local yTop = rowsStartY + (i - 1) * lineH
+		local yTop = rowsStartY + (i - 1) * activeLineH
 		local r = {x = listX, y = yTop, w = ROW_W, h = ROW_H}
 		local hovered = Cursor.x >= r.x and Cursor.x <= r.x + r.w and Cursor.y >= r.y and Cursor.y <= r.y + r.h
 
