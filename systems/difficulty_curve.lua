@@ -11,20 +11,12 @@ DifficultyCurve.endlessHpBase = 1.15
 
 -- Enemy hp multiplier
 function DifficultyCurve.getEnemyHpMultiplier(waveIndex)
-	local d = Difficulty.get()
+	local campaignHp = 1 + DifficultyCurve.campaignEnd * DifficultyCurve.campaignHpSlope
+	local baseHp = (waveIndex <= DifficultyCurve.campaignEnd)
+		and (1 + waveIndex * DifficultyCurve.campaignHpSlope)
+		or (campaignHp * (DifficultyCurve.endlessHpBase ^ (waveIndex - DifficultyCurve.campaignEnd)))
 
-	local hpMult
-
-	if waveIndex <= DifficultyCurve.campaignEnd then
-		hpMult = 1 + waveIndex * DifficultyCurve.campaignHpSlope
-	else
-		local endlessWave = waveIndex - DifficultyCurve.campaignEnd
-		local campaignHp = 1 + DifficultyCurve.campaignEnd * DifficultyCurve.campaignHpSlope
-
-		hpMult = campaignHp * (DifficultyCurve.endlessHpBase ^ endlessWave)
-	end
-
-	return hpMult * d.enemyHpBias
+	return baseHp * Difficulty.get().enemyHpBias
 end
 
 function DifficultyCurve.getEnemySpeedMultiplier(waveIndex)
@@ -32,10 +24,7 @@ function DifficultyCurve.getEnemySpeedMultiplier(waveIndex)
 end
 
 function DifficultyCurve.getBossHpMultiplier(waveIndex)
-	local d = Difficulty.get()
-	local hpMult = DifficultyCurve.getEnemyHpMultiplier(waveIndex)
-
-	return d.bossHpBias * hpMult
+	return Difficulty.get().bossHpBias * DifficultyCurve.getEnemyHpMultiplier(waveIndex)
 end
 
 return DifficultyCurve
