@@ -290,27 +290,8 @@ local function rebuildControlsRows()
 		return
 	end
 
-	local sourceLayout = controlsDevice == "gamepad" and gamepadControlsLayout or keyboardControlsLayout
-	local deviceLabel = controlsDevice == "gamepad" and L("settings.tabControlsGamepad") or L("settings.tabControlsKeyboard")
-	local switchLabel = controlsDevice == "gamepad" and L("settings.tabControlsKeyboard") or L("settings.tabControlsGamepad")
-	local controlsRows = {
-		{
-			id = "controls_device",
-			type = "action",
-			label = string.format("%s:", L("settings.tabControls")),
-			valueLabel = deviceLabel,
-			buttonLabel = string.format("↔ %s", switchLabel),
-			renderAsButton = true,
-			onClick = function()
-				controlsDevice = controlsDevice == "keyboard" and "gamepad" or "keyboard"
-				rebuildControlsRows()
-				settingsCursor = 1
-				closeCapture()
-				conflictMessage = nil
-				Sound.play("uiMove")
-			end,
-		},
-	}
+	local sourceLayout = keyboardControlsLayout
+	local controlsRows = {}
 
 	for _, def in ipairs(sourceLayout) do
 		controlsRows[#controlsRows + 1] = {
