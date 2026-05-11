@@ -68,6 +68,8 @@ local function releaseEnemy(e)
 	enemyPool[#enemyPool + 1] = e
 end
 
+local computeNudgeParams
+
 local function updateEnemyPathPosition(e, pathWorld)
 	local seg = e.pathSeg or 1
 	local t = e.pathT or 0
@@ -236,6 +238,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.id = nextID
 	e.shockID = 0
 
+	computeNudgeParams(e)
+
 	e.face = "normal"
 	e.faceT = 0
 	e.faceDur = 0
@@ -310,25 +314,17 @@ local function handleEnemyEscaped(e, i, isBoss)
 	swapRemove(enemies, i)
 end
 
-local function getNudgeDamping(e)
+computeNudgeParams = function(e)
 	local speed = max(EPS, e.baseSpeed or 0)
 	local speedTier = speed / (speed + 100)
 	local baseDamp = MIN_NUDGE_DAMP + (MAX_NUDGE_DAMP - MIN_NUDGE_DAMP) * speedTier
+	e.nudgeTargetK = baseDamp * NUDGE_TARGET_DAMP_MULT
+	e.nudgeFollowK = baseDamp * NUDGE_FOLLOW_DAMP_MULT
 
-	-- Example tuning anchors for balancing:
-	-- slow/boss-ish enemy (baseSpeed ~= 45): target k ~= 4.3, follow k ~= 12.4
-	-- fast/basic enemy (baseSpeed ~= 130): target k ~= 6.6, follow k ~= 18.8
-	local targetK = baseDamp * NUDGE_TARGET_DAMP_MULT
-	local followK = baseDamp * NUDGE_FOLLOW_DAMP_MULT
-
-	return targetK, followK
-end
-
-local function getMaxNudgeForEnemy(e)
 	local radiusScale = (e.radius or NUDGE_RADIUS_REF) / NUDGE_RADIUS_REF
 	radiusScale = min(MAX_NUDGE_RADIUS_SCALE, max(MIN_NUDGE_RADIUS_SCALE, radiusScale))
-
-	return BASE_MAX_NUDGE * radiusScale
+	local maxNudge = BASE_MAX_NUDGE * radiusScale
+	e.maxNudge2 = maxNudge * maxNudge
 end
 
 local function updateEnemies(dt)
@@ -556,9 +552,8 @@ local function updateEnemies(dt)
 		-- visual-only nudge smoothing:
 		-- 1) target eases back to path
 		-- 2) rendered nudge follows target for softer hit finish
-		local targetK, followK = getNudgeDamping(e)
-		local targetDecay = exp(-targetK * dt)
-		local follow = 1 - exp(-followK * dt)
+		local targetDecay = exp(-e.nudgeTargetK * dt)
+		local follow = 1 - exp(-e.nudgeFollowK * dt)
 		e.nudgeTargetX = e.nudgeTargetX * targetDecay
 		e.nudgeTargetY = e.nudgeTargetY * targetDecay
 		e.nudgeX = e.nudgeX + (e.nudgeTargetX - e.nudgeX) * follow
@@ -636,10 +631,8 @@ local function applyHitImpulse(e, dx, dy, strength)
 
 	local n2 = e.nudgeTargetX * e.nudgeTargetX + e.nudgeTargetY * e.nudgeTargetY
 
-	local maxNudge = getMaxNudgeForEnemy(e)
-
-	if n2 > maxNudge * maxNudge then
-		local s = maxNudge / sqrt(n2)
+	if n2 > e.maxNudge2 then
+		local s = sqrt(e.maxNudge2 / n2)
 		e.nudgeTargetX = e.nudgeTargetX * s
 		e.nudgeTargetY = e.nudgeTargetY * s
 	end
