@@ -106,9 +106,9 @@ function MapPreviewCache.buildAll(w, h)
 				Cacti.clear()
 				Mushrooms.clear()
 			end
-		end)
 
-		MapRender.renderGameplayFramedToCanvas(canvas, context)
+			MapRender.renderGameplayFramedToCanvas(canvas)
+		end)
 
 		cache[mapDef.id] = {
 			canvas = canvas,
