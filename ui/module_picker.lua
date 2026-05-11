@@ -4,6 +4,7 @@ local State = require("core.state")
 local Modules = require("systems.modules")
 local Towers = require("world.towers")
 local L = require("core.localization")
+local Util = require("core.util")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -15,24 +16,18 @@ local openedAt = 0
 
 local max = math.max
 
-local function clamp(x, a, b)
-	if x < a then return a end
-	if x > b then return b end
-	return x
-end
-
 local function lerp(a, b, t)
 	return a + (b - a) * t
 end
 
 local function smoothstep(t)
-	t = clamp(t, 0, 1)
+	t = Util.clamp(t, 0, 1)
 
 	return t * t * (3 - 2 * t)
 end
 
 local function easeOutBack(t)
-	t = clamp(t, 0, 1)
+	t = Util.clamp(t, 0, 1)
 
 	local c1 = 1.70158
 	local c3 = c1 + 1
@@ -115,9 +110,9 @@ local function rebuildLayout()
 	local sw, sh = lg.getDimensions()
 	local count = #State.modulePicker.choices
 
-	local gap = clamp(sw * 0.022, 18, 30)
-	local cardW = clamp((sw - 180 - gap * (count - 1)) / max(count, 1), 232, 300)
-	local cardH = clamp(sh * 0.40, 224, 264)
+	local gap = Util.clamp(sw * 0.022, 18, 30)
+	local cardW = Util.clamp((sw - 180 - gap * (count - 1)) / max(count, 1), 232, 300)
+	local cardH = Util.clamp(sh * 0.40, 224, 264)
 	local totalW = count * cardW + (count - 1) * gap
 	local startX = (sw - totalW) * 0.5
 	local y = sh * 0.5 - cardH * 0.24
@@ -317,7 +312,7 @@ function ModulePicker.draw()
 		local towerColor = Theme.tower[choice.target] or text
 
 		local intro = easeOutBack((now - openedAt - c.delay) * 6.0)
-		local alpha = clamp((now - openedAt - c.delay) * 5.0, 0, 1)
+		local alpha = Util.clamp((now - openedAt - c.delay) * 5.0, 0, 1)
 
 		if alpha > 0 then
 			local hovered = pointInCard(mx, my, c)
