@@ -17,12 +17,12 @@ function Util.dist2(x1, y1, x2, y2)
 	return dx * dx + dy * dy
 end
 
-function Util.len(x,y)
+function Util.len(x, y)
 	return sqrt(x * x + y * y)
 end
 
-function Util.norm(x,y)
-	local l = sqrt(x * x + y * y)
+function Util.norm(x, y)
+	local l = Util.len(x, y)
 
 	if l == 0 then
 		return 0, 0
