@@ -76,6 +76,7 @@ local draggingSlider = nil
 
 local tabs = {}
 local activeTab = 1
+local controlsDevice = "keyboard"
 local tabAnim = {}
 local tabTime = 0
 local capturingRowId = nil
@@ -280,6 +281,58 @@ local function switchTab(nextTab)
 	end
 end
 
+local function rebuildControlsRows()
+	local controlsTab = tabs[3]
+
+	if not controlsTab then
+		return
+	end
+
+	local sourceLayout = controlsDevice == "gamepad" and gamepadControlsLayout or keyboardControlsLayout
+	local deviceLabel = controlsDevice == "gamepad" and L("settings.tabControlsGamepad") or L("settings.tabControlsKeyboard")
+	local switchLabel = controlsDevice == "gamepad" and L("settings.tabControlsKeyboard") or L("settings.tabControlsGamepad")
+	local controlsRows = {
+		{
+			id = "controls_device",
+			type = "action",
+			label = string.format("%s: %s", L("settings.tabControls"), deviceLabel),
+			onClick = function()
+				controlsDevice = controlsDevice == "keyboard" and "gamepad" or "keyboard"
+				rebuildControlsRows()
+				settingsCursor = 1
+				closeCapture()
+				conflictMessage = nil
+				Sound.play("uiMove")
+			end,
+		},
+		{
+			id = "controls_device_hint",
+			type = "info",
+			label = string.format("↔ %s", switchLabel),
+		},
+	}
+
+	for _, def in ipairs(sourceLayout) do
+		controlsRows[#controlsRows + 1] = {
+			id = string.format("bind_%s_%s_%s", controlsDevice, def.kind, def.id),
+			label = L(def.label),
+			type = "keybind",
+			bindingDevice = controlsDevice,
+			bindingKind = def.kind,
+			bindingId = def.id,
+		}
+	end
+
+	controlsRows[#controlsRows + 1] = {
+		id = "restore_defaults_controls",
+		label = L("settings.controlsRestoreDefaults"),
+		type = "action",
+		onClick = restoreDefaultKeybinds,
+	}
+
+	controlsTab.rows = controlsRows
+end
+
 local function getActiveRows()
 	local tab = tabs[activeTab]
 
@@ -383,6 +436,7 @@ function Screen.load()
 	Hotkeys.refreshFromSave()
 	settingsCursor = 1
 	activeTab = 1
+	controlsDevice = "keyboard"
 	tabTime = 0
 	settingsDirty = false
 	settingsFlushTimer = nil
@@ -447,52 +501,13 @@ function Screen.load()
 			},
 		},
 		{
-			id = "controlsKeyboard",
-			label = L("settings.tabControlsKeyboard"),
-			rows = {},
-		},
-		{
-			id = "controlsGamepad",
-			label = L("settings.tabControlsGamepad"),
+			id = "controls",
+			label = L("settings.tabControls"),
 			rows = {},
 		},
 	}
 
-	local keyboardRows = tabs[3].rows
-	for _, def in ipairs(keyboardControlsLayout) do
-		keyboardRows[#keyboardRows + 1] = {
-			id = string.format("bind_keyboard_%s_%s", def.kind, def.id),
-			label = L(def.label),
-			type = "keybind",
-			bindingDevice = "keyboard",
-			bindingKind = def.kind,
-			bindingId = def.id,
-		}
-	end
-	keyboardRows[#keyboardRows + 1] = {
-		id = "restore_defaults_keyboard",
-		label = L("settings.controlsRestoreDefaults"),
-		type = "action",
-		onClick = restoreDefaultKeybinds,
-	}
-
-	local gamepadRows = tabs[4].rows
-	for _, def in ipairs(gamepadControlsLayout) do
-		gamepadRows[#gamepadRows + 1] = {
-			id = string.format("bind_gamepad_%s_%s", def.kind, def.id),
-			label = L(def.label),
-			type = "keybind",
-			bindingDevice = "gamepad",
-			bindingKind = def.kind,
-			bindingId = def.id,
-		}
-	end
-	gamepadRows[#gamepadRows + 1] = {
-		id = "restore_defaults_gamepad",
-		label = L("settings.controlsRestoreDefaults"),
-		type = "action",
-		onClick = restoreDefaultKeybinds,
-	}
+	rebuildControlsRows()
 
 	buttons = {
 		{
@@ -520,7 +535,7 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 
 	rows = getActiveRows()
-	if activeTab ~= 3 and activeTab ~= 4 then
+	if activeTab ~= 3 then
 		closeCapture()
 	end
 	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
@@ -697,7 +712,7 @@ function Screen.draw()
 		Button.draw(btn)
 	end
 
-	if (activeTab == 3 or activeTab == 4) and conflictMessage then
+	if activeTab == 3 and conflictMessage then
 		lg.setColor(colorText)
 		Text.printfShadow(conflictMessage, listX, buttonsStartY - 24, ROW_W, "left")
 	end
