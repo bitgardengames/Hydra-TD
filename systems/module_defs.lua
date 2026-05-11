@@ -633,12 +633,13 @@ addSpec("lancer_volley", "module.lancer_volley", "moduleDesc.lancer_volley", {
 	{id = "draw_lancer"},
 })
 
-addSpec("lancer_arc_lance", "module.lancer_arc_lance", "moduleDesc.lancer_arc_lance", {
-	{id = "move_homing"},
-	{id = "hit_damage"},
-	{id = "hit_chain", data = {jumps = 1, radius = 52}},
-	{id = "lancer_hit_fx"},
-	{id = "draw_lancer"},
+-- Legacy id for save compatibility.
+add("lancer_arc_lance", {
+	nameKey = "module.lancer_focus_fire",
+	descKey = "moduleDesc.lancer_focus_fire",
+	apply = function(ctx)
+		ModuleDefs.lancer_focus_fire.apply(ctx)
+	end,
 })
 
 addSpec("lancer_focus_fire", "module.lancer_focus_fire", "moduleDesc.lancer_focus_fire", {
