@@ -52,6 +52,8 @@ return {
 		controlConflictSwapApplied = "Swap applied.",
 		controlsRestoreDefaults = "Restore Default Keybinds",
 		controlsDefaultsRestored = "Default keybinds restored.",
+		controlsSwitchToController = "Use Controller Controls",
+		controlsSwitchToKeyboard = "Use Keyboard Controls",
 		on = "On",
 		off = "Off",
 	},

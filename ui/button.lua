@@ -120,7 +120,7 @@ function Button.draw(btn)
 		lg.setColor(colorText)
 	end
 
-	Text.printfShadow(btn.label, x, ty, w, "center")
+	Text.printfShadow(btn._resolvedLabel or btn.label, x, ty, w, "center")
 end
 
 function Button.mousepressed(btn, x, y, button)
