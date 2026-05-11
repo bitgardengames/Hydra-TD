@@ -78,18 +78,22 @@ local state = {
 }
 
 function state.addDamage(kind, dmg, isBoss)
-    if not kind or not dmg or dmg <= 0 then
+	if not kind or not dmg or dmg <= 0 then
 		return
 	end
 
-    local combatStats = state.combatStats
-    combatStats.damageByTower[kind] = (combatStats.damageByTower[kind] or 0) + dmg
-    combatStats.totalDamage = (combatStats.totalDamage or 0) + dmg
+	local function addDamageValue(t, key, value)
+		t[key] = (t[key] or 0) + value
+	end
 
-    if isBoss then
-        combatStats.bossDamageByTower[kind] = (combatStats.bossDamageByTower[kind] or 0) + dmg
-        combatStats.bossTotalDamage = (combatStats.bossTotalDamage or 0) + dmg
-    end
+	local combatStats = state.combatStats
+	addDamageValue(combatStats.damageByTower, kind, dmg)
+	combatStats.totalDamage = combatStats.totalDamage + dmg
+
+	if isBoss then
+		addDamageValue(combatStats.bossDamageByTower, kind, dmg)
+		combatStats.bossTotalDamage = combatStats.bossTotalDamage + dmg
+	end
 
 	combatStats.damageDirty = true
 end
