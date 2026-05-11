@@ -40,38 +40,48 @@ local function hashNoise(x, y, seed)
 end
 
 local grassScatterCanvas
-local grassCacheKey
+local grassCacheMapRef
+local grassCacheTile
+local grassCacheW
+local grassCacheH
+local grassCacheR, grassCacheG, grassCacheB, grassCacheA
 
 local function buildGrassScatterCache(terrain)
 	local map = MapMod.map
 
 	if not map or not map.isPath then
 		grassScatterCanvas = nil
-		grassCacheKey = nil
+		grassCacheMapRef = nil
 		return
 	end
 
 	local grass = terrain.grass
-	local nextKey = table.concat({
-		tostring(map.isPath),
-		tostring(gridW),
-		tostring(gridH),
-		tostring(tile),
-		string.format("%.6f", grass[1] or 0),
-		string.format("%.6f", grass[2] or 0),
-		string.format("%.6f", grass[3] or 0),
-		string.format("%.6f", grass[4] or 1),
-	}, "|")
+	local gR = grass[1] or 0
+	local gG = grass[2] or 0
+	local gB = grass[3] or 0
+	local gA = grass[4] or 1
 
-	if grassCacheKey == nextKey and grassScatterCanvas then
+	if grassScatterCanvas
+		and grassCacheMapRef == map.isPath
+		and grassCacheW == gridW
+		and grassCacheH == gridH
+		and grassCacheTile == tile
+		and grassCacheR == gR
+		and grassCacheG == gG
+		and grassCacheB == gB
+		and grassCacheA == gA then
 		return
 	end
 
-	grassCacheKey = nextKey
+	grassCacheMapRef = map.isPath
+	grassCacheW = gridW
+	grassCacheH = gridH
+	grassCacheTile = tile
+	grassCacheR, grassCacheG, grassCacheB, grassCacheA = gR, gG, gB, gA
 	grassScatterCanvas = lg.newCanvas(gridW * tile, gridH * tile)
 
-	local colorScatterDark = {grass[1] * 0.94, grass[2] * 0.94, grass[3] * 0.94, 1}
-	local colorScatterLight = {grass[1] * 1.06, grass[2] * 1.06, grass[3] * 1.06, 1}
+	local colorScatterDark = {gR * 0.94, gG * 0.94, gB * 0.94, 1}
+	local colorScatterLight = {gR * 1.06, gG * 1.06, gB * 1.06, 1}
 
 	lg.push("all")
 	lg.setCanvas(grassScatterCanvas)
@@ -198,7 +208,7 @@ local function updatePathColor(color)
 end
 
 local function updateGrassColor(_)
-	grassCacheKey = nil
+	grassCacheMapRef = nil
 end
 
 local function updateWaterColor(color)
