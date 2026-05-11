@@ -64,14 +64,14 @@ local function evaluateSimpleCandidate(e, c)
 end
 
 function Targeting.isSemanticallyValidTarget(tower, e)
-	if not e or e.hp <= 0 or e.dying then
+	if not Targeting.isTargetEntityValid(e) or e.hp <= 0 or e.dying then
 		return false
 	end
 
 	local dx = e.x - tower.x
 	local dy = e.y - tower.y
 
-	return dx * dx + dy * dy <= tower.range2
+	return type(tower.range2) == "number" and dx * dx + dy * dy <= tower.range2
 end
 
 function Targeting.isTargetEntityValid(e)
