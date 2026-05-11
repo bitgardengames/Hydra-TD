@@ -271,6 +271,14 @@ local function exitToMenu()
 	Sound.play("uiBack")
 end
 
+local function toggleControlsDevice()
+	controlsDevice = (controlsDevice == "keyboard") and "gamepad" or "keyboard"
+	settingsCursor = 1
+	closeCapture()
+	rebuildControlsRows()
+	Sound.play("uiConfirm")
+end
+
 local function switchTab(nextTab)
 	local clamped = Util.clamp(nextTab, 1, #tabs)
 
@@ -290,7 +298,7 @@ local function rebuildControlsRows()
 		return
 	end
 
-	local sourceLayout = keyboardControlsLayout
+	local sourceLayout = (controlsDevice == "gamepad") and gamepadControlsLayout or keyboardControlsLayout
 	local controlsRows = {}
 
 	for _, def in ipairs(sourceLayout) do
@@ -513,6 +521,20 @@ function Screen.load()
 
 	buttons = {
 		{
+			id = "toggle_controls_device",
+			label = function()
+				if controlsDevice == "keyboard" then
+					return L("settings.controlsSwitchToController")
+				end
+				return L("settings.controlsSwitchToKeyboard")
+			end,
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				toggleControlsDevice()
+			end
+		},
+		{
 			id = "back",
 			label = L("menu.back"),
 			w = btnW,
@@ -590,6 +612,11 @@ function Screen.update(dt)
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = buttonsStartY + (i - 1) * gap
+		if type(btn.label) == "function" then
+			btn._resolvedLabel = btn.label()
+		else
+			btn._resolvedLabel = btn.label
+		end
 
 		Button.update(btn, Cursor.x, Cursor.y, dt)
 	end
