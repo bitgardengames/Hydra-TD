@@ -1502,6 +1502,50 @@ B.lancer_sustained_barrage = {
 }
 
 
+B.lancer_focus_fire = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		local tower = p.sourceTower
+		if not tower then
+			return
+		end
+
+		data = data or {}
+		local window = data.window or 1.1
+		local perStackMult = data.perStackMult or 0.18
+		local maxStacks = max(1, floor(data.maxStacks or 4))
+
+		local now = p.t or 0
+		local key = e.id or e
+		local stacks = tower._lancerFocusStacks
+		if not stacks then
+			stacks = {}
+			tower._lancerFocusStacks = stacks
+		end
+
+		local state = stacks[key]
+		if not state or now > state.expiresAt then
+			state = {count = 1, expiresAt = now + window}
+		else
+			state.count = min(state.count + 1, maxStacks)
+			state.expiresAt = now + window
+		end
+		stacks[key] = state
+
+		if state.count <= 1 then
+			return
+		end
+
+		local bonusMult = (state.count - 1) * perStackMult
+		if bonusMult > 0 then
+			emitDamage(p, e, (p.damage or 0) * bonusMult)
+		end
+	end
+}
+
 B.lancer_rail_momentum = {
 	onHit = function(p, e, data)
 		if not e or e.hp <= 0 then

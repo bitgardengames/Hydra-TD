@@ -59,7 +59,7 @@ return {
 			"lancer_sustained_barrage",
 			"lancer_opening_strike",
 			"lancer_rail_lance",
-			"lancer_arc_lance",
+			"lancer_focus_fire",
 		},
 		behaviors = {
 			{id = "move_homing"},

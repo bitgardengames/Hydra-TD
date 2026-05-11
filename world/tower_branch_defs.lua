@@ -34,7 +34,7 @@ local defs = {
 		[2] = {"lancer_overdrive", "lancer_volley"},
 		[3] = {"pierce", "lancer_ricochet"},
 		[4] = {"lancer_sustained_barrage", "lancer_opening_strike"},
-		[5] = {"lancer_rail_lance", "lancer_arc_lance"},
+		[5] = {"lancer_rail_lance", "lancer_focus_fire"},
 	},
 
 	poison = {
