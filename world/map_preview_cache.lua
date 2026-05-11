@@ -18,11 +18,37 @@ local mapH = Constants.GRID_H * Constants.TILE
 
 local cache = {}
 
+local function cloneMapData(src)
+	local out = {}
+
+	for k, v in pairs(src) do
+		out[k] = v
+	end
+
+	return out
+end
+
 local function withMapContext(context, fn)
-	local previousMap = MapMod.map
-	MapMod.map = context.map
+	local activeMap = MapMod.map
+	local previousMap = cloneMapData(activeMap)
+
+	for k in pairs(activeMap) do
+		activeMap[k] = nil
+	end
+
+	for k, v in pairs(context.map) do
+		activeMap[k] = v
+	end
+
 	local ok, err = pcall(fn)
-	MapMod.map = previousMap
+
+	for k in pairs(activeMap) do
+		activeMap[k] = nil
+	end
+
+	for k, v in pairs(previousMap) do
+		activeMap[k] = v
+	end
 
 	if not ok then
 		error(err)
