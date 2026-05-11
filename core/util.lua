@@ -5,11 +5,9 @@ local max = math.max
 local sqrt = math.sqrt
 local floor = math.floor
 
-local function copyKeys(dst, src, skipNil)
+local function copyKeys(dst, src)
 	for k, v in pairs(src) do
-		if not skipNil or v ~= nil then
-			dst[k] = v
-		end
+		dst[k] = v
 	end
 
 	return dst
@@ -68,7 +66,7 @@ function Util.clearTable(t)
 end
 
 function Util.resetFromDefaults(dst, defaults)
-	return copyKeys(dst, defaults, false)
+	return copyKeys(dst, defaults)
 end
 
 function Util.applyNonNilOverrides(dst, overrides)
@@ -76,7 +74,7 @@ function Util.applyNonNilOverrides(dst, overrides)
 		return dst
 	end
 
-	return copyKeys(dst, overrides, true)
+	return copyKeys(dst, overrides)
 end
 
 return Util
