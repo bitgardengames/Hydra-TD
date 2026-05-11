@@ -756,17 +756,17 @@ addSpec("cannon_frontline_burst", "module.cannon_frontline_burst", "moduleDesc.c
 addSpec("cannon_mega_shell", "module.cannon_mega_shell", "moduleDesc.cannon_mega_shell", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 14}},
-	{id = "aoe_damage", data = {radius = 82}},
-	{id = "cannon_damage_scale", data = {mult = 2.15}},
+	{id = "aoe_damage", data = {radius = 78}},
+	{id = "cannon_damage_scale", data = {mult = 2.05}},
 	{id = "draw_cannon"},
 })
 
 addSpec("cannon_carpet_fire", "module.cannon_carpet_fire", "moduleDesc.cannon_carpet_fire", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 11}},
-	{id = "aoe_damage", data = {radius = 42}},
+	{id = "aoe_damage", data = {radius = 48}},
 	{id = "cannon_damage_scale", data = {mult = 0.82}},
-	{id = "cannon_carpet_fire", data = {delayA = 0.09, delayB = 0.18, spread = 0.18}},
+	{id = "cannon_carpet_fire", data = {delayA = 0.07, delayB = 0.14, spread = 0.14}},
 	{id = "draw_cannon"},
 })
 
