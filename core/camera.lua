@@ -44,8 +44,6 @@ local function computeAdaptiveZoom()
 	-- Preserve framing by using the limiting axis
 	local resolutionFactor = min(scaleX, scaleY)
 
-	-- Optional softening (feels nicer than linear)
-	resolutionFactor = resolutionFactor
 
 	local z = AUTHORED_ZOOM * resolutionFactor
 
@@ -54,7 +52,6 @@ end
 
 function Camera.load()
 	Camera.resize()
-	Camera.setZoom(computeAdaptiveZoom())
 end
 
 function Camera.setZoom(z)
