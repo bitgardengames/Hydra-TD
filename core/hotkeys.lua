@@ -63,7 +63,6 @@ function Hotkeys.refreshFromSave()
 	local Save = require("core.save")
 	local settings = Save.data and Save.data.settings
 	local bindings = settings and settings.keybinds
-	if bindings and bindings.keyboard then bindings = bindings.keyboard end
 	Hotkeys.applyKeyboardBindings(bindings)
 end
 

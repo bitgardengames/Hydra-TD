@@ -20,10 +20,6 @@ local function ensureKeybinds(settings)
 		return true
 	end
 
-	if settings.keybinds.keyboard ~= nil then
-		settings.keybinds = settings.keybinds.keyboard
-		changed = true
-	end
 
 	local defaults = Hotkeys.getDefaultBindings()
 	for section, sectionDefaults in pairs(defaults) do
