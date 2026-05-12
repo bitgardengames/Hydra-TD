@@ -88,7 +88,6 @@ local draggingSlider = nil
 
 local tabs = {}
 local activeTab = 1
-local controlsDevice = "keyboard"
 local tabAnim = {}
 local tabTime = 0
 local capturingRowId = nil
@@ -132,7 +131,7 @@ local function startCapture(row)
 end
 
 local function getBinding(row)
-	local keybinds = Save.data.settings.keybinds[row.bindingDevice]
+	local keybinds = Save.data.settings.keybinds
 
 	if row.bindingKind == "shop" then
 		return keybinds.shop[row.bindingId]
@@ -141,8 +140,8 @@ local function getBinding(row)
 	return keybinds.actions[row.bindingId]
 end
 
-local function getBindingSection(bindingDevice, bindingKind)
-	local keybinds = Save.data.settings.keybinds[bindingDevice]
+local function getBindingSection(bindingKind)
+	local keybinds = Save.data.settings.keybinds
 
 	if bindingKind == "shop" then
 		return keybinds.shop
@@ -160,10 +159,10 @@ local function formatBindingValue(row, key)
 end
 
 local function commitBindingChange(change)
-	local section = getBindingSection(change.row.bindingDevice, change.row.bindingKind)
+	local section = getBindingSection(change.row.bindingKind)
 
 	if change.conflictRow then
-		local conflictSection = getBindingSection(change.conflictRow.bindingDevice, change.conflictRow.bindingKind)
+		local conflictSection = getBindingSection(change.conflictRow.bindingKind)
 		conflictSection[change.conflictRow.bindingId] = change.previous
 	end
 
@@ -173,13 +172,13 @@ local function commitBindingChange(change)
 end
 
 local function setBinding(row, key)
-	local section = getBindingSection(row.bindingDevice, row.bindingKind)
+	local section = getBindingSection(row.bindingKind)
 	local previous = section[row.bindingId]
 	local conflictRow = nil
 
 	if key and key ~= "none" then
 		for _, other in ipairs(rows) do
-			if other.type == "keybind" and other.id ~= row.id and other.bindingDevice == row.bindingDevice and getBinding(other) == key then
+			if other.type == "keybind" and other.id ~= row.id and getBinding(other) == key then
 				conflictRow = other
 				break
 			end
@@ -274,7 +273,6 @@ local function switchTab(nextTab)
 		activeTab = clamped
 		local tabId = tabs[activeTab] and tabs[activeTab].id
 		if tabId == "controls_keyboard" then
-			controlsDevice = "keyboard"
 			rebuildControlsRows()
 		end
 		settingsCursor = 1
@@ -295,10 +293,9 @@ rebuildControlsRows = function()
 
 	for _, def in ipairs(sourceLayout) do
 		controlsRows[#controlsRows + 1] = {
-			id = string.format("bind_%s_%s_%s", controlsDevice, def.kind, def.id),
+			id = string.format("bind_%s_%s", def.kind, def.id),
 			label = L(def.label),
 			type = "keybind",
-			bindingDevice = controlsDevice,
 			bindingKind = def.kind,
 			bindingId = def.id,
 		}
@@ -456,7 +453,6 @@ function Screen.load()
 	Hotkeys.refreshFromSave()
 	settingsCursor = 1
 	activeTab = 1
-	controlsDevice = "keyboard"
 	tabTime = 0
 	settingsDirty = false
 	settingsFlushTimer = nil
@@ -781,10 +777,6 @@ function Screen.keypressed(key)
 				setBinding(row, "none")
 				closeCapture()
 				Sound.play("uiConfirm")
-				return
-			end
-
-			if row.bindingDevice ~= "keyboard" then
 				return
 			end
 
