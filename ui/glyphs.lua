@@ -7,41 +7,12 @@ local Glyphs = {}
 
 local cache = {}
 local registry = {}
-
--- Platform glyph mappings
-local platformMaps = {
-	xbox = {
-		confirm = "pad_a",
-		cancel = "pad_b",
-		x = "pad_x",
-		y = "pad_y",
-	},
-
-	playstation = {
-		confirm = "ps_cross",
-		cancel = "ps_circle",
-		x = "ps_square",
-		y = "ps_triangle",
-	},
-
-	steamdeck = "xbox",
-}
-
-local currentPlatform = "xbox"
-
 -- Base visual parameters
 local BASE_H = 24
 local RADIUS = 2
 
 -- Colors
 local colorFill = Theme.ui.panel
-
-function Glyphs.setPlatform(platform)
-	if platformMaps[platform] then
-		currentPlatform = platform
-		cache = {}
-	end
-end
 
 -- Register a glyph renderer
 function Glyphs.register(id, def)
@@ -54,19 +25,7 @@ function Glyphs.register(id, def)
 end
 
 local function resolveGlyph(id)
-	-- Already a concrete glyph
-	if registry[id] then
-		return id
-	end
-
-	local map = platformMaps[currentPlatform]
-
-	-- Alias resolution (steamdeck -> xbox)
-	if type(map) == "string" then
-		map = platformMaps[map]
-	end
-
-	return map and map[id] or id
+	return id
 end
 
 local function buildCanvas(id, scale)
