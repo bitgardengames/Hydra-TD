@@ -283,15 +283,34 @@ local function switchTab(nextTab)
 	end
 end
 
-local function rebuildControlsRows()
+local rebuildControlsRows
+
+local function toggleControlsDevice()
+	controlsDevice = (controlsDevice == "keyboard") and "gamepad" or "keyboard"
+	closeCapture()
+	rebuildControlsRows()
+	settingsCursor = 1
+	Sound.play("uiMove")
+end
+
+rebuildControlsRows = function()
 	local controlsTab = tabs[3]
 
 	if not controlsTab then
 		return
 	end
 
-	local sourceLayout = keyboardControlsLayout
-	local controlsRows = {}
+	local sourceLayout = (controlsDevice == "gamepad") and gamepadControlsLayout or keyboardControlsLayout
+	local controlsRows = {
+		{
+			id = "controls_device_toggle",
+			label = L("settings.tabControls"),
+			type = "action",
+			renderAsButton = true,
+			buttonLabel = (controlsDevice == "gamepad") and L("settings.tabControlsGamepad") or L("settings.tabControlsKeyboard"),
+			onClick = toggleControlsDevice,
+		},
+	}
 
 	for _, def in ipairs(sourceLayout) do
 		controlsRows[#controlsRows + 1] = {
