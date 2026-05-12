@@ -4,7 +4,6 @@ local Towers = require("world.towers")
 local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
 local Hotkeys = require("core.hotkeys")
-local Glyphs = require("ui.glyphs")
 local Tooltip = require("ui.tooltip")
 local Text = require("ui.text")
 local Theme = require("core.theme")
@@ -55,7 +54,6 @@ local PAD = 8
 local BUTTON_H = 32
 local GAP = 16
 local IDLE_LIFT = 6
-local GLYPH_X_OFFSET = -5
 local STAT_LINE_H = 22
 
 local outlineW = Theme.outline.width
@@ -67,15 +65,6 @@ local outerSmallRadius = 6 + outlineW * 0.5
 local innerSmallRadius = 6 - outlineW * 0.25
 
 local function drawHotkeyVisual(action, x, y, textY)
-	local glyph = Hotkeys.getGlyph(action)
-
-	if glyph then
-		local gw = Glyphs.getSize(glyph, 1)
-		Glyphs.draw(glyph, x + GLYPH_X_OFFSET, textY - 1)
-
-		return gw - 10
-	end
-
 	local label = Hotkeys.getDisplay(action)
 
 	if label then

@@ -29,7 +29,6 @@ function Bootstrap.initFull()
 
 	Steam.setRichPresence(L("presence.menu"))
 
-	require("ui.glyph_defs")
 end
 
 function Bootstrap.initMinimal()
