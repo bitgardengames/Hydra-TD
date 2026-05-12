@@ -25,8 +25,6 @@ local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorDim = Theme.ui.screenDim or {0, 0, 0, 0.55}
 local colorOutline = Theme.outline.color
-local colorButton = Theme.ui.button
-local colorButtonHover = Theme.ui.buttonHover
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -77,7 +75,6 @@ local sliderRects = {}
 local rowRects = {}
 local tabRects = {}
 local draggingSlider = nil
-local selectorButtons = {}
 
 local tabs = {}
 local activeTab = 1
@@ -252,12 +249,6 @@ local function adjustRow(row, dir)
 		Sound.play("uiConfirm")
 	elseif row.type == "action" and row.onClick then
 		row.onClick()
-	elseif row.type == "deviceSelector" then
-		if dir < 0 then
-			setControlsDevice("keyboard")
-		else
-			setControlsDevice("gamepad")
-		end
 	elseif row.type == "keybind" then
 		startCapture(row)
 	end
@@ -292,34 +283,15 @@ local function switchTab(nextTab)
 	end
 end
 
-local rebuildControlsRows
-
-local function setControlsDevice(device)
-	if controlsDevice == device then
-		return
-	end
-
-	controlsDevice = device
-	closeCapture()
-	rebuildControlsRows()
-	settingsCursor = 1
-	Sound.play("uiMove")
-end
-
-rebuildControlsRows = function()
+local function rebuildControlsRows()
 	local controlsTab = tabs[3]
 
 	if not controlsTab then
 		return
 	end
 
-	local sourceLayout = (controlsDevice == "gamepad") and gamepadControlsLayout or keyboardControlsLayout
-	local controlsRows = {
-		{
-			id = "controls_device_selector",
-			type = "deviceSelector",
-		},
-	}
+	local sourceLayout = keyboardControlsLayout
+	local controlsRows = {}
 
 	for _, def in ipairs(sourceLayout) do
 		controlsRows[#controlsRows + 1] = {
@@ -418,7 +390,7 @@ local function drawKeybindRow(row, x, yTop)
 	Text.printfShadow(keybindText(row), x + LABEL_W, rowTextY(yTop), SLIDER_W + 20, "right")
 end
 
-local function drawActionRow(row, x, yTop, selected, hovered)
+local function drawActionRow(row, x, yTop)
 	Text.printShadow(row.label, x, rowTextY(yTop))
 
 	if row.valueLabel then
@@ -430,49 +402,17 @@ local function drawActionRow(row, x, yTop, selected, hovered)
 		local buttonH = ROW_H - 8
 		local buttonX = x + ROW_W - buttonW - 8
 		local buttonY = yTop + (ROW_H - buttonH) * 0.5
-		local isHot = selected or hovered
-		local r = isHot and colorButtonHover or colorButton
 
 		lg.setColor(colorOutline)
 		lg.rectangle("fill", buttonX - 1, buttonY - 1, buttonW + 2, buttonH + 2, 8, 8)
-		lg.setColor(r[1] * 0.4, r[2] * 0.4, r[3] * 0.4, 1)
+		lg.setColor(0.20, 0.22, 0.30, 1)
 		lg.rectangle("fill", buttonX, buttonY, buttonW, buttonH, 7, 7)
-		lg.setColor(r)
-		lg.rectangle("fill", buttonX, buttonY - 4, buttonW, buttonH, 7, 7)
+		lg.setColor(1, 1, 1, 0.08)
+		lg.rectangle("fill", buttonX, buttonY, buttonW, buttonH * 0.45, 7, 7)
 
 		lg.setColor(colorText)
-		Text.printfShadow(row.buttonLabel or row.label, buttonX, buttonY - 4 + (buttonH - lg.getFont():getHeight()) * 0.5, buttonW, "center")
+		Text.printfShadow(row.buttonLabel or row.label, buttonX, buttonY + (buttonH - lg.getFont():getHeight()) * 0.5, buttonW, "center")
 	end
-end
-
-local function drawDeviceSelectorRow(x, yTop, selected)
-	local gapW = 16
-	local buttonW = floor((ROW_W - gapW) * 0.5)
-	local buttonH = btnH
-	local buttonY = yTop + (ROW_H - buttonH) * 0.5
-	local keyboardBtn = selectorButtons[1]
-	local gamepadBtn = selectorButtons[2]
-
-	keyboardBtn.x = x
-	keyboardBtn.y = buttonY
-	keyboardBtn.w = buttonW
-	keyboardBtn.h = buttonH
-	keyboardBtn.label = L("settings.tabControlsKeyboard")
-
-	gamepadBtn.x = x + buttonW + gapW
-	gamepadBtn.y = buttonY
-	gamepadBtn.w = buttonW
-	gamepadBtn.h = buttonH
-	gamepadBtn.label = L("settings.tabControlsGamepad")
-
-	if controlsDevice == "keyboard" then
-		keyboardBtn.hovered = true
-	elseif controlsDevice == "gamepad" then
-		gamepadBtn.hovered = true
-	end
-
-	Button.draw(keyboardBtn)
-	Button.draw(gamepadBtn)
 end
 
 local function drawRow(row, selected, hovered, x, yTop, index)
@@ -488,9 +428,7 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 	elseif row.type == "keybind" then
 		drawKeybindRow(row, x, yTop)
 	elseif row.type == "action" then
-		drawActionRow(row, x, yTop, selected, hovered)
-	elseif row.type == "deviceSelector" then
-		drawDeviceSelectorRow(x, yTop, selected)
+		drawActionRow(row, x, yTop)
 	elseif row.type == "info" then
 		drawInfoRow(row, x, yTop)
 	end
@@ -585,27 +523,6 @@ function Screen.load()
 		}
 	}
 
-	selectorButtons = {
-		{
-			id = "controls_keyboard",
-			label = "",
-			w = 0,
-			h = btnH,
-			onClick = function()
-				setControlsDevice("keyboard")
-			end,
-		},
-		{
-			id = "controls_gamepad",
-			label = "",
-			w = 0,
-			h = btnH,
-			onClick = function()
-				setControlsDevice("gamepad")
-			end,
-		},
-	}
-
 	tabAnim = {}
 	for i = 1, #tabs do
 		tabAnim[i] = (i == activeTab) and 1 or 0
@@ -682,10 +599,6 @@ function Screen.update(dt)
 		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
 			settingsCursor = i
 		end
-	end
-
-	for _, selectorBtn in ipairs(selectorButtons) do
-		Button.update(selectorBtn, Cursor.x, Cursor.y, dt)
 	end
 
 	-- Drag slider
@@ -1001,15 +914,6 @@ function Screen.mousepressed(x, y, button)
 					return true
 				end
 
-				if row.type == "deviceSelector" then
-					for _, selectorBtn in ipairs(selectorButtons) do
-						if Button.mousepressed(selectorBtn, x, y, button) then
-							return true
-						end
-					end
-					return true
-				end
-
 				if row.type == "info" then
 					Sound.play("uiMove")
 					return true
@@ -1026,12 +930,6 @@ function Screen.mousepressed(x, y, button)
 			return true
 		end
 	end
-
-	for _, selectorBtn in ipairs(selectorButtons) do
-		if Button.mousepressed(selectorBtn, x, y, button) then
-			return true
-		end
-	end
 end
 
 function Screen.mousereleased(x, y, button)
@@ -1044,12 +942,6 @@ function Screen.mousereleased(x, y, button)
 
 	for _, btn in ipairs(buttons) do
 		if Button.mousereleased(btn, x, y, button) then
-			return true
-		end
-	end
-
-	for _, selectorBtn in ipairs(selectorButtons) do
-		if Button.mousereleased(selectorBtn, x, y, button) then
 			return true
 		end
 	end
