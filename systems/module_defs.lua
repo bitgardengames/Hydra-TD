@@ -620,7 +620,7 @@ addSpec("lancer_overdrive", "module.lancer_overdrive", "moduleDesc.lancer_overdr
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 9}},
 	{id = "hit_damage"},
-	{id = "lancer_overdrive", data = {triggerEvery = 4, bonusDmgMult = 1.4}},
+	{id = "lancer_overdrive", data = {triggerEvery = 5, bonusDmgMult = 1.2}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
 })
@@ -628,7 +628,7 @@ addSpec("lancer_overdrive", "module.lancer_overdrive", "moduleDesc.lancer_overdr
 addSpec("lancer_volley", "module.lancer_volley", "moduleDesc.lancer_volley", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "split_on_hit", data = {count = 2}, noInherit = true},
+	{id = "split_on_hit", data = {count = 2, spread = 0.28, dmgMult = 0.5}, noInherit = true},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
 })

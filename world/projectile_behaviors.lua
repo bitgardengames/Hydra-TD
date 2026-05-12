@@ -1384,6 +1384,14 @@ B.split_on_hit = {
 		local count = data.count or 2
 		local spread = data.spread or 0.35 -- radians (~20° total default)
 		local dmgMult = data.dmgMult or 0.6
+		local parentSplitGen = p.splitGeneration or 0
+		local childSplitGen = parentSplitGen + 1
+		local childDamageDecay = data.childDamageDecay or 0.85
+		local childTravelDecay = data.childTravelDecay or 0.7
+		local childTravelMin = data.childTravelMin or 380
+		local baseTravelDistance = data.travelDistance or 2000
+		local childDamageMult = dmgMult * (childDamageDecay ^ parentSplitGen)
+		local childTravelDistance = max(childTravelMin, baseTravelDistance * (childTravelDecay ^ parentSplitGen))
 
 		-- Forward direction (toward/through target)
 		local baseVX = p.vx or cos(p.rotation or 0)
@@ -1416,12 +1424,13 @@ B.split_on_hit = {
 			evt.x = spawnX
 			evt.y = spawnY
 			evt.angle = base
-			evt.lastTX = spawnX + cos(base) * (data.travelDistance or 2000)
-			evt.lastTY = spawnY + sin(base) * (data.travelDistance or 2000)
-			evt.damage = (p.damage or 0) * dmgMult
+			evt.lastTX = spawnX + cos(base) * childTravelDistance
+			evt.lastTY = spawnY + sin(base) * childTravelDistance
+			evt.damage = (p.damage or 0) * childDamageMult
 			evt.source = p.sourceTower
 			evt.parent = p
 			evt.ignoreTarget = e
+			evt.splitGeneration = childSplitGen
 			return
 		end
 
@@ -1436,12 +1445,13 @@ B.split_on_hit = {
 			evt.x = spawnX
 			evt.y = spawnY
 			evt.angle = ang
-			evt.lastTX = spawnX + cos(ang) * (data.travelDistance or 2000)
-			evt.lastTY = spawnY + sin(ang) * (data.travelDistance or 2000)
-			evt.damage = (p.damage or 0) * dmgMult
+			evt.lastTX = spawnX + cos(ang) * childTravelDistance
+			evt.lastTY = spawnY + sin(ang) * childTravelDistance
+			evt.damage = (p.damage or 0) * childDamageMult
 			evt.source = p.sourceTower
 			evt.parent = p
 			evt.ignoreTarget = e
+			evt.splitGeneration = childSplitGen
 		end
 
 		local fxEvt = emitFX(p, "lancer_hit")
