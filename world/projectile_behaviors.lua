@@ -866,6 +866,7 @@ B.cannon_long_fuse = {
 		local ringRadius = data.ringRadius or 54
 		local ringWidth = data.ringWidth or 22
 		local ringDamageMult = data.ringDamageMult or 1.15
+		local repeatHitMult = data.repeatHitMult or 0.6
 
 		local evt = emitSpawnProjectile(p)
 		evt.x = p.x
@@ -873,6 +874,7 @@ B.cannon_long_fuse = {
 		evt.damage = p.damage
 		evt.source = p.sourceTower
 		evt.hitOrigin = "long_fuse_payload"
+		evt.longFuseHitSet = p.hitSet
 		evt.behaviors = {
 			{ id = "stationary" },
 			{ id = "cannon_delayed_blast", data = {
@@ -883,6 +885,7 @@ B.cannon_long_fuse = {
 				ringRadius = ringRadius,
 				ringWidth = ringWidth,
 				ringDamageMult = ringDamageMult,
+				repeatHitMult = repeatHitMult,
 			}},
 		}
 	end
@@ -898,6 +901,7 @@ B.cannon_delayed_blast = {
 			ringRadius = data.ringRadius or 54,
 			ringWidth = data.ringWidth or 22,
 			ringDamageMult = data.ringDamageMult or 1.15,
+			repeatHitMult = data.repeatHitMult or 0.6,
 			fired = false,
 		}
 	end,
@@ -939,7 +943,13 @@ B.cannon_delayed_blast = {
 						ringBonus = (p.damage or 0) * b.ringDamageMult
 					end
 
-					emitDamage(p, other, coreDmg + ringBonus)
+					local totalDmg = coreDmg + ringBonus
+					local priorHits = p.longFuseHitSet
+					if priorHits and priorHits[other.id] then
+						totalDmg = totalDmg * b.repeatHitMult
+					end
+
+					emitDamage(p, other, totalDmg)
 					emitImpulse(p, other, p.x, p.y, 4.2)
 				end
 			end
