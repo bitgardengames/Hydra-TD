@@ -47,7 +47,6 @@ local state = {
 
 	mode = "menu", -- "menu", "campaign", "game", "pause"
 
-	inputSource = "keyboard",
 
 	ignoreStats = false,
 

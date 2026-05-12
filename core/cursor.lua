@@ -1,28 +1,16 @@
 local Cursor = {
 	x = 0,
 	y = 0,
-
-	usingVirtual = false,
-
-	speed = 700, -- px / second
-	deadzone = 0.18,
 }
 
 local lg = love.graphics
 
 local min = math.min
 local max = math.max
-local abs = math.abs
 
 -- Call every frame
 function Cursor.update(dt)
-	local js = love.joystick.getJoysticks()[1]
-
-	if js then
-		Cursor.updateVirtual(dt)
-	elseif not Cursor.usingVirtual then
-		Cursor.x, Cursor.y = love.mouse.getPosition()
-	end
+	Cursor.x, Cursor.y = love.mouse.getPosition()
 
 	-- Clamp
 	local sw, sh = lg.getDimensions()
@@ -64,65 +52,6 @@ function Cursor.draw()
 
     love.graphics.pop()
     love.graphics.setLineWidth(1)
-end
-
--- Gamepad / Steam Deck movement
-function Cursor.updateVirtual(dt)
-	local js = love.joystick.getJoysticks()[1]
-
-	if not js then
-		return
-	end
-
-	local ax = js:getAxis(1)
-	local ay = js:getAxis(2)
-
-	if abs(ax) < Cursor.deadzone then
-		ax = 0
-	end
-
-	if abs(ay) < Cursor.deadzone then
-		ay = 0
-	end
-
-	Cursor.x = Cursor.x + ax * Cursor.speed * dt
-	Cursor.y = Cursor.y + ay * Cursor.speed * dt
-end
-
--- Call this when a gamepad is used
-function Cursor.enableVirtual()
-	if Cursor.usingVirtual then
-		return
-	end
-
-	local sw, sh = lg.getDimensions()
-
-	-- Only seed position if cursor was never placed
-	if Cursor.x == 0 and Cursor.y == 0 then
-		local x, y = love.mouse.getPosition()
-
-		x = max(0, min(sw - 1, x))
-		y = max(0, min(sh - 1, y))
-
-		if x == 0 and y == 0 then
-			Cursor.x = sw * 0.5
-			Cursor.y = sh * 0.5
-		else
-			Cursor.x = x
-			Cursor.y = y
-		end
-	end
-
-	Cursor.usingVirtual = true
-end
-
--- Call this when mouse moves
-function Cursor.disableVirtual()
-	if not Cursor.usingVirtual then
-		return
-	end
-
-	Cursor.usingVirtual = false
 end
 
 function Cursor.mousemoved(x, y)
