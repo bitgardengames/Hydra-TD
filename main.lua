@@ -168,11 +168,6 @@ function resetGame()
 	State.modulePicker.subtitle = nil
 	State.modulePicker.hint = nil
 	State.modulePicker.tower = nil
-	State.simDebug = {
-		stepsThisFrame = 1,
-		backlogClampEvents = 0,
-	}
-
 	Camera.load()
 end
 
@@ -259,12 +254,6 @@ function love.update(dt)
 	end
 
 	Sim.update(dt * State.speed)
-
-	State.simDebug = State.simDebug or {
-		stepsThisFrame = 1,
-		backlogClampEvents = 0,
-	}
-	State.simDebug.stepsThisFrame = 1
 
 	if mode ~= "game" then
 		Menu.update(dt)
