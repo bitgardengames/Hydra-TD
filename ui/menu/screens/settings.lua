@@ -25,6 +25,8 @@ local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorDim = Theme.ui.screenDim or {0, 0, 0, 0.55}
 local colorOutline = Theme.outline.color
+local colorButton = Theme.ui.button
+local colorButtonHover = Theme.ui.buttonHover
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -285,8 +287,12 @@ end
 
 local rebuildControlsRows
 
-local function toggleControlsDevice()
-	controlsDevice = (controlsDevice == "keyboard") and "gamepad" or "keyboard"
+local function setControlsDevice(device)
+	if controlsDevice == device then
+		return
+	end
+
+	controlsDevice = device
 	closeCapture()
 	rebuildControlsRows()
 	settingsCursor = 1
@@ -303,12 +309,24 @@ rebuildControlsRows = function()
 	local sourceLayout = (controlsDevice == "gamepad") and gamepadControlsLayout or keyboardControlsLayout
 	local controlsRows = {
 		{
-			id = "controls_device_toggle",
-			label = L("settings.tabControls"),
+			id = "controls_device_keyboard",
+			label = L("settings.tabControlsKeyboard"),
 			type = "action",
 			renderAsButton = true,
-			buttonLabel = (controlsDevice == "gamepad") and L("settings.tabControlsGamepad") or L("settings.tabControlsKeyboard"),
-			onClick = toggleControlsDevice,
+			onClick = function()
+				setControlsDevice("keyboard")
+			end,
+			valueLabel = (controlsDevice == "keyboard") and "●" or nil,
+		},
+		{
+			id = "controls_device_gamepad",
+			label = L("settings.tabControlsGamepad"),
+			type = "action",
+			renderAsButton = true,
+			onClick = function()
+				setControlsDevice("gamepad")
+			end,
+			valueLabel = (controlsDevice == "gamepad") and "●" or nil,
 		},
 	}
 
@@ -409,7 +427,7 @@ local function drawKeybindRow(row, x, yTop)
 	Text.printfShadow(keybindText(row), x + LABEL_W, rowTextY(yTop), SLIDER_W + 20, "right")
 end
 
-local function drawActionRow(row, x, yTop)
+local function drawActionRow(row, x, yTop, selected, hovered)
 	Text.printShadow(row.label, x, rowTextY(yTop))
 
 	if row.valueLabel then
@@ -421,16 +439,18 @@ local function drawActionRow(row, x, yTop)
 		local buttonH = ROW_H - 8
 		local buttonX = x + ROW_W - buttonW - 8
 		local buttonY = yTop + (ROW_H - buttonH) * 0.5
+		local isHot = selected or hovered
+		local r = isHot and colorButtonHover or colorButton
 
 		lg.setColor(colorOutline)
 		lg.rectangle("fill", buttonX - 1, buttonY - 1, buttonW + 2, buttonH + 2, 8, 8)
-		lg.setColor(0.20, 0.22, 0.30, 1)
+		lg.setColor(r[1] * 0.4, r[2] * 0.4, r[3] * 0.4, 1)
 		lg.rectangle("fill", buttonX, buttonY, buttonW, buttonH, 7, 7)
-		lg.setColor(1, 1, 1, 0.08)
-		lg.rectangle("fill", buttonX, buttonY, buttonW, buttonH * 0.45, 7, 7)
+		lg.setColor(r)
+		lg.rectangle("fill", buttonX, buttonY - 4, buttonW, buttonH, 7, 7)
 
 		lg.setColor(colorText)
-		Text.printfShadow(row.buttonLabel or row.label, buttonX, buttonY + (buttonH - lg.getFont():getHeight()) * 0.5, buttonW, "center")
+		Text.printfShadow(row.buttonLabel or row.label, buttonX, buttonY - 4 + (buttonH - lg.getFont():getHeight()) * 0.5, buttonW, "center")
 	end
 end
 
@@ -447,7 +467,7 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 	elseif row.type == "keybind" then
 		drawKeybindRow(row, x, yTop)
 	elseif row.type == "action" then
-		drawActionRow(row, x, yTop)
+		drawActionRow(row, x, yTop, selected, hovered)
 	elseif row.type == "info" then
 		drawInfoRow(row, x, yTop)
 	end
