@@ -77,7 +77,6 @@ local sliderRects = {}
 local rowRects = {}
 local tabRects = {}
 local draggingSlider = nil
-local selectorButtons = {}
 
 local tabs = {}
 local activeTab = 1
@@ -252,12 +251,6 @@ local function adjustRow(row, dir)
 		Sound.play("uiConfirm")
 	elseif row.type == "action" and row.onClick then
 		row.onClick()
-	elseif row.type == "deviceSelector" then
-		if dir < 0 then
-			setControlsDevice("keyboard")
-		else
-			setControlsDevice("gamepad")
-		end
 	elseif row.type == "keybind" then
 		startCapture(row)
 	end
@@ -316,8 +309,24 @@ rebuildControlsRows = function()
 	local sourceLayout = (controlsDevice == "gamepad") and gamepadControlsLayout or keyboardControlsLayout
 	local controlsRows = {
 		{
-			id = "controls_device_selector",
-			type = "deviceSelector",
+			id = "controls_device_keyboard",
+			label = L("settings.tabControlsKeyboard"),
+			type = "action",
+			renderAsButton = true,
+			onClick = function()
+				setControlsDevice("keyboard")
+			end,
+			valueLabel = (controlsDevice == "keyboard") and "●" or nil,
+		},
+		{
+			id = "controls_device_gamepad",
+			label = L("settings.tabControlsGamepad"),
+			type = "action",
+			renderAsButton = true,
+			onClick = function()
+				setControlsDevice("gamepad")
+			end,
+			valueLabel = (controlsDevice == "gamepad") and "●" or nil,
 		},
 	}
 
@@ -445,36 +454,6 @@ local function drawActionRow(row, x, yTop, selected, hovered)
 	end
 end
 
-local function drawDeviceSelectorRow(x, yTop, selected)
-	local gapW = 16
-	local buttonW = floor((ROW_W - gapW) * 0.5)
-	local buttonH = btnH
-	local buttonY = yTop + (ROW_H - buttonH) * 0.5
-	local keyboardBtn = selectorButtons[1]
-	local gamepadBtn = selectorButtons[2]
-
-	keyboardBtn.x = x
-	keyboardBtn.y = buttonY
-	keyboardBtn.w = buttonW
-	keyboardBtn.h = buttonH
-	keyboardBtn.label = L("settings.tabControlsKeyboard")
-
-	gamepadBtn.x = x + buttonW + gapW
-	gamepadBtn.y = buttonY
-	gamepadBtn.w = buttonW
-	gamepadBtn.h = buttonH
-	gamepadBtn.label = L("settings.tabControlsGamepad")
-
-	if controlsDevice == "keyboard" then
-		keyboardBtn.hovered = true
-	elseif controlsDevice == "gamepad" then
-		gamepadBtn.hovered = true
-	end
-
-	Button.draw(keyboardBtn)
-	Button.draw(gamepadBtn)
-end
-
 local function drawRow(row, selected, hovered, x, yTop, index)
 	rowRectFor(index, x, yTop)
 	drawRowHighlight(index, selected, hovered)
@@ -489,8 +468,6 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 		drawKeybindRow(row, x, yTop)
 	elseif row.type == "action" then
 		drawActionRow(row, x, yTop, selected, hovered)
-	elseif row.type == "deviceSelector" then
-		drawDeviceSelectorRow(x, yTop, selected)
 	elseif row.type == "info" then
 		drawInfoRow(row, x, yTop)
 	end
@@ -585,27 +562,6 @@ function Screen.load()
 		}
 	}
 
-	selectorButtons = {
-		{
-			id = "controls_keyboard",
-			label = "",
-			w = 0,
-			h = btnH,
-			onClick = function()
-				setControlsDevice("keyboard")
-			end,
-		},
-		{
-			id = "controls_gamepad",
-			label = "",
-			w = 0,
-			h = btnH,
-			onClick = function()
-				setControlsDevice("gamepad")
-			end,
-		},
-	}
-
 	tabAnim = {}
 	for i = 1, #tabs do
 		tabAnim[i] = (i == activeTab) and 1 or 0
@@ -682,10 +638,6 @@ function Screen.update(dt)
 		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
 			settingsCursor = i
 		end
-	end
-
-	for _, selectorBtn in ipairs(selectorButtons) do
-		Button.update(selectorBtn, Cursor.x, Cursor.y, dt)
 	end
 
 	-- Drag slider
@@ -1001,15 +953,6 @@ function Screen.mousepressed(x, y, button)
 					return true
 				end
 
-				if row.type == "deviceSelector" then
-					for _, selectorBtn in ipairs(selectorButtons) do
-						if Button.mousepressed(selectorBtn, x, y, button) then
-							return true
-						end
-					end
-					return true
-				end
-
 				if row.type == "info" then
 					Sound.play("uiMove")
 					return true
@@ -1026,12 +969,6 @@ function Screen.mousepressed(x, y, button)
 			return true
 		end
 	end
-
-	for _, selectorBtn in ipairs(selectorButtons) do
-		if Button.mousepressed(selectorBtn, x, y, button) then
-			return true
-		end
-	end
 end
 
 function Screen.mousereleased(x, y, button)
@@ -1044,12 +981,6 @@ function Screen.mousereleased(x, y, button)
 
 	for _, btn in ipairs(buttons) do
 		if Button.mousereleased(btn, x, y, button) then
-			return true
-		end
-	end
-
-	for _, selectorBtn in ipairs(selectorButtons) do
-		if Button.mousereleased(selectorBtn, x, y, button) then
 			return true
 		end
 	end
