@@ -557,7 +557,7 @@ addSpec("slow_absolute_zero", "module.slow_absolute_zero", "moduleDesc.slow_abso
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.22, dur = 1.1}},
-	{id = "shatter_bonus", data = {mult = 0.9}},
+	{id = "shatter_bonus", data = {mult = 0.82}},
 	{id = "pierce", data = {maxHits = 1}},
 	{id = "draw_slow"},
 })
@@ -566,7 +566,7 @@ addSpec("slow_hailstorm", "module.slow_hailstorm", "moduleDesc.slow_hailstorm", 
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.54, dur = 1.4}},
-	{id = "split_on_hit", data = {count = 3, spread = 0.32, dmgMult = 0.6}, noInherit = true},
+	{id = "split_on_hit", data = {count = 3, spread = 0.26, dmgMult = 0.62}, noInherit = true},
 	{id = "draw_slow"},
 })
 
