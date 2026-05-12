@@ -45,8 +45,8 @@ local headerSpacing = 30
 local footerSpacing = 22
 local tabGap = 10
 local tabH = 36
-local tabMinW = 108
-local tabOffsetY = 3
+local tabW = 132
+local tabOffsetX = 12
 local tabAnimSpeed = 12
 local minRowsVisible = 6
 local tabOuterRadius = 12
@@ -564,17 +564,14 @@ function Screen.update(dt)
 
 	-- Buttons (layout in update, like pause)
 	buttonsStartY = rowsStartY + rowsBlockH + footerSpacing
-	local tabsStartY = boxY + boxH + tabOffsetY
-
-	local tabW = max(tabMinW, floor((ROW_W - tabGap * (#tabs - 1)) / #tabs))
-	local tabsTotalW = #tabs * tabW + (#tabs - 1) * tabGap
-	local tabsX = floor(cx - tabsTotalW * 0.5)
+	local tabsStartY = rowsStartY
+	local tabsX = boxX - tabW - tabOffsetX
 
 	tabRects = {}
 	for i, tab in ipairs(tabs) do
 		tabRects[i] = {
-			x = tabsX + (i - 1) * (tabW + tabGap),
-			y = tabsStartY,
+			x = tabsX,
+			y = tabsStartY + (i - 1) * (tabH + tabGap),
 			w = tabW,
 			h = tabH,
 		}
@@ -690,24 +687,25 @@ function Screen.draw()
 		local anim = tabAnim[i] or 0
 		local wobble = active and (sin(tabTime * 4 + i * 0.6) * 0.5 + 0.5) or 0
 		local highlightAlpha = 0.05 + anim * 0.08 + wobble * 0.02
-		local yOffset = active and -1 or (hovered and -0.5 or 0)
-		local drawY = rect.y + yOffset
+		local xOffset = active and 1 or (hovered and 0.5 or 0)
+		local drawY = rect.y
+		local drawX = rect.x + xOffset
 
 		lg.setColor(colorOutline)
-		lg.rectangle("fill", rect.x - outlineW, drawY - outlineW, rect.w + outlineW * 2, rect.h + outlineW * 2, tabOuterRadius, tabOuterRadius)
+		lg.rectangle("fill", drawX - outlineW, drawY - outlineW, rect.w + outlineW * 2, rect.h + outlineW * 2, tabOuterRadius, tabOuterRadius)
 
 		lg.setColor(colorBackdrop)
-		lg.rectangle("fill", rect.x, drawY, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
+		lg.rectangle("fill", drawX, drawY, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
 
 		if highlightAlpha > 0 then
 			lg.setColor(1, 1, 1, highlightAlpha)
-			lg.rectangle("fill", rect.x, drawY, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
+			lg.rectangle("fill", drawX, drawY, rect.w, rect.h, tabInnerRadius, tabInnerRadius)
 		end
 
 		local textY = drawY + (rect.h - lg.getFont():getHeight()) * 0.5
 
 		lg.setColor(colorText)
-		Text.printfShadow(tab.label, rect.x, textY, rect.w, "center")
+		Text.printfShadow(tab.label, drawX, textY, rect.w, "center")
 	end
 
 	-- Button
