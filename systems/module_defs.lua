@@ -257,7 +257,7 @@ add("poison_cull_weak", {
 	apply = function(ctx)
 		ctx:addBehavior({
 			id = "poison_cull_weak",
-			data = { maxBonusStacks = 10, bonusPerStack = 0.09 }
+			data = { maxBonusStacks = 8, bonusPerStack = 0.09 }
 		})
 	end
 })
@@ -296,7 +296,7 @@ add("poison_pandemic", {
 	apply = function(ctx)
 		ctx:addBehavior({
 			id = "infect_spread",
-			data = { radius = 64, stackMult = 0.8, loop = true }
+			data = { radius = 64, stackMult = 0.65, loop = true }
 		})
 	end
 })
@@ -700,7 +700,7 @@ addSpec("poison_neurotoxin", "module.poison_neurotoxin", "moduleDesc.poison_neur
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "hit_damage"},
 	{id = "apply_poison", data = {dps = 3.8, dur = 2.2, maxStacks = 11}},
-	{id = "poison_neurotoxin", data = {bonusStacks = 2}},
+	{id = "poison_neurotoxin", data = {bonusStacks = 1, branchMaxStacks = 8, diminishAt = 6, highStackBonusMult = 0.5}},
 	{id = "draw_poison"},
 })
 
