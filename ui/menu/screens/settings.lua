@@ -115,18 +115,6 @@ local keyboardControlsLayout = {
 	{kind = "action", id = "screenshot", label = "settings.controlScreenshot"},
 }
 
-local gamepadControlsLayout = {
-	{kind = "action", id = "fastForward", label = "settings.controlSpeed"},
-	{kind = "action", id = "skipPrep", label = "settings.controlStartWave"},
-	{kind = "action", id = "upgrade", label = "settings.controlUpgrade"},
-	{kind = "action", id = "sell", label = "settings.controlSell"},
-	{kind = "shop", id = "dpleft", label = "settings.controlPlaceSlow"},
-	{kind = "shop", id = "dpup", label = "settings.controlPlaceLancer"},
-	{kind = "shop", id = "dpdown", label = "settings.controlPlacePoison"},
-	{kind = "shop", id = "dpright", label = "settings.controlPlaceCannon"},
-	{kind = "shop", id = "rightstick", label = "settings.controlPlaceShock"},
-	{kind = "action", id = "toggleMeter", label = "settings.controlDamageMeter"},
-}
 
 local function closeCapture()
 	capturingRowId = nil
@@ -166,10 +154,6 @@ end
 local function formatBindingValue(row, key)
 	if not key or key == "" or key == "none" then
 		return L("settings.controlUnbound")
-	end
-
-	if row.bindingDevice == "gamepad" then
-		return Hotkeys.padAliases[key] or key:upper()
 	end
 
 	return key:upper()
@@ -292,9 +276,6 @@ local function switchTab(nextTab)
 		if tabId == "controls_keyboard" then
 			controlsDevice = "keyboard"
 			rebuildControlsRows()
-		elseif tabId == "controls_controller" then
-			controlsDevice = "gamepad"
-			rebuildControlsRows()
 		end
 		settingsCursor = 1
 		draggingSlider = nil
@@ -305,12 +286,12 @@ end
 
 local function isControlsTab(index)
 	local tab = tabs[index]
-	return tab and (tab.id == "controls_keyboard" or tab.id == "controls_controller")
+	return tab and tab.id == "controls_keyboard"
 end
 
 rebuildControlsRows = function()
 	local controlsRows = {}
-	local sourceLayout = (controlsDevice == "gamepad") and gamepadControlsLayout or keyboardControlsLayout
+	local sourceLayout = keyboardControlsLayout
 
 	for _, def in ipairs(sourceLayout) do
 		controlsRows[#controlsRows + 1] = {
@@ -332,9 +313,7 @@ rebuildControlsRows = function()
 
 	for _, tab in ipairs(tabs) do
 		if tab.id == "controls_keyboard" then
-			tab.rows = controlsDevice == "keyboard" and controlsRows or {}
-		elseif tab.id == "controls_controller" then
-			tab.rows = controlsDevice == "gamepad" and controlsRows or {}
+			tab.rows = controlsRows
 		end
 	end
 end
@@ -546,11 +525,6 @@ function Screen.load()
 			label = L("settings.tabControlsKeyboard"),
 			rows = {},
 		},
-		{
-			id = "controls_controller",
-			label = L("settings.tabControlsGamepad"),
-			rows = {},
-		},
 	}
 
 	rebuildControlsRows()
@@ -662,21 +636,6 @@ function Screen.update(dt)
 
 			rows[draggingSlider].set(t)
 			settingsDirty = true
-		end
-	end
-
-	-- Gamepad analog control
-	if Cursor.usingVirtual then
-		local row = rows[settingsCursor]
-
-		if row and row.type == "slider" then
-			local ax = Cursor.axisX or 0
-
-			if abs(ax) > 0.25 then
-				row.set(Util.clamp(row.get() + ax * dt * 0.7, 0, 1))
-				settingsDirty = true
-				settingsFlushTimer = settingsFlushDelay
-			end
 		end
 	end
 
@@ -865,79 +824,6 @@ function Screen.keypressed(key)
 			adjustRow(row, 1)
 		end
 	elseif key == "escape" then
-		exitToMenu()
-	end
-end
-
-function Screen.gamepadpressed(_, button)
-	if capturingRowId then
-		local row = rows[settingsCursor]
-
-		if not row or row.id ~= capturingRowId then
-			for _, candidate in ipairs(rows) do
-				if candidate.id == capturingRowId then
-					row = candidate
-					break
-				end
-			end
-		end
-
-		if button == "b" then
-			closeCapture()
-			Sound.play("uiBack")
-			return
-		end
-
-		if pendingBindingChange then
-			if button == "a" then
-				commitBindingChange(pendingBindingChange)
-				closeCapture()
-				Sound.play("uiConfirm")
-			end
-			return
-		end
-
-		if row then
-			if button == "back" then
-				setBinding(row, "none")
-				closeCapture()
-				Sound.play("uiConfirm")
-				return
-			end
-
-			if row.bindingDevice ~= "gamepad" then
-				return
-			end
-
-			setBinding(row, button)
-			if not pendingBindingChange then
-				closeCapture()
-				Sound.play("uiConfirm")
-			end
-		end
-
-		return
-	end
-
-	local row = rows[settingsCursor]
-
-	if not row then
-		return
-	end
-
-	if button == "dpup" then
-		settingsCursor = max(1, settingsCursor - 1)
-		ensureCursorVisible()
-		Sound.play("uiMove")
-	elseif button == "dpdown" then
-		settingsCursor = min(#rows, settingsCursor + 1)
-		ensureCursorVisible()
-		Sound.play("uiMove")
-	elseif button == "dpleft" then
-		adjustRow(row, -1)
-	elseif button == "dpright" then
-		adjustRow(row, 1)
-	elseif button == "b" then
 		exitToMenu()
 	end
 end

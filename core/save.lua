@@ -20,34 +20,22 @@ local function ensureKeybinds(settings)
 		return true
 	end
 
-	if settings.keybinds.keyboard == nil and settings.keybinds.gamepad == nil then
-		settings.keybinds = {
-			keyboard = settings.keybinds,
-			gamepad = Hotkeys.getDefaultGamepadBindings(),
-		}
+	if settings.keybinds.keyboard ~= nil then
+		settings.keybinds = settings.keybinds.keyboard
 		changed = true
 	end
 
 	local defaults = Hotkeys.getDefaultBindings()
-
-	for device, deviceDefaults in pairs(defaults) do
-		if type(settings.keybinds[device]) ~= "table" then
-			settings.keybinds[device] = {}
+	for section, sectionDefaults in pairs(defaults) do
+		if type(settings.keybinds[section]) ~= "table" then
+			settings.keybinds[section] = {}
 			changed = true
 		end
-
-		for section, sectionDefaults in pairs(deviceDefaults) do
-			if type(settings.keybinds[device][section]) ~= "table" then
-				settings.keybinds[device][section] = {}
+		for id, defaultKey in pairs(sectionDefaults) do
+			local key = settings.keybinds[section][id]
+			if type(key) ~= "string" or key == "" then
+				settings.keybinds[section][id] = defaultKey
 				changed = true
-			end
-
-			for id, defaultKey in pairs(sectionDefaults) do
-				local key = settings.keybinds[device][section][id]
-				if type(key) ~= "string" or key == "" then
-					settings.keybinds[device][section][id] = defaultKey
-					changed = true
-				end
 			end
 		end
 	end

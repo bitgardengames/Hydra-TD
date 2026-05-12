@@ -20,8 +20,8 @@ local getTime = love.timer.getTime
 local floor = math.floor
 local min = math.min
 
-local lastPadConfirm = 0
-local PAD_CLICK_COOLDOWN = 0.12
+local TILE = Constants.TILE
+
 local TILE = Constants.TILE
 
 local findEnemyAt = Enemies.findEnemyAt
@@ -49,24 +49,6 @@ end
 
 local function cancelPlacement()
 	State.placing = nil
-end
-
-local function controllerCancel()
-	-- Cancel placement first
-	if State.placing then
-		cancelPlacement()
-
-		return true
-	end
-
-	-- Then deselect
-	if State.selectedTower or State.selectedEnemy then
-		deselect()
-
-		return true
-	end
-
-	return false
 end
 
 local function updateHover()
@@ -403,99 +385,9 @@ local function keypressed(key)
 	end
 end
 
-local function gamepadpressed(joystick, button)
-	Cursor.enableVirtual()
-
-	-- Settings screen gets raw D-Pad input (no mouse emulation)
-	if State.mode ~= "game" then
-		Menu.gamepadpressed(joystick, button)
-	end
-
-	-- Shop selection (d-pad > towers)
-	local shopKind = Hotkeys.padShopKindFromButton(joystick, button)
-
-	if shopKind and State.mode == "game" then
-		State.placing = shopKind
-		deselect()
-
-		return
-	end
-
-	-- Resolve pad action
-	local action = Hotkeys.padActionFromButton(button)
-
-	if not action then
-		return
-	end
-
-	-- Global actions
-	if action == "pause" then
-		if State.mode == "pause" then
-			State.mode = "game"
-			Sound.exitPause()
-		elseif State.mode == "game" then
-			State.mode = "pause"
-			Sound.enterPause()
-		end
-
-		return
-	end
-
-	-- Menu / overlay screens
-	if State.mode ~= "game" then
-		if action == "confirm" then
-			local now = getTime()
-
-			if now - lastPadConfirm > PAD_CLICK_COOLDOWN then
-				mousepressed(Cursor.x, Cursor.y, 1)
-				lastPadConfirm = now
-			end
-
-			return
-		end
-
-		if action == "cancel" or action == "back" then
-			mousepressed(Cursor.x, Cursor.y, 2)
-
-			return
-		end
-
-		return
-	end
-
-	-- Gameplay actions
-	if action == "confirm" then
-		local now = getTime()
-
-		if now - lastPadConfirm > PAD_CLICK_COOLDOWN then
-			mousepressed(Cursor.x, Cursor.y, 1)
-			lastPadConfirm = now
-		end
-
-		return
-	end
-
-	-- Cancel / deselect
-	if action == "cancel" or action == "back" then
-		controllerCancel()
-
-		return
-	end
-
-	if runGameplayAction(action) then
-		return
-	end
-end
-
-local function gamepadreleased(joystick, button)
-	-- noop
-end
-
 return {
 	updateHover = updateHover,
 	mousepressed = mousepressed,
 	mousereleased = mousereleased,
-	gamepadpressed = gamepadpressed,
-	gamepadreleased  = gamepadreleased,
 	keypressed = keypressed,
 }
