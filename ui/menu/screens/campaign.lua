@@ -237,6 +237,9 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 end
 
 local function pointInTriangle(px, py, ax, ay, bx, by, cx, cy)
+	if ax == nil or ay == nil or bx == nil or by == nil or cx == nil or cy == nil then
+		return false
+	end
 	local function sign(px, py, ax, ay, bx, by)
 		return (px - bx) * (ay - by) - (ax - bx) * (py - by)
 	end
@@ -534,7 +537,7 @@ function Screen.draw()
 		local points = {ax + size * 0.5, arrowY - size, ax - size * 0.5, arrowY, ax + size * 0.5, arrowY + size}
 
 		if leftEnabled then
-			hover = pointInTriangle(love.mouse.getPosition(), unpack(points))
+			hover = pointInTriangle(love.mouse.getPosition(), points[1], points[2], points[3], points[4], points[5], points[6])
 		end
 
 		local color = resolveArrowColor(leftEnabled, hover)
@@ -548,7 +551,7 @@ function Screen.draw()
 		local points = {ax - size * 0.5, arrowY - size, ax + size * 0.5, arrowY, ax - size * 0.5, arrowY + size}
 
 		if rightEnabled then
-			hover = pointInTriangle(love.mouse.getPosition(), unpack(points))
+			hover = pointInTriangle(love.mouse.getPosition(), points[1], points[2], points[3], points[4], points[5], points[6])
 		end
 
 		local color = resolveArrowColor(rightEnabled, hover)
