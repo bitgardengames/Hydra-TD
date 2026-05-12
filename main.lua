@@ -22,7 +22,6 @@ local Sim = require("core.sim")
 local Tooltip = require("ui.tooltip")
 local Messages = require("ui.messages")
 local Draw = require("render.draw")
-local Glyphs = require("ui.glyphs")
 local DrawWorld = require("render.draw_world")
 local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
@@ -35,7 +34,6 @@ local Achievements = require("systems.achievements")
 local Menu = require("ui.menu.menu")
 local Overlay = require("ui.overlay")
 local Hotkeys = require("core.hotkeys")
-local Rumble = require("systems.rumble")
 local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
 local Steam = require("core.steam")
@@ -247,7 +245,6 @@ function love.update(dt)
 	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
 
 	Cursor.update(dt)
-	Rumble.update(dt)
 	Steam.update()
 	Sound.update(dt)
 
@@ -503,80 +500,6 @@ function love.keypressed(key)
 	end
 
 	Input.keypressed(key)
-end
-
-local function detectControllerType(joystick)
-	local name = joystick:getName():lower()
-
-	--print("Controller name:", name)
-
-	-- Steam Deck
-	if name:find("steam") then
-		return "steamdeck"
-	end
-
-	-- PlayStation
-	if name:find("dualshock") or name:find("dualsense") or name:find("playstation") or name:find("ps4") or name:find("ps5") then
-		return "playstation"
-	end
-
-	-- Xbox (default)
-	if name:find("xbox") or name:find("xinput") then
-		return "xbox"
-	end
-
-	-- Fallback: treat unknown gamepads as Xbox
-	return "xbox"
-end
-
-function love.gamepadpressed(joystick, button)
-	State.inputSource = "controller"
-
-	local platform = detectControllerType(joystick)
-
-	if platform and platform ~= State.lastInputPlatform then
-		State.lastInputPlatform = platform
-		Glyphs.setPlatform(platform)
-	end
-
-	Input.gamepadpressed(joystick, button)
-end
-
-function love.gamepadreleased(joystick, button)
-	local platform = detectControllerType(joystick)
-
-	if platform and platform ~= State.lastInputPlatform then
-		State.lastInputPlatform = platform
-		Glyphs.setPlatform(platform)
-	end
-
-	Input.gamepadreleased(joystick, button)
-end
-
-function love.gamepadaxis(joystick, axis, value)
-	if abs(value) > 0.3 then
-		State.inputSource = "controller"
-
-		local platform = detectControllerType(joystick)
-
-		if platform and platform ~= State.lastInputPlatform then
-			State.lastInputPlatform = platform
-			Glyphs.setPlatform(platform)
-		end
-	end
-end
-
-function love.joystickremoved(joystick)
-	pauseGame()
-end
-
-function love.joystickadded(joystick)
-	local platform = detectControllerType(joystick)
-
-	if platform and platform ~= State.lastInputPlatform then
-		State.lastInputPlatform = platform
-		Glyphs.setPlatform(platform)
-	end
 end
 
 function love.resize(w, h)
