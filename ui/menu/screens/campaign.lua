@@ -11,7 +11,6 @@ local Text = require("ui.text")
 local Button = require("ui.button")
 local Medals = require("ui.medals")
 local Backdrop = require("scenes.backdrop")
-local Cursor = require("core.cursor")
 local Steam = require("core.steam")
 local L = require("core.localization")
 
@@ -389,7 +388,7 @@ function Screen.update(dt)
 			btn.label = difficultyButtonLabel()
 		end
 
-		Button.update(btn, Cursor.x, Cursor.y, dt)
+		Button.update(btn, love.mouse.getPosition(), dt)
 	end
 end
 
@@ -534,7 +533,7 @@ function Screen.draw()
 		local points = {ax + size * 0.5, arrowY - size, ax - size * 0.5, arrowY, ax + size * 0.5, arrowY + size}
 
 		if leftEnabled then
-			hover = pointInTriangle(Cursor.x, Cursor.y, unpack(points))
+			hover = pointInTriangle(love.mouse.getPosition(), unpack(points))
 		end
 
 		local color = resolveArrowColor(leftEnabled, hover)
@@ -548,7 +547,7 @@ function Screen.draw()
 		local points = {ax - size * 0.5, arrowY - size, ax + size * 0.5, arrowY, ax - size * 0.5, arrowY + size}
 
 		if rightEnabled then
-			hover = pointInTriangle(Cursor.x, Cursor.y, unpack(points))
+			hover = pointInTriangle(love.mouse.getPosition(), unpack(points))
 		end
 
 		local color = resolveArrowColor(rightEnabled, hover)

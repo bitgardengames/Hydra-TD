@@ -3,7 +3,6 @@
 local Constants = require("core.constants")
 local Scale = require("core.scale")
 local Camera = require("core.camera")
-local Cursor = require("core.cursor")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local Fonts = require("core.fonts")
@@ -244,7 +243,6 @@ function love.update(dt)
 
 	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
 
-	Cursor.update(dt)
 	Steam.update()
 	Sound.update(dt)
 
@@ -416,13 +414,11 @@ function love.draw()
 			Overlay.draw()
 		end
 
-		Cursor.draw()
 		Tooltip.draw()
 	else
 		Menu.draw()
 		Overlay.draw()
 
-		Cursor.draw()
 		Tooltip.draw()
 	end
 end
@@ -459,10 +455,6 @@ function love.mousereleased(x, y, button)
 	Input.mousereleased(x, y, button)
 end
 
-function love.mousemoved(x, y, dx, dy)
-
-	Cursor.mousemoved(x, y)
-end
 
 function love.keypressed(key)
 
@@ -510,7 +502,7 @@ function love.focus(focused)
 		pauseGame()
 		love.mouse.setVisible(true)
 	else
-		love.mouse.setVisible(false)
+		love.mouse.setVisible(true)
 	end
 end
 
@@ -519,7 +511,7 @@ function love.visible(visible)
 		pauseGame()
 		love.mouse.setVisible(true)
 	else
-		love.mouse.setVisible(false)
+		love.mouse.setVisible(true)
 	end
 end
 

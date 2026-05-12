@@ -11,7 +11,6 @@ local Maps = require("world.map_defs")
 local Menu = require("ui.menu.menu")
 local Settings = require("ui.menu.screens.settings")
 local BottomBar = require("ui.bottom_bar")
-local Cursor = require("core.cursor")
 local Sound = require("systems.sound")
 local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
@@ -52,7 +51,7 @@ local function cancelPlacement()
 end
 
 local function updateHover()
-	State.hoverGX, State.hoverGY = screenToGrid(Cursor.x, Cursor.y)
+	State.hoverGX, State.hoverGY = screenToGrid(love.mouse.getPosition())
 end
 
 local function hitButton(list, x, y)

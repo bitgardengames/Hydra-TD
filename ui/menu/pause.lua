@@ -1,5 +1,4 @@
 local Button = require("ui.button")
-local Cursor = require("core.cursor")
 local State = require("core.state")
 local Achievements = require("systems.achievements")
 local Sound = require("systems.sound")
@@ -92,7 +91,7 @@ function Page.update(dt)
 		btn.x = cx - btn.w * 0.5
 		btn.y = startY + (i - 1) * gap
 
-		Button.update(btn, Cursor.x, Cursor.y, dt)
+		Button.update(btn, love.mouse.getPosition(), dt)
 	end
 end
 

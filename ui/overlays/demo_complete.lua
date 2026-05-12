@@ -1,6 +1,5 @@
 local Theme = require("core.theme")
 local Button = require("ui.button")
-local Cursor = require("core.cursor")
 local Steam = require("core.steam")
 local Fonts = require("core.fonts")
 local Text = require("ui.text")
@@ -73,7 +72,7 @@ end
 
 function Screen.update(dt)
 	for _, btn in ipairs(buttons) do
-		Button.update(btn, Cursor.x, Cursor.y, dt)
+		Button.update(btn, love.mouse.getPosition(), dt)
 	end
 end
 

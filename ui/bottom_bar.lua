@@ -1,5 +1,4 @@
 local Constants = require("core.constants")
-local Cursor = require("core.cursor")
 local Theme = require("core.theme")
 
 local Hud = require("ui.bottom_bar_hud")
@@ -48,7 +47,7 @@ function BottomBar.draw()
 
 	local dt = getDelta()
 	local now = getTime()
-	local mx, my = Cursor.x, Cursor.y
+	local mx, my = love.mouse.getPosition()
 
 	local outerY = sh - outerH - PANEL_LIFT
 
