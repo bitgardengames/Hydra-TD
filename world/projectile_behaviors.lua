@@ -157,6 +157,42 @@ local function emitDamage(p, e, dmg)
 	evt.amount = dmg
 end
 
+local function beginChainDamageBudget(p)
+	p._chainBudgetUsed = 0
+end
+
+local function consumeChainDamageBudget(p, rawDmg)
+	if rawDmg <= 0 then
+		return 0
+	end
+
+	local base = p._baseDamage or p.damage or rawDmg
+	local cap = base * 4.5
+	local used = p._chainBudgetUsed or 0
+	local remaining = max(0, cap - used)
+	if remaining <= 0 then
+		return 0
+	end
+
+	-- Soft-cap after first few secondary hits, then hard-cap at total budget.
+	local secondaryCount = p._chainSecondaryHitCount or 0
+	local diminished = rawDmg
+	if secondaryCount >= 6 then
+		diminished = diminished * 0.85
+	end
+	if secondaryCount >= 10 then
+		diminished = diminished * 0.7
+	end
+
+	local allowed = min(diminished, remaining)
+	if allowed > 0 then
+		p._chainBudgetUsed = used + allowed
+		p._chainSecondaryHitCount = secondaryCount + 1
+	end
+
+	return allowed
+end
+
 local function emitImpulse(p, e, px, py, strength)
 	local evt = emitEvent(p, "impulse")
 	evt.target = e
@@ -1020,6 +1056,9 @@ B.hit_chain = {
 	type = "damage",
 
 	onHit = function(p, e, data)
+		beginChainDamageBudget(p)
+		p._chainSecondaryHitCount = 0
+
 		local jumps = data.jumps or 3
 		local baseRadius = data.radius or 56
 		local falloff = data.falloff or 0.75
@@ -1067,7 +1106,13 @@ B.hit_chain = {
 			if not current or current.hp <= 0 then break end
 
 			-- deal damage
-			emitDamage(p, current, dmg)
+			local dealt = dmg
+			if i > 1 then
+				dealt = consumeChainDamageBudget(p, dmg)
+			end
+			if dealt > 0 then
+				emitDamage(p, current, dealt)
+			end
 			emitImpulse(p, current, p.x, p.y, 1.25)
 
 			local prev = chain[#chain]
@@ -1179,7 +1224,10 @@ B.fork_chain = {
 						fork.to = other
 						forks[nextFork] = fork
 						claimed[other] = true
-						emitDamage(p, other, (p.damage or 0) * dmgMult)
+						local forkDmg = consumeChainDamageBudget(p, (p.damage or 0) * dmgMult)
+						if forkDmg > 0 then
+							emitDamage(p, other, forkDmg)
+						end
 						forksAdded = forksAdded + 1
 
 						if forksAdded >= forksPerLink then
@@ -1225,7 +1273,10 @@ B.chain_static_surge = {
 
 				local extraMult = (stacks - 1) * bonusPerStack
 				if extraMult > 0 then
-					emitDamage(p, target, (p.damage or 0) * extraMult)
+					local surgeDmg = consumeChainDamageBudget(p, (p.damage or 0) * extraMult)
+					if surgeDmg > 0 then
+						emitDamage(p, target, surgeDmg)
+					end
 				end
 			end
 		end
