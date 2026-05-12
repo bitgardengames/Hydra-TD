@@ -13,13 +13,19 @@ Targeting.MODES = {
 }
 local MODES = Targeting.MODES
 local simpleCtx = {}
+local validModes = {
+	[MODES.PROGRESS] = true,
+	[MODES.LOW_HP] = true,
+	[MODES.HIGH_HP] = true,
+	[MODES.FARTHEST] = true,
+}
 
 local function normalizeMode(mode)
 	if mode == nil then
 		return MODES.PROGRESS
 	end
 
-	if mode == MODES.PROGRESS or mode == MODES.LOW_HP or mode == MODES.HIGH_HP or mode == MODES.FARTHEST then
+	if validModes[mode] then
 		return mode
 	end
 
@@ -128,7 +134,7 @@ function Targeting.isTargetEntityValid(e)
 end
 
 function Targeting.isValidTarget(tower, e)
-	return Targeting.isTargetEntityValid(e) and Targeting.isSemanticallyValidTarget(tower, e)
+	return Targeting.isSemanticallyValidTarget(tower, e)
 end
 
 local function pickSimpleTarget(tower, mode)
