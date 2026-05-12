@@ -91,7 +91,8 @@ function Page.update(dt)
 		btn.x = cx - btn.w * 0.5
 		btn.y = startY + (i - 1) * gap
 
-		Button.update(btn, love.mouse.getPosition(), dt)
+		local mx, my = love.mouse.getPosition()
+		Button.update(btn, mx, my, dt)
 	end
 end
 

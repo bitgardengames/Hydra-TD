@@ -157,14 +157,16 @@ function Screen.update(dt)
 	end
 
 	for _, btn in ipairs(buttons) do
-		Button.update(btn, love.mouse.getPosition(), dt)
+		local mx, my = love.mouse.getPosition()
+		Button.update(btn, mx, my, dt)
 	end
 
 	if storeButton then
 		storeButton.x = 24
 		storeButton.y = sh - storeButton.h - 24
 
-		Button.update(storeButton, love.mouse.getPosition(), dt)
+		local mx, my = love.mouse.getPosition()
+		Button.update(storeButton, mx, my, dt)
 	end
 end
 

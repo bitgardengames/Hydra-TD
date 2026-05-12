@@ -388,7 +388,8 @@ function Screen.update(dt)
 			btn.label = difficultyButtonLabel()
 		end
 
-		Button.update(btn, love.mouse.getPosition(), dt)
+		local mx, my = love.mouse.getPosition()
+		Button.update(btn, mx, my, dt)
 	end
 end
 
