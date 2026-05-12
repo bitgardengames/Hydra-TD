@@ -271,11 +271,21 @@ local function exitToMenu()
 	Sound.play("uiBack")
 end
 
+local rebuildControlsRows
+
 local function switchTab(nextTab)
 	local clamped = Util.clamp(nextTab, 1, #tabs)
 
 	if clamped ~= activeTab then
 		activeTab = clamped
+		local tabId = tabs[activeTab] and tabs[activeTab].id
+		if tabId == "controls_keyboard" then
+			controlsDevice = "keyboard"
+			rebuildControlsRows()
+		elseif tabId == "controls_controller" then
+			controlsDevice = "gamepad"
+			rebuildControlsRows()
+		end
 		settingsCursor = 1
 		draggingSlider = nil
 		closeCapture()
@@ -283,15 +293,14 @@ local function switchTab(nextTab)
 	end
 end
 
-local function rebuildControlsRows()
-	local controlsTab = tabs[3]
+local function isControlsTab(index)
+	local tab = tabs[index]
+	return tab and (tab.id == "controls_keyboard" or tab.id == "controls_controller")
+end
 
-	if not controlsTab then
-		return
-	end
-
-	local sourceLayout = keyboardControlsLayout
+rebuildControlsRows = function()
 	local controlsRows = {}
+	local sourceLayout = (controlsDevice == "gamepad") and gamepadControlsLayout or keyboardControlsLayout
 
 	for _, def in ipairs(sourceLayout) do
 		controlsRows[#controlsRows + 1] = {
@@ -311,7 +320,13 @@ local function rebuildControlsRows()
 		onClick = restoreDefaultKeybinds,
 	}
 
-	controlsTab.rows = controlsRows
+	for _, tab in ipairs(tabs) do
+		if tab.id == "controls_keyboard" then
+			tab.rows = controlsDevice == "keyboard" and controlsRows or {}
+		elseif tab.id == "controls_controller" then
+			tab.rows = controlsDevice == "gamepad" and controlsRows or {}
+		end
+	end
 end
 
 local function getActiveRows()
@@ -503,8 +518,13 @@ function Screen.load()
 			},
 		},
 		{
-			id = "controls",
-			label = L("settings.tabControls"),
+			id = "controls_keyboard",
+			label = L("settings.tabControlsKeyboard"),
+			rows = {},
+		},
+		{
+			id = "controls_controller",
+			label = L("settings.tabControlsGamepad"),
 			rows = {},
 		},
 	}
@@ -537,14 +557,14 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 
 	rows = getActiveRows()
-	if activeTab ~= 3 then
+	if not isControlsTab(activeTab) then
 		closeCapture()
 	end
 	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
 	tabTime = tabTime + dt
 
 	-- Panel sizing (keep room for future settings rows)
-	activeLineH = (activeTab == 3) and controlsLineH or lineH
+	activeLineH = isControlsTab(activeTab) and controlsLineH or lineH
 	local rowsBlockH = max((minRowsVisible - 1) * activeLineH + ROW_H, (#rows - 1) * activeLineH + ROW_H)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
 
@@ -713,7 +733,7 @@ function Screen.draw()
 		Button.draw(btn)
 	end
 
-	if activeTab == 3 and conflictMessage then
+	if isControlsTab(activeTab) and conflictMessage then
 		lg.setColor(colorText)
 		Text.printfShadow(conflictMessage, listX, buttonsStartY - 24, ROW_W, "left")
 	end
