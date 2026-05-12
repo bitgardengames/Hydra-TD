@@ -135,31 +135,26 @@ local function forEachCell(cell, _, ctx)
 	end
 end
 
-local function traverseQueryCells(x, y, radius, opts)
-	local mode = opts.mode
-	local radiusPolicy = opts.radiusPolicy
-	local dedupeById = opts.dedupeById == true
-
-	if mode == "collect" then
-		local ctx = opts.collectContext
-		ctx.count = 0
-		ctx.dedupeById = dedupeById
-		if dedupeById then
-			nextStamp(ctx)
-		end
-
-		collectCellsInto(x, y, radius, collectCell, ctx, radiusPolicy)
-
-		local count = ctx.count
-		for i = count + 1, ctx.activeLength do
-			ctx.results[i] = nil
-		end
-		ctx.activeLength = count
-		return ctx.results, count
+local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById, radiusPolicy)
+	local ctx = collectContext
+	ctx.count = 0
+	ctx.dedupeById = dedupeById == true
+	if ctx.dedupeById then
+		nextStamp(ctx)
 	end
 
-	local ctx = opts.callbackContext
-	collectCellsInto(x, y, radius, forEachCell, ctx, radiusPolicy)
+	collectCellsInto(x, y, radius, collectCell, ctx, radiusPolicy)
+
+	local count = ctx.count
+	for i = count + 1, ctx.activeLength do
+		ctx.results[i] = nil
+	end
+	ctx.activeLength = count
+	return ctx.results, count
+end
+
+local function traverseQueryCellsCallback(x, y, radius, callbackContext, radiusPolicy)
+	collectCellsInto(x, y, radius, forEachCell, callbackContext, radiusPolicy)
 end
 
 local function removeFromCell(e)
@@ -238,21 +233,11 @@ function Spatial.beginFrame()
 end
 
 function Spatial.queryCells(x, y, radius, dedupeById)
-	return traverseQueryCells(x, y, radius, {
-		mode = "collect",
-		collectContext = outerCollectContext,
-		dedupeById = dedupeById,
-		radiusPolicy = queryCellRadius,
-	})
+	return traverseQueryCellsCollect(x, y, radius, outerCollectContext, dedupeById, queryCellRadius)
 end
 
 function Spatial.queryCellsLocal(x, y, radius, dedupeById)
-	return traverseQueryCells(x, y, radius, {
-		mode = "collect",
-		collectContext = nestedCollectContext,
-		dedupeById = dedupeById,
-		radiusPolicy = queryCellRadiusLocal,
-	})
+	return traverseQueryCellsCollect(x, y, radius, nestedCollectContext, dedupeById, queryCellRadiusLocal)
 end
 
 function Spatial.pointToCell(x, y)
@@ -271,17 +256,22 @@ local function countCellOccupancy(cell, idx, ctx)
 	end
 end
 
+local occupancyState = { sum = 0, onCount = nil, counts = nil }
+local function writeOccupancyCount(i, count)
+	occupancyState.counts[i] = count
+end
+
 function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 	local counts = out or occupancyBuffer
-	local state = {
-		sum = 0,
-		onCount = function(i, count)
-			counts[i] = count
-		end,
-	}
+	local state = occupancyState
+	state.sum = 0
+	state.counts = counts
+	state.onCount = writeOccupancyCount
 
 	local idx = traverseOccupancy(cx, cy, radiusCells, countCellOccupancy, state)
 	local sum = state.sum
+	state.onCount = nil
+	state.counts = nil
 
 	for i = idx + 1, #counts do
 		counts[i] = nil
@@ -291,7 +281,9 @@ function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 end
 
 function Spatial.queryOccupancySum(cx, cy, radiusCells)
-	local state = { sum = 0 }
+	local state = occupancyState
+	state.sum = 0
+	state.onCount = nil
 	traverseOccupancy(cx, cy, radiusCells, countCellOccupancy, state)
 	return state.sum
 end
@@ -299,11 +291,7 @@ end
 function Spatial.forEachInCells(x, y, radius, fn, context)
 	forEachContext.fn = fn
 	forEachContext.context = context
-	traverseQueryCells(x, y, radius, {
-		mode = "callback",
-		callbackContext = forEachContext,
-		radiusPolicy = queryCellRadius,
-	})
+	traverseQueryCellsCallback(x, y, radius, forEachContext, queryCellRadius)
 	forEachContext.fn = nil
 	forEachContext.context = nil
 end
