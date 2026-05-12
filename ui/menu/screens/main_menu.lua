@@ -1,7 +1,6 @@
 local Constants = require("core.constants")
 local Theme = require("core.theme")
 local Button = require("ui.button")
-local Cursor = require("core.cursor")
 local State = require("core.state")
 local Title = require("ui.title")
 local Sound = require("systems.sound")
@@ -51,8 +50,6 @@ local panelPaddingX = 24
 local panelPaddingY = 24
 
 function Screen.load()
-	-- Reset cursor when entering menu
-	Cursor.usingVirtual = false
 
 	Backdrop.start()
 

@@ -460,16 +460,11 @@ function love.mousereleased(x, y, button)
 end
 
 function love.mousemoved(x, y, dx, dy)
-	if abs(dx) + abs(dy) > 2 then
-		Cursor.disableVirtual()
-		State.inputSource = "mouse"
-	end
 
 	Cursor.mousemoved(x, y)
 end
 
 function love.keypressed(key)
-	--State.inputSource = "keyboard"
 
 	if key == Hotkeys.getActionKey("screenshot") then
 		local time = os.date("%Y-%m-%d_%H-%M-%S")

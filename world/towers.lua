@@ -5,7 +5,6 @@ local Sound = require("systems.sound")
 local State = require("core.state")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
-local Rumble = require("systems.rumble")
 local Targeting = require("world.targeting")
 local Difficulty = require("systems.difficulty")
 local Enemies = require("world.enemies")
@@ -239,7 +238,6 @@ local function addTower(kind, gx, gy)
 
 	Sound.play("towerPlaced")
 
-	Rumble.pulse(0.32, 0.055)
 
 	return true
 end
@@ -295,7 +293,6 @@ local function upgradeTower(t, specializationId)
 
 	Achievements.increment("TOWER_UPGRADES")
 
-	Rumble.pulse(0.22, 0.045)
 
 	return true
 end
@@ -347,7 +344,6 @@ local function sellTower(t)
 
 	Sound.play("towerSold")
 
-	Rumble.pulse(0.18, 0.04)
 end
 
 local function findTowerAt(gx, gy)
