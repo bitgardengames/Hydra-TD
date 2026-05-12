@@ -1915,14 +1915,30 @@ B.poison_neurotoxin = {
 			return
 		end
 
-		local bonusStacks = max(0, floor(data.bonusStacks or 0))
-		if bonusStacks <= 0 then
+		local baseBonusStacks = max(0, floor(data.bonusStacks or 0))
+		if baseBonusStacks <= 0 then
 			return
 		end
 
 		e.poisonStacks = e.poisonStacks or 0
 		e.poisonMaxStacks = e.poisonMaxStacks or e.poisonStacks
-		e.poisonStacks = min(e.poisonStacks + bonusStacks, e.poisonMaxStacks)
+
+		local branchCap = e.poisonMaxStacks
+		if data.branchMaxStacks then
+			branchCap = min(branchCap, max(0, floor(data.branchMaxStacks)))
+		end
+
+		if branchCap <= e.poisonStacks then
+			return
+		end
+
+		local bonusStacks = baseBonusStacks
+		local diminishAt = max(0, floor(data.diminishAt or branchCap))
+		if e.poisonStacks >= diminishAt then
+			bonusStacks = max(1, floor(baseBonusStacks * (data.highStackBonusMult or 0.5)))
+		end
+
+		e.poisonStacks = min(e.poisonStacks + bonusStacks, branchCap)
 	end
 }
 
