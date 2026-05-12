@@ -2,7 +2,6 @@ local Constants = require("core.constants")
 local State = require("core.state")
 local Towers = require("world.towers")
 local Hotkeys = require("core.hotkeys")
-local Glyphs = require("ui.glyphs")
 local Text = require("ui.text")
 local Tooltip = require("ui.tooltip")
 local Theme = require("core.theme")
@@ -121,15 +120,6 @@ local function ensureShopAnim(kind)
 end
 
 local function drawHotkeyVisual(action, x, y, textY)
-	local glyph = Hotkeys.getGlyph(action)
-
-	if glyph then
-		local gw = Glyphs.getSize(glyph, 1)
-		Glyphs.draw(glyph, x + GLYPH_X_OFFSET, textY - 1)
-
-		return gw - 10
-	end
-
 	local label = Hotkeys.getDisplay(action)
 
 	if label then
@@ -149,7 +139,6 @@ local SHOP_BTN_W = 126
 local SHOP_BTN_H = 32
 local SHOP_COLS = 3
 local IDLE_LIFT = 6
-local GLYPH_X_OFFSET = -5
 
 local totalRowWidth = SHOP_BTN_W * SHOP_COLS + GAP_X * (SHOP_COLS - 1)
 

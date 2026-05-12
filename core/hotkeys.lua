@@ -81,8 +81,5 @@ function Hotkeys.getDisplay(action)
 	return key:upper()
 end
 
-function Hotkeys.getGlyph(_)
-	return nil
-end
 
 return Hotkeys
