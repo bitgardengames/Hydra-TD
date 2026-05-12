@@ -52,12 +52,22 @@ local minRowsVisible = 6
 local tabOuterRadius = 12
 local tabInnerRadius = 10
 
+local scrollbarW = 8
+local scrollbarMargin = 10
+local scrollbarMinThumbH = 24
+
 local boxX, boxY, boxW, boxH = 0, 0, 0, 0
 local titleY = 0
 local rowsStartY = 0
 local buttonsStartY = 0
 local listX = 0
 local activeLineH = lineH
+local maxPanelHeight = 0
+local rowsViewportY = 0
+local rowsViewportH = 0
+local rowsContentH = 0
+local rowsScroll = 0
+local maxRowsScroll = 0
 
 local LABEL_W = 180
 local SLIDER_W = 160
@@ -449,6 +459,20 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 	end
 end
 
+
+local function ensureCursorVisible()
+	local selectedTop = (settingsCursor - 1) * activeLineH
+	local selectedBottom = selectedTop + ROW_H
+
+	if selectedTop < rowsScroll then
+		rowsScroll = selectedTop
+	elseif selectedBottom > rowsScroll + rowsViewportH then
+		rowsScroll = selectedBottom - rowsViewportH
+	end
+
+	rowsScroll = Util.clamp(rowsScroll, 0, maxRowsScroll)
+end
+
 function Screen.load()
 	Hotkeys.refreshFromSave()
 	settingsCursor = 1
@@ -563,20 +587,31 @@ function Screen.update(dt)
 	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
 	tabTime = tabTime + dt
 
-	-- Panel sizing (keep room for future settings rows)
+	-- Panel sizing (fixed to screen, rows scroll when overflowing)
 	activeLineH = isControlsTab(activeTab) and controlsLineH or lineH
-	local rowsBlockH = max((minRowsVisible - 1) * activeLineH + ROW_H, (#rows - 1) * activeLineH + ROW_H)
+	rowsContentH = max(0, (#rows - 1) * activeLineH + ROW_H)
+	local minRowsBlockH = max((minRowsVisible - 1) * activeLineH + ROW_H, ROW_H)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
 
-	local contentH = headerHeight + headerSpacing + rowsBlockH + footerSpacing + btnBlockH
+	local staticContentH = headerHeight + headerSpacing + footerSpacing + btnBlockH
+	local desiredContentH = staticContentH + max(minRowsBlockH, rowsContentH)
+	maxPanelHeight = floor(sh - paddingY * 2)
+	local maxContentH = max(ROW_H, maxPanelHeight - paddingY * 2)
+	local contentH = min(desiredContentH, maxContentH)
+	local rowsBlockH = max(ROW_H, contentH - staticContentH)
 
 	boxW = ROW_W + paddingX * 2
 	boxH = contentH + paddingY * 2
 	boxX = cx - boxW * 0.5
-	boxY = floor(sh * 0.5 - boxH * 0.5)
+	boxY = floor((sh - boxH) * 0.5)
 
 	titleY = boxY + paddingY
 	rowsStartY = titleY + headerHeight + headerSpacing
+	rowsViewportY = rowsStartY
+	rowsViewportH = rowsBlockH
+	maxRowsScroll = max(0, rowsContentH - rowsViewportH)
+	rowsScroll = Util.clamp(rowsScroll, 0, maxRowsScroll)
+	ensureCursorVisible()
 
 	-- Center the row block inside the panel width
 	local rowRectX = cx - (ROW_W * 0.5)
@@ -682,12 +717,28 @@ function Screen.draw()
 	-- Rows
 	Fonts.set("menu")
 
+	lg.setScissor(listX, rowsViewportY, ROW_W, rowsViewportH)
 	for i, row in ipairs(rows) do
-		local yTop = rowsStartY + (i - 1) * activeLineH
-		local r = {x = listX, y = yTop, w = ROW_W, h = ROW_H}
-		local hovered = Cursor.x >= r.x and Cursor.x <= r.x + r.w and Cursor.y >= r.y and Cursor.y <= r.y + r.h
+		local yTop = rowsStartY + (i - 1) * activeLineH - rowsScroll
+		if yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH then
+			local r = {x = listX, y = yTop, w = ROW_W, h = ROW_H}
+			local hovered = Cursor.x >= r.x and Cursor.x <= r.x + r.w and Cursor.y >= r.y and Cursor.y <= r.y + r.h
+			drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
+		end
+	end
+	lg.setScissor()
 
-		drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
+	if maxRowsScroll > 0 then
+		local trackX = boxX + boxW + scrollbarMargin
+		local trackY = rowsViewportY
+		local trackH = rowsViewportH
+		local thumbH = max(scrollbarMinThumbH, trackH * (rowsViewportH / rowsContentH))
+		local t = rowsScroll / maxRowsScroll
+		local thumbY = trackY + (trackH - thumbH) * t
+		lg.setColor(0, 0, 0, 0.28)
+		lg.rectangle("fill", trackX, trackY, scrollbarW, trackH, 4, 4)
+		lg.setColor(1, 1, 1, 0.35)
+		lg.rectangle("fill", trackX, thumbY, scrollbarW, thumbH, 4, 4)
 	end
 
 	if capturingRowId and rows[settingsCursor] and rows[settingsCursor].id == capturingRowId then
@@ -790,9 +841,11 @@ function Screen.keypressed(key)
 
 	if key == "up" then
 		settingsCursor = max(1, settingsCursor - 1)
+		ensureCursorVisible()
 		Sound.play("uiMove")
 	elseif key == "down" then
 		settingsCursor = min(#rows, settingsCursor + 1)
+		ensureCursorVisible()
 		Sound.play("uiMove")
 	elseif key == "left" then
 		local row = rows[settingsCursor]
@@ -874,9 +927,11 @@ function Screen.gamepadpressed(_, button)
 
 	if button == "dpup" then
 		settingsCursor = max(1, settingsCursor - 1)
+		ensureCursorVisible()
 		Sound.play("uiMove")
 	elseif button == "dpdown" then
 		settingsCursor = min(#rows, settingsCursor + 1)
+		ensureCursorVisible()
 		Sound.play("uiMove")
 	elseif button == "dpleft" then
 		adjustRow(row, -1)
@@ -963,6 +1018,15 @@ function Screen.mousereleased(x, y, button)
 			return true
 		end
 	end
+end
+
+
+function Screen.wheelmoved(_, y)
+	if maxRowsScroll <= 0 or y == 0 then
+		return
+	end
+
+	rowsScroll = Util.clamp(rowsScroll - y * activeLineH, 0, maxRowsScroll)
 end
 
 return Screen
