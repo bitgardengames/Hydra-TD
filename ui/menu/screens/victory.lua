@@ -1,7 +1,6 @@
 local Theme = require("core.theme")
 local Constants = require("core.constants")
 local Button = require("ui.button")
-local Cursor = require("core.cursor")
 local State = require("core.state")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
@@ -304,7 +303,7 @@ function Screen.update(dt)
 	end
 
 	for _, btn in ipairs(buttons) do
-		Button.update(btn, Cursor.x, Cursor.y, dt)
+		Button.update(btn, love.mouse.getPosition(), dt)
 	end
 end
 
@@ -454,7 +453,7 @@ end
 
 function Screen.mousepressed(x, y, button)
 	for _, btn in ipairs(buttons) do
-		if Button.mousepressed(btn, Cursor.x, Cursor.y, button) then
+		if Button.mousepressed(btn, love.mouse.getPosition(), button) then
 			return true
 		end
 	end

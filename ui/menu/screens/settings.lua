@@ -8,7 +8,6 @@ local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local Button = require("ui.button")
 local Backdrop = require("scenes.backdrop")
-local Cursor = require("core.cursor")
 local Steam = require("core.steam")
 local L = require("core.localization")
 
@@ -603,7 +602,7 @@ function Screen.update(dt)
 	end
 
 	for i, rect in ipairs(tabRects) do
-		local hovered = Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h
+		local hovered = love.mouse.getX() >= rect.x and love.mouse.getX() <= rect.x + rect.w and love.mouse.getY() >= rect.y and love.mouse.getY() <= rect.y + rect.h
 		local target = (i == activeTab) and 1 or (hovered and 0.65 or 0)
 		local a = tabAnim[i] or 0
 		tabAnim[i] = a + (target - a) * min(1, dt * tabAnimSpeed)
@@ -613,12 +612,12 @@ function Screen.update(dt)
 		btn.x = cx - btn.w * 0.5
 		btn.y = buttonsStartY + (i - 1) * gap
 
-		Button.update(btn, Cursor.x, Cursor.y, dt)
+		Button.update(btn, love.mouse.getPosition(), dt)
 	end
 
 	-- Hover selects row
 	for i, rect in pairs(rowRects) do
-		if Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h then
+		if love.mouse.getX() >= rect.x and love.mouse.getX() <= rect.x + rect.w and love.mouse.getY() >= rect.y and love.mouse.getY() <= rect.y + rect.h then
 			settingsCursor = i
 		end
 	end
@@ -628,7 +627,7 @@ function Screen.update(dt)
 		local rect = sliderRects[draggingSlider]
 
 		if rect then
-			local t = Util.clamp((Cursor.x - rect.x) / rect.w, 0, 1)
+			local t = Util.clamp((love.mouse.getX() - rect.x) / rect.w, 0, 1)
 
 			rows[draggingSlider].set(t)
 			settingsDirty = true
@@ -677,7 +676,7 @@ function Screen.draw()
 		local yTop = rowsStartY + (i - 1) * activeLineH - rowsScroll
 		if yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH then
 			local r = {x = listX, y = yTop, w = ROW_W, h = ROW_H}
-			local hovered = Cursor.x >= r.x and Cursor.x <= r.x + r.w and Cursor.y >= r.y and Cursor.y <= r.y + r.h
+			local hovered = love.mouse.getX() >= r.x and love.mouse.getX() <= r.x + r.w and love.mouse.getY() >= r.y and love.mouse.getY() <= r.y + r.h
 			drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
 		end
 	end
@@ -708,7 +707,7 @@ function Screen.draw()
 	Fonts.set("menu")
 	for i, tab in ipairs(tabs) do
 		local rect = tabRects[i]
-		local hovered = rect and Cursor.x >= rect.x and Cursor.x <= rect.x + rect.w and Cursor.y >= rect.y and Cursor.y <= rect.y + rect.h
+		local hovered = rect and love.mouse.getX() >= rect.x and love.mouse.getX() <= rect.x + rect.w and love.mouse.getY() >= rect.y and love.mouse.getY() <= rect.y + rect.h
 		local active = i == activeTab
 		local anim = tabAnim[i] or 0
 		local wobble = active and (sin(tabTime * 4 + i * 0.6) * 0.5 + 0.5) or 0

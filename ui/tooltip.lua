@@ -1,7 +1,6 @@
 local Theme = require("core.theme")
 local Text = require("ui.text")
 local Fonts = require("core.fonts")
-local Cursor = require("core.cursor")
 
 local lg = love.graphics
 local max = math.max
@@ -52,8 +51,8 @@ function Tooltip.show(def)
 	end
 
 	-- Always update position
-	t.x = Cursor.x + 14
-	t.y = Cursor.y + 14
+	t.x = love.mouse.getX() + 14
+	t.y = love.mouse.getY() + 14
 
 	Tooltip.clampToScreen()
 end
@@ -69,8 +68,8 @@ function Tooltip.update(dt)
 		return
 	end
 
-	t.x = Cursor.x + 14
-	t.y = Cursor.y + 14
+	t.x = love.mouse.getX() + 14
+	t.y = love.mouse.getY() + 14
 
 	Tooltip.clampToScreen()
 end
