@@ -4,7 +4,6 @@ local Targeting = {}
 
 local EPS = 0.0001
 local HUGE_NEG = -math.huge
-local queryCells = Spatial.queryCells
 local forEachInCells = Spatial.forEachInCells
 Targeting.MODES = {
 	PROGRESS = "progress",
@@ -27,7 +26,16 @@ local function normalizeMode(mode)
 	return MODES.PROGRESS
 end
 
-local function evaluateSimpleCandidate(e, c)
+local function updateBest(e, c, score)
+	local diff = score - c.bestScore
+
+	if diff > EPS or (diff >= -EPS and (not c.best or e.id < c.best.id)) then
+		c.bestScore = score
+		c.best = e
+	end
+end
+
+local function evaluateProgressCandidate(e, c)
 	if e.hp <= 0 or e.dying then
 		return
 	end
@@ -40,28 +48,63 @@ local function evaluateSimpleCandidate(e, c)
 		return
 	end
 
-	local score
-	if c.mode == MODES.PROGRESS then
-		score = e.dist
-		if e.slowTimer > 0 then
-			-- Slight deprioritization for slowed enemies
-			score = score - 5
-		end
-	elseif c.mode == MODES.LOW_HP then
-		score = -e.hp
-	elseif c.mode == MODES.HIGH_HP then
-		score = e.hp
-	else
-		score = d2
+	local score = e.dist
+	if e.slowTimer > 0 then
+		score = score - 5
 	end
 
-	local diff = score - c.bestScore
-
-	if diff > EPS or (diff >= -EPS and (not c.best or e.id < c.best.id)) then
-		c.bestScore = score
-		c.best = e
-	end
+	updateBest(e, c, score)
 end
+
+local function evaluateLowHpCandidate(e, c)
+	if e.hp <= 0 or e.dying then
+		return
+	end
+
+	local dx = e.x - c.tx
+	local dy = e.y - c.ty
+	if dx * dx + dy * dy > c.r2 then
+		return
+	end
+
+	updateBest(e, c, -e.hp)
+end
+
+local function evaluateHighHpCandidate(e, c)
+	if e.hp <= 0 or e.dying then
+		return
+	end
+
+	local dx = e.x - c.tx
+	local dy = e.y - c.ty
+	if dx * dx + dy * dy > c.r2 then
+		return
+	end
+
+	updateBest(e, c, e.hp)
+end
+
+local function evaluateFarthestCandidate(e, c)
+	if e.hp <= 0 or e.dying then
+		return
+	end
+
+	local dx = e.x - c.tx
+	local dy = e.y - c.ty
+	local d2 = dx * dx + dy * dy
+	if d2 > c.r2 then
+		return
+	end
+
+	updateBest(e, c, d2)
+end
+
+local evaluatorsByMode = {
+	[MODES.PROGRESS] = evaluateProgressCandidate,
+	[MODES.LOW_HP] = evaluateLowHpCandidate,
+	[MODES.HIGH_HP] = evaluateHighHpCandidate,
+	[MODES.FARTHEST] = evaluateFarthestCandidate,
+}
 
 function Targeting.isSemanticallyValidTarget(tower, e)
 	if not Targeting.isTargetEntityValid(e) or e.hp <= 0 or e.dying then
@@ -95,9 +138,8 @@ local function pickSimpleTarget(tower, mode)
 	ctx.r2 = tower.range2
 	ctx.tx = tower.x
 	ctx.ty = tower.y
-	ctx.mode = mode
 
-	forEachInCells(tower.x, tower.y, tower.range, evaluateSimpleCandidate, ctx)
+	forEachInCells(tower.x, tower.y, tower.range, evaluatorsByMode[mode] or evaluateProgressCandidate, ctx)
 
 	return ctx.best
 end
