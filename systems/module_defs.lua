@@ -836,14 +836,14 @@ addSpec("shock_crowd_search", "module.shock_crowd_search", "moduleDesc.shock_cro
 addSpec("shock_boss_focus", "module.shock_boss_focus", "moduleDesc.shock_boss_focus", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 3, radius = 56, falloff = 0.94}},
-	{id = "chain_static_surge", data = {bonusPerStack = 0.28, maxStacks = 8}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.2, maxStacks = 7}},
 	{id = "chain_endpoint_burst", data = {radius = 28, dmgMult = 0.35}},
 	{id = "chain_zap_fx"},
 })
 
 addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thunderstorm", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 10, radius = 68, falloff = 0.9}},
+	{id = "hit_chain", data = {jumps = 8, radius = 68, falloff = 0.86}},
 	{id = "fork_chain", data = {radius = 50, dmgMult = 0.22, forksPerLink = 1}},
 	{id = "chain_zap_fx"},
 })
@@ -851,7 +851,7 @@ addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thu
 addSpec("shock_meltdown", "module.shock_meltdown", "moduleDesc.shock_meltdown", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 5, radius = 58}},
-	{id = "chain_endpoint_burst", data = {radius = 32, dmgMult = 0.48}},
+	{id = "chain_endpoint_burst", data = {radius = 30, dmgMult = 0.42}},
 	{id = "chain_zap_fx"},
 })
 
