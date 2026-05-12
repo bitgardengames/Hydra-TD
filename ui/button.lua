@@ -42,6 +42,7 @@ local function ensureAnim(btn)
 end
 
 function Button.update(btn, mx, my, dt)
+	dt = dt or 0
 	if btn.enabled == false then
 		btn.hovered = false
 		btn.anim = nil
