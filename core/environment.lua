@@ -1,7 +1,6 @@
 local Environment = {}
 
 function Environment.load()
-	love.mouse.setVisible(true)
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	love.window.setTitle("Hydra TD")
 

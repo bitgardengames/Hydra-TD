@@ -500,18 +500,12 @@ end
 function love.focus(focused)
 	if not focused then -- Alt-tab or focus loss
 		pauseGame()
-		love.mouse.setVisible(true)
-	else
-		love.mouse.setVisible(true)
 	end
 end
 
 function love.visible(visible)
 	if not visible then
 		pauseGame()
-		love.mouse.setVisible(true)
-	else
-		love.mouse.setVisible(true)
 	end
 end
 
