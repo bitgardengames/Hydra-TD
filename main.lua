@@ -5,7 +5,6 @@ local Scale = require("core.scale")
 local Camera = require("core.camera")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
-local Fonts = require("core.fonts")
 local State = require("core.state")
 local Save = require("core.save")
 local MapMod = require("world.map")
@@ -21,7 +20,6 @@ local Sim = require("core.sim")
 local Tooltip = require("ui.tooltip")
 local Messages = require("ui.messages")
 local Draw = require("render.draw")
-local DrawWorld = require("render.draw_world")
 local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
@@ -41,16 +39,10 @@ local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
 
 local lg = love.graphics
-local lk = love.keyboard
-local lm = love.mouse
 
 local max = math.max
 local min = math.min
-local abs = math.abs
 
-local colorGood = Theme.ui.good
-local colorBad = Theme.ui.bad
-local colorText = Theme.ui.text
 local colorDim = Theme.ui.screenDim
 
 local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
