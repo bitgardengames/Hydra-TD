@@ -205,8 +205,7 @@ function Cactus.draw()
 			w = TILE * (0.15 + c.widthBias * 0.05) * s
 		end
 
-		-- ✅ FIXED SHADOW (tight, radius-based like trees)
-		local radius = w * 0.5
+		local radius = w
 		lg.setColor(0, 0, 0, shA)
 		lg.ellipse("fill", x, baseY + 1, radius * shW, radius * shH)
 
@@ -214,6 +213,8 @@ function Cactus.draw()
 			local cy = baseY - h * 0.5
 			local rx = w * 0.5
 			local ry = h * 0.5
+
+			radius = radius * 0.5
 
 			lg.setColor(style.outline)
 			lg.ellipse("fill", x, cy, rx + outlineW, ry + outlineW)
