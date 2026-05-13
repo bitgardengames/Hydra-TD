@@ -396,6 +396,36 @@ function Modules.getActive()
 	return Modules.active
 end
 
+local function applyTargetModeFromModules(mode, mods)
+	if not mods then
+		return mode
+	end
+
+	for i = 1, #mods do
+		local mod = mods[i]
+		if mod and mod.targetMode then
+			mode = mod.targetMode
+		end
+	end
+
+	return mode
+end
+
+local function applyTargetModeFromIds(mode, ids)
+	if not ids then
+		return mode
+	end
+
+	for i = 1, #ids do
+		local mod = ModuleDefs[ids[i]]
+		if mod and mod.targetMode then
+			mode = mod.targetMode
+		end
+	end
+
+	return mode
+end
+
 function Modules.getTargetMode(towerOrKind)
 	local towerKind = towerOrKind
 	local branchSelections = nil
@@ -408,33 +438,11 @@ function Modules.getTargetMode(towerOrKind)
 	end
 
 	local mode = nil
+	mode = applyTargetModeFromModules(mode, Modules.active.global)
+	mode = applyTargetModeFromModules(mode, Modules.active[towerKind])
+	mode = applyTargetModeFromIds(mode, branchSelections)
 
-	local global = Modules.active.global
-	for i = 1, #global do
-		local mod = global[i]
-		if mod and mod.targetMode then
-			mode = mod.targetMode
-		end
-	end
-
-	local towerList = Modules.active[towerKind]
-	if towerList then
-		for i = 1, #towerList do
-			local mod = towerList[i]
-			if mod and mod.targetMode then
-				mode = mod.targetMode
-			end
-		end
-	end
-
-	if branchSelections then
-		for i = 1, #branchSelections do
-			local mod = ModuleDefs[branchSelections[i]]
-			if mod and mod.targetMode then
-				mode = mod.targetMode
-			end
-		end
-	elseif legacySpecializationId then
+	if legacySpecializationId and not branchSelections then
 		local mod = ModuleDefs[legacySpecializationId]
 		if mod and mod.targetMode then
 			mode = mod.targetMode
