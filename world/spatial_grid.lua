@@ -82,55 +82,9 @@ local function queryCellRadiusLocal()
 	return 2
 end
 
-local function collectCellsInto(x, y, radius, onCell, context, radiusPolicy)
-	local cx = floor(x * INV_CELL)
-	local cy = floor(y * INV_CELL)
-	local cellRadius = (radiusPolicy or queryCellRadius)(radius)
-	return eachNeighborInRange(cx, cy, cellRadius, onCell, context)
-end
-
 local function traverseOccupancy(cx, cy, radiusCells, onCell, context)
 	local radius = radiusCells or 1
 	return eachNeighborInRange(cx, cy, radius, onCell, context)
-end
-
-local function collectContext(enemy, ctx)
-	if ctx.dedupeById then
-		local id = enemy.id
-		if id then
-			local stamp = ctx.stamp
-			if ctx.seen[id] == stamp then
-				return
-			end
-			ctx.seen[id] = stamp
-		end
-	end
-
-	local nextCount = ctx.count + 1
-	ctx.results[nextCount] = enemy
-	ctx.count = nextCount
-end
-
-local function collectCell(cell, _, ctx)
-	if not cell then
-		return
-	end
-	local length = #cell
-	for i = 1, length do
-		collectContext(cell[i], ctx)
-	end
-end
-
-local function forEachCell(cell, _, ctx)
-	if not cell then
-		return
-	end
-	local fn = ctx.fn
-	local callbackContext = ctx.context
-	local length = #cell
-	for i = 1, length do
-		fn(cell[i], callbackContext)
-	end
 end
 
 local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById, radiusPolicy)
@@ -141,13 +95,61 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 		nextStamp(ctx)
 	end
 
-	collectCellsInto(x, y, radius, collectCell, ctx, radiusPolicy)
-
-	return ctx.results, ctx.count
+	local cx = floor(x * INV_CELL)
+	local cy = floor(y * INV_CELL)
+	local cellRadius = (radiusPolicy or queryCellRadius)(radius)
+	local results = ctx.results
+	local count = 0
+	local seen = ctx.seen
+	local stamp = ctx.stamp
+	for dx = -cellRadius, cellRadius do
+		local col = grid[cx + dx]
+		if col then
+			for dy = -cellRadius, cellRadius do
+				local cell = col[cy + dy]
+				if cell then
+					for i = 1, #cell do
+						local enemy = cell[i]
+						if ctx.dedupeById then
+							local id = enemy.id
+							if id and seen[id] == stamp then
+								goto continue_enemy
+							end
+							if id then
+								seen[id] = stamp
+							end
+						end
+						count = count + 1
+						results[count] = enemy
+						::continue_enemy::
+					end
+				end
+			end
+		end
+	end
+	ctx.count = count
+	return results, count
 end
 
 local function traverseQueryCellsCallback(x, y, radius, callbackContext, radiusPolicy)
-	collectCellsInto(x, y, radius, forEachCell, callbackContext, radiusPolicy)
+	local cx = floor(x * INV_CELL)
+	local cy = floor(y * INV_CELL)
+	local cellRadius = (radiusPolicy or queryCellRadius)(radius)
+	local fn = callbackContext.fn
+	local context = callbackContext.context
+	for dx = -cellRadius, cellRadius do
+		local col = grid[cx + dx]
+		if col then
+			for dy = -cellRadius, cellRadius do
+				local cell = col[cy + dy]
+				if cell then
+					for i = 1, #cell do
+						fn(cell[i], context)
+					end
+				end
+			end
+		end
+	end
 end
 
 local function removeFromCell(e)
