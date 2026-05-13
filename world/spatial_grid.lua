@@ -89,8 +89,7 @@ local function queryCellRadiusLocal()
 end
 
 local function traverseOccupancy(cx, cy, radiusCells, onCell, context)
-	local radius = radiusCells or 1
-	return eachNeighborInRange(cx, cy, radius, onCell, context)
+	return eachNeighborInRange(cx, cy, radiusCells or 1, onCell, context)
 end
 
 local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById, radiusPolicy)
@@ -263,27 +262,12 @@ end
 
 function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 	local counts = out or occupancyBuffer
-	local radius = radiusCells or 1
-	local idx = 0
 	local sum = 0
-
-	for dx = -radius, radius do
-		local col = grid[cx + dx]
-		if col then
-			for dy = -radius, radius do
-				idx = idx + 1
-				local cell = col[cy + dy]
-				local count = cell and #cell or 0
-				counts[idx] = count
-				sum = sum + count
-			end
-		else
-			for _ = -radius, radius do
-				idx = idx + 1
-				counts[idx] = 0
-			end
-		end
-	end
+	local idx = traverseOccupancy(cx, cy, radiusCells, function(cell, cellIdx)
+		local count = cell and #cell or 0
+		counts[cellIdx] = count
+		sum = sum + count
+	end)
 
 	for i = idx + 1, #counts do
 		counts[i] = nil
@@ -293,20 +277,12 @@ function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 end
 
 function Spatial.queryOccupancySum(cx, cy, radiusCells)
-	local radius = radiusCells or 1
 	local sum = 0
-
-	for dx = -radius, radius do
-		local col = grid[cx + dx]
-		if col then
-			for dy = -radius, radius do
-				local cell = col[cy + dy]
-				if cell then
-					sum = sum + #cell
-				end
-			end
+	traverseOccupancy(cx, cy, radiusCells, function(cell)
+		if cell then
+			sum = sum + #cell
 		end
-	end
+	end)
 
 	return sum
 end
