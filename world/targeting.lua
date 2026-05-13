@@ -21,76 +21,48 @@ local validModes = {
 }
 
 local function normalizeMode(mode)
-	if mode == nil then
-		return MODES.PROGRESS
-	end
-
 	if validModes[mode] then
 		return mode
 	end
-
 	return MODES.PROGRESS
 end
 
 local function updateBest(e, c, score)
 	local diff = score - c.bestScore
-
 	if diff > EPS or (diff >= -EPS and (not c.best or e.id < c.best.id)) then
 		c.bestScore = score
 		c.best = e
 	end
 end
 
-local function evaluateProgressCandidate(e, c)
-	if e.hp <= 0 or e.dying then
-		return
-	end
-
-	local dx = e.x - c.tx
-	local dy = e.y - c.ty
-	local d2 = dx * dx + dy * dy
-
-	if d2 > c.r2 then
-		return
-	end
-
+local function scoreProgress(e)
 	local score = e.dist
 	if e.slowTimer > 0 then
 		score = score - 5
 	end
-
-	updateBest(e, c, score)
+	return score
 end
 
-local function evaluateLowHpCandidate(e, c)
-	if e.hp <= 0 or e.dying then
-		return
-	end
-
-	local dx = e.x - c.tx
-	local dy = e.y - c.ty
-	if dx * dx + dy * dy > c.r2 then
-		return
-	end
-
-	updateBest(e, c, -e.hp)
+local function scoreLowHp(e)
+	return -e.hp
 end
 
-local function evaluateHighHpCandidate(e, c)
-	if e.hp <= 0 or e.dying then
-		return
-	end
-
-	local dx = e.x - c.tx
-	local dy = e.y - c.ty
-	if dx * dx + dy * dy > c.r2 then
-		return
-	end
-
-	updateBest(e, c, e.hp)
+local function scoreHighHp(e)
+	return e.hp
 end
 
-local function evaluateFarthestCandidate(e, c)
+local function scoreFarthest(_, _, d2)
+	return d2
+end
+
+local scoreByMode = {
+	[MODES.PROGRESS] = scoreProgress,
+	[MODES.LOW_HP] = scoreLowHp,
+	[MODES.HIGH_HP] = scoreHighHp,
+	[MODES.FARTHEST] = scoreFarthest,
+}
+
+local function evaluateCandidate(e, c)
 	if e.hp <= 0 or e.dying then
 		return
 	end
@@ -102,15 +74,8 @@ local function evaluateFarthestCandidate(e, c)
 		return
 	end
 
-	updateBest(e, c, d2)
+	updateBest(e, c, c.scoreFn(e, c, d2))
 end
-
-local evaluatorsByMode = {
-	[MODES.PROGRESS] = evaluateProgressCandidate,
-	[MODES.LOW_HP] = evaluateLowHpCandidate,
-	[MODES.HIGH_HP] = evaluateHighHpCandidate,
-	[MODES.FARTHEST] = evaluateFarthestCandidate,
-}
 
 function Targeting.isSemanticallyValidTarget(tower, e)
 	if not Targeting.isTargetEntityValid(e) or e.hp <= 0 or e.dying then
@@ -144,9 +109,11 @@ local function pickSimpleTarget(tower, mode)
 	ctx.r2 = tower.range2
 	ctx.tx = tower.x
 	ctx.ty = tower.y
+	ctx.scoreFn = scoreByMode[mode]
 
-	forEachInCells(tower.x, tower.y, tower.range, evaluatorsByMode[mode] or evaluateProgressCandidate, ctx)
+	forEachInCells(tower.x, tower.y, tower.range, evaluateCandidate, ctx)
 
+	ctx.scoreFn = nil
 	return ctx.best
 end
 
