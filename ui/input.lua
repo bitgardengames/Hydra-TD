@@ -21,8 +21,6 @@ local min = math.min
 
 local TILE = Constants.TILE
 
-local TILE = Constants.TILE
-
 local findEnemyAt = Enemies.findEnemyAt
 
 local colorBad = Theme.ui.bad
@@ -59,7 +57,8 @@ local function hitButton(list, x, y)
 		return nil
 	end
 
-	for _, b in ipairs(list) do
+	for i = 1, #list do
+		local b = list[i]
 		if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
 			return b
 		end
@@ -82,7 +81,8 @@ local function handleButtonPressRelease(list, x, y, isPress, onReleaseInside)
 		return nil
 	end
 
-	for _, b in ipairs(list) do
+	for i = 1, #list do
+		local b = list[i]
 		if b.anim then
 			local wasPressed = b.anim.pressed
 			b.anim.pressed = false
