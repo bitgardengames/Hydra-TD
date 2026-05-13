@@ -1,6 +1,5 @@
 local State = require("core.state")
 local Enemies = require("world.enemies")
-local Modules = require("systems.modules")
 local Effects = require("world.effects")
 local Sound = require("systems.sound")
 local PB = require("world.projectile_behaviors")
