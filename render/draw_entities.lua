@@ -62,16 +62,20 @@ local function prepareEnemyRenderData()
 
 	for i = 1, #enemies do
 		local e = enemies[i]
-		local oldRX = e.rx or e.x
-		local oldRY = e.ry or e.y
+		local ex = e.x
+		local ey = e.y
+		local oldRX = e.rx or ex
+		local oldRY = e.ry or ey
 
 		-- Enemy simulation is fixed-step. Interpolate actual world positions from
 		-- previous tick to current tick for render-only smoothness.
-		local baseX = lerp(e.prevX or e.x, e.x, a)
-		local baseY = lerp(e.prevY or e.y, e.y, a)
+		local baseX = lerp(e.prevX or ex, ex, a)
+		local baseY = lerp(e.prevY or ey, ey, a)
 
-		local nudgeX = lerp(e.prevNudgeX or e.nudgeX or 0, e.nudgeX or 0, a)
-		local nudgeY = lerp(e.prevNudgeY or e.nudgeY or 0, e.nudgeY or 0, a)
+		local nudgeXNow = e.nudgeX or 0
+		local nudgeYNow = e.nudgeY or 0
+		local nudgeX = lerp(e.prevNudgeX or nudgeXNow, nudgeXNow, a)
+		local nudgeY = lerp(e.prevNudgeY or nudgeYNow, nudgeYNow, a)
 
 		-- Target position from fixed-step interpolation.
 		local targetX = baseX + nudgeX
@@ -90,8 +94,10 @@ local function prepareEnemyRenderData()
 		-- Smoothed render velocity for eye direction, to reduce high-frequency jitter.
 		local rawDX = targetX - oldRX
 		local rawDY = targetY - oldRY
-		e.eyeDX = (e.eyeDX or rawDX) + (rawDX - (e.eyeDX or rawDX)) * EYE_SMOOTH
-		e.eyeDY = (e.eyeDY or rawDY) + (rawDY - (e.eyeDY or rawDY)) * EYE_SMOOTH
+		local eyeDX = e.eyeDX or rawDX
+		local eyeDY = e.eyeDY or rawDY
+		e.eyeDX = eyeDX + (rawDX - eyeDX) * EYE_SMOOTH
+		e.eyeDY = eyeDY + (rawDY - eyeDY) * EYE_SMOOTH
 
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
 	end
@@ -99,8 +105,6 @@ end
 
 -- Draw a single enemy
 local function drawEnemy(e)
-	local a = max(0, min(1, State.renderAlpha or 0))
-
 	local ix = e.rx
 	local iy = e.ry
 	local animT = e.rAnimT or 0
