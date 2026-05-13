@@ -589,7 +589,7 @@ function Screen.update(dt)
 	buttonsStartY = boxY + boxH - paddingY - btnBlockH
 	local tabsTotalW = (#tabs * tabW) + (max(0, #tabs - 1) * tabGap)
 	local tabsStartX = cx - tabsTotalW * 0.5
-	local tabsY = boxY + boxH
+	local tabsY = boxY + boxH + 6
 
 	tabRects = {}
 	for i, tab in ipairs(tabs) do
