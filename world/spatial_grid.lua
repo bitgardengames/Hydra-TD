@@ -34,7 +34,6 @@ local outerCollectContext = {
 	dedupeById = false,
 	seen = {},
 	stamp = 0,
-	activeLength = 0,
 }
 
 local nestedCollectContext = {
@@ -43,7 +42,6 @@ local nestedCollectContext = {
 	dedupeById = false,
 	seen = {},
 	stamp = 0,
-	activeLength = 0,
 }
 
 local forEachContext = {
@@ -145,12 +143,7 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 
 	collectCellsInto(x, y, radius, collectCell, ctx, radiusPolicy)
 
-	local count = ctx.count
-	for i = count + 1, ctx.activeLength do
-		ctx.results[i] = nil
-	end
-	ctx.activeLength = count
-	return ctx.results, count
+	return ctx.results, ctx.count
 end
 
 local function traverseQueryCellsCallback(x, y, radius, callbackContext, radiusPolicy)
