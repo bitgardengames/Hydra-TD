@@ -2251,29 +2251,27 @@ B.beam = {
 		-- cooldown timer
 		b.timer = b.timer - dt
 
-		for k, v in pairs(b.hitCooldown) do
+		local hitCooldown = b.hitCooldown
+		for k, v in next, hitCooldown do
 			v = v - dt
 			if v <= 0 then
-				b.hitCooldown[k] = nil
+				hitCooldown[k] = nil
 			else
-				b.hitCooldown[k] = v
+				hitCooldown[k] = v
 			end
 		end
 
 		local vx, vy = p.vx, p.vy
-		local len = math.sqrt(vx*vx + vy*vy)
-		if len == 0 then return end
-
-		vx, vy = vx / len, vy / len
 
 		local x1, y1 = p.x, p.y
 		local segments = 10
 
+		local step = b.length / segments
 		for s = 0, segments do
-			local tSeg = s / segments
+			local dist = s * step
 
-			local sx = x1 + vx * b.length * tSeg
-			local sy = y1 + vy * b.length * tSeg
+			local sx = x1 + vx * dist
+			local sy = y1 + vy * dist
 
 			if b.timer <= 0 then
 				local nearby, nearbyCount = Spatial.queryCells(sx, sy)
@@ -2290,14 +2288,14 @@ B.beam = {
 						if dist2 <= rr*rr then
 							local id = e2.id or e2
 
-							if not b.hitCooldown[id] then
+							if not hitCooldown[id] then
 								local evt = emitEvent(p, "hit")
 								evt.target = e2
 								evt.origin = "beam"
 								evt.hitX = sx
 								evt.hitY = sy
 
-								b.hitCooldown[id] = b.rate
+								hitCooldown[id] = b.rate
 							end
 						end
 					end
