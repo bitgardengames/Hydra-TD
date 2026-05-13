@@ -53,10 +53,16 @@ local function eachNeighborInRange(cx, cy, cellRadius, onCell, context)
 	local idx = 0
 	for dx = -cellRadius, cellRadius do
 		local col = grid[cx + dx]
-		for dy = -cellRadius, cellRadius do
-			idx = idx + 1
-			local cell = col and col[cy + dy] or nil
-			onCell(cell, idx, context)
+		if col then
+			for dy = -cellRadius, cellRadius do
+				idx = idx + 1
+				onCell(col[cy + dy], idx, context)
+			end
+		else
+			for _ = -cellRadius, cellRadius do
+				idx = idx + 1
+				onCell(nil, idx, context)
+			end
 		end
 	end
 	return idx
