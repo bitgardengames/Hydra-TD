@@ -18,37 +18,30 @@ local mapH = Constants.GRID_H * Constants.TILE
 
 local cache = {}
 
-local function cloneMapData(src)
-	local out = {}
-
-	for k, v in pairs(src) do
-		out[k] = v
+local function clearTable(t)
+	for k in pairs(t) do
+		t[k] = nil
 	end
-
-	return out
 end
 
-local function withMapContext(context, fn)
+local function copyTable(dst, src)
+	clearTable(dst)
+
+	for k, v in pairs(src) do
+		dst[k] = v
+	end
+
+	return dst
+end
+
+local function withMapContext(context, previousMap, fn)
 	local activeMap = MapMod.map
-	local previousMap = cloneMapData(activeMap)
-
-	for k in pairs(activeMap) do
-		activeMap[k] = nil
-	end
-
-	for k, v in pairs(context.map) do
-		activeMap[k] = v
-	end
+	copyTable(previousMap, activeMap)
+	copyTable(activeMap, context.map)
 
 	local ok, err = pcall(fn)
 
-	for k in pairs(activeMap) do
-		activeMap[k] = nil
-	end
-
-	for k, v in pairs(previousMap) do
-		activeMap[k] = v
-	end
+	copyTable(activeMap, previousMap)
 
 	if not ok then
 		error(err)
@@ -66,6 +59,7 @@ end
 function MapPreviewCache.buildAll(w, h)
 	local winW, winH = lg.getDimensions()
 	local previousMapIndex = State.worldMapIndex
+	local previousMap = {}
 
 	for mapIndex, mapDef in ipairs(Maps) do
 		local context = MapMod.createRenderContext(mapDef)
@@ -73,7 +67,7 @@ function MapPreviewCache.buildAll(w, h)
 		local scatter = context.map.biome and context.map.biome.scatter
 
 		State.worldMapIndex = mapIndex
-		withMapContext(context, function()
+		withMapContext(context, previousMap, function()
 			MapMod.clearBlocked()
 
 			if scatter then
