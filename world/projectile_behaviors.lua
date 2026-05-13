@@ -1,6 +1,3 @@
-local State = require("core.state")
-local Effects = require("world.effects")
-local Enemies = require("world.enemies")
 local Constants = require("core.constants")
 local Spatial = require("world.spatial_grid")
 
