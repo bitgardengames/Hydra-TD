@@ -1,6 +1,5 @@
 local Constants = require("core.constants")
 local State = require("core.state")
-local Theme = require("core.theme")
 local Biomes = require("world.biomes")
 
 local REF_COVERAGE_INDEX = 1.8

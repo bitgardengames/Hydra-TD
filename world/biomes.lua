@@ -1,4 +1,3 @@
-local Theme = require("core.theme")
 
 local Biomes = {}
 

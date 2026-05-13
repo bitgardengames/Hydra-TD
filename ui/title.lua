@@ -235,7 +235,6 @@ function Title.drawBannerStyle(w, h, angle, alpha, yOffset)
 	end
 
 	local lancerScale = min(w, h) * BANNER_LANCER_SCALE_FACTOR * horizontalBoost
-	local textScale = (Title.textScaleBias or 1)
 	local gap = (BASE_LANCER_VISUAL_W * lancerScale) * 0.16
 	local anchorY = (aspect < 0.9) and (h * 0.333 + h * 0.06) or  (h * 0.5)
 
