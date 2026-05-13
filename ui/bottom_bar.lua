@@ -43,7 +43,7 @@ local innerSmallRadius = 6 - outlineW * 0.25
 function BottomBar.draw()
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local sw, sh = lg.getDimensions()
+	local _, sh = lg.getDimensions()
 
 	local dt = getDelta()
 	local now = getTime()

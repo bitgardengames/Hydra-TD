@@ -389,8 +389,6 @@ local function drawEnemies()
 end
 
 local function getBarrelTip(t, localTipX)
-	local size = TILE * 0.42
-
 	-- apply recoil in local barrel space
 	local localX = (localTipX or 0) - (t.recoil or 0)
 	local localY = 0
