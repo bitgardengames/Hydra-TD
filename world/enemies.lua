@@ -409,40 +409,46 @@ local function updateEnemies(dt)
 		if e._infectSpread and not e._infectDidSpread and e.hp <= 0 and e.poisonStacks and e.poisonStacks > 0 then
 			e._infectDidSpread = true
 
-			local radius = e._infectSpread.radius
-			local stackMult = e._infectSpread.stackMult
+			local infect = e._infectSpread
+			local radius = infect.radius
+			local stackMult = infect.stackMult
 			local radius2 = radius * radius
 			local spreadStacks = floor(e.poisonStacks * stackMult)
 
 			if spreadStacks > 0 then
-				local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius)
+				local ex, ey = e.x, e.y
+				local sourcePoisonDPS = e.poisonDPS or 0
+				local sourcePoisonTimer = e.poisonTimer or 0
+				local sourcePoisonMissingHpMult = e.poisonMissingHpMult or 0
+				local poisonSource = e.poisonSource
+				local nearby, nearbyCount = Spatial.queryCells(ex, ey, radius)
 
 				for i = 1, nearbyCount do
 					local other = nearby[i]
 
 					if other ~= e and other.hp > 0 then
-						local dx = other.x - e.x
-						local dy = other.y - e.y
+						local dx = other.x - ex
+						local dy = other.y - ey
 
 						if dx * dx + dy * dy <= radius2 then
 							-- transfer poison, NOT damage
 							other.poisonStacks = (other.poisonStacks or 0) + spreadStacks
-							other.poisonDPS = max(other.poisonDPS or 0, e.poisonDPS or 0)
-							other.poisonTimer = max(other.poisonTimer or 0, e.poisonTimer or 0)
-							other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, e.poisonMissingHpMult or 0)
-							other.poisonSource = e.poisonSource
+							other.poisonDPS = max(other.poisonDPS or 0, sourcePoisonDPS)
+							other.poisonTimer = max(other.poisonTimer or 0, sourcePoisonTimer)
+							other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, sourcePoisonMissingHpMult)
+							other.poisonSource = poisonSource
 
-							if e._infectSpread.loop == true then
+							if infect.loop == true then
 								local spread = other._infectSpread
 								if not spread then
 									spread = {}
 									other._infectSpread = spread
 								end
 
-								spread.radius = e._infectSpread.radius
-								spread.stackMult = e._infectSpread.stackMult
+								spread.radius = radius
+								spread.stackMult = stackMult
 								spread.loop = true
-								spread.source = e.poisonSource
+								spread.source = poisonSource
 								other._infectDidSpread = false
 							end
 						end
