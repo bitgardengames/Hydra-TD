@@ -45,7 +45,6 @@ local footerSpacing = 22
 local tabGap = 10
 local tabH = 36
 local tabW = 132
-local tabOffsetX = 12
 local tabAnimSpeed = 12
 local minRowsVisible = 6
 local tabOuterRadius = 12
@@ -562,7 +561,8 @@ function Screen.update(dt)
 	local minRowsBlockH = max((minRowsVisible - 1) * activeLineH + ROW_H, ROW_H)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
 
-	local staticContentH = headerHeight + headerSpacing + footerSpacing + btnBlockH
+	local tabsBlockH = tabH
+	local staticContentH = headerHeight + headerSpacing + footerSpacing + btnBlockH + footerSpacing + tabsBlockH
 	local desiredContentH = staticContentH + max(minRowsBlockH, rowsContentH)
 	maxPanelHeight = floor(sh - paddingY * 2)
 	local maxContentH = max(ROW_H, maxPanelHeight - paddingY * 2)
@@ -588,14 +588,15 @@ function Screen.update(dt)
 
 	-- Buttons (layout in update, like pause)
 	buttonsStartY = rowsStartY + rowsBlockH + footerSpacing
-	local tabsStartY = rowsStartY
-	local tabsX = boxX - tabW - tabOffsetX
+	local tabsTotalW = (#tabs * tabW) + (max(0, #tabs - 1) * tabGap)
+	local tabsStartX = cx - tabsTotalW * 0.5
+	local tabsY = boxY + boxH - paddingY - tabH
 
 	tabRects = {}
 	for i, tab in ipairs(tabs) do
 		tabRects[i] = {
-			x = tabsX,
-			y = tabsStartY + (i - 1) * (tabH + tabGap),
+			x = tabsStartX + (i - 1) * (tabW + tabGap),
+			y = tabsY,
 			w = tabW,
 			h = tabH,
 		}
@@ -713,9 +714,9 @@ function Screen.draw()
 		local anim = tabAnim[i] or 0
 		local wobble = active and (sin(tabTime * 4 + i * 0.6) * 0.5 + 0.5) or 0
 		local highlightAlpha = 0.05 + anim * 0.08 + wobble * 0.02
-		local xOffset = active and 1 or (hovered and 0.5 or 0)
-		local drawY = rect.y
-		local drawX = rect.x + xOffset
+		local yOffset = active and -1 or (hovered and -0.5 or 0)
+		local drawY = rect.y + yOffset
+		local drawX = rect.x
 
 		lg.setColor(colorOutline)
 		lg.rectangle("fill", drawX - outlineW, drawY - outlineW, rect.w + outlineW * 2, rect.h + outlineW * 2, tabOuterRadius, tabOuterRadius)
