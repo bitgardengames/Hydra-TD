@@ -91,7 +91,8 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 	local ctx = collectContext
 	ctx.count = 0
 	ctx.dedupeById = dedupeById == true
-	if ctx.dedupeById then
+	local useDedupe = ctx.dedupeById
+	if useDedupe then
 		nextStamp(ctx)
 	end
 
@@ -100,17 +101,17 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 	local cellRadius = (radiusPolicy or queryCellRadius)(radius)
 	local results = ctx.results
 	local count = 0
-	local seen = ctx.seen
-	local stamp = ctx.stamp
-	for dx = -cellRadius, cellRadius do
-		local col = grid[cx + dx]
-		if col then
-			for dy = -cellRadius, cellRadius do
-				local cell = col[cy + dy]
-				if cell then
-					for i = 1, #cell do
-						local enemy = cell[i]
-						if ctx.dedupeById then
+	if useDedupe then
+		local seen = ctx.seen
+		local stamp = ctx.stamp
+		for dx = -cellRadius, cellRadius do
+			local col = grid[cx + dx]
+			if col then
+				for dy = -cellRadius, cellRadius do
+					local cell = col[cy + dy]
+					if cell then
+						for i = 1, #cell do
+							local enemy = cell[i]
 							local id = enemy.id
 							if id and seen[id] == stamp then
 								goto continue_enemy
@@ -118,10 +119,25 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 							if id then
 								seen[id] = stamp
 							end
+							count = count + 1
+							results[count] = enemy
+							::continue_enemy::
 						end
-						count = count + 1
-						results[count] = enemy
-						::continue_enemy::
+					end
+				end
+			end
+		end
+	else
+		for dx = -cellRadius, cellRadius do
+			local col = grid[cx + dx]
+			if col then
+				for dy = -cellRadius, cellRadius do
+					local cell = col[cy + dy]
+					if cell then
+						for i = 1, #cell do
+							count = count + 1
+							results[count] = cell[i]
+						end
 					end
 				end
 			end
