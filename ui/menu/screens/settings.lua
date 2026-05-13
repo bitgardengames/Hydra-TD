@@ -561,8 +561,7 @@ function Screen.update(dt)
 	local minRowsBlockH = max((minRowsVisible - 1) * activeLineH + ROW_H, ROW_H)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
 
-	local tabsBlockH = tabH
-	local staticContentH = headerHeight + headerSpacing + footerSpacing + btnBlockH + footerSpacing + tabsBlockH
+	local staticContentH = headerHeight + headerSpacing + footerSpacing + btnBlockH
 	local desiredContentH = staticContentH + max(minRowsBlockH, rowsContentH)
 	maxPanelHeight = floor(sh - paddingY * 2)
 	local maxContentH = max(ROW_H, maxPanelHeight - paddingY * 2)
@@ -587,10 +586,10 @@ function Screen.update(dt)
 	listX = rowRectX
 
 	-- Buttons (layout in update, like pause)
-	buttonsStartY = rowsStartY + rowsBlockH + footerSpacing
+	buttonsStartY = boxY + boxH - paddingY - btnBlockH
 	local tabsTotalW = (#tabs * tabW) + (max(0, #tabs - 1) * tabGap)
 	local tabsStartX = cx - tabsTotalW * 0.5
-	local tabsY = boxY + boxH - paddingY - tabH
+	local tabsY = boxY + boxH + footerSpacing
 
 	tabRects = {}
 	for i, tab in ipairs(tabs) do
