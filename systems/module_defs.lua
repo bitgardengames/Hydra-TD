@@ -537,6 +537,14 @@ addSpec("slow_snowball", "module.slow_snowball", "moduleDesc.slow_snowball", {
 	{id = "draw_slow"},
 })
 
+addSpec("slow_frost_aura", "module.slow_frost_aura", "moduleDesc.slow_frost_aura", {
+	{id = "move_homing"},
+	{id = "hit_damage", data = {mult = 0.82}},
+	{id = "apply_slow", data = {factor = 0.4, dur = 1.0}},
+	{id = "slow_aura", data = {factor = 0.2, dur = 0.7, radius = 54, tick = 0.3, fxScale = 0.62}, noInherit = true},
+	{id = "draw_slow"},
+})
+
 addSpec("slow_lead_freeze", "module.slow_lead_freeze", "moduleDesc.slow_lead_freeze", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
