@@ -231,6 +231,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.poisonTickTimer = 0
 	e.poisonDPS = 0
 	e.poisonMissingHpMult = 0
+	e.poisonRamp = 1
+	e.poisonRampPerTick = 0
+	e.poisonRampMax = 1
 	e.shadow = true
 	e.id = nextID
 	e.shockID = 0
@@ -369,9 +372,17 @@ local function updateEnemies(dt)
 			if e.poisonTickTimer >= POISON_TICK then
 				local ticks = floor(e.poisonTickTimer / POISON_TICK)
 				e.poisonTickTimer = e.poisonTickTimer - ticks * POISON_TICK
+				local poisonRamp = e.poisonRamp or 1
+				local poisonRampPerTick = e.poisonRampPerTick or 0
+				local poisonRampMax = e.poisonRampMax or 1
+
+				if poisonRampPerTick > 0 and poisonRamp < poisonRampMax then
+					poisonRamp = min(poisonRamp + poisonRampPerTick * ticks, poisonRampMax)
+					e.poisonRamp = poisonRamp
+				end
 
 				local poisonMult = (e.modifiers and e.modifiers.poison) or 1.0
-				local baseDmg = e.poisonDPS * e.poisonStacks * poisonMult * POISON_TICK * ticks
+				local baseDmg = e.poisonDPS * e.poisonStacks * poisonMult * poisonRamp * POISON_TICK * ticks
 				local missingFrac = 0
 				if e.maxHp and e.maxHp > 0 then
 					missingFrac = max(0, (e.maxHp - e.hp) / e.maxHp)
@@ -399,6 +410,9 @@ local function updateEnemies(dt)
 				e.poisonSource = nil
 				e.poisonTickTimer = 0
 				e.poisonMissingHpMult = 0
+				e.poisonRamp = 1
+				e.poisonRampPerTick = 0
+				e.poisonRampMax = 1
 			end
 		end
 
@@ -417,6 +431,9 @@ local function updateEnemies(dt)
 				local sourcePoisonDPS = e.poisonDPS or 0
 				local sourcePoisonTimer = e.poisonTimer or 0
 				local sourcePoisonMissingHpMult = e.poisonMissingHpMult or 0
+				local sourcePoisonRamp = e.poisonRamp or 1
+				local sourcePoisonRampPerTick = e.poisonRampPerTick or 0
+				local sourcePoisonRampMax = e.poisonRampMax or 1
 				local poisonSource = e.poisonSource
 				local nearby, nearbyCount = Spatial.queryCells(ex, ey, radius)
 
@@ -433,6 +450,9 @@ local function updateEnemies(dt)
 							other.poisonDPS = max(other.poisonDPS or 0, sourcePoisonDPS)
 							other.poisonTimer = max(other.poisonTimer or 0, sourcePoisonTimer)
 							other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, sourcePoisonMissingHpMult)
+							other.poisonRamp = max(other.poisonRamp or 1, sourcePoisonRamp)
+							other.poisonRampPerTick = max(other.poisonRampPerTick or 0, sourcePoisonRampPerTick)
+							other.poisonRampMax = max(other.poisonRampMax or 1, sourcePoisonRampMax)
 							other.poisonSource = poisonSource
 
 							if infect.loop == true then
