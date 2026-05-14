@@ -1512,6 +1512,18 @@ B.lancer_ricochet = {
 }
 
 B.lancer_overdrive = {
+	onShot = function(p, data)
+		local tower = p and p.sourceTower
+		if not tower then
+			return
+		end
+
+		data = data or {}
+		local triggerEvery = max(1, floor(data.triggerEvery or 4))
+		local nextHitIndex = (tower._lancerOverdriveHits or 0) + 1
+		p._overdriveRound = (nextHitIndex % triggerEvery) == 0
+	end,
+
 	onHit = function(p, e, data)
 		if not e or e.hp <= 0 then
 			return
@@ -2527,7 +2539,12 @@ B.draw_lancer = {
 		local rx = p.r * (6 / 4.5)
 		local ry = p.r * (3 / 4.5)
 
-		local r, g, b = getProjectileColor(p, {0.97, 0.97, 0.97})
+		local r, g, b
+		if p._overdriveRound then
+			r, g, b = 1.0, 0.58, 0.14
+		else
+			r, g, b = getProjectileColor(p, {0.97, 0.97, 0.97})
+		end
 		local hr, hg, hb = colorMul(r, g, b, 1.15)
 
 		lg.setColor(r, g, b, a)
