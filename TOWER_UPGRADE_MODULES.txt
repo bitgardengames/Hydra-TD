@@ -1,32 +1,32 @@
-Hydra TD - Tower Upgrade Modules (Name + Effect)
+Hydra TD - Tower Upgrade Modules (Current Names + Descriptions)
 
 Source of truth:
 - Branch/tier mapping: world/tower_branch_defs.lua
-- Module names/effects text: languages/enUS.lua (module + moduleDesc)
+- Module names/descriptions text: languages/enUS.lua (module + moduleDesc)
 
 Slow Tower
 - Tier 2
-  - Glacier: Each hit heavily chills enemies for a long duration and deals bonus damage to already slowed targets.
-  - Shardfall: Each hit applies a light chill and spawns one shard shot to boost coverage and total hits.
+  - Glacier: Each hit applies a heavy, long slow and deals bonus damage to slowed enemies.
+  - Shardfall: Each hit applies a light slow and spawns 1 shard shot.
 - Tier 3
-  - Shatter: Each hit applies a steady chill and deals extra damage to already slowed enemies.
-  - Snowball: Shots pierce through enemies, ramp up damage as they pass through crowds, and apply chill on hit.
+  - Shatter: Each hit applies a steady slow and deals extra damage to slowed enemies.
+  - Snowball: Shots pierce enemies, gain damage through crowds, and apply slow on hit.
 - Tier 4
-  - Cold Lead: Each hit applies a heavy chill and gains major bonus damage against already slowed enemies.
+  - Cold Lead: Each hit applies a heavy slow and gains major bonus damage vs slowed enemies.
   - Whiteout: Each hit applies chill and deals splash damage in a wider area.
 - Tier 5
-  - Absolute Zero: Each hit almost stops enemies; excels at hard control with modest follow-through damage.
-  - Hailstorm: Each hit applies a lighter chill and bursts into dense shard volleys for sustained crowd damage.
+  - Absolute Zero: Each hit almost stops enemies, with lower follow-up damage.
+  - Hailstorm: Each hit applies a lighter slow and bursts into shard volleys for crowd damage.
 
 Lancer Tower
 - Tier 2
-  - Overdrive: Every 4th hit fires an overdrive round for +140% bonus damage.
+  - Overdrive: Every 4th hit fires an overdrive round with +140% damage.
   - Splitfire: Each hit releases 2 follow-up split shots.
 - Tier 3
   - Overpenetration: Projectiles pass through enemies without being consumed.
   - Ricochet: Shots bounce to a nearby enemy after impact.
 - Tier 4
-  - Sustained Barrage: Fires in repeating burst cycles: the first 3 shots in every 6-shot cycle deal bonus damage.
+  - Sustained Barrage: Fires in 6-shot cycles; the first 3 shots deal bonus damage.
   - First Blood: Hits deal heavy bonus damage to enemies above 80% HP.
 - Tier 5
   - Rail: Shots switch to linear movement and gain pierce.
@@ -41,21 +41,21 @@ Poison Tower
   - Venomburst: When a poisoned enemy dies, poison spreads to nearby enemies.
 - Tier 4
   - Envenom: Hits deal bonus direct damage based on poison stacks on the target.
-  - Spillover: Each hit splashes poison onto up to 2 nearby enemies, spreading stacks and duration.
+  - Spillover: Each hit splashes poison to up to 2 nearby enemies, spreading stacks and duration.
 - Tier 5
   - Hemotoxin: Poison damage scales with target missing health.
   - Pandemic: When a poisoned enemy dies, poison spreads to nearby enemies and can keep chaining through new kills.
 
 Cannon Tower
 - Tier 2
-  - Siege: Fires fewer, heavier shells with larger blast zones and higher direct impact damage.
-  - Barrage: Fires faster, lighter shells for stronger sustained splash throughput in clustered waves.
+  - Siege: Fires fewer, heavier shells with larger blasts and higher impact damage.
+  - Barrage: Fires faster, lighter shells for better sustained splash in dense waves.
 - Tier 3
   - Cluster: Shells split into 3 smaller bomblets on impact.
-  - Shockwave: Blast impact launches enemies, then emits a damaging radial shockwave for heavy two-stage AoE bursts.
+  - Shockwave: Impacts launch enemies, then emit a damaging shockwave for 2-stage AoE.
 - Tier 4
-  - Long Fuse: Impact deals normal blast damage, then after a short delay detonates a larger secondary blast with a bonus-damage ring.
-  - Frontline: Impact bursts into 3 short-range follow-up shells, trading per-hit power for stronger close-pack sustained splash.
+  - Long Fuse: Impact deals normal blast damage, then triggers a larger delayed blast with a bonus-damage ring.
+  - Frontline: Impact bursts into 3 short-range follow-up shells for stronger close-range splash.
 - Tier 5
   - Megashell: Fires massive high-damage shells with a huge blast radius.
   - Carpet Fire: Fires lighter shells that follow up with 2 delayed blasts.
@@ -68,10 +68,10 @@ Shock Tower
   - Fork Arc: Chain lightning jumps between enemies and forks into extra side arcs.
   - Static: Repeated hits on the same target build stacking surge damage.
 - Tier 4
-  - Crowdhunt: Adds several extra chain jumps and stronger side-forks to heavily boost crowd damage output.
-  - Kingslayer: Amplifies repeated-hit surge damage and triggers small endpoint bursts for stronger heavy-target DPS.
+  - Crowdhunt: Adds extra chain jumps and stronger side-forks for much higher crowd damage.
+  - Kingslayer: Boosts repeated-hit surge damage and adds small endpoint bursts for heavy targets.
 - Tier 5
-  - Thunderstorm: Greatly extends chain reach and adds side-arcs for maximum large-pack damage output.
+  - Thunderstorm: Greatly extends chain reach and adds side-arcs for maximum crowd damage.
   - Meltdown: Chain endpoints detonate for extra area damage.
 
 Plasma Tower
@@ -82,8 +82,8 @@ Plasma Tower
   - Boomerang Shot: Plasma travels out, then returns.
   - Spiral Drive: Plasma follows a spiral path.
 - Tier 4
-  - Solar Lance: Extends plasma reach with a narrow, high-pressure burn trail for stronger long-lane damage.
-  - Corona Bloom: Compresses plasma into a volatile bloom that burns a much wider area at a faster tick rate.
+  - Solar Lance: Extends plasma reach with a narrow burn trail for stronger long-lane damage.
+  - Corona Bloom: Turns plasma into a volatile bloom that burns a much wider area at a faster tick rate.
 - Tier 5
   - Supernova: Plasma burns while traveling, then detonates near the end of its life for a heavy burst.
   - Starforge: Plasma grows larger as it travels, increasing its area coverage over time.
