@@ -578,6 +578,14 @@ addSpec("slow_hailstorm", "module.slow_hailstorm", "moduleDesc.slow_hailstorm", 
 	{id = "draw_slow"},
 })
 
+addSpec("slow_glacial_barrage", "module.slow_glacial_barrage", "moduleDesc.slow_glacial_barrage", {
+	{id = "move_homing"},
+	{id = "hit_damage", data = {mult = 0.85}},
+	{id = "slow_burst_cleave", data = {cooldown = 1.2, count = 5, dmgMult = 0.34, ringOffset = 14, travelDistance = 700}, noInherit = true},
+	{id = "apply_slow", data = {factor = 0.56, dur = 1.45}},
+	{id = "draw_slow"},
+})
+
 -- Legacy slow branch ids (save compatibility)
 add("slow_permafrost", {
 	nameKey = "module.slow_permafrost",
