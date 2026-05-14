@@ -759,6 +759,7 @@ addSpec("cannon_mega_shell", "module.cannon_mega_shell", "moduleDesc.cannon_mega
 	{id = "hit_circle", data = {radius = 14}},
 	{id = "aoe_damage", data = {radius = 78}},
 	{id = "cannon_damage_scale", data = {mult = 2.05}},
+	{id = "projectile_radius", data = {radius = 5.2}},
 	{id = "draw_cannon"},
 })
 
