@@ -1459,6 +1459,58 @@ B.split_on_hit = {
 	end
 }
 
+B.slow_burst_cleave = {
+	type = "damage",
+
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		if not e.slowTimer or e.slowTimer <= 0 then
+			return
+		end
+
+		local tower = p.sourceTower
+		if not tower then
+			return
+		end
+
+		data = data or {}
+		local now = p.t or 0
+		local cooldown = data.cooldown or 1.25
+		local nextReady = tower._slowBurstCleaveReadyAt or 0
+		if now < nextReady then
+			return
+		end
+		tower._slowBurstCleaveReadyAt = now + cooldown
+
+		local count = data.count or 5
+		local dmgMult = data.dmgMult or 0.33
+		local ringOffset = data.ringOffset or 14
+		local travelDistance = data.travelDistance or 650
+		local base = p.rotation or 0
+		local step = (2 * pi) / count
+
+		for i = 1, count do
+			local ang = base + (i - 1) * step
+			local spawnX = e.x + cos(ang) * ringOffset
+			local spawnY = e.y + sin(ang) * ringOffset
+			local evt = emitSpawnProjectile(p)
+			evt.x = spawnX
+			evt.y = spawnY
+			evt.angle = ang
+			evt.lastTX = spawnX + cos(ang) * travelDistance
+			evt.lastTY = spawnY + sin(ang) * travelDistance
+			evt.damage = (p.damage or 0) * dmgMult
+			evt.source = tower
+			evt.parent = p
+			evt.ignoreTarget = e
+			evt.splitGeneration = (p.splitGeneration or 0) + 1
+		end
+	end
+}
+
 B.lancer_ricochet = {
 	onHit = function(p, e, data)
 		if not e then

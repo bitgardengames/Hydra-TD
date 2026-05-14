@@ -27,7 +27,7 @@ local defs = {
 		[2] = {"slow_glacier_core", "slow_frost_shards"},
 		[3] = {"slow_snowball", "slow_frost_aura"},
 		[4] = {"slow_lead_freeze", "slow_wide_chill"},
-		[5] = {"slow_absolute_zero", "slow_hailstorm"},
+		[5] = {"slow_absolute_zero", "slow_glacial_barrage"},
 	},
 
 	lancer = {
