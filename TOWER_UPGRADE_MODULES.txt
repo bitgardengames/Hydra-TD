@@ -51,7 +51,7 @@ Cannon Tower
   - Siege: Fires fewer, heavier shells with larger blasts and higher impact damage.
   - Barrage: Fires faster, lighter shells for better sustained splash in dense waves.
 - Tier 3
-  - Cluster: Shells split into 3 smaller bomblets on impact.
+  - Cluster: Shells split into 3 smaller shells on impact.
   - Shockwave: Impacts launch enemies, then emit a damaging shockwave for 2-stage AoE.
 - Tier 4
   - Long Fuse: Impact deals normal blast damage, then triggers a larger delayed blast with a bonus-damage ring.

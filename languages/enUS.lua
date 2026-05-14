@@ -254,7 +254,7 @@ return {
 		poison_pandemic = "On poisoned enemy death, poison spreads and can chain 1 more time.",
 		cannon_siege_shells = "Fires fewer heavy shells with +40% impact damage and larger blasts.",
 		cannon_rapid_mortar = "Fires faster light shells for higher sustained splash damage.",
-		cannon_cluster_payload = "Shells split into 3 bomblets on impact.",
+		cannon_cluster_payload = "Shells split into 3 smaller shells on impact.",
 		cannon_shockwave = "Impacts launch enemies, then emit 1 damaging shockwave.",
 		cannon_long_fuse = "Impacts deal normal blast damage, then trigger 1 larger delayed blast.",
 		cannon_frontline_burst = "Impacts burst into 3 short-range follow-up shells.",
