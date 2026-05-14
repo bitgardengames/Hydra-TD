@@ -12,6 +12,7 @@ local L = require("core.localization")
 
 local enemies = {}
 local enemyPool = {}
+local slowPatches = {}
 
 local colorMoney = Theme.ui.money
 
@@ -46,6 +47,32 @@ local function swapRemove(list, i)
 
 	list[i] = list[last]
 	list[last] = nil
+end
+
+local function spawnSlowPatch(sourceTower, x, y, opts)
+	opts = opts or {}
+	if not sourceTower or not x or not y then
+		return
+	end
+
+	local maxPerTower = opts.maxPerTower or sourceTower.slowPatchMax or 4
+	local activeCount = sourceTower._slowPatchCount or 0
+	if activeCount >= maxPerTower then
+		return
+	end
+
+	local patch = {
+		x = x,
+		y = y,
+		radius = opts.radius or 44,
+		slowFactor = opts.slowFactor or 0.18,
+		dur = opts.dur or 1.15,
+		t = 0,
+		sourceTower = sourceTower,
+	}
+
+	sourceTower._slowPatchCount = activeCount + 1
+	slowPatches[#slowPatches + 1] = patch
 end
 
 local function acquireEnemy()
@@ -333,6 +360,18 @@ local function updateEnemies(dt)
 	local pathSegLen = map.pathSegLen
 	local totalLen = map.totalWorldLength
 	local LastSecondThreshold = map.lastSecondThreshold
+	for i = #slowPatches, 1, -1 do
+		local patch = slowPatches[i]
+		patch.t = patch.t + dt
+		if patch.t >= patch.dur then
+			local src = patch.sourceTower
+			if src and src._slowPatchCount and src._slowPatchCount > 0 then
+				src._slowPatchCount = src._slowPatchCount - 1
+			end
+			swapRemove(slowPatches, i)
+		end
+	end
+
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
 		local isBoss = e.boss
@@ -540,6 +579,22 @@ local function updateEnemies(dt)
 			e.slowTimer = slowTimer
 		end
 
+		for j = 1, #slowPatches do
+			local patch = slowPatches[j]
+			local rr = patch.radius + (e.radius or 0)
+			local dx = e.x - patch.x
+			local dy = e.y - patch.y
+			if dx * dx + dy * dy <= rr * rr then
+				local patchFactor = min(max(patch.slowFactor or 0, 0), 0.9)
+				local newFactor = 1 - patchFactor
+				if newFactor < (e.slowFactor or 1) then
+					e.slowFactor = newFactor
+				end
+				e.slowTimer = max(e.slowTimer or 0, dt * 1.5)
+				e.slowDuration = max(e.slowDuration or 0, dt * 1.5)
+			end
+		end
+
 		e.speed = e.baseSpeed * e.slowFactor
 		e.prevAnimT = e.animT
 		e.animT = e.animT + dt * e.speed * 0.03
@@ -637,6 +692,15 @@ local function clear()
 		enemies[i] = nil
 	end
 
+	for i = #slowPatches, 1, -1 do
+		local patch = slowPatches[i]
+		local src = patch.sourceTower
+		if src and src._slowPatchCount and src._slowPatchCount > 0 then
+			src._slowPatchCount = src._slowPatchCount - 1
+		end
+		slowPatches[i] = nil
+	end
+
 	nextID = 0
 end
 
@@ -665,6 +729,8 @@ return {
 	enemies = enemies,
 	EnemyDefs = EnemyDefs,
 	findEnemyAt = findEnemyAt,
+	slowPatches = slowPatches,
+	spawnSlowPatch = spawnSlowPatch,
 	spawnEnemy = spawnEnemy,
 	updateEnemies = updateEnemies,
 	applyHitImpulse = applyHitImpulse,

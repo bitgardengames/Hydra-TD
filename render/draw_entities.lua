@@ -365,11 +365,32 @@ end
 -- Draw all enemies
 local function drawEnemies()
 	local enemies = Enemies.enemies
+	local slowPatches = Enemies.slowPatches or {}
 
 	lg.setLineWidth(2)
 
 	-- Interpolate enemy positions
 	prepareEnemyRenderData()
+
+	-- Ground frost patches from slow impacts.
+	for i = 1, #slowPatches do
+		local patch = slowPatches[i]
+		local life = 1 - (patch.t / patch.dur)
+		if life > 0 then
+			local pulse = 0.88 + sin(patch.t * 3.0 + i * 0.37) * 0.12
+			local radius = patch.radius * (1 + (1 - life) * 0.06)
+			local alpha = 0.17 * life * pulse
+
+			lg.setColor(sr * 0.85, sg * 0.9, sb, alpha * 0.4)
+			lg.circle("fill", patch.x, patch.y, radius * 0.86)
+
+			lg.setColor(sr, sg, sb, alpha)
+			lg.circle("line", patch.x, patch.y, radius)
+
+			lg.setColor(sr, sg, sb, alpha * 0.55)
+			lg.circle("line", patch.x, patch.y, radius * 0.72)
+		end
+	end
 
 	-- Draw bodies
 	for i = 1, #enemies do
