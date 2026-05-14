@@ -9,14 +9,14 @@ Slow Tower
   - Glacier: Each hit applies strong slow and +50% damage vs slowed enemies.
   - Shardfall: Each hit applies light slow and spawns 1 frost shard.
 - Tier 3
-  - Shatter: Each hit applies medium slow and +40% damage vs slowed enemies.
   - Snowball: Shots pierce, apply slow, and gain +10% damage per enemy hit.
+  - Frost Aura: Hits apply lighter slow and lower direct damage, but emits a high-uptime chill aura around the tower.
 - Tier 4
   - Cold Lead: Each hit applies strong slow and +100% damage vs slowed enemies.
   - Whiteout: Each hit applies slow and deals splash damage in a wide radius.
 - Tier 5
   - Absolute Zero: Each hit applies near-freeze slow, but deals -25% follow-up damage.
-  - Hailstorm: Each hit applies light slow and bursts into 3 frost shards.
+  - Glacial Barrage: Hits deal lower direct damage, but striking already-slowed enemies occasionally triggers a burst cleave of frost shards.
 
 Lancer Tower
 - Tier 2
