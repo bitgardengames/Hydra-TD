@@ -34,8 +34,8 @@ Lancer Tower
 
 Poison Tower
 - Tier 2
-  - Blight: Applies strong poison with -40% max stacks.
-  - Plague Cloud: Applies weaker poison per stack, but +75% max stacks.
+  - Blight: Applies strong poison with -3 max stacks.
+  - Plague Cloud: Applies weaker poison per stack, but +6 max stacks.
 - Tier 3
   - Neuro: Applies steady poison and adds +1 extra stack per hit.
   - Venomburst: On poisoned enemy death, poison spreads to nearby enemies.
