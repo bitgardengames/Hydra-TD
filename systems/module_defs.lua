@@ -683,7 +683,7 @@ addSpec("poison_blight", "module.poison_blight", "moduleDesc.poison_blight", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 10}},
 	{id = "hit_damage"},
-	{id = "apply_poison", data = {dps = 6.2, dur = 2.2, maxStacks = 7}},
+	{id = "apply_poison", data = {dps = 1.9, dur = 2.4, maxStacks = 7, rampPerTick = 0.32, rampMax = 3.0}},
 	{id = "draw_poison"},
 })
 
@@ -691,7 +691,7 @@ addSpec("poison_plague", "module.poison_plague", "moduleDesc.poison_plague", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 12}},
 	{id = "hit_damage"},
-	{id = "apply_poison", data = {dps = 2.8, dur = 2.2, maxStacks = 16}},
+	{id = "apply_poison", data = {dps = 2.1, dur = 5.0, maxStacks = 12, rampPerTick = 0.12, rampMax = 1.7}},
 	{id = "draw_poison"},
 })
 
