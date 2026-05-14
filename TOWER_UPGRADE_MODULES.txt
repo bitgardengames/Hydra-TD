@@ -6,17 +6,17 @@ Source of truth:
 
 Slow Tower
 - Tier 2
-  - Glacier: Each hit heavily chills enemies for a long duration.
-  - Shardfall: Each hit applies a light chill and creates one shard shot.
+  - Glacier: Each hit heavily chills enemies for a long duration and deals bonus damage to already slowed targets.
+  - Shardfall: Each hit applies a light chill and spawns one shard shot to boost coverage and total hits.
 - Tier 3
   - Shatter: Each hit applies a steady chill and deals extra damage to already slowed enemies.
   - Snowball: Shots pierce through enemies, ramp up damage as they pass through crowds, and apply chill on hit.
 - Tier 4
-  - Cold Lead: Prioritizes enemies furthest along the path and applies a heavy chill.
-  - Whiteout: Targets the densest groups, applies chill, and creates one shard shot on hit.
+  - Cold Lead: Each hit applies a heavy chill and gains major bonus damage against already slowed enemies.
+  - Whiteout: Each hit applies chill and deals splash damage in a wider area.
 - Tier 5
-  - Absolute Zero: Each hit almost stops enemies and deals bonus damage to slowed targets.
-  - Hailstorm: Each hit applies chill and bursts into 3 shard shots.
+  - Absolute Zero: Each hit almost stops enemies; excels at hard control with modest follow-through damage.
+  - Hailstorm: Each hit applies a lighter chill and bursts into dense shard volleys for sustained crowd damage.
 
 Lancer Tower
 - Tier 2
@@ -30,7 +30,7 @@ Lancer Tower
   - First Blood: Hits deal heavy bonus damage to enemies above 80% HP.
 - Tier 5
   - Rail: Shots switch to linear movement and gain pierce.
-  - Arc: Each hit chains to 2 nearby enemies.
+  - Focus Fire: Repeated hits on the same target within a short window build bonus rifle damage stacks.
 
 Poison Tower
 - Tier 2
@@ -48,14 +48,14 @@ Poison Tower
 
 Cannon Tower
 - Tier 2
-  - Siege: Prioritizes distant targets and uses large blast shells.
-  - Barrage: Uses smaller blasts with faster, lighter-impact shells.
+  - Siege: Fires fewer, heavier shells with larger blast zones and higher direct impact damage.
+  - Barrage: Fires faster, lighter shells for stronger sustained splash throughput in clustered waves.
 - Tier 3
   - Cluster: Shells split into 3 smaller bomblets on impact.
-  - Shockwave: Uses wider blasts with heavier impact damage.
+  - Shockwave: Blast impact launches enemies, then emits a damaging radial shockwave for heavy two-stage AoE bursts.
 - Tier 4
-  - Long Fuse: Targets enemies farthest from the tower.
-  - Frontline: Targets enemies furthest along the path.
+  - Long Fuse: Impact deals normal blast damage, then after a short delay detonates a larger secondary blast with a bonus-damage ring.
+  - Frontline: Impact bursts into 3 short-range follow-up shells, trading per-hit power for stronger close-pack sustained splash.
 - Tier 5
   - Megashell: Fires massive high-damage shells with a huge blast radius.
   - Carpet Fire: Fires lighter shells that follow up with 2 delayed blasts.
@@ -68,10 +68,10 @@ Shock Tower
   - Fork Arc: Chain lightning jumps between enemies and forks into extra side arcs.
   - Static: Repeated hits on the same target build stacking surge damage.
 - Tier 4
-  - Crowdhunt: Prioritizes dense enemy groups for better chain coverage.
-  - Kingslayer: Prioritizes high-health enemies and builds stronger surge damage on repeated hits.
+  - Crowdhunt: Adds several extra chain jumps and stronger side-forks to heavily boost crowd damage output.
+  - Kingslayer: Amplifies repeated-hit surge damage and triggers small endpoint bursts for stronger heavy-target DPS.
 - Tier 5
-  - Thunderstorm: Chain lightning jumps across a very large group of enemies.
+  - Thunderstorm: Greatly extends chain reach and adds side-arcs for maximum large-pack damage output.
   - Meltdown: Chain endpoints detonate for extra area damage.
 
 Plasma Tower
