@@ -2168,6 +2168,16 @@ B.projectile_radius = {
 	end
 }
 
+B.projectile_visual_scale = {
+	init = function(p, data)
+		if not data or not data.scale then
+			return
+		end
+
+		p.visualScale = data.scale
+	end
+}
+
 B.plasma_supernova_burst = {
 	init = function(p)
 		p._supernovaBurstDone = false
@@ -2619,8 +2629,10 @@ B.draw_cannon = {
 B.draw_plasma = {
 	draw = function(p, a)
 		local pulse = sin(p.t * 6) * 0.5 + 0.5
-		local outer = p.r * (8 / 4.5) + pulse * (1.2 / 4.5) * p.r
-		local inner = p.r * (4.5 / 4.5) + pulse * (0.6 / 4.5) * p.r
+		local visualScale = p.visualScale or 1
+		local displayR = p.r * visualScale
+		local outer = displayR * (8 / 4.5) + pulse * (1.2 / 4.5) * displayR
+		local inner = displayR * (4.5 / 4.5) + pulse * (0.6 / 4.5) * displayR
 
 		local cr, cg, cb = getProjectileColor(p, {0.85, 0.55, 1.0})
 		local hr, hg, hb = colorMul(cr, cg, cb, 1.2)

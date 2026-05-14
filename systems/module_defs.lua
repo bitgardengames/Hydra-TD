@@ -888,6 +888,7 @@ addSpec("plasma_focused_core", "module.plasma_focused_core", "moduleDesc.plasma_
 	{id = "move_linear", data = {dist = 330}},
 	{id = "tick_damage", data = {radius = 9, rate = 0.08, impulse = 0.45}},
 	{id = "projectile_radius", data = {radius = 3.8}},
+	{id = "projectile_visual_scale", data = {scale = 0.9}},
 	{id = "draw_plasma"},
 })
 
@@ -895,6 +896,7 @@ addSpec("plasma_unstable_core", "module.plasma_unstable_core", "moduleDesc.plasm
 	{id = "move_linear", data = {dist = 300}},
 	{id = "tick_damage", data = {radius = 16, rate = 0.14, impulse = 0.45}},
 	{id = "projectile_radius", data = {radius = 5.4}},
+	{id = "projectile_visual_scale", data = {scale = 1.1}},
 	{id = "draw_plasma"},
 })
 
