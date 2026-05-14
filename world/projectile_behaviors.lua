@@ -2399,6 +2399,58 @@ B.apply_slow = {
 	end
 }
 
+B.slow_aura = {
+	on_shot = function(p, data)
+		p._slowAuraTimer = 0
+		p._slowAuraTick = data.tick or 0.28
+		p._slowAuraRadius = data.radius or 56
+	end,
+
+	on_tick = function(p, dt, data)
+		local tower = p.sourceTower
+		if not tower then
+			return
+		end
+
+		p._slowAuraTimer = (p._slowAuraTimer or 0) - dt
+		if p._slowAuraTimer > 0 then
+			return
+		end
+
+		local cx = tower.x
+		local cy = tower.renderY or tower.y
+		local radius = data.radius or p._slowAuraRadius or 56
+		local slowDur = data.dur or 0.6
+		local slowFactor = min(data.factor or 0.22, 0.9)
+		local newFactor = 1 - slowFactor
+
+		local nearby, nearbyCount = Spatial.queryCells(cx, cy, radius)
+		for i = 1, nearbyCount do
+			local e = nearby[i]
+			if e and e.hp > 0 then
+				local dx = e.x - cx
+				local dy = e.y - cy
+				local rr = radius + (e.radius or 0)
+				if dx * dx + dy * dy <= rr * rr then
+					if not e.slowFactor or newFactor < e.slowFactor then
+						e.slowFactor = newFactor
+					end
+					e.slowTimer = max(e.slowTimer or 0, slowDur)
+					e.slowDuration = max(e.slowDuration or 0, slowDur)
+				end
+			end
+		end
+
+		local evt = emitFX(p, "frost_burst")
+		evt.x = cx
+		evt.y = cy
+		evt.color = tower.color
+		evt.scale = data.fxScale or 0.7
+
+		p._slowAuraTimer = p._slowAuraTick or 0.28
+	end
+}
+
 B.apply_poison = {
 	onHit = function(p, e, data)
 		if e and e.hp > 0 then
