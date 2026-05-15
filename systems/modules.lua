@@ -94,26 +94,8 @@ end
 
 local ContextMethods = {}
 
-local function findBehaviorIndex(behaviors, id)
-	if not id then
-		return nil
-	end
-
-	for i = 1, #behaviors do
-		if behaviors[i].id == id then
-			return i
-		end
-	end
-
-	return nil
-end
-
-local function appendBehavior(ctx, behavior)
-	ctx.behaviors[#ctx.behaviors + 1] = behavior
-end
-
 function ContextMethods:addBehavior(b)
-	appendBehavior(self, b)
+	self.behaviors[#self.behaviors + 1] = b
 end
 
 function ContextMethods:addHookBehavior(hookId, behavior)
@@ -126,36 +108,36 @@ function ContextMethods:addHookBehavior(hookId, behavior)
 		b.hooks = { hookId }
 	end
 
-	appendBehavior(self, b)
+	self.behaviors[#self.behaviors + 1] = b
 end
 
 function ContextMethods:replaceBehavior(id, newB)
-	local i = findBehaviorIndex(self.behaviors, id)
-	if not i then
-		return
+	for i = 1, #self.behaviors do
+		if self.behaviors[i].id == id then
+			self.behaviors[i] = newB
+			return
+		end
 	end
-
-	self.behaviors[i] = newB
 end
 
 function ContextMethods:modifyBehavior(id, fn)
-	local i = findBehaviorIndex(self.behaviors, id)
-	if not i then
-		return
+	for i = 1, #self.behaviors do
+		local behavior = self.behaviors[i]
+		if behavior.id == id then
+			behavior.data = behavior.data or {}
+			fn(behavior.data)
+			return
+		end
 	end
-
-	local behavior = self.behaviors[i]
-	behavior.data = behavior.data or {}
-	fn(behavior.data)
 end
 
 function ContextMethods:removeBehavior(id)
-	local i = findBehaviorIndex(self.behaviors, id)
-	if not i then
-		return
+	for i = 1, #self.behaviors do
+		if self.behaviors[i].id == id then
+			table.remove(self.behaviors, i)
+			return
+		end
 	end
-
-	table.remove(self.behaviors, i)
 end
 
 function ContextMethods:forEachBehavior(fn)
