@@ -13,7 +13,6 @@ local Screens = {
 
 local Menu = {}
 
-local lastMode
 
 function Menu.load()
 	for _, screen in pairs(Screens) do
@@ -24,18 +23,6 @@ function Menu.load()
 end
 
 function Menu.update(dt)
-	--[[if State.mode ~= lastMode then
-		if lastMode then
-			local prev = Screens[lastMode]
-			if prev and prev.leave then prev.leave() end
-		end
-
-		local next = Screens[State.mode]
-		if next and next.enter then next.enter() end
-
-		lastMode = State.mode
-	end]]
-
 	local screen = Screens[State.mode]
 
 	if screen and screen.update then
