@@ -85,6 +85,10 @@ local biomeTemplateOverrides = {
 	},
 }
 
+local function getMapWaveDefs(map)
+	return map and map.waves or nil
+end
+
 local function getBossByArchetype(map, bossIndex)
 	local mapOverrides = map and mapBossOverrides[map.id]
 	if mapOverrides and mapOverrides[bossIndex] then
@@ -114,8 +118,9 @@ local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 		biomeOverride = biomeOverrides[bossKind]
 	end
 
-	if map and map.waves and map.waves.encounters then
-		local mapDefs = map.waves.encounters
+	local mapWaveDefs = getMapWaveDefs(map)
+	if mapWaveDefs and mapWaveDefs.encounters then
+		local mapDefs = mapWaveDefs.encounters
 		mapKeyedOverride = mapDefs[bossKind]
 		mapIndexedOverride = mapDefs[bossIndex]
 	end
@@ -194,6 +199,7 @@ end
 -- Wave start
 function Waves.startWave()
 	local map = Maps[State.mapIndex]
+	local mapWaveDefs = getMapWaveDefs(map)
 	local mapMult = State.mapCoverageMult or 1.0
 
 	State.waveLeaks = 0
@@ -213,8 +219,8 @@ function Waves.startWave()
 		local bossKind = wave.enemy or "boss"
 		local bossIndex = math.floor(State.wave / 10)
 
-		if map and map.waves and map.waves.bosses then
-			local bossDef = map.waves.bosses[bossIndex]
+		if mapWaveDefs and mapWaveDefs.bosses then
+			local bossDef = mapWaveDefs.bosses[bossIndex]
 
 			if bossDef and bossDef.type then
 				bossKind = bossDef.type
