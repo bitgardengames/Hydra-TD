@@ -1,3 +1,6 @@
+local TowerDefs = require("world.tower_defs")
+local ModuleDefs = require("systems.module_defs")
+
 local TowerBranchDefs = {}
 
 --[[
@@ -65,6 +68,58 @@ local defs = {
 		[5] = {"plasma_supernova", "plasma_growing_mass"},
 	},
 }
+
+local function flattenChoices(towerTree)
+	local list = {}
+
+	for level = 2, 5 do
+		local choices = towerTree[level]
+		if choices then
+			for i = 1, #choices do
+				list[#list + 1] = choices[i]
+			end
+		end
+	end
+
+	return list
+end
+
+local function validateAndSync()
+	local missingRefs = {}
+
+	for towerKind, towerTree in pairs(defs) do
+		local towerDef = TowerDefs[towerKind]
+		assert(towerDef, ("[TowerBranchDefs] missing tower def for '%s'"):format(towerKind))
+
+		local flattened = flattenChoices(towerTree)
+		towerDef.upgradeChoices = flattened
+
+		for i = 1, #flattened do
+			local moduleId = flattened[i]
+			if not ModuleDefs[moduleId] then
+				missingRefs[#missingRefs + 1] = ("%s (tower=%s)"):format(moduleId, towerKind)
+			end
+		end
+
+		if towerDef.upgradeChoices then
+			local isBranchModule = {}
+			for i = 1, #flattened do
+				isBranchModule[flattened[i]] = true
+			end
+
+			for i = 1, #towerDef.upgradeChoices do
+				local moduleId = towerDef.upgradeChoices[i]
+				assert(isBranchModule[moduleId],
+					("[TowerBranchDefs] orphan module '%s' in %s.upgradeChoices"):format(moduleId, towerKind))
+			end
+		end
+	end
+
+	assert(#missingRefs == 0,
+		"[TowerBranchDefs] missing module defs for branch choices: " .. table.concat(missingRefs, ", "))
+end
+
+validateAndSync()
 
 function TowerBranchDefs.getChoices(towerKind, level)
 	local towerTree = defs[towerKind]
