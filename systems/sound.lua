@@ -25,6 +25,32 @@ local function scaleVolume(v)
 	return v * Sound.masterVolume
 end
 
+local function buildSfxEntry(def)
+	local entry = {
+		jitter = def.jitter,
+		bias = def.bias,
+		cooldown = def.cooldown,
+	}
+
+	if def.files then
+		entry.sources = {}
+
+		for i, file in ipairs(def.files) do
+			entry.sources[i] = la.newSource(file, "static")
+		end
+	else
+		entry.source = la.newSource(def.file, "static")
+	end
+
+	return entry
+end
+
+local function buildMusicTrack(file)
+	local track = la.newSource(file, "stream")
+	track:setLooping(true)
+	return track
+end
+
 -- Play a sound effect
 function Sound.play(name, opts)
 	if Sound.suppressed then
@@ -143,146 +169,45 @@ function Sound.load()
 	local sfx = Sound.sfx
 	local music = Sound.music
 
-	-- Sounds
-	sfx.uiMove = {
-		source = la.newSource("assets/sounds/uiMove.ogg", "static"),
+	local sfxDefs = {
+		uiMove = { file = "assets/sounds/uiMove.ogg" },
+		uiConfirm = { file = "assets/sounds/uiConfirm.ogg" },
+		uiBack = { file = "assets/sounds/uiBack.ogg" },
+		uiError = { file = "assets/sounds/uiError.ogg" },
+		victory = { file = "assets/sounds/victory.ogg" },
+		gameOver = { file = "assets/sounds/gameOver.ogg" },
+		towerPlaced = { files = { "assets/sounds/towerPlaced1.ogg", "assets/sounds/towerPlaced2.ogg" }, jitter = true },
+		towerUpgraded = { file = "assets/sounds/upgrade.ogg" },
+		message = { file = "assets/sounds/message.ogg", jitter = true, bias = 0.8 },
+		medal = { file = "assets/sounds/medal.mp3", jitter = true, bias = 0.9 },
+		towerSold = { files = { "assets/sounds/towerSold1.ogg", "assets/sounds/towerSold2.ogg", "assets/sounds/towerSold3.ogg" } },
+		lancer = { file = "assets/sounds/lancer.ogg", jitter = true, bias = 0.7 },
+		slow = { file = "assets/sounds/slow.ogg", jitter = true, bias = 0.2 },
+		cannon = { file = "assets/sounds/cannon.ogg", jitter = true, bias = 0.82 },
+		poison = { files = { "assets/sounds/poison1.ogg", "assets/sounds/poison2.ogg" }, jitter = true, bias = 0.7 },
+		shock = { files = { "assets/sounds/shock1.ogg", "assets/sounds/shock2.ogg", "assets/sounds/shock3.ogg" }, jitter = true, bias = 0.9 },
+		plasma = { file = "assets/sounds/plasma2.ogg", jitter = true, bias = 0.82 },
 	}
 
-	sfx.uiConfirm = {
-		source = la.newSource("assets/sounds/uiConfirm.ogg", "static"),
+	for name, def in pairs(sfxDefs) do
+		sfx[name] = buildSfxEntry(def)
+	end
+
+	local musicDefs = {
+		menu = "assets/music/Menu4.ogg",
+		pause = "assets/music/Pause.ogg",
+		gameOver = "assets/music/GameOver.ogg",
+		track1 = "assets/music/Track1.ogg",
+		track2 = "assets/music/Track2.ogg",
+		track3 = "assets/music/Track3.ogg",
+		track4 = "assets/music/Track4.ogg",
+		track5 = "assets/music/Track5.ogg",
+		track6 = "assets/music/Track6.ogg",
 	}
 
-	sfx.uiBack = {
-		source = la.newSource("assets/sounds/uiBack.ogg", "static"),
-	}
-
-	sfx.uiError = {
-		source = la.newSource("assets/sounds/uiError.ogg", "static"),
-	}
-
-	sfx.victory = {
-		source = la.newSource("assets/sounds/victory.ogg", "static"),
-	}
-
-	sfx.gameOver = {
-		source = la.newSource("assets/sounds/gameOver.ogg", "static"),
-	}
-
-	sfx.towerPlaced = {
-		sources = {
-			la.newSource("assets/sounds/towerPlaced1.ogg", "static"),
-			la.newSource("assets/sounds/towerPlaced2.ogg", "static"),
-		},
-		jitter = true,
-	}
-
-	sfx.towerUpgraded = {
-		source = la.newSource("assets/sounds/upgrade.ogg", "static"),
-	}
-
-	sfx.message = {
-		source = la.newSource("assets/sounds/message.ogg", "static"),
-		jitter = true,
-		bias = 0.8,
-	}
-
-	sfx.medal = {
-		source = la.newSource("assets/sounds/medal.mp3", "static"),
-		jitter = true,
-		bias = 0.9,
-	}
-
-	sfx.towerSold = {
-		sources = {
-			la.newSource("assets/sounds/towerSold1.ogg", "static"),
-			la.newSource("assets/sounds/towerSold2.ogg", "static"),
-			la.newSource("assets/sounds/towerSold3.ogg", "static"),
-		},
-	}
-
-	sfx.lancer = {
-		source = la.newSource("assets/sounds/lancer.ogg", "static"),
-		jitter = true,
-		bias = 0.7,
-		--cooldown = 0.08,
-	}
-
-	sfx.slow = {
-		source = la.newSource("assets/sounds/slow.ogg", "static"),
-		jitter = true,
-		bias = 0.2,
-		--cooldown = 0.10,
-	}
-
-	sfx.cannon = {
-		source = la.newSource("assets/sounds/cannon.ogg", "static"),
-		jitter = true,
-		bias = 0.82,
-		--cooldown = 0.14,
-	}
-
-	sfx.poison = {
-		sources = {
-			la.newSource("assets/sounds/poison1.ogg", "static"),
-			la.newSource("assets/sounds/poison2.ogg", "static"),
-		},
-		jitter = true,
-		bias = 0.7,
-		--cooldown = 0.12,
-	}
-
-	sfx.shock = {
-		sources = {
-			la.newSource("assets/sounds/shock1.ogg", "static"),
-			la.newSource("assets/sounds/shock2.ogg", "static"),
-			la.newSource("assets/sounds/shock3.ogg", "static"),
-		},
-		jitter = true,
-		bias = 0.9,
-		--cooldown = 0.09,
-	}
-
-	--[[sfx.plasma = {
-		source = la.newSource("assets/sounds/plasma.ogg", "static"),
-		jitter = true,
-		bias = 0.62,
-		--cooldown = 0.08,
-	}]]
-
-	sfx.plasma = {
-		source = la.newSource("assets/sounds/plasma2.ogg", "static"),
-		jitter = true,
-		bias = 0.82,
-		--cooldown = 0.08,
-	}
-
-	-- Music
-	music.menu = la.newSource("assets/music/Menu4.ogg", "stream")
-	music.menu:setLooping(true)
-
-	music.pause = la.newSource("assets/music/Pause.ogg", "stream")
-	music.pause:setLooping(true)
-
-	music.gameOver = la.newSource("assets/music/GameOver.ogg", "stream")
-	music.gameOver:setLooping(true)
-
-	music.track1 = la.newSource("assets/music/Track1.ogg", "stream")
-	music.track1:setLooping(true)
-
-	music.track2 = la.newSource("assets/music/Track2.ogg", "stream")
-	music.track2:setLooping(true)
-
-	music.track3 = la.newSource("assets/music/Track3.ogg", "stream")
-	music.track3:setLooping(true)
-
-	music.track4 = la.newSource("assets/music/Track4.ogg", "stream")
-	music.track4:setLooping(true)
-
-	music.track5 = la.newSource("assets/music/Track5.ogg", "stream")
-	music.track5:setLooping(true)
-
-	music.track6 = la.newSource("assets/music/Track6.ogg", "stream")
-	music.track6:setLooping(true)
+	for name, file in pairs(musicDefs) do
+		music[name] = buildMusicTrack(file)
+	end
 
 	Sound.gameplayTracks = {
 		music.track1,
