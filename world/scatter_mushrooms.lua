@@ -2,6 +2,7 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 local State = require("core.state")
 local Map = require("world.map")
+local ScatterCommon = require("world.scatter_common")
 
 local Mushrooms = {}
 
@@ -48,18 +49,7 @@ function Mushrooms.clear()
 end
 
 local function nearPath(gx, gy)
-	local path = Map.map.isPath
-
-	for dx = -1, 1 do
-		for dy = -1, 1 do
-			local col = path[gx + dx]
-			if col and col[gy + dy] then
-				return true
-			end
-		end
-	end
-
-	return false
+	return ScatterCommon.isNearPath(Map.map.isPath, gx, gy)
 end
 
 function Mushrooms.generate()

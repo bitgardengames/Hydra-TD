@@ -2,6 +2,7 @@ local Theme = require("core.theme")
 local Constants = require("core.constants")
 local State = require("core.state")
 local Map = require("world.map")
+local ScatterCommon = require("world.scatter_common")
 
 local Trees = {}
 
@@ -77,22 +78,7 @@ function Trees.hasTreeAt(gx, gy)
 end
 
 local function nearPath(gx, gy)
-	local path = Map.map.isPath
-
-	for dx = -1, 1 do
-		for dy = -1, 1 do
-			local x = gx + dx
-			local y = gy + dy
-
-			local col = path[x]
-
-			if col and col[y] then
-				return true
-			end
-		end
-	end
-
-	return false
+	return ScatterCommon.isNearPath(Map.map.isPath, gx, gy)
 end
 
 function Trees.generate()
