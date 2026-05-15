@@ -108,21 +108,16 @@ end
 
 local ContextMethods = {}
 
-local function swapRemove(list, i)
-	local last = #list
-	if i < last then
-		list[i] = list[last]
+local function appendBehavior(ctx, behavior)
+	ctx.behaviors[#ctx.behaviors + 1] = behavior
+
+	if behavior and behavior.id and ctx._behaviorIndex[behavior.id] == nil then
+		ctx._behaviorIndex[behavior.id] = #ctx.behaviors
 	end
-	list[last] = nil
 end
 
 function ContextMethods:addBehavior(b)
-	self.behaviors[#self.behaviors + 1] = b
-
-	-- Append keeps all existing indexes stable; maintain incrementally.
-	if b and b.id and self._behaviorIndex[b.id] == nil then
-		self._behaviorIndex[b.id] = #self.behaviors
-	end
+	appendBehavior(self, b)
 end
 
 function ContextMethods:addHookBehavior(hookId, behavior)
@@ -135,12 +130,7 @@ function ContextMethods:addHookBehavior(hookId, behavior)
 		b.hooks = { hookId }
 	end
 
-	self.behaviors[#self.behaviors + 1] = b
-
-	-- Append keeps all existing indexes stable; maintain incrementally.
-	if b.id and self._behaviorIndex[b.id] == nil then
-		self._behaviorIndex[b.id] = #self.behaviors
-	end
+	appendBehavior(self, b)
 end
 
 function ContextMethods:replaceBehavior(id, newB)
@@ -171,8 +161,7 @@ function ContextMethods:removeBehavior(id)
 		return
 	end
 
-	-- Order is not semantically required for single-id removals; swap-remove avoids shifting.
-	swapRemove(self.behaviors, i)
+	table.remove(self.behaviors, i)
 	rebuildBehaviorIndex(self)
 end
 
