@@ -92,28 +92,24 @@ local function copyBehaviors(list)
 	return out
 end
 
-local function rebuildBehaviorIndex(ctx)
-	local index = {}
-	local behaviors = ctx.behaviors
+local ContextMethods = {}
+
+local function findBehaviorIndex(behaviors, id)
+	if not id then
+		return nil
+	end
 
 	for i = 1, #behaviors do
-		local id = behaviors[i].id
-		if id and index[id] == nil then
-			index[id] = i
+		if behaviors[i].id == id then
+			return i
 		end
 	end
 
-	ctx._behaviorIndex = index
+	return nil
 end
-
-local ContextMethods = {}
 
 local function appendBehavior(ctx, behavior)
 	ctx.behaviors[#ctx.behaviors + 1] = behavior
-
-	if behavior and behavior.id and ctx._behaviorIndex[behavior.id] == nil then
-		ctx._behaviorIndex[behavior.id] = #ctx.behaviors
-	end
 end
 
 function ContextMethods:addBehavior(b)
@@ -134,18 +130,16 @@ function ContextMethods:addHookBehavior(hookId, behavior)
 end
 
 function ContextMethods:replaceBehavior(id, newB)
-	local i = self._behaviorIndex[id]
+	local i = findBehaviorIndex(self.behaviors, id)
 	if not i then
 		return
 	end
 
-	-- Replacement can change ids and first-occurrence mappings; rebuild once.
 	self.behaviors[i] = newB
-	rebuildBehaviorIndex(self)
 end
 
 function ContextMethods:modifyBehavior(id, fn)
-	local i = self._behaviorIndex[id]
+	local i = findBehaviorIndex(self.behaviors, id)
 	if not i then
 		return
 	end
@@ -156,13 +150,12 @@ function ContextMethods:modifyBehavior(id, fn)
 end
 
 function ContextMethods:removeBehavior(id)
-	local i = self._behaviorIndex[id]
+	local i = findBehaviorIndex(self.behaviors, id)
 	if not i then
 		return
 	end
 
 	table.remove(self.behaviors, i)
-	rebuildBehaviorIndex(self)
 end
 
 function ContextMethods:forEachBehavior(fn)
@@ -195,7 +188,7 @@ function ContextMethods:removeByType(typeName)
 		behaviors[i] = nil
 	end
 
-	rebuildBehaviorIndex(self)
+
 end
 
 local ContextMetatable = { __index = ContextMethods }
@@ -242,10 +235,7 @@ local function createContext(base)
 	local ctx = {
 		behaviors = copyBehaviors(base),
 		output = "projectile",
-		_behaviorIndex = {},
 	}
-
-	rebuildBehaviorIndex(ctx)
 
 	return setmetatable(ctx, ContextMetatable)
 end
