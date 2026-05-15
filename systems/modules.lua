@@ -369,7 +369,7 @@ function Modules.getFireProfile(tower)
 	end
 
 	local ctx = Modules.buildContext(tower)
-	profile = {
+	local profile = {
 		output = ctx.output,
 		behaviors = ctx.behaviors,
 		version = version,
@@ -396,28 +396,13 @@ function Modules.getActive()
 	return Modules.active
 end
 
-local function applyTargetModeFromModules(mode, mods)
-	if not mods then
+local function applyTargetMode(mode, list, resolver)
+	if not list then
 		return mode
 	end
 
-	for i = 1, #mods do
-		local mod = mods[i]
-		if mod and mod.targetMode then
-			mode = mod.targetMode
-		end
-	end
-
-	return mode
-end
-
-local function applyTargetModeFromIds(mode, ids)
-	if not ids then
-		return mode
-	end
-
-	for i = 1, #ids do
-		local mod = ModuleDefs[ids[i]]
+	for i = 1, #list do
+		local mod = resolver(list[i])
 		if mod and mod.targetMode then
 			mode = mod.targetMode
 		end
@@ -438,9 +423,15 @@ function Modules.getTargetMode(towerOrKind)
 	end
 
 	local mode = nil
-	mode = applyTargetModeFromModules(mode, Modules.active.global)
-	mode = applyTargetModeFromModules(mode, Modules.active[towerKind])
-	mode = applyTargetModeFromIds(mode, branchSelections)
+	mode = applyTargetMode(mode, Modules.active.global, function(mod)
+		return mod
+	end)
+	mode = applyTargetMode(mode, Modules.active[towerKind], function(mod)
+		return mod
+	end)
+	mode = applyTargetMode(mode, branchSelections, function(id)
+		return ModuleDefs[id]
+	end)
 
 	if legacySpecializationId and not branchSelections then
 		local mod = ModuleDefs[legacySpecializationId]
