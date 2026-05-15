@@ -103,12 +103,11 @@ function ContextMethods:addHookBehavior(hookId, behavior)
 		return
 	end
 
-	local b = behavior
-	if not b.hooks then
-		b.hooks = { hookId }
+	if not behavior.hooks then
+		behavior.hooks = { hookId }
 	end
 
-	self.behaviors[#self.behaviors + 1] = b
+	self.behaviors[#self.behaviors + 1] = behavior
 end
 
 function ContextMethods:replaceBehavior(id, newB)
@@ -147,30 +146,11 @@ function ContextMethods:forEachBehavior(fn)
 end
 
 function ContextMethods:removeByType(typeName)
-	-- Preserve hook execution order with in-place compaction; rebuild once afterward.
-	local behaviors = self.behaviors
-	local write = 1
-	local removed = 0
-
-	for read = 1, #behaviors do
-		local behavior = behaviors[read]
-		if behavior.type == typeName then
-			removed = removed + 1
-		else
-			behaviors[write] = behavior
-			write = write + 1
+	for i = #self.behaviors, 1, -1 do
+		if self.behaviors[i].type == typeName then
+			table.remove(self.behaviors, i)
 		end
 	end
-
-	if removed == 0 then
-		return
-	end
-
-	for i = write, #behaviors do
-		behaviors[i] = nil
-	end
-
-
 end
 
 local ContextMetatable = { __index = ContextMethods }
