@@ -234,20 +234,6 @@ local HOOK_IDS = {
 	"on_expire",
 }
 
-local function behaviorSupportsHook(def, behaviorData, primaryHookId, compatHookId)
-	if behaviorData and behaviorData.hooks then
-		for i = 1, #behaviorData.hooks do
-			local hook = behaviorData.hooks[i]
-			if hook == primaryHookId or hook == compatHookId then
-				return true
-			end
-		end
-		return false
-	end
-
-	return def[primaryHookId] ~= nil or (compatHookId and def[compatHookId] ~= nil)
-end
-
 function ProjectileBehaviors.compileHooks(p)
 	local hooks = {}
 
@@ -256,19 +242,32 @@ function ProjectileBehaviors.compileHooks(p)
 	end
 
 	for i = 1, #p.behaviors do
-		local b = p.behaviors[i]
-		local def = B[b.id]
-
+		local behavior = p.behaviors[i]
+		local def = B[behavior.id]
 		if def then
+			local declaredHooks = behavior.hooks
+			local declaredLookup = nil
+			if declaredHooks then
+				declaredLookup = {}
+				for j = 1, #declaredHooks do
+					declaredLookup[declaredHooks[j]] = true
+				end
+			end
+
 			for j = 1, #HOOK_IDS do
 				local hookId = HOOK_IDS[j]
 				local compatHookId = HOOK_COMPAT[hookId]
+				local fn = def[hookId] or def[compatHookId]
 
-				if behaviorSupportsHook(def, b, hookId, compatHookId) then
-					local fn = def[hookId] or def[compatHookId]
-					if fn then
+				if fn then
+					local enabled = true
+					if declaredLookup then
+						enabled = declaredLookup[hookId] or (compatHookId and declaredLookup[compatHookId]) or false
+					end
+
+					if enabled then
 						local arr = hooks[hookId]
-						arr[#arr + 1] = { fn = fn, data = b.data }
+						arr[#arr + 1] = { fn = fn, data = behavior.data }
 					end
 				end
 			end
