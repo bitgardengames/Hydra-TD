@@ -108,14 +108,6 @@ end
 
 local ContextMethods = {}
 
-local function mutateBehaviors(ctx, mutator)
-	local shouldRebuild = mutator(ctx.behaviors)
-
-	if shouldRebuild then
-		rebuildBehaviorIndex(ctx)
-	end
-end
-
 local function swapRemove(list, i)
 	local last = #list
 	if i < last then
@@ -158,10 +150,8 @@ function ContextMethods:replaceBehavior(id, newB)
 	end
 
 	-- Replacement can change ids and first-occurrence mappings; rebuild once.
-	mutateBehaviors(self, function(behaviors)
-		behaviors[i] = newB
-		return true
-	end)
+	self.behaviors[i] = newB
+	rebuildBehaviorIndex(self)
 end
 
 function ContextMethods:modifyBehavior(id, fn)
@@ -182,10 +172,8 @@ function ContextMethods:removeBehavior(id)
 	end
 
 	-- Order is not semantically required for single-id removals; swap-remove avoids shifting.
-	mutateBehaviors(self, function(behaviors)
-		swapRemove(behaviors, i)
-		return true
-	end)
+	swapRemove(self.behaviors, i)
+	rebuildBehaviorIndex(self)
 end
 
 function ContextMethods:forEachBehavior(fn)
@@ -196,30 +184,29 @@ end
 
 function ContextMethods:removeByType(typeName)
 	-- Preserve hook execution order with in-place compaction; rebuild once afterward.
-	mutateBehaviors(self, function(behaviors)
-		local write = 1
-		local removed = 0
+	local behaviors = self.behaviors
+	local write = 1
+	local removed = 0
 
-		for read = 1, #behaviors do
-			local behavior = behaviors[read]
-			if behavior.type == typeName then
-				removed = removed + 1
-			else
-				behaviors[write] = behavior
-				write = write + 1
-			end
+	for read = 1, #behaviors do
+		local behavior = behaviors[read]
+		if behavior.type == typeName then
+			removed = removed + 1
+		else
+			behaviors[write] = behavior
+			write = write + 1
 		end
+	end
 
-		if removed == 0 then
-			return false
-		end
+	if removed == 0 then
+		return
+	end
 
-		for i = write, #behaviors do
-			behaviors[i] = nil
-		end
+	for i = write, #behaviors do
+		behaviors[i] = nil
+	end
 
-		return true
-	end)
+	rebuildBehaviorIndex(self)
 end
 
 local ContextMetatable = { __index = ContextMethods }
