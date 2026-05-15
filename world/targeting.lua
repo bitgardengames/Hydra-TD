@@ -98,27 +98,21 @@ function Targeting.isTargetEntityValid(e)
 		and type(e.y) == "number"
 end
 
-function Targeting.isValidTarget(tower, e)
-	return Targeting.isSemanticallyValidTarget(tower, e)
-end
+Targeting.isValidTarget = Targeting.isSemanticallyValidTarget
 
-local function pickSimpleTarget(tower, mode)
+function Targeting.findTarget(tower, mode)
 	local ctx = simpleCtx
 	ctx.best = nil
 	ctx.bestScore = HUGE_NEG
 	ctx.r2 = tower.range2
 	ctx.tx = tower.x
 	ctx.ty = tower.y
-	ctx.scoreFn = scoreByMode[mode]
+	ctx.scoreFn = scoreByMode[normalizeMode(mode)]
 
 	forEachInCells(tower.x, tower.y, tower.range, evaluateCandidate, ctx)
 
 	ctx.scoreFn = nil
 	return ctx.best
-end
-
-function Targeting.findTarget(tower, mode)
-	return pickSimpleTarget(tower, normalizeMode(mode))
 end
 
 for aliasName, mode in pairs({
