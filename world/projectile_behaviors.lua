@@ -218,27 +218,34 @@ local function projectileHasHit(p, id)
 	return p.hitSet[id] == true
 end
 
-local HOOK_COMPAT = {
-	on_shot = "init",
-	on_tick = "update",
-	on_hit = "onHit",
-	on_kill = "onKill",
-	on_expire = "onExpire",
+local HOOK_SPECS = {
+	{ id = "on_shot", legacy = "init" },
+	{ id = "on_tick", legacy = "update" },
+	{ id = "on_hit", legacy = "onHit" },
+	{ id = "on_kill", legacy = "onKill" },
+	{ id = "on_expire", legacy = "onExpire" },
 }
 
-local HOOK_IDS = {
-	"on_shot",
-	"on_tick",
-	"on_hit",
-	"on_kill",
-	"on_expire",
-}
+local function isDeclaredHook(declaredHooks, hookId, legacyHookId)
+	if not declaredHooks then
+		return true
+	end
+
+	for i = 1, #declaredHooks do
+		local declared = declaredHooks[i]
+		if declared == hookId or declared == legacyHookId then
+			return true
+		end
+	end
+
+	return false
+end
 
 function ProjectileBehaviors.compileHooks(p)
 	local hooks = {}
 
-	for i = 1, #HOOK_IDS do
-		hooks[HOOK_IDS[i]] = {}
+	for i = 1, #HOOK_SPECS do
+		hooks[HOOK_SPECS[i].id] = {}
 	end
 
 	for i = 1, #p.behaviors do
@@ -246,29 +253,13 @@ function ProjectileBehaviors.compileHooks(p)
 		local def = B[behavior.id]
 		if def then
 			local declaredHooks = behavior.hooks
-			local declaredLookup = nil
-			if declaredHooks then
-				declaredLookup = {}
-				for j = 1, #declaredHooks do
-					declaredLookup[declaredHooks[j]] = true
-				end
-			end
+			for j = 1, #HOOK_SPECS do
+				local spec = HOOK_SPECS[j]
+				local fn = def[spec.id] or def[spec.legacy]
 
-			for j = 1, #HOOK_IDS do
-				local hookId = HOOK_IDS[j]
-				local compatHookId = HOOK_COMPAT[hookId]
-				local fn = def[hookId] or def[compatHookId]
-
-				if fn then
-					local enabled = true
-					if declaredLookup then
-						enabled = declaredLookup[hookId] or (compatHookId and declaredLookup[compatHookId]) or false
-					end
-
-					if enabled then
-						local arr = hooks[hookId]
-						arr[#arr + 1] = { fn = fn, data = behavior.data }
-					end
+				if fn and isDeclaredHook(declaredHooks, spec.id, spec.legacy) then
+					local arr = hooks[spec.id]
+					arr[#arr + 1] = { fn = fn, data = behavior.data }
 				end
 			end
 		end
