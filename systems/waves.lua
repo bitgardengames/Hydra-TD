@@ -12,6 +12,7 @@ local Spatial = require("world.spatial_grid")
 local Waves = {}
 
 local max = math.max
+local min = math.min
 
 local function copyValues(dst, src)
 	for k, v in pairs(src) do
@@ -29,6 +30,14 @@ local function copyNonNilValues(dst, src)
 			dst[k] = v
 		end
 	end
+end
+
+local function mergeTemplateLayers(...)
+	local merged = {}
+	for i = 1, select("#", ...) do
+		copyNonNilValues(merged, select(i, ...))
+	end
+	return merged
 end
 
 local biomeBossArchetypes = {
@@ -125,27 +134,16 @@ local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 	end
 
 	local biome = (map and map.biome) or "default"
-	local biomeOverride = nil
-	local mapKeyedOverride = nil
-	local mapIndexedOverride = nil
-
-	local biomeOverrides = biomeTemplateOverrides[biome]
-	if biomeOverrides then
-		biomeOverride = biomeOverrides[bossKind]
-	end
+	local biomeOverride = biomeTemplateOverrides[biome] and biomeTemplateOverrides[biome][bossKind] or nil
 
 	local mapWaveDefs = getMapWaveDefs(map)
-	if mapWaveDefs and mapWaveDefs.encounters then
-		local mapDefs = mapWaveDefs.encounters
-		mapKeyedOverride = mapDefs[bossKind]
-		mapIndexedOverride = mapDefs[bossIndex]
-	end
-
-	local resolved = {}
-	copyValues(resolved, base)
-	copyNonNilValues(resolved, biomeOverride)
-	copyNonNilValues(resolved, mapKeyedOverride)
-	copyNonNilValues(resolved, mapIndexedOverride)
+	local mapDefs = mapWaveDefs and mapWaveDefs.encounters or nil
+	local resolved = mergeTemplateLayers(
+		base,
+		biomeOverride,
+		mapDefs and mapDefs[bossKind] or nil,
+		mapDefs and mapDefs[bossIndex] or nil
+	)
 
 	return {
 		flankKind = resolved.flankKind,
@@ -157,6 +155,14 @@ local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 		addHpMult = resolved.addHpMult,
 		addSpdMult = resolved.addSpdMult,
 	}
+end
+
+local function getWaveMultipliers(waveNumber, mapMult, isBoss)
+	local hpMult = isBoss
+		and (DifficultyCurve.getBossHpMultiplier(waveNumber) * mapMult)
+		or (DifficultyCurve.getEnemyHpMultiplier(waveNumber) * mapMult)
+	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(waveNumber)
+	return hpMult, spdMult
 end
 
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
@@ -240,8 +246,7 @@ function Waves.startWave()
 			bossKind = getBossByArchetype(map, bossIndex)
 		end
 
-		local hpMult = DifficultyCurve.getBossHpMultiplier(State.wave) * mapMult
-		local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
+		local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, true)
 
 		State.activeBoss = nil
 		State.activeBossKind = bossKind
@@ -278,8 +283,7 @@ function Waves.startWave()
 	local count = max(1, wave.count or 1)
 	local kind = wave.enemy or "grunt"
 
-	local hpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult
-	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(State.wave)
+	local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, false)
 
 	local gap = wave.spacing or 1.0
 
@@ -344,7 +348,7 @@ function Waves.updateSpawner(dt)
 
 			local available = bossAdds.maxAlive - aliveAdds
 			if available > 0 then
-				local toSpawn = max(0, math.min(bossAdds.burst, available, bossAdds.maxTotal - bossAdds.totalSpawned))
+				local toSpawn = max(0, min(bossAdds.burst, available, bossAdds.maxTotal - bossAdds.totalSpawned))
 				if toSpawn > 0 then
 					beginSpawner(bossAdds.kind, toSpawn, 0.18, bossAdds.hpMult, bossAdds.spdMult)
 					bossAdds.totalSpawned = bossAdds.totalSpawned + toSpawn
