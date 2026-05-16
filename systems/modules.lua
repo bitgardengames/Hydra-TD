@@ -92,36 +92,22 @@ local function copyBehaviors(list)
 	return out
 end
 
-local ContextMethods = {}
-
-function ContextMethods:addBehavior(b)
-	self.behaviors[#self.behaviors + 1] = b
+local function addBehavior(ctx, b)
+	ctx.behaviors[#ctx.behaviors + 1] = b
 end
 
-function ContextMethods:addHookBehavior(hookId, behavior)
-	if not behavior then
-		return
-	end
-
-	if not behavior.hooks then
-		behavior.hooks = { hookId }
-	end
-
-	self.behaviors[#self.behaviors + 1] = behavior
-end
-
-function ContextMethods:replaceBehavior(id, newB)
-	for i = 1, #self.behaviors do
-		if self.behaviors[i].id == id then
-			self.behaviors[i] = newB
+local function replaceBehavior(ctx, id, newB)
+	for i = 1, #ctx.behaviors do
+		if ctx.behaviors[i].id == id then
+			ctx.behaviors[i] = newB
 			return
 		end
 	end
 end
 
-function ContextMethods:modifyBehavior(id, fn)
-	for i = 1, #self.behaviors do
-		local behavior = self.behaviors[i]
+local function modifyBehavior(ctx, id, fn)
+	for i = 1, #ctx.behaviors do
+		local behavior = ctx.behaviors[i]
 		if behavior.id == id then
 			behavior.data = behavior.data or {}
 			fn(behavior.data)
@@ -130,31 +116,13 @@ function ContextMethods:modifyBehavior(id, fn)
 	end
 end
 
-function ContextMethods:removeBehavior(id)
-	for i = 1, #self.behaviors do
-		if self.behaviors[i].id == id then
-			table.remove(self.behaviors, i)
-			return
+local function removeByType(ctx, typeName)
+	for i = #ctx.behaviors, 1, -1 do
+		if ctx.behaviors[i].type == typeName then
+			table.remove(ctx.behaviors, i)
 		end
 	end
 end
-
-function ContextMethods:forEachBehavior(fn)
-	for i = 1, #self.behaviors do
-		fn(self.behaviors[i])
-	end
-end
-
-function ContextMethods:removeByType(typeName)
-	for i = #self.behaviors, 1, -1 do
-		if self.behaviors[i].type == typeName then
-			table.remove(self.behaviors, i)
-		end
-	end
-end
-
-local ContextMetatable = { __index = ContextMethods }
-
 
 local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	if not tower or not tower.def then
@@ -199,7 +167,20 @@ local function createContext(base)
 		output = "projectile",
 	}
 
-	return setmetatable(ctx, ContextMetatable)
+	ctx.addBehavior = function(self, behavior)
+		addBehavior(self, behavior)
+	end
+	ctx.replaceBehavior = function(self, id, behavior)
+		replaceBehavior(self, id, behavior)
+	end
+	ctx.modifyBehavior = function(self, id, fn)
+		modifyBehavior(self, id, fn)
+	end
+	ctx.removeByType = function(self, typeName)
+		removeByType(self, typeName)
+	end
+
+	return ctx
 end
 
 function Modules.buildContext(tower)
