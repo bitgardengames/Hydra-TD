@@ -92,38 +92,6 @@ local function copyBehaviors(list)
 	return out
 end
 
-local function addBehavior(ctx, b)
-	ctx.behaviors[#ctx.behaviors + 1] = b
-end
-
-local function replaceBehavior(ctx, id, newB)
-	for i = 1, #ctx.behaviors do
-		if ctx.behaviors[i].id == id then
-			ctx.behaviors[i] = newB
-			return
-		end
-	end
-end
-
-local function modifyBehavior(ctx, id, fn)
-	for i = 1, #ctx.behaviors do
-		local behavior = ctx.behaviors[i]
-		if behavior.id == id then
-			behavior.data = behavior.data or {}
-			fn(behavior.data)
-			return
-		end
-	end
-end
-
-local function removeByType(ctx, typeName)
-	for i = #ctx.behaviors, 1, -1 do
-		if ctx.behaviors[i].type == typeName then
-			table.remove(ctx.behaviors, i)
-		end
-	end
-end
-
 local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	if not tower or not tower.def then
 		return
@@ -168,16 +136,32 @@ local function createContext(base)
 	}
 
 	ctx.addBehavior = function(self, behavior)
-		addBehavior(self, behavior)
+		self.behaviors[#self.behaviors + 1] = behavior
 	end
 	ctx.replaceBehavior = function(self, id, behavior)
-		replaceBehavior(self, id, behavior)
+		for i = 1, #self.behaviors do
+			if self.behaviors[i].id == id then
+				self.behaviors[i] = behavior
+				return
+			end
+		end
 	end
 	ctx.modifyBehavior = function(self, id, fn)
-		modifyBehavior(self, id, fn)
+		for i = 1, #self.behaviors do
+			local behavior = self.behaviors[i]
+			if behavior.id == id then
+				behavior.data = behavior.data or {}
+				fn(behavior.data)
+				return
+			end
+		end
 	end
 	ctx.removeByType = function(self, typeName)
-		removeByType(self, typeName)
+		for i = #self.behaviors, 1, -1 do
+			if self.behaviors[i].type == typeName then
+				table.remove(self.behaviors, i)
+			end
+		end
 	end
 
 	return ctx
