@@ -129,6 +129,37 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 		end
 	end
 end
+
+local function applyTargetModeFromMods(modules, mode)
+	if not modules then
+		return mode
+	end
+
+	for i = 1, #modules do
+		local mod = modules[i]
+		if mod and mod.targetMode then
+			mode = mod.targetMode
+		end
+	end
+
+	return mode
+end
+
+local function applyTargetModeFromModuleIds(moduleIds, mode)
+	if not moduleIds then
+		return mode
+	end
+
+	for i = 1, #moduleIds do
+		local mod = ModuleDefs[moduleIds[i]]
+		if mod and mod.targetMode then
+			mode = mod.targetMode
+		end
+	end
+
+	return mode
+end
+
 local function createContext(base)
 	local ctx = {
 		behaviors = copyBehaviors(base),
@@ -301,38 +332,15 @@ function Modules.getTargetMode(towerOrKind)
 	end
 
 	local mode = nil
-	local globalMods = Modules.active.global
-	for i = 1, #globalMods do
-		local mod = globalMods[i]
-		if mod and mod.targetMode then
-			mode = mod.targetMode
-		end
-	end
-
-	local towerMods = Modules.active[towerKind]
-	if towerMods then
-		for i = 1, #towerMods do
-			local mod = towerMods[i]
-			if mod and mod.targetMode then
-				mode = mod.targetMode
-			end
-		end
-	end
+	mode = applyTargetModeFromMods(Modules.active.global, mode)
+	mode = applyTargetModeFromMods(Modules.active[towerKind], mode)
 
 	if branchSelections then
-		for i = 1, #branchSelections do
-			local mod = ModuleDefs[branchSelections[i]]
-			if mod and mod.targetMode then
-				mode = mod.targetMode
-			end
-		end
+		mode = applyTargetModeFromModuleIds(branchSelections, mode)
 	end
 
 	if legacySpecializationId and not branchSelections then
-		local mod = ModuleDefs[legacySpecializationId]
-		if mod and mod.targetMode then
-			mode = mod.targetMode
-		end
+		mode = applyTargetModeFromModuleIds({ legacySpecializationId }, mode)
 	end
 
 	return mode
