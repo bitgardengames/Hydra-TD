@@ -130,16 +130,21 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	end
 end
 
+local function applyTargetMode(mode, mod)
+	if mod and mod.targetMode then
+		return mod.targetMode
+	end
+
+	return mode
+end
+
 local function applyTargetModeFromModules(modules, mode)
 	if not modules then
 		return mode
 	end
 
 	for i = 1, #modules do
-		local mod = modules[i]
-		if mod and mod.targetMode then
-			mode = mod.targetMode
-		end
+		mode = applyTargetMode(mode, modules[i])
 	end
 
 	return mode
@@ -151,10 +156,7 @@ local function applyTargetModeFromIds(moduleIds, mode)
 	end
 
 	for i = 1, #moduleIds do
-		local mod = ModuleDefs[moduleIds[i]]
-		if mod and mod.targetMode then
-			mode = mod.targetMode
-		end
+		mode = applyTargetMode(mode, ModuleDefs[moduleIds[i]])
 	end
 
 	return mode
@@ -337,10 +339,7 @@ function Modules.getTargetMode(towerOrKind)
 	mode = applyTargetModeFromIds(branchSelections, mode)
 
 	if legacySpecializationId and not branchSelections then
-		local specialization = ModuleDefs[legacySpecializationId]
-		if specialization and specialization.targetMode then
-			mode = specialization.targetMode
-		end
+		mode = applyTargetMode(mode, ModuleDefs[legacySpecializationId])
 	end
 
 	return mode
