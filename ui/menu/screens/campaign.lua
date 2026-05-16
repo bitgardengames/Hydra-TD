@@ -675,10 +675,6 @@ function Screen.mousereleased(x, y, button)
 	end
 end
 
-local function canMoveLeft()
-	return State.mapIndex > 1
-end
-
 function Screen.resize(w, h)
 	MapPreviewCache.buildAll(520, 312)
 	Backdrop.start()
