@@ -5,16 +5,6 @@ local max = math.max
 local sqrt = math.sqrt
 local floor = math.floor
 
-local function copyKeys(dst, src, skipNil)
-	for k, v in pairs(src) do
-		if not skipNil or v ~= nil then
-			dst[k] = v
-		end
-	end
-
-	return dst
-end
-
 -- Targeting / distance math
 function Util.clamp(x, a, b)
 	return max(a, min(x, b))
@@ -32,7 +22,7 @@ function Util.len(x, y)
 end
 
 function Util.norm(x, y)
-	local l = Util.len(x, y)
+	local l = sqrt(x * x + y * y)
 
 	if l == 0 then
 		return 0, 0
@@ -68,7 +58,11 @@ function Util.clearTable(t)
 end
 
 function Util.resetFromDefaults(dst, defaults)
-	return copyKeys(dst, defaults, false)
+	for k, v in pairs(defaults) do
+		dst[k] = v
+	end
+
+	return dst
 end
 
 function Util.applyNonNilOverrides(dst, overrides)
@@ -76,7 +70,13 @@ function Util.applyNonNilOverrides(dst, overrides)
 		return dst
 	end
 
-	return copyKeys(dst, overrides, true)
+	for k, v in pairs(overrides) do
+		if v ~= nil then
+			dst[k] = v
+		end
+	end
+
+	return dst
 end
 
 return Util
