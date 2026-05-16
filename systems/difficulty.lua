@@ -1,62 +1,44 @@
 local Difficulty = {}
 
-Difficulty.defs = {
-	easy = {
-		key = "easy",
+local baseDef = {
+	enemySpeedBias = 1.0,
+	enemyHpBias = 1.0,
+	bossHpBias = 1.0,
+	rewardBias = 1.0,
+	startMoney = 120,
+	startLives = 20,
+	sellRefund = 0.75,
+}
 
-		-- Enemy baseline bias
-		enemySpeedBias = 1.0,
+local function makeDef(key, overrides)
+	local def = { key = key }
+	for k, v in pairs(baseDef) do
+		def[k] = v
+	end
+	for k, v in pairs(overrides or {}) do
+		def[k] = v
+	end
+	return def
+end
+
+Difficulty.defs = {
+	easy = makeDef("easy", {
 		enemyHpBias = 0.83,
 		bossHpBias = 0.83,
-
-		-- Economy
 		rewardBias = 1.05,
-
-		-- Player affordances
-		startMoney = 120,
 		startLives = 25,
 		sellRefund = 0.85,
-	},
+	}),
 
-	normal = {
-		key = "normal",
-
-		enemySpeedBias = 1.0,
+	normal = makeDef("normal", {
 		enemyHpBias = 0.91,
 		bossHpBias = 0.91,
+	}),
 
-		rewardBias = 1.00,
-
-		startMoney = 120,
-		startLives = 20,
-		sellRefund = 0.75,
-	},
-
-	hard = {
-		key = "hard",
-
-		enemySpeedBias = 1.0,
-		enemyHpBias = 1.0,
-		bossHpBias = 1.0,
-
-		rewardBias = 1.00,
-
-		startMoney = 120,
+	hard = makeDef("hard", {
 		startLives = 15,
 		sellRefund = 0.60,
-	},
-
-	--[[expert = {
-		enemySpeedBias = 1.0,
-		enemyHpBias = 1.07,
-		bossHpBias = 1.07,
-
-		rewardBias = 1.00,
-
-		startMoney = 120,
-		startLives = 10,
-		sellRefund = 0.50,
-	}]]
+	}),
 }
 
 Difficulty.default = "normal"
