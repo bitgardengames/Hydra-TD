@@ -8,11 +8,28 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
 local Spatial = require("world.spatial_grid")
-local Util = require("core.util")
 
 local Waves = {}
 
 local max = math.max
+
+local function copyValues(dst, src)
+	for k, v in pairs(src) do
+		dst[k] = v
+	end
+end
+
+local function copyNonNilValues(dst, src)
+	if not src then
+		return
+	end
+
+	for k, v in pairs(src) do
+		if v ~= nil then
+			dst[k] = v
+		end
+	end
+end
 
 local biomeBossArchetypes = {
 	default = {"boss_summoner", "boss_displacement", "boss_suppression"},
@@ -125,10 +142,10 @@ local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 	end
 
 	local resolved = {}
-	Util.resetFromDefaults(resolved, base)
-	Util.applyNonNilOverrides(resolved, biomeOverride)
-	Util.applyNonNilOverrides(resolved, mapKeyedOverride)
-	Util.applyNonNilOverrides(resolved, mapIndexedOverride)
+	copyValues(resolved, base)
+	copyNonNilValues(resolved, biomeOverride)
+	copyNonNilValues(resolved, mapKeyedOverride)
+	copyNonNilValues(resolved, mapIndexedOverride)
 
 	return {
 		flankKind = resolved.flankKind,
@@ -169,8 +186,8 @@ local spawner = {}
 local bossAdds = {}
 
 local function resetTable(target, defaults, overrides)
-	Util.resetFromDefaults(target, defaults)
-	Util.applyNonNilOverrides(target, overrides)
+	copyValues(target, defaults)
+	copyNonNilValues(target, overrides)
 end
 
 resetTable(spawner, spawnerDefaults)
