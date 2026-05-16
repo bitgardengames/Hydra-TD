@@ -14,7 +14,6 @@ local Waves = {}
 
 local max = math.max
 
-local mergeInto = Util.resetFromDefaults
 local biomeBossArchetypes = {
 	default = {"boss_summoner", "boss_displacement", "boss_suppression"},
 	autumn = {"boss_displacement", "boss_suppression", "boss_summoner"},
@@ -126,10 +125,10 @@ local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 	end
 
 	local resolved = {}
-	mergeInto(resolved, base)
-	mergeInto(resolved, biomeOverride)
-	mergeInto(resolved, mapKeyedOverride)
-	mergeInto(resolved, mapIndexedOverride)
+	Util.resetFromDefaults(resolved, base)
+	Util.applyNonNilOverrides(resolved, biomeOverride)
+	Util.applyNonNilOverrides(resolved, mapKeyedOverride)
+	Util.applyNonNilOverrides(resolved, mapIndexedOverride)
 
 	return {
 		flankKind = resolved.flankKind,
@@ -169,21 +168,16 @@ local bossAddsDefaults = {
 local spawner = {}
 local bossAdds = {}
 
-local function resetSpawner(overrides)
-	Util.resetFromDefaults(spawner, spawnerDefaults)
-	Util.applyNonNilOverrides(spawner, overrides)
+local function resetTable(target, defaults, overrides)
+	Util.resetFromDefaults(target, defaults)
+	Util.applyNonNilOverrides(target, overrides)
 end
 
-local function resetBossAdds(overrides)
-	Util.resetFromDefaults(bossAdds, bossAddsDefaults)
-	Util.applyNonNilOverrides(bossAdds, overrides)
-end
-
-resetSpawner()
-resetBossAdds()
+resetTable(spawner, spawnerDefaults)
+resetTable(bossAdds, bossAddsDefaults)
 
 local function beginSpawner(kind, count, gap, hpMult, spdMult)
-	resetSpawner({
+	resetTable(spawner, spawnerDefaults, {
 		active = true,
 		remaining = count or 0,
 		gap = gap or spawnerDefaults.gap,
@@ -240,7 +234,7 @@ function Waves.startWave()
 		if template and template.flankKind then
 			local interval = max(1.2, template.interval or 6.0)
 			local maxAlive = max(1, template.maxAliveAdds or 10)
-			resetBossAdds({
+			resetTable(bossAdds, bossAddsDefaults, {
 				active = true,
 				kind = template.flankKind,
 				burst = max(1, template.flankBurst or 1),
@@ -366,8 +360,8 @@ function Waves.getWaveCompletionBonus(wave, waveLeaks)
 end
 
 function Waves.resetSpawner()
-	resetSpawner()
-	resetBossAdds()
+	resetTable(spawner, spawnerDefaults)
+	resetTable(bossAdds, bossAddsDefaults)
 end
 
 function Waves.getSpawner()
