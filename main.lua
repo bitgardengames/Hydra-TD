@@ -221,6 +221,51 @@ end
 
 local MAX_FRAME_DT = 1 / 15
 
+local function isWorldMode(mode)
+	return mode == "game" or mode == "pause" or mode == "game_over" or mode == "victory"
+end
+
+local function updateMetaScreens(dt, mode)
+	Menu.update(dt)
+	Overlay.update(dt)
+
+	if mode == "campaign" then
+		State.carouselT = min(1, State.carouselT + dt * 7)
+
+		if State.carouselT >= 1 then
+			State.carouselDir = 0
+		end
+	end
+end
+
+local function updateGamePresentation(dt)
+	State.renderAlpha = 1
+	State.renderStep = dt * State.speed
+
+	State.livesAnim = max(0, State.livesAnim - dt * 2)
+	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
+
+	if State.placing then
+		State.placingFadeT = min(1, State.placingFadeT + dt * 12)
+	else
+		State.placingFadeT = 0
+	end
+
+	local p = State.placingFadeT
+	State.placingFade = p * p * (3 - 2 * p)
+end
+
+local function drawWorldAndUI()
+	Camera.begin()
+	Draw.drawWorld()
+	Camera.finish()
+	Camera.present()
+
+	Draw.drawUI()
+	ModulePicker.draw()
+	Tooltip.draw()
+end
+
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
 	dt = min(dt, MAX_FRAME_DT)
@@ -248,16 +293,7 @@ function love.update(dt)
 	Sim.update(dt * State.speed)
 
 	if mode ~= "game" then
-		Menu.update(dt)
-		Overlay.update(dt)
-
-		if mode == "campaign" then
-			State.carouselT = min(1, State.carouselT + dt * 7)
-
-			if State.carouselT >= 1 then
-				State.carouselDir = 0
-			end
-		end
+		updateMetaScreens(dt, mode)
 
 		return
 	end
@@ -269,21 +305,7 @@ function love.update(dt)
 		Overlay.update(dt)
 	end
 
-	State.renderAlpha = 1
-	State.renderStep = dt * State.speed
-
-	State.livesAnim = max(0, State.livesAnim - dt * 2)
-	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
-
-	-- Placement ghost fade
-	if State.placing then
-		State.placingFadeT = min(1, State.placingFadeT + dt * 12)
-	else
-		State.placingFadeT = 0
-	end
-
-	local p = State.placingFadeT
-	State.placingFade = p * p * (3 - 2 * p)
+	updateGamePresentation(dt)
 
 	Tooltip.update(dt)
 	Messages.update(dt)
@@ -367,17 +389,8 @@ function love.draw()
 
 	lg.setColor(1, 1, 1)
 
-	if State.mode == "game" or State.mode == "pause" or State.mode == "game_over" or State.mode == "victory" then
-		-- World
-		Camera.begin()
-		Draw.drawWorld()
-
-		Camera.finish()
-		Camera.present()
-
-		-- UI
-		Draw.drawUI()
-		ModulePicker.draw() -- This should all be part of drawUI, not in main.lua
+	if isWorldMode(State.mode) then
+		drawWorldAndUI()
 
 		if State.mode == "pause" then
 			local t = State.pauseT
@@ -394,8 +407,6 @@ function love.draw()
 			Menu.draw()
 			Overlay.draw()
 		end
-
-		Tooltip.draw()
 	else
 		Menu.draw()
 		Overlay.draw()
