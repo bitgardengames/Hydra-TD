@@ -196,7 +196,7 @@ function Cactus.draw()
 
 		local radius = w
 		lg.setColor(0, 0, 0, shA)
-		lg.ellipse("fill", x, baseY + 1, radius * shW, radius * shH)
+		lg.ellipse("fill", x, baseY + 1, radius * shW * 2.0, radius * shH * 2.0)
 
 		if c.shape == "round" then
 			local cy = baseY - h * 0.5
