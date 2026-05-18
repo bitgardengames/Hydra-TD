@@ -2447,6 +2447,15 @@ B.apply_slow = {
 		evt.x = p.x
 		evt.y = p.y
 		evt.color = p.sourceTower and p.sourceTower.color
+
+		local patchEvt = emitFX(p, "frost_patch")
+		patchEvt.x = p.x
+		patchEvt.y = p.y
+		patchEvt.sourceTower = p.sourceTower
+		patchEvt.radius = data.patchRadius or 42
+		patchEvt.dur = data.patchDur or 1.1
+		patchEvt.factor = data.patchFactor or (data.factor * 0.55)
+		patchEvt.maxPerTower = data.patchMaxPerTower or 4
 	end
 }
 

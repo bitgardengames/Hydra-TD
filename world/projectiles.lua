@@ -383,6 +383,13 @@ local function resolveFX(evt)
 		Effects.spawnCannonImpact(evt.x, evt.y, evt.r)
 	elseif kind == "frost_burst" then
 		Effects.spawnFrostBurst(evt.x, evt.y)
+	elseif kind == "frost_patch" then
+		Enemies.spawnSlowPatch(evt.sourceTower, evt.x, evt.y, {
+			radius = evt.radius,
+			dur = evt.dur,
+			slowFactor = evt.factor,
+			maxPerTower = evt.maxPerTower,
+		})
 	elseif kind == "poison_splash" then
 		Effects.spawnPoisonSplash(evt.x, evt.y)
 	elseif kind == "lancer_hit" then
