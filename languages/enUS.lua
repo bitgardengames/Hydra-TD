@@ -28,7 +28,7 @@ return {
 		tabGameplay = "Gameplay",
 		tabVideo = "Video",
 		tabControls = "Controls",
-		tabControlsKeyboard = "Keyboard",
+		tabControlsKeybinds = "Keybinds",
 		controlPause = "Pause / Menu",
 		controlSpeed = "Toggle Speed",
 		controlStartWave = "Start Wave",
