@@ -16,7 +16,6 @@ local lm = love.mouse
 local floor = math.floor
 local min = math.min
 local max = math.max
-local abs = math.abs
 local sin = math.sin
 
 local Screen = {}
@@ -76,7 +75,6 @@ local THUMB_R = 7
 
 local ROW_W = LABEL_W + SLIDER_W + 40
 
-local settingsCursor = 1
 local rows = {}
 local buttons = {}
 
@@ -229,22 +227,6 @@ local function keybindText(row)
 	return formatBindingValue(row, key)
 end
 
-local function adjustRow(row, dir)
-	if row.type == "slider" then
-		row.set(Util.clamp(row.get() + dir * 0.10, 0, 1))
-		settingsDirty = true
-		settingsFlushTimer = settingsFlushDelay
-		Sound.play("uiMove")
-	elseif row.type == "toggle" then
-		row.set(not row.get())
-		Sound.play("uiConfirm")
-	elseif row.type == "action" and row.onClick then
-		row.onClick()
-	elseif row.type == "keybind" then
-		startCapture(row)
-	end
-end
-
 local function flushSettingsNow()
 	if settingsDirty then
 		Save.flush()
@@ -273,7 +255,6 @@ local function switchTab(nextTab)
 		if tabId == "controls_keyboard" then
 			rebuildControlsRows()
 		end
-		settingsCursor = 1
 		draggingSlider = nil
 		closeCapture()
 		Sound.play("uiMove")
@@ -336,17 +317,17 @@ local function rowSliderY(yTop)
 	return yTop + (ROW_H - SLIDER_H) * 0.5
 end
 
-local function drawRowHighlight(index, selected, hovered)
-	if selected or hovered then
+local function drawRowHighlight(index, hovered)
+	if hovered then
 		local r = rowRects[index]
 
-		lg.setColor(1, 1, 1, selected and 0.10 or 0.06)
+		lg.setColor(1, 1, 1, 0.06)
 		lg.rectangle("fill", r.x, r.y, r.w, r.h, 6, 6)
 	end
 end
 
 -- Row renderers
-local function drawSliderRow(row, x, yTop, selected, hovered, index)
+local function drawSliderRow(row, x, yTop, hovered, index)
 	Text.printShadow(row.label, x, rowTextY(yTop))
 
 	local sliderX = x + LABEL_W
@@ -414,14 +395,14 @@ local function drawActionRow(row, x, yTop)
 	end
 end
 
-local function drawRow(row, selected, hovered, x, yTop, index)
+local function drawRow(row, hovered, x, yTop, index)
 	rowRectFor(index, x, yTop)
-	drawRowHighlight(index, selected, hovered)
+	drawRowHighlight(index, hovered)
 
 	lg.setColor(colorText)
 
 	if row.type == "slider" then
-		drawSliderRow(row, x, yTop, selected, hovered, index)
+		drawSliderRow(row, x, yTop, hovered, index)
 	elseif row.type == "toggle" then
 		drawToggleRow(row, x, yTop)
 	elseif row.type == "keybind" then
@@ -434,22 +415,8 @@ local function drawRow(row, selected, hovered, x, yTop, index)
 end
 
 
-local function ensureCursorVisible()
-	local selectedTop = (settingsCursor - 1) * activeLineH
-	local selectedBottom = selectedTop + ROW_H
-
-	if selectedTop < rowsScroll then
-		rowsScroll = selectedTop
-	elseif selectedBottom > rowsScroll + rowsViewportH then
-		rowsScroll = selectedBottom - rowsViewportH
-	end
-
-	rowsScroll = Util.clamp(rowsScroll, 0, maxRowsScroll)
-end
-
 function Screen.load()
 	Hotkeys.refreshFromSave()
-	settingsCursor = 1
 	activeTab = 1
 	tabTime = 0
 	settingsDirty = false
@@ -552,7 +519,6 @@ function Screen.update(dt)
 	if not isControlsTab(activeTab) then
 		closeCapture()
 	end
-	settingsCursor = Util.clamp(settingsCursor, 1, max(1, #rows))
 	tabTime = tabTime + dt
 
 	-- Panel sizing (fixed to screen, rows scroll when overflowing)
@@ -579,7 +545,6 @@ function Screen.update(dt)
 	rowsViewportH = rowsBlockH
 	maxRowsScroll = max(0, rowsContentH - rowsViewportH)
 	rowsScroll = Util.clamp(rowsScroll, 0, maxRowsScroll)
-	ensureCursorVisible()
 
 	-- Center the row block inside the panel width
 	local rowRectX = cx - (ROW_W * 0.5)
@@ -614,13 +579,6 @@ function Screen.update(dt)
 
 		local mx, my = lm.getPosition()
 		Button.update(btn, mx, my, dt)
-	end
-
-	-- Hover selects row
-	for i, rect in pairs(rowRects) do
-		if lm.getX() >= rect.x and lm.getX() <= rect.x + rect.w and lm.getY() >= rect.y and lm.getY() <= rect.y + rect.h then
-			settingsCursor = i
-		end
 	end
 
 	-- Drag slider
@@ -678,7 +636,7 @@ function Screen.draw()
 		if yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH then
 			local r = {x = listX, y = yTop, w = ROW_W, h = ROW_H}
 			local hovered = lm.getX() >= r.x and lm.getX() <= r.x + r.w and lm.getY() >= r.y and lm.getY() <= r.y + r.h
-			drawRow(row, settingsCursor == i, hovered, listX, yTop, i)
+			drawRow(row, hovered, listX, yTop, i)
 		end
 	end
 	lg.setScissor()
@@ -696,11 +654,16 @@ function Screen.draw()
 		lg.rectangle("fill", trackX, thumbY, scrollbarW, thumbH, 4, 4)
 	end
 
-	if capturingRowId and rows[settingsCursor] and rows[settingsCursor].id == capturingRowId then
-		local focusedRect = rowRects[settingsCursor]
-		if focusedRect then
-			lg.setColor(colorText)
-			Text.printfShadow(capturingHint or L("settings.controlListeningHint"), focusedRect.x, focusedRect.y + focusedRect.h + 6, focusedRect.w, "left")
+	if capturingRowId then
+		for i, row in ipairs(rows) do
+			if row.id == capturingRowId then
+				local focusedRect = rowRects[i]
+				if focusedRect then
+					lg.setColor(colorText)
+					Text.printfShadow(capturingHint or L("settings.controlListeningHint"), focusedRect.x, focusedRect.y + focusedRect.h + 6, focusedRect.w, "left")
+				end
+				break
+			end
 		end
 	end
 
@@ -747,13 +710,11 @@ end
 
 function Screen.keypressed(key)
 	if capturingRowId then
-		local row = rows[settingsCursor]
-		if not row or row.id ~= capturingRowId then
-			for _, candidate in ipairs(rows) do
-				if candidate.id == capturingRowId then
-					row = candidate
-					break
-				end
+		local row = nil
+		for _, candidate in ipairs(rows) do
+			if candidate.id == capturingRowId then
+				row = candidate
+				break
 			end
 		end
 
@@ -790,32 +751,7 @@ function Screen.keypressed(key)
 		return
 	end
 
-	if key == "up" then
-		settingsCursor = max(1, settingsCursor - 1)
-		ensureCursorVisible()
-		Sound.play("uiMove")
-	elseif key == "down" then
-		settingsCursor = min(#rows, settingsCursor + 1)
-		ensureCursorVisible()
-		Sound.play("uiMove")
-	elseif key == "left" then
-		local row = rows[settingsCursor]
-
-		if row then
-			adjustRow(row, -1)
-		end
-	elseif key == "right" then
-		local row = rows[settingsCursor]
-
-		if row then
-			adjustRow(row, 1)
-		end
-	elseif key == "return" then
-		local row = rows[settingsCursor]
-		if row then
-			adjustRow(row, 1)
-		end
-	elseif key == "escape" then
+	if key == "escape" then
 		exitToMenu()
 	end
 end
@@ -832,8 +768,6 @@ function Screen.mousepressed(x, y, button)
 		-- Rows
 		for i, rect in pairs(rowRects) do
 			if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
-				settingsCursor = i
-
 				local row = rows[i]
 				local slider = sliderRects[i]
 
