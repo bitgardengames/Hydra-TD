@@ -483,7 +483,7 @@ function Screen.load()
 		},
 		{
 			id = "controls_keyboard",
-			label = L("settings.tabControlsKeyboard"),
+			label = L("settings.tabControlsKeybinds"),
 			rows = {},
 		},
 	}
