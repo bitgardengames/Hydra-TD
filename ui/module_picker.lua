@@ -266,28 +266,19 @@ function ModulePicker.draw()
 	local picker = State.modulePicker
 	local title = picker.title or "Wave Reward"
 	local subtitle = picker.subtitle or "Choose 1 Module"
-	local hintText = picker.hint or "Press 1, 2, or 3 • Click a card"
-
 	Fonts.set("menu")
+	local headerScale = 1.15
+	local headerY = sh * 0.135
 	lg.setColor(text[1], text[2], text[3], overlayT)
-	lg.printf(title, 0, sh * 0.135, sw, "center")
+	lg.push()
+	lg.translate(sw * 0.5, headerY)
+	lg.scale(headerScale, headerScale)
+	lg.printf(title, -sw * 0.5, 0, sw, "center")
+	lg.pop()
 
 	Fonts.set("ui")
 	lg.setColor(1, 1, 1, 0.75 * overlayT)
-	lg.printf(subtitle, 0, sh * 0.135 + 34, sw, "center")
-
-	local hintW = 276
-	local hintH = 26
-	local hintX = sw * 0.5 - hintW * 0.5
-	local hintY = sh * 0.135 + 58
-
-	lg.setColor(0.14, 0.14, 0.18, 0.6 * overlayT)
-	lg.rectangle("fill", hintX, hintY, hintW, hintH, 12, 12)
-	lg.setColor(1, 1, 1, 0.08 * overlayT)
-	lg.rectangle("line", hintX, hintY, hintW, hintH, 12, 12)
-
-	lg.setColor(1, 1, 1, 0.72 * overlayT)
-	lg.printf(hintText, hintX, hintY + 4, hintW, "center")
+	lg.printf(subtitle, 0, headerY + 40, sw, "center")
 
 	local choices = State.modulePicker.choices or {}
 
