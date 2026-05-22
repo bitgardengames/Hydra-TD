@@ -350,7 +350,9 @@ function ModulePicker.draw()
 				alpha
 			)
 
-			drawKeyBadge(tostring(i), drawX + drawW - 34, drawY + 12, alpha)
+			if picker.mode ~= "tower_upgrade" then
+				drawKeyBadge(tostring(i), drawX + drawW - 34, drawY + 12, alpha)
+			end
 
 			Fonts.set("menu")
 			lg.setColor(1, 1, 1, alpha)
