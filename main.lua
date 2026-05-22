@@ -447,9 +447,7 @@ function love.mousereleased(x, y, button)
 	Input.mousereleased(x, y, button)
 end
 
-
 function love.keypressed(key)
-
 	if key == Hotkeys.getActionKey("screenshot") then
 		local time = os.date("%Y-%m-%d_%H-%M-%S")
 

@@ -34,7 +34,8 @@ local HERO_FONT_SIZE = 148
 local CTA_FONT_SIZE = 120
 local FLOATER_FONT_SIZE = 60
 
-local FONT = "assets/fonts/Fredoka_SemiCondensed-SemiBold.ttf" -- "assets/fonts/PTSans.ttf"
+--local FONT = "assets/fonts/Fredoka_SemiCondensed-SemiBold.ttf" -- "assets/fonts/PTSans.ttf"
+local FONT = "assets/fonts/PTSans.ttf"
 
 local FONT_HERO = lg.newFont(FONT, HERO_FONT_SIZE)
 local FONT_CTA = lg.newFont(FONT, CTA_FONT_SIZE)

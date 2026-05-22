@@ -22,8 +22,8 @@ Difficulty.defs = {
 		key = "normal",
 
 		enemySpeedBias = 1.0,
-		enemyHpBias = 0.95,
-		bossHpBias = 0.95,
+		enemyHpBias = 0.91,
+		bossHpBias = 0.91,
 
 		rewardBias = 1.00,
 
@@ -36,8 +36,8 @@ Difficulty.defs = {
 		key = "hard",
 
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.4,
-		bossHpBias = 1.4,
+		enemyHpBias = 1.0,
+		bossHpBias = 1.0,
 
 		rewardBias = 1.00,
 
