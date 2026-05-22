@@ -22,8 +22,8 @@ Difficulty.defs = {
 		key = "normal",
 
 		enemySpeedBias = 1.0,
-		enemyHpBias = 0.91,
-		bossHpBias = 0.91,
+		enemyHpBias = 0.95,
+		bossHpBias = 0.95,
 
 		rewardBias = 1.00,
 
@@ -36,8 +36,8 @@ Difficulty.defs = {
 		key = "hard",
 
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.0,
-		bossHpBias = 1.0,
+		enemyHpBias = 1.4,
+		bossHpBias = 1.4,
 
 		rewardBias = 1.00,
 
@@ -48,8 +48,8 @@ Difficulty.defs = {
 
 	--[[expert = {
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.07,
-		bossHpBias = 1.07,
+		enemyHpBias = 1.09,
+		bossHpBias = 1.09,
 
 		rewardBias = 1.00,
 
@@ -59,20 +59,19 @@ Difficulty.defs = {
 	}]]
 }
 
-Difficulty.default = "normal"
-
-local active = Difficulty.default
+local default = "normal"
+local active = default
 
 function Difficulty.set(key)
 	if Difficulty.defs[key] then
 		active = key
 	else
-		active = Difficulty.default
+		active = default
 	end
 end
 
 function Difficulty.get()
-	return Difficulty.defs[active] or Difficulty.defs[Difficulty.default]
+	return Difficulty.defs[active] or Difficulty.defs[default]
 end
 
 function Difficulty.key()
