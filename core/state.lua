@@ -47,7 +47,6 @@ local state = {
 
 	mode = "menu", -- "menu", "campaign", "game", "pause"
 
-
 	ignoreStats = false,
 
 	modules = {},
@@ -73,7 +72,6 @@ local state = {
 		damageAlpha = 0,
 		damageFadeSpeed = 14,
 	},
-
 }
 
 function state.addDamage(kind, dmg, isBoss)

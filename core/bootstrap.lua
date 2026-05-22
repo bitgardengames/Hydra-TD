@@ -28,7 +28,6 @@ function Bootstrap.initFull()
 	Projectiles.load()
 
 	Steam.setRichPresence(L("presence.menu"))
-
 end
 
 function Bootstrap.initMinimal()
@@ -40,22 +39,12 @@ function Bootstrap.initMinimal()
 		msaa = 8
 	})
 
-	--[[love.window.setMode(1080, 1920, {
-		--fullscreen = true,
-		--fullscreentype = "desktop",
-		vsync = 1,
-		msaa = 8
-	})]]
-
-	local Save = require("core.save").load()
-	local Localization = require("core.localization")
-	local Sound = require("systems.sound").load()
-
+	require("core.save").load()
+	require("core.localization").load("enUS")
+	require("systems.sound").load()
 	require("core.fonts").load()
 	require("core.scale").update()
 	require("core.camera").load()
-
-	Localization.load("enUS")
 end
 
 return Bootstrap
