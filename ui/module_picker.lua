@@ -86,20 +86,6 @@ local function drawPanelCard(x, y, w, h, bodyColor, panelColor, edgeColor, alpha
 	return panelX, panelY, panelW, panelH
 end
 
-local function drawKeyBadge(keyText, x, y, alpha)
-	local fill = Theme.ui.button
-
-	lg.setColor(fill[1], fill[2], fill[3], 0.95 * alpha)
-	lg.rectangle("fill", x - outlineW, y - outlineW, 24 + outlineW * 2, 24 + outlineW * 2, outerSmallRadius)
-
-	lg.setColor(fill[1] * 0.75, fill[2] * 0.75, fill[3] * 0.75, 0.95 * alpha)
-	lg.rectangle("fill", x, y, 24, 24, innerSmallRadius)
-
-	Fonts.set("menu")
-	lg.setColor(1, 1, 1, alpha)
-	lg.printf(keyText, x, y + 1, 24, "center")
-end
-
 local function rebuildLayout()
 	cards = {}
 
@@ -349,10 +335,6 @@ function ModulePicker.draw()
 				{borderR, borderG, borderB},
 				alpha
 			)
-
-			if picker.mode ~= "tower_upgrade" then
-				drawKeyBadge(tostring(i), drawX + drawW - 34, drawY + 12, alpha)
-			end
 
 			Fonts.set("menu")
 			lg.setColor(1, 1, 1, alpha)
