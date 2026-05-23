@@ -707,7 +707,7 @@ addSpec("poison_plague", "module.poison_plague", "moduleDesc.poison_plague", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 12}},
 	{id = "hit_damage"},
-	{id = "apply_poison", data = {dps = 2.1, dur = 5.0, maxStacks = 12, rampPerTick = 0.12, rampMax = 1.7}},
+	{id = "apply_poison", data = {dps = 2.1, dur = 5.0, maxStacks = 10, rampPerTick = 0.12, rampMax = 1.7}},
 	{id = "draw_poison"},
 })
 
