@@ -20,6 +20,7 @@ local sqrt = math.sqrt
 local atan2 = math.atan2
 local floor = math.floor
 local random = math.random
+local abs = math.abs
 
 local ProjectileBehaviors = {}
 
@@ -444,11 +445,12 @@ B.move_homing = {
 			return
 		end
 
-		-- direction to target center
+		-- direction to target center (computed once)
 		local dx = tx - p.x
 		local dy = ty - p.y
+		local dist2 = dx * dx + dy * dy
 
-		local dist = sqrt(dx*dx + dy*dy)
+		local dist = sqrt(dist2)
 		if dist < 1e-6 then
 			dist = 1e-6
 		end
@@ -457,24 +459,21 @@ B.move_homing = {
 		local nx = dx * inv
 		local ny = dy * inv
 
-		-- NEW: aim at enemy SURFACE, not center
+		-- aim at enemy surface, derived from center-normalized direction
 		local enemyRadius = (alive and e.radius) or 0
 		local targetX = tx - nx * enemyRadius
 		local targetY = ty - ny * enemyRadius
 
-		-- recompute toward surface
-		dx = targetX - p.x
-		dy = targetY - p.y
-
-		dist = sqrt(dx*dx + dy*dy)
-		if dist < 1e-6 then
-			dist = 1e-6
-		end
+		local surfaceScale = dist - enemyRadius
+		local surfaceDx = nx * surfaceScale
+		local surfaceDy = ny * surfaceScale
+		local surfaceDist = abs(surfaceScale)
+		local surfaceDist2 = surfaceDist * surfaceDist
 
 		local step = (p.speed or 0) * dt
+		local step2 = step * step
 
-		-- NEW: no radius fudge
-		if dist <= step then
+		if surfaceDist2 <= step2 then
 			p.x, p.y = targetX, targetY
 
 			if alive then
@@ -510,11 +509,11 @@ B.move_homing = {
 		end
 
 		-- normal movement
-		local inv2 = 1 / dist
-		p.x = p.x + dx * inv2 * step
-		p.y = p.y + dy * inv2 * step
+		local invSurfaceDist = 1 / surfaceDist
+		p.x = p.x + surfaceDx * invSurfaceDist * step
+		p.y = p.y + surfaceDy * invSurfaceDist * step
 
-		p.rotation = atan2(dy, dx)
+		p.rotation = atan2(surfaceDy, surfaceDx)
 	end
 }
 
