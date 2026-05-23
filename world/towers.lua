@@ -81,11 +81,10 @@ local function swapRemove(list, index)
 end
 
 local function hashString(s)
-	local h = 2166136261
+	local h = 0
 
 	for i = 1, #s do
-		h = (h ~ s:byte(i)) % 4294967296
-		h = (h * 16777619) % 4294967296
+		h = (h * 131 + s:byte(i)) % 4294967296
 	end
 
 	return h
