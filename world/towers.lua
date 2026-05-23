@@ -20,6 +20,7 @@ local towers = {}
 local towersByCell = {}
 
 local pi = math.pi
+local TWO_PI = pi * 2
 local abs = math.abs
 local cos = math.cos
 local sin = math.sin
@@ -51,6 +52,27 @@ local MAX_BRANCH_UPGRADES = 4
 local RETARGET_JITTER = 0.10
 local RETARGET_MIN_FACTOR = 0.5
 local RETARGET_MAX_FACTOR = 1.5
+
+local function normalizeAngle(a)
+	-- Performance-sensitive path: avoid `%` for the common small-diff case.
+	if a > pi then
+		a = a - TWO_PI
+	elseif a < -pi then
+		a = a + TWO_PI
+	end
+
+	if a > pi or a < -pi then
+		while a > pi do
+			a = a - TWO_PI
+		end
+
+		while a < -pi do
+			a = a + TWO_PI
+		end
+	end
+
+	return a
+end
 
 local function swapRemove(list, index)
 	local last = #list
@@ -541,7 +563,7 @@ local function updateTowers(dt)
 				local dy = ay - ty
 				local targetAngle = atan2(dy, dx)
 				t.targetAngle = targetAngle
-				aimDiff = (targetAngle - t.angle + pi) % (pi * 2) - pi
+				aimDiff = normalizeAngle(targetAngle - t.angle)
 
 				t.lastTargetId = targetId
 				t.lastTargetX = targetX
@@ -560,7 +582,7 @@ local function updateTowers(dt)
 
 				if abs(aimDiff) > 0.001 then
 					t.angle = t.angle + aimDiff * min(1, turnSpeed * dt)
-					aimDiff = (t.targetAngle - t.angle + pi) % (pi * 2) - pi
+					aimDiff = normalizeAngle(t.targetAngle - t.angle)
 					t.lastAimDiff = aimDiff
 				end
 			else
