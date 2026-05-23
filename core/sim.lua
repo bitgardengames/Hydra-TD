@@ -16,6 +16,7 @@ function Sim.update(dt)
 	end
 
 	Spatial.beginFrame()
+	State.frameId = (State.frameId or 0) + 1
 	Waves.updateSpawner(dt)
 	Enemies.updateEnemies(dt)
 	Towers.updateTowers(dt)
