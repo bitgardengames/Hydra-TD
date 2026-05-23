@@ -90,14 +90,12 @@ local function evaluateCandidate(e, c)
 end
 
 local function clearFrameCache(cache)
+	-- Drop per-frame cache tables entirely so stale entries are never reused across
+	-- frames. Reusing entry tables here can return cleared candidate lists and
+	-- prevent towers from acquiring any targets.
+	cache.entries = {}
 	local used = cache.usedKeys
 	for i = 1, cache.usedCount do
-		local entry = used[i]
-		entry.count = 0
-		local list = entry.list
-		for j = 1, #list do
-			list[j] = nil
-		end
 		used[i] = nil
 	end
 	cache.usedCount = 0
