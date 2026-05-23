@@ -863,6 +863,7 @@ B.cannon_long_fuse = {
 		local ringWidth = data.ringWidth or 22
 		local ringDamageMult = data.ringDamageMult or 1.15
 		local repeatHitMult = data.repeatHitMult or 0.6
+		local ringOverlapCapMult = data.ringOverlapCapMult or 0.45
 
 		local evt = emitSpawnProjectile(p)
 		evt.x = p.x
@@ -882,6 +883,7 @@ B.cannon_long_fuse = {
 				ringWidth = ringWidth,
 				ringDamageMult = ringDamageMult,
 				repeatHitMult = repeatHitMult,
+				ringOverlapCapMult = ringOverlapCapMult,
 			}},
 		}
 	end
@@ -898,6 +900,7 @@ B.cannon_delayed_blast = {
 			ringWidth = data.ringWidth or 22,
 			ringDamageMult = data.ringDamageMult or 1.15,
 			repeatHitMult = data.repeatHitMult or 0.6,
+			ringOverlapCapMult = data.ringOverlapCapMult or 0.45,
 			fired = false,
 		}
 	end,
@@ -937,6 +940,11 @@ B.cannon_delayed_blast = {
 					local ringBonus = 0
 					if d2 >= ringInner2 and d2 <= ringOuter2 then
 						ringBonus = (p.damage or 0) * b.ringDamageMult
+					end
+
+					if ringBonus > 0 then
+						local ringCap = coreDmg * b.ringOverlapCapMult
+						ringBonus = min(ringBonus, ringCap)
 					end
 
 					local totalDmg = coreDmg + ringBonus

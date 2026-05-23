@@ -758,7 +758,7 @@ addSpec("cannon_long_fuse", "module.cannon_long_fuse", "moduleDesc.cannon_long_f
 	{id = "hit_circle", data = {radius = 13}},
 	{id = "aoe_damage", data = {radius = 54, falloff = 0.66}},
 	{id = "cannon_damage_scale", data = {mult = 1.0}},
-	{id = "cannon_long_fuse", data = {delay = 0.62, radius = 74, falloff = 0.54, damageMult = 1.35, ringRadius = 50, ringWidth = 20, ringDamageMult = 0.95, repeatHitMult = 0.55}},
+	{id = "cannon_long_fuse", data = {delay = 0.62, radius = 70, falloff = 0.54, damageMult = 1.2, ringRadius = 48, ringWidth = 18, ringDamageMult = 0.72, ringOverlapCapMult = 0.45, repeatHitMult = 0.5}},
 	{id = "draw_cannon"},
 })
 
