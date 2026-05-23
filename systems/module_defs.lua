@@ -707,7 +707,7 @@ addSpec("poison_plague", "module.poison_plague", "moduleDesc.poison_plague", {
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 12}},
 	{id = "hit_damage"},
-	{id = "apply_poison", data = {dps = 2.1, dur = 5.0, maxStacks = 12, rampPerTick = 0.12, rampMax = 1.7}},
+	{id = "apply_poison", data = {dps = 2.1, dur = 5.0, maxStacks = 10, rampPerTick = 0.12, rampMax = 1.7}},
 	{id = "draw_poison"},
 })
 
@@ -758,7 +758,7 @@ addSpec("cannon_long_fuse", "module.cannon_long_fuse", "moduleDesc.cannon_long_f
 	{id = "hit_circle", data = {radius = 13}},
 	{id = "aoe_damage", data = {radius = 54, falloff = 0.66}},
 	{id = "cannon_damage_scale", data = {mult = 1.0}},
-	{id = "cannon_long_fuse", data = {delay = 0.62, radius = 74, falloff = 0.54, damageMult = 1.35, ringRadius = 50, ringWidth = 20, ringDamageMult = 0.95, repeatHitMult = 0.55}},
+	{id = "cannon_long_fuse", data = {delay = 0.62, radius = 70, falloff = 0.54, damageMult = 1.2, ringRadius = 48, ringWidth = 18, ringDamageMult = 0.72, ringOverlapCapMult = 0.45, repeatHitMult = 0.5}},
 	{id = "draw_cannon"},
 })
 
@@ -839,7 +839,7 @@ addSpec("shock_forked_arc", "module.shock_forked_arc", "moduleDesc.shock_forked_
 addSpec("shock_static_surge", "module.shock_static_surge", "moduleDesc.shock_static_surge", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 4, radius = 56}},
-	{id = "chain_static_surge", data = {bonusPerStack = 0.2, maxStacks = 6}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.14, maxStacks = 6, fullStacks = 3, postFullScale = 0.45}},
 	{id = "chain_zap_fx"},
 })
 
@@ -853,7 +853,7 @@ addSpec("shock_crowd_search", "module.shock_crowd_search", "moduleDesc.shock_cro
 addSpec("shock_boss_focus", "module.shock_boss_focus", "moduleDesc.shock_boss_focus", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 3, radius = 56, falloff = 0.94}},
-	{id = "chain_static_surge", data = {bonusPerStack = 0.2, maxStacks = 7}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.18, maxStacks = 7, fullStacks = 2, postFullScale = 0.6}},
 	{id = "chain_endpoint_burst", data = {radius = 28, dmgMult = 0.35}},
 	{id = "chain_zap_fx"},
 })
@@ -861,14 +861,14 @@ addSpec("shock_boss_focus", "module.shock_boss_focus", "moduleDesc.shock_boss_fo
 addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thunderstorm", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 8, radius = 68, falloff = 0.86}},
-	{id = "fork_chain", data = {radius = 50, dmgMult = 0.22, forksPerLink = 1}},
+	{id = "fork_chain", data = {radius = 50, dmgMult = 0.16, forksPerLink = 1}},
 	{id = "chain_zap_fx"},
 })
 
 addSpec("shock_meltdown", "module.shock_meltdown", "moduleDesc.shock_meltdown", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 5, radius = 58}},
-	{id = "chain_endpoint_burst", data = {radius = 30, dmgMult = 0.42}},
+	{id = "hit_chain", data = {jumps = 4, radius = 54}},
+	{id = "chain_endpoint_burst", data = {radius = 36, dmgMult = 0.60}},
 	{id = "chain_zap_fx"},
 })
 
@@ -974,5 +974,107 @@ add("plasma_vortex", {
 		ModuleDefs.plasma_spiral_drive.apply(ctx)
 	end
 })
+
+local function getBehaviorData(def, behaviorId)
+	if not def or not def.behaviors then
+		return nil
+	end
+	for _, behavior in ipairs(def.behaviors) do
+		if behavior.id == behaviorId then
+			return behavior.data or {}
+		end
+	end
+	return nil
+end
+
+local function validateModuleDescriptionNumbers()
+	local checks = {
+		{
+			id = "lancer_overdrive",
+			behaviorId = "lancer_overdrive",
+			label = "trigger cadence",
+			field = "triggerEvery",
+			expected = 5,
+		},
+		{
+			id = "lancer_overdrive",
+			behaviorId = "lancer_overdrive",
+			label = "bonus damage multiplier",
+			field = "bonusDmgMult",
+			expected = 1.2,
+		},
+		{
+			id = "lancer_focus_fire",
+			behaviorId = "lancer_focus_fire",
+			label = "per-stack multiplier",
+			field = "perStackMult",
+			expected = 0.18,
+		},
+		{
+			id = "shock_storm_coil",
+			behaviorId = "hit_chain",
+			label = "jump count",
+			field = "jumps",
+			expected = 7,
+		},
+		{
+			id = "shock_crowd_search",
+			behaviorId = "hit_chain",
+			label = "jump count",
+			field = "jumps",
+			expected = 7,
+		},
+		{
+			id = "shock_meltdown",
+			behaviorId = "chain_endpoint_burst",
+			label = "endpoint burst multiplier",
+			field = "dmgMult",
+			expected = 0.42,
+		},
+		{
+			id = "cannon_carpet_fire",
+			behaviorId = "cannon_carpet_fire",
+			label = "follow-up blast count",
+			field = "delayedBlastCount",
+			expected = 2,
+			actual = function(data)
+				local count = 0
+				if data.delayA then
+					count = count + 1
+				end
+				if data.delayB then
+					count = count + 1
+				end
+				return count
+			end,
+		},
+	}
+
+	local mismatches = {}
+	for _, check in ipairs(checks) do
+		local def = ModuleDefs[check.id]
+		local behaviorData = getBehaviorData(def, check.behaviorId)
+		if not behaviorData then
+			mismatches[#mismatches + 1] = string.format("%s missing behavior '%s'", check.id, check.behaviorId)
+		else
+			local actual = check.actual and check.actual(behaviorData) or behaviorData[check.field]
+			if actual ~= check.expected then
+				mismatches[#mismatches + 1] = string.format(
+					"%s %s mismatch (expected %s, got %s)",
+					check.id,
+					check.label,
+					tostring(check.expected),
+					tostring(actual)
+				)
+			end
+		end
+	end
+
+	if #mismatches > 0 then
+		error("Module definition validation failed: " .. table.concat(mismatches, "; "))
+	end
+end
+
+validateModuleDescriptionNumbers()
 
 return ModuleDefs

@@ -20,6 +20,7 @@ local sqrt = math.sqrt
 local atan2 = math.atan2
 local floor = math.floor
 local random = math.random
+local abs = math.abs
 
 local ProjectileBehaviors = {}
 
@@ -444,11 +445,12 @@ B.move_homing = {
 			return
 		end
 
-		-- direction to target center
+		-- direction to target center (computed once)
 		local dx = tx - p.x
 		local dy = ty - p.y
+		local dist2 = dx * dx + dy * dy
 
-		local dist = sqrt(dx*dx + dy*dy)
+		local dist = sqrt(dist2)
 		if dist < 1e-6 then
 			dist = 1e-6
 		end
@@ -457,24 +459,21 @@ B.move_homing = {
 		local nx = dx * inv
 		local ny = dy * inv
 
-		-- NEW: aim at enemy SURFACE, not center
+		-- aim at enemy surface, derived from center-normalized direction
 		local enemyRadius = (alive and e.radius) or 0
 		local targetX = tx - nx * enemyRadius
 		local targetY = ty - ny * enemyRadius
 
-		-- recompute toward surface
-		dx = targetX - p.x
-		dy = targetY - p.y
-
-		dist = sqrt(dx*dx + dy*dy)
-		if dist < 1e-6 then
-			dist = 1e-6
-		end
+		local surfaceScale = dist - enemyRadius
+		local surfaceDx = nx * surfaceScale
+		local surfaceDy = ny * surfaceScale
+		local surfaceDist = abs(surfaceScale)
+		local surfaceDist2 = surfaceDist * surfaceDist
 
 		local step = (p.speed or 0) * dt
+		local step2 = step * step
 
-		-- NEW: no radius fudge
-		if dist <= step then
+		if surfaceDist2 <= step2 then
 			p.x, p.y = targetX, targetY
 
 			if alive then
@@ -510,11 +509,11 @@ B.move_homing = {
 		end
 
 		-- normal movement
-		local inv2 = 1 / dist
-		p.x = p.x + dx * inv2 * step
-		p.y = p.y + dy * inv2 * step
+		local invSurfaceDist = 1 / surfaceDist
+		p.x = p.x + surfaceDx * invSurfaceDist * step
+		p.y = p.y + surfaceDy * invSurfaceDist * step
 
-		p.rotation = atan2(dy, dx)
+		p.rotation = atan2(surfaceDy, surfaceDx)
 	end
 }
 
@@ -863,6 +862,7 @@ B.cannon_long_fuse = {
 		local ringWidth = data.ringWidth or 22
 		local ringDamageMult = data.ringDamageMult or 1.15
 		local repeatHitMult = data.repeatHitMult or 0.6
+		local ringOverlapCapMult = data.ringOverlapCapMult or 0.45
 
 		local evt = emitSpawnProjectile(p)
 		evt.x = p.x
@@ -882,6 +882,7 @@ B.cannon_long_fuse = {
 				ringWidth = ringWidth,
 				ringDamageMult = ringDamageMult,
 				repeatHitMult = repeatHitMult,
+				ringOverlapCapMult = ringOverlapCapMult,
 			}},
 		}
 	end
@@ -898,6 +899,7 @@ B.cannon_delayed_blast = {
 			ringWidth = data.ringWidth or 22,
 			ringDamageMult = data.ringDamageMult or 1.15,
 			repeatHitMult = data.repeatHitMult or 0.6,
+			ringOverlapCapMult = data.ringOverlapCapMult or 0.45,
 			fired = false,
 		}
 	end,
@@ -937,6 +939,11 @@ B.cannon_delayed_blast = {
 					local ringBonus = 0
 					if d2 >= ringInner2 and d2 <= ringOuter2 then
 						ringBonus = (p.damage or 0) * b.ringDamageMult
+					end
+
+					if ringBonus > 0 then
+						local ringCap = coreDmg * b.ringOverlapCapMult
+						ringBonus = min(ringBonus, ringCap)
 					end
 
 					local totalDmg = coreDmg + ringBonus
@@ -1259,6 +1266,8 @@ B.chain_static_surge = {
 
 		local bonusPerStack = data.bonusPerStack or 0.2
 		local maxStacks = data.maxStacks or 6
+		local fullStacks = max(1, data.fullStacks or 3)
+		local postFullScale = data.postFullScale or 0.5
 		local stackMap = p.sourceTower and p.sourceTower._shockSurgeStacks
 
 		if not stackMap and p.sourceTower then
@@ -1277,7 +1286,16 @@ B.chain_static_surge = {
 				local stacks = min((stackMap[key] or 0) + 1, maxStacks)
 				stackMap[key] = stacks
 
-				local extraMult = (stacks - 1) * bonusPerStack
+				local effectiveSteps
+				if stacks <= fullStacks then
+					effectiveSteps = stacks - 1
+				else
+					local earlySteps = fullStacks - 1
+					local lateSteps = stacks - fullStacks
+					effectiveSteps = earlySteps + (lateSteps * postFullScale)
+				end
+
+				local extraMult = effectiveSteps * bonusPerStack
 				if extraMult > 0 then
 					local surgeDmg = consumeChainDamageBudget(p, (p.damage or 0) * extraMult)
 					if surgeDmg > 0 then

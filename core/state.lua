@@ -72,6 +72,11 @@ local state = {
 		damageAlpha = 0,
 		damageFadeSpeed = 14,
 	},
+
+	spatialStats = {
+		localQueryCount = 0,
+		localCandidateTotal = 0,
+	},
 }
 
 function state.addDamage(kind, dmg, isBoss)

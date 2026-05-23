@@ -477,10 +477,9 @@ local function updateTowers(dt)
 				t.targetAngle = nil
 			end
 
-			-- Shortest angle difference
-			local diff = (targetAngle - t.angle + pi) % (pi * 2) - pi
-
-			aimDiff = diff
+			-- Shortest angle difference. Keep this value authoritative for the
+			-- current frame so rotation + fire-angle checks share identical math.
+			aimDiff = (targetAngle - t.angle + pi) % (pi * 2) - pi
 
 			if canRotate then
 				local recoilT = t.recoil / recoilStrength
@@ -500,15 +499,7 @@ local function updateTowers(dt)
 				local canFire = true
 
 				if canRotate then
-					local ax = t.aimX or target.x
-					local ay = t.aimY or target.y
-
-					local dx = ax - tx
-					local dy = ay - ty
-					local targetAngle = t.targetAngle
-					local diff = (targetAngle - t.angle + pi) % (pi * 2) - pi
-
-					canFire = abs(diff) <= FIRE_ANGLE_EPS
+					canFire = aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS
 				end
 
 				if canFire then
