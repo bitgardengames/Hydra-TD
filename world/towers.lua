@@ -28,6 +28,8 @@ local atan2 = math.atan2
 local min = math.min
 local max = math.max
 local floor = math.floor
+local bitLib = bit32 or bit
+local bxor = bitLib and bitLib.bxor
 
 local colorGood = Theme.ui.good
 local colorWarn = Theme.ui.warn
@@ -83,8 +85,12 @@ end
 local function hashString(s)
 	local h = 2166136261
 
+	if not bxor then
+		error("Bitwise xor is unavailable (expected bit32.bxor or bit.bxor)")
+	end
+
 	for i = 1, #s do
-		h = (h ~ s:byte(i)) % 4294967296
+		h = bxor(h, s:byte(i)) % 4294967296
 		h = (h * 16777619) % 4294967296
 	end
 
