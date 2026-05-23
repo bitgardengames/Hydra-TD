@@ -44,6 +44,11 @@ local nestedCollectContext = {
 	stamp = 0,
 }
 
+local frameStats = {
+	localQueryCount = 0,
+	localCandidateTotal = 0,
+}
+
 local forEachContext = {
 	fn = nil,
 	context = nil,
@@ -84,8 +89,20 @@ local function queryCellRadius(radius)
 	return cellRadius
 end
 
-local function queryCellRadiusLocal()
-	return 2
+local function queryCellRadiusLocal(radius)
+	local cellRadius = 0
+
+	if radius and radius > 0 then
+		cellRadius = ceil(radius * INV_CELL)
+		if cellRadius < 0 then
+			cellRadius = 0
+		elseif cellRadius > 2 then
+			-- Preserve legacy local-query safety bound for compatibility.
+			cellRadius = 2
+		end
+	end
+
+	return cellRadius
 end
 
 local function traverseOccupancy(cx, cy, radiusCells, onCell, context)
@@ -246,6 +263,8 @@ end
 function Spatial.beginFrame()
 	outerCollectContext.count = 0
 	nestedCollectContext.count = 0
+	frameStats.localQueryCount = 0
+	frameStats.localCandidateTotal = 0
 end
 
 function Spatial.queryCells(x, y, radius, dedupeById)
@@ -253,7 +272,15 @@ function Spatial.queryCells(x, y, radius, dedupeById)
 end
 
 function Spatial.queryCellsLocal(x, y, radius, dedupeById)
-	return traverseQueryCellsCollect(x, y, radius, nestedCollectContext, dedupeById, queryCellRadiusLocal)
+	local results, count =
+		traverseQueryCellsCollect(x, y, radius, nestedCollectContext, dedupeById, queryCellRadiusLocal)
+	frameStats.localQueryCount = frameStats.localQueryCount + 1
+	frameStats.localCandidateTotal = frameStats.localCandidateTotal + count
+	return results, count
+end
+
+function Spatial.getLocalQueryFrameStats()
+	return frameStats.localQueryCount, frameStats.localCandidateTotal
 end
 
 function Spatial.pointToCell(x, y)

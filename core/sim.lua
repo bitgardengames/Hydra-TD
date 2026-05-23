@@ -22,6 +22,10 @@ function Sim.update(dt)
 	Projectiles.update(dt)
 	Effects.update(dt)
 	Floaters.update(dt)
+
+	local localQueryCount, localCandidateTotal = Spatial.getLocalQueryFrameStats()
+	State.spatialStats.localQueryCount = localQueryCount
+	State.spatialStats.localCandidateTotal = localCandidateTotal
 end
 
 return Sim

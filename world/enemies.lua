@@ -40,6 +40,13 @@ local random = love.math.random
 local nextID = 0
 local INV_SPAWN_FADE_DUR = 1 / 0.12
 local INV_EXIT_FADE_DUR = 1 / 0.10
+local MAX_HIT_QUERY_RADIUS = 0
+
+for _, def in pairs(EnemyDefs) do
+	if def.radius and def.radius > MAX_HIT_QUERY_RADIUS then
+		MAX_HIT_QUERY_RADIUS = def.radius
+	end
+end
 
 local function swapRemove(list, i)
 	local last = #list
@@ -141,7 +148,7 @@ local function advanceEnemyAlongPath(e, moveDist, pathWorld, pathSegLen, totalLe
 end
 
 local function findEnemyAt(x, y)
-	local candidates, candidateCount = Spatial.queryCellsLocal(x, y, 0, true)
+	local candidates, candidateCount = Spatial.queryCellsLocal(x, y, MAX_HIT_QUERY_RADIUS, true)
 
 	if candidateCount == 0 then
 		return nil
