@@ -839,7 +839,7 @@ addSpec("shock_forked_arc", "module.shock_forked_arc", "moduleDesc.shock_forked_
 addSpec("shock_static_surge", "module.shock_static_surge", "moduleDesc.shock_static_surge", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 4, radius = 56}},
-	{id = "chain_static_surge", data = {bonusPerStack = 0.2, maxStacks = 6}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.14, maxStacks = 6, fullStacks = 3, postFullScale = 0.45}},
 	{id = "chain_zap_fx"},
 })
 
@@ -853,7 +853,7 @@ addSpec("shock_crowd_search", "module.shock_crowd_search", "moduleDesc.shock_cro
 addSpec("shock_boss_focus", "module.shock_boss_focus", "moduleDesc.shock_boss_focus", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 3, radius = 56, falloff = 0.94}},
-	{id = "chain_static_surge", data = {bonusPerStack = 0.2, maxStacks = 7}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.18, maxStacks = 7, fullStacks = 2, postFullScale = 0.6}},
 	{id = "chain_endpoint_burst", data = {radius = 28, dmgMult = 0.35}},
 	{id = "chain_zap_fx"},
 })
