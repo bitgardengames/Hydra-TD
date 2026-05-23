@@ -20,7 +20,7 @@ Slow Tower
 
 Lancer Tower
 - Tier 2
-  - Overdrive: Every 4th hit fires an overdrive shot for +140% damage.
+  - Overdrive: Every 5th hit fires an overdrive shot for +120% damage.
   - Splitfire: Each hit fires 2 split follow-up shots.
 - Tier 3
   - Overpenetration: Projectiles pass through enemies without being consumed.
@@ -30,7 +30,7 @@ Lancer Tower
   - First Blood: Hits deal +90% damage to enemies above 80% HP.
 - Tier 5
   - Rail: Shots use linear travel and gain +2 pierce.
-  - Focus Fire: Repeated hits on the same target gain +12% damage per stack.
+  - Focus Fire: Repeated hits on the same target gain +18% damage per stack.
 
 Poison Tower
 - Tier 2
@@ -57,7 +57,7 @@ Cannon Tower
   - Long Fuse: Impacts deal normal blast damage, then trigger 1 larger delayed blast.
   - Frontline: Impacts burst into 3 short-range follow-up shells.
 - Tier 5
-  - Megashell: Fires massive shells with +60% damage and huge blast radius.
+  - Megashell: Fires massive shells with +105% damage and huge blast radius.
   - Carpet Fire: Fires lighter shells with 2 delayed follow-up blasts.
 
 Shock Tower

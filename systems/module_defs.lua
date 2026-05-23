@@ -975,4 +975,106 @@ add("plasma_vortex", {
 	end
 })
 
+local function getBehaviorData(def, behaviorId)
+	if not def or not def.behaviors then
+		return nil
+	end
+	for _, behavior in ipairs(def.behaviors) do
+		if behavior.id == behaviorId then
+			return behavior.data or {}
+		end
+	end
+	return nil
+end
+
+local function validateModuleDescriptionNumbers()
+	local checks = {
+		{
+			id = "lancer_overdrive",
+			behaviorId = "lancer_overdrive",
+			label = "trigger cadence",
+			field = "triggerEvery",
+			expected = 5,
+		},
+		{
+			id = "lancer_overdrive",
+			behaviorId = "lancer_overdrive",
+			label = "bonus damage multiplier",
+			field = "bonusDmgMult",
+			expected = 1.2,
+		},
+		{
+			id = "lancer_focus_fire",
+			behaviorId = "lancer_focus_fire",
+			label = "per-stack multiplier",
+			field = "perStackMult",
+			expected = 0.18,
+		},
+		{
+			id = "shock_storm_coil",
+			behaviorId = "hit_chain",
+			label = "jump count",
+			field = "jumps",
+			expected = 7,
+		},
+		{
+			id = "shock_crowd_search",
+			behaviorId = "hit_chain",
+			label = "jump count",
+			field = "jumps",
+			expected = 7,
+		},
+		{
+			id = "shock_meltdown",
+			behaviorId = "chain_endpoint_burst",
+			label = "endpoint burst multiplier",
+			field = "dmgMult",
+			expected = 0.42,
+		},
+		{
+			id = "cannon_carpet_fire",
+			behaviorId = "cannon_carpet_fire",
+			label = "follow-up blast count",
+			field = "delayedBlastCount",
+			expected = 2,
+			actual = function(data)
+				local count = 0
+				if data.delayA then
+					count = count + 1
+				end
+				if data.delayB then
+					count = count + 1
+				end
+				return count
+			end,
+		},
+	}
+
+	local mismatches = {}
+	for _, check in ipairs(checks) do
+		local def = ModuleDefs[check.id]
+		local behaviorData = getBehaviorData(def, check.behaviorId)
+		if not behaviorData then
+			mismatches[#mismatches + 1] = string.format("%s missing behavior '%s'", check.id, check.behaviorId)
+		else
+			local actual = check.actual and check.actual(behaviorData) or behaviorData[check.field]
+			if actual ~= check.expected then
+				mismatches[#mismatches + 1] = string.format(
+					"%s %s mismatch (expected %s, got %s)",
+					check.id,
+					check.label,
+					tostring(check.expected),
+					tostring(actual)
+				)
+			end
+		end
+	end
+
+	if #mismatches > 0 then
+		error("Module definition validation failed: " .. table.concat(mismatches, "; "))
+	end
+end
+
+validateModuleDescriptionNumbers()
+
 return ModuleDefs
