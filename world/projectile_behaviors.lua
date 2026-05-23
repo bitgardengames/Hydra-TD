@@ -1259,6 +1259,8 @@ B.chain_static_surge = {
 
 		local bonusPerStack = data.bonusPerStack or 0.2
 		local maxStacks = data.maxStacks or 6
+		local fullStacks = max(1, data.fullStacks or 3)
+		local postFullScale = data.postFullScale or 0.5
 		local stackMap = p.sourceTower and p.sourceTower._shockSurgeStacks
 
 		if not stackMap and p.sourceTower then
@@ -1277,7 +1279,16 @@ B.chain_static_surge = {
 				local stacks = min((stackMap[key] or 0) + 1, maxStacks)
 				stackMap[key] = stacks
 
-				local extraMult = (stacks - 1) * bonusPerStack
+				local effectiveSteps
+				if stacks <= fullStacks then
+					effectiveSteps = stacks - 1
+				else
+					local earlySteps = fullStacks - 1
+					local lateSteps = stacks - fullStacks
+					effectiveSteps = earlySteps + (lateSteps * postFullScale)
+				end
+
+				local extraMult = effectiveSteps * bonusPerStack
 				if extraMult > 0 then
 					local surgeDmg = consumeChainDamageBudget(p, (p.damage or 0) * extraMult)
 					if surgeDmg > 0 then
