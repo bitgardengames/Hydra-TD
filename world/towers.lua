@@ -42,6 +42,10 @@ local sampleFast = MapMod.sampleFast
 local getTargetMode = Modules.getTargetMode
 
 local FIRE_ANGLE_EPS = math.rad(6)
+local AIM_RECOMPUTE_POS_EPS2 = 1
+local AIM_RECOMPUTE_ANGLE_EPS = math.rad(0.75)
+local AIM_RECOMPUTE_STALE_FRAMES = 6
+local SPLASH_LEAD_SPEED_THRESHOLD = 20
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_BRANCH_UPGRADES = 4
 local RETARGET_JITTER = 0.10
@@ -238,6 +242,11 @@ local function addTower(kind, gx, gy)
 		levelUpAnim = 0,
 		spawnAnim = 1,
 		target = nil,
+		lastTargetId = nil,
+		lastTargetX = nil,
+		lastTargetY = nil,
+		lastAimDiff = nil,
+		aimStaleFrames = 0,
 		targetMode = nil,
 		_targetModeVersion = nil,
 		_cacheVersion = 0,
@@ -488,40 +497,61 @@ local function updateTowers(dt)
 		local recoilStrength = t.recoilStrength or 1
 
 		if target then
-			local ax, ay = target.x, target.y
+			local targetId = target.id or target.uid or target.spawnId or target
+			local targetX, targetY = target.x, target.y
+			local lastTargetId = t.lastTargetId
+			local lastTargetX = t.lastTargetX
+			local lastTargetY = t.lastTargetY
+			local dxTarget = (targetX or 0) - (lastTargetX or targetX or 0)
+			local dyTarget = (targetY or 0) - (lastTargetY or targetY or 0)
+			local movedEnough = (dxTarget * dxTarget + dyTarget * dyTarget) > AIM_RECOMPUTE_POS_EPS2
+			local targetChanged = targetId ~= lastTargetId
+			local hasFreshGate = windUpCompleted or (t.cooldown <= 0)
+			local staleFrames = (t.aimStaleFrames or 0) + 1
+			local staleExceeded = staleFrames >= AIM_RECOMPUTE_STALE_FRAMES
 
-			if t.splash then
-				local speedFactor = min((target.speed or 0) / 120, 0.18)
-				local leadTime = 0.28 + speedFactor
+			local shouldRecompute = targetChanged or movedEnough or staleExceeded or hasFreshGate
 
-				if target.slowTimer and target.slowTimer > 0 then
-					leadTime = leadTime * 0.85
+			if not shouldRecompute and canRotate and t.lastAimDiff then
+				shouldRecompute = abs(t.lastAimDiff) > AIM_RECOMPUTE_ANGLE_EPS
+			end
+
+			if shouldRecompute then
+				local ax, ay = targetX, targetY
+				local targetSpeed = target.speed or 0
+				if t.splash and targetSpeed > SPLASH_LEAD_SPEED_THRESHOLD then
+					local speedFactor = min(targetSpeed / 120, 0.18)
+					local leadTime = 0.28 + speedFactor
+
+					if target.slowTimer and target.slowTimer > 0 then
+						leadTime = leadTime * 0.85
+					end
+
+					local futureDist = (target.dist or 0) + targetSpeed * leadTime
+					local nx, ny = sampleFast(futureDist)
+
+					ax = ax + (nx - targetX)
+					ay = ay + (ny - targetY)
 				end
 
-				local futureDist = (target.dist or 0) + (target.speed or 0) * leadTime
-				local nx, ny = sampleFast(futureDist)
+				t.aimX = ax
+				t.aimY = ay
 
-				ax = ax + (nx - target.x)
-				ay = ay + (ny - target.y)
-			end
-
-			t.aimX = ax
-			t.aimY = ay
-
-			local dx = ax - tx
-			local dy = ay - ty
-
-			local targetAngle = atan2(dy, dx)
-
-			if targetAngle then
+				local dx = ax - tx
+				local dy = ay - ty
+				local targetAngle = atan2(dy, dx)
 				t.targetAngle = targetAngle
-			else
-				t.targetAngle = nil
-			end
+				aimDiff = (targetAngle - t.angle + pi) % (pi * 2) - pi
 
-			-- Shortest angle difference. Keep this value authoritative for the
-			-- current frame so rotation + fire-angle checks share identical math.
-			aimDiff = (targetAngle - t.angle + pi) % (pi * 2) - pi
+				t.lastTargetId = targetId
+				t.lastTargetX = targetX
+				t.lastTargetY = targetY
+				t.lastAimDiff = aimDiff
+				t.aimStaleFrames = 0
+			else
+				aimDiff = t.lastAimDiff
+				t.aimStaleFrames = staleFrames
+			end
 
 			if canRotate then
 				local recoilT = t.recoil / recoilStrength
@@ -530,10 +560,19 @@ local function updateTowers(dt)
 
 				if abs(aimDiff) > 0.001 then
 					t.angle = t.angle + aimDiff * min(1, turnSpeed * dt)
+					aimDiff = (t.targetAngle - t.angle + pi) % (pi * 2) - pi
+					t.lastAimDiff = aimDiff
 				end
 			else
 				aimDiff = 0
+				t.lastAimDiff = 0
 			end
+		else
+			t.lastTargetId = nil
+			t.lastTargetX = nil
+			t.lastTargetY = nil
+			t.lastAimDiff = nil
+			t.aimStaleFrames = 0
 		end
 
 		-- Wind-up / fire
