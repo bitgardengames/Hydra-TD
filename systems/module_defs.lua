@@ -497,6 +497,7 @@ local function addSpec(id, nameKey, descKey, behaviors, targetMode)
 		descKey = descKey,
 		category = "special",
 		targetMode = targetMode,
+		behaviors = cloneBehaviors(),
 
 		apply = function(ctx)
 			ctx.behaviors = cloneBehaviors()
