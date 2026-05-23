@@ -9,7 +9,6 @@ local floor = math.floor
 local max = math.max
 local pointToCell = Spatial.pointToCell
 local queryCellsLocal = Spatial.queryCellsLocal
-local INV_RADIUS_BUCKET = 0.25
 Targeting.MODES = {
 	PROGRESS = "progress",
 	LOW_HP = "low_hp",
@@ -105,7 +104,10 @@ local function clearFrameCache(cache)
 end
 
 local function radiusBucket(range)
-	return max(1, floor((range or 0) * INV_RADIUS_BUCKET + 0.5))
+	-- Bucket by world-unit radius so cached candidate sets remain valid for towers
+	-- with different ranges that happen to share a cell. Coarser bucketing can
+	-- under-query neighbor cells for longer-range towers, causing missed targets.
+	return max(1, floor((range or 0) + 0.5))
 end
 
 local function getCandidatesForTower(tower)
