@@ -44,11 +44,48 @@ local getTargetMode = Modules.getTargetMode
 local FIRE_ANGLE_EPS = math.rad(6)
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_BRANCH_UPGRADES = 4
+local RETARGET_JITTER = 0.10
+local RETARGET_MIN_FACTOR = 0.5
+local RETARGET_MAX_FACTOR = 1.5
 
 local function swapRemove(list, index)
 	local last = #list
 	list[index] = list[last]
 	list[last] = nil
+end
+
+local function hashString(s)
+	local h = 2166136261
+
+	for i = 1, #s do
+		h = (h ~ s:byte(i)) % 4294967296
+		h = (h * 16777619) % 4294967296
+	end
+
+	return h
+end
+
+local function towerPhaseSeed(kind, gx, gy)
+	local kindHash = hashString(kind or "")
+	local seed = (kindHash + gx * 73856093 + gy * 19349663) % 4294967296
+
+	return seed
+end
+
+local function unitFromSeed(seed)
+	return ((seed % 104729) + 0.5) / 104729
+end
+
+local function nextRetargetInterval(t)
+	local cycle = (t._retargetCycle or 0) + 1
+	t._retargetCycle = cycle
+
+	local seed = (t._retargetSeed or 0) + cycle * 83492791
+	local u = unitFromSeed(seed)
+	local factor = 1 + ((u * 2 - 1) * RETARGET_JITTER)
+	factor = min(RETARGET_MAX_FACTOR, max(RETARGET_MIN_FACTOR, factor))
+
+	return RETARGET_INTERVAL * factor
 end
 
 
@@ -206,6 +243,8 @@ local function addTower(kind, gx, gy)
 		_cacheVersion = 0,
 		_cache = {},
 		retargetT = 0,
+		_retargetSeed = towerPhaseSeed(kind, gx, gy),
+		_retargetCycle = 0,
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
 		color = def.color,
@@ -222,6 +261,9 @@ local function addTower(kind, gx, gy)
 			nextLevel = 2,
 		},
 	}
+
+	local phase = unitFromSeed(t._retargetSeed)
+	t.retargetT = RETARGET_INTERVAL * phase
 
 	recomputeTowerStats(t)
 
@@ -429,7 +471,7 @@ local function updateTowers(dt)
 		local canRetarget = t.retargetT <= 0
 		if not target and canRetarget then
 			target = findTarget(t, t.targetMode)
-			t.retargetT = RETARGET_INTERVAL
+			t.retargetT = nextRetargetInterval(t)
 		end
 
 		t.target = target
