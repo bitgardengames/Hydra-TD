@@ -1,10 +1,15 @@
 local Spatial = require("world.spatial_grid")
+local State = require("core.state")
 
 local Targeting = {}
 
 local EPS = 0.0001
 local HUGE_NEG = -math.huge
-local forEachInCells = Spatial.forEachInCells
+local floor = math.floor
+local max = math.max
+local pointToCell = Spatial.pointToCell
+local queryCellsLocal = Spatial.queryCellsLocal
+local INV_RADIUS_BUCKET = 0.25
 Targeting.MODES = {
 	PROGRESS = "progress",
 	LOW_HP = "low_hp",
@@ -13,6 +18,12 @@ Targeting.MODES = {
 }
 local MODES = Targeting.MODES
 local simpleCtx = {}
+local frameCache = {
+	frameId = -1,
+	entries = {},
+	usedKeys = {},
+	usedCount = 0,
+}
 local validModes = {
 	[MODES.PROGRESS] = true,
 	[MODES.LOW_HP] = true,
@@ -77,6 +88,74 @@ local function evaluateCandidate(e, c)
 	updateBest(e, c, c.scoreFn(e, c, d2))
 end
 
+local function clearFrameCache(cache)
+	local used = cache.usedKeys
+	for i = 1, cache.usedCount do
+		local key = used[i]
+		local entry = cache.entries[key]
+		if entry then
+			entry.count = 0
+			local list = entry.list
+			for j = 1, #list do
+				list[j] = nil
+			end
+		end
+		used[i] = nil
+	end
+	cache.usedCount = 0
+end
+
+local function radiusBucket(range)
+	return max(1, floor((range or 0) * INV_RADIUS_BUCKET + 0.5))
+end
+
+local function composeCellKey(cx, cy, radiusKey)
+	return cx .. ":" .. cy .. ":" .. radiusKey
+end
+
+local function getCandidatesForTower(tower)
+	local frameId = State.frameId or 0
+	if frameCache.frameId ~= frameId then
+		clearFrameCache(frameCache)
+		frameCache.frameId = frameId
+	end
+
+	local cx, cy = pointToCell(tower.x, tower.y)
+	local radiusKey = radiusBucket(tower.range)
+	local key = composeCellKey(cx, cy, radiusKey)
+	local entry = frameCache.entries[key]
+	if entry then
+		return entry.list, entry.count
+	end
+
+	entry = {
+		list = {},
+		count = 0,
+	}
+	frameCache.entries[key] = entry
+
+	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, false)
+	local list = entry.list
+	local count = 0
+	for i = 1, candidateCount do
+		local e = candidates[i]
+		if e and e.hp > 0 and not e.dying then
+			count = count + 1
+			list[count] = e
+		end
+	end
+	for i = count + 1, #list do
+		list[i] = nil
+	end
+	entry.count = count
+
+	local usedCount = frameCache.usedCount + 1
+	frameCache.usedCount = usedCount
+	frameCache.usedKeys[usedCount] = key
+
+	return list, count
+end
+
 function Targeting.isSemanticallyValidTarget(tower, e)
 	if not Targeting.isTargetEntityValid(e) or e.hp <= 0 or e.dying then
 		return false
@@ -108,8 +187,10 @@ function Targeting.findTarget(tower, mode)
 	ctx.tx = tower.x
 	ctx.ty = tower.y
 	ctx.scoreFn = scoreByMode[normalizeMode(mode)]
-
-	forEachInCells(tower.x, tower.y, tower.range, evaluateCandidate, ctx)
+	local candidates, count = getCandidatesForTower(tower)
+	for i = 1, count do
+		evaluateCandidate(candidates[i], ctx)
+	end
 
 	ctx.scoreFn = nil
 	return ctx.best
