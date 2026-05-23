@@ -266,13 +266,11 @@ function ModulePicker.draw()
 	local picker = State.modulePicker
 	local title = picker.title or "Wave Reward"
 	local subtitle = picker.subtitle or "Choose 1 Module"
-	Fonts.set("menu")
-	local headerScale = 1.15
+	Fonts.set("title")
 	local headerY = sh * 0.135
 	lg.setColor(text[1], text[2], text[3], overlayT)
 	lg.push()
 	lg.translate(sw * 0.5, headerY)
-	lg.scale(headerScale, headerScale)
 	lg.printf(title, -sw * 0.5, 0, sw, "center")
 	lg.pop()
 
