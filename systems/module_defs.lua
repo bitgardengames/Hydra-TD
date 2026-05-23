@@ -861,14 +861,14 @@ addSpec("shock_boss_focus", "module.shock_boss_focus", "moduleDesc.shock_boss_fo
 addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thunderstorm", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 8, radius = 68, falloff = 0.86}},
-	{id = "fork_chain", data = {radius = 50, dmgMult = 0.22, forksPerLink = 1}},
+	{id = "fork_chain", data = {radius = 50, dmgMult = 0.16, forksPerLink = 1}},
 	{id = "chain_zap_fx"},
 })
 
 addSpec("shock_meltdown", "module.shock_meltdown", "moduleDesc.shock_meltdown", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 5, radius = 58}},
-	{id = "chain_endpoint_burst", data = {radius = 30, dmgMult = 0.42}},
+	{id = "hit_chain", data = {jumps = 4, radius = 54}},
+	{id = "chain_endpoint_burst", data = {radius = 36, dmgMult = 0.60}},
 	{id = "chain_zap_fx"},
 })
 
