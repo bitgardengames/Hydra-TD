@@ -18,6 +18,8 @@ Targeting.MODES = {
 }
 local MODES = Targeting.MODES
 local simpleCtx = {}
+-- Frame cache uses nested integer-keyed tables to reduce temporary string
+-- allocations and GC spikes from composed cache keys.
 local frameCache = {
 	frameId = -1,
 	entries = {},
@@ -91,14 +93,11 @@ end
 local function clearFrameCache(cache)
 	local used = cache.usedKeys
 	for i = 1, cache.usedCount do
-		local key = used[i]
-		local entry = cache.entries[key]
-		if entry then
-			entry.count = 0
-			local list = entry.list
-			for j = 1, #list do
-				list[j] = nil
-			end
+		local entry = used[i]
+		entry.count = 0
+		local list = entry.list
+		for j = 1, #list do
+			list[j] = nil
 		end
 		used[i] = nil
 	end
@@ -107,10 +106,6 @@ end
 
 local function radiusBucket(range)
 	return max(1, floor((range or 0) * INV_RADIUS_BUCKET + 0.5))
-end
-
-local function composeCellKey(cx, cy, radiusKey)
-	return cx .. ":" .. cy .. ":" .. radiusKey
 end
 
 local function getCandidatesForTower(tower)
@@ -122,8 +117,18 @@ local function getCandidatesForTower(tower)
 
 	local cx, cy = pointToCell(tower.x, tower.y)
 	local radiusKey = radiusBucket(tower.range)
-	local key = composeCellKey(cx, cy, radiusKey)
-	local entry = frameCache.entries[key]
+	local entriesByX = frameCache.entries
+	local entriesByY = entriesByX[cx]
+	if not entriesByY then
+		entriesByY = {}
+		entriesByX[cx] = entriesByY
+	end
+	local entriesByRadius = entriesByY[cy]
+	if not entriesByRadius then
+		entriesByRadius = {}
+		entriesByY[cy] = entriesByRadius
+	end
+	local entry = entriesByRadius[radiusKey]
 	if entry then
 		return entry.list, entry.count
 	end
@@ -132,7 +137,7 @@ local function getCandidatesForTower(tower)
 		list = {},
 		count = 0,
 	}
-	frameCache.entries[key] = entry
+	entriesByRadius[radiusKey] = entry
 
 	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, false)
 	local list = entry.list
@@ -151,7 +156,7 @@ local function getCandidatesForTower(tower)
 
 	local usedCount = frameCache.usedCount + 1
 	frameCache.usedCount = usedCount
-	frameCache.usedKeys[usedCount] = key
+	frameCache.usedKeys[usedCount] = entry
 
 	return list, count
 end
