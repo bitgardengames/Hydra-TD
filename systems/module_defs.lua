@@ -869,7 +869,7 @@ addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thu
 addSpec("shock_meltdown", "module.shock_meltdown", "moduleDesc.shock_meltdown", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 4, radius = 54}},
-	{id = "chain_endpoint_burst", data = {radius = 36, dmgMult = 0.60}},
+	{id = "chain_endpoint_burst", data = {radius = 36, dmgMult = 0.42}},
 	{id = "chain_zap_fx"},
 })
 
