@@ -314,7 +314,7 @@ local function keypressed(key)
 	end
 
 	-- Menu screens
-	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" or State.mode == "pause" then
+	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" or State.mode == "pause" or State.mode == "game_over" or State.mode == "victory" then
 		Menu.keypressed(key)
 
 		return
