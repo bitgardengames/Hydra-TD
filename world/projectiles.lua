@@ -211,6 +211,7 @@ local function initProjectile(p, source, opts)
 	p.hitOrigin = opts.hitOrigin or "primary"
 
 	p.target = opts.target
+	p.targetID = p.target and p.target.id or nil
 	p.ignoreTarget = opts.ignoreTarget
 
 	p.angle = opts.angle or source.angle or 0

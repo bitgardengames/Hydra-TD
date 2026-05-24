@@ -414,6 +414,7 @@ B.retarget_on_spawn = {
 		-- assign new target if found
 		if best then
 			p.target = best
+			p.targetID = best.id
 			p.lastTX = best.x
 			p.lastTY = best.y
 		end
@@ -432,12 +433,15 @@ B.move_homing = {
 		local e = p.target
 
 		local tx, ty
-		local alive = e and e.hp and e.hp > 0
+		local alive = e and e.hp and e.hp > 0 and ((not p.targetID) or e.id == p.targetID)
 
 		if alive then
 			tx, ty = e.x, e.y
 			p.lastTX, p.lastTY = tx, ty
 		else
+			if e and p.targetID and e.id ~= p.targetID then
+				p.target = nil
+			end
 			tx, ty = p.lastTX, p.lastTY
 		end
 
