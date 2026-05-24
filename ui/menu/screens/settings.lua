@@ -108,7 +108,6 @@ local keyboardControlsLayout = {
 	{kind = "shop", id = "shock", label = "settings.controlPlaceShock"},
 	{kind = "shop", id = "plasma", label = "settings.controlPlacePlasma"},
 	{kind = "action", id = "toggleMeter", label = "settings.controlDamageMeter"},
-	{kind = "action", id = "screenshot", label = "settings.controlScreenshot"},
 }
 
 local function closeCapture()
