@@ -437,13 +437,6 @@ function Screen.draw()
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
 	Text.printfShadow(L("victory.medalProgress"), 0, medalY - 20, sw, "center")
 
-	local hintY = medalY + clusterH + hintOffset - 4
-	lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
-	Text.printfShadow(L("victory.hint"), boxX + paddingX, hintY, boxW - paddingX * 2, "center")
-
-	lg.setColor(colorText[1], colorText[2], colorText[3], 0.56 * alpha)
-	Text.printfShadow(L("victory.shortcuts"), boxX + paddingX, hintY + 16, boxW - paddingX * 2, "center")
-
 	-- Buttons
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
