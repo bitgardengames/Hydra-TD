@@ -777,6 +777,7 @@ addSpec("cannon_mega_shell", "module.cannon_mega_shell", "moduleDesc.cannon_mega
 	{id = "aoe_damage", data = {radius = 78}},
 	{id = "cannon_damage_scale", data = {mult = 2.05}},
 	{id = "projectile_radius", data = {radius = 5.2}},
+	{id = "projectile_visual_scale", data = {scale = 1.2}},
 	{id = "draw_cannon"},
 })
 
