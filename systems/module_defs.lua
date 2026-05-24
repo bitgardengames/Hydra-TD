@@ -930,28 +930,24 @@ addSpec("plasma_spiral_drive", "module.plasma_spiral_drive", "moduleDesc.plasma_
 })
 
 addSpec("plasma_thermal_tracking", "module.plasma_thermal_tracking", "moduleDesc.plasma_thermal_tracking", {
-	{id = "move_linear", data = {dist = 360}},
 	{id = "tick_damage", data = {radius = 10, rate = 0.08, impulse = 0.5}},
 	{id = "projectile_radius", data = {radius = 4.2}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_lane_sweep", "module.plasma_lane_sweep", "moduleDesc.plasma_lane_sweep", {
-	{id = "move_linear", data = {dist = 290}},
 	{id = "tick_damage", data = {radius = 17, rate = 0.14, impulse = 0.4}},
 	{id = "projectile_radius", data = {radius = 6.2}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_supernova", "module.plasma_supernova", "moduleDesc.plasma_supernova", {
-	{id = "move_linear", data = {dist = 300}},
 	{id = "tick_damage", data = {radius = 13, rate = 0.12, impulse = 0.45}},
 	{id = "plasma_supernova_burst", data = {radius = 42, dmgMult = 2.2, triggerAt = 0.2}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_growing_mass", "module.plasma_growing_mass", "moduleDesc.plasma_growing_mass", {
-	{id = "move_linear", data = {dist = 340}},
 	{id = "tick_damage", data = {radius = 12, rate = 0.095, impulse = 0.45}},
 	{id = "growing_projectile", data = {scale = 2.75}},
 	{id = "draw_plasma"},
