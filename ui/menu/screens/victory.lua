@@ -461,4 +461,23 @@ function Screen.mousereleased(x, y, button)
 	end
 end
 
+function Screen.keypressed(key)
+	if key == "escape" then
+		for _, btn in ipairs(buttons) do
+			if btn.id == "menu" and btn.onClick then
+				Sound.play("uiBack")
+				btn.onClick()
+				return true
+			end
+		end
+	elseif key == "return" or key == "kpenter" then
+		for _, btn in ipairs(buttons) do
+			if btn.enabled ~= false and btn.onClick then
+				btn.onClick()
+				return true
+			end
+		end
+	end
+end
+
 return Screen
