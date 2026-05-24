@@ -19,7 +19,6 @@ Hotkeys.defaultKb = {
 		fastForward = "tab",
 		skipPrep = "space",
 		toggleMeter = "d",
-		screenshot = "printscreen",
 	},
 }
 
