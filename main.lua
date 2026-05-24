@@ -434,6 +434,11 @@ function love.mousepressed(x, y, button)
 		end
 	end
 
+	if State.mode ~= "game" then
+		Menu.mousepressed(x, y, button)
+		return
+	end
+
 	Input.mousepressed(x, y, button)
 end
 
@@ -442,6 +447,11 @@ function love.mousereleased(x, y, button)
 		if Overlay.mousereleased(x, y, button) then
 			return
 		end
+	end
+
+	if State.mode ~= "game" then
+		Menu.mousereleased(x, y, button)
+		return
 	end
 
 	Input.mousereleased(x, y, button)
