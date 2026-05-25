@@ -821,13 +821,13 @@ add("cannon_aftershock", {
 
 addSpec("shock_storm_coil", "module.shock_storm_coil", "moduleDesc.shock_storm_coil", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 7, radius = 62}},
+	{id = "hit_chain", data = {jumps = 5, radius = 62}},
 	{id = "chain_zap_fx"},
 })
 
 addSpec("shock_overcharge", "module.shock_overcharge", "moduleDesc.shock_overcharge", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 2, radius = 54, falloff = 0.92}},
+	{id = "hit_chain", data = {jumps = 3, radius = 54, falloff = 0.92}},
 	{id = "chain_zap_fx"},
 })
 
