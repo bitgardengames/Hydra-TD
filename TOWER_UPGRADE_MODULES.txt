@@ -62,8 +62,8 @@ Cannon Tower
 
 Shock Tower
 - Tier 2
-  - Stormcoil: Chain lightning gains +3 jumps.
-  - Overcharge: Chain lightning has -2 jumps but +35% damage kept per jump.
+  - Stormcoil: Chain lightning gains +1 jump.
+  - Overcharge: Chain lightning has -1 jump but +35% damage kept per jump.
 - Tier 3
   - Fork Arc: Chain lightning forks 1 side arc on each jump.
   - Static: Repeated hits on the same target gain +10% surge damage per stack.
