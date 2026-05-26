@@ -256,7 +256,7 @@ return {
 		poison_corrupt_strong = "Each hit splashes poison to up to 2 nearby enemies.",
 		poison_hemotoxin = "Poison damage gains up to +60% based on target missing HP.",
 		poison_pandemic = "On poisoned enemy death, poison spreads and can chain 1 more time.",
-		cannon_siege_shells = "Fires fewer heavy shells with +40% impact damage and larger blasts.",
+		cannon_siege_shells = "Fires heavy shells with +40% impact damage and larger blasts.",
 		cannon_rapid_mortar = "Fires faster light shells for higher sustained splash damage.",
 		cannon_cluster_payload = "Shells split into 3 smaller shells on impact.",
 		cannon_shockwave = "Impacts launch enemies, then emit 1 damaging shockwave.",

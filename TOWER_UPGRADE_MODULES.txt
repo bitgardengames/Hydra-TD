@@ -48,7 +48,7 @@ Poison Tower
 
 Cannon Tower
 - Tier 2
-  - Siege: Fires fewer heavy shells with +40% impact damage and larger blasts.
+  - Siege: Fires heavy shells with +40% impact damage and larger blasts.
   - Barrage: Fires faster light shells for higher sustained splash damage.
 - Tier 3
   - Cluster: Shells split into 3 smaller shells on impact.
