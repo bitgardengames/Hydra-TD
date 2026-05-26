@@ -299,7 +299,7 @@ end
 
 function Screen.mousepressed(x, y, button)
 	for _, btn in ipairs(buttons) do
-		if Button.mousepressed(btn, love.mouse.getPosition(), button) then
+		if Button.mousepressed(btn, x, y, button) then
 			return true
 		end
 	end
