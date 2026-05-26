@@ -14,7 +14,6 @@ local lg = love.graphics
 
 local floor = math.floor
 local max = math.max
-local sin = math.sin
 
 local Screen = {}
 local selectedHeadline = nil
@@ -47,12 +46,12 @@ local gap = 62
 
 local headerHeight = 36
 local subtitleSpacing = 28
-local highlightOffset = 26
+local highlightOffset = 22
 local highlightGap = 12
-local highlightH = 56
-local difficultyOffset = 22
-local tipOffset = 20
-local buttonsOffset = 42
+local highlightH = 52
+local difficultyOffset = 18
+local tipOffset = 16
+local buttonsOffset = 34
 
 local contentStartY = 0
 local titleY = 0
@@ -197,7 +196,6 @@ end
 
 function Screen.draw()
 	local sw, sh = lg.getDimensions()
-	local cx = floor(sw * 0.5)
 
 	local count = #buttons
 	local buttonsHeight = (count - 1) * gap + btnH
@@ -253,13 +251,6 @@ function Screen.draw()
 		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
 		Text.printfShadow(selectedSubheadline, 0, reasonY, sw, "center")
 	end
-
-	-- Spotlight pulse
-	local pulse = 0.5 + 0.5 * sin(t * 2.6)
-	local orbR = 34 + pulse * 8
-	local orbY = titleY + 8
-	lg.setColor(colorBad[1], colorBad[2], colorBad[3], (0.1 + pulse * 0.06) * alpha)
-	lg.circle("fill", cx, orbY, orbR)
 
 	-- Highlight strip
 	local count = #highlights
