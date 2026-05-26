@@ -1013,7 +1013,7 @@ local function validateModuleDescriptionNumbers()
 			behaviorId = "hit_chain",
 			label = "jump count",
 			field = "jumps",
-			expected = 7,
+			expected = 5,
 		},
 		{
 			id = "shock_crowd_search",
