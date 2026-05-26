@@ -175,6 +175,9 @@ function love.load(arg)
 
 	love.math.setRandomSeed(123456)
 
+	-- Ensure OS cursor is always visible during gameplay/UI interactions
+	love.mouse.setVisible(true)
+
 	math.randomseed(os.time())
 	math.random()
 
