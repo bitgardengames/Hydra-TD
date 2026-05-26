@@ -233,44 +233,14 @@ function Waves.startWave()
 
 	-- Boss waves
 	if wave.boss then
-		local bossKind = wave.enemy or "boss"
-		local bossIndex = math.floor(State.wave / 10)
-
-		if mapWaveDefs and mapWaveDefs.bosses then
-			local bossDef = mapWaveDefs.bosses[bossIndex]
-
-			if bossDef and bossDef.type then
-				bossKind = bossDef.type
-			end
-		else
-			bossKind = getBossByArchetype(map, bossIndex)
-		end
+		local bossKind = "boss"
 
 		local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, true)
 
 		State.activeBoss = nil
 		State.activeBossKind = bossKind
 		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
-
-		local template = resolveBossEncounterTemplate(map, bossKind, bossIndex)
-		if template and template.flankKind then
-			local interval = max(1.2, template.interval or 6.0)
-			local maxAlive = max(1, template.maxAliveAdds or 10)
-			resetTable(bossAdds, bossAddsDefaults, {
-				active = true,
-				kind = template.flankKind,
-				burst = max(1, template.flankBurst or 1),
-				timer = max(0.6, template.initialDelay or (interval * 0.5)),
-				interval = interval,
-				maxAlive = maxAlive,
-				maxTotal = max(maxAlive, template.maxTotalAdds or maxAlive),
-				totalSpawned = 0,
-				hpMult = (template.addHpMult or 1.0) * DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult,
-				spdMult = (template.addSpdMult or 1.0) * DifficultyCurve.getEnemySpeedMultiplier(State.wave),
-			})
-		else
-			bossAdds.active = false
-		end
+		bossAdds.active = false
 
 		return
 	end
