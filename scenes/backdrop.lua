@@ -68,8 +68,8 @@ Backdrop.shots = {
 		duration = 14,
 		map = 5,
 		towers = {
-			{kind = "lancer", gx = 12, gy = 8, level = 4},
-			{kind = "shock", gx = 22, gy = 8, level = 2},
+			{kind = "lancer", gx = 12, gy = 8, level = 5},
+			{kind = "shock", gx = 22, gy = 8, level = 3},
 			{kind = "shock", gx = 13, gy = 8, level = 4},
 			{kind = "plasma", gx = 22, gy = 6, level = 4},
 		},
