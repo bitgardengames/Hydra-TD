@@ -257,7 +257,7 @@ add("poison_cull_weak", {
 	apply = function(ctx)
 		ctx:addBehavior({
 			id = "poison_cull_weak",
-			data = { maxBonusStacks = 8, bonusPerStack = 0.09 }
+			data = { maxBonusStacks = 8, bonusPerStack = 0.075 }
 		})
 	end
 })
@@ -270,7 +270,7 @@ add("poison_corrupt_strong", {
 	apply = function(ctx)
 		ctx:addBehavior({
 			id = "poison_corrupt_strong",
-			data = { radius = 64, spreadStacks = 2, spreadDur = 1.4 }
+			data = { radius = 60, spreadStacks = 2, spreadDur = 1.25 }
 		})
 	end
 })
@@ -283,7 +283,7 @@ add("poison_hemotoxin", {
 	apply = function(ctx)
 		ctx:addBehavior({
 			id = "poison_hemotoxin",
-			data = { missingHpMult = 1.0 }
+			data = { missingHpMult = 0.75 }
 		})
 	end
 })
@@ -540,7 +540,7 @@ addSpec("slow_snowball", "module.slow_snowball", "moduleDesc.slow_snowball", {
 
 addSpec("slow_frost_aura", "module.slow_frost_aura", "moduleDesc.slow_frost_aura", {
 	{id = "move_homing"},
-	{id = "hit_damage", data = {mult = 0.82}},
+	{id = "hit_damage", data = {mult = 0.88}},
 	{id = "apply_slow", data = {factor = 0.4, dur = 1.0}},
 	{id = "slow_aura", data = {factor = 0.2, dur = 0.7, radius = 54, tick = 0.3, fxScale = 0.62}, noInherit = true},
 	{id = "draw_slow"},
@@ -566,7 +566,7 @@ addSpec("slow_absolute_zero", "module.slow_absolute_zero", "moduleDesc.slow_abso
 	{id = "move_homing"},
 	{id = "hit_damage"},
 	{id = "apply_slow", data = {factor = 0.22, dur = 1.1}},
-	{id = "shatter_bonus", data = {mult = 0.82}},
+	{id = "shatter_bonus", data = {mult = 0.88}},
 	{id = "pierce", data = {maxHits = 1}},
 	{id = "draw_slow"},
 })
@@ -582,7 +582,7 @@ addSpec("slow_hailstorm", "module.slow_hailstorm", "moduleDesc.slow_hailstorm", 
 addSpec("slow_glacial_barrage", "module.slow_glacial_barrage", "moduleDesc.slow_glacial_barrage", {
 	{id = "move_homing"},
 	{id = "hit_damage", data = {mult = 0.85}},
-	{id = "slow_burst_cleave", data = {cooldown = 1.2, count = 5, dmgMult = 0.34, ringOffset = 14, travelDistance = 700}, noInherit = true},
+	{id = "slow_burst_cleave", data = {cooldown = 1.35, count = 5, dmgMult = 0.31, ringOffset = 14, travelDistance = 700}, noInherit = true},
 	{id = "apply_slow", data = {factor = 0.56, dur = 1.45}},
 	{id = "draw_slow"},
 })
@@ -645,7 +645,7 @@ addSpec("lancer_overdrive", "module.lancer_overdrive", "moduleDesc.lancer_overdr
 addSpec("lancer_volley", "module.lancer_volley", "moduleDesc.lancer_volley", {
 	{id = "move_homing"},
 	{id = "hit_damage"},
-	{id = "split_on_hit", data = {count = 2, spread = 0.28, dmgMult = 0.5}, noInherit = true},
+	{id = "split_on_hit", data = {count = 2, spread = 0.28, dmgMult = 0.44}, noInherit = true},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
 })
@@ -672,7 +672,7 @@ addSpec("lancer_opening_strike", "module.lancer_opening_strike", "moduleDesc.lan
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 9}},
 	{id = "hit_damage"},
-	{id = "lancer_opening_strike", data = {triggerHpFrac = 0.8, bonusDmgMult = 0.65}},
+	{id = "lancer_opening_strike", data = {triggerHpFrac = 0.8, bonusDmgMult = 0.55}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
 })
@@ -681,7 +681,7 @@ addSpec("lancer_sustained_barrage", "module.lancer_sustained_barrage", "moduleDe
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 9}},
 	{id = "hit_damage"},
-	{id = "lancer_sustained_barrage", data = {cycleShots = 6, burstShots = 3, bonusDmgMult = 0.45}},
+	{id = "lancer_sustained_barrage", data = {cycleShots = 6, burstShots = 3, bonusDmgMult = 0.36}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_lancer"},
 })
@@ -691,7 +691,7 @@ addSpec("lancer_rail_lance", "module.lancer_rail_lance", "moduleDesc.lancer_rail
 	{id = "hit_circle", data = {radius = 9}},
 	{id = "hit_damage"},
 	{id = "pierce", data = {maxHits = 5}},
-	{id = "lancer_rail_momentum", data = {perHitMult = 0.22, maxStacks = 4}},
+	{id = "lancer_rail_momentum", data = {perHitMult = 0.18, maxStacks = 4}},
 	{id = "lancer_hit_fx"},
 	{id = "draw_rail_lance"},
 })
@@ -733,7 +733,7 @@ addSpec("cannon_rapid_mortar", "module.cannon_rapid_mortar", "moduleDesc.cannon_
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 9}},
 	{id = "aoe_damage", data = {radius = 40, falloff = 0.84}},
-	{id = "cannon_damage_scale", data = {mult = 0.72}},
+	{id = "cannon_damage_scale", data = {mult = 0.78}},
 	{id = "draw_cannon"},
 })
 
@@ -749,8 +749,8 @@ addSpec("cannon_shockwave", "module.cannon_shockwave", "moduleDesc.cannon_shockw
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "aoe_damage", data = {radius = 40, falloff = 0.72}},
-	{id = "cannon_damage_scale", data = {mult = 0.60}},
-	{id = "cannon_shockwave", data = {radius = 54, damageMult = 0.62, minFalloff = 0.34, impulse = 4.8}},
+	{id = "cannon_damage_scale", data = {mult = 0.66}},
+	{id = "cannon_shockwave", data = {radius = 54, damageMult = 0.52, minFalloff = 0.34, impulse = 4.8}},
 	{id = "draw_cannon"},
 })
 
@@ -759,7 +759,7 @@ addSpec("cannon_long_fuse", "module.cannon_long_fuse", "moduleDesc.cannon_long_f
 	{id = "hit_circle", data = {radius = 13}},
 	{id = "aoe_damage", data = {radius = 54, falloff = 0.66}},
 	{id = "cannon_damage_scale", data = {mult = 1.0}},
-	{id = "cannon_long_fuse", data = {delay = 0.62, radius = 70, falloff = 0.54, damageMult = 0.95, ringRadius = 48, ringWidth = 18, ringDamageMult = 0.5, ringOverlapCapMult = 0.33, repeatHitMult = 0.5}},
+	{id = "cannon_long_fuse", data = {delay = 0.62, radius = 70, falloff = 0.54, damageMult = 0.72, ringRadius = 48, ringWidth = 18, ringDamageMult = 0.32, ringOverlapCapMult = 0.33, repeatHitMult = 0.5}},
 	{id = "draw_cannon"},
 })
 
@@ -785,7 +785,7 @@ addSpec("cannon_carpet_fire", "module.cannon_carpet_fire", "moduleDesc.cannon_ca
 	{id = "move_homing"},
 	{id = "hit_circle", data = {radius = 11}},
 	{id = "aoe_damage", data = {radius = 48}},
-	{id = "cannon_damage_scale", data = {mult = 0.82}},
+	{id = "cannon_damage_scale", data = {mult = 0.88}},
 	{id = "cannon_carpet_fire", data = {delayA = 0.07, delayB = 0.14, spread = 0.14}},
 	{id = "draw_cannon"},
 })
@@ -827,7 +827,7 @@ addSpec("shock_storm_coil", "module.shock_storm_coil", "moduleDesc.shock_storm_c
 
 addSpec("shock_overcharge", "module.shock_overcharge", "moduleDesc.shock_overcharge", {
 	{id = "emit_on_target"},
-	{id = "hit_chain", data = {jumps = 3, radius = 54, falloff = 0.92}},
+	{id = "hit_chain", data = {jumps = 3, radius = 56, falloff = 0.94}},
 	{id = "chain_zap_fx"},
 })
 
@@ -841,7 +841,7 @@ addSpec("shock_forked_arc", "module.shock_forked_arc", "moduleDesc.shock_forked_
 addSpec("shock_static_surge", "module.shock_static_surge", "moduleDesc.shock_static_surge", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 4, radius = 56}},
-	{id = "chain_static_surge", data = {bonusPerStack = 0.14, maxStacks = 6, fullStacks = 3, postFullScale = 0.45}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.12, maxStacks = 6, fullStacks = 3, postFullScale = 0.45}},
 	{id = "chain_zap_fx"},
 })
 
@@ -855,7 +855,7 @@ addSpec("shock_crowd_search", "module.shock_crowd_search", "moduleDesc.shock_cro
 addSpec("shock_boss_focus", "module.shock_boss_focus", "moduleDesc.shock_boss_focus", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 3, radius = 56, falloff = 0.94}},
-	{id = "chain_static_surge", data = {bonusPerStack = 0.18, maxStacks = 7, fullStacks = 2, postFullScale = 0.6}},
+	{id = "chain_static_surge", data = {bonusPerStack = 0.15, maxStacks = 7, fullStacks = 2, postFullScale = 0.6}},
 	{id = "chain_endpoint_burst", data = {radius = 28, dmgMult = 0.35}},
 	{id = "chain_zap_fx"},
 })
@@ -870,7 +870,7 @@ addSpec("shock_thunderstorm", "module.shock_thunderstorm", "moduleDesc.shock_thu
 addSpec("shock_meltdown", "module.shock_meltdown", "moduleDesc.shock_meltdown", {
 	{id = "emit_on_target"},
 	{id = "hit_chain", data = {jumps = 4, radius = 54}},
-	{id = "chain_endpoint_burst", data = {radius = 36, dmgMult = 0.42}},
+	{id = "chain_endpoint_burst", data = {radius = 36, dmgMult = 0.36}},
 	{id = "chain_zap_fx"},
 })
 
@@ -912,7 +912,7 @@ addSpec("plasma_focused_core", "module.plasma_focused_core", "moduleDesc.plasma_
 
 addSpec("plasma_unstable_core", "module.plasma_unstable_core", "moduleDesc.plasma_unstable_core", {
 	{id = "move_linear", data = {dist = 300}},
-	{id = "tick_damage", data = {radius = 16, rate = 0.14, impulse = 0.45}},
+	{id = "tick_damage", data = {radius = 16, rate = 0.13, impulse = 0.45}},
 	{id = "projectile_radius", data = {radius = 5.4}},
 	{id = "projectile_visual_scale", data = {scale = 1.1}},
 	{id = "draw_plasma"},
@@ -926,7 +926,7 @@ addSpec("plasma_boomerang_shot", "module.plasma_boomerang_shot", "moduleDesc.pla
 
 addSpec("plasma_spiral_drive", "module.plasma_spiral_drive", "moduleDesc.plasma_spiral_drive", {
 	{id = "move_spiral", data = {amp = 15, freq = 7.5}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.12, impulse = 0.45}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.11, impulse = 0.45}},
 	{id = "draw_plasma"},
 })
 
@@ -939,22 +939,22 @@ addSpec("plasma_thermal_tracking", "module.plasma_thermal_tracking", "moduleDesc
 
 addSpec("plasma_lane_sweep", "module.plasma_lane_sweep", "moduleDesc.plasma_lane_sweep", {
 	{id = "move_linear", data = {dist = 300}},
-	{id = "tick_damage", data = {radius = 17, rate = 0.14, impulse = 0.4}},
+	{id = "tick_damage", data = {radius = 17, rate = 0.125, impulse = 0.4}},
 	{id = "projectile_radius", data = {radius = 6.2}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_supernova", "module.plasma_supernova", "moduleDesc.plasma_supernova", {
 	{id = "move_linear", data = {dist = 300}},
-	{id = "tick_damage", data = {radius = 13, rate = 0.12, impulse = 0.45}},
-	{id = "plasma_supernova_burst", data = {radius = 42, dmgMult = 2.2, triggerAt = 0.2}},
+	{id = "tick_damage", data = {radius = 13, rate = 0.11, impulse = 0.45}},
+	{id = "plasma_supernova_burst", data = {radius = 42, dmgMult = 1.85, triggerAt = 0.2}},
 	{id = "draw_plasma"},
 })
 
 addSpec("plasma_growing_mass", "module.plasma_growing_mass", "moduleDesc.plasma_growing_mass", {
 	{id = "move_linear", data = {dist = 300}},
-	{id = "tick_damage", data = {radius = 12, rate = 0.095, impulse = 0.45}},
-	{id = "growing_projectile", data = {scale = 2.75}},
+	{id = "tick_damage", data = {radius = 12, rate = 0.1, impulse = 0.45}},
+	{id = "growing_projectile", data = {scale = 2.55}},
 	{id = "draw_plasma"},
 })
 
