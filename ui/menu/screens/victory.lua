@@ -62,13 +62,12 @@ local panelW = 560
 local headerHeight = 36
 local subheadSpacing = 30
 local statsOffset = 24
-local statsGapX = 14
-local statsGapY = 12
-local statH = 56
-local difficultyOffset = 24
-local medalSpacing = 56
-local hintOffset = 26
-local buttonsOffset = 34
+local statsGap = 12
+local statH = 52
+local difficultyOffset = 22
+local medalSpacing = 50
+local hintOffset = 22
+local buttonsOffset = 30
 
 -- Medal visuals
 local medalR = 16
@@ -131,8 +130,7 @@ local function layoutButtons()
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 	local contentStartY = floor(sh * 0.5 - 220)
-	local statRows = math.ceil(#stats / 2)
-	local statsHeight = statRows * statH + (statRows - 1) * statsGapY
+	local statsHeight = #stats * statH + (#stats - 1) * statsGap
 
 	local buttonsStartY = contentStartY
 		+ headerHeight
@@ -162,12 +160,9 @@ end
 local function buildStats()
 	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
 	stats = {
-		{ label = L("gameOver.map"), value = getMapName() },
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
 		{ label = L("gameOver.score"), value = tostring(State.score or 0) },
 		{ label = L("gameOver.leaks"), value = tostring(State.totalLeaks or 0) },
-		{ label = L("gameOver.livesRemaining"), value = tostring(max(0, State.lives or 0)) },
-		{ label = L("gameOver.difficultyLabel"), value = getDifficultyLabel() or "--" },
 	}
 end
 
@@ -314,8 +309,7 @@ function Screen.draw()
 
 	local boxWidth = min(panelW, sw - 56)
 	local contentStartY = floor(sh * 0.5 - 220)
-	local statRows = math.ceil(#stats / 2)
-	local statsHeight = statRows * statH + (statRows - 1) * statsGapY
+	local statsHeight = #stats * statH + (#stats - 1) * statsGap
 
 	local count = #buttons
 	local buttonsHeight = (count - 1) * gap + btnH
@@ -381,12 +375,10 @@ function Screen.draw()
 
 
 	local statsY = titleY + headerHeight + subheadSpacing
-	local cardW = (boxW - paddingX * 2 - statsGapX) * 0.5
+	local cardW = boxW - paddingX * 2
 	for i, item in ipairs(stats) do
-		local row = floor((i - 1) / 2)
-		local col = (i - 1) % 2
-		local x = boxX + paddingX + col * (cardW + statsGapX)
-		local y = statsY + row * (statH + statsGapY)
+		local x = boxX + paddingX
+		local y = statsY + (i - 1) * (statH + statsGap)
 
 		lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.6 * alpha)
 		lg.rectangle("fill", x, y, cardW, statH, 10, 10)
@@ -407,7 +399,7 @@ function Screen.draw()
 	if difficultyLabel then
 		Fonts.set("ui")
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.78 * alpha)
-		Text.printfShadow(format("%s: %s", L("settings.difficulty"), difficultyLabel), 0, difficultyY, sw, "center")
+		Text.printfShadow(format("%s: %s  •  %s: %s", L("gameOver.map"), getMapName(), L("settings.difficulty"), difficultyLabel), 0, difficultyY, sw, "center")
 	end
 
 	-- Medals
