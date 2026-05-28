@@ -250,6 +250,12 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.jamPulseTimer = 0
 	e.shieldTimer = def.shieldCooldown or 0
 	e.shieldPulse = 0
+	e.hasteTimer = 0
+	e.hasteSpeedMultiplier = 1
+	e.hasteMaxSpeedMult = def.hasteMaxSpeedMult or 1.7
+	e.hasteCooldown = def.hasteCooldown or 0
+	e.hastePulseTimer = 0
+	e.hasteCastPulse = 0
 	e.shieldHp = 0
 	e.shieldMax = 0
 	e.shieldExpire = 0
@@ -558,7 +564,9 @@ local function updateEnemies(dt)
 			e.slowTimer = slowTimer
 		end
 
-		e.speed = e.baseSpeed * e.slowFactor
+		local buffMult = (e.hasteTimer or 0) > 0 and (e.hasteSpeedMultiplier or 1) or 1
+		local speedCap = e.baseSpeed * (e.hasteMaxSpeedMult or 1.7)
+		e.speed = min(speedCap, e.baseSpeed * e.slowFactor * buffMult)
 		e.prevAnimT = e.animT
 		e.animT = e.animT + dt * e.speed * 0.03
 
@@ -593,6 +601,32 @@ local function updateEnemies(dt)
 					Towers.applyDisabled(t, e.def.jamDuration or 0, e.x, e.y)
 					Effects.spawnZapLine(e.x, e.y, t.x, t.renderY or t.y)
 					Floaters.add(t.x, (t.renderY or t.y) - 16, "⛔", 0.72, 0.95, 1.0)
+				end
+			end
+		end
+
+		if e.hasteTimer and e.hasteTimer > 0 then
+			e.hasteTimer = max(0, e.hasteTimer - dt)
+		end
+
+		if e.kind == "overcharger" and e.hasteCooldown > 0 then
+			e.hasteCastPulse = max(0, (e.hasteCastPulse or 0) - dt)
+			e.hasteTimer = max(0, (e.hasteTimer or 0) - dt)
+			e.hastePulseTimer = (e.hastePulseTimer or e.hasteCooldown) - dt
+			if e.hastePulseTimer <= 0 then
+				e.hastePulseTimer = e.hasteCooldown
+				e.hasteCastPulse = 0.45
+				Effects.spawnHastePulse(e.x, e.y, e.def.hasteRadius or 0)
+				local nearby, count = Spatial.queryCells(e.x, e.y, e.def.hasteRadius or 0)
+				local hasteDuration = e.def.hasteDuration or 0
+				local hasteMultiplier = e.def.hasteSpeedMultiplier or 1
+				for j = 1, count do
+					local other = nearby[j]
+					if other ~= e and other.hp > 0 then
+						other.hasteTimer = max(other.hasteTimer or 0, hasteDuration)
+						other.hasteSpeedMultiplier = max(other.hasteSpeedMultiplier or 1, hasteMultiplier)
+						other.hasteMaxSpeedMult = max(other.hasteMaxSpeedMult or 1.7, e.def.hasteMaxSpeedMult or 1.7)
+					end
 				end
 			end
 		end

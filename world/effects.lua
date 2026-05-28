@@ -28,6 +28,7 @@ Effects.lancer = {}
 Effects.death = {}
 Effects.placePuffs = {}
 Effects.plasmaParticles = {}
+Effects.hastePulses = {}
 
 local zapJitter = 4
 local halfJitter = zapJitter * 0.5
@@ -47,6 +48,7 @@ local lancerPool = {}
 local deathPool = {}
 local placePuffPool = {}
 local plasmaParticlePool = {}
+local hastePulsePool = {}
 
 local function acquire(pool)
 	local obj = pool[#pool]
@@ -363,6 +365,17 @@ function Effects.spawnPlasmaHit(x, y, vx, vy)
 	end
 end
 
+
+function Effects.spawnHastePulse(x, y, radius)
+	local p = acquire(hastePulsePool)
+	p.x = x
+	p.y = y
+	p.radius = radius or 120
+	p.t = 0
+	p.life = 0.45
+	Effects.hastePulses[#Effects.hastePulses + 1] = p
+end
+
 -- Tower placement
 function Effects.spawnPlacePuff(x, y)
 	for i = 1, 10 do
@@ -533,6 +546,17 @@ function Effects.update(dt)
 			plasmaParticles[i] = plasmaParticles[#plasmaParticles]
 			plasmaParticles[#plasmaParticles] = nil
 			release(plasmaParticlePool, dead)
+		end
+	end
+
+	local hastePulses = Effects.hastePulses
+
+	for i = #hastePulses, 1, -1 do
+		local p = hastePulses[i]
+		p.t = p.t + dt
+		if p.t >= p.life then
+			swapRemove(hastePulses, i)
+			release(hastePulsePool, p)
 		end
 	end
 
@@ -893,6 +917,20 @@ function Effects.draw()
 		lg.circle("fill", p.x, p.y, r)
 	end
 
+	local hastePulses = Effects.hastePulses
+
+	for i = 1, #hastePulses do
+		local p = hastePulses[i]
+		local t = p.t / p.life
+		local a = 1 - t
+		local rr = (p.radius or 120) * (0.2 + 0.8 * t)
+		lg.setLineWidth(3 * a + 1)
+		lg.setColor(1.0, 0.55, 0.2, 0.45 * a)
+		lg.circle("line", p.x, p.y, rr)
+		lg.setColor(1.0, 0.35, 0.1, 0.18 * a)
+		lg.circle("fill", p.x, p.y, rr * 0.9)
+	end
+
 	local placePuffs = Effects.placePuffs
 
 	for i = 1, #placePuffs do
@@ -1005,6 +1043,12 @@ function Effects.clear()
 	end
 
 	-- Plasma particles
+	for i = #Effects.hastePulses, 1, -1 do
+		local p = Effects.hastePulses[i]
+		Effects.hastePulses[i] = nil
+		release(hastePulsePool, p)
+	end
+
 	for i = #Effects.plasmaParticles, 1, -1 do
 		local p = Effects.plasmaParticles[i]
 		Effects.plasmaParticles[i] = nil
