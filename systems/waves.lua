@@ -261,6 +261,9 @@ function Waves.startWave()
 	if count >= 30 and kind ~= "projector" then
 		Enemies.spawnEnemy("projector", hpMult, spdMult)
 	end
+	if State.wave >= 18 and count >= 30 and kind ~= "leech_beacon" then
+		Enemies.spawnEnemy("leech_beacon", hpMult * 1.45, spdMult * 0.95)
+	end
 end
 
 -- Spawning update

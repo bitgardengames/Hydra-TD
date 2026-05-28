@@ -171,6 +171,9 @@ local function drawEnemy(e)
 		bodyG = 0.26 + glow * 0.18
 		bodyB = 0.12 + glow * 0.08
 	end
+	if e.kind == "leech_beacon" then
+		bodyR, bodyG, bodyB = 0.78, 0.38, 0.95
+	end
 
 	-- Base (shadowed)
 	lg.setColor(bodyR * darkMul, bodyG * darkMul, bodyB * darkMul)
@@ -329,6 +332,26 @@ local function drawEnemy(e)
 		lg.circle("fill", ix, iy, e.radius + 2)
 		lg.setColor(0.65, 1.0, 1.0, 0.55)
 		lg.circle("line", ix, iy, e.radius + 2)
+	end
+
+	if e.kind == "leech_beacon" then
+		lg.setColor(0.95, 0.7, 1.0, enemyAlpha)
+		lg.setLineWidth(2)
+		lg.line(ix, iy - e.radius * 0.4, ix, iy - e.radius * 1.2)
+		lg.setColor(1.0, 0.85, 1.0, enemyAlpha)
+		lg.circle("fill", ix, iy - e.radius * 1.28, max(2, e.radius * 0.2))
+		lg.setLineWidth(1)
+		local lt = e.linkTarget
+		if lt and (e.linkTimer or 0) > 0 then
+			local tx, ty = lt.x, (lt.renderY or lt.y)
+			lg.setColor(0.95, 0.5, 1.0, 0.7)
+			lg.setLineWidth(3)
+			lg.line(ix, iy, tx, ty)
+			lg.setColor(1.0, 0.85, 1.0, 0.95)
+			lg.setLineWidth(1.2)
+			lg.line(ix, iy, tx, ty)
+			lg.setLineWidth(1)
+		end
 	end
 
 	if (e.hasteTimer or 0) > 0 then
@@ -671,6 +694,10 @@ local function drawTowerFX(t)
 			lg.setColor(0.75, 0.95, 1.0, 0.95)
 			lg.print("⛔" .. string.format("%.1f", t.disabledTimer), cx - 12, renderY - 36)
 		end
+		if (t.leechDebuffTimer or 0) > 0 then
+			lg.setColor(0.98, 0.6, 1.0, 0.98)
+			lg.print("🜂" .. string.format("%.1f", t.leechDebuffTimer), cx - 12, renderY - 50)
+		end
 	local kind = t.kind
 
 	if kind == "shock" then
@@ -985,6 +1012,11 @@ local function if (t.disabledTimer or 0) > 0 then
 		lg.setColor(0.6, 0.9, 1.0, 0.15 * flicker)
 		lg.circle("fill", cx, renderY, size * 0.75)
 	end
+	if (t.leechDebuffTimer or 0) > 0 then
+		local flicker = 0.6 + 0.4 * sin((State.time or 0) * 24 + i * 1.2)
+		lg.setColor(0.95, 0.35, 1.0, 0.2 * flicker)
+		lg.circle("fill", cx, renderY, size * 0.85)
+	end
 
 	drawTowerInstance(t, cx, renderY)
 	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
@@ -1072,6 +1104,11 @@ local function drawTowers()
 		lg.setColor(0.6, 0.9, 1.0, 0.15 * flicker)
 		lg.circle("fill", cx, renderY, size * 0.75)
 	end
+	if (t.leechDebuffTimer or 0) > 0 then
+		local flicker = 0.6 + 0.4 * sin((State.time or 0) * 24 + i * 1.2)
+		lg.setColor(0.95, 0.35, 1.0, 0.2 * flicker)
+		lg.circle("fill", cx, renderY, size * 0.85)
+	end
 
 	drawTowerInstance(t, cx, renderY)
 
@@ -1079,6 +1116,10 @@ local function drawTowers()
 		if (t.disabledTimer or 0) > 0 then
 			lg.setColor(0.75, 0.95, 1.0, 0.95)
 			lg.print("⛔" .. string.format("%.1f", t.disabledTimer), cx - 12, renderY - 36)
+		end
+		if (t.leechDebuffTimer or 0) > 0 then
+			lg.setColor(0.98, 0.6, 1.0, 0.98)
+			lg.print("🜂" .. string.format("%.1f", t.leechDebuffTimer), cx - 12, renderY - 50)
 		end
 
 		-- Pulse ring

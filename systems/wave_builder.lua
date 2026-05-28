@@ -25,6 +25,11 @@ local Templates = {
 		baseCount = 6 * 3,
 		spacing = 1.15,
 	},
+	leech = {
+		enemy = "leech_beacon",
+		baseCount = 2,
+		spacing = 7.0,
+	},
 
 }
 
@@ -34,6 +39,7 @@ local TemplateSelectionRules = {
 	{ mod = 7, template = Templates.fast },
 	{ mod = 11, template = Templates.tanky },
 	{ mod = 9, template = Templates.jammer },
+	{ mod = 19, template = Templates.leech },
 }
 
 local function pickTemplate(waveIndex)

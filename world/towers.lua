@@ -255,6 +255,10 @@ local function addTower(kind, gx, gy)
 		kills = 0,
 		charge = 0,
 		windUp = 0,
+		leechDebuffTimer = 0,
+		leechDebuffDuration = 0,
+		leechFireRateMultiplier = 1,
+		leechSource = nil,
 		fireAnim = 0,
 		recoil = 0,
 		recoilStrength = def.recoilStrength or 0,
@@ -440,6 +444,13 @@ local function applyDisabled(t, duration, sourceX, sourceY)
 	t.disabledPulse = 1
 end
 
+local function applyLeechDebuff(t, source, duration, fireRateMultiplier)
+	t.leechDebuffTimer = max(t.leechDebuffTimer or 0, duration or 0)
+	t.leechDebuffDuration = max(t.leechDebuffDuration or 0, duration or 0)
+	t.leechFireRateMultiplier = min(t.leechFireRateMultiplier or 1, fireRateMultiplier or 1)
+	t.leechSource = source
+end
+
 local function getTowersInRadius(x, y, r)
 	local out = {}
 	local r2 = r * r
@@ -499,7 +510,16 @@ local function updateTowers(dt)
 
 		local prevWindUp = t.windUp or 0
 		t.disabledTimer = max(0, (t.disabledTimer or 0) - dt)
-		t.cooldown = max(0, (t.cooldown or 0) - dt)
+		if (t.leechDebuffTimer or 0) > 0 then
+			t.leechDebuffTimer = max(0, (t.leechDebuffTimer or 0) - dt)
+			if t.leechDebuffTimer <= 0 then
+				t.leechDebuffDuration = 0
+				t.leechFireRateMultiplier = 1
+				t.leechSource = nil
+			end
+		end
+		local leechMult = (t.leechDebuffTimer or 0) > 0 and (t.leechFireRateMultiplier or 1) or 1
+		t.cooldown = max(0, (t.cooldown or 0) - dt * leechMult)
 		t.windUp = max(0, prevWindUp - dt)
 		t.retargetT = max(0, (t.retargetT or 0) - dt)
 		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
@@ -680,5 +700,6 @@ return {
 	updateTowers = updateTowers,
 	clear = clear,
 	applyDisabled = applyDisabled,
+	applyLeechDebuff = applyLeechDebuff,
 	getTowersInRadius = getTowersInRadius,
 }

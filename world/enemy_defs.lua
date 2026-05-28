@@ -58,6 +58,20 @@ return {
 		jamTelegraph = 0.8,
 	},
 
+
+	leech_beacon = {
+		nameKey = "enemy.leech_beacon",
+		hp = 42 * mult,
+		speed = 52,
+		reward = 22,
+		score = 48,
+		radius = 13,
+		linkRange = 220,
+		linkDuration = 3.6,
+		linkCooldown = 12.0,
+		fireRateMultiplier = 0.45,
+	},
+
 	projector = {
 		nameKey = "enemy.projector",
 		hp = 26 * mult,

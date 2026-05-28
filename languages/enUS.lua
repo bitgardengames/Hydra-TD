@@ -304,6 +304,7 @@ return {
 		tank = "Tank",
 		runner = "Runner",
 		boss = "Boss",
+		leech_beacon = "Leech Beacon",
 	},
 
 	hud = {

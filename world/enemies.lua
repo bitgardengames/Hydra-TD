@@ -260,6 +260,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.shieldMax = 0
 	e.shieldExpire = 0
 	e.shieldHitFlash = 0
+	e.linkTimer = 0
+	e.linkCooldown = def.linkCooldown or 0
+	e.linkTarget = nil
 
 	computeNudgeParams(e)
 
@@ -627,6 +630,47 @@ local function updateEnemies(dt)
 						other.hasteSpeedMultiplier = max(other.hasteSpeedMultiplier or 1, hasteMultiplier)
 						other.hasteMaxSpeedMult = max(other.hasteMaxSpeedMult or 1.7, e.def.hasteMaxSpeedMult or 1.7)
 					end
+				end
+			end
+		end
+
+
+		if e.kind == "leech_beacon" then
+			e.linkTimer = max(0, (e.linkTimer or 0) - dt)
+			e.linkCooldown = max(0, (e.linkCooldown or e.def.linkCooldown or 0) - dt)
+			local target = e.linkTarget
+			local valid = target and (e.linkTimer or 0) > 0
+			if valid then
+				local dx = target.x - e.x
+				local dy = target.y - e.y
+				local r = e.def.linkRange or 0
+				valid = target ~= nil and (dx * dx + dy * dy) <= (r * r)
+			end
+			if not valid then
+				e.linkTarget = nil
+				e.linkTimer = 0
+			else
+				Towers.applyLeechDebuff(target, e, dt + 0.12, e.def.fireRateMultiplier or 1)
+			end
+
+			if not e.linkTarget and e.linkCooldown <= 0 then
+				local candidates = Towers.getTowersInRadius(e.x, e.y, e.def.linkRange or 0)
+				local best, bestD2 = nil, 1e30
+				for j = 1, #candidates do
+					local t = candidates[j]
+					local dx = t.x - e.x
+					local dy = t.y - e.y
+					local d2 = dx * dx + dy * dy
+					if d2 < bestD2 then
+						best = t
+						bestD2 = d2
+					end
+				end
+				if best then
+					e.linkTarget = best
+					e.linkTimer = e.def.linkDuration or 0
+					e.linkCooldown = e.def.linkCooldown or 0
+					Floaters.add(best.x, (best.renderY or best.y) - 18, "🜂", 0.95, 0.25, 0.95)
 				end
 			end
 		end
