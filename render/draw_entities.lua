@@ -148,9 +148,16 @@ local function drawEnemy(e)
 
 	-- Body lighting (canonical system)
 	local r = e.radius
+	local bodyR, bodyG, bodyB = eR, eG, eB
+	if e.kind == "jammer" then
+		local pulse = 0.5 + 0.5 * sin(animT * 5.5)
+		bodyR = 0.45 + pulse * 0.35
+		bodyG = 0.9
+		bodyB = 1.0
+	end
 
 	-- Base (shadowed)
-	lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul)
+	lg.setColor(bodyR * darkMul, bodyG * darkMul, bodyB * darkMul)
 	lg.circle("fill", ix, iy, r)
 
 	-- Top highlight
@@ -158,7 +165,7 @@ local function drawEnemy(e)
 	local hy = iy - r * highlightOffset
 	local hr = r * highlightScale
 
-	lg.setColor(eR, eG, eB, enemyAlpha)
+	lg.setColor(bodyR, bodyG, bodyB, enemyAlpha)
 	lg.circle("fill", hx, hy, hr)
 
     -- Hit flash
@@ -280,6 +287,14 @@ local function drawEnemy(e)
 		lg.circle("fill", ix - eyeSep + dx, eyeY + dy, eyeSize)
 		lg.circle("fill", ix + eyeSep + dx, eyeY + dy, eyeSize)
     end
+
+	if e.kind == "jammer" and (e.jamPulseTimer or 0) > 0 then
+		local jt = min(1, e.jamPulseTimer / 0.35)
+		lg.setLineWidth(2)
+		lg.setColor(0.6, 0.95, 1.0, jt * 0.8)
+		lg.circle("line", ix, iy, (e.def.jamRadius or 0) * (1 + (1 - jt) * 0.06))
+		lg.setLineWidth(1)
+	end
 
 	-- Selection Ring
 	if State.selectedEnemy == e then
@@ -591,6 +606,10 @@ local function drawPoisonFX(t)
 end
 
 local function drawTowerFX(t)
+		if (t.disabledTimer or 0) > 0 then
+			lg.setColor(0.75, 0.95, 1.0, 0.95)
+			lg.print("⛔" .. string.format("%.1f", t.disabledTimer), cx - 12, renderY - 36)
+		end
 	local kind = t.kind
 
 	if kind == "shock" then
@@ -900,7 +919,13 @@ local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
 	drawTowerCore(kind, cx, cy, angle, recoil, alpha, 1, 1, 1, 0)
 end
 
-local function drawTowerInstance(t, cx, renderY)
+local function if (t.disabledTimer or 0) > 0 then
+		local flicker = 0.65 + 0.35 * sin((State.time or 0) * 32 + i * 1.7)
+		lg.setColor(0.6, 0.9, 1.0, 0.15 * flicker)
+		lg.circle("fill", cx, renderY, size * 0.75)
+	end
+
+	drawTowerInstance(t, cx, renderY)
 	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
 end
 
@@ -981,9 +1006,19 @@ local function drawTowers()
 		end
 
 		-- Top
-		drawTowerInstance(t, cx, renderY)
+		if (t.disabledTimer or 0) > 0 then
+		local flicker = 0.65 + 0.35 * sin((State.time or 0) * 32 + i * 1.7)
+		lg.setColor(0.6, 0.9, 1.0, 0.15 * flicker)
+		lg.circle("fill", cx, renderY, size * 0.75)
+	end
+
+	drawTowerInstance(t, cx, renderY)
 
 		drawTowerFX(t)
+		if (t.disabledTimer or 0) > 0 then
+			lg.setColor(0.75, 0.95, 1.0, 0.95)
+			lg.print("⛔" .. string.format("%.1f", t.disabledTimer), cx - 12, renderY - 36)
+		end
 
 		-- Pulse ring
 		if riseAnim > 0 then
