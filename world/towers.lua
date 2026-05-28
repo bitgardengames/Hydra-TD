@@ -7,6 +7,7 @@ local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
 local Targeting = require("world.targeting")
 local Difficulty = require("systems.difficulty")
+local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
@@ -34,6 +35,7 @@ local colorWarn = Theme.ui.warn
 local cgR, cgG, cgB = colorGood[1], colorGood[2], colorGood[3]
 local cwR, cwG, cwB = colorWarn[1], colorWarn[2], colorWarn[3]
 
+local enemies = Enemies.enemies
 
 local findTarget = Targeting.findTarget
 local isSemanticallyValidTarget = Targeting.isSemanticallyValidTarget
@@ -260,9 +262,6 @@ local function addTower(kind, gx, gy)
 		angle = -pi / 2,
 		levelUpAnim = 0,
 		spawnAnim = 1,
-		disabledTimer = 0,
-		disabledDuration = 0,
-		disabledPulse = 0,
 		target = nil,
 		lastTargetId = nil,
 		lastTargetX = nil,
@@ -430,33 +429,10 @@ local function findTowerAt(gx, gy)
 end
 
 
-local function applyDisabled(t, duration, sourceX, sourceY)
-	t.disabledTimer = max(t.disabledTimer or 0, duration or 0)
-	t.disabledDuration = max(t.disabledDuration or 0, duration or 0)
-	t.disabledSourceX = sourceX
-	t.disabledSourceY = sourceY
-	t.disabledPulse = 1
-end
-
-local function getTowersInRadius(x, y, r)
-	local out = {}
-	local r2 = r * r
-	for i = 1, #towers do
-		local t = towers[i]
-		local dx = t.x - x
-		local dy = t.y - y
-		if dx * dx + dy * dy <= r2 then
-			out[#out + 1] = t
-		end
-	end
-	return out
-end
-
 local function updateTowerVisuals(t, dt)
 	t.fireAnim = max(0, t.fireAnim - dt * 8)
 	t.spawnAnim = max(0, (t.spawnAnim or 0) - dt * 5)
 	t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)
-	t.disabledPulse = max(0, (t.disabledPulse or 0) - dt * 3.2)
 
 	local riseAnim = t.levelUpAnim or 0
 	local animatedHeight
@@ -496,7 +472,6 @@ local function updateTowers(dt)
 		local t = towers[i]
 
 		local prevWindUp = t.windUp or 0
-		t.disabledTimer = max(0, (t.disabledTimer or 0) - dt)
 		t.cooldown = max(0, (t.cooldown or 0) - dt)
 		t.windUp = max(0, prevWindUp - dt)
 		t.retargetT = max(0, (t.retargetT or 0) - dt)
@@ -537,7 +512,7 @@ local function updateTowers(dt)
 
 		-- Aim + rotation
 		local aimDiff = nil
-		local canRotate = t.canRotate and (t.disabledTimer or 0) <= 0
+		local canRotate = t.canRotate
 		local tx, ty = t.x, t.y
 		local turnSpeedBase = t.turnSpeed or 12
 		local recoilStrength = t.recoilStrength or 1
@@ -622,9 +597,7 @@ local function updateTowers(dt)
 		end
 
 		-- Wind-up / fire
-		if (t.disabledTimer or 0) > 0 then
-		t.windUp = 0
-	elseif windUpCompleted and target then
+		if windUpCompleted and target then
 				local canFire = true
 
 				if canRotate then
@@ -677,6 +650,4 @@ return {
 	findTowerAt = findTowerAt,
 	updateTowers = updateTowers,
 	clear = clear,
-	applyDisabled = applyDisabled,
-	getTowersInRadius = getTowersInRadius,
 }

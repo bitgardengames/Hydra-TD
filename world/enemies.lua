@@ -8,7 +8,6 @@ local Spatial = require("world.spatial_grid")
 local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
 local Achievements = require("systems.achievements")
-local Towers = require("world.towers")
 local L = require("core.localization")
 
 local enemies = {}
@@ -245,21 +244,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.shadow = true
 	e.id = nextID
 	e.shockID = 0
-	e.jamCooldown = def.jamCooldown or 0
-	e.jamTimer = def.jamCooldown or 0
-	e.jamPulseTimer = 0
-	e.shieldTimer = def.shieldCooldown or 0
-	e.shieldPulse = 0
-	e.hasteTimer = 0
-	e.hasteSpeedMultiplier = 1
-	e.hasteMaxSpeedMult = def.hasteMaxSpeedMult or 1.7
-	e.hasteCooldown = def.hasteCooldown or 0
-	e.hastePulseTimer = 0
-	e.hasteCastPulse = 0
-	e.shieldHp = 0
-	e.shieldMax = 0
-	e.shieldExpire = 0
-	e.shieldHitFlash = 0
 
 	computeNudgeParams(e)
 
@@ -413,8 +397,7 @@ local function updateEnemies(dt)
 				local missingBonus = 1 + (missingFrac * (e.poisonMissingHpMult or 0))
 				local dmg = baseDmg * missingBonus
 
-				local leftover = absorbShieldDamage(e, dmg)
-				e.hp = e.hp - leftover
+				e.hp = e.hp - dmg
 
 				if e.poisonSource then
 					e.poisonSource.damageDealt = e.poisonSource.damageDealt + dmg
@@ -564,9 +547,7 @@ local function updateEnemies(dt)
 			e.slowTimer = slowTimer
 		end
 
-		local buffMult = (e.hasteTimer or 0) > 0 and (e.hasteSpeedMultiplier or 1) or 1
-		local speedCap = e.baseSpeed * (e.hasteMaxSpeedMult or 1.7)
-		e.speed = min(speedCap, e.baseSpeed * e.slowFactor * buffMult)
+		e.speed = e.baseSpeed * e.slowFactor
 		e.prevAnimT = e.animT
 		e.animT = e.animT + dt * e.speed * 0.03
 
@@ -586,78 +567,6 @@ local function updateEnemies(dt)
 			if e.faceT >= e.faceDur then
 				e.face = "normal"
 			end
-		end
-
-
-		if e.kind == "jammer" and e.jamCooldown > 0 then
-			e.jamTimer = (e.jamTimer or e.jamCooldown) - dt
-			e.jamPulseTimer = max(0, (e.jamPulseTimer or 0) - dt)
-			if e.jamTimer <= 0 then
-				e.jamTimer = e.jamCooldown
-				e.jamPulseTimer = 0.35
-				local affected = Towers.getTowersInRadius(e.x, e.y, e.def.jamRadius or 0)
-				for j = 1, #affected do
-					local t = affected[j]
-					Towers.applyDisabled(t, e.def.jamDuration or 0, e.x, e.y)
-					Effects.spawnZapLine(e.x, e.y, t.x, t.renderY or t.y)
-					Floaters.add(t.x, (t.renderY or t.y) - 16, "⛔", 0.72, 0.95, 1.0)
-				end
-			end
-		end
-
-		if e.hasteTimer and e.hasteTimer > 0 then
-			e.hasteTimer = max(0, e.hasteTimer - dt)
-		end
-
-		if e.kind == "overcharger" and e.hasteCooldown > 0 then
-			e.hasteCastPulse = max(0, (e.hasteCastPulse or 0) - dt)
-			e.hasteTimer = max(0, (e.hasteTimer or 0) - dt)
-			e.hastePulseTimer = (e.hastePulseTimer or e.hasteCooldown) - dt
-			if e.hastePulseTimer <= 0 then
-				e.hastePulseTimer = e.hasteCooldown
-				e.hasteCastPulse = 0.45
-				Effects.spawnHastePulse(e.x, e.y, e.def.hasteRadius or 0)
-				local nearby, count = Spatial.queryCells(e.x, e.y, e.def.hasteRadius or 0)
-				local hasteDuration = e.def.hasteDuration or 0
-				local hasteMultiplier = e.def.hasteSpeedMultiplier or 1
-				for j = 1, count do
-					local other = nearby[j]
-					if other ~= e and other.hp > 0 then
-						other.hasteTimer = max(other.hasteTimer or 0, hasteDuration)
-						other.hasteSpeedMultiplier = max(other.hasteSpeedMultiplier or 1, hasteMultiplier)
-						other.hasteMaxSpeedMult = max(other.hasteMaxSpeedMult or 1.7, e.def.hasteMaxSpeedMult or 1.7)
-					end
-				end
-			end
-		end
-
-		if e.kind == "projector" then
-			e.shieldPulse = (e.shieldPulse or 0) + dt
-			e.shieldTimer = (e.shieldTimer or e.def.shieldCooldown or 0) - dt
-			if e.shieldTimer <= 0 then
-				e.shieldTimer = e.def.shieldCooldown or 6.0
-				local nearby, count = Spatial.queryCells(e.x, e.y, e.def.shieldRadius or 0)
-				for j = 1, count do
-					local other = nearby[j]
-					if other ~= e and other.hp > 0 then
-						other.shieldMax = e.def.shieldAmount or 0
-						other.shieldHp = other.shieldMax
-						other.shieldExpire = e.def.shieldDuration or 0
-						other.shieldSource = e
-					end
-				end
-			end
-		end
-
-		if (e.shieldHp or 0) > 0 then
-			e.shieldExpire = (e.shieldExpire or 0) - dt
-			if e.shieldExpire <= 0 then
-				e.shieldHp = 0
-				e.shieldExpire = 0
-			end
-		end
-		if (e.shieldHitFlash or 0) > 0 then
-			e.shieldHitFlash = max(0, e.shieldHitFlash - dt)
 		end
 
 		-- store previous values for interpolation
@@ -759,21 +668,6 @@ local function applyHitImpulse(e, dx, dy, strength)
 	end
 end
 
-local function absorbShieldDamage(e, amount)
-	local shieldHp = e.shieldHp or 0
-	if amount <= 0 or shieldHp <= 0 then
-		return amount, 0
-	end
-	local absorbed = min(shieldHp, amount)
-	e.shieldHp = shieldHp - absorbed
-	e.shieldHitFlash = 0.08
-	if e.shieldHp <= 0 then
-		e.shieldHp = 0
-		e.shieldExpire = 0
-	end
-	return amount - absorbed, absorbed
-end
-
 return {
 	enemies = enemies,
 	EnemyDefs = EnemyDefs,
@@ -781,6 +675,5 @@ return {
 	spawnEnemy = spawnEnemy,
 	updateEnemies = updateEnemies,
 	applyHitImpulse = applyHitImpulse,
-	absorbShieldDamage = absorbShieldDamage,
 	clear = clear,
 }

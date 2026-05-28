@@ -19,13 +19,6 @@ local Templates = {
 		baseCount = 10 * 3,
 		spacing = 1.05, -- 1.05
 	},
-
-	jammer = {
-		enemy = "jammer",
-		baseCount = 6 * 3,
-		spacing = 1.15,
-	},
-
 }
 
 -- Simple deterministic template selection
@@ -33,7 +26,6 @@ local TemplateSelectionRules = {
 	{ mod = 6, template = Templates.standard },
 	{ mod = 7, template = Templates.fast },
 	{ mod = 11, template = Templates.tanky },
-	{ mod = 9, template = Templates.jammer },
 }
 
 local function pickTemplate(waveIndex)

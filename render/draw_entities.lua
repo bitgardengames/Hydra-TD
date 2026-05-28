@@ -148,32 +148,9 @@ local function drawEnemy(e)
 
 	-- Body lighting (canonical system)
 	local r = e.radius
-	local bodyR, bodyG, bodyB = eR, eG, eB
-	if e.kind == "jammer" then
-		local pulse = 0.5 + 0.5 * sin(animT * 5.5)
-		bodyR = 0.45 + pulse * 0.35
-		bodyG = 0.9
-		bodyB = 1.0
-	end
-	if e.kind == "overcharger" and (e.hasteCastPulse or 0) > 0 then
-		local ht = min(1, e.hasteCastPulse / 0.45)
-		lg.setLineWidth(2)
-		lg.setColor(1.0, 0.45, 0.15, ht * 0.9)
-		lg.circle("line", ix, iy, (e.def.hasteRadius or 0) * (1 + (1 - ht) * 0.08))
-		lg.setLineWidth(1)
-	end
-	if e.kind == "projector" then
-		bodyR, bodyG, bodyB = 0.60, 0.98, 1.0
-	end
-	if e.kind == "overcharger" then
-		local glow = 0.5 + 0.5 * sin(animT * 7.0)
-		bodyR = 0.9 + glow * 0.1
-		bodyG = 0.26 + glow * 0.18
-		bodyB = 0.12 + glow * 0.08
-	end
 
 	-- Base (shadowed)
-	lg.setColor(bodyR * darkMul, bodyG * darkMul, bodyB * darkMul)
+	lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul)
 	lg.circle("fill", ix, iy, r)
 
 	-- Top highlight
@@ -181,11 +158,11 @@ local function drawEnemy(e)
 	local hy = iy - r * highlightOffset
 	local hr = r * highlightScale
 
-	lg.setColor(bodyR, bodyG, bodyB, enemyAlpha)
+	lg.setColor(eR, eG, eB, enemyAlpha)
 	lg.circle("fill", hx, hy, hr)
 
     -- Hit flash
-	if e.hitFlash > 0 then
+    if e.hitFlash > 0 then
         local a = min(1, e.hitFlash / 0.05)
 
         lg.setColor(0.92, 0.96, 1.0, a * 0.55)
@@ -204,11 +181,6 @@ local function drawEnemy(e)
 		-- Subtle frost tint (desaturating feel)
 		lg.setColor(sr * 0.7, sg * 0.85, sb, 0.10 * enemyAlpha)
 		lg.circle("fill", ix, iy, e.radius - 3)
-	end
-	if (e.shieldHitFlash or 0) > 0 then
-		local sa = min(1, (e.shieldHitFlash or 0) / 0.08)
-		lg.setColor(0.55, 0.95, 1.0, sa * 0.6)
-		lg.circle("line", ix, iy, e.radius + 4)
 	end
 
 	-- Poison inner rim (clean green accent)
@@ -309,46 +281,6 @@ local function drawEnemy(e)
 		lg.circle("fill", ix + eyeSep + dx, eyeY + dy, eyeSize)
     end
 
-	if e.kind == "jammer" and (e.jamPulseTimer or 0) > 0 then
-		local jt = min(1, e.jamPulseTimer / 0.35)
-		lg.setLineWidth(2)
-		lg.setColor(0.6, 0.95, 1.0, jt * 0.8)
-		lg.circle("line", ix, iy, (e.def.jamRadius or 0) * (1 + (1 - jt) * 0.06))
-		lg.setLineWidth(1)
-	end
-	if e.kind == "projector" then
-		local pulse = 0.7 + 0.3 * sin((e.shieldPulse or animT) * 4.0)
-		lg.setLineWidth(2)
-		lg.setColor(0.55, 0.98, 1.0, 0.45 * pulse * enemyAlpha)
-		lg.circle("line", ix, iy, e.radius + 7)
-		lg.setLineWidth(1)
-	end
-	if (e.shieldHp or 0) > 0 then
-		local frac = min(1, (e.shieldHp or 0) / max(1, e.shieldMax or 1))
-		lg.setColor(0.45, 0.95, 1.0, 0.2 + 0.2 * frac)
-		lg.circle("fill", ix, iy, e.radius + 2)
-		lg.setColor(0.65, 1.0, 1.0, 0.55)
-		lg.circle("line", ix, iy, e.radius + 2)
-	end
-
-	if (e.hasteTimer or 0) > 0 then
-		local tx = (e.prevRX or ix) - ix
-		local ty = (e.prevRY or iy) - iy
-		local trail = 8 + e.radius * 0.9
-		local len = math.sqrt(tx * tx + ty * ty)
-		if len > 0.01 then
-			tx = tx / len
-			ty = ty / len
-		end
-		lg.setLineWidth(2.5)
-		lg.setColor(1.0, 0.45, 0.12, 0.5 * enemyAlpha)
-		lg.line(ix, iy, ix + tx * trail, iy + ty * trail)
-		lg.setLineWidth(1.2)
-		lg.setColor(1.0, 0.8, 0.4, 0.75 * enemyAlpha)
-		lg.line(ix + tx * 2, iy + ty * 2, ix + tx * (trail + 3), iy + ty * (trail + 3))
-		lg.setLineWidth(1)
-	end
-
 	-- Selection Ring
 	if State.selectedEnemy == e then
 		lg.setColor(selR, selG, selB, 0.25)
@@ -374,7 +306,6 @@ local function drawEnemyHealth(e)
 	local by = iy - e.radius - (e.boss and 18 or 12)
 
 	local t = max(0, e.hp / e.maxHp)
-	local shieldFrac = min(1, (e.shieldHp or 0) / max(1, e.shieldMax or 1))
 
 	-- Muted health color
 	local r, g, b
@@ -391,13 +322,6 @@ local function drawEnemyHealth(e)
 		r = 0.85
 		g = 0.45 + p * 0.30
 		b = 0.20
-	end
-	if shieldFrac > 0 then
-		local sw = w * shieldFrac
-		lg.setColor(0.20, 0.58, 0.66, 0.9)
-		lg.rectangle("fill", bx, by, sw, h, 3, 3)
-		lg.setColor(0.62, 1.0, 1.0, 0.9)
-		lg.rectangle("line", bx, by, sw, h, 3, 3)
 	end
 
 	-- Background
@@ -667,10 +591,6 @@ local function drawPoisonFX(t)
 end
 
 local function drawTowerFX(t)
-		if (t.disabledTimer or 0) > 0 then
-			lg.setColor(0.75, 0.95, 1.0, 0.95)
-			lg.print("⛔" .. string.format("%.1f", t.disabledTimer), cx - 12, renderY - 36)
-		end
 	local kind = t.kind
 
 	if kind == "shock" then
@@ -980,13 +900,7 @@ local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
 	drawTowerCore(kind, cx, cy, angle, recoil, alpha, 1, 1, 1, 0)
 end
 
-local function if (t.disabledTimer or 0) > 0 then
-		local flicker = 0.65 + 0.35 * sin((State.time or 0) * 32 + i * 1.7)
-		lg.setColor(0.6, 0.9, 1.0, 0.15 * flicker)
-		lg.circle("fill", cx, renderY, size * 0.75)
-	end
-
-	drawTowerInstance(t, cx, renderY)
+local function drawTowerInstance(t, cx, renderY)
 	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
 end
 
@@ -1067,19 +981,9 @@ local function drawTowers()
 		end
 
 		-- Top
-		if (t.disabledTimer or 0) > 0 then
-		local flicker = 0.65 + 0.35 * sin((State.time or 0) * 32 + i * 1.7)
-		lg.setColor(0.6, 0.9, 1.0, 0.15 * flicker)
-		lg.circle("fill", cx, renderY, size * 0.75)
-	end
-
-	drawTowerInstance(t, cx, renderY)
+		drawTowerInstance(t, cx, renderY)
 
 		drawTowerFX(t)
-		if (t.disabledTimer or 0) > 0 then
-			lg.setColor(0.75, 0.95, 1.0, 0.95)
-			lg.print("⛔" .. string.format("%.1f", t.disabledTimer), cx - 12, renderY - 36)
-		end
 
 		-- Pulse ring
 		if riseAnim > 0 then

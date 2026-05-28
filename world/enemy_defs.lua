@@ -30,47 +30,6 @@ return {
 		radius = 9,
 	},
 
-
-	overcharger = {
-		nameKey = "enemy.overcharger",
-		hp = 20 * mult,
-		speed = 64,
-		reward = 9,
-		score = 18,
-		radius = 10,
-		hasteRadius = 145,
-		hasteDuration = 2.0,
-		hasteCooldown = 6.2,
-		hasteSpeedMultiplier = 1.35,
-		hasteMaxSpeedMult = 1.7,
-	},
-
-	jammer = {
-		nameKey = "enemy.jammer",
-		hp = 18 * mult,
-		speed = 72,
-		reward = 7,
-		score = 16,
-		radius = 10,
-		jamRadius = 115,
-		jamDuration = 2.2,
-		jamCooldown = 6.5,
-		jamTelegraph = 0.8,
-	},
-
-	projector = {
-		nameKey = "enemy.projector",
-		hp = 26 * mult,
-		speed = 42,
-		reward = 11,
-		score = 20,
-		radius = 11,
-		shieldRadius = 130,
-		shieldAmount = 22,
-		shieldDuration = 3.8,
-		shieldCooldown = 6.0,
-	},
-
 	boss = {
 		nameKey = "enemy.boss",
 		hp = 625 * mult,
