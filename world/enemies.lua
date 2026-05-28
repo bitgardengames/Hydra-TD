@@ -8,6 +8,7 @@ local Spatial = require("world.spatial_grid")
 local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
 local Achievements = require("systems.achievements")
+local Towers = require("world.towers")
 local L = require("core.localization")
 
 local enemies = {}
@@ -244,6 +245,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.shadow = true
 	e.id = nextID
 	e.shockID = 0
+	e.jamCooldown = def.jamCooldown or 0
+	e.jamTimer = def.jamCooldown or 0
+	e.jamPulseTimer = 0
 
 	computeNudgeParams(e)
 
@@ -566,6 +570,23 @@ local function updateEnemies(dt)
 
 			if e.faceT >= e.faceDur then
 				e.face = "normal"
+			end
+		end
+
+
+		if e.kind == "jammer" and e.jamCooldown > 0 then
+			e.jamTimer = (e.jamTimer or e.jamCooldown) - dt
+			e.jamPulseTimer = max(0, (e.jamPulseTimer or 0) - dt)
+			if e.jamTimer <= 0 then
+				e.jamTimer = e.jamCooldown
+				e.jamPulseTimer = 0.35
+				local affected = Towers.getTowersInRadius(e.x, e.y, e.def.jamRadius or 0)
+				for j = 1, #affected do
+					local t = affected[j]
+					Towers.applyDisabled(t, e.def.jamDuration or 0, e.x, e.y)
+					Effects.spawnZapLine(e.x, e.y, t.x, t.renderY or t.y)
+					Floaters.add(t.x, (t.renderY or t.y) - 16, "⛔", 0.72, 0.95, 1.0)
+				end
 			end
 		end
 

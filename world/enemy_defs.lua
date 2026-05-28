@@ -30,6 +30,20 @@ return {
 		radius = 9,
 	},
 
+
+	jammer = {
+		nameKey = "enemy.jammer",
+		hp = 18 * mult,
+		speed = 72,
+		reward = 7,
+		score = 16,
+		radius = 10,
+		jamRadius = 115,
+		jamDuration = 2.2,
+		jamCooldown = 6.5,
+		jamTelegraph = 0.8,
+	},
+
 	boss = {
 		nameKey = "enemy.boss",
 		hp = 625 * mult,
