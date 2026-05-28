@@ -351,12 +351,13 @@ local function resolveDamage(p, evt)
 		return
 	end
 
-	e.hp = e.hp - amount
+	local remaining, absorbed = Enemies.absorbShieldDamage(e, amount)
+	e.hp = e.hp - remaining
 
 	local t = p.sourceTower
 
 	if t then
-		t.damageDealt = (t.damageDealt or 0) + amount
+		t.damageDealt = (t.damageDealt or 0) + (remaining + absorbed)
 		e.lastHitTower = t
 	end
 
@@ -364,7 +365,7 @@ local function resolveDamage(p, evt)
 		e.hitFlash = 0.05
 	end
 
-	State.addDamage(p.sourceKind, amount, e.boss == true)
+	State.addDamage(p.sourceKind, remaining + absorbed, e.boss == true)
 end
 
 local function resolveImpulse(evt)

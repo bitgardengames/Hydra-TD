@@ -248,6 +248,12 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.jamCooldown = def.jamCooldown or 0
 	e.jamTimer = def.jamCooldown or 0
 	e.jamPulseTimer = 0
+	e.shieldTimer = def.shieldCooldown or 0
+	e.shieldPulse = 0
+	e.shieldHp = 0
+	e.shieldMax = 0
+	e.shieldExpire = 0
+	e.shieldHitFlash = 0
 
 	computeNudgeParams(e)
 
@@ -401,7 +407,8 @@ local function updateEnemies(dt)
 				local missingBonus = 1 + (missingFrac * (e.poisonMissingHpMult or 0))
 				local dmg = baseDmg * missingBonus
 
-				e.hp = e.hp - dmg
+				local leftover = absorbShieldDamage(e, dmg)
+				e.hp = e.hp - leftover
 
 				if e.poisonSource then
 					e.poisonSource.damageDealt = e.poisonSource.damageDealt + dmg
@@ -590,6 +597,35 @@ local function updateEnemies(dt)
 			end
 		end
 
+		if e.kind == "projector" then
+			e.shieldPulse = (e.shieldPulse or 0) + dt
+			e.shieldTimer = (e.shieldTimer or e.def.shieldCooldown or 0) - dt
+			if e.shieldTimer <= 0 then
+				e.shieldTimer = e.def.shieldCooldown or 6.0
+				local nearby, count = Spatial.queryCells(e.x, e.y, e.def.shieldRadius or 0)
+				for j = 1, count do
+					local other = nearby[j]
+					if other ~= e and other.hp > 0 then
+						other.shieldMax = e.def.shieldAmount or 0
+						other.shieldHp = other.shieldMax
+						other.shieldExpire = e.def.shieldDuration or 0
+						other.shieldSource = e
+					end
+				end
+			end
+		end
+
+		if (e.shieldHp or 0) > 0 then
+			e.shieldExpire = (e.shieldExpire or 0) - dt
+			if e.shieldExpire <= 0 then
+				e.shieldHp = 0
+				e.shieldExpire = 0
+			end
+		end
+		if (e.shieldHitFlash or 0) > 0 then
+			e.shieldHitFlash = max(0, e.shieldHitFlash - dt)
+		end
+
 		-- store previous values for interpolation
 		e.prevDist = e.dist
 		e.prevX = e.x
@@ -689,6 +725,21 @@ local function applyHitImpulse(e, dx, dy, strength)
 	end
 end
 
+local function absorbShieldDamage(e, amount)
+	local shieldHp = e.shieldHp or 0
+	if amount <= 0 or shieldHp <= 0 then
+		return amount, 0
+	end
+	local absorbed = min(shieldHp, amount)
+	e.shieldHp = shieldHp - absorbed
+	e.shieldHitFlash = 0.08
+	if e.shieldHp <= 0 then
+		e.shieldHp = 0
+		e.shieldExpire = 0
+	end
+	return amount - absorbed, absorbed
+end
+
 return {
 	enemies = enemies,
 	EnemyDefs = EnemyDefs,
@@ -696,5 +747,6 @@ return {
 	spawnEnemy = spawnEnemy,
 	updateEnemies = updateEnemies,
 	applyHitImpulse = applyHitImpulse,
+	absorbShieldDamage = absorbShieldDamage,
 	clear = clear,
 }

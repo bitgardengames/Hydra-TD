@@ -155,6 +155,9 @@ local function drawEnemy(e)
 		bodyG = 0.9
 		bodyB = 1.0
 	end
+	if e.kind == "projector" then
+		bodyR, bodyG, bodyB = 0.60, 0.98, 1.0
+	end
 
 	-- Base (shadowed)
 	lg.setColor(bodyR * darkMul, bodyG * darkMul, bodyB * darkMul)
@@ -169,7 +172,7 @@ local function drawEnemy(e)
 	lg.circle("fill", hx, hy, hr)
 
     -- Hit flash
-    if e.hitFlash > 0 then
+	if e.hitFlash > 0 then
         local a = min(1, e.hitFlash / 0.05)
 
         lg.setColor(0.92, 0.96, 1.0, a * 0.55)
@@ -188,6 +191,11 @@ local function drawEnemy(e)
 		-- Subtle frost tint (desaturating feel)
 		lg.setColor(sr * 0.7, sg * 0.85, sb, 0.10 * enemyAlpha)
 		lg.circle("fill", ix, iy, e.radius - 3)
+	end
+	if (e.shieldHitFlash or 0) > 0 then
+		local sa = min(1, (e.shieldHitFlash or 0) / 0.08)
+		lg.setColor(0.55, 0.95, 1.0, sa * 0.6)
+		lg.circle("line", ix, iy, e.radius + 4)
 	end
 
 	-- Poison inner rim (clean green accent)
@@ -295,6 +303,20 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, (e.def.jamRadius or 0) * (1 + (1 - jt) * 0.06))
 		lg.setLineWidth(1)
 	end
+	if e.kind == "projector" then
+		local pulse = 0.7 + 0.3 * sin((e.shieldPulse or animT) * 4.0)
+		lg.setLineWidth(2)
+		lg.setColor(0.55, 0.98, 1.0, 0.45 * pulse * enemyAlpha)
+		lg.circle("line", ix, iy, e.radius + 7)
+		lg.setLineWidth(1)
+	end
+	if (e.shieldHp or 0) > 0 then
+		local frac = min(1, (e.shieldHp or 0) / max(1, e.shieldMax or 1))
+		lg.setColor(0.45, 0.95, 1.0, 0.2 + 0.2 * frac)
+		lg.circle("fill", ix, iy, e.radius + 2)
+		lg.setColor(0.65, 1.0, 1.0, 0.55)
+		lg.circle("line", ix, iy, e.radius + 2)
+	end
 
 	-- Selection Ring
 	if State.selectedEnemy == e then
@@ -321,6 +343,7 @@ local function drawEnemyHealth(e)
 	local by = iy - e.radius - (e.boss and 18 or 12)
 
 	local t = max(0, e.hp / e.maxHp)
+	local shieldFrac = min(1, (e.shieldHp or 0) / max(1, e.shieldMax or 1))
 
 	-- Muted health color
 	local r, g, b
@@ -337,6 +360,13 @@ local function drawEnemyHealth(e)
 		r = 0.85
 		g = 0.45 + p * 0.30
 		b = 0.20
+	end
+	if shieldFrac > 0 then
+		local sw = w * shieldFrac
+		lg.setColor(0.20, 0.58, 0.66, 0.9)
+		lg.rectangle("fill", bx, by, sw, h, 3, 3)
+		lg.setColor(0.62, 1.0, 1.0, 0.9)
+		lg.rectangle("line", bx, by, sw, h, 3, 3)
 	end
 
 	-- Background
