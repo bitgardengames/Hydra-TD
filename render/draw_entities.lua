@@ -155,8 +155,21 @@ local function drawEnemy(e)
 		bodyG = 0.9
 		bodyB = 1.0
 	end
+	if e.kind == "overcharger" and (e.hasteCastPulse or 0) > 0 then
+		local ht = min(1, e.hasteCastPulse / 0.45)
+		lg.setLineWidth(2)
+		lg.setColor(1.0, 0.45, 0.15, ht * 0.9)
+		lg.circle("line", ix, iy, (e.def.hasteRadius or 0) * (1 + (1 - ht) * 0.08))
+		lg.setLineWidth(1)
+	end
 	if e.kind == "projector" then
 		bodyR, bodyG, bodyB = 0.60, 0.98, 1.0
+	end
+	if e.kind == "overcharger" then
+		local glow = 0.5 + 0.5 * sin(animT * 7.0)
+		bodyR = 0.9 + glow * 0.1
+		bodyG = 0.26 + glow * 0.18
+		bodyB = 0.12 + glow * 0.08
 	end
 
 	-- Base (shadowed)
@@ -316,6 +329,24 @@ local function drawEnemy(e)
 		lg.circle("fill", ix, iy, e.radius + 2)
 		lg.setColor(0.65, 1.0, 1.0, 0.55)
 		lg.circle("line", ix, iy, e.radius + 2)
+	end
+
+	if (e.hasteTimer or 0) > 0 then
+		local tx = (e.prevRX or ix) - ix
+		local ty = (e.prevRY or iy) - iy
+		local trail = 8 + e.radius * 0.9
+		local len = math.sqrt(tx * tx + ty * ty)
+		if len > 0.01 then
+			tx = tx / len
+			ty = ty / len
+		end
+		lg.setLineWidth(2.5)
+		lg.setColor(1.0, 0.45, 0.12, 0.5 * enemyAlpha)
+		lg.line(ix, iy, ix + tx * trail, iy + ty * trail)
+		lg.setLineWidth(1.2)
+		lg.setColor(1.0, 0.8, 0.4, 0.75 * enemyAlpha)
+		lg.line(ix + tx * 2, iy + ty * 2, ix + tx * (trail + 3), iy + ty * (trail + 3))
+		lg.setLineWidth(1)
 	end
 
 	-- Selection Ring

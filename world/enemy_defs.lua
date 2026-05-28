@@ -31,6 +31,20 @@ return {
 	},
 
 
+	overcharger = {
+		nameKey = "enemy.overcharger",
+		hp = 20 * mult,
+		speed = 64,
+		reward = 9,
+		score = 18,
+		radius = 10,
+		hasteRadius = 145,
+		hasteDuration = 2.0,
+		hasteCooldown = 6.2,
+		hasteSpeedMultiplier = 1.35,
+		hasteMaxSpeedMult = 1.7,
+	},
+
 	jammer = {
 		nameKey = "enemy.jammer",
 		hp = 18 * mult,
