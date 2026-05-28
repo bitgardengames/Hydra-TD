@@ -258,6 +258,9 @@ function Waves.startWave()
 	local gap = wave.spacing or 1.0
 
 	beginSpawner(kind, count, gap, hpMult, spdMult)
+	if count >= 30 and kind ~= "projector" then
+		Enemies.spawnEnemy("projector", hpMult, spdMult)
+	end
 end
 
 -- Spawning update

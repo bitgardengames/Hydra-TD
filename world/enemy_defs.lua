@@ -44,6 +44,19 @@ return {
 		jamTelegraph = 0.8,
 	},
 
+	projector = {
+		nameKey = "enemy.projector",
+		hp = 26 * mult,
+		speed = 42,
+		reward = 11,
+		score = 20,
+		radius = 11,
+		shieldRadius = 130,
+		shieldAmount = 22,
+		shieldDuration = 3.8,
+		shieldCooldown = 6.0,
+	},
+
 	boss = {
 		nameKey = "enemy.boss",
 		hp = 625 * mult,
