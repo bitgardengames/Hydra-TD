@@ -7,7 +7,6 @@ local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
 local Targeting = require("world.targeting")
 local Difficulty = require("systems.difficulty")
-local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
@@ -35,7 +34,6 @@ local colorWarn = Theme.ui.warn
 local cgR, cgG, cgB = colorGood[1], colorGood[2], colorGood[3]
 local cwR, cwG, cwB = colorWarn[1], colorWarn[2], colorWarn[3]
 
-local enemies = Enemies.enemies
 
 local findTarget = Targeting.findTarget
 local isSemanticallyValidTarget = Targeting.isSemanticallyValidTarget
