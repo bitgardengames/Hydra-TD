@@ -68,6 +68,8 @@ local state = {
 		active = false,
 		step = nil,
 		tipsShown = 0,
+		targetGX = nil,
+		targetGY = nil,
 	},
 
 	modulePicker = {
