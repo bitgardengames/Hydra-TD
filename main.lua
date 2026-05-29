@@ -38,6 +38,7 @@ local L = require("core.localization")
 local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
 local MapModifiers = require("core.map_modifiers")
+local Challenges = require("systems.challenges")
 
 local lg = love.graphics
 
@@ -50,6 +51,20 @@ local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 
 local SCREENSHOT_DIR = "screenshots"
 
+local function recordActiveChallenge(mapId)
+	local challengeId = State.challenge and State.challenge.activeId
+
+	if not challengeId or (State.challenge and State.challenge.completed) then
+		return false
+	end
+
+	Save.recordChallengeCompletion(mapId, challengeId, Difficulty.key(), State.wave or 0)
+	Challenges.markCompleted(State)
+	Messages.add(L("challenge.completedToast"), 0.6, 1.0, 0.6)
+
+	return true
+end
+
 -- Revisit this being a global
 function finalizeCurrentRun(completed)
 	--if State.mode ~= "game" and State.mode ~= "pause" then
@@ -61,16 +76,21 @@ function finalizeCurrentRun(completed)
 	end
 
 	local map = Maps[State.worldMapIndex]
-	local mapId = map.id
-	local stats = Save.data.mapStats[mapId]
-
-	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
 
 	if not map then
 		return
 	end
 
+	local mapId = map.id
+	local stats = Save.data.mapStats[mapId]
+
+	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
+
 	Save.recordMapResult(mapId, State.wave or 0, Difficulty.key(), completed == true)
+
+	if completed == true and not Challenges.isEndlessChallenge(State.challenge and State.challenge.activeId) and Challenges.evaluate(State, true) then
+		recordActiveChallenge(mapId)
+	end
 end
 
 function resetGame()
@@ -164,6 +184,7 @@ function resetGame()
 	State.modulePicker.subtitle = nil
 	State.modulePicker.hint = nil
 	State.modulePicker.tower = nil
+	Challenges.startRun(State, mapDef)
 	Camera.load()
 end
 
@@ -386,6 +407,12 @@ function love.update(dt)
 			else
 				Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
 			end
+		end
+
+		Challenges.onWaveCleared(State, State.wave)
+
+		if Challenges.isEndlessChallenge(State.challenge and State.challenge.activeId) and Challenges.evaluate(State, false) then
+			recordActiveChallenge(Maps[State.worldMapIndex].id)
 		end
 
 		-- Otherwise continue as normal
