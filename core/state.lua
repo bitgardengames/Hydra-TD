@@ -49,6 +49,8 @@ local state = {
 
 	ignoreStats = false,
 
+	modifiers = {},
+
 	modules = {},
 	modulePicker = {
 		active = false,

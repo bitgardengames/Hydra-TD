@@ -273,7 +273,7 @@ end
 
 -- Wave start
 function Waves.startWave()
-	local map = Maps[State.mapIndex]
+	local map = Maps[State.worldMapIndex or State.mapIndex]
 	local mapWaveDefs = getMapWaveDefs(map)
 	local mapMult = State.mapCoverageMult or 1.0
 
@@ -293,14 +293,32 @@ function Waves.startWave()
 
 	-- Boss waves
 	if wave.boss then
-		local bossKind = "boss"
+		local bossIndex = max(1, math.floor(State.wave / 10))
+		local bossKind = getBossByArchetype(map, bossIndex) or wave.enemy or "boss"
 
 		local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, true)
+		local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
+		local extraBossAdds = (State.modifiers and State.modifiers.extraBossAdds) or 0
 
 		State.activeBoss = nil
 		State.activeBossKind = bossKind
 		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
-		bossAdds.active = false
+
+		if encounter and (encounter.flankBurst or 0) + extraBossAdds > 0 then
+			resetTable(bossAdds, bossAddsDefaults, {
+				active = true,
+				kind = encounter.flankKind or "grunt",
+				burst = max(1, (encounter.flankBurst or 1) + extraBossAdds),
+				timer = encounter.initialDelay or 2.5,
+				interval = encounter.interval or 6.0,
+				maxAlive = max(1, (encounter.maxAliveAdds or 10) + extraBossAdds),
+				maxTotal = max(1, (encounter.maxTotalAdds or 20) + (extraBossAdds * 3)),
+				hpMult = hpMult * (encounter.addHpMult or 1.0),
+				spdMult = spdMult * (encounter.addSpdMult or 1.0),
+			})
+		else
+			bossAdds.active = false
+		end
 
 		return
 	end

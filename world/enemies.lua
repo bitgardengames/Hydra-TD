@@ -169,6 +169,9 @@ end
 
 local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
 	local def = EnemyDefs[kind]
+	local modifiers = State.modifiers or {}
+	hpScale = (hpScale or 1.0) * (modifiers.enemyHpMult or 1.0)
+	spdScale = (spdScale or 1.0) * (modifiers.enemySpeedMult or 1.0)
 
 	local x, y
 
@@ -218,7 +221,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.maxHp = def.hp * hpScale
 	e.baseSpeed = def.speed * spdScale
 	e.speed = def.speed * spdScale
-	e.reward = def.reward * (1.0 + State.wave * 0.01)
+	e.reward = def.reward * (1.0 + State.wave * 0.01) * (modifiers.rewardMult or 1.0)
 	e.score = def.score or 0
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius

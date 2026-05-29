@@ -13,6 +13,7 @@ local Medals = require("ui.medals")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
+local MapModifiers = require("core.map_modifiers")
 
 local lg = love.graphics
 local floor = math.floor
@@ -39,6 +40,7 @@ local innerRadius = baseRadius - outlineW * 0.25
 local PAD_PREVIEW = 44
 local PAD_TITLE = 60
 local PAD_META = 18
+local MODIFIER_LINE_H = 18
 local TITLE_OFFSET = -22
 
 local paddingX = 28
@@ -299,6 +301,20 @@ local function getCompletionString(mapId)
 	return nil
 end
 
+local function getModifierLines(map)
+	return MapModifiers.getSummaryLines(MapModifiers.resolve(map), L)
+end
+
+local function getModifierBlockH(map)
+	local lines = getModifierLines(map)
+
+	if #lines == 0 then
+		return 0
+	end
+
+	return 10 + (#lines * MODIFIER_LINE_H)
+end
+
 -- Load
 function Screen.load()
 	campaignButtons = {
@@ -370,7 +386,7 @@ function Screen.update(dt)
 
 	-- Layout
 	local previewBlockH = ph
-	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
+	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META + getModifierBlockH(map)
 	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 	local contentH = previewBlockH + titleBlockH + buttonsBlockH
 
@@ -380,7 +396,7 @@ function Screen.update(dt)
 
 	local previewY = boxY + paddingY
 	local textY = previewY + ph + PAD_PREVIEW
-	local buttonsStartY = textY + PAD_TITLE + PAD_META
+	local buttonsStartY = textY + PAD_TITLE + PAD_META + getModifierBlockH(map)
 
 	-- Buttons
 	for i, btn in ipairs(campaignButtons) do
@@ -417,7 +433,7 @@ function Screen.draw()
 
 	-- Layout
 	local previewBlockH = ph
-	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
+	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META + getModifierBlockH(map)
 	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 
 	local contentH = previewBlockH + titleBlockH + buttonsBlockH
@@ -566,8 +582,19 @@ function Screen.draw()
 
 	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
 
+	local modifierLines = getModifierLines(map)
+	if #modifierLines > 0 then
+		local lineY = textY + PAD_TITLE + 24
+		lg.setColor(colorDisabled)
+		Text.printfShadow(L("campaign.modifiers"), 0, lineY, sw, "center")
+
+		for i, line in ipairs(modifierLines) do
+			Text.printfShadow(line, 0, lineY + i * MODIFIER_LINE_H, sw, "center")
+		end
+	end
+
 	-- Buttons
-	local buttonsStartY = textY + PAD_TITLE + PAD_META
+	local buttonsStartY = textY + PAD_TITLE + PAD_META + getModifierBlockH(map)
 
 	Fonts.set("menu")
 
@@ -618,7 +645,7 @@ function Screen.mousepressed(x, y, button)
 
 		-- Layout
 		local previewBlockH = ph
-		local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
+		local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META + getModifierBlockH(map)
 		local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 		local contentH = previewBlockH + titleBlockH + buttonsBlockH
 
