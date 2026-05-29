@@ -15,7 +15,6 @@ local L = require("core.localization")
 local Modules = require("systems.modules")
 local MapModifiers = require("core.map_modifiers")
 local TowerBranchDefs = require("world.tower_branch_defs")
-local Challenges = require("systems.challenges")
 --local Steam = require("luasteam")
 
 local towers = {}
@@ -315,7 +314,6 @@ local function addTower(kind, gx, gy)
 	Effects.spawnPlacePuff(x, y)
 
 	Sound.play("towerPlaced")
-	Challenges.onTowerBuilt(State, kind)
 
 	return true
 end
@@ -370,7 +368,6 @@ local function upgradeTower(t, specializationId)
 	Sound.play("towerUpgraded")
 
 	Achievements.increment("TOWER_UPGRADES")
-	Challenges.onTowerUpgraded(State, t.level)
 
 	return true
 end
@@ -421,7 +418,6 @@ local function sellTower(t)
 	State.selectedTower = nil
 
 	Sound.play("towerSold")
-	Challenges.onTowerSold(State)
 end
 
 local function findTowerAt(gx, gy)
