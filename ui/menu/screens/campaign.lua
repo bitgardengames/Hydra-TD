@@ -15,6 +15,7 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local MapModifiers = require("core.map_modifiers")
 local Challenges = require("systems.challenges")
+local Onboarding = require("core.onboarding")
 
 local lg = love.graphics
 local floor = math.floor
@@ -405,6 +406,7 @@ function Screen.load()
 				Backdrop.stop()
 				Difficulty.set(Save.data.settings.difficulty)
 				resetGame()
+				Onboarding.onGameStarted()
 				Sound.playMusic("gameplay")
 			end
 		},

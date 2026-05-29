@@ -51,8 +51,36 @@ return {
 		controlConflictSwapApplied = "Swap applied.",
 		controlsRestoreDefaults = "Restore Default Keybinds",
 		controlsDefaultsRestored = "Default keybinds restored.",
+		gameplayTips = "Gameplay Tips",
+		replayTutorial = "Replay Tutorial",
+		replay = "Replay",
 		on = "On",
 		off = "Off",
+	},
+
+	tutorial = {
+		welcomeTitle = "New to Hydra TD?",
+		welcomeBody = "Learn the basics with a skippable one-minute guided start, or jump straight into the campaign.",
+		startButton = "Quick Tutorial",
+		skipButton = "Jump In",
+		skipTutorial = "Skip Tutorial",
+		dismiss = "Dismiss",
+		dontShowAgain = "Don't Show Again",
+		placeTitle = "Place Your First Tower",
+		placeBody = "Pick a tower from the bottom bar, then place it near a bend so it covers more of the path.",
+		waveTitle = "Start the Wave",
+		waveBody = "Press the start-wave hotkey or button when you are ready. Gameplay stays fully controllable from here.",
+		readyTitle = "You're Ready",
+		readyBody = "Nice placement. Keep building near bends, mix tower types, and upgrade key towers when you can afford it.",
+	},
+
+	tips = {
+		firstTowerTitle = "Good Coverage",
+		firstTowerBody = "Towers near corners fire longer. If enemies leak, add coverage before saving for expensive upgrades.",
+		firstWaveTitle = "Watch the First Wave",
+		firstWaveBody = "Use early waves to spot weak bends. You earn a bonus when no enemies leak.",
+		firstUpgradeTitle = "Upgrade Available",
+		firstUpgradeBody = "Select a key tower and upgrade it to add a module. Upgrades are strongest on towers with great coverage.",
 	},
 
 	campaign = {

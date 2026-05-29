@@ -3,6 +3,7 @@ local Util = require("core.util")
 local Towers = require("world.towers")
 local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
+local Onboarding = require("core.onboarding")
 local Hotkeys = require("core.hotkeys")
 local Tooltip = require("ui.tooltip")
 local Text = require("ui.text")
@@ -263,6 +264,10 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 		local upgradeCost = Towers.getUpgradeCost(t)
 		local canUpgrade = upgradeCost and State.money >= upgradeCost
+
+		if canUpgrade then
+			Onboarding.onUpgradePromptAvailable()
+		end
 
 		-- Configure upgrade button
 		local upgradeBtn = inspectButtons[1]

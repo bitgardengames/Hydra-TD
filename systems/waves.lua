@@ -8,6 +8,7 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
 local Spatial = require("world.spatial_grid")
+local Onboarding = require("core.onboarding")
 
 local Waves = {}
 
@@ -278,6 +279,7 @@ function Waves.startWave()
 	local mapMult = State.mapCoverageMult or 1.0
 
 	State.waveLeaks = 0
+	Onboarding.onWaveStarted()
 
 	if State.mode == "game" then -- Make sure the background scene doesn't set the status
 		local diffKey = Difficulty.key()

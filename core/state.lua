@@ -64,6 +64,12 @@ local state = {
 	modifiers = {},
 
 	modules = {},
+	onboarding = {
+		active = false,
+		step = nil,
+		tipsShown = 0,
+	},
+
 	modulePicker = {
 		active = false,
 		choices = nil,
