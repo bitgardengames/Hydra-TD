@@ -47,6 +47,45 @@ local Templates = {
 	},
 }
 
+-- Endless event templates alter post-campaign wave shapes without requiring map-specific data.
+local EndlessEventTemplates = {
+	stampede = {
+		nameKey = "waveEvents.stampede",
+		groups = {
+			{ enemy = "runner", baseCount = 44, spacing = 0.26 },
+		},
+	},
+
+	siegeLine = {
+		nameKey = "waveEvents.siegeLine",
+		groups = {
+			{ enemy = "tank", baseCount = 22, spacing = 1.18 },
+		},
+	},
+
+	mixedColumn = {
+		nameKey = "waveEvents.mixedColumn",
+		groups = {
+			{ enemy = "tank", baseCount = 13, spacing = 0.86 },
+			{ enemy = "runner", baseCount = 30, spacing = 0.34, delay = 4.6 },
+		},
+	},
+
+	bossEscort = {
+		nameKey = "waveEvents.bossEscort",
+		groups = {
+			{ enemy = "grunt", baseCount = 18, spacing = 0.42, delay = 1.4 },
+			{ enemy = "runner", baseCount = 12, spacing = 0.45, delay = 3.2 },
+		},
+	},
+}
+
+local EndlessEventOrder = {
+	EndlessEventTemplates.stampede,
+	EndlessEventTemplates.siegeLine,
+	EndlessEventTemplates.mixedColumn,
+}
+
 -- Simple deterministic template selection
 local TemplateSelectionRules = {
 	{ mod = 17, template = Templates.eliteSmallPack },
@@ -70,6 +109,53 @@ end
 
 local function getEndlessWaveIndex(waveIndex)
 	return math.max(0, waveIndex - 20)
+end
+
+local function pickEndlessEvent(waveIndex)
+	local endlessWaveIndex = getEndlessWaveIndex(waveIndex)
+
+	if endlessWaveIndex <= 0 or endlessWaveIndex % 5 ~= 0 then
+		return nil
+	end
+
+	if waveIndex % 10 == 0 then
+		return "bossEscort", EndlessEventTemplates.bossEscort
+	end
+
+	local eventIndex = math.floor(endlessWaveIndex / 5)
+	local template = EndlessEventOrder[((eventIndex - 1) % #EndlessEventOrder) + 1]
+
+	if template == EndlessEventTemplates.stampede then
+		return "stampede", template
+	elseif template == EndlessEventTemplates.siegeLine then
+		return "siegeLine", template
+	end
+
+	return "mixedColumn", template
+end
+
+local function withEvent(wave, eventKey, eventTemplate)
+	if not eventTemplate then
+		return wave
+	end
+
+	wave.eventKey = eventKey
+	wave.eventNameKey = eventTemplate.nameKey
+
+	return wave
+end
+
+function Builder.getEvent(waveIndex)
+	local eventKey, eventTemplate = pickEndlessEvent(waveIndex)
+
+	if not eventTemplate then
+		return nil
+	end
+
+	return {
+		key = eventKey,
+		nameKey = eventTemplate.nameKey,
+	}
 end
 
 local function getEndlessCountMultiplier(endlessWaveIndex)
@@ -127,7 +213,7 @@ local function addEndlessDensityGroups(groups, endlessWaveIndex)
 	end
 end
 
-local function buildGroups(template, endlessWaveIndex)
+local function buildGroups(template, endlessWaveIndex, includeDensity)
 	local groups = {}
 
 	if template.groups then
@@ -142,30 +228,41 @@ local function buildGroups(template, endlessWaveIndex)
 		}, endlessWaveIndex)
 	end
 
-	addEndlessDensityGroups(groups, endlessWaveIndex)
+	if includeDensity ~= false then
+		addEndlessDensityGroups(groups, endlessWaveIndex)
+	end
 
 	return groups
 end
 
 function Builder.build(waveIndex)
+	local endlessWaveIndex = getEndlessWaveIndex(waveIndex)
+	local eventKey, eventTemplate = pickEndlessEvent(waveIndex)
+
 	-- Boss every 10th wave, no exceptions
 	if waveIndex % 10 == 0 then
-		return {
+		local wave = {
 			boss = true,
 			enemy = "boss",
 			count = 1,
 			spacing = 0,
 		}
+
+		if eventTemplate and eventTemplate.groups then
+			wave.groups = buildGroups(eventTemplate, endlessWaveIndex, false)
+		end
+
+		return withEvent(wave, eventKey, eventTemplate)
 	end
 
-	local template = pickTemplate(waveIndex)
-	local endlessWaveIndex = getEndlessWaveIndex(waveIndex)
+	local template = eventTemplate or pickTemplate(waveIndex)
+	local isEvent = eventTemplate ~= nil
 
 	if template.groups or endlessWaveIndex > 0 then
-		return {
+		return withEvent({
 			boss = false,
-			groups = buildGroups(template, endlessWaveIndex),
-		}
+			groups = buildGroups(template, endlessWaveIndex, not isEvent),
+		}, eventKey, eventTemplate)
 	end
 
 	return {

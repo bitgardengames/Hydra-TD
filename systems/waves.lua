@@ -306,6 +306,15 @@ function Waves.startWave()
 		State.activeBossKind = bossKind
 		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
 
+		if wave.groups then
+			local addHpMult, addSpdMult = getWaveMultipliers(State.wave, mapMult, false)
+
+			queueWaveGroups(wave.groups, addHpMult, addSpdMult)
+			bossAdds.active = false
+
+			return
+		end
+
 		if encounter and (encounter.flankBurst or 0) + extraBossAdds > 0 then
 			resetTable(bossAdds, bossAddsDefaults, {
 				active = true,
