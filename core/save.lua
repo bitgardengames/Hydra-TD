@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 1 -- Only upgrade if save structure changes
+local SAVE_VERSION = 2 -- Only upgrade if save structure changes
 
 local Hotkeys = require("core.hotkeys")
 
@@ -37,6 +37,25 @@ local function ensureKeybinds(settings)
 	end
 
 	return changed
+end
+
+local function ensureMapStatsEntry(mapId)
+	local stats = Save.data.mapStats
+	local s = stats[mapId]
+	local changed = false
+
+	if not s then
+		s = {bestWave = 0, completedDifficulty = nil, challenges = {}}
+		stats[mapId] = s
+		changed = true
+	end
+
+	if type(s.challenges) ~= "table" then
+		s.challenges = {}
+		changed = true
+	end
+
+	return s, changed
 end
 
 local function migrateMapIds()
@@ -106,6 +125,17 @@ function Save.load()
 			Save.data.furthestIndex = Save.data.furthestIndex or 1
 			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 			Save.data.mapStats = Save.data.mapStats or {}
+
+			local statsChanged = false
+
+			for mapId in pairs(Save.data.mapStats) do
+				local _, changed = ensureMapStatsEntry(mapId)
+				statsChanged = statsChanged or changed
+			end
+
+			if statsChanged then
+				Save.flush()
+			end
 
 			-- Settings
 			Save.data.settings = Save.data.settings or {}
@@ -223,12 +253,7 @@ function Save.recordMapResult(mapId, wave, difficulty, completed)
 	local stats = Save.data.mapStats
 	local safeWave = math.max(0, tonumber(wave) or 0)
 
-	local s = stats[mapId]
-
-	if not s then
-		s = {bestWave = 0, completedDifficulty = nil}
-		stats[mapId] = s
-	end
+	local s = ensureMapStatsEntry(mapId)
 
 	if safeWave > (s.bestWave or 0) then
 		s.bestWave = safeWave
@@ -244,6 +269,38 @@ function Save.recordMapResult(mapId, wave, difficulty, completed)
 	end
 
 	Save.flush()
+end
+
+function Save.recordChallengeCompletion(mapId, challengeId, difficulty, wave)
+	if not mapId or not challengeId then
+		return false
+	end
+
+	local s = ensureMapStatsEntry(mapId)
+	local challenges = s.challenges
+	local c = challenges[challengeId]
+	local safeWave = math.max(0, tonumber(wave) or 0)
+
+	if type(c) ~= "table" then
+		c = {completed = c == true, difficulty = difficulty, wave = safeWave, completions = 0}
+		challenges[challengeId] = c
+	end
+
+	c.completed = true
+	c.difficulty = difficulty or c.difficulty
+	c.wave = math.max(c.wave or 0, safeWave)
+	c.completions = (c.completions or 0) + 1
+
+	Save.flush()
+
+	return true
+end
+
+function Save.isChallengeCompleted(mapId, challengeId)
+	local s = Save.data.mapStats and Save.data.mapStats[mapId]
+	local c = s and s.challenges and s.challenges[challengeId]
+
+	return c and c.completed == true
 end
 
 -- Serialization

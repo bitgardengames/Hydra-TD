@@ -63,6 +63,45 @@ return {
 		best = "Best: %d",
 	},
 
+	challenge = {
+		label = "Challenge",
+		none = "None",
+		noneDesc = "Optional objectives are disabled for this run.",
+		panelTitle = "Challenge: %s",
+		completed = "✓ Complete",
+		completedToast = "Challenge complete!",
+
+		no_leaks = {
+			name = "No Leaks",
+			desc = "Win without letting any enemies leak.",
+			summary = "Win with no leaks",
+		},
+
+		three_tower_types = {
+			name = "Three Tower Types",
+			desc = "Win after building no more than 3 tower types.",
+			summary = "Win using only 3 tower types",
+		},
+
+		no_selling = {
+			name = "No Selling",
+			desc = "Win without selling any towers.",
+			summary = "Win without selling",
+		},
+
+		max_tier_3 = {
+			name = "Tier 3 Cap",
+			desc = "Win without upgrading any tower above tier 3.",
+			summary = "Win with no tower above tier 3",
+		},
+
+		endless_wave_30 = {
+			name = "Endless 30",
+			desc = "Continue after victory and clear endless wave 30.",
+			summary = "Survive endless to wave 30",
+		},
+	},
+
 	difficulty = {
 		easy = "Easy",
 		normal = "Normal",
