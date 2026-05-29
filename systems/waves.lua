@@ -190,6 +190,9 @@ local bossAddsDefaults = {
 }
 local spawner = {}
 local bossAdds = {}
+local waveGroupQueue = {}
+local waveGroupDelay = 0
+local waveGroupDelayPrimed = false
 
 local function resetTable(target, defaults, overrides)
 	copyValues(target, defaults)
@@ -198,6 +201,14 @@ end
 
 resetTable(spawner, spawnerDefaults)
 resetTable(bossAdds, bossAddsDefaults)
+
+local function clearWaveGroupQueue()
+	for i = #waveGroupQueue, 1, -1 do
+		waveGroupQueue[i] = nil
+	end
+	waveGroupDelay = 0
+	waveGroupDelayPrimed = false
+end
 
 local function beginSpawner(kind, count, gap, hpMult, spdMult)
 	resetTable(spawner, spawnerDefaults, {
@@ -211,6 +222,53 @@ local function beginSpawner(kind, count, gap, hpMult, spdMult)
 	})
 
 	State.inPrep = false
+end
+
+local function beginNextWaveGroup()
+	if spawner.active or #waveGroupQueue == 0 then
+		return
+	end
+
+	local group = table.remove(waveGroupQueue, 1)
+	waveGroupDelay = 0
+	waveGroupDelayPrimed = false
+
+	beginSpawner(group.enemy or "grunt", max(1, group.count or 1), group.spacing or 1.0, group.hpMult, group.spdMult)
+end
+
+local function updateWaveGroupQueue(dt)
+	if spawner.active or #waveGroupQueue == 0 then
+		return
+	end
+
+	if not waveGroupDelayPrimed then
+		waveGroupDelay = waveGroupQueue[1].delay or 0
+		waveGroupDelayPrimed = true
+	end
+
+	waveGroupDelay = waveGroupDelay - dt
+
+	if waveGroupDelay <= 0 then
+		beginNextWaveGroup()
+	end
+end
+
+local function queueWaveGroups(groups, hpMult, spdMult)
+	clearWaveGroupQueue()
+	State.inPrep = false
+
+	for _, group in ipairs(groups or {}) do
+		waveGroupQueue[#waveGroupQueue + 1] = {
+			enemy = group.enemy,
+			count = group.count,
+			spacing = group.spacing,
+			delay = group.delay,
+			hpMult = hpMult,
+			spdMult = spdMult,
+		}
+	end
+
+	updateWaveGroupQueue(0)
 end
 
 -- Wave start
@@ -231,6 +289,8 @@ function Waves.startWave()
 	-- WaveBuilder enforces boss invariant and returns a simple descriptor
 	local wave = WaveBuilder.build(State.wave)
 
+	clearWaveGroupQueue()
+
 	-- Boss waves
 	if wave.boss then
 		local bossKind = "boss"
@@ -249,12 +309,16 @@ function Waves.startWave()
 	State.activeBossKind = nil
 	bossAdds.active = false
 
+	local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, false)
+
+	if wave.groups then
+		queueWaveGroups(wave.groups, hpMult, spdMult)
+		return
+	end
+
 	-- Normal waves: single enemy kind with count + spacing
 	local count = max(1, wave.count or 1)
 	local kind = wave.enemy or "grunt"
-
-	local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, false)
-
 	local gap = wave.spacing or 1.0
 
 	beginSpawner(kind, count, gap, hpMult, spdMult)
@@ -262,38 +326,39 @@ end
 
 -- Spawning update
 function Waves.updateSpawner(dt)
-	if not spawner.active then
-		return
-	end
+	if spawner.active then
+		spawner.timer = spawner.timer - dt
 
-	spawner.timer = spawner.timer - dt
+		local maxSpawnCatchupPerFrame = 12
+		local spawnLoops = 0
 
-	local maxSpawnCatchupPerFrame = 12
-	local spawnLoops = 0
+		while spawner.timer <= 0 and spawner.remaining > 0 and spawnLoops < maxSpawnCatchupPerFrame do
+			local kind = spawner.kind
 
-	while spawner.timer <= 0 and spawner.remaining > 0 and spawnLoops < maxSpawnCatchupPerFrame do
-		local kind = spawner.kind
+			if not kind then
+				spawner.remaining = 0
+				spawner.active = false
 
-		if not kind then
-			spawner.remaining = 0
-			spawner.active = false
+				break
+			end
 
-			return
+			Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
+
+			spawner.remaining = spawner.remaining - 1
+			spawner.timer = spawner.timer + spawner.gap
+			spawnLoops = spawnLoops + 1
 		end
 
-		Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
+		if spawnLoops == maxSpawnCatchupPerFrame and spawner.timer <= 0 then
+			spawner.timer = 0
+		end
 
-		spawner.remaining = spawner.remaining - 1
-		spawner.timer = spawner.timer + spawner.gap
-		spawnLoops = spawnLoops + 1
-	end
-
-	if spawnLoops == maxSpawnCatchupPerFrame and spawner.timer <= 0 then
-		spawner.timer = 0
-	end
-
-	if spawner.remaining <= 0 then
-		spawner.active = false
+		if spawner.remaining <= 0 then
+			spawner.active = false
+			updateWaveGroupQueue(0)
+		end
+	else
+		updateWaveGroupQueue(dt)
 	end
 
 	if bossAdds.active then
@@ -331,7 +396,7 @@ function Waves.updateSpawner(dt)
 end
 
 function Waves.allEnemiesCleared()
-	return #Enemies.enemies == 0 and not spawner.active
+	return #Enemies.enemies == 0 and not spawner.active and #waveGroupQueue == 0
 end
 
 function Waves.getWaveCompletionBonus(wave, waveLeaks)
@@ -353,6 +418,7 @@ end
 function Waves.resetSpawner()
 	resetTable(spawner, spawnerDefaults)
 	resetTable(bossAdds, bossAddsDefaults)
+	clearWaveGroupQueue()
 end
 
 function Waves.getSpawner()
