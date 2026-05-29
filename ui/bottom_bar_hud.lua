@@ -3,6 +3,7 @@ local Theme = require("core.theme")
 local Util = require("core.util")
 local Enemies = require("world.enemies")
 local Waves = require("systems.waves")
+local WaveBuilder = require("systems.wave_builder")
 local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local L = require("core.localization")
@@ -37,7 +38,7 @@ local hudCache = {
 	money = {value = nil, text = ""},
 	lives = {value = nil, text = ""},
 	wave = {value = nil, text = ""},
-	prep = {value = nil, text = "", action = nil},
+	prep = {value = nil, text = "", action = nil, eventKey = nil},
 	spawn = {remaining = nil, count = nil, text = ""},
 }
 
@@ -100,9 +101,18 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 		local prepCache = hudCache.prep
 		local skipKey = Hotkeys.getDisplay("skipPrep")
 
-		if prepCache.action ~= skipKey then
+		local event = WaveBuilder.getEvent(State.wave)
+		local eventKey = event and event.key or false
+
+		if prepCache.action ~= skipKey or prepCache.eventKey ~= eventKey then
 			prepCache.action = skipKey
-			prepCache.text = L("hud.prep", skipKey)
+			prepCache.eventKey = eventKey
+
+			if event then
+				prepCache.text = L("hud.prepEvent", skipKey, L(event.nameKey))
+			else
+				prepCache.text = L("hud.prep", skipKey)
+			end
 		end
 
 		lg.setColor(cg1, cg2, cg3, 1)

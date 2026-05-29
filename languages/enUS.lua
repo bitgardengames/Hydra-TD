@@ -378,7 +378,15 @@ return {
 		lives = "Lives %d",
 		wave = "Wave %d",
 		prep = "Press %s to start",
+		prepEvent = "Press %s to start • %s",
 		spawning = "Spawning %d - Alive %d",
+	},
+
+	waveEvents = {
+		stampede = "Stampede",
+		siegeLine = "Siege Line",
+		mixedColumn = "Mixed Column",
+		bossEscort = "Boss Escort",
 	},
 
 	messages = {
