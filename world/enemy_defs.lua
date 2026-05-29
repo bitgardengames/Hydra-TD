@@ -43,6 +43,19 @@ return {
 		},
 	},
 
+	stitcher = {
+		nameKey = "enemy.stitcher",
+		hp = 64 * mult,
+		speed = 50,
+		reward = 16,
+		score = 40,
+		radius = 12,
+		regen = {
+			rate = 5.5 * mult,
+			delay = 1.15,
+		},
+	},
+
 	shielder = {
 		nameKey = "enemy.shielder",
 		hp = 42 * mult,
@@ -53,6 +66,53 @@ return {
 		shield = {
 			fraction = 0.55,
 			damageReduction = 0.18,
+		},
+	},
+
+	aegis_runner = {
+		nameKey = "enemy.aegisRunner",
+		hp = 26 * mult,
+		speed = 88,
+		reward = 10,
+		score = 24,
+		radius = 10,
+		shield = {
+			fraction = 0.35,
+			damageReduction = 0.12,
+		},
+	},
+
+	bastion = {
+		nameKey = "enemy.bastion",
+		hp = 58 * mult,
+		speed = 38,
+		reward = 18,
+		score = 46,
+		radius = 14,
+		shield = {
+			fraction = 0.9,
+			damageReduction = 0.25,
+			regenRate = 4.0 * mult,
+			regenDelay = 2.4,
+		},
+	},
+
+	bulwark_mender = {
+		nameKey = "enemy.bulwarkMender",
+		hp = 54 * mult,
+		speed = 46,
+		reward = 20,
+		score = 54,
+		radius = 13,
+		regen = {
+			rate = 3.8 * mult,
+			delay = 1.0,
+		},
+		shield = {
+			fraction = 0.5,
+			damageReduction = 0.2,
+			regenRate = 2.8 * mult,
+			regenDelay = 2.0,
 		},
 	},
 

@@ -67,6 +67,35 @@ local Templates = {
 			{ enemy = "shielder", baseCount = 2, spacing = 1.35, delay = 2.4 },
 		},
 	},
+
+	stitcherEscort = {
+		groups = {
+			{ enemy = "grunt", baseCount = 16, spacing = 0.42 },
+			{ enemy = "stitcher", baseCount = 3, spacing = 1.25, delay = 1.5 },
+		},
+	},
+
+	aegisRush = {
+		groups = {
+			{ enemy = "aegis_runner", baseCount = 9, spacing = 0.58 },
+			{ enemy = "runner", baseCount = 12, spacing = 0.42, delay = 1.6 },
+		},
+	},
+
+	bastionLine = {
+		groups = {
+			{ enemy = "bastion", baseCount = 3, spacing = 1.45 },
+			{ enemy = "shielder", baseCount = 4, spacing = 1.05, delay = 1.0 },
+		},
+	},
+
+	bulwarkMenders = {
+		groups = {
+			{ enemy = "bulwark_mender", baseCount = 2, spacing = 1.5 },
+			{ enemy = "tank", baseCount = 6, spacing = 0.85, delay = 1.4 },
+			{ enemy = "runner", baseCount = 10, spacing = 0.48, delay = 2.6 },
+		},
+	},
 }
 
 -- Endless event templates alter post-campaign wave shapes without requiring map-specific data.
@@ -110,6 +139,10 @@ local EndlessEventOrder = {
 
 -- Simple deterministic template selection
 local TemplateSelectionRules = {
+	{ mod = 22, template = Templates.bulwarkMenders },
+	{ mod = 19, template = Templates.bastionLine },
+	{ mod = 15, template = Templates.aegisRush },
+	{ mod = 14, template = Templates.stitcherEscort },
 	{ mod = 18, template = Templates.mixedSpecialists },
 	{ mod = 16, template = Templates.shieldedColumn },
 	{ mod = 9, template = Templates.regeneratorPair },
@@ -224,15 +257,41 @@ local function addEndlessDensityGroups(groups, endlessWaveIndex)
 	local extraGroupCount = math.min(3, math.floor((endlessWaveIndex + 5) / 6))
 	local countMultiplier = getEndlessCountMultiplier(endlessWaveIndex)
 	local spacingMultiplier = getEndlessSpacingMultiplier(endlessWaveIndex)
-	local densityKinds = { "grunt", "runner", "tank", "regenerator", "shielder" }
+	local densityKinds = {
+		"grunt",
+		"runner",
+		"tank",
+		"regenerator",
+		"shielder",
+		"stitcher",
+		"aegis_runner",
+		"bastion",
+		"bulwark_mender",
+	}
 
 	for i = 1, extraGroupCount do
 		local kind = densityKinds[((endlessWaveIndex + i - 1) % #densityKinds) + 1]
-		local baseCount = kind == "tank" and 5 or (kind == "runner" and 10 or (kind == "regenerator" and 3 or (kind == "shielder" and 3 or 16)))
+		local baseCount = kind == "tank" and 5
+			or (kind == "runner" and 10)
+			or (kind == "regenerator" and 3)
+			or (kind == "shielder" and 3)
+			or (kind == "stitcher" and 2)
+			or (kind == "aegis_runner" and 7)
+			or (kind == "bastion" and 2)
+			or (kind == "bulwark_mender" and 2)
+			or 16
+		local specialistSpacing = kind == "regenerator"
+			or kind == "shielder"
+			or kind == "stitcher"
+			or kind == "bastion"
+			or kind == "bulwark_mender"
 		groups[#groups + 1] = {
 			enemy = kind,
 			count = scaleCount(baseCount, countMultiplier * (0.75 + (i * 0.15))),
-			spacing = math.max(0.22, (kind == "tank" and 0.9 or ((kind == "regenerator" or kind == "shielder") and 1.05 or 0.48)) * spacingMultiplier),
+			spacing = math.max(
+				0.22,
+				(kind == "tank" and 0.9 or (specialistSpacing and 1.05 or 0.48)) * spacingMultiplier
+			),
 			delay = math.max(0.35, 1.2 - (i * 0.2)),
 		}
 	end

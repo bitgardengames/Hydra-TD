@@ -369,6 +369,10 @@ local function resolveDamage(p, evt)
 		e.regenCooldown = e.regenDelay
 	end
 
+	if e.shieldRegenDelay and e.shieldRegenDelay > 0 then
+		e.shieldRegenCooldown = e.shieldRegenDelay
+	end
+
 	local t = p.sourceTower
 
 	if t then

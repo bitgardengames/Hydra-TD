@@ -161,6 +161,7 @@ return {
 		bossEnemy = "Boss: uses extended counterplay and ability timing.",
 		regeneratingEnemy = "Regenerates HP after avoiding damage briefly.",
 		shieldedEnemy = "Starts with a blue shield that absorbs direct damage.",
+		rechargingShieldEnemy = "Shield recharges after avoiding damage briefly.",
 		mechanic = "Mechanic",
 		tags = "Tags",
 		category = {
@@ -440,7 +441,11 @@ return {
 		tank = "Tank",
 		runner = "Runner",
 		regenerator = "Regenerator",
+		stitcher = "Stitcher",
 		shielder = "Shielder",
+		aegisRunner = "Aegis Runner",
+		bastion = "Bastion",
+		bulwarkMender = "Bulwark Mender",
 		boss = "Boss",
 	},
 

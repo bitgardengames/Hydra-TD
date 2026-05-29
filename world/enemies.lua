@@ -254,6 +254,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.shieldMax = def.shield and (def.hp * hpScale * (def.shield.fraction or 0)) or 0
 	e.shield = e.shieldMax
 	e.shieldDamageReduction = def.shield and (def.shield.damageReduction or 0) or 0
+	e.shieldRegenRate = def.shield and ((def.shield.regenRate or 0) * hpScale) or 0
+	e.shieldRegenDelay = def.shield and (def.shield.regenDelay or 0) or 0
+	e.shieldRegenCooldown = 0
 	e.shieldFlash = 0
 
 	computeNudgeParams(e)
@@ -439,6 +442,14 @@ local function updateEnemies(dt)
 				e.regenCooldown = max(0, e.regenCooldown - dt)
 			else
 				e.hp = min(e.maxHp, e.hp + e.regenRate * dt)
+			end
+		end
+
+		if e.shieldRegenRate and e.shieldRegenRate > 0 and e.shieldMax and e.shieldMax > 0 and e.shield < e.shieldMax and e.hp > 0 then
+			if e.shieldRegenCooldown and e.shieldRegenCooldown > 0 then
+				e.shieldRegenCooldown = max(0, e.shieldRegenCooldown - dt)
+			else
+				e.shield = min(e.shieldMax, e.shield + e.shieldRegenRate * dt)
 			end
 		end
 
