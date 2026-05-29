@@ -3,10 +3,6 @@ local maps = {
 		id = "riverbend",
 		nameKey = "map.riverbend",
 		biome = "default",
-		modifiers = {
-			startMoneyDelta = 20,
-			rewardMult = 0.95,
-		},
 		path = {
 			{5, 7}, {13, 7},
 			{13, 3}, {19, 3},
@@ -61,11 +57,6 @@ local maps = {
 		id = "roundabout",
 		nameKey = "map.roundabout",
 		biome = "highlands",
-		modifiers = {
-			enemyHpMult = 1.08,
-			rewardMult = 1.08,
-			extraBossAdds = 1,
-		},
 		path = {
 			{5, 9}, {12, 9},
 			{12, 3}, {18, 3},
@@ -89,11 +80,6 @@ local maps = {
 		id = "gauntlet",
 		nameKey = "map.gauntlet",
 		biome = "autumn",
-		modifiers = {
-			startMoneyDelta = -15,
-			enemySpeedMult = 1.06,
-			bonusInterest = 2,
-		},
 		path = {
 			{5, 11}, {19, 11},
 			{19, 7}, {24, 7},
@@ -152,14 +138,6 @@ local maps = {
 		id = "lowvalley",
 		nameKey = "map.lowvalley",
 		biome = "drylands",
-		modifiers = {
-			towerRangeMult = 0.94,
-			rewardMult = 1.12,
-			noBuildZones = {
-				{ x = 13, y = 6, w = 3, h = 2 },
-				{ x = 21, y = 9, w = 2, h = 2 },
-			},
-		},
 		path = {
 			{5, 5}, {17, 5},
 			{17, 3}, {25, 3},
@@ -221,11 +199,6 @@ local maps = {
 		id = "terrace",
 		nameKey = "map.terrace",
 		biome = "winter",
-		modifiers = {
-			startMoneyDelta = 25,
-			limitedTowerTypes = { "slow", "lancer", "cannon", "shock" },
-			enemyHpMult = 1.05,
-		},
 		path = {
 			{5, 3}, {14, 3},
 			{14, 11}, {20, 11},

@@ -86,7 +86,6 @@ return {
 	campaign = {
 		locked = "LOCKED",
 		mapOf = "Map %d of %d",
-		modifiers = "Map Modifiers",
 		completedBest = "Completed: %s • Best: %d",
 		best = "Best: %d",
 	},
@@ -366,7 +365,6 @@ return {
 
 	messages = {
 		bonus = "Perfect Wave +$%s",
-		bonusInterest = "Perfect Wave +$%s  Interest +$%s",
 	},
 
 	inspect = {
@@ -394,24 +392,10 @@ return {
 		damage = "damage",
 	},
 
-	mapModifier = {
-		startMoneyDelta = "Starting money %s",
-		enemyHpMult = "Enemy HP %s",
-		enemySpeedMult = "Enemy speed %s",
-		towerRangeMult = "Tower range %s",
-		rewardMult = "Enemy rewards %s",
-		noBuildZones = "%d restricted build zones",
-		bonusInterest = "+$%d perfect-wave interest",
-		extraBossAdds = "+%d boss adds per burst",
-		limitedTowerTypes = "Available towers: %s",
-		towerLimited = "This map does not allow that tower type.",
-	},
-
 	floater = {
 		upgrade = "Upgrade!",
 		cannotPlace = "Can't",
 		needMoney = "Need $",
-		towerLimited = "Locked",
 	},
 
 	game = {

@@ -6,7 +6,6 @@ local Text = require("ui.text")
 local Tooltip = require("ui.tooltip")
 local Theme = require("core.theme")
 local L = require("core.localization")
-local MapModifiers = require("core.map_modifiers")
 
 local lg = love.graphics
 local min = math.min
@@ -168,7 +167,6 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 
 		local selected = State.placing == key
 		local canAfford = State.money >= def.cost
-		local towerAllowed = MapModifiers.isTowerAllowed(State.modifiers, key)
 		local pulse = selected and (0.9 + sin(now * 6) * 0.1) or 1
 
 		local btn = getShopButton(i)
@@ -178,7 +176,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		btn.y = yb
 		btn.w = SHOP_BTN_W
 		btn.h = SHOP_BTN_H
-		btn.canAfford = canAfford and towerAllowed
+		btn.canAfford = canAfford
 
 		if btn.cost ~= def.cost then
 			btn.cost = def.cost
@@ -242,7 +240,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 				rows[3].label = L("stats.range")
 				rows[3].value = formatStat(def.range)
 
-				rows[4].text = towerAllowed and L(def.descKey) or L("mapModifier.towerLimited")
+				rows[4].text = L(def.descKey)
 			end
 
 			Tooltip.show(shopTooltip)
@@ -256,7 +254,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local faceB = b * pulse
 
 		-- If unaffordable, override face color
-		if not canAfford or not towerAllowed then
+		if not canAfford then
 			faceR, faceG, faceB = cd1, cd2, cd3
 		end
 
@@ -285,10 +283,10 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 			nameX = nameX + used
 		end
 
-		lg.setColor(ct1, ct2, ct3, (canAfford and towerAllowed) and 1 or 0.55)
+		lg.setColor(ct1, ct2, ct3, canAfford and 1 or 0.55)
 		Text.printShadow(btn.nameText, nameX, ty)
 
-		lg.setColor((canAfford and towerAllowed) and colorText or colorBad)
+		lg.setColor(canAfford and colorText or colorBad)
 		Text.printfShadow(btn.costText, x + PAD, ty, SHOP_BTN_W - PAD * 2, "right")
 
 		i = i + 1

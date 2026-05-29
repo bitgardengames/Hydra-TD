@@ -184,8 +184,6 @@ local function mousepressed(x, y, button)
 						Floaters.add(wx, wy, L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 					elseif why == "money" then
 						Floaters.add(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
-					elseif why == "tower_limited" then
-						Floaters.add(wx, wy, L("floater.towerLimited"), colorBad[1], colorBad[2], colorBad[3])
 					end
 				end
 			end
