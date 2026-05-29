@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 3 -- Only upgrade if save structure changes
+local SAVE_VERSION = 4 -- Only upgrade if save structure changes
 
 local Hotkeys = require("core.hotkeys")
 
@@ -72,13 +72,8 @@ local function ensureMapStatsEntry(mapId)
 	local changed = false
 
 	if not s then
-		s = {bestWave = 0, completedDifficulty = nil, challenges = {}}
+		s = {bestWave = 0, completedDifficulty = nil}
 		stats[mapId] = s
-		changed = true
-	end
-
-	if type(s.challenges) ~= "table" then
-		s.challenges = {}
 		changed = true
 	end
 
@@ -139,10 +134,13 @@ function Save.load()
 
 			-- Structure migrations (not used yet)
 			if version < SAVE_VERSION then
-				--[[ example future upgrade
-				if version < 2 then
+				if version < 4 and type(Save.data.mapStats) == "table" then
+					for _, stats in pairs(Save.data.mapStats) do
+						if type(stats) == "table" then
+							stats.challenges = nil
+						end
+					end
 				end
-				]]
 
 				Save.data.version = SAVE_VERSION
 				Save.flush()
@@ -305,38 +303,6 @@ function Save.recordMapResult(mapId, wave, difficulty, completed)
 	end
 
 	Save.flush()
-end
-
-function Save.recordChallengeCompletion(mapId, challengeId, difficulty, wave)
-	if not mapId or not challengeId then
-		return false
-	end
-
-	local s = ensureMapStatsEntry(mapId)
-	local challenges = s.challenges
-	local c = challenges[challengeId]
-	local safeWave = math.max(0, tonumber(wave) or 0)
-
-	if type(c) ~= "table" then
-		c = {completed = c == true, difficulty = difficulty, wave = safeWave, completions = 0}
-		challenges[challengeId] = c
-	end
-
-	c.completed = true
-	c.difficulty = difficulty or c.difficulty
-	c.wave = math.max(c.wave or 0, safeWave)
-	c.completions = (c.completions or 0) + 1
-
-	Save.flush()
-
-	return true
-end
-
-function Save.isChallengeCompleted(mapId, challengeId)
-	local s = Save.data.mapStats and Save.data.mapStats[mapId]
-	local c = s and s.challenges and s.challenges[challengeId]
-
-	return c and c.completed == true
 end
 
 -- Serialization

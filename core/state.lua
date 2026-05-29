@@ -49,18 +49,6 @@ local state = {
 
 	ignoreStats = false,
 
-	selectedChallengeId = nil,
-	challenge = {
-		selectedId = nil,
-		activeId = nil,
-		completed = false,
-		towerKinds = {},
-		towerKindCount = 0,
-		sells = 0,
-		maxTowerLevel = 1,
-		bestWaveCleared = 0,
-	},
-
 	modifiers = {},
 
 	modules = {},

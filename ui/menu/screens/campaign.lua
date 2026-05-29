@@ -14,7 +14,6 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local MapModifiers = require("core.map_modifiers")
-local Challenges = require("systems.challenges")
 local Onboarding = require("core.onboarding")
 
 local lg = love.graphics
@@ -43,7 +42,6 @@ local PAD_PREVIEW = 44
 local PAD_TITLE = 60
 local PAD_META = 18
 local MODIFIER_LINE_H = 18
-local CHALLENGE_BLOCK_H = 54
 local TITLE_OFFSET = -22
 
 local paddingX = 28
@@ -96,49 +94,6 @@ local function difficultyButtonLabel()
 	local current = Save.data.settings.difficulty or Difficulty.default
 
 	return format("%s: %s", L("settings.difficulty"), L("difficulty." .. current))
-end
-
-local function getSelectedChallenge(map)
-	local selectedId = State.selectedChallengeId
-
-	if not Challenges.isAvailableForMap(map, selectedId) then
-		State.selectedChallengeId = nil
-		selectedId = nil
-	end
-
-	return Challenges.getById(selectedId)
-end
-
-local function challengeButtonLabel(map)
-	local def = getSelectedChallenge(map)
-	local name = def and L(def.nameKey) or L("challenge.none")
-
-	return format("%s: %s", L("challenge.label"), name)
-end
-
-local function cycleChallenge(map, dir)
-	local defs = Challenges.getForMap(map)
-	local currentId = State.selectedChallengeId
-	local currentIndex = 1
-
-	for i, def in ipairs(defs) do
-		if def.id == currentId then
-			currentIndex = i + 1
-			break
-		end
-	end
-
-	local count = #defs + 1
-	local nextIndex = currentIndex + dir
-
-	if nextIndex < 1 then
-		nextIndex = count
-	elseif nextIndex > count then
-		nextIndex = 1
-	end
-
-	State.selectedChallengeId = nextIndex == 1 and nil or defs[nextIndex - 1].id
-	Sound.play("uiMove")
 end
 
 -- Helpers
@@ -362,7 +317,7 @@ local function getModifierBlockH(map)
 end
 
 local function getMetaBlockH(map)
-	return PAD_META + getModifierBlockH(map) + CHALLENGE_BLOCK_H
+	return PAD_META + getModifierBlockH(map)
 end
 
 -- Load
@@ -375,16 +330,6 @@ function Screen.load()
 			h = btnH,
 			onClick = function()
 				cycleDifficulty(1)
-			end
-		},
-
-		{
-			id = "challenge",
-			label = L("challenge.none"),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				cycleChallenge(Maps[State.mapIndex], 1)
 			end
 		},
 
@@ -466,8 +411,6 @@ function Screen.update(dt)
 		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
 		if btn.id == "difficulty" then
 			btn.label = difficultyButtonLabel()
-		elseif btn.id == "challenge" then
-			btn.label = challengeButtonLabel(map)
 		end
 
 		local mx, my = love.mouse.getPosition()
@@ -655,21 +598,6 @@ function Screen.draw()
 			Text.printfShadow(line, 0, lineY + i * MODIFIER_LINE_H, sw, "center")
 		end
 	end
-
-	local selectedChallenge = getSelectedChallenge(map)
-	local challengeY = textY + PAD_TITLE + PAD_META + getModifierBlockH(map) + 8
-	local challengeName = selectedChallenge and L(selectedChallenge.nameKey) or L("challenge.none")
-	local challengeDesc = selectedChallenge and L(selectedChallenge.descKey) or L("challenge.noneDesc")
-	local completedText = ""
-
-	if selectedChallenge and Save.isChallengeCompleted(map.id, selectedChallenge.id) then
-		completedText = "  " .. L("challenge.completed")
-	end
-
-	lg.setColor(colorText)
-	Text.printfShadow(L("challenge.panelTitle", challengeName) .. completedText, 0, challengeY, sw, "center")
-	lg.setColor(colorDisabled)
-	Text.printfShadow(challengeDesc, 0, challengeY + 20, sw, "center")
 
 	-- Buttons
 	local buttonsStartY = textY + PAD_TITLE + getMetaBlockH(map)
