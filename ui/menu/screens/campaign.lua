@@ -60,7 +60,6 @@ local PATH_TRIM_END = 72
 
 -- State
 local campaignButtons = {}
-local codexButton = nil
 local pulseTime = 0
 local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
 
@@ -368,18 +367,6 @@ end
 
 -- Load
 function Screen.load()
-	codexButton = {
-		id = "codex",
-		label = L("menu.codex"),
-		w = 150,
-		h = 38,
-		onClick = function()
-			State.codexBackMode = "campaign"
-			State.mode = "codex"
-			Sound.play("uiConfirm")
-		end
-	}
-
 	campaignButtons = {
 		{
 			id = "difficulty",
@@ -473,15 +460,6 @@ function Screen.update(dt)
 	local buttonsStartY = textY + PAD_TITLE + getMetaBlockH(map)
 
 	-- Buttons
-	if codexButton then
-		codexButton.label = L("menu.codex")
-		codexButton.x = 24
-		codexButton.y = sh - codexButton.h - 24
-
-		local mx, my = love.mouse.getPosition()
-		Button.update(codexButton, mx, my, dt)
-	end
-
 	for i, btn in ipairs(campaignButtons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = buttonsStartY + (i - 1) * gap
@@ -701,10 +679,6 @@ function Screen.draw()
 	for i, btn in ipairs(campaignButtons) do
 		Button.draw(btn)
 	end
-
-	if codexButton then
-		Button.draw(codexButton)
-	end
 end
 
 function Screen.keypressed(key)
@@ -791,10 +765,6 @@ function Screen.mousepressed(x, y, button)
 	end
 
 	-- Buttons
-	if codexButton and Button.mousepressed(codexButton, x, y, button) then
-		return true
-	end
-
 	for _, btn in ipairs(campaignButtons) do
 		if Button.mousepressed(btn, x, y, button) then
 			return true
@@ -803,10 +773,6 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
-	if codexButton and Button.mousereleased(codexButton, x, y, button) then
-		return true
-	end
-
 	for _, btn in ipairs(campaignButtons) do
 		if Button.mousereleased(btn, x, y, button) then
 			return true
