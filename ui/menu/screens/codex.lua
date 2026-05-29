@@ -58,7 +58,7 @@ local entriesByTab = {}
 local backMode = "menu"
 
 local towerOrder = {"slow", "lancer", "poison", "cannon", "shock", "plasma"}
-local enemyOrder = {"grunt", "runner", "tank", "boss", "boss_summoner", "boss_displacement", "boss_suppression"}
+local enemyOrder = {"grunt", "runner", "tank", "regenerator", "shielder", "boss", "boss_summoner", "boss_displacement", "boss_suppression"}
 
 local function getSortedIds(defs, preferredOrder)
 	local ids = {}
@@ -198,6 +198,14 @@ local function buildEnemies()
 			statLine("codex.score", formatNumber(def.score)),
 			statLine("codex.radius", formatNumber(def.radius)),
 		}
+
+		if def.regen then
+			lines[#lines + 1] = L("codex.regeneratingEnemy")
+		end
+
+		if def.shield then
+			lines[#lines + 1] = L("codex.shieldedEnemy")
+		end
 
 		if def.boss then
 			lines[#lines + 1] = L("codex.bossEnemy")

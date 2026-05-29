@@ -30,6 +30,32 @@ return {
 		radius = 9,
 	},
 
+	regenerator = {
+		nameKey = "enemy.regenerator",
+		hp = 48 * mult,
+		speed = 58,
+		reward = 12,
+		score = 28,
+		radius = 11,
+		regen = {
+			rate = 3.0 * mult,
+			delay = 0.8,
+		},
+	},
+
+	shielder = {
+		nameKey = "enemy.shielder",
+		hp = 42 * mult,
+		speed = 52,
+		reward = 13,
+		score = 32,
+		radius = 12,
+		shield = {
+			fraction = 0.55,
+			damageReduction = 0.18,
+		},
+	},
+
 	boss = {
 		nameKey = "enemy.boss",
 		hp = 625 * mult,

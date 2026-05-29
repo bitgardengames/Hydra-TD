@@ -45,6 +45,28 @@ local Templates = {
 			{ enemy = "tank", baseCount = 14, spacing = 0.72 },
 		},
 	},
+
+	regeneratorPair = {
+		groups = {
+			{ enemy = "grunt", baseCount = 18, spacing = 0.44 },
+			{ enemy = "regenerator", baseCount = 3, spacing = 1.1, delay = 1.8 },
+		},
+	},
+
+	shieldedColumn = {
+		groups = {
+			{ enemy = "shielder", baseCount = 3, spacing = 1.25 },
+			{ enemy = "tank", baseCount = 8, spacing = 0.82, delay = 1.1 },
+		},
+	},
+
+	mixedSpecialists = {
+		groups = {
+			{ enemy = "runner", baseCount = 16, spacing = 0.45 },
+			{ enemy = "regenerator", baseCount = 2, spacing = 1.35, delay = 1.2 },
+			{ enemy = "shielder", baseCount = 2, spacing = 1.35, delay = 2.4 },
+		},
+	},
 }
 
 -- Endless event templates alter post-campaign wave shapes without requiring map-specific data.
@@ -88,6 +110,9 @@ local EndlessEventOrder = {
 
 -- Simple deterministic template selection
 local TemplateSelectionRules = {
+	{ mod = 18, template = Templates.mixedSpecialists },
+	{ mod = 16, template = Templates.shieldedColumn },
+	{ mod = 9, template = Templates.regeneratorPair },
 	{ mod = 17, template = Templates.eliteSmallPack },
 	{ mod = 13, template = Templates.largeSwarmWithLowSpacing },
 	{ mod = 11, template = Templates.tankScreenWithRunnerTrickle },
@@ -199,15 +224,15 @@ local function addEndlessDensityGroups(groups, endlessWaveIndex)
 	local extraGroupCount = math.min(3, math.floor((endlessWaveIndex + 5) / 6))
 	local countMultiplier = getEndlessCountMultiplier(endlessWaveIndex)
 	local spacingMultiplier = getEndlessSpacingMultiplier(endlessWaveIndex)
-	local densityKinds = { "grunt", "runner", "tank" }
+	local densityKinds = { "grunt", "runner", "tank", "regenerator", "shielder" }
 
 	for i = 1, extraGroupCount do
 		local kind = densityKinds[((endlessWaveIndex + i - 1) % #densityKinds) + 1]
-		local baseCount = kind == "tank" and 5 or (kind == "runner" and 10 or 16)
+		local baseCount = kind == "tank" and 5 or (kind == "runner" and 10 or (kind == "regenerator" and 3 or (kind == "shielder" and 3 or 16)))
 		groups[#groups + 1] = {
 			enemy = kind,
 			count = scaleCount(baseCount, countMultiplier * (0.75 + (i * 0.15))),
-			spacing = math.max(0.22, (kind == "tank" and 0.9 or 0.48) * spacingMultiplier),
+			spacing = math.max(0.22, (kind == "tank" and 0.9 or ((kind == "regenerator" or kind == "shielder") and 1.05 or 0.48)) * spacingMultiplier),
 			delay = math.max(0.35, 1.2 - (i * 0.2)),
 		}
 	end
