@@ -199,6 +199,27 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
+	if e.regenRate and e.regenRate > 0 then
+		local pulse = 0.55 + sin(animT * 4.0) * 0.25
+		local a = (0.28 + pulse * 0.18) * enemyAlpha
+
+		lg.setColor(0.35, 0.95, 0.48, a)
+		lg.circle("line", ix, iy, e.radius + 5)
+		lg.setColor(0.35, 0.95, 0.48, 0.10 * enemyAlpha)
+		lg.circle("fill", ix, iy, e.radius - 4)
+	end
+
+	if e.shieldMax and e.shieldMax > 0 and e.shield and e.shield > 0 then
+		local t = e.shield / e.shieldMax
+		local flash = e.shieldFlash or 0
+		local shieldAlpha = (0.24 + 0.34 * t + flash * 2.4) * enemyAlpha
+
+		lg.setColor(0.28, 0.68, 1.0, min(0.92, shieldAlpha))
+		lg.circle("line", ix, iy, e.radius + 6)
+		lg.setColor(0.28, 0.68, 1.0, 0.08 * enemyAlpha)
+		lg.circle("fill", ix, iy, e.radius + 1)
+	end
+
 	-- Eyes
 	local eyeSep = e.radius * 0.38
 	local eyeSize = max(1.6, e.radius * 0.16)
@@ -361,6 +382,17 @@ local function drawEnemyHealth(e)
 
 		lg.setColor(r, g, b, 0.9 * alphaScale)
 		lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, radius)
+	end
+
+	if e.shieldMax and e.shieldMax > 0 and e.shield and e.shield > 0 then
+		local shieldT = max(0, min(1, e.shield / e.shieldMax))
+		local shieldY = by - 3
+		local shieldH = 2
+
+		lg.setColor(0.05, 0.13, 0.24, 0.55)
+		lg.rectangle("fill", bx, shieldY, w, shieldH, 1, 1)
+		lg.setColor(0.32, 0.72, 1.0, 0.85)
+		lg.rectangle("fill", bx, shieldY, w * shieldT, shieldH, 1, 1)
 	end
 end
 

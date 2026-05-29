@@ -159,6 +159,8 @@ return {
 		score = "Score",
 		radius = "Radius",
 		bossEnemy = "Boss: uses extended counterplay and ability timing.",
+		regeneratingEnemy = "Regenerates HP after avoiding damage briefly.",
+		shieldedEnemy = "Starts with a blue shield that absorbs direct damage.",
 		mechanic = "Mechanic",
 		tags = "Tags",
 		category = {
@@ -437,6 +439,8 @@ return {
 		grunt = "Grunt",
 		tank = "Tank",
 		runner = "Runner",
+		regenerator = "Regenerator",
+		shielder = "Shielder",
 		boss = "Boss",
 	},
 

@@ -351,12 +351,28 @@ local function resolveDamage(p, evt)
 		return
 	end
 
-	e.hp = e.hp - amount
+	local dealt = amount
+	local hpDamage = amount
+
+	if e.shield and e.shield > 0 then
+		local effectiveDamage = amount * (1 - (e.shieldDamageReduction or 0))
+		local absorbed = min(e.shield, effectiveDamage)
+		e.shield = e.shield - absorbed
+		e.shieldFlash = 0.12
+		hpDamage = effectiveDamage - absorbed
+		dealt = effectiveDamage
+	end
+
+	e.hp = e.hp - hpDamage
+
+	if e.regenDelay and e.regenDelay > 0 then
+		e.regenCooldown = e.regenDelay
+	end
 
 	local t = p.sourceTower
 
 	if t then
-		t.damageDealt = (t.damageDealt or 0) + amount
+		t.damageDealt = (t.damageDealt or 0) + dealt
 		e.lastHitTower = t
 	end
 
@@ -364,7 +380,7 @@ local function resolveDamage(p, evt)
 		e.hitFlash = 0.05
 	end
 
-	State.addDamage(p.sourceKind, amount, e.boss == true)
+	State.addDamage(p.sourceKind, dealt, e.boss == true)
 end
 
 local function resolveImpulse(evt)
