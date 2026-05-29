@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 2 -- Only upgrade if save structure changes
+local SAVE_VERSION = 3 -- Only upgrade if save structure changes
 
 local Hotkeys = require("core.hotkeys")
 
@@ -34,6 +34,33 @@ local function ensureKeybinds(settings)
 				changed = true
 			end
 		end
+	end
+
+	return changed
+end
+
+
+local function ensureOnboarding(settings, meta)
+	local changed = false
+
+	if settings.tips_enabled == nil then
+		settings.tips_enabled = true
+		changed = true
+	end
+
+	if meta.tutorial_completed == nil then
+		meta.tutorial_completed = false
+		changed = true
+	end
+
+	if meta.expert_mode == nil then
+		meta.expert_mode = false
+		changed = true
+	end
+
+	if type(meta.tipsSeen) ~= "table" then
+		meta.tipsSeen = {}
+		changed = true
 	end
 
 	return changed
@@ -174,6 +201,10 @@ function Save.load()
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
 			meta.clearedMaps = meta.clearedMaps or {}
 
+			if ensureOnboarding(settings, meta) then
+				Save.flush()
+			end
+
 			-- Run map ID migration once
 			if not Save.data.mapIdMigrationDone then
 				local changed = migrateMapIds()
@@ -201,6 +232,7 @@ function Save.load()
 			sfxVolume = 0.20,
 			difficulty = "normal",
 			fullscreen = true,
+			tips_enabled = true,
 			keybinds = Hotkeys.getDefaultBindings(),
 		},
 
@@ -216,6 +248,10 @@ function Save.load()
 			TOWER_PLASMA_KILLS = 0,
 
 			TOWER_UPGRADES = 0,
+
+			tutorial_completed = false,
+			expert_mode = false,
+			tipsSeen = {},
 
 			unlockedAchievements = {},
 			clearedMaps = {},

@@ -13,6 +13,7 @@ local BottomBar = require("ui.bottom_bar")
 local Sound = require("systems.sound")
 local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
+local Onboarding = require("core.onboarding")
 
 local getTime = love.timer.getTime
 local floor = math.floor
@@ -175,6 +176,7 @@ local function mousepressed(x, y, button)
 				local ok, why = Towers.addTower(State.placing, gx, gy)
 
 				if ok then
+					Onboarding.onTowerPlaced()
 					cancelPlacement()
 					deselect()
 				else

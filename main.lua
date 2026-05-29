@@ -39,6 +39,7 @@ local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
 local MapModifiers = require("core.map_modifiers")
 local Challenges = require("systems.challenges")
+local Onboarding = require("core.onboarding")
 
 local lg = love.graphics
 
@@ -240,6 +241,7 @@ function love.load(arg)
 		end
 
 		require("core.bootstrap").initFull()
+		Onboarding.showWelcomeIfNeeded()
 
 		Steam.setOverlayHook(pauseGame)
 	end
@@ -256,6 +258,7 @@ end
 local function updateMetaScreens(dt, mode)
 	Menu.update(dt)
 	Overlay.update(dt)
+	Onboarding.update(dt)
 
 	if mode == "campaign" then
 		State.carouselT = min(1, State.carouselT + dt * 7)
@@ -292,6 +295,7 @@ local function drawWorldAndUI()
 	Draw.drawUI()
 	ModulePicker.draw()
 	Tooltip.draw()
+	Onboarding.draw()
 end
 
 -- What is this name? lol "maybeDoSomething"
@@ -337,6 +341,7 @@ function love.update(dt)
 
 	Tooltip.update(dt)
 	Messages.update(dt)
+	Onboarding.update(dt)
 
 	if gameplayFrozen then
 		return
@@ -452,6 +457,7 @@ function love.draw()
 		Overlay.draw()
 
 		Tooltip.draw()
+		Onboarding.draw()
 	end
 end
 
@@ -466,6 +472,10 @@ function love.mousepressed(x, y, button)
 		if ModulePicker.mousepressed(x, y, button) then
 			return
 		end
+	end
+
+	if Onboarding.mousepressed(x, y, button) then
+		return
 	end
 
 	if Overlay.isActive() then
@@ -483,6 +493,10 @@ function love.mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button)
+	if Onboarding.mousereleased(x, y, button) then
+		return
+	end
+
 	if Overlay.isActive() then
 		if Overlay.mousereleased(x, y, button) then
 			return
@@ -512,6 +526,10 @@ function love.keypressed(key)
 		if ModulePicker.keypressed(key) then
 			return
 		end
+	end
+
+	if Onboarding.keypressed(key) then
+		return
 	end
 
 	if Overlay.isActive() then
