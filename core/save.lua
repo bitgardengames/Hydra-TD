@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 4 -- Only upgrade if save structure changes
+local SAVE_VERSION = 1 -- Only upgrade if save structure changes
 
 local Hotkeys = require("core.hotkeys")
 
@@ -37,47 +37,6 @@ local function ensureKeybinds(settings)
 	end
 
 	return changed
-end
-
-
-local function ensureOnboarding(settings, meta)
-	local changed = false
-
-	if settings.tips_enabled == nil then
-		settings.tips_enabled = true
-		changed = true
-	end
-
-	if meta.tutorial_completed == nil then
-		meta.tutorial_completed = false
-		changed = true
-	end
-
-	if meta.expert_mode == nil then
-		meta.expert_mode = false
-		changed = true
-	end
-
-	if type(meta.tipsSeen) ~= "table" then
-		meta.tipsSeen = {}
-		changed = true
-	end
-
-	return changed
-end
-
-local function ensureMapStatsEntry(mapId)
-	local stats = Save.data.mapStats
-	local s = stats[mapId]
-	local changed = false
-
-	if not s then
-		s = {bestWave = 0, completedDifficulty = nil}
-		stats[mapId] = s
-		changed = true
-	end
-
-	return s, changed
 end
 
 local function migrateMapIds()
@@ -134,13 +93,10 @@ function Save.load()
 
 			-- Structure migrations (not used yet)
 			if version < SAVE_VERSION then
-				if version < 4 and type(Save.data.mapStats) == "table" then
-					for _, stats in pairs(Save.data.mapStats) do
-						if type(stats) == "table" then
-							stats.challenges = nil
-						end
-					end
+				--[[ example future upgrade
+				if version < 2 then
 				end
+				]]
 
 				Save.data.version = SAVE_VERSION
 				Save.flush()
@@ -150,17 +106,6 @@ function Save.load()
 			Save.data.furthestIndex = Save.data.furthestIndex or 1
 			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 			Save.data.mapStats = Save.data.mapStats or {}
-
-			local statsChanged = false
-
-			for mapId in pairs(Save.data.mapStats) do
-				local _, changed = ensureMapStatsEntry(mapId)
-				statsChanged = statsChanged or changed
-			end
-
-			if statsChanged then
-				Save.flush()
-			end
 
 			-- Settings
 			Save.data.settings = Save.data.settings or {}
@@ -199,10 +144,6 @@ function Save.load()
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
 			meta.clearedMaps = meta.clearedMaps or {}
 
-			if ensureOnboarding(settings, meta) then
-				Save.flush()
-			end
-
 			-- Run map ID migration once
 			if not Save.data.mapIdMigrationDone then
 				local changed = migrateMapIds()
@@ -230,7 +171,6 @@ function Save.load()
 			sfxVolume = 0.20,
 			difficulty = "normal",
 			fullscreen = true,
-			tips_enabled = true,
 			keybinds = Hotkeys.getDefaultBindings(),
 		},
 
@@ -246,10 +186,6 @@ function Save.load()
 			TOWER_PLASMA_KILLS = 0,
 
 			TOWER_UPGRADES = 0,
-
-			tutorial_completed = false,
-			expert_mode = false,
-			tipsSeen = {},
 
 			unlockedAchievements = {},
 			clearedMaps = {},
@@ -287,7 +223,12 @@ function Save.recordMapResult(mapId, wave, difficulty, completed)
 	local stats = Save.data.mapStats
 	local safeWave = math.max(0, tonumber(wave) or 0)
 
-	local s = ensureMapStatsEntry(mapId)
+	local s = stats[mapId]
+
+	if not s then
+		s = {bestWave = 0, completedDifficulty = nil}
+		stats[mapId] = s
+	end
 
 	if safeWave > (s.bestWave or 0) then
 		s.bestWave = safeWave

@@ -169,8 +169,6 @@ end
 
 local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
 	local def = EnemyDefs[kind]
-	hpScale = hpScale or 1.0
-	spdScale = spdScale or 1.0
 
 	local x, y
 
@@ -222,7 +220,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.speed = def.speed * spdScale
 	e.reward = def.reward * (1.0 + State.wave * 0.01)
 	e.score = def.score or 0
-	e.modifiers = def.modifiers
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius
 	e.hitFlash = 0
@@ -247,13 +244,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.shadow = true
 	e.id = nextID
 	e.shockID = 0
-	e.regenRate = def.regen and ((def.regen.rate or 0) * hpScale) or 0
-	e.regenDelay = def.regen and (def.regen.delay or 0) or 0
-	e.regenCooldown = 0
-	e.shieldMax = def.shield and (def.hp * hpScale * (def.shield.fraction or 0)) or 0
-	e.shield = e.shieldMax
-	e.shieldDamageReduction = def.shield and (def.shield.damageReduction or 0) or 0
-	e.shieldFlash = 0
 
 	computeNudgeParams(e)
 
@@ -431,18 +421,6 @@ local function updateEnemies(dt)
 				e.poisonRampPerTick = 0
 				e.poisonRampMax = 1
 			end
-		end
-
-		if e.regenRate and e.regenRate > 0 and e.hp > 0 and e.hp < e.maxHp then
-			if e.regenCooldown and e.regenCooldown > 0 then
-				e.regenCooldown = max(0, e.regenCooldown - dt)
-			else
-				e.hp = min(e.maxHp, e.hp + e.regenRate * dt)
-			end
-		end
-
-		if e.shieldFlash and e.shieldFlash > 0 then
-			e.shieldFlash = max(0, e.shieldFlash - dt)
 		end
 
 		-- Infect: spread poison once on death

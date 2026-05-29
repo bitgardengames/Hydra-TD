@@ -13,7 +13,6 @@ local Medals = require("ui.medals")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
-local Onboarding = require("core.onboarding")
 
 local lg = love.graphics
 local floor = math.floor
@@ -45,9 +44,9 @@ local TITLE_OFFSET = -22
 local paddingX = 28
 local paddingY = 28
 
-local btnW = 300
+local btnW = 240
 local btnH = 42
-local gap = 48
+local gap = 62
 
 -- Arrow navigation
 local ARROW_SIZE = 20
@@ -300,10 +299,6 @@ local function getCompletionString(mapId)
 	return nil
 end
 
-local function getMetaBlockH(map)
-	return PAD_META
-end
-
 -- Load
 function Screen.load()
 	campaignButtons = {
@@ -335,7 +330,6 @@ function Screen.load()
 				Backdrop.stop()
 				Difficulty.set(Save.data.settings.difficulty)
 				resetGame()
-				Onboarding.onGameStarted()
 				Sound.playMusic("gameplay")
 			end
 		},
@@ -376,7 +370,7 @@ function Screen.update(dt)
 
 	-- Layout
 	local previewBlockH = ph
-	local titleBlockH = PAD_PREVIEW + PAD_TITLE + getMetaBlockH(map)
+	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
 	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 	local contentH = previewBlockH + titleBlockH + buttonsBlockH
 
@@ -386,7 +380,7 @@ function Screen.update(dt)
 
 	local previewY = boxY + paddingY
 	local textY = previewY + ph + PAD_PREVIEW
-	local buttonsStartY = textY + PAD_TITLE + getMetaBlockH(map)
+	local buttonsStartY = textY + PAD_TITLE + PAD_META
 
 	-- Buttons
 	for i, btn in ipairs(campaignButtons) do
@@ -423,7 +417,7 @@ function Screen.draw()
 
 	-- Layout
 	local previewBlockH = ph
-	local titleBlockH = PAD_PREVIEW + PAD_TITLE + getMetaBlockH(map)
+	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
 	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 
 	local contentH = previewBlockH + titleBlockH + buttonsBlockH
@@ -573,7 +567,7 @@ function Screen.draw()
 	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
 
 	-- Buttons
-	local buttonsStartY = textY + PAD_TITLE + getMetaBlockH(map)
+	local buttonsStartY = textY + PAD_TITLE + PAD_META
 
 	Fonts.set("menu")
 
@@ -624,7 +618,7 @@ function Screen.mousepressed(x, y, button)
 
 		-- Layout
 		local previewBlockH = ph
-		local titleBlockH = PAD_PREVIEW + PAD_TITLE + getMetaBlockH(map)
+		local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
 		local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
 		local contentH = previewBlockH + titleBlockH + buttonsBlockH
 

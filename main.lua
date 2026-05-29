@@ -37,7 +37,6 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
-local Onboarding = require("core.onboarding")
 
 local lg = love.graphics
 
@@ -61,15 +60,14 @@ function finalizeCurrentRun(completed)
 	end
 
 	local map = Maps[State.worldMapIndex]
-
-	if not map then
-		return
-	end
-
 	local mapId = map.id
 	local stats = Save.data.mapStats[mapId]
 
 	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
+
+	if not map then
+		return
+	end
 
 	Save.recordMapResult(mapId, State.wave or 0, Difficulty.key(), completed == true)
 end
@@ -86,8 +84,7 @@ function resetGame()
 
     -- Map state
     MapMod.clearBlocked()
-	local mapDef = Maps[State.worldMapIndex]
-    MapMod.buildPath(mapDef)
+    MapMod.buildPath(Maps[State.worldMapIndex])
 
 	local seed = 123456 + State.worldMapIndex * 1009
 	love.math.setRandomSeed(seed)
@@ -118,7 +115,7 @@ function resetGame()
 	local diff = Difficulty.get()
 
     -- Core game state
-    State.money = max(0, diff.startMoney)
+    State.money = diff.startMoney
     State.moneyLerp = State.money
     State.lives = diff.startLives
 	State.livesAnim = 0
@@ -218,7 +215,6 @@ function love.load(arg)
 		end
 
 		require("core.bootstrap").initFull()
-		Onboarding.showWelcomeIfNeeded()
 
 		Steam.setOverlayHook(pauseGame)
 	end
@@ -235,7 +231,6 @@ end
 local function updateMetaScreens(dt, mode)
 	Menu.update(dt)
 	Overlay.update(dt)
-	Onboarding.update(dt)
 
 	if mode == "campaign" then
 		State.carouselT = min(1, State.carouselT + dt * 7)
@@ -272,7 +267,6 @@ local function drawWorldAndUI()
 	Draw.drawUI()
 	ModulePicker.draw()
 	Tooltip.draw()
-	Onboarding.draw()
 end
 
 -- What is this name? lol "maybeDoSomething"
@@ -318,7 +312,6 @@ function love.update(dt)
 
 	Tooltip.update(dt)
 	Messages.update(dt)
-	Onboarding.update(dt)
 
 	if gameplayFrozen then
 		return
@@ -380,8 +373,8 @@ function love.update(dt)
 
 		if State.waveLeaks == 0 then
 			local bonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
-
 			State.money = State.money + bonus
+
 			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
 		end
 
@@ -422,7 +415,6 @@ function love.draw()
 		Overlay.draw()
 
 		Tooltip.draw()
-		Onboarding.draw()
 	end
 end
 
@@ -437,10 +429,6 @@ function love.mousepressed(x, y, button)
 		if ModulePicker.mousepressed(x, y, button) then
 			return
 		end
-	end
-
-	if Onboarding.mousepressed(x, y, button) then
-		return
 	end
 
 	if Overlay.isActive() then
@@ -458,10 +446,6 @@ function love.mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button)
-	if Onboarding.mousereleased(x, y, button) then
-		return
-	end
-
 	if Overlay.isActive() then
 		if Overlay.mousereleased(x, y, button) then
 			return
@@ -491,10 +475,6 @@ function love.keypressed(key)
 		if ModulePicker.keypressed(key) then
 			return
 		end
-	end
-
-	if Onboarding.keypressed(key) then
-		return
 	end
 
 	if Overlay.isActive() then

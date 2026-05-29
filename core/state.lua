@@ -50,14 +50,6 @@ local state = {
 	ignoreStats = false,
 
 	modules = {},
-	onboarding = {
-		active = false,
-		step = nil,
-		tipsShown = 0,
-		targetGX = nil,
-		targetGY = nil,
-	},
-
 	modulePicker = {
 		active = false,
 		choices = nil,

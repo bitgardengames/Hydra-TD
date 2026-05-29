@@ -4,13 +4,11 @@ local State = require("core.state")
 local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
-local Onboarding = require("core.onboarding")
 
 local random = love.math.random
 local lg = love.graphics
 local sqrt = math.sqrt
 local sin = math.sin
-local getTime = love.timer.getTime
 local min = math.min
 local max = math.max
 local abs = math.abs
@@ -199,27 +197,6 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
-	if e.regenRate and e.regenRate > 0 then
-		local pulse = 0.55 + sin(animT * 4.0) * 0.25
-		local a = (0.28 + pulse * 0.18) * enemyAlpha
-
-		lg.setColor(0.35, 0.95, 0.48, a)
-		lg.circle("line", ix, iy, e.radius + 5)
-		lg.setColor(0.35, 0.95, 0.48, 0.10 * enemyAlpha)
-		lg.circle("fill", ix, iy, e.radius - 4)
-	end
-
-	if e.shieldMax and e.shieldMax > 0 and e.shield and e.shield > 0 then
-		local t = e.shield / e.shieldMax
-		local flash = e.shieldFlash or 0
-		local shieldAlpha = (0.24 + 0.34 * t + flash * 2.4) * enemyAlpha
-
-		lg.setColor(0.28, 0.68, 1.0, min(0.92, shieldAlpha))
-		lg.circle("line", ix, iy, e.radius + 6)
-		lg.setColor(0.28, 0.68, 1.0, 0.08 * enemyAlpha)
-		lg.circle("fill", ix, iy, e.radius + 1)
-	end
-
 	-- Eyes
 	local eyeSep = e.radius * 0.38
 	local eyeSize = max(1.6, e.radius * 0.16)
@@ -382,17 +359,6 @@ local function drawEnemyHealth(e)
 
 		lg.setColor(r, g, b, 0.9 * alphaScale)
 		lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, radius)
-	end
-
-	if e.shieldMax and e.shieldMax > 0 and e.shield and e.shield > 0 then
-		local shieldT = max(0, min(1, e.shield / e.shieldMax))
-		local shieldY = by - 3
-		local shieldH = 2
-
-		lg.setColor(0.05, 0.13, 0.24, 0.55)
-		lg.rectangle("fill", bx, shieldY, w, shieldH, 1, 1)
-		lg.setColor(0.32, 0.72, 1.0, 0.85)
-		lg.rectangle("fill", bx, shieldY, w * shieldT, shieldH, 1, 1)
 	end
 end
 
@@ -938,34 +904,6 @@ local function drawTowerInstance(t, cx, renderY)
 	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
 end
 
-
-local function drawPlacementLessonTarget()
-	local gx, gy = Onboarding.getPlacementTarget()
-
-	if not gx or not gy then
-		return
-	end
-
-	local cx, cy = MapMod.gridToCenter(gx, gy)
-	local t = getTime()
-	local pulse = (sin(t * 4.2) + 1) * 0.5
-	local pad = 5 + pulse * 5
-	local x = cx - TILE * 0.5 - pad
-	local y = cy - TILE * 0.5 - pad
-	local size = TILE + pad * 2
-
-	lg.setColor(goodR, goodG, goodB, 0.07 + pulse * 0.04)
-	lg.rectangle("fill", x, y, size, size, 10, 10)
-
-	lg.setLineWidth(2)
-	lg.setColor(goodR, goodG, goodB, 0.42 + pulse * 0.22)
-	lg.rectangle("line", x, y, size, size, 10, 10)
-
-	lg.setLineWidth(1)
-	lg.setColor(1, 1, 1, 0.18 + pulse * 0.12)
-	lg.rectangle("line", cx - TILE * 0.5 + 4, cy - TILE * 0.5 + 4, TILE - 8, TILE - 8, 8, 8)
-end
-
 -- Draw tower placement ghost
 local function drawTowerGhost()
 	if not State.placing or not State.hoverGX or not State.hoverGY then
@@ -1056,7 +994,6 @@ local function drawTowers()
 end
 
 return {
-	drawPlacementLessonTarget = drawPlacementLessonTarget,
 	drawEnemy = drawEnemy,
 	drawEnemies = drawEnemies,
 	drawTowerBase = drawTowerBase,

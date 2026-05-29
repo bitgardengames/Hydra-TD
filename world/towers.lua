@@ -310,6 +310,7 @@ local function addTower(kind, gx, gy)
 
 	Sound.play("towerPlaced")
 
+
 	return true
 end
 
@@ -364,6 +365,7 @@ local function upgradeTower(t, specializationId)
 
 	Achievements.increment("TOWER_UPGRADES")
 
+
 	return true
 end
 
@@ -413,6 +415,7 @@ local function sellTower(t)
 	State.selectedTower = nil
 
 	Sound.play("towerSold")
+
 end
 
 local function findTowerAt(gx, gy)
