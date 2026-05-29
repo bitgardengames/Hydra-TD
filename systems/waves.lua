@@ -300,8 +300,6 @@ function Waves.startWave()
 
 		local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, true)
 		local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
-		local extraBossAdds = (State.modifiers and State.modifiers.extraBossAdds) or 0
-
 		State.activeBoss = nil
 		State.activeBossKind = bossKind
 		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
@@ -315,15 +313,15 @@ function Waves.startWave()
 			return
 		end
 
-		if encounter and (encounter.flankBurst or 0) + extraBossAdds > 0 then
+		if encounter and (encounter.flankBurst or 0) > 0 then
 			resetTable(bossAdds, bossAddsDefaults, {
 				active = true,
 				kind = encounter.flankKind or "grunt",
-				burst = max(1, (encounter.flankBurst or 1) + extraBossAdds),
+				burst = max(1, encounter.flankBurst or 1),
 				timer = encounter.initialDelay or 2.5,
 				interval = encounter.interval or 6.0,
-				maxAlive = max(1, (encounter.maxAliveAdds or 10) + extraBossAdds),
-				maxTotal = max(1, (encounter.maxTotalAdds or 20) + (extraBossAdds * 3)),
+				maxAlive = max(1, encounter.maxAliveAdds or 10),
+				maxTotal = max(1, encounter.maxTotalAdds or 20),
 				hpMult = hpMult * (encounter.addHpMult or 1.0),
 				spdMult = spdMult * (encounter.addSpdMult or 1.0),
 			})

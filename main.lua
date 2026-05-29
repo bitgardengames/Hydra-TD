@@ -37,7 +37,6 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
-local MapModifiers = require("core.map_modifiers")
 local Onboarding = require("core.onboarding")
 
 local lg = love.graphics
@@ -88,9 +87,7 @@ function resetGame()
     -- Map state
     MapMod.clearBlocked()
 	local mapDef = Maps[State.worldMapIndex]
-	State.modifiers = MapModifiers.resolve(mapDef)
     MapMod.buildPath(mapDef)
-	MapModifiers.applyNoBuildZones(MapMod, State.modifiers)
 
 	local seed = 123456 + State.worldMapIndex * 1009
 	love.math.setRandomSeed(seed)
@@ -121,7 +118,7 @@ function resetGame()
 	local diff = Difficulty.get()
 
     -- Core game state
-    State.money = max(0, diff.startMoney + (State.modifiers.startMoneyDelta or 0))
+    State.money = max(0, diff.startMoney)
     State.moneyLerp = State.money
     State.lives = diff.startLives
 	State.livesAnim = 0
@@ -383,15 +380,9 @@ function love.update(dt)
 
 		if State.waveLeaks == 0 then
 			local bonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
-			local interest = State.modifiers and State.modifiers.bonusInterest or 0
 
-			State.money = State.money + bonus + interest
-
-			if interest ~= 0 then
-				Messages.add(L("messages.bonusInterest", bonus, interest), 0.6, 1.0, 0.6)
-			else
-				Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
-			end
+			State.money = State.money + bonus
+			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
 		end
 
 		-- Otherwise continue as normal

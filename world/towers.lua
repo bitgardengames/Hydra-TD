@@ -13,7 +13,6 @@ local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
 local L = require("core.localization")
 local Modules = require("systems.modules")
-local MapModifiers = require("core.map_modifiers")
 local TowerBranchDefs = require("world.tower_branch_defs")
 --local Steam = require("luasteam")
 
@@ -188,7 +187,7 @@ local function recomputeTowerStats(t)
 	t.damage = def.damage * scaledDamageMult
 	t.fireRate = def.fireRate * scaledFireMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
-	t.range = (def.range + rangeAdd * upgrades) * ((State.modifiers and State.modifiers.towerRangeMult) or 1.0)
+	t.range = def.range + rangeAdd * upgrades
 	t.range2 = t.range * t.range
 	t._cache = t._cache or {}
 	t._cache.targetMode = {
@@ -221,10 +220,6 @@ end
 
 local function addTower(kind, gx, gy)
 	local def = TowerDefs[kind]
-
-	if not MapModifiers.isTowerAllowed(State.modifiers, kind) then
-		return false, "tower_limited"
-	end
 
 	if State.money < def.cost then
 		return false, "money"
