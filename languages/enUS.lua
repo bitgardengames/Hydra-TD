@@ -67,7 +67,7 @@ return {
 		dismiss = "Dismiss",
 		dontShowAgain = "Don't Show Again",
 		placeTitle = "Place Your First Tower",
-		placeBody = "Pick a tower from the bottom bar, then place it near a bend so it covers more of the path.",
+		placeBody = "Pick a tower from the bottom bar, then place it on the highlighted tile near the bend for strong path coverage.",
 		waveTitle = "Start the Wave",
 		waveBody = "Press the start-wave hotkey or button when you are ready. Gameplay stays fully controllable from here.",
 		readyTitle = "You're Ready",

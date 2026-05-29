@@ -4,11 +4,13 @@ local State = require("core.state")
 local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
+local Onboarding = require("core.onboarding")
 
 local random = love.math.random
 local lg = love.graphics
 local sqrt = math.sqrt
 local sin = math.sin
+local getTime = love.timer.getTime
 local min = math.min
 local max = math.max
 local abs = math.abs
@@ -904,6 +906,34 @@ local function drawTowerInstance(t, cx, renderY)
 	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
 end
 
+
+local function drawPlacementLessonTarget()
+	local gx, gy = Onboarding.getPlacementTarget()
+
+	if not gx or not gy then
+		return
+	end
+
+	local cx, cy = MapMod.gridToCenter(gx, gy)
+	local t = getTime()
+	local pulse = (sin(t * 4.2) + 1) * 0.5
+	local pad = 5 + pulse * 5
+	local x = cx - TILE * 0.5 - pad
+	local y = cy - TILE * 0.5 - pad
+	local size = TILE + pad * 2
+
+	lg.setColor(goodR, goodG, goodB, 0.07 + pulse * 0.04)
+	lg.rectangle("fill", x, y, size, size, 10, 10)
+
+	lg.setLineWidth(2)
+	lg.setColor(goodR, goodG, goodB, 0.42 + pulse * 0.22)
+	lg.rectangle("line", x, y, size, size, 10, 10)
+
+	lg.setLineWidth(1)
+	lg.setColor(1, 1, 1, 0.18 + pulse * 0.12)
+	lg.rectangle("line", cx - TILE * 0.5 + 4, cy - TILE * 0.5 + 4, TILE - 8, TILE - 8, 8, 8)
+end
+
 -- Draw tower placement ghost
 local function drawTowerGhost()
 	if not State.placing or not State.hoverGX or not State.hoverGY then
@@ -994,6 +1024,7 @@ local function drawTowers()
 end
 
 return {
+	drawPlacementLessonTarget = drawPlacementLessonTarget,
 	drawEnemy = drawEnemy,
 	drawEnemies = drawEnemies,
 	drawTowerBase = drawTowerBase,
