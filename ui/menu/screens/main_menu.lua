@@ -66,6 +66,18 @@ function Screen.load()
 		},
 
 		{
+			id = "codex",
+			label = L("menu.codex"),
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				State.codexBackMode = "menu"
+				State.mode = "codex"
+				Sound.play("uiConfirm")
+			end
+		},
+
+		{
 			id = "settings",
 			label = L("menu.settings"),
 			w = btnW,

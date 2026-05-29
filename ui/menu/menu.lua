@@ -3,6 +3,7 @@ local State = require("core.state")
 local Screens = {
 	menu = require("ui.menu.screens.main_menu"),
 	campaign = require("ui.menu.screens.campaign"),
+	codex = require("ui.menu.screens.codex"),
 	settings = require("ui.menu.screens.settings"),
 
 	victory = require("ui.menu.screens.victory"),

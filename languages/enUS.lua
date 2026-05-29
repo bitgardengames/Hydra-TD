@@ -8,6 +8,7 @@ return {
 	menu = {
 		play = "Play",
 		settings = "Settings",
+		codex = "Codex",
 		quit = "Quit",
 		back = "Back",
 		resume = "Resume",
@@ -128,6 +129,71 @@ return {
 			desc = "Continue after victory and clear endless wave 30.",
 			summary = "Survive endless to wave 30",
 		},
+	},
+
+
+	codex = {
+		title = "Codex",
+		tabTowers = "Towers",
+		tabUpgrades = "Upgrades",
+		tabEnemies = "Enemies",
+		tabModifiers = "Modifiers",
+		towerSubtitle = "Buildable tower",
+		upgradeSubtitle = "%s tier %d upgrade",
+		enemySubtitle = "Standard enemy",
+		enemyBossSubtitle = "Boss enemy",
+		futureEnemyModifier = "Future enemy modifier",
+		empty = "No codex entries yet.",
+		hint = "Click a row or use ↑/↓ to browse • ←/→ changes tabs • Esc goes back",
+		cost = "Cost",
+		damage = "Damage",
+		fireRate = "Fire rate",
+		range = "Range (tiles)",
+		behaviors = "Behaviors",
+		tower = "Tower",
+		tier = "Tier",
+		categoryLabel = "Category",
+		hp = "HP",
+		speed = "Speed",
+		reward = "Reward",
+		score = "Score",
+		radius = "Radius",
+		bossEnemy = "Boss: uses extended counterplay and ability timing.",
+		mechanic = "Mechanic",
+		tags = "Tags",
+		category = {
+			movement = "Movement",
+			damage = "Damage",
+			utility = "Utility",
+			special = "Special",
+		},
+		mechanicPackage = {
+			summoner = "Summoner",
+			displacement = "Displacement",
+			suppression_aura = "Suppression Aura",
+		},
+		modifierType = {
+			general = "General",
+			defense = "Defense",
+			mobility = "Mobility",
+		},
+		modifierTag = {
+			durable = "Durable",
+			speed = "Speed",
+			sustain = "Sustain",
+		},
+	},
+
+	enemyModifier = {
+		armored = "Armored",
+		swift = "Swift",
+		regenerating = "Regenerating",
+	},
+
+	enemyModifierDesc = {
+		armored = "Takes reduced direct damage until cracked by sustained fire.",
+		swift = "Moves faster and pressures long straightaways.",
+		regenerating = "Slowly restores health while it remains alive.",
 	},
 
 	difficulty = {
