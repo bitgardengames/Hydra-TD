@@ -38,13 +38,14 @@ local hudCache = {
 	lives = {value = nil, text = ""},
 	wave = {value = nil, text = ""},
 	prep = {value = nil, text = "", action = nil},
+	preview = {wave = nil, entries = nil, count = 0},
 	spawn = {remaining = nil, count = nil, text = ""},
 }
 
 function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local y = infoY + floor((infoH - textH) * 0.5 + 0.5)
+	local y = State.inPrep and (infoY + 1) or (infoY + floor((infoH - textH) * 0.5 + 0.5))
 
 	-- Smooth money
 	State.moneyLerp = State.moneyLerp + (State.money - State.moneyLerp) * 0.25
@@ -105,8 +106,38 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 			prepCache.text = L("hud.prep", skipKey)
 		end
 
+		local previewCache = hudCache.preview
+		if previewCache.wave ~= State.wave then
+			local preview = Waves.getWavePreview(State.wave)
+			previewCache.wave = State.wave
+			previewCache.count = preview.count
+			previewCache.entries = {}
+			for i = 1, #preview.composition do
+				local group = preview.composition[i]
+				previewCache.entries[i] = L("hud.compositionEntry", group.count, group.name)
+			end
+		end
+
 		lg.setColor(cg1, cg2, cg3, 1)
 		Text.printShadow(prepCache.text, infoX + STATUS_X, y)
+
+		-- The composition gets the full second row. Drop trailing groups until the
+		-- localized text fits; the total remains visible even when details do not.
+		local entries = previewCache.entries
+		local visible = #entries
+		local maxWidth = infoW - 16
+		local previewText
+		repeat
+			local details = table.concat(entries, L("hud.compositionSeparator"), 1, visible)
+			if visible < #entries then
+				details = details .. L("hud.moreComposition")
+			end
+			previewText = L("hud.nextWave", details, L("hud.waveTotal", previewCache.count))
+			if font:getWidth(previewText) <= maxWidth or visible == 0 then break end
+			visible = visible - 1
+		until false
+
+		Text.printShadow(previewText, infoX + 8, infoY + infoH - textH - 1)
 	else
 		local spawner = Waves.getSpawner()
 		local spawnCache = hudCache.spawn

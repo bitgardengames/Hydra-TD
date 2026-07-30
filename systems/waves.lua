@@ -201,6 +201,50 @@ end
 resetTable(spawner, spawnerDefaults)
 resetTable(bossAdds, bossAddsDefaults)
 
+-- Build a display-only description of a wave.  Keep this independent of the
+-- live spawner tables so callers (notably the prep HUD) can safely look ahead.
+function Waves.getWavePreview(waveNumber)
+	local wave = WaveBuilder.build(waveNumber)
+	local groups = {}
+	local groupsByKind = {}
+
+	local function addKind(kind)
+		local group = groupsByKind[kind]
+		if not group then
+			local def = EnemyDefs[kind]
+			group = {
+				kind = kind,
+				name = L((def and def.nameKey) or ("enemy." .. kind)),
+				count = 0,
+			}
+			groupsByKind[kind] = group
+			groups[#groups + 1] = group
+		end
+		group.count = group.count + 1
+	end
+
+	if wave.boss then
+		addKind("boss")
+	else
+		for i = 1, #(wave.composition or {}) do
+			addKind(wave.composition[i])
+		end
+	end
+
+	local counts = {}
+	for kind, group in pairs(groupsByKind) do
+		counts[kind] = group.count
+	end
+
+	return {
+		count = wave.count or 0,
+		total = wave.count or 0,
+		totalCount = wave.count or 0,
+		counts = counts,
+		composition = groups,
+	}
+end
+
 local function beginSpawner(kind, count, gap, hpMult, spdMult, composition)
 	resetTable(spawner, spawnerDefaults, {
 		active = true,

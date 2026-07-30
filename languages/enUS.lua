@@ -320,6 +320,11 @@ return {
 		wave = "Wave %d",
 		prep = "Press %s to start",
 		spawning = "Spawning %d - Alive %d",
+		nextWave = "Next: %s (%s)",
+		waveTotal = "%d total",
+		compositionEntry = "%d %s",
+		compositionSeparator = ", ",
+		moreComposition = ", …",
 	},
 
 	messages = {
