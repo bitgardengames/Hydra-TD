@@ -445,6 +445,12 @@ function love.mousepressed(x, y, button)
 	Input.mousepressed(x, y, button)
 end
 
+function love.wheelmoved(x, y)
+	if State.mode ~= "game" and State.mode ~= "pause" then
+		Menu.wheelmoved(x, y)
+	end
+end
+
 function love.mousereleased(x, y, button)
 	if Overlay.isActive() then
 		if Overlay.mousereleased(x, y, button) then

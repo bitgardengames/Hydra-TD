@@ -1,0 +1,30 @@
+-- Shared achievement catalog used by both stat tracking and the Progress screen.
+return {
+	{id = "BOSS_KILL_1", nameKey = "achievement.boss_1", descKey = "achievementDesc.boss_1", stat = "BOSSES_KILLED", target = 1},
+	{id = "BOSS_KILL_25", nameKey = "achievement.boss_25", descKey = "achievementDesc.boss_25", stat = "BOSSES_KILLED", target = 25},
+	{id = "ENEMY_KILL_500", nameKey = "achievement.kill_500", descKey = "achievementDesc.kill_500", stat = "ENEMIES_KILLED", target = 500},
+	{id = "ENEMY_KILL_1500", nameKey = "achievement.kill_1500", descKey = "achievementDesc.kill_1500", stat = "ENEMIES_KILLED", target = 1500},
+	{id = "ENEMY_KILL_3000", nameKey = "achievement.kill_3000", descKey = "achievementDesc.kill_3000", stat = "ENEMIES_KILLED", target = 3000},
+
+	{id = "TOWER_LANCER_250", nameKey = "achievement.tower_lancer_250", descKey = "achievementDesc.tower_lancer_250", stat = "TOWER_LANCER_KILLS", target = 250},
+	{id = "TOWER_SLOW_250", nameKey = "achievement.tower_slow_250", descKey = "achievementDesc.tower_slow_250", stat = "TOWER_SLOW_KILLS", target = 250},
+	{id = "TOWER_CANNON_250", nameKey = "achievement.tower_cannon_250", descKey = "achievementDesc.tower_cannon_250", stat = "TOWER_CANNON_KILLS", target = 250},
+	{id = "TOWER_SHOCK_250", nameKey = "achievement.tower_shock_250", descKey = "achievementDesc.tower_shock_250", stat = "TOWER_SHOCK_KILLS", target = 250},
+	{id = "TOWER_POISON_250", nameKey = "achievement.tower_poison_250", descKey = "achievementDesc.tower_poison_250", stat = "TOWER_POISON_KILLS", target = 250},
+	{id = "TOWER_PLASMA_250", nameKey = "achievement.tower_plasma_250", descKey = "achievementDesc.tower_plasma_250", stat = "TOWER_PLASMA_KILLS", target = 250},
+	{id = "TOWER_LANCER_1000", nameKey = "achievement.tower_lancer_1000", descKey = "achievementDesc.tower_lancer_1000", stat = "TOWER_LANCER_KILLS", target = 1000},
+	{id = "TOWER_SLOW_1000", nameKey = "achievement.tower_slow_1000", descKey = "achievementDesc.tower_slow_1000", stat = "TOWER_SLOW_KILLS", target = 1000},
+	{id = "TOWER_CANNON_1000", nameKey = "achievement.tower_cannon_1000", descKey = "achievementDesc.tower_cannon_1000", stat = "TOWER_CANNON_KILLS", target = 1000},
+	{id = "TOWER_SHOCK_1000", nameKey = "achievement.tower_shock_1000", descKey = "achievementDesc.tower_shock_1000", stat = "TOWER_SHOCK_KILLS", target = 1000},
+	{id = "TOWER_POISON_1000", nameKey = "achievement.tower_poison_1000", descKey = "achievementDesc.tower_poison_1000", stat = "TOWER_POISON_KILLS", target = 1000},
+	{id = "TOWER_PLASMA_1000", nameKey = "achievement.tower_plasma_1000", descKey = "achievementDesc.tower_plasma_1000", stat = "TOWER_PLASMA_KILLS", target = 1000},
+
+	{id = "CAMPAIGN_EASY", nameKey = "achievement.campaign_easy", descKey = "achievementDesc.campaign_easy"},
+	{id = "CAMPAIGN_NORMAL", nameKey = "achievement.campaign_normal", descKey = "achievementDesc.campaign_normal"},
+	{id = "CAMPAIGN_HARD", nameKey = "achievement.campaign_hard", descKey = "achievementDesc.campaign_hard"},
+	{id = "NO_LEAKS_NORMAL", nameKey = "achievement.no_leaks_normal", descKey = "achievementDesc.no_leaks_normal"},
+	{id = "NO_LEAKS_HARD", nameKey = "achievement.no_leaks_hard", descKey = "achievementDesc.no_leaks_hard"},
+	{id = "TOWER_UPGRADE_1", nameKey = "achievement.tower_upgrade_1", descKey = "achievementDesc.tower_upgrade_1", stat = "TOWER_UPGRADES", target = 1},
+	{id = "TOWER_UPGRADE_100", nameKey = "achievement.tower_upgrade_100", descKey = "achievementDesc.tower_upgrade_100", stat = "TOWER_UPGRADES", target = 100},
+	{id = "LAST_SECOND", nameKey = "achievement.last_second", descKey = "achievementDesc.last_second"},
+}

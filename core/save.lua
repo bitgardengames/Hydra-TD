@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 1 -- Only upgrade if save structure changes
+local SAVE_VERSION = 2 -- Only upgrade if save structure changes
 
 local Hotkeys = require("core.hotkeys")
 
@@ -143,6 +143,7 @@ function Save.load()
 
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
 			meta.clearedMaps = meta.clearedMaps or {}
+			meta.encounteredEnemies = meta.encounteredEnemies or {}
 
 			-- Run map ID migration once
 			if not Save.data.mapIdMigrationDone then
@@ -189,6 +190,7 @@ function Save.load()
 
 			unlockedAchievements = {},
 			clearedMaps = {},
+			encounteredEnemies = {},
 		},
 
 		mapIdMigrationDone = true, -- new saves don't need migration
@@ -276,6 +278,20 @@ function Save.unlockMap(mapId, mapIndex)
 	if not u[mapId] then
 		u[mapId] = true
 		Save.data.furthestIndex = math.max(Save.data.furthestIndex or 1, mapIndex or 1)
+		Save.flush()
+	end
+end
+
+function Save.markEnemyEncountered(kind)
+	if not Save.data or type(kind) ~= "string" then
+		return
+	end
+
+	local meta = Save.data.meta
+	meta.encounteredEnemies = meta.encounteredEnemies or {}
+
+	if not meta.encounteredEnemies[kind] then
+		meta.encounteredEnemies[kind] = true
 		Save.flush()
 	end
 end

@@ -9,6 +9,7 @@ local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
 local Achievements = require("systems.achievements")
 local L = require("core.localization")
+local Save = require("core.save")
 
 local enemies = {}
 local enemyPool = {}
@@ -169,6 +170,8 @@ end
 
 local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
 	local def = EnemyDefs[kind]
+
+	Save.markEnemyEncountered(kind)
 
 	local x, y
 

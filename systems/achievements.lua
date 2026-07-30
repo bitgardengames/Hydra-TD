@@ -1,23 +1,11 @@
 local State = require("core.state")
 local Steam = require("core.steam")
 local Save = require("core.save")
+local AchievementDefs = require("systems.achievement_defs")
 
 local Achievements = {}
 
 local watchers = {}
-
---[[
-	List of achievements
-
-	BOSS_KILL_1, BOSS_KILL_25
-	ENEMY_KILL_500, ENEMY_KILL_1500, ENEMY_KILL_3000
-	TOWER_LANCER_250, TOWER_SLOW_250, TOWER_CANNON_250, TOWER_SHOCK_250, TOWER_POISON_250, TOWER_PLASMA_250
-	TOWER_LANCER_1000, TOWER_SLOW_1000, TOWER_CANNON_1000, TOWER_SHOCK_1000, TOWER_POISON_1000, TOWER_PLASMA_1000
-	CAMPAIGN_EASY, CAMPAIGN_NORMAL, CAMPAIGN_HARD
-	NO_LEAKS_NORMAL, NO_LEAKS_HARD
-	TOWER_UPGRADE_1, TOWER_UPGRADE_100
-	LAST_SECOND
---]]
 
 local BASE_CAMPAIGN_MAP_IDS = {
 	"riverbend",
@@ -101,53 +89,12 @@ function Achievements.checkCampaignCompletion()
 	end
 end
 
--- Enemy kills
-watchers.ENEMIES_KILLED = function(value)
-	if value >= 3000 then unlock("ENEMY_KILL_3000") end
-	if value >= 1500 then unlock("ENEMY_KILL_1500") end
-	if value >= 500 then unlock("ENEMY_KILL_500") end
-end
-
--- Boss kills
-watchers.BOSSES_KILLED = function(value)
-	if value >= 25 then unlock("BOSS_KILL_25") end
-	if value >= 1 then unlock("BOSS_KILL_1") end
-end
-
--- Tower kills
-watchers.TOWER_LANCER_KILLS = function(value)
-	if value >= 1000 then unlock("TOWER_LANCER_1000") end
-	if value >= 250 then unlock("TOWER_LANCER_250") end
-end
-
-watchers.TOWER_SLOW_KILLS = function(value)
-	if value >= 1000 then unlock("TOWER_SLOW_1000") end
-	if value >= 250 then unlock("TOWER_SLOW_250") end
-end
-
-watchers.TOWER_CANNON_KILLS = function(value)
-	if value >= 1000 then unlock("TOWER_CANNON_1000") end
-	if value >= 250 then unlock("TOWER_CANNON_250") end
-end
-
-watchers.TOWER_SHOCK_KILLS = function(value)
-	if value >= 1000 then unlock("TOWER_SHOCK_1000") end
-	if value >= 250 then unlock("TOWER_SHOCK_250") end
-end
-
-watchers.TOWER_POISON_KILLS = function(value)
-	if value >= 1000 then unlock("TOWER_POISON_1000") end
-	if value >= 250 then unlock("TOWER_POISON_250") end
-end
-
-watchers.TOWER_PLASMA_KILLS = function(value)
-	if value >= 1000 then unlock("TOWER_PLASMA_1000") end
-	if value >= 250 then unlock("TOWER_PLASMA_250") end
-end
-
-watchers.TOWER_UPGRADES = function(value)
-	if value >= 100 then unlock("TOWER_UPGRADE_100") end
-	if value >= 1 then unlock("TOWER_UPGRADE_1") end
+-- Build cumulative watchers from the same catalog displayed by the UI.
+for _, def in ipairs(AchievementDefs) do
+	if def.stat and def.target then
+		watchers[def.stat] = watchers[def.stat] or {}
+		watchers[def.stat][#watchers[def.stat] + 1] = def
+	end
 end
 
 function Achievements.increment(stat, amount)
@@ -160,10 +107,14 @@ function Achievements.increment(stat, amount)
 	local meta = Save.data.meta
 	meta[stat] = (meta[stat] or 0) + amount
 
-	local fn = watchers[stat]
+	local definitions = watchers[stat]
 
-	if fn then
-		fn(meta[stat])
+	if definitions then
+		for _, def in ipairs(definitions) do
+			if meta[stat] >= def.target then
+				unlock(def.id)
+			end
+		end
 	end
 end
 
