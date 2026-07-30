@@ -181,7 +181,9 @@ local function mousepressed(x, y, button)
 					cancelPlacement()
 					deselect()
 				else
-					if why == "path" or why == "occupied" then
+					if why == "tutorial_tile" then
+						Floaters.add(wx, wy, L("floater.tutorialTile"), colorBad[1], colorBad[2], colorBad[3])
+					elseif why == "path" or why == "occupied" then
 						Floaters.add(wx, wy, L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 					elseif why == "money" then
 						Floaters.add(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
@@ -199,7 +201,7 @@ local function mousepressed(x, y, button)
 			if t then
 				State.selectedTower = t
 				State.selectedEnemy = nil
-				Onboarding.event("tower_selected")
+				Onboarding.event("tower_selected", t)
 
 				return
 			end

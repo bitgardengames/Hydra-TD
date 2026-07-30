@@ -264,6 +264,8 @@ end
 
 -- Wave start
 function Waves.startWave()
+	if not Onboarding.canStartWave() then return false end
+	local tutorialWave = Onboarding.isTutorialWave()
 	Onboarding.event("wave_started")
 	local map = Maps[State.mapIndex]
 	local mapWaveDefs = getMapWaveDefs(map)
@@ -279,7 +281,9 @@ function Waves.startWave()
 	end
 
 	-- WaveBuilder enforces boss invariant and returns a simple descriptor
-	local wave = WaveBuilder.build(State.wave)
+	local wave = tutorialWave and {
+		count = 4, enemy = "grunt", spacing = 0.85,
+	} or WaveBuilder.build(State.wave)
 
 	-- Boss waves
 	if wave.boss then
@@ -308,6 +312,7 @@ function Waves.startWave()
 	local gap = wave.spacing or 1.0
 
 	beginSpawner(kind, count, gap, hpMult, spdMult, wave.composition)
+	return true
 end
 
 -- Spawning update

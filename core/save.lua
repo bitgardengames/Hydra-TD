@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 3 -- Only upgrade if save structure changes
+local SAVE_VERSION = 4 -- Only upgrade if save structure changes
 
 local Hotkeys = require("core.hotkeys")
 
@@ -91,12 +91,12 @@ function Save.load()
 
 			local version = Save.data.version or 0
 
-			-- Structure migrations (not used yet)
+			-- Players with an existing profile should not unexpectedly receive the
+			-- new first-launch offer. They can still start it from Settings.
 			if version < SAVE_VERSION then
-				--[[ example future upgrade
-				if version < 2 then
+				if version < 4 and Save.data.tutorialOffered == nil then
+					Save.data.tutorialOffered = true
 				end
-				]]
 
 				Save.data.version = SAVE_VERSION
 				Save.flush()
@@ -125,6 +125,18 @@ function Save.load()
 			local onboardingChanged = false
 			if Save.data.tutorialCompleted == nil then
 				Save.data.tutorialCompleted = false
+				onboardingChanged = true
+			end
+			if Save.data.tutorialOffered == nil then
+				Save.data.tutorialOffered = false
+				onboardingChanged = true
+			end
+			if Save.data.tutorialSkipped == nil then
+				Save.data.tutorialSkipped = false
+				onboardingChanged = true
+			end
+			if type(Save.data.tutorialDemonstratedIds) ~= "table" then
+				Save.data.tutorialDemonstratedIds = {}
 				onboardingChanged = true
 			end
 			if Save.data.contextualTipsEnabled == nil then
@@ -184,6 +196,9 @@ function Save.load()
 		unlockedMaps = {},
 		mapStats = {},
 		tutorialCompleted = false,
+		tutorialOffered = false,
+		tutorialSkipped = false,
+		tutorialDemonstratedIds = {},
 		contextualTipsEnabled = true,
 		dismissedTipIds = {},
 

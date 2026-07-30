@@ -466,13 +466,13 @@ function Screen.load()
 					end,
 				},
 				{
-					id = "reset_tutorial_tips",
-					label = L("settings.resetTutorialTips"),
+					id = "replay_tutorial",
+					label = L("settings.replayTutorial"),
 					type = "action",
 					renderAsButton = true,
-					buttonLabel = L("settings.reset"),
+					buttonLabel = L("settings.replay"),
 					onClick = function()
-						Onboarding.reset()
+						Onboarding.replay()
 						Sound.play("uiConfirm")
 					end,
 				},

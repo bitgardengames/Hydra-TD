@@ -219,6 +219,8 @@ function love.load(arg)
 		require("core.bootstrap").initFull()
 
 		Steam.setOverlayHook(pauseGame)
+		Onboarding.load()
+		Onboarding.offerIfNeeded()
 	end
 
 	collectgarbage("collect")
@@ -263,10 +265,12 @@ end
 local function drawWorldAndUI()
 	Camera.begin()
 	Draw.drawWorld()
+	Onboarding.drawWorld()
 	Camera.finish()
 	Camera.present()
 
 	Draw.drawUI()
+	Onboarding.draw()
 	ModulePicker.draw()
 	Tooltip.draw()
 end
@@ -433,6 +437,8 @@ function love.mousepressed(x, y, button)
 			return
 		end
 	end
+
+	if Onboarding.mousepressed(x, y, button) then return end
 
 	if ModulePicker.isActive() then
 		if ModulePicker.mousepressed(x, y, button) then
