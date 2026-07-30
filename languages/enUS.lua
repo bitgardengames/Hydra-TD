@@ -327,11 +327,9 @@ return {
 		endlessTier = "Wave %d • Endless Tier %d",
 		prep = "Press %s to start",
 		spawning = "Spawning %d - Alive %d",
-		nextWave = "Next: %s (%s)",
+		upcomingWave = "Wave %d Preview",
 		waveTotal = "%d total",
 		compositionEntry = "%d %s",
-		compositionSeparator = ", ",
-		moreComposition = ", …",
 	},
 
 	messages = {
