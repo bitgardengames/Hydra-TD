@@ -65,6 +65,8 @@ return {
 		mapOf = "Map %d of %d",
 		completedBest = "Completed: %s • Best: %d",
 		best = "Best: %d",
+		bestEndless = "Endless: wave %d",
+		completedBestEndless = "Completed: %s • Best: %d • Endless: %d",
 	},
 
 	difficulty = {
@@ -322,6 +324,7 @@ return {
 	hud = {
 		lives = "Lives %d",
 		wave = "Wave %d",
+		endlessTier = "Wave %d • Endless Tier %d",
 		prep = "Press %s to start",
 		spawning = "Spawning %d - Alive %d",
 		nextWave = "Next: %s (%s)",

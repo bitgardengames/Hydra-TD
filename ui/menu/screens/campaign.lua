@@ -288,10 +288,15 @@ local function getCompletionString(mapId)
 
 	if s.completedDifficulty then
 		local diff = L("difficulty." .. s.completedDifficulty)
-
+		if (s.bestEndlessWave or 0) > 0 then
+			return L("campaign.completedBestEndless", diff, s.bestWave or 0, s.bestEndlessWave)
+		end
 		return L("campaign.completedBest", diff, s.bestWave or 0)
 	end
 
+	if (s.bestEndlessWave or 0) > 0 then
+		return L("campaign.bestEndless", s.bestEndlessWave)
+	end
 	if s.bestWave and s.bestWave > 0 then
 		return L("campaign.best", s.bestWave)
 	end

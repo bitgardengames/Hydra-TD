@@ -3,6 +3,7 @@ local Theme = require("core.theme")
 local Util = require("core.util")
 local Enemies = require("world.enemies")
 local Waves = require("systems.waves")
+local WaveBuilder = require("systems.wave_builder")
 local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local L = require("core.localization")
@@ -87,10 +88,11 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 	end
 
 	local waveCache = hudCache.wave
+	local intensityTier = WaveBuilder.getIntensityTier(State.wave)
 
 	if waveCache.value ~= State.wave then
 		waveCache.value = State.wave
-		waveCache.text = L("hud.wave", State.wave)
+		waveCache.text = intensityTier > 0 and L("hud.endlessTier", State.wave, intensityTier) or L("hud.wave", State.wave)
 	end
 
 	lg.setColor(ct1, ct2, ct3, 1)
@@ -119,7 +121,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 		end
 
 		lg.setColor(cg1, cg2, cg3, 1)
-		Text.printShadow(prepCache.text, infoX + STATUS_X, y)
+		Text.printShadow(prepCache.text, infoX + (intensityTier > 0 and 365 or STATUS_X), y)
 
 		-- The composition gets the full second row. Drop trailing groups until the
 		-- localized text fits; the total remains visible even when details do not.
@@ -151,7 +153,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 		end
 
 		lg.setColor(0.85, 0.85, 0.85, 0.85)
-		Text.printShadow(spawnCache.text, infoX + STATUS_X, y)
+		Text.printShadow(spawnCache.text, infoX + (intensityTier > 0 and 365 or STATUS_X), y)
 	end
 end
 

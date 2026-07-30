@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 4 -- Only upgrade if save structure changes
+local SAVE_VERSION = 5 -- Adds per-map endless records without changing campaign results
 
 local Hotkeys = require("core.hotkeys")
 
@@ -97,6 +97,14 @@ function Save.load()
 				if version < 4 and Save.data.tutorialOffered == nil then
 					Save.data.tutorialOffered = true
 				end
+				if version < 5 and type(Save.data.mapStats) == "table" then
+					for _, stats in pairs(Save.data.mapStats) do
+						if type(stats) == "table" and (tonumber(stats.bestWave) or 0) > 20 then
+							stats.bestEndlessWave = math.max(stats.bestEndlessWave or 0, stats.bestWave)
+							stats.bestWave = stats.completedDifficulty and 20 or 0
+						end
+					end
+				end
 
 				Save.data.version = SAVE_VERSION
 				Save.flush()
@@ -106,6 +114,9 @@ function Save.load()
 			Save.data.furthestIndex = Save.data.furthestIndex or 1
 			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 			Save.data.mapStats = Save.data.mapStats or {}
+			for _, stats in pairs(Save.data.mapStats) do
+				if type(stats) == "table" then stats.bestEndlessWave = stats.bestEndlessWave or 0 end
+			end
 
 			-- Settings
 			Save.data.settings = Save.data.settings or {}
@@ -256,18 +267,20 @@ function Save.isMapUnlocked(i, mapId)
 	return Save.data.unlockedMaps[mapId] == true
 end
 
-function Save.recordMapResult(mapId, wave, difficulty, completed)
+function Save.recordMapResult(mapId, wave, difficulty, completed, endless)
 	local stats = Save.data.mapStats
 	local safeWave = math.max(0, tonumber(wave) or 0)
 
 	local s = stats[mapId]
 
 	if not s then
-		s = {bestWave = 0, completedDifficulty = nil}
+		s = {bestWave = 0, bestEndlessWave = 0, completedDifficulty = nil}
 		stats[mapId] = s
 	end
 
-	if safeWave > (s.bestWave or 0) then
+	if endless then
+		if safeWave > (s.bestEndlessWave or 0) then s.bestEndlessWave = safeWave end
+	elseif safeWave > (s.bestWave or 0) then
 		s.bestWave = safeWave
 	end
 

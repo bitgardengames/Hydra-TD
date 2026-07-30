@@ -61,16 +61,15 @@ function finalizeCurrentRun(completed)
 	end
 
 	local map = Maps[State.worldMapIndex]
+	if not map then
+		return
+	end
 	local mapId = map.id
 	local stats = Save.data.mapStats[mapId]
 
 	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
 
-	if not map then
-		return
-	end
-
-	Save.recordMapResult(mapId, State.wave or 0, Difficulty.key(), completed == true)
+	Save.recordMapResult(mapId, State.wave or 0, Difficulty.key(), completed == true, State.endless == true)
 end
 
 function resetGame()
