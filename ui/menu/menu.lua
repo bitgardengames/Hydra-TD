@@ -4,6 +4,7 @@ local Screens = {
 	menu = require("ui.menu.screens.main_menu"),
 	campaign = require("ui.menu.screens.campaign"),
 	settings = require("ui.menu.screens.settings"),
+	progress = require("ui.menu.screens.progress"),
 
 	victory = require("ui.menu.screens.victory"),
 	game_over = require("ui.menu.screens.game_over"),
@@ -69,6 +70,14 @@ function Menu.mousereleased(x, y, button)
 
 	if screen and screen.mousereleased then
 		screen.mousereleased(x, y, button)
+	end
+end
+
+function Menu.wheelmoved(x, y)
+	local screen = Screens[State.mode]
+
+	if screen and screen.wheelmoved then
+		screen.wheelmoved(x, y)
 	end
 end
 

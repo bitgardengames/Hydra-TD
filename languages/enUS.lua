@@ -7,6 +7,7 @@ return {
 
 	menu = {
 		play = "Play",
+		progress = "Progress",
 		settings = "Settings",
 		quit = "Quit",
 		back = "Back",
@@ -435,7 +436,7 @@ return {
 
 	achievement = {
 		boss_1 = "First Blood",
-		boss_50 = "No Mercy",
+		boss_25 = "No Mercy",
 
 		kill_500 = "Still Standing",
 		kill_1500 = "Keep Them Coming",
@@ -469,7 +470,7 @@ return {
 
 	achievementDesc = {
 		boss_1 = "Defeat your first boss",
-		boss_50 = "Defeat 50 bosses",
+		boss_25 = "Defeat 25 bosses",
 
 		kill_500 = "Defeat 500 enemies",
 		kill_1500 = "Defeat 1,500 enemies",
@@ -499,6 +500,28 @@ return {
 
 		tower_upgrade_1 = "Upgrade a tower",
 		tower_upgrade_100 = "Upgrade towers 100 times",
+	},
+
+	progress = {
+		title = "Progress",
+		achievements = "Achievements",
+		enemyIntel = "Enemy Intel",
+		unlocked = "Unlocked",
+		locked = "Locked",
+		progressValue = "%d / %d",
+		noIntel = "No enemy intel collected yet. Encounter enemies in battle to reveal their files.",
+		armor = "Armor: blocks %g damage; heavy hits (≥ %g) deal ×%g.",
+		shield = "Shield: %g strength; burst and chain attacks break it faster.",
+		regeneration = "Regeneration: restores %g health/sec after %.2fs without damage.",
+		support = "Support: speeds nearby enemies by %d%% within %g range.",
+		bossAbility = "Boss ability: %s.",
+		counterplay = "Counterplay: %.1fs warning, then a %.1fs exposed window.",
+		ability_add_wave = "summons reinforcements",
+		ability_shockwave_dash = "dashes with a shockwave",
+		ability_silence_aura = "suppresses nearby towers",
+		ability_unknown = "enters a dangerous combat phase",
+		basic = "No special mechanics.",
+		scrollHint = "Mouse wheel or ↑/↓ to scroll • Esc to return",
 	},
 
 	overlay = {

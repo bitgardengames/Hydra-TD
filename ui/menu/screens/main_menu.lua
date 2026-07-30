@@ -66,6 +66,17 @@ function Screen.load()
 		},
 
 		{
+			id = "progress",
+			label = L("menu.progress"),
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				State.mode = "progress"
+				Sound.play("uiConfirm")
+			end
+		},
+
+		{
 			id = "settings",
 			label = L("menu.settings"),
 			w = btnW,
