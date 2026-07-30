@@ -1,27 +1,15 @@
+local DifficultyCurve = require("systems.difficulty_curve")
+
 local Builder = {}
 
--- Wave templates define structure, not difficulty
+-- Templates describe the campaign baseline. Endless tiers add bodies and mixed
+-- pressure, but retain a hard wave budget so progression cannot grow forever.
 local Templates = {
-	standard = {
-		enemy = "grunt",
-		baseCount = 12 * 3,
-		spacing = 0.65, -- 0.65
-	},
-
-	fast = {
-		enemy = "runner",
-		baseCount = 16 * 3,
-		spacing = 0.65, -- 0.45
-	},
-
-	tanky = {
-		enemy = "tank",
-		baseCount = 10 * 3,
-		spacing = 1.05, -- 1.05
-	},
+	standard = { enemy = "grunt", baseCount = 36, spacing = 0.65 },
+	fast = { enemy = "runner", baseCount = 48, spacing = 0.65 },
+	tanky = { enemy = "tank", baseCount = 30, spacing = 1.05 },
 }
 
--- Simple deterministic template selection
 local TemplateSelectionRules = {
 	{ mod = 6, template = Templates.standard },
 	{ mod = 7, template = Templates.fast },
@@ -30,11 +18,8 @@ local TemplateSelectionRules = {
 
 local function pickTemplate(waveIndex)
 	for _, rule in ipairs(TemplateSelectionRules) do
-		if waveIndex % rule.mod == 0 then
-			return rule.template
-		end
+		if waveIndex % rule.mod == 0 then return rule.template end
 	end
-
 	return Templates.standard
 end
 
@@ -45,15 +30,33 @@ local unlocks = {
 	{ wave = 9, kind = "warcaller", every = 10 },
 }
 
-local function buildComposition(waveIndex, baseKind, count)
+Builder.endlessTierWaves = 5
+Builder.maxWaveEnemies = 120
+Builder.minSpawnSpacing = 0.28
+
+function Builder.getIntensityTier(waveIndex)
+	local endlessWave = math.max(0, (tonumber(waveIndex) or 0) - DifficultyCurve.campaignEnd)
+	if endlessWave == 0 then return 0 end
+	return math.floor((endlessWave - 1) / Builder.endlessTierWaves) + 1
+end
+
+local function buildComposition(waveIndex, baseKind, count, tier)
 	local composition = {}
+	local pressureKinds = {"runner", "grunt", "tank"}
 	for i = 1, count do
 		local kind = baseKind
-		-- Offset each cadence so mixed waves read as squads rather than a solid wall
-		-- of specialists. Later unlocks take precedence when cadences overlap.
 		for j = 1, #unlocks do
 			local u = unlocks[j]
 			if waveIndex >= u.wave and (i + j * 2) % u.every == 0 then kind = u.kind end
+		end
+		-- Each endless tier inserts a predictable flank group. Rotating the kind
+		-- creates simultaneous mixed pressure without making every unit elite.
+		if tier > 0 then
+			local groupSize = math.min(3 + tier, 9)
+			local groupCycle = math.max(10, 18 - math.min(tier, 8))
+			if (i - 1) % groupCycle < groupSize then
+				kind = pressureKinds[((tier + math.floor((i - 1) / groupCycle)) % #pressureKinds) + 1]
+			end
 		end
 		composition[i] = kind
 	end
@@ -61,25 +64,25 @@ local function buildComposition(waveIndex, baseKind, count)
 end
 
 function Builder.build(waveIndex)
-	-- Boss every 10th wave, no exceptions
+	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
+	local tier = Builder.getIntensityTier(waveIndex)
+
 	if waveIndex % 10 == 0 then
-		return {
-			boss = true,
-			enemy = "boss",
-			count = 1,
-			spacing = 0,
-		}
+		return { boss = true, enemy = "boss", count = 1, spacing = 0, intensityTier = tier }
 	end
 
 	local template = pickTemplate(waveIndex)
-
-	local count = template.baseCount
+	-- Six more enemies per tier is legible count growth; the cap is the ultimate
+	-- simulation budget. Spacing tightens gently and never becomes a frame burst.
+	local count = math.min(Builder.maxWaveEnemies, template.baseCount + tier * 6)
+	local spacing = math.max(Builder.minSpawnSpacing, template.spacing * (0.94 ^ tier))
 	return {
 		boss = false,
 		enemy = template.enemy,
 		count = count,
-		spacing = template.spacing,
-		composition = buildComposition(waveIndex, template.enemy, count),
+		spacing = spacing,
+		composition = buildComposition(waveIndex, template.enemy, count, tier),
+		intensityTier = tier,
 	}
 end
 

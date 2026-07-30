@@ -15,6 +15,19 @@ local Waves = {}
 local max = math.max
 local min = math.min
 
+-- Runtime budgets complement WaveBuilder's per-wave budget. The active cap is
+-- intentionally lower than several queued endless groups, applying backpressure
+-- rather than allowing a slow frame to turn into an unbounded spawn burst.
+local BASE_ACTIVE_ENEMY_CAP = 140
+local MAX_ACTIVE_ENEMY_CAP = 180
+local MAX_SPAWN_CATCHUP_PER_FRAME = 12
+local SPAWN_BACKPRESSURE_DELAY = 0.10
+
+local function getActiveEnemyCap(waveNumber)
+	local tier = WaveBuilder.getIntensityTier(waveNumber)
+	return min(MAX_ACTIVE_ENEMY_CAP, BASE_ACTIVE_ENEMY_CAP + tier * 4)
+end
+
 local function copyValues(dst, src)
 	for k, v in pairs(src) do
 		dst[k] = v
@@ -287,14 +300,32 @@ function Waves.startWave()
 
 	-- Boss waves
 	if wave.boss then
-		local bossKind = "boss"
+		local bossIndex = math.max(1, math.floor(State.wave / 10))
+		local bossKind = getBossByArchetype(map, bossIndex)
+		local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
+		local tier = WaveBuilder.getIntensityTier(State.wave)
 
 		local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, true)
+		local addHpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult
 
 		State.activeBoss = nil
 		State.activeBossKind = bossKind
 		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
-		bossAdds.active = false
+		if encounter then
+			resetTable(bossAdds, bossAddsDefaults, {
+				active = true,
+				kind = encounter.flankKind,
+				burst = min(8, encounter.flankBurst + math.floor(tier / 2)),
+				timer = max(1.5, encounter.initialDelay - tier * 0.12),
+				interval = max(3.0, encounter.interval * (0.96 ^ tier)),
+				maxAlive = min(32, encounter.maxAliveAdds + tier * 2),
+				maxTotal = min(72, encounter.maxTotalAdds + tier * 5),
+				hpMult = addHpMult * encounter.addHpMult,
+				spdMult = spdMult * encounter.addSpdMult,
+			})
+		else
+			bossAdds.active = false
+		end
 
 		return
 	end
@@ -317,39 +348,42 @@ end
 
 -- Spawning update
 function Waves.updateSpawner(dt)
-	if not spawner.active then
-		return
-	end
-
-	spawner.timer = spawner.timer - dt
-
-	local maxSpawnCatchupPerFrame = 12
 	local spawnLoops = 0
+	local activeCap = getActiveEnemyCap(State.wave)
 
-	while spawner.timer <= 0 and spawner.remaining > 0 and spawnLoops < maxSpawnCatchupPerFrame do
-		local kind = spawner.composition and spawner.composition[spawner.compositionIndex] or spawner.kind
+	if spawner.active then
+		spawner.timer = spawner.timer - dt
 
-		if not kind then
-			spawner.remaining = 0
-			spawner.active = false
+		while spawner.active and spawner.timer <= 0 and spawner.remaining > 0
+			and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
+			local kind = spawner.composition and spawner.composition[spawner.compositionIndex] or spawner.kind
 
-			return
+			if not kind then
+				spawner.remaining = 0
+				spawner.active = false
+
+				return
+			end
+
+			Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
+			spawner.compositionIndex = spawner.compositionIndex + 1
+
+			spawner.remaining = spawner.remaining - 1
+			spawner.timer = spawner.timer + spawner.gap
+			spawnLoops = spawnLoops + 1
 		end
 
-		Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
-		spawner.compositionIndex = spawner.compositionIndex + 1
+		if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and spawner.timer <= 0 then
+			spawner.timer = 0
+		elseif #Enemies.enemies >= activeCap and spawner.remaining > 0 then
+			-- Discard accumulated catch-up debt while capped. Once room opens, spawning
+			-- resumes smoothly rather than releasing the entire backlog in one frame.
+			spawner.timer = max(spawner.timer, SPAWN_BACKPRESSURE_DELAY)
+		end
 
-		spawner.remaining = spawner.remaining - 1
-		spawner.timer = spawner.timer + spawner.gap
-		spawnLoops = spawnLoops + 1
-	end
-
-	if spawnLoops == maxSpawnCatchupPerFrame and spawner.timer <= 0 then
-		spawner.timer = 0
-	end
-
-	if spawner.remaining <= 0 then
-		spawner.active = false
+		if spawner.remaining <= 0 then
+			spawner.active = false
+		end
 	end
 
 	if bossAdds.active then
@@ -372,7 +406,7 @@ function Waves.updateSpawner(dt)
 				end
 			end
 
-			local available = bossAdds.maxAlive - aliveAdds
+			local available = min(bossAdds.maxAlive - aliveAdds, activeCap - #Enemies.enemies)
 			if available > 0 then
 				local toSpawn = max(0, min(bossAdds.burst, available, bossAdds.maxTotal - bossAdds.totalSpawned))
 				if toSpawn > 0 then
@@ -413,6 +447,10 @@ end
 
 function Waves.getSpawner()
 	return spawner
+end
+
+function Waves.getActiveEnemyCap()
+	return getActiveEnemyCap(State.wave)
 end
 
 return Waves
