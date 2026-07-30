@@ -221,6 +221,8 @@ end
 
 local function addTower(kind, gx, gy)
 	local def = TowerDefs[kind]
+	local tutorialOK, tutorialWhy = Onboarding.validatePlacement(kind, gx, gy)
+	if not tutorialOK then return false, tutorialWhy end
 
 	if State.money < def.cost then
 		return false, "money"
@@ -310,7 +312,7 @@ local function addTower(kind, gx, gy)
 	Effects.spawnPlacePuff(x, y)
 
 	Sound.play("towerPlaced")
-	Onboarding.event("tower_placed")
+	Onboarding.event("tower_placed", t)
 
 
 	return true
@@ -366,7 +368,7 @@ local function upgradeTower(t, specializationId)
 	Sound.play("towerUpgraded")
 
 	Achievements.increment("TOWER_UPGRADES")
-	Onboarding.event("tower_upgraded")
+	Onboarding.event("tower_upgraded", t)
 
 
 	return true

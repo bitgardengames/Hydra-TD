@@ -53,7 +53,8 @@ return {
 		controlsRestoreDefaults = "Restore Default Keybinds",
 		controlsDefaultsRestored = "Default keybinds restored.",
 		gameplayTips = "Enable gameplay tips",
-		resetTutorialTips = "Reset tutorial tips",
+		replayTutorial = "Replay tutorial",
+		replay = "Replay",
 		reset = "Reset",
 		on = "On",
 		off = "Off",
@@ -342,6 +343,22 @@ return {
 		dismiss = "Dismiss ×",
 	},
 
+	tutorial = {
+		offerTitle = "New to Hydra TD?",
+		offerText = "Learn the basics in a quick one-minute battle.",
+		start = "Quick 1-minute tutorial",
+		skip = "Jump straight in",
+		skipShort = "Skip tutorial",
+		place = "Place the Lancer on the highlighted tile.",
+		wave = "Great! Start the small wave when you're ready.",
+		combat = "Watch your tower defend the path. You can use ordinary controls now.",
+		inspect = "Select your Lancer to inspect its stats.",
+		upgrade = "Choose Upgrade, then pick an upgrade module.",
+		completeTitle = "You're ready!",
+		complete = "Tutorial complete. Your campaign is ready.",
+		continue = "Continue to campaign",
+	},
+
 	inspect = {
 		towerTitle = "%s level %d",
 		upgradeTitle = "Upgrade to level %d",
@@ -371,6 +388,7 @@ return {
 		upgrade = "Upgrade!",
 		cannotPlace = "Can't",
 		needMoney = "Need $",
+		tutorialTile = "Use highlighted tile",
 	},
 
 	game = {
