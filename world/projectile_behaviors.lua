@@ -153,6 +153,8 @@ local function emitDamage(p, e, dmg)
 	local evt = emitEvent(p, "damage")
 	evt.target = e
 	evt.amount = dmg
+	-- Shock arcs and explicit chain graphs are the shield-break counterplay.
+	evt.chain = p.sourceKind == "shock" or p._chain ~= nil
 end
 
 local function beginChainDamageBudget(p)

@@ -112,6 +112,36 @@ local function drawEnemy(e)
 
 	e.drawX = ix
 	e.drawY = iy
+	local r = e.radius
+
+	-- Mechanical silhouettes are deliberately geometric and remain legible without
+	-- their colors: plates, shield arc, regeneration cross, and war banner/aura.
+	if e.support then
+		local pulse = (e.supportPulse or 0) / e.support.pulsePeriod
+		lg.setColor(0.95, 0.62, 0.18, (0.18 + (1 - pulse) * 0.28) * enemyAlpha)
+		lg.setLineWidth(2)
+		lg.circle("line", ix, iy, e.support.radius * (0.86 + pulse * 0.14))
+		lg.setColor(outR, outG, outB, enemyAlpha)
+		lg.rectangle("fill", ix + r * 0.55, iy - r * 2.0, 3, r * 1.7)
+		lg.polygon("fill", ix + r * 0.7, iy - r * 1.9, ix + r * 1.65, iy - r * 1.55, ix + r * 0.7, iy - r * 1.2)
+	end
+	if e.kind == "bulwark" then
+		lg.setColor(outR, outG, outB, enemyAlpha)
+		for a = 0, 3 do
+			local ang = a * HALF_PI + pi * 0.25
+			local px, py = ix + cos(ang) * r, iy + sin(ang) * r
+			lg.push(); lg.translate(px, py); lg.rotate(ang)
+			lg.rectangle("fill", -r * 0.35, -r * 0.55, r * 0.7, r * 1.1, 2, 2); lg.pop()
+		end
+	elseif e.kind == "shieldbearer" and e.shieldHp > 0 then
+		lg.setColor(0.65, 0.9, 1, 0.85 * enemyAlpha)
+		lg.setLineWidth(4)
+		lg.arc("line", "open", ix, iy, r + 6, -pi * 0.9, pi * 0.9)
+	elseif e.kind == "regenerator" then
+		lg.setColor(outR, outG, outB, enemyAlpha)
+		lg.rectangle("fill", ix - 2, iy - r * 1.65, 4, r * 0.75)
+		lg.rectangle("fill", ix - r * 0.38, iy - r * 1.42, r * 0.76, 4)
+	end
 
     -- Boss Horns
     if e.boss then
@@ -147,8 +177,6 @@ local function drawEnemy(e)
 	lg.circle("fill", ix, iy, e.radius + 3)
 
 	-- Body lighting (canonical system)
-	local r = e.radius
-
 	-- Base (shadowed)
 	lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul)
 	lg.circle("fill", ix, iy, r)
@@ -195,6 +223,24 @@ local function drawEnemy(e)
 
 		lg.setColor(pr, pg, pb, 0.6 * intensity * enemyAlpha)
 		lg.circle("line", ix, iy, e.radius - 1)
+	end
+
+	-- Trait status glyphs provide state, not just identity. Broken shields flash an
+	-- X; regenerators show chevrons only while actually recovering; boosted units
+	-- carry speed streaks pointing backward along the path.
+	if e.shieldBreakFlash > 0 then
+		local a = e.shieldBreakFlash / 0.35
+		lg.setColor(1, 1, 1, a * enemyAlpha); lg.setLineWidth(3)
+		lg.line(ix - r, iy - r, ix + r, iy + r); lg.line(ix + r, iy - r, ix - r, iy + r)
+	end
+	if e.regeneration and e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0 then
+		lg.setColor(0.55, 1, 0.55, enemyAlpha); lg.setLineWidth(2)
+		lg.line(ix - 6, iy + r + 5, ix, iy + r + 1, ix + 6, iy + r + 5)
+	end
+	if (e.supportBoost or 1) > 1 then
+		lg.setColor(1, 0.8, 0.35, 0.8 * enemyAlpha); lg.setLineWidth(2)
+		lg.line(ix - r - 8, iy - 4, ix - r - 2, iy - 4)
+		lg.line(ix - r - 10, iy + 3, ix - r - 2, iy + 3)
 	end
 
 	-- Eyes
@@ -306,6 +352,13 @@ local function drawEnemyHealth(e)
 	local by = iy - e.radius - (e.boss and 18 or 12)
 
 	local t = max(0, e.hp / e.maxHp)
+	if e.shieldMax and e.shieldMax > 0 and e.shieldHp > 0 then
+		local shieldT = min(1, e.shieldHp / e.shieldMax)
+		lg.setColor(0.08, 0.12, 0.18, 0.8)
+		lg.rectangle("fill", bx, by - 4, w, 2)
+		lg.setColor(0.65, 0.9, 1, 0.95)
+		lg.rectangle("fill", bx, by - 4, w * shieldT, 2)
+	end
 
 	-- Muted health color
 	local r, g, b

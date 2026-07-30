@@ -351,12 +351,16 @@ local function resolveDamage(p, evt)
 		return
 	end
 
-	e.hp = e.hp - amount
+	local dealt, absorbed = Enemies.applyDamage(e, amount, {
+		sourceKind = p.sourceKind,
+		chain = evt.chain == true or p.sourceKind == "shock",
+	})
+	local effectiveDamage = dealt + absorbed
 
 	local t = p.sourceTower
 
 	if t then
-		t.damageDealt = (t.damageDealt or 0) + amount
+		t.damageDealt = (t.damageDealt or 0) + effectiveDamage
 		e.lastHitTower = t
 	end
 
@@ -364,7 +368,7 @@ local function resolveDamage(p, evt)
 		e.hitFlash = 0.05
 	end
 
-	State.addDamage(p.sourceKind, amount, e.boss == true)
+	State.addDamage(p.sourceKind, effectiveDamage, e.boss == true)
 end
 
 local function resolveImpulse(evt)
