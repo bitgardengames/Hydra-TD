@@ -8,6 +8,7 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
 local Spatial = require("world.spatial_grid")
+local Onboarding = require("systems.onboarding")
 
 local Waves = {}
 
@@ -263,6 +264,7 @@ end
 
 -- Wave start
 function Waves.startWave()
+	Onboarding.event("wave_started")
 	local map = Maps[State.mapIndex]
 	local mapWaveDefs = getMapWaveDefs(map)
 	local mapMult = State.mapCoverageMult or 1.0

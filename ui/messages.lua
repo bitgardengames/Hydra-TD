@@ -18,6 +18,8 @@ local PADDING_Y = 4
 local GAP = 4
 
 local list = {}
+local activeTip = nil
+local tipRect = nil
 
 local function getBaseY()
 	local _, sh = lg.getDimensions()
@@ -57,6 +59,28 @@ function Messages.add(text, r, g, b)
 	end
 
 	Sound.play("message")
+end
+
+-- Contextual tips are deliberately separate from transient messages: there can
+-- only ever be one, and the small close target is the only input they consume.
+function Messages.showTip(id, text, dismissText, onDismiss)
+	if activeTip then
+		return false
+	end
+
+	activeTip = {id = id, text = text, dismissText = dismissText, onDismiss = onDismiss}
+	return true
+end
+
+function Messages.clearTip(id)
+	if activeTip and (not id or activeTip.id == id) then
+		activeTip = nil
+		tipRect = nil
+	end
+end
+
+function Messages.hasTip()
+	return activeTip ~= nil
 end
 
 function Messages.update(dt)
@@ -121,6 +145,35 @@ function Messages.draw()
 
 		lg.pop()
 	end
+
+	if activeTip then
+		local sw = lg.getWidth()
+		local font = lg.getFont()
+		local label = activeTip.text .. "   " .. activeTip.dismissText
+		local w = math.min(sw - 48, font:getWidth(label) + 28)
+		local h = font:getHeight() + 16
+		local x = (sw - w) * 0.5
+		local y = 24
+		tipRect = {x = x, y = y, w = w, h = h}
+		lg.setColor(0.10, 0.11, 0.15, 0.94)
+		lg.rectangle("fill", x, y, w, h, 8)
+		lg.setColor(1, 1, 1, 1)
+		Text.printfShadow(label, x + 10, y + 8, w - 20, "center")
+	end
+end
+
+function Messages.mousepressed(x, y, button)
+	if button ~= 1 or not activeTip or not tipRect then
+		return false
+	end
+	if x >= tipRect.x and x <= tipRect.x + tipRect.w and y >= tipRect.y and y <= tipRect.y + tipRect.h then
+		local callback = activeTip.onDismiss
+		activeTip = nil
+		tipRect = nil
+		if callback then callback() end
+		return true
+	end
+	return false
 end
 
 return Messages

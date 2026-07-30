@@ -13,6 +13,7 @@ local BottomBar = require("ui.bottom_bar")
 local Sound = require("systems.sound")
 local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
+local Onboarding = require("systems.onboarding")
 
 local getTime = love.timer.getTime
 local floor = math.floor
@@ -141,6 +142,7 @@ local function mousepressed(x, y, button)
 			if shopButton.canAfford then
 				State.placing = shopButton.kind
 				State.selectedTower = nil
+				Onboarding.event("attempting_placement")
 				--Sound.play("ui_click")
 			else
 				--Sound.play("ui_deny")
@@ -163,6 +165,7 @@ local function mousepressed(x, y, button)
 		if enemy then
 			State.selectedEnemy = enemy
 			State.selectedTower = nil
+			Onboarding.event("enemy_selected")
 
 			return
 		end
@@ -196,6 +199,7 @@ local function mousepressed(x, y, button)
 			if t then
 				State.selectedTower = t
 				State.selectedEnemy = nil
+				Onboarding.event("tower_selected")
 
 				return
 			end
@@ -224,6 +228,7 @@ local function mousereleased(x, y, button)
 		if b.canAfford then
 			State.placing = b.kind
 			State.selectedTower = nil
+			Onboarding.event("attempting_placement")
 		end
 	end)
 

@@ -10,6 +10,7 @@ local Floaters = require("ui.floaters")
 local Achievements = require("systems.achievements")
 local L = require("core.localization")
 local Save = require("core.save")
+local Onboarding = require("systems.onboarding")
 
 local enemies = {}
 local enemyPool = {}
@@ -324,6 +325,7 @@ local function handleEnemyEscaped(e, i, isBoss)
 		State.waveLeaks = State.waveLeaks + 1
 		State.totalLeaks = State.totalLeaks + 1
 		State.livesAnim = 1
+		Onboarding.event("enemy_leaked")
 	end
 
 	if State.selectedEnemy == e then
