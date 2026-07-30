@@ -21,7 +21,8 @@ local PAD = 12
 local UI_H = Constants.UI_H
 local SHOP_W = ((120 * 3) + (PAD * 2) + (PAD * (3 - 1)))
 local INSPECT_W = 260
-local HUD_H = 28
+-- Prep uses two rows: the regular status row and a full-width wave preview.
+local HUD_H = 40
 
 local PANEL_LIFT = 16
 local PANEL_INSET = 16
