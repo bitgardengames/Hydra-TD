@@ -52,15 +52,16 @@ local function scoreProgress(e)
 	if e.slowTimer > 0 then
 		score = score - 5
 	end
+	score = score + ((e.def and e.def.targetPriority) or 0)
 	return score
 end
 
 local function scoreLowHp(e)
-	return -e.hp
+	return -(e.hp + (e.shieldHp or 0))
 end
 
 local function scoreHighHp(e)
-	return e.hp
+	return e.hp + (e.shieldHp or 0)
 end
 
 local function scoreFarthest(_, _, d2)

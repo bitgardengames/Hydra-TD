@@ -38,6 +38,28 @@ local function pickTemplate(waveIndex)
 	return Templates.standard
 end
 
+local unlocks = {
+	{ wave = 4, kind = "bulwark", every = 7 },
+	{ wave = 6, kind = "regenerator", every = 6 },
+	{ wave = 8, kind = "shieldbearer", every = 7 },
+	{ wave = 9, kind = "warcaller", every = 10 },
+}
+
+local function buildComposition(waveIndex, baseKind, count)
+	local composition = {}
+	for i = 1, count do
+		local kind = baseKind
+		-- Offset each cadence so mixed waves read as squads rather than a solid wall
+		-- of specialists. Later unlocks take precedence when cadences overlap.
+		for j = 1, #unlocks do
+			local u = unlocks[j]
+			if waveIndex >= u.wave and (i + j * 2) % u.every == 0 then kind = u.kind end
+		end
+		composition[i] = kind
+	end
+	return composition
+end
+
 function Builder.build(waveIndex)
 	-- Boss every 10th wave, no exceptions
 	if waveIndex % 10 == 0 then
@@ -51,11 +73,13 @@ function Builder.build(waveIndex)
 
 	local template = pickTemplate(waveIndex)
 
+	local count = template.baseCount
 	return {
 		boss = false,
 		enemy = template.enemy,
-		count = template.baseCount,
+		count = count,
 		spacing = template.spacing,
+		composition = buildComposition(waveIndex, template.enemy, count),
 	}
 end
 

@@ -244,6 +244,17 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.shadow = true
 	e.id = nextID
 	e.shockID = 0
+	e.modifiers = def.modifiers
+	e.armor = def.armor
+	e.regeneration = def.regeneration
+	e.regenDelay = 0
+	e.shieldDef = def.shield
+	e.shieldMax = def.shield and def.shield.hp * hpScale or 0
+	e.shieldHp = e.shieldMax
+	e.shieldBreakFlash = 0
+	e.support = def.support
+	e.supportBoost = 1
+	e.supportPulse = 0
 
 	computeNudgeParams(e)
 
@@ -340,6 +351,25 @@ local function updateEnemies(dt)
 	local pathSegLen = map.pathSegLen
 	local totalLen = map.totalWorldLength
 	local LastSecondThreshold = map.lastSecondThreshold
+	-- Warcallers broadcast a short-range, explicitly visible speed aura. Recompute
+	-- every tick so killing the support unit immediately removes the benefit.
+	for i = 1, #enemies do
+		enemies[i].supportBoost = 1
+	end
+	for i = 1, #enemies do
+		local source = enemies[i]
+		local aura = source.support
+		if aura and source.hp > 0 then
+			source.supportPulse = ((source.supportPulse or 0) + dt) % aura.pulsePeriod
+			local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius)
+			for j = 1, count do
+				local other = nearby[j]
+				if other ~= source and other.hp > 0 then
+					other.supportBoost = max(other.supportBoost or 1, aura.speedMultiplier)
+				end
+			end
+		end
+	end
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
 		local isBoss = e.boss
@@ -547,7 +577,14 @@ local function updateEnemies(dt)
 			e.slowTimer = slowTimer
 		end
 
-		e.speed = e.baseSpeed * e.slowFactor
+		if e.regenDelay and e.regenDelay > 0 then
+			e.regenDelay = max(0, e.regenDelay - dt)
+		elseif e.regeneration and e.poisonStacks <= 0 and e.hp < e.maxHp then
+			e.hp = min(e.maxHp, e.hp + e.regeneration.hpPerSecond * e.hpScale * dt)
+		end
+		if e.shieldBreakFlash > 0 then e.shieldBreakFlash = max(0, e.shieldBreakFlash - dt) end
+
+		e.speed = e.baseSpeed * e.slowFactor * (e.supportBoost or 1)
 		e.prevAnimT = e.animT
 		e.animT = e.animT + dt * e.speed * 0.03
 
@@ -668,6 +705,35 @@ local function applyHitImpulse(e, dx, dy, strength)
 	end
 end
 
+-- Single damage gateway for traits. Returns health and shield damage separately
+-- so callers can report useful barrier damage without counting mitigation.
+local function applyDamage(e, amount, context)
+	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
+	context = context or {}
+	local raw = amount
+	if e.armor then
+		local heavy = context.sourceKind == "cannon" or context.sourceKind == "lancer"
+			or raw >= (e.armor.heavyThreshold or math.huge)
+		if heavy then amount = amount * (e.armor.heavyMultiplier or 1)
+		else amount = max(1, amount - (e.armor.flatReduction or 0)) end
+	end
+	local absorbed = 0
+	if e.shieldHp and e.shieldHp > 0 then
+		local shieldDamage = amount
+		if context.chain then shieldDamage = shieldDamage * (e.shieldDef.chainMultiplier or 1) end
+		if raw >= (e.shieldDef.burstThreshold or math.huge) then
+			shieldDamage = shieldDamage * (e.shieldDef.burstMultiplier or 1)
+		end
+		absorbed = min(e.shieldHp, shieldDamage)
+		e.shieldHp = e.shieldHp - shieldDamage
+		if e.shieldHp <= 0 then e.shieldHp = 0; e.shieldBreakFlash = 0.35 end
+		amount = max(0, amount - absorbed)
+	end
+	e.hp = e.hp - amount
+	if e.regeneration then e.regenDelay = e.regeneration.delay end
+	return amount, absorbed
+end
+
 return {
 	enemies = enemies,
 	EnemyDefs = EnemyDefs,
@@ -675,5 +741,6 @@ return {
 	spawnEnemy = spawnEnemy,
 	updateEnemies = updateEnemies,
 	applyHitImpulse = applyHitImpulse,
+	applyDamage = applyDamage,
 	clear = clear,
 }

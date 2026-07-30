@@ -174,6 +174,8 @@ local spawnerDefaults = {
 	hpMult = 1.0,
 	spdMult = 1.0,
 	kind = nil,
+	composition = nil,
+	compositionIndex = 1,
 }
 
 local bossAddsDefaults = {
@@ -199,7 +201,7 @@ end
 resetTable(spawner, spawnerDefaults)
 resetTable(bossAdds, bossAddsDefaults)
 
-local function beginSpawner(kind, count, gap, hpMult, spdMult)
+local function beginSpawner(kind, count, gap, hpMult, spdMult, composition)
 	resetTable(spawner, spawnerDefaults, {
 		active = true,
 		remaining = count or 0,
@@ -208,6 +210,8 @@ local function beginSpawner(kind, count, gap, hpMult, spdMult)
 		hpMult = hpMult or spawnerDefaults.hpMult,
 		spdMult = spdMult or spawnerDefaults.spdMult,
 		kind = kind,
+		composition = composition,
+		compositionIndex = 1,
 	})
 
 	State.inPrep = false
@@ -257,7 +261,7 @@ function Waves.startWave()
 
 	local gap = wave.spacing or 1.0
 
-	beginSpawner(kind, count, gap, hpMult, spdMult)
+	beginSpawner(kind, count, gap, hpMult, spdMult, wave.composition)
 end
 
 -- Spawning update
@@ -272,7 +276,7 @@ function Waves.updateSpawner(dt)
 	local spawnLoops = 0
 
 	while spawner.timer <= 0 and spawner.remaining > 0 and spawnLoops < maxSpawnCatchupPerFrame do
-		local kind = spawner.kind
+		local kind = spawner.composition and spawner.composition[spawner.compositionIndex] or spawner.kind
 
 		if not kind then
 			spawner.remaining = 0
@@ -282,6 +286,7 @@ function Waves.updateSpawner(dt)
 		end
 
 		Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
+		spawner.compositionIndex = spawner.compositionIndex + 1
 
 		spawner.remaining = spawner.remaining - 1
 		spawner.timer = spawner.timer + spawner.gap
