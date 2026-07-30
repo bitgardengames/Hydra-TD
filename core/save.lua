@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 5 -- Adds per-map endless records without changing campaign results
+local SAVE_VERSION = 2 -- Onboarding, achievement, and endless progression updates
 
 local Hotkeys = require("core.hotkeys")
 
@@ -91,13 +91,14 @@ function Save.load()
 
 			local version = Save.data.version or 0
 
-			-- Players with an existing profile should not unexpectedly receive the
-			-- new first-launch offer. They can still start it from Settings.
+			-- Apply every save-structure change made during this game version as a
+			-- single upgrade. Existing players should not unexpectedly receive the
+			-- first-launch tutorial offer; they can still start it from Settings.
 			if version < SAVE_VERSION then
-				if version < 4 and Save.data.tutorialOffered == nil then
+				if Save.data.tutorialOffered == nil then
 					Save.data.tutorialOffered = true
 				end
-				if version < 5 and type(Save.data.mapStats) == "table" then
+				if type(Save.data.mapStats) == "table" then
 					for _, stats in pairs(Save.data.mapStats) do
 						if type(stats) == "table" and (tonumber(stats.bestWave) or 0) > 20 then
 							stats.bestEndlessWave = math.max(stats.bestEndlessWave or 0, stats.bestWave)
