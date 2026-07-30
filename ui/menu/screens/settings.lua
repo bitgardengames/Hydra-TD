@@ -10,6 +10,7 @@ local Button = require("ui.button")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
+local Onboarding = require("systems.onboarding")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -446,6 +447,33 @@ function Screen.load()
 					set = function(v)
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
+					end,
+				},
+			},
+		},
+		{
+			id = "gameplay",
+			label = L("settings.tabGameplay"),
+			rows = {
+				{
+					id = "gameplay_tips",
+					label = L("settings.gameplayTips"),
+					type = "toggle",
+					get = function() return Save.data.contextualTipsEnabled end,
+					set = function(v)
+						Save.data.contextualTipsEnabled = v
+						Save.flush()
+					end,
+				},
+				{
+					id = "reset_tutorial_tips",
+					label = L("settings.resetTutorialTips"),
+					type = "action",
+					renderAsButton = true,
+					buttonLabel = L("settings.reset"),
+					onClick = function()
+						Onboarding.reset()
+						Sound.play("uiConfirm")
 					end,
 				},
 			},

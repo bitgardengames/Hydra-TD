@@ -52,6 +52,9 @@ return {
 		controlConflictSwapApplied = "Swap applied.",
 		controlsRestoreDefaults = "Restore Default Keybinds",
 		controlsDefaultsRestored = "Default keybinds restored.",
+		gameplayTips = "Enable gameplay tips",
+		resetTutorialTips = "Reset tutorial tips",
+		reset = "Reset",
 		on = "On",
 		off = "Off",
 	},
@@ -329,6 +332,14 @@ return {
 
 	messages = {
 		bonus = "Perfect Wave +$%s",
+	},
+
+	onboarding = {
+		tower_placement = "Choose a tower, then click a clear tile to place it.",
+		wave_start = "Press Space when you're ready to start the wave.",
+		inspection_upgrade = "Select a tower to inspect it and buy an upgrade when affordable.",
+		enemy_intel = "Select an enemy to inspect its health, speed, and defenses.",
+		dismiss = "Dismiss ×",
 	},
 
 	inspect = {

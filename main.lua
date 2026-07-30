@@ -37,6 +37,7 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
+local Onboarding = require("systems.onboarding")
 
 local lg = love.graphics
 
@@ -161,6 +162,7 @@ function resetGame()
 	State.modulePicker.hint = nil
 	State.modulePicker.tower = nil
 	Camera.load()
+	Onboarding.event("map_entered")
 end
 
 local pauseGame = function()
@@ -312,6 +314,13 @@ function love.update(dt)
 
 	Tooltip.update(dt)
 	Messages.update(dt)
+	if State.selectedTower then
+		local cost = Towers.getUpgradeCost(State.selectedTower)
+		if cost and State.money >= cost then
+			Onboarding.event("affordable_upgrade")
+		end
+	end
+	Onboarding.update()
 
 	if gameplayFrozen then
 		return
@@ -439,6 +448,10 @@ function love.mousepressed(x, y, button)
 
 	if State.mode ~= "game" then
 		Menu.mousepressed(x, y, button)
+		return
+	end
+
+	if Messages.mousepressed(x, y, button) then
 		return
 	end
 

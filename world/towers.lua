@@ -14,6 +14,7 @@ local Emissions = require("world.emissions")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local TowerBranchDefs = require("world.tower_branch_defs")
+local Onboarding = require("systems.onboarding")
 --local Steam = require("luasteam")
 
 local towers = {}
@@ -309,6 +310,7 @@ local function addTower(kind, gx, gy)
 	Effects.spawnPlacePuff(x, y)
 
 	Sound.play("towerPlaced")
+	Onboarding.event("tower_placed")
 
 
 	return true
@@ -364,6 +366,7 @@ local function upgradeTower(t, specializationId)
 	Sound.play("towerUpgraded")
 
 	Achievements.increment("TOWER_UPGRADES")
+	Onboarding.event("tower_upgraded")
 
 
 	return true

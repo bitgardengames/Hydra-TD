@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 2 -- Only upgrade if save structure changes
+local SAVE_VERSION = 3 -- Only upgrade if save structure changes
 
 local Hotkeys = require("core.hotkeys")
 
@@ -120,6 +120,23 @@ function Save.load()
 				settings.fullscreen = true
 			end
 
+			-- Onboarding. Keep these defaults explicit so profiles from every older
+			-- save version get the same safe, non-blocking first-run experience.
+			local onboardingChanged = false
+			if Save.data.tutorialCompleted == nil then
+				Save.data.tutorialCompleted = false
+				onboardingChanged = true
+			end
+			if Save.data.contextualTipsEnabled == nil then
+				Save.data.contextualTipsEnabled = true
+				onboardingChanged = true
+			end
+			if type(Save.data.dismissedTipIds) ~= "table" then
+				Save.data.dismissedTipIds = {}
+				onboardingChanged = true
+			end
+			if onboardingChanged then Save.flush() end
+
 			if ensureKeybinds(settings) then
 				Save.flush()
 			end
@@ -166,6 +183,9 @@ function Save.load()
 		furthestIndex = 1,
 		unlockedMaps = {},
 		mapStats = {},
+		tutorialCompleted = false,
+		contextualTipsEnabled = true,
+		dismissedTipIds = {},
 
 		settings = {
 			musicVolume = 0.20,
