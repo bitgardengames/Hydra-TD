@@ -120,8 +120,6 @@ function resetGame()
     State.lives = diff.startLives
 	State.livesAnim = 0
     State.score = 0
-	State.talentPoints = 0
-	State.talentPointsEarned = 0
     State.wave = 1
 	State.waveLeaks = 0
 	State.totalLeaks = 0
@@ -320,7 +318,8 @@ function love.update(dt)
 	Tooltip.update(dt)
 	Messages.update(dt)
 	if State.selectedTower then
-		if Towers.hasAvailableTalent(State.selectedTower) then
+		local cost = Towers.getUpgradeCost(State.selectedTower)
+		if cost and State.money >= cost then
 			Onboarding.event("affordable_upgrade")
 		end
 	end
@@ -349,15 +348,6 @@ function love.update(dt)
 
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
-		local earned = Constants.TALENT_POINTS_PER_WAVE
-		if State.wave % Constants.TALENT_BOSS_INTERVAL == 0 then
-			earned = earned + Constants.TALENT_POINTS_PER_BOSS
-		elseif State.wave % Constants.TALENT_ELITE_INTERVAL == 0 then
-			earned = earned + Constants.TALENT_POINTS_PER_ELITE
-		end
-		State.talentPoints = State.talentPoints + earned
-		State.talentPointsEarned = State.talentPointsEarned + earned
-		Messages.add(L("messages.talentPoints", earned), 0.55, 0.85, 1.0)
 		-- Win condition: wave 20 cleared
 		--if State.wave == 1 and not State.endless then
 		if State.wave == 20 and not State.endless then

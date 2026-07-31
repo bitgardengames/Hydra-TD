@@ -5,7 +5,6 @@ local Modules = require("systems.modules")
 local Towers = require("world.towers")
 local L = require("core.localization")
 local Util = require("core.util")
-local TalentDefs = require("world.tower_talent_defs")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -96,15 +95,6 @@ local function rebuildLayout()
 
 	local sw, sh = lg.getDimensions()
 	local count = #State.modulePicker.choices
-	if State.modulePicker.mode == "talent_tree" then
-		local nodeW, nodeH, gapX, gapY = 260, 112, 44, 22
-		local startX, startY = (sw - (nodeW * 2 + gapX)) * .5, sh * .25
-		for i, choice in ipairs(State.modulePicker.choices) do
-			local node = TalentDefs.get(choice.moduleId)
-			cards[i] = {x=startX+(node.position.x-1)*(nodeW+gapX), y=startY+(node.position.y-1)*(nodeH+gapY), w=nodeW, h=nodeH, delay=(i-1)*.02, hover=0}
-		end
-		return
-	end
 
 	local gap = Util.clamp(sw * 0.022, 18, 30)
 	local cardW = Util.clamp((sw - 180 - gap * (count - 1)) / max(count, 1), 232, 300)
@@ -162,17 +152,19 @@ function ModulePicker.openTowerUpgrade(tower)
 		return false
 	end
 
-	local choices = {}
-	for _, node in ipairs(TalentDefs.getForTower(tower.kind)) do
-		choices[#choices + 1] = {moduleId=node.id, target=tower.kind}
+	local choices = Modules.rollTowerUpgradeChoices(tower)
+	local cost = Towers.getUpgradeCost(tower)
+
+	if not cost or State.money < cost then
+		return false
 	end
 
 	return ModulePicker.open({
-		mode = "talent_tree",
+		mode = "tower_upgrade",
 		choices = choices,
 		tower = tower,
 		title = L("modulePicker.upgradeTitle", L(tower.def.nameKey)),
-		subtitle = L("modulePicker.talentSubtitle", State.talentPoints),
+		subtitle = L("modulePicker.upgradeSubtitle", cost),
 		hint = L("modulePicker.hint"),
 	})
 end
@@ -200,13 +192,11 @@ function ModulePicker.choose(index)
 		return false
 	end
 
-	if picker.mode == "talent_tree" then
-		local ok = Towers.purchaseTalent(picker.tower, choice.moduleId)
+	if picker.mode == "tower_upgrade" then
+		local ok = Towers.upgradeTower(picker.tower, choice.moduleId)
 		if not ok then
 			return false
 		end
-		picker.subtitle = L("modulePicker.talentSubtitle", State.talentPoints)
-		return true
 	else
 		Modules.add(choice.moduleId, choice.target)
 	end
@@ -250,9 +240,6 @@ function ModulePicker.keypressed(key)
 		return ModulePicker.choose(2)
 	elseif key == "3" then
 		return ModulePicker.choose(3)
-	elseif key == "escape" and State.modulePicker.mode == "talent_tree" then
-		ModulePicker.close()
-		return true
 	end
 
 	return true
@@ -292,23 +279,12 @@ function ModulePicker.draw()
 	lg.printf(subtitle, 0, headerY + 40, sw, "center")
 
 	local choices = State.modulePicker.choices or {}
-	if picker.mode == "talent_tree" then
-		for i = 1, #cards - 2 do
-			local a, b = cards[i], cards[i + 2]
-			lg.setColor(.45, .55, .68, .35 * overlayT)
-			lg.setLineWidth(3)
-			lg.line(a.x+a.w/2, a.y+a.h, b.x+b.w/2, b.y)
-		end
-	end
 
 	for i = 1, #choices do
 		local choice = choices[i]
 		local mod = Modules.getDef(choice.moduleId)
 		local c = cards[i]
 		local towerColor = Theme.tower[choice.target] or text
-		local node = TalentDefs.get(choice.moduleId)
-		local rank = picker.tower and picker.tower.purchasedTalents[choice.moduleId] or 0
-		local available = picker.mode ~= "talent_tree" or Towers.canPurchaseTalent(picker.tower, choice.moduleId)
 
 		local intro = easeOutBack((now - openedAt - c.delay) * 6.0)
 		local alpha = Util.clamp((now - openedAt - c.delay) * 5.0, 0, 1)
@@ -357,18 +333,13 @@ function ModulePicker.draw()
 			Fonts.set("ui")
 			lg.setColor(1, 1, 1, 0.84 * alpha)
 			lg.printf(getModuleDesc(mod), drawX + 18, bodyY + 56, drawW - 36, "left")
-			if picker.mode == "talent_tree" then
-				local status = rank > 0 and L("modulePicker.purchased", rank, node.maxRank) or (available and L("modulePicker.available", node.cost) or L("modulePicker.locked", node.requiredPointsSpent))
-				lg.setColor(available and .55 or 1, available and 1 or .65, .7, alpha)
-				lg.printf(status, drawX+18, drawY+drawH-27, drawW-36, "right")
-			end
 
 			if hovered then
 				local pulse = 0.5 + 0.5 * math.sin(now * 8 + i)
 				lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.14 + 0.08 * pulse) * alpha)
 				lg.rectangle("line", drawX - 2, drawY - 2, drawW + 4, drawH + 4, innerRadius + 2, innerRadius + 2)
 
-				local cta = picker.mode == "talent_tree" and L("modulePicker.selectCta") or "Click to Claim"
+				local cta = picker.mode == "tower_upgrade" and L("modulePicker.selectCta") or "Click to Claim"
 				lg.setColor(1, 1, 1, (0.72 + 0.20 * pulse) * alpha)
 				Fonts.set("ui")
 				lg.printf(cta, drawX + 18, drawY + drawH - 30, drawW - 36, "right")

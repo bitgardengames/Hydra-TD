@@ -33,7 +33,7 @@ return {
 		controlPause = "Pause / Menu",
 		controlSpeed = "Toggle Speed",
 		controlStartWave = "Start Wave",
-		controlUpgrade = "Open Tower Talents",
+		controlUpgrade = "Upgrade Tower",
 		controlSell = "Sell Tower",
 		controlPlaceSlow = "Place Slow",
 		controlPlaceLancer = "Place Lancer",
@@ -298,15 +298,10 @@ return {
 	},
 
 	modulePicker = {
-		upgradeTitle = "%s Talent Tree",
-		upgradeSubtitle = "%d talent points available",
-		talentSubtitle = "%d talent points available",
-		talentHint = "Spend milestone points • Esc to close",
-		purchased = "Purchased %d/%d",
-		available = "Available • %d point",
-		locked = "Locked • spend %d points in this tree",
+		upgradeTitle = "%s Specialization",
+		upgradeSubtitle = "Choose an upgrade • $%d",
 		hint = "Press 1, 2, or 3 • Click a card",
-		selectCta = "Click to Spend Point",
+		selectCta = "Click to Upgrade",
 		noSpec = "No specialization selected yet.",
 		currentSpec = "Current: %s",
 	},
@@ -339,13 +334,12 @@ return {
 
 	messages = {
 		bonus = "Perfect Wave +$%s",
-		talentPoints = "+%d talent point(s)",
 	},
 
 	onboarding = {
 		tower_placement = "Choose a tower, then click a clear tile to place it.",
 		wave_start = "Press Space when you're ready to start the wave.",
-		inspection_upgrade = "Select a tower and spend a talent point in its talent tree.",
+		inspection_upgrade = "Select a tower to inspect it and buy an upgrade when affordable.",
 		enemy_intel = "Select an enemy to inspect its health, speed, and defenses.",
 		dismiss = "Dismiss ×",
 	},
@@ -360,7 +354,7 @@ return {
 		wave = "Great! Start the small wave when you're ready.",
 		combat = "Watch your tower defend the path. You can use ordinary controls now.",
 		inspect = "Select your Lancer to inspect its stats.",
-		upgrade = "Open Talents, then spend a talent point on your Lancer.",
+		upgrade = "Choose Upgrade, then pick an upgrade module.",
 		completeTitle = "You're ready!",
 		complete = "Tutorial complete. Your campaign is ready.",
 		continue = "Continue to campaign",
@@ -369,8 +363,6 @@ return {
 	inspect = {
 		towerTitle = "%s level %d",
 		upgradeTitle = "Upgrade to level %d",
-		talentTitle = "Tower talents",
-		talentDescription = "%d run-local talent points available. Talents cost no money.",
 		damage = "Damage: %s",
 		kills = "Kills: %d",
 		hp = "HP: %s / %s",
@@ -384,7 +376,7 @@ return {
 	},
 
 	actions = {
-		upgrade = "Talents",
+		upgrade = "Upgrade",
 		sell = "Sell",
 	},
 
@@ -394,7 +386,7 @@ return {
 	},
 
 	floater = {
-		upgrade = "Talent learned!",
+		upgrade = "Upgrade!",
 		cannotPlace = "Can't",
 		needMoney = "Need $",
 		tutorialTile = "Use highlighted tile",
@@ -507,8 +499,8 @@ return {
 		no_leaks_hard = "Dead End",
 		last_second = "Last Second",
 
-		tower_upgrade_1 = "First Talent",
-		tower_upgrade_100 = "Talent Scholar",
+		tower_upgrade_1 = "Rising Power",
+		tower_upgrade_100 = "Built Up",
 	},
 
 	achievementDesc = {
@@ -541,8 +533,8 @@ return {
 		no_leaks_hard = "Complete a map on Hard without any enemies escaping",
 		last_second = "Defeat an enemy at the last second before it escapes",
 
-		tower_upgrade_1 = "Spend a tower talent point",
-		tower_upgrade_100 = "Spend 100 tower talent points",
+		tower_upgrade_1 = "Upgrade a tower",
+		tower_upgrade_100 = "Upgrade towers 100 times",
 	},
 
 	progress = {

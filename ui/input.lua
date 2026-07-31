@@ -151,7 +151,7 @@ local function mousepressed(x, y, button)
 			return
 		end
 
-		-- Inspect panel (talents & sell)
+		-- Inspect panel (upgrade & sell)
 		if handlePanelButtons(BottomBar.getInspectButtons, x, y, true) then
 			return
 		end
