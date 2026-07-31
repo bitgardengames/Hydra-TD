@@ -7,6 +7,8 @@ local state = {
 	lives = 20,
 	livesAnim = 0,
 	score = 0,
+	talentPoints = 0,
+	talentPointsEarned = 0,
 
 	mapIndex = 1,
 	worldMapIndex = 1,
