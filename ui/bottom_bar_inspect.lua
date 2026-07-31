@@ -1,7 +1,6 @@
 local State = require("core.state")
 local Util = require("core.util")
 local Towers = require("world.towers")
-local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
 local Hotkeys = require("core.hotkeys")
 local Tooltip = require("ui.tooltip")
@@ -96,14 +95,7 @@ local inspectButtons = {
 				return
 			end
 
-			local upgradeCost = Towers.getUpgradeCost(t)
-
-			-- Only upgrade if affordable
-			if upgradeCost and State.money >= upgradeCost then
-				ModulePicker.openTowerUpgrade(t)
-			else
-				-- optional error sound / floater
-			end
+			ModulePicker.openTowerUpgrade(t)
 		end,
 	},
 
@@ -261,8 +253,8 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		local BUTTON_W = floor((usableW - GAP) * 0.5)
 		local actionY = panelY + h - OUTER_PAD - BUTTON_H
 
-		local upgradeCost = Towers.getUpgradeCost(t)
-		local canUpgrade = upgradeCost and State.money >= upgradeCost
+		local upgradeCost = State.talentPoints
+		local canUpgrade = Towers.hasAvailableTalent(t)
 
 		-- Configure upgrade button
 		local upgradeBtn = inspectButtons[1]
@@ -271,7 +263,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		upgradeBtn.w = BUTTON_W
 		upgradeBtn.h = BUTTON_H
 		upgradeBtn.canAfford = canUpgrade
-		upgradeBtn.cost = upgradeCost
+		upgradeBtn.cost = nil
 		upgradeBtn.value = nil
 
 		-- Configure sell button
@@ -377,16 +369,10 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			end
 
 			-- Upgrade tooltip
-			if hovered and btn.id == "upgrade" and upgradeCost then
-				local specName = nil
-				if t.specializationId then
-					local mod = Modules.getDef(t.specializationId)
-					specName = mod and L(mod.nameKey) or nil
-				end
-
+			if hovered and btn.id == "upgrade" then
 				Tooltip.show({
-					title = L("inspect.upgradeTitle", t.level + 1),
-					text = specName and L("modulePicker.currentSpec", specName) or L("modulePicker.noSpec"),
+					title = L("inspect.talentTitle"),
+					text = L("inspect.talentDescription", State.talentPoints),
 				})
 			end
 		end

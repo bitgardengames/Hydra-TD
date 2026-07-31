@@ -6,14 +6,13 @@ local State = require("core.state")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
 local Targeting = require("world.targeting")
-local Difficulty = require("systems.difficulty")
 local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
 local L = require("core.localization")
 local Modules = require("systems.modules")
-local TowerBranchDefs = require("world.tower_branch_defs")
+local TalentDefs = require("world.tower_talent_defs")
 local Onboarding = require("systems.onboarding")
 --local Steam = require("luasteam")
 
@@ -49,7 +48,6 @@ local AIM_RECOMPUTE_ANGLE_EPS = math.rad(0.75)
 local AIM_RECOMPUTE_STALE_FRAMES = 6
 local SPLASH_LEAD_SPEED_THRESHOLD = 20
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
-local MAX_BRANCH_UPGRADES = 4
 local RETARGET_JITTER = 0.10
 local RETARGET_MIN_FACTOR = 0.5
 local RETARGET_MAX_FACTOR = 1.5
@@ -171,24 +169,10 @@ local function recomputeTowerStats(t)
 		return
 	end
 
-	local level = max(1, t.level or 1)
-	local upgrades = max(0, level - 1)
-	local upgrade = def.upgrade or {}
-	local progress = min(1, upgrades / MAX_BRANCH_UPGRADES)
-
-	local dmgMult = upgrade.dmgMult or 1
-	local fireMult = upgrade.fireMult or 1
-	local rangeAdd = upgrade.rangeAdd or 0
-
-	-- Upgrade multipliers are interpreted as "at max upgrade" values so they scale
-	-- smoothly as levels are gained.
-	local scaledDamageMult = 1 + (dmgMult - 1) * progress
-	local scaledFireMult = 1 + (fireMult - 1) * progress
-
-	t.damage = def.damage * scaledDamageMult
-	t.fireRate = def.fireRate * scaledFireMult
+	t.damage = def.damage
+	t.fireRate = def.fireRate
 	t.fireInterval = 1 / max(0.001, t.fireRate)
-	t.range = def.range + rangeAdd * upgrades
+	t.range = def.range
 	t.range2 = t.range * t.range
 	t._cache = t._cache or {}
 	t._cache.targetMode = {
@@ -287,12 +271,9 @@ local function addTower(kind, gx, gy)
 		chain = def.chain,
 		poison = def.poison,
 		plasma = def.plasma,
-		specializationId = nil,
-		branchSelections = {},
-		_upgradePreview = {
-			specializationId = nil,
-			nextLevel = 2,
-		},
+		purchasedTalents = {},
+		activeTalentModules = {},
+		_upgradePreview = {nextLevel = 2},
 	}
 
 	local phase = unitFromSeed(t._retargetSeed)
@@ -318,49 +299,56 @@ local function addTower(kind, gx, gy)
 	return true
 end
 
-local function getUpgradeCost(tower)
-    local base = tower.def.cost
-    local exp = 1.55
-
-    return floor(base * (exp ^ tower.level) + 0.5)
+local function pointsSpent(t)
+	local total = 0
+	for _, rank in pairs(t.purchasedTalents or {}) do total = total + rank end
+	return total
 end
 
-local function upgradeTower(t, specializationId)
+local function canPurchaseTalent(t, talentId)
 	if not t then
 		return false, "missing_tower"
 	end
+	local node = TalentDefs.get(talentId)
+	if not node or node.towerKind ~= t.kind then return false, "invalid_choice" end
+	local purchased = t.purchasedTalents or {}
+	if (purchased[talentId] or 0) >= node.maxRank then return false, "max_rank" end
+	if State.talentPoints < node.cost then return false, "points" end
+	if pointsSpent(t) < node.requiredPointsSpent then return false, "threshold" end
+	for _, prerequisite in ipairs(node.prerequisites) do
+		if not purchased[prerequisite] then return false, "prerequisite" end
+	end
+	if node.choiceGroup then
+		for id, rank in pairs(purchased) do
+			local other = TalentDefs.get(id)
+			if rank > 0 and other and other.choiceGroup == node.choiceGroup and id ~= talentId then
+				return false, "exclusive"
+			end
+		end
+	end
+	return true
+end
 
-	if not specializationId then
+local function purchaseTalent(t, talentId)
+	if not talentId then
 		return false, "missing_choice"
 	end
-
-	local cost = getUpgradeCost(t)
-
-	if State.money < cost then
-		return false, "money"
+	local ok, why = canPurchaseTalent(t, talentId)
+	if not ok then return false, why end
+	local node = TalentDefs.get(talentId)
+	State.talentPoints = State.talentPoints - node.cost
+	t.purchasedTalents[talentId] = (t.purchasedTalents[talentId] or 0) + 1
+	t.activeTalentModules = {}
+	for id, rank in pairs(t.purchasedTalents) do
+		if rank > 0 then t.activeTalentModules[#t.activeTalentModules + 1] = TalentDefs.get(id).moduleId end
 	end
-
-	local diff = Difficulty.get()
-	local nextLevel = (t.level or 1) + 1
-
-	if not TowerBranchDefs.isValidChoice(t.kind, nextLevel, specializationId) then
-		return false, "invalid_choice"
-	end
-
-	State.money = State.money - cost
-
-	t.level = t.level + 1
+	t.level = 1 + pointsSpent(t)
 	t.prevHeight = t.height
 	t.height = (t.level - 1) * 4
 	t.levelUpAnim = 1
-	t.specializationId = specializationId
-	t.branchSelections = t.branchSelections or {}
-	t.branchSelections[#t.branchSelections + 1] = specializationId
 	recomputeTowerStats(t)
 	Modules.invalidateTower(t)
-	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 	t._upgradePreview = t._upgradePreview or {}
-	t._upgradePreview.specializationId = specializationId
 	t._upgradePreview.nextLevel = t.level + 1
 
 	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
@@ -374,6 +362,13 @@ local function upgradeTower(t, specializationId)
 	return true
 end
 
+local function hasAvailableTalent(t)
+	for _, node in ipairs(TalentDefs.getForTower(t and t.kind)) do
+		if canPurchaseTalent(t, node.id) then return true end
+	end
+	return false
+end
+
 local function getUpgradePreview(t)
 	if not t or not t.def then
 		return nil
@@ -384,7 +379,6 @@ local function getUpgradePreview(t)
 		preview = {}
 		t._upgradePreview = preview
 	end
-	preview.specializationId = t.specializationId
 	preview.nextLevel = t.level + 1
 
 	return preview
@@ -648,8 +642,10 @@ return {
 	TowerDefs = TowerDefs,
 	towersByCell = towersByCell,
 	addTower = addTower,
-	getUpgradeCost = getUpgradeCost,
-	upgradeTower = upgradeTower,
+	canPurchaseTalent = canPurchaseTalent,
+	purchaseTalent = purchaseTalent,
+	upgradeTower = purchaseTalent,
+	hasAvailableTalent = hasAvailableTalent,
 	getUpgradePreview = getUpgradePreview,
 	sellTower = sellTower,
 	findTowerAt = findTowerAt,
