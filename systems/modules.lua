@@ -1,4 +1,5 @@
 local ModuleDefs = require("systems.module_defs")
+local TowerBranchDefs = require("world.tower_branch_defs")
 
 local Modules = {}
 
@@ -227,17 +228,25 @@ function Modules.buildContext(tower)
 		end
 	end
 
-	-- Run-local talent modules selected on this tower.
-	local talentModules = tower and tower.activeTalentModules
-	if talentModules then
-		for i = 1, #talentModules do
-			local moduleId = talentModules[i]
+	-- tower branch modules (selected through upgrade tiers)
+	local branchSelections = tower and tower.branchSelections
+	if branchSelections then
+		for i = 1, #branchSelections do
+			local moduleId = branchSelections[i]
 			local branchMod = ModuleDefs[moduleId]
 			if branchMod and branchMod.apply then
 				branchMod.apply(ctx)
 			end
 		end
+	elseif tower and tower.specializationId then
+		-- backward compatibility for older saves
+		local specialization = ModuleDefs[tower.specializationId]
+		if specialization and specialization.apply then
+			specialization.apply(ctx)
+		end
 	end
+
+	applyTowerUpgradeBehaviorScaling(ctx, tower)
 
 	-- Normalize/validate post-module behavior list in one pass.
 	local outputIsBeam = ctx.output == "beam"
@@ -315,19 +324,52 @@ end
 
 function Modules.getTargetMode(towerOrKind)
 	local towerKind = towerOrKind
-	local talentModules = nil
+	local branchSelections = nil
+	local legacySpecializationId = nil
 
 	if type(towerOrKind) == "table" then
 		towerKind = towerOrKind.kind
-		talentModules = towerOrKind.activeTalentModules
+		branchSelections = towerOrKind.branchSelections
+		legacySpecializationId = towerOrKind.specializationId
 	end
 
 	local mode = nil
 	mode = applyTargetModeFromModules(Modules.active.global, mode)
 	mode = applyTargetModeFromModules(Modules.active[towerKind], mode)
-	mode = applyTargetModeFromIds(talentModules, mode)
+	mode = applyTargetModeFromIds(branchSelections, mode)
+
+	if legacySpecializationId and not branchSelections then
+		mode = applyTargetMode(mode, ModuleDefs[legacySpecializationId])
+	end
 
 	return mode
+end
+
+function Modules.rollTowerUpgradeChoices(tower)
+	if not tower or not tower.kind then
+		return {}
+	end
+
+	local nextLevel = (tower.level or 1) + 1
+	local branchChoices = TowerBranchDefs.getChoices(tower.kind, nextLevel)
+
+	if not branchChoices then
+		return {}
+	end
+
+	local out = {}
+
+	for i = 1, #branchChoices do
+		local moduleId = branchChoices[i]
+		if ModuleDefs[moduleId] then
+			out[#out + 1] = {
+				moduleId = moduleId,
+				target = tower.kind,
+			}
+		end
+	end
+
+	return out
 end
 
 return Modules
