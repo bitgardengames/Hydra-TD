@@ -449,9 +449,7 @@ local function updateEnemies(dt)
 				e.hitFlash = 0.03
 
 				State.addDamage("poison", dmg, e.boss == true)
-				local bossExposed = e.boss == true and (e.exposed == true or e.bossState == "exposed"
-					or ((e.shieldMax or 0) > 0 and (e.shieldHp or 0) <= 0))
-				RunStats.recordDamage(e.poisonSource, "poison", dmg, bossExposed)
+				RunStats.recordDamage(e.poisonSource, "poison", dmg)
 			end
 
 			if e.poisonTimer <= 0 then

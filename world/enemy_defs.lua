@@ -73,12 +73,6 @@ return {
 		radius = 18,
 		boss = true,
 		mechanicWeight = 1.0,
-		traits = {"boss_mechanic"},
-		counterplay = {
-			telegraph = 1.4,
-			weakPhase = 2.0,
-			exposedWindow = 1.6,
-		},
 
 		modifiers = {
 			--slow = 0.5, -- 50% slow effectiveness (movement speed)
@@ -97,17 +91,6 @@ return {
 		mechanicWeight = 1.35,
 		mechanicPackage = "summoner",
 		traits = {"boss_summoner"},
-		counterplay = {
-			telegraph = 2.2,
-			weakPhase = 2.8,
-			exposedWindow = 2.1,
-		},
-		ability = {
-			name = "add_wave",
-			telegraph = 2.2,
-			weakPhase = 2.8,
-			exposedWindow = 2.1,
-		},
 	},
 
 	boss_displacement = {
@@ -121,17 +104,6 @@ return {
 		mechanicWeight = 1.5,
 		mechanicPackage = "displacement",
 		traits = {"boss_displacement"},
-		counterplay = {
-			telegraph = 1.7,
-			weakPhase = 2.4,
-			exposedWindow = 2.4,
-		},
-		ability = {
-			name = "shockwave_dash",
-			telegraph = 1.7,
-			weakPhase = 2.4,
-			exposedWindow = 2.4,
-		},
 	},
 
 	boss_suppression = {
@@ -145,16 +117,5 @@ return {
 		mechanicWeight = 1.65,
 		mechanicPackage = "suppression_aura",
 		traits = {"boss_suppression"},
-		counterplay = {
-			telegraph = 2.4,
-			weakPhase = 2.2,
-			exposedWindow = 2.8,
-		},
-		ability = {
-			name = "silence_aura",
-			telegraph = 2.4,
-			weakPhase = 2.2,
-			exposedWindow = 2.8,
-		},
 	},
 }
