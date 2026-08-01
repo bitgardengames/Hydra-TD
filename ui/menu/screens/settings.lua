@@ -239,8 +239,14 @@ end
 local function exitToMenu()
 	flushSettingsNow()
 	closeCapture()
-	State.mode = "menu"
-	Steam.setRichPresence(L("presence.menu"))
+
+	if State.mode == "settings_gameplay" then
+		State.mode = "pause"
+	else
+		State.mode = "menu"
+		Steam.setRichPresence(L("presence.menu"))
+	end
+
 	Sound.play("uiBack")
 end
 
@@ -540,7 +546,9 @@ function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 
-	Backdrop.update(dt)
+	if State.mode ~= "settings_gameplay" then
+		Backdrop.update(dt)
+	end
 
 	rows = getActiveRows()
 	if not isControlsTab(activeTab) then
@@ -635,7 +643,9 @@ function Screen.draw()
 
 	local sw, sh = lg.getDimensions()
 
-	Backdrop.draw()
+	if State.mode ~= "settings_gameplay" then
+		Backdrop.draw()
+	end
 
 	-- Dim background
 	lg.setColor(colorDim)

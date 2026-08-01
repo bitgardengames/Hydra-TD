@@ -1,9 +1,12 @@
 local State = require("core.state")
 
+local Settings = require("ui.menu.screens.settings")
+
 local Screens = {
 	menu = require("ui.menu.screens.main_menu"),
 	campaign = require("ui.menu.screens.campaign"),
-	settings = require("ui.menu.screens.settings"),
+	settings = Settings,
+	settings_gameplay = Settings,
 	progress = require("ui.menu.screens.progress"),
 
 	victory = require("ui.menu.screens.victory"),
@@ -16,9 +19,12 @@ local Menu = {}
 
 
 function Menu.load()
+	local loaded = {}
+
 	for _, screen in pairs(Screens) do
-		if screen.load then
+		if screen.load and not loaded[screen] then
 			screen.load()
+			loaded[screen] = true
 		end
 	end
 end
