@@ -180,14 +180,20 @@ add("growing_projectile", {
 	end
 })
 
--- Bounce isn't working currently
+-- Contract: each hit sends the projectile in a random direction at its current
+-- speed; a target cannot be hit again immediately, and the shot ends after four bounces.
 add("chaos_bounce", {
 	nameKey = "module.bounce",
 	descKey = "moduleDesc.bounce",
 	category = "damage",
+	developmentOnly = true,
 
 	apply = function(ctx)
-		ctx:addBehavior({ id = "chaos_bounce" })
+		ctx:replaceBehavior("move_homing", { id = "move_linear" })
+		ctx:addBehavior({
+			id = "chaos_bounce",
+			data = { maxBounces = 4, repeatDelay = 0.15 },
+		})
 	end
 })
 

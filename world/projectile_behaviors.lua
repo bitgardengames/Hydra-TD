@@ -1804,12 +1804,60 @@ B.tick_zap = {
 }
 
 B.chaos_bounce = {
-	onHit = function(p, e, data)
-		local ang = random() * (pi * 2)
+	init = function(p, data)
+		data = data or {}
 
-		p.vx = cos(ang)
-		p.vy = sin(ang)
-		p.hit = nil
+		p._chaosBounce = {
+			bounces = 0,
+			maxBounces = max(1, data.maxBounces or 4),
+			repeatDelay = max(0, data.repeatDelay or 0.15),
+		}
+		p.allowRepeatHits = true
+		p.consumeOnHit = false
+	end,
+
+	canHit = function(p, enemy)
+		local bounce = p._chaosBounce
+		if not bounce or not p.getHitCooldownExpiry then
+			return true
+		end
+
+		local id = enemy.id or enemy
+		return p.getHitCooldownExpiry(p, id) == nil
+	end,
+
+	onHit = function(p, e, data)
+		local bounce = p._chaosBounce
+		if not bounce then
+			return "consume"
+		end
+
+		bounce.bounces = bounce.bounces + 1
+		if bounce.bounces >= bounce.maxBounces then
+			return "consume"
+		end
+
+		local id = e.id or e
+		if p.setHitCooldownExpiry then
+			p.setHitCooldownExpiry(p, id, bounce.repeatDelay)
+		end
+
+		local ang = random() * (pi * 2)
+		local directionSpeed = sqrt((p.vx or 0) ^ 2 + (p.vy or 0) ^ 2)
+		if directionSpeed <= 0 then
+			directionSpeed = 1
+		end
+
+		p.vx = cos(ang) * directionSpeed
+		p.vy = sin(ang) * directionSpeed
+		p.angle = ang
+		p.rotation = ang
+
+		-- Advance the canonical hit-set generation rather than mutating hitSet;
+		-- cooldown gating above keeps the impact target out of the new generation.
+		if p.resetHitTracking then
+			p.resetHitTracking(p)
+		end
 	end
 }
 

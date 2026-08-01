@@ -38,7 +38,7 @@ end
 
 function Modules.add(moduleId, towerType)
 	local mod = ModuleDefs[moduleId]
-	if not mod then return end
+	if not mod or mod.developmentOnly then return end
 
 	local list = Modules.active[towerType]
 	if not list then return end

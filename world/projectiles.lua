@@ -224,6 +224,7 @@ local function initProjectile(p, source, opts)
 	resetReusableState(p)
 	p.hasHit = projectileHasHit
 	p.markHit = markProjectileHit
+	p.resetHitTracking = nextHitSetStamp
 	p.getHitCooldownExpiry = getHitCooldownExpiry
 	p.setHitCooldownExpiry = setHitCooldownExpiry
 
