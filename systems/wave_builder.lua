@@ -1,4 +1,5 @@
 local DifficultyCurve = require("systems.difficulty_curve")
+local CampaignWaveDefs = require("systems.campaign_wave_defs")
 
 local Builder = {}
 
@@ -66,7 +67,26 @@ end
 function Builder.build(waveIndex)
 	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
 	local tier = Builder.getIntensityTier(waveIndex)
+	local campaignGroups = CampaignWaveDefs[waveIndex]
+	if campaignGroups then
+		local count = 0
+		local composition = {}
+		for _, group in ipairs(campaignGroups) do
+			count = count + group.count
+			for _ = 1, group.count do composition[#composition + 1] = group.kind end
+		end
+		return {
+			boss = campaignGroups[1].kind == "boss",
+			enemy = campaignGroups[1].kind,
+			count = count,
+			spacing = campaignGroups[1].spacing,
+			groups = campaignGroups,
+			composition = composition,
+			intensityTier = 0,
+		}
+	end
 
+	-- Everything below this point is the separate, deterministic endless mode.
 	if waveIndex % 10 == 0 then
 		return { boss = true, enemy = "boss", count = 1, spacing = 0, intensityTier = tier }
 	end
