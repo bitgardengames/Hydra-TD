@@ -38,6 +38,8 @@ local stats = {}
 local confetti = {}
 local t = 0
 local panelT = 0
+local recapScroll = 0
+local layout = nil
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -58,18 +60,11 @@ local paddingY = 30
 
 local btnW = 240
 local btnH = 42
-local gap = 62
 local panelW = 560
 
-local headerHeight = 36
-local subheadSpacing = 30
-local statsOffset = 24
 local statsGap = 12
 local statH = 44
 local difficultyOffset = 22
-local medalSpacing = 50
-local hintOffset = 22
-local buttonsOffset = 30
 
 -- Medal visuals
 local medalR = 16
@@ -128,25 +123,65 @@ local function selectVictoryMessage()
 	return L("game.victory"), L("victory.subtitle")
 end
 
-local function layoutButtons()
+local function calculateLayout()
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
-	local contentStartY = floor(sh * 0.5 - 220)
-	local statsHeight = #stats * statH + (#stats - 1) * statsGap
+	local compact = sh < 720
+	local edge = compact and 10 or 24
+	local boxW = min(panelW, sw - edge * 2)
+	local boxX = cx - boxW * 0.5
+	local boxY = edge
+	local boxH = sh - edge * 2
+	local padX = min(paddingX, max(12, boxW * 0.05))
+	local padY = compact and 12 or paddingY
+	local buttonGap = compact and 8 or 14
+	local buttonHeight = compact and 36 or btnH
+	local buttonsHeight = #buttons * buttonHeight + max(0, #buttons - 1) * buttonGap
+	local buttonsStartY = boxY + boxH - padY - buttonsHeight
+	local titleHeight = compact and 54 or 76
+	local recapY = boxY + padY + titleHeight
+	local recapBottom = buttonsStartY - (compact and 8 or 18)
+	local cardW = boxW - padX * 2
+	local valueFont = compact and Fonts.ui or Fonts.menu
+	local labelFont = Fonts.ui
+	local rowGap = compact and 6 or statsGap
+	local rows = {}
+	local contentY = 0
 
-	local buttonsStartY = contentStartY
-		+ headerHeight
-		+ subheadSpacing
-		+ statsOffset
-		+ statsHeight
-		+ difficultyOffset
-		+ medalSpacing
-		+ hintOffset
-		+ buttonsOffset
+	for i, item in ipairs(stats) do
+		local _, wrapped = valueFont:getWrap(item.value, max(1, cardW - 24))
+		local valueLines = max(1, #wrapped)
+		local rowH = max(statH, 8 + labelFont:getHeight() + 4 + valueLines * valueFont:getHeight() + 8)
+		if compact then rowH = max(40, rowH - 4) end
+		rows[i] = { y = contentY, h = rowH, lines = valueLines }
+		contentY = contentY + rowH + (i < #stats and rowGap or 0)
+	end
+
+	local difficultyY = contentY + (compact and 12 or difficultyOffset)
+	local _, clusterH = Medals.getClusterSize(medalR, medalGap)
+	local medalY = difficultyY + (compact and 30 or 38)
+	local recapContentH = medalY + clusterH + 14
+	local viewportH = max(0, recapBottom - recapY)
+	recapScroll = min(max(0, recapScroll), max(0, recapContentH - viewportH))
+
+	return {
+		sw = sw, sh = sh, cx = cx, compact = compact,
+		boxX = boxX, boxY = boxY, boxW = boxW, boxH = boxH,
+		padX = padX, padY = padY, cardW = cardW,
+		titleY = boxY + padY, recapY = recapY, recapH = viewportH,
+		rows = rows, difficultyY = difficultyY, medalY = medalY,
+		recapContentH = recapContentH, buttonsStartY = buttonsStartY,
+		buttonGap = buttonGap, buttonHeight = buttonHeight,
+	}
+end
+
+local function layoutButtons()
+	layout = calculateLayout()
 
 	for i, btn in ipairs(buttons) do
-		btn.x = cx - btn.w * 0.5
-		btn.y = buttonsStartY + (i - 1) * gap
+		btn.h = layout.buttonHeight
+		btn.x = layout.cx - btn.w * 0.5
+		btn.y = layout.buttonsStartY + (i - 1) * (layout.buttonHeight + layout.buttonGap)
 	end
 end
 
@@ -248,6 +283,7 @@ end
 function Screen.enter()
 	t = 0
 	panelT = 0
+	recapScroll = 0
 	buildStats()
 	resetConfetti()
 	Medals.resetAnimations()
@@ -281,8 +317,8 @@ function Screen.update(dt)
 	local pt = min(1, t * speed)
 	panelT = pt * pt * (3 - 2 * pt)
 
-	layoutButtons()
 	buildStats()
+	layoutButtons()
 
 	Medals.update(dt)
 	local sw, sh = lg.getDimensions()
@@ -311,31 +347,11 @@ function Screen.update(dt)
 end
 
 function Screen.draw()
-	local sw, sh = lg.getDimensions()
-	local cx = floor(sw * 0.5)
-
-	local boxWidth = min(panelW, sw - 56)
-	local contentStartY = floor(sh * 0.5 - 220)
-	local statsHeight = #stats * statH + (#stats - 1) * statsGap
-
-	local count = #buttons
-	local buttonsHeight = (count - 1) * gap + btnH
-
-	local contentHeight =
-		headerHeight
-		+ subheadSpacing
-		+ statsOffset
-		+ statsHeight
-		+ difficultyOffset
-		+ medalSpacing
-		+ hintOffset
-		+ buttonsOffset
-		+ buttonsHeight
-
-	local boxW = boxWidth
-	local boxH = contentHeight + paddingY * 2
-	local boxX = cx - boxW * 0.5
-	local boxY = contentStartY - paddingY
+	-- Reuse one geometry calculation for rendering and the interactive buttons.
+	layoutButtons()
+	local g = layout
+	local sw, sh, cx = g.sw, g.sh, g.cx
+	local boxX, boxY, boxW, boxH = g.boxX, g.boxY, g.boxW, g.boxH
 
 	-- Dim world
 	lg.setColor(colorDim)
@@ -370,62 +386,51 @@ function Screen.draw()
 	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
 
 	-- Title
-	local titleY = boxY + paddingY
+	local titleY = g.titleY
 
-	Fonts.set("title")
+	Fonts.set(g.compact and "menu" or "title")
 	lg.setColor(colorGood[1], colorGood[2], colorGood[3], alpha)
-	Text.printfShadow(selectedHeadline or L("game.victory"), 0, titleY, sw, "center")
+	Text.printfShadow(selectedHeadline or L("game.victory"), boxX + g.padX, titleY, boxW - g.padX * 2, "center")
 
-	Fonts.set("menu")
+	Fonts.set(g.compact and "ui" or "menu")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.85 * alpha)
-	Text.printfShadow(selectedSubheadline or L("victory.subtitle"), 0, titleY + 30, sw, "center")
+	Text.printfShadow(selectedSubheadline or L("victory.subtitle"), boxX + g.padX, titleY + (g.compact and 25 or 36), boxW - g.padX * 2, "center")
 
-
-	local statsY = titleY + headerHeight + subheadSpacing
-	local cardW = boxW - paddingX * 2
+	-- The recap may scroll, but the heading and action buttons remain outside its clip.
+	lg.setScissor(g.boxX, g.recapY, g.boxW, g.recapH)
+	local statsY = g.recapY - recapScroll
+	local cardW = g.cardW
 	for i, item in ipairs(stats) do
-		local x = boxX + paddingX
-		local y = statsY + (i - 1) * (statH + statsGap)
+		local row = g.rows[i]
+		local x = boxX + g.padX
+		local y = statsY + row.y
 
 		lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.6 * alpha)
-		lg.rectangle("fill", x, y, cardW, statH, 10, 10)
+		lg.rectangle("fill", x, y, cardW, row.h, 10, 10)
 
 		Fonts.set("ui")
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.74 * alpha)
 		Text.printfShadow(item.label, x + 12, y + 8, cardW - 24, "left")
 
-		Fonts.set("menu")
+		Fonts.set(g.compact and "ui" or "menu")
 		lg.setColor(colorButton[1], colorButton[2], colorButton[3], alpha)
-		Text.printfShadow(item.value, x + 12, y + 28, cardW - 24, "left")
+		Text.printfShadow(item.value, x + 12, y + 8 + Fonts.ui:getHeight() + 4, cardW - 24, "left")
 	end
 
 	-- Difficulty
 	local difficultyLabel = getDifficultyLabel()
-	local difficultyY = statsY + statsHeight + difficultyOffset
+	local difficultyY = statsY + g.difficultyY
 
 	if difficultyLabel then
 		Fonts.set("ui")
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.78 * alpha)
-		Text.printfShadow(format("%s: %s  •  %s: %s", L("gameOver.map"), getMapName(), L("settings.difficulty"), difficultyLabel), 0, difficultyY, sw, "center")
+		Text.printfShadow(format("%s: %s  •  %s: %s", L("gameOver.map"), getMapName(), L("settings.difficulty"), difficultyLabel), boxX + g.padX, difficultyY, boxW - g.padX * 2, "center")
 	end
 
 	-- Medals
 	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
 	local medalX = cx - clusterW * 0.5
-
-	local medalTop = difficultyY + 20
-	local buttonsStartY = contentStartY
-		+ headerHeight
-		+ subheadSpacing
-		+ statsOffset
-		+ statsHeight
-		+ difficultyOffset
-		+ medalSpacing
-		+ hintOffset
-		+ buttonsOffset
-
-	local medalBottom = buttonsStartY - hintOffset - buttonsOffset
-	local medalY = medalTop + (medalBottom - medalTop - clusterH) * 0.5
+	local medalY = statsY + g.medalY
 
 	lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.75 * alpha)
 	lg.rectangle("fill", medalX - 16, medalY - 12, clusterW + 32, clusterH + 24, 14, 14)
@@ -435,6 +440,7 @@ function Screen.draw()
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
 	Text.printfShadow(L("victory.medalProgress"), 0, medalY - 20, sw, "center")
+	lg.setScissor()
 
 	-- Buttons
 	for _, btn in ipairs(buttons) do
@@ -442,6 +448,11 @@ function Screen.draw()
 	end
 
 	lg.pop()
+end
+
+function Screen.wheelmoved(_, y)
+	if not layout or layout.recapContentH <= layout.recapH then return end
+	recapScroll = min(max(0, recapScroll - y * 36), layout.recapContentH - layout.recapH)
 end
 
 function Screen.mousepressed(x, y, button)
