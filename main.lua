@@ -228,7 +228,7 @@ end
 local MAX_FRAME_DT = 1 / 15
 
 local function isWorldMode(mode)
-	return mode == "game" or mode == "pause" or mode == "game_over" or mode == "victory"
+	return mode == "game" or mode == "pause" or mode == "settings_gameplay" or mode == "game_over" or mode == "victory"
 end
 
 local function updateMetaScreens(dt, mode)
@@ -279,7 +279,7 @@ function love.update(dt)
 	dt = min(dt, MAX_FRAME_DT)
 
 	local mode = State.mode
-	local target = (mode == "pause") and 1 or 0
+	local target = (mode == "pause" or mode == "settings_gameplay") and 1 or 0
 
 	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
 
@@ -288,6 +288,12 @@ function love.update(dt)
 
 	if mode == "pause" then
 		Menu.updatePause(dt)
+
+		return
+	end
+
+	if mode == "settings_gameplay" then
+		Menu.update(dt)
 
 		return
 	end
@@ -416,6 +422,10 @@ function love.draw()
 			lg.rectangle("fill", 0, 0, sw, sh)
 
 			Menu.drawPause()
+		end
+
+		if State.mode == "settings_gameplay" then
+			Menu.draw()
 		end
 
 		if State.mode == "game_over" or State.mode == "victory" then

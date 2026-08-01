@@ -108,6 +108,17 @@ function Page.load()
 		},
 
 		{
+			id = "settings",
+			label = L("menu.settings"),
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				State.mode = "settings_gameplay"
+				Sound.play("uiConfirm")
+			end
+		},
+
+		{
 			id = "menu",
 			label = L("menu.mainMenu"),
 			w = btnW,
