@@ -191,6 +191,9 @@ local spawnerDefaults = {
 	kind = nil,
 	composition = nil,
 	compositionIndex = 1,
+	groups = nil,
+	groupIndex = 1,
+	groupRemaining = 0,
 }
 
 local bossAddsDefaults = {
@@ -221,41 +224,48 @@ resetTable(bossAdds, bossAddsDefaults)
 function Waves.getWavePreview(waveNumber)
 	local wave = WaveBuilder.build(waveNumber)
 	local groups = {}
-	local groupsByKind = {}
 
-	local function addKind(kind)
-		local group = groupsByKind[kind]
-		if not group then
-			local def = EnemyDefs[kind]
-			group = {
-				kind = kind,
-				name = L((def and def.nameKey) or ("enemy." .. kind)),
-				count = 0,
-				tags = {},
-				counterHints = {},
-			}
-			for _, trait in ipairs(EnemyTraits.forEnemy(def)) do
-				group.tags[#group.tags + 1] = trait.tag
-				group.counterHints[#group.counterHints + 1] = trait.counter
-			end
-			groupsByKind[kind] = group
-			groups[#groups + 1] = group
+	local function addGroup(kind, count, spacing, delay, role)
+		local def = EnemyDefs[kind]
+		local group = {
+			kind = kind,
+			name = L((def and def.nameKey) or ("enemy." .. kind)),
+			count = count,
+			spacing = spacing or 0,
+			delay = delay or 0,
+			role = role,
+			tags = {},
+			counterHints = {},
+		}
+		for _, trait in ipairs(EnemyTraits.forEnemy(def)) do
+			group.tags[#group.tags + 1] = trait.tag
+			group.counterHints[#group.counterHints + 1] = trait.counter
 		end
-		group.count = group.count + 1
+		groups[#groups + 1] = group
 	end
 
 	if wave.boss then
 		local bossIndex = math.max(1, math.floor(waveNumber / 10))
-		addKind(getBossByArchetype(Maps[State.mapIndex], bossIndex))
+		local authored = wave.groups and wave.groups[1]
+		addGroup(getBossByArchetype(Maps[State.mapIndex], bossIndex), 1, 0,
+			authored and authored.delay, authored and authored.role)
+	elseif wave.groups then
+		for _, group in ipairs(wave.groups) do
+			addGroup(group.kind, group.count, group.spacing, group.delay, group.role)
+		end
 	else
-		for i = 1, #(wave.composition or {}) do
-			addKind(wave.composition[i])
+		-- Endless composition has uniform timing; coalesce adjacent kinds while
+		-- preserving their spawn order rather than aggregating the whole wave.
+		for _, kind in ipairs(wave.composition or {}) do
+			local group = groups[#groups]
+			if group and group.kind == kind then group.count = group.count + 1
+			else addGroup(kind, 1, wave.spacing, 0, nil) end
 		end
 	end
 
 	local counts = {}
-	for kind, group in pairs(groupsByKind) do
-		counts[kind] = group.count
+	for _, group in ipairs(groups) do
+		counts[group.kind] = (counts[group.kind] or 0) + group.count
 	end
 
 	return {
@@ -267,17 +277,21 @@ function Waves.getWavePreview(waveNumber)
 	}
 end
 
-local function beginSpawner(kind, count, gap, hpMult, spdMult, composition)
+local function beginSpawner(kind, count, gap, hpMult, spdMult, composition, groups)
+	local firstGroup = groups and groups[1]
 	resetTable(spawner, spawnerDefaults, {
 		active = true,
 		remaining = count or 0,
 		gap = gap or spawnerDefaults.gap,
-		timer = 0,
+		timer = (firstGroup and firstGroup.delay) or 0,
 		hpMult = hpMult or spawnerDefaults.hpMult,
 		spdMult = spdMult or spawnerDefaults.spdMult,
 		kind = kind,
 		composition = composition,
 		compositionIndex = 1,
+		groups = groups,
+		groupIndex = 1,
+		groupRemaining = firstGroup and firstGroup.count or 0,
 	})
 
 	State.inPrep = false
@@ -350,7 +364,7 @@ function Waves.startWave()
 
 	local gap = wave.spacing or 1.0
 
-	beginSpawner(kind, count, gap, hpMult, spdMult, wave.composition)
+	beginSpawner(kind, count, gap, hpMult, spdMult, wave.composition, wave.groups)
 	return true
 end
 
@@ -364,7 +378,9 @@ function Waves.updateSpawner(dt)
 
 		while spawner.active and spawner.timer <= 0 and spawner.remaining > 0
 			and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
-			local kind = spawner.composition and spawner.composition[spawner.compositionIndex] or spawner.kind
+			local group = spawner.groups and spawner.groups[spawner.groupIndex]
+			local kind = group and group.kind
+				or (spawner.composition and spawner.composition[spawner.compositionIndex]) or spawner.kind
 
 			if not kind then
 				spawner.remaining = 0
@@ -377,7 +393,19 @@ function Waves.updateSpawner(dt)
 			spawner.compositionIndex = spawner.compositionIndex + 1
 
 			spawner.remaining = spawner.remaining - 1
-			spawner.timer = spawner.timer + spawner.gap
+			if group then
+				spawner.groupRemaining = spawner.groupRemaining - 1
+				if spawner.groupRemaining <= 0 and spawner.remaining > 0 then
+					spawner.groupIndex = spawner.groupIndex + 1
+					local nextGroup = spawner.groups[spawner.groupIndex]
+					spawner.groupRemaining = nextGroup.count
+					spawner.timer = spawner.timer + nextGroup.delay
+				else
+					spawner.timer = spawner.timer + group.spacing
+				end
+			else
+				spawner.timer = spawner.timer + spawner.gap
+			end
 			spawnLoops = spawnLoops + 1
 		end
 
