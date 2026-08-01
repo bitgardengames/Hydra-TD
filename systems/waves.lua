@@ -7,6 +7,7 @@ local WaveBuilder = require("systems.wave_builder")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
+local EnemyTraits = require("world.enemy_traits")
 local Spatial = require("world.spatial_grid")
 local Onboarding = require("systems.onboarding")
 
@@ -230,7 +231,13 @@ function Waves.getWavePreview(waveNumber)
 				kind = kind,
 				name = L((def and def.nameKey) or ("enemy." .. kind)),
 				count = 0,
+				tags = {},
+				counterHints = {},
 			}
+			for _, trait in ipairs(EnemyTraits.forEnemy(def)) do
+				group.tags[#group.tags + 1] = trait.tag
+				group.counterHints[#group.counterHints + 1] = trait.counter
+			end
 			groupsByKind[kind] = group
 			groups[#groups + 1] = group
 		end
@@ -238,7 +245,8 @@ function Waves.getWavePreview(waveNumber)
 	end
 
 	if wave.boss then
-		addKind("boss")
+		local bossIndex = math.max(1, math.floor(waveNumber / 10))
+		addKind(getBossByArchetype(Maps[State.mapIndex], bossIndex))
 	else
 		for i = 1, #(wave.composition or {}) do
 			addKind(wave.composition[i])

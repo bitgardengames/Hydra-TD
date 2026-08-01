@@ -259,6 +259,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.support = def.support
 	e.supportBoost = 1
 	e.supportPulse = 0
+	e.combatAge = 0
 
 	computeNudgeParams(e)
 
@@ -277,6 +278,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 end
 
 local function handleEnemyKilled(e, i, isBoss)
+	Save.recordEnemyResult(e.kind, "kill", e.combatAge)
 	if isBoss then
 		State.activeBoss = nil
 		State.activeBossKind = nil
@@ -306,6 +308,7 @@ local function handleEnemyKilled(e, i, isBoss)
 end
 
 local function handleEnemyEscaped(e, i, isBoss)
+	Save.recordEnemyResult(e.kind, "leak")
 	if isBoss then
 		State.activeBoss = nil
 		State.activeBossKind = nil
@@ -377,6 +380,7 @@ local function updateEnemies(dt)
 	end
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
+		e.combatAge = (e.combatAge or 0) + dt
 		local isBoss = e.boss
 
 		-- Spawn fade-in

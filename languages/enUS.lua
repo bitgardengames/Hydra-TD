@@ -556,6 +556,12 @@ return {
 		ability_silence_aura = "suppresses nearby towers",
 		ability_unknown = "enters a dangerous combat phase",
 		basic = "No special mechanics.",
+		basicIntel = "MECHANIC: No special mechanic.\nTELL: Standard silhouette and movement.\nDEFEATS IT: Any two or more complementary damage towers.",
+		mechanic = "MECHANIC — %s: %s",
+		tell = "TELL: %s",
+		defeats = "DEFEATS IT: %s Answers: %s",
+		history = "Kills %d  •  Leaks caused %d",
+		historyFull = "Kills %d  •  Leaks caused %d  •  Fastest %.2fs",
 		scrollHint = "Mouse wheel or ↑/↓ to scroll • Esc to return",
 	},
 

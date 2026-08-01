@@ -185,6 +185,7 @@ function Save.load()
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
 			meta.clearedMaps = meta.clearedMaps or {}
 			meta.encounteredEnemies = meta.encounteredEnemies or {}
+			meta.enemyHistory = meta.enemyHistory or {}
 
 			-- Run map ID migration once
 			if not Save.data.mapIdMigrationDone then
@@ -238,6 +239,7 @@ function Save.load()
 			unlockedAchievements = {},
 			clearedMaps = {},
 			encounteredEnemies = {},
+			enemyHistory = {},
 		},
 
 		mapIdMigrationDone = true, -- new saves don't need migration
@@ -342,6 +344,22 @@ function Save.markEnemyEncountered(kind)
 	if not meta.encounteredEnemies[kind] then
 		meta.encounteredEnemies[kind] = true
 		Save.flush()
+	end
+end
+
+function Save.recordEnemyResult(kind, result, killTime)
+	if not Save.data or type(kind) ~= "string" then return end
+	local meta = Save.data.meta
+	meta.enemyHistory = meta.enemyHistory or {}
+	local history = meta.enemyHistory[kind] or {kills = 0, leaks = 0}
+	meta.enemyHistory[kind] = history
+	if result == "kill" then
+		history.kills = (history.kills or 0) + 1
+		if killTime and (not history.fastestKill or killTime < history.fastestKill) then
+			history.fastestKill = killTime
+		end
+	elseif result == "leak" then
+		history.leaks = (history.leaks or 0) + 1
 	end
 end
 
