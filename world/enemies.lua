@@ -11,6 +11,7 @@ local Achievements = require("systems.achievements")
 local L = require("core.localization")
 local Save = require("core.save")
 local Onboarding = require("systems.onboarding")
+local RunStats = require("systems.run_stats")
 
 local enemies = {}
 local enemyPool = {}
@@ -293,6 +294,7 @@ local function handleEnemyKilled(e, i, isBoss)
 
 	local reward = floor(e.reward + 0.5)
 	State.money = State.money + reward
+	RunStats.recordIncome(reward, "kill")
 	State.score = State.score + (e.score or 0)
 	Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 
@@ -309,6 +311,7 @@ end
 
 local function handleEnemyEscaped(e, i, isBoss)
 	Save.recordEnemyResult(e.kind, "leak")
+	RunStats.recordLeak(e.kind)
 	if isBoss then
 		State.activeBoss = nil
 		State.activeBossKind = nil
@@ -446,6 +449,9 @@ local function updateEnemies(dt)
 				e.hitFlash = 0.03
 
 				State.addDamage("poison", dmg, e.boss == true)
+				local bossExposed = e.boss == true and (e.exposed == true or e.bossState == "exposed"
+					or ((e.shieldMax or 0) > 0 and (e.shieldHp or 0) <= 0))
+				RunStats.recordDamage(e.poisonSource, "poison", dmg, bossExposed)
 			end
 
 			if e.poisonTimer <= 0 then

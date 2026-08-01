@@ -4,6 +4,7 @@ local Effects = require("world.effects")
 local Sound = require("systems.sound")
 local PB = require("world.projectile_behaviors")
 local Util = require("core.util")
+local RunStats = require("systems.run_stats")
 
 local projectiles = {}
 local pool = {}
@@ -369,6 +370,9 @@ local function resolveDamage(p, evt)
 	end
 
 	State.addDamage(p.sourceKind, effectiveDamage, e.boss == true)
+	local bossExposed = e.boss == true and (e.exposed == true or e.bossState == "exposed"
+		or ((e.shieldMax or 0) > 0 and (e.shieldHp or 0) <= 0))
+	RunStats.recordDamage(t, evt.damageType or p.damageType or p.sourceKind, effectiveDamage, bossExposed)
 end
 
 local function resolveImpulse(evt)

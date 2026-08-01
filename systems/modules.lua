@@ -44,6 +44,7 @@ function Modules.add(moduleId, towerType)
 	if not list then return end
 
 	list[#list + 1] = mod
+	mod.id = mod.id or moduleId
 	Modules.version = Modules.version + 1
 end
 
