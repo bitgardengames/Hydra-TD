@@ -8,6 +8,7 @@ local Steam = require("core.steam")
 local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local L = require("core.localization")
+local Difficulty = require("systems.difficulty")
 
 
 local floor = math.floor
@@ -32,6 +33,49 @@ local paddingX = 24
 local paddingY = 24
 local headerSpacing = 36
 local headerHeight = 38
+
+local contextCardW = 190
+local contextCardH = 72
+local contextCardMargin = 24
+local contextCardPadding = 14
+
+local function drawDifficultyCard(sw)
+	local cardX = sw - contextCardW - contextCardMargin
+	local cardY = contextCardMargin
+
+	lg.setColor(colorOutline)
+	lg.rectangle(
+		"fill",
+		cardX - outlineW,
+		cardY - outlineW,
+		contextCardW + outlineW * 2,
+		contextCardH + outlineW * 2,
+		outerRadius
+	)
+
+	lg.setColor(colorBackdrop)
+	lg.rectangle("fill", cardX, cardY, contextCardW, contextCardH, innerRadius)
+
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.text)
+	lg.printf(
+		L("settings.difficulty"),
+		cardX + contextCardPadding,
+		cardY + 9,
+		contextCardW - contextCardPadding * 2,
+		"left"
+	)
+
+	Fonts.set("menu")
+	lg.setColor(Theme.ui.selected)
+	lg.printf(
+		L("difficulty." .. Difficulty.key()),
+		cardX + contextCardPadding,
+		cardY + 32,
+		contextCardW - contextCardPadding * 2,
+		"left"
+	)
+end
 
 function Page.load()
 	buttons = {
@@ -124,6 +168,9 @@ function Page.draw()
 
 	lg.setColor(colorBackdrop)
 	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
+
+	-- Keep the current run context visible without crowding the pause actions.
+	drawDifficultyCard(sw)
 
 	-- Draw header
 	lg.setColor(1, 1, 1, 1)
