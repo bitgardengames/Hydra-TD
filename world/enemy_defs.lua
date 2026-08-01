@@ -28,6 +28,7 @@ return {
 		reward = 6,
 		score = 12,
 		radius = 9,
+		traits = {"fast"},
 	},
 
 	bulwark = {
@@ -35,6 +36,7 @@ return {
 		descriptionKey = "enemy.bulwarkDescription",
 		hp = 105 * mult, speed = 40, reward = 13, score = 30, radius = 14,
 		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
+		traits = {"armored"},
 	},
 
 	regenerator = {
@@ -42,6 +44,7 @@ return {
 		descriptionKey = "enemy.regeneratorDescription",
 		hp = 76 * mult, speed = 53, reward = 12, score = 28, radius = 12,
 		regeneration = { hpPerSecond = 5 * mult, delay = 1.25 },
+		traits = {"regenerates"},
 	},
 
 	shieldbearer = {
@@ -49,6 +52,7 @@ return {
 		descriptionKey = "enemy.shieldbearerDescription",
 		hp = 72 * mult, speed = 50, reward = 14, score = 32, radius = 13,
 		shield = { hp = 30 * mult, burstThreshold = 12, burstMultiplier = 1.6, chainMultiplier = 1.75 },
+		traits = {"shielded"},
 	},
 
 	warcaller = {
@@ -57,6 +61,7 @@ return {
 		hp = 68 * mult, speed = 48, reward = 16, score = 38, radius = 13,
 		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
 		targetPriority = 34,
+		traits = {"support"},
 	},
 
 	boss = {
@@ -68,6 +73,7 @@ return {
 		radius = 18,
 		boss = true,
 		mechanicWeight = 1.0,
+		traits = {"boss_mechanic"},
 		counterplay = {
 			telegraph = 1.4,
 			weakPhase = 2.0,
@@ -90,6 +96,7 @@ return {
 		boss = true,
 		mechanicWeight = 1.35,
 		mechanicPackage = "summoner",
+		traits = {"boss_summoner"},
 		counterplay = {
 			telegraph = 2.2,
 			weakPhase = 2.8,
@@ -113,6 +120,7 @@ return {
 		boss = true,
 		mechanicWeight = 1.5,
 		mechanicPackage = "displacement",
+		traits = {"boss_displacement"},
 		counterplay = {
 			telegraph = 1.7,
 			weakPhase = 2.4,
@@ -136,6 +144,7 @@ return {
 		boss = true,
 		mechanicWeight = 1.65,
 		mechanicPackage = "suppression_aura",
+		traits = {"boss_suppression"},
 		counterplay = {
 			telegraph = 2.4,
 			weakPhase = 2.2,

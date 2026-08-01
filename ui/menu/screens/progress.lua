@@ -2,6 +2,7 @@ local AchievementDefs = require("systems.achievement_defs")
 local Backdrop = require("scenes.backdrop")
 local Button = require("ui.button")
 local EnemyDefs = require("world.enemy_defs")
+local EnemyTraits = require("world.enemy_traits")
 local Fonts = require("core.fonts")
 local L = require("core.localization")
 local Save = require("core.save")
@@ -20,6 +21,11 @@ local tabs = {}
 local backButton = nil
 local viewport = {x = 0, y = 0, w = 0, h = 0}
 local rowHeight = 78
+local intelRowHeight = 142
+
+local function activeRowHeight()
+	return activeTab == "intel" and intelRowHeight or rowHeight
+end
 
 local enemyOrder = {
 	"grunt", "runner", "tank", "bulwark", "regenerator", "shieldbearer",
@@ -82,7 +88,7 @@ function Screen.update(dt)
 	backButton.x, backButton.y = sw * 0.5 - backButton.w * 0.5, sh - 55
 	Button.update(backButton, love.mouse.getX(), love.mouse.getY(), dt)
 
-	maxScroll = math.max(0, entryCount() * rowHeight - viewport.h)
+	maxScroll = math.max(0, entryCount() * activeRowHeight() - viewport.h)
 	scroll = math.max(0, math.min(maxScroll, scroll))
 end
 
@@ -113,27 +119,27 @@ local function drawAchievement(def, x, y, w)
 end
 
 local function mechanicLines(def)
+	local traits = EnemyTraits.forEnemy(def)
+	if #traits == 0 then return L("progress.basicIntel") end
 	local lines = {}
-	if def.armor then lines[#lines + 1] = L("progress.armor", def.armor.flatReduction, def.armor.heavyThreshold, def.armor.heavyMultiplier) end
-	if def.shield then lines[#lines + 1] = L("progress.shield", def.shield.hp) end
-	if def.regeneration then lines[#lines + 1] = L("progress.regeneration", def.regeneration.hpPerSecond, def.regeneration.delay) end
-	if def.support then lines[#lines + 1] = L("progress.support", (def.support.speedMultiplier - 1) * 100, def.support.radius) end
-	if def.boss then
-		local ability = def.ability and def.ability.name
-		lines[#lines + 1] = L("progress.bossAbility", L("progress.ability_" .. (ability or "unknown")))
+	for _, trait in ipairs(traits) do
+		lines[#lines + 1] = L("progress.mechanic", trait.tag, trait.mechanic)
+		lines[#lines + 1] = L("progress.tell", trait.tell)
+		lines[#lines + 1] = L("progress.defeats", trait.counter, table.concat(trait.answers, "; "))
 	end
-	if def.counterplay then
-		lines[#lines + 1] = L("progress.counterplay", def.counterplay.telegraph, def.counterplay.exposedWindow)
-	end
-	if #lines == 0 then lines[1] = L("progress.basic") end
-	return table.concat(lines, "  ")
+	return table.concat(lines, "\n")
 end
 
 local function drawIntel(entry, x, y, w)
-	panel(x, y, w, rowHeight - 10, Theme.ui.panel)
+	panel(x, y, w, intelRowHeight - 10, Theme.ui.panel)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text)
 	Text.printShadow(L(entry.def.nameKey), x + 16, y + 10)
+	local history = (Save.data.meta.enemyHistory or {})[entry.kind] or {}
+	local stat = history.fastestKill
+		and L("progress.historyFull", history.kills or 0, history.leaks or 0, history.fastestKill)
+		or L("progress.history", history.kills or 0, history.leaks or 0)
+	Text.printfShadow(stat, x + w - 330, y + 10, 314, "right")
 	Fonts.set("tooltip")
 	lg.setColor(Theme.ui.text[1] * 0.82, Theme.ui.text[2] * 0.82, Theme.ui.text[3] * 0.82)
 	Text.printfShadow(mechanicLines(entry.def), x + 16, y + 36, w - 32, "left")
@@ -165,7 +171,7 @@ function Screen.draw()
 			lg.setColor(Theme.ui.text)
 			Text.printfShadow(L("progress.noIntel"), viewport.x + 40, viewport.y + 35, viewport.w - 80, "center")
 		end
-		for i, entry in ipairs(entries) do drawIntel(entry, viewport.x + 3, viewport.y + (i - 1) * rowHeight - scroll + 3, viewport.w - 10) end
+		for i, entry in ipairs(entries) do drawIntel(entry, viewport.x + 3, viewport.y + (i - 1) * intelRowHeight - scroll + 3, viewport.w - 10) end
 	end
 	lg.setScissor()
 	Fonts.set("tooltip")
@@ -176,13 +182,13 @@ function Screen.draw()
 end
 
 function Screen.wheelmoved(_, y)
-	scroll = scroll - y * rowHeight * 0.7
+	scroll = scroll - y * activeRowHeight() * 0.7
 end
 
 function Screen.keypressed(key)
 	if key == "escape" then goBack()
-	elseif key == "up" then scroll = scroll - rowHeight
-	elseif key == "down" then scroll = scroll + rowHeight
+	elseif key == "up" then scroll = scroll - activeRowHeight()
+	elseif key == "down" then scroll = scroll + activeRowHeight()
 	elseif key == "left" or key == "right" then selectTab(activeTab == "achievements" and "intel" or "achievements") end
 end
 
