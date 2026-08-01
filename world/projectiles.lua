@@ -370,9 +370,7 @@ local function resolveDamage(p, evt)
 	end
 
 	State.addDamage(p.sourceKind, effectiveDamage, e.boss == true)
-	local bossExposed = e.boss == true and (e.exposed == true or e.bossState == "exposed"
-		or ((e.shieldMax or 0) > 0 and (e.shieldHp or 0) <= 0))
-	RunStats.recordDamage(t, evt.damageType or p.damageType or p.sourceKind, effectiveDamage, bossExposed)
+	RunStats.recordDamage(t, evt.damageType or p.damageType or p.sourceKind, effectiveDamage)
 end
 
 local function resolveImpulse(evt)

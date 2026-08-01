@@ -17,7 +17,7 @@ function RunStats.reset(options)
 		moneyEarned = 0, moneySpent = 0,
 		earlyCallBonuses = 0, flawlessBonuses = 0,
 		leaksByEnemy = {}, purchases = {}, sales = {}, branches = {},
-		damageByTower = {}, damageByType = {}, bossExposureDamage = 0,
+		damageByTower = {}, damageByType = {},
 		finalTierWave = {}, towerKinds = {}, towerBranches = {}, soldTowers = {},
 		modules = {}, contracts = {}, difficulty = options.difficulty or "normal",
 	}
@@ -52,10 +52,9 @@ end
 
 function RunStats.recordLeak(kind) add(ensure().leaksByEnemy, kind, 1) end
 
-function RunStats.recordDamage(tower, damageType, amount, bossExposed)
+function RunStats.recordDamage(tower, damageType, amount)
 	local d = ensure(); add(d.damageByType, damageType or "other", amount)
 	if tower then add(d.damageByTower, tower.runStatsId or tower.kind, amount) end
-	if bossExposed then d.bossExposureDamage = d.bossExposureDamage + math.max(0, amount or 0) end
 end
 
 function RunStats.captureLoadout(modules, contracts)
