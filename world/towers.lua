@@ -15,6 +15,7 @@ local L = require("core.localization")
 local Modules = require("systems.modules")
 local TowerBranchDefs = require("world.tower_branch_defs")
 local Onboarding = require("systems.onboarding")
+local RunStats = require("systems.run_stats")
 --local Steam = require("luasteam")
 
 local towers = {}
@@ -301,6 +302,7 @@ local function addTower(kind, gx, gy)
 	recomputeTowerStats(t)
 
 	State.money = State.money - def.cost
+	RunStats.recordPurchase(t, def.cost)
 
 	MapMod.setBlocked(gx, gy)
 
@@ -356,6 +358,7 @@ local function upgradeTower(t, specializationId)
 	t.specializationId = specializationId
 	t.branchSelections = t.branchSelections or {}
 	t.branchSelections[#t.branchSelections + 1] = specializationId
+	RunStats.recordUpgrade(t, specializationId, cost, State.wave, TowerBranchDefs.getChoices(t.kind, t.level + 1) == nil)
 	recomputeTowerStats(t)
 	Modules.invalidateTower(t)
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
@@ -396,6 +399,7 @@ local function sellTower(t)
 	end
 
 	State.money = State.money + t.sellValue
+	RunStats.recordSale(t, t.sellValue)
 
 	local col = MapMod.map.blocked[t.gx]
 

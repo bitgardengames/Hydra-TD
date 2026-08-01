@@ -9,6 +9,8 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local Maps = require("world.map_defs")
 local L = require("core.localization")
+local Modules = require("systems.modules")
+local RunStats = require("systems.run_stats")
 
 local lg = love.graphics
 
@@ -62,6 +64,7 @@ local tipY = 0
 local panelW = 560
 local panelX = 0
 local highlights = {}
+local summaryLines = {}
 
 local function restartRun()
 	Sound.play("uiConfirm")
@@ -102,6 +105,15 @@ local function buildHighlights()
 	highlights = {
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
 		{ label = L("gameOver.score"), value = tostring(score) },
+	}
+	RunStats.captureLoadout(Modules.active, State.selectedContracts or State.contracts)
+	local summary = RunStats.summarize(State.money, State.score)
+	State.runSummary = summary
+	summaryLines = {
+		string.format("MVP %s  •  Leak %s (%d)  •  Damage %s", summary.mvp, summary.leak, summary.leakCount, summary.damageType),
+		"Build: " .. (summary.build ~= "" and summary.build or "none") .. (summary.paths ~= "" and "  •  " .. summary.paths or ""),
+		"Modules: " .. (summary.modules ~= "" and summary.modules or "none") .. "  •  Contracts: " .. (summary.contracts ~= "" and summary.contracts or "none"),
+		summary.observation .. "  •  [C] Copy build code",
 	}
 end
 
@@ -181,7 +193,7 @@ function Screen.update(dt)
 	reasonY = titleY + headerHeight + subtitleSpacing
 	highlightsY = reasonY + highlightOffset
 	difficultyY = highlightsY + highlightH + difficultyOffset
-	tipY = difficultyY + tipOffset
+	tipY = difficultyY + tipOffset + 72
 
 	local buttonsStartY = tipY + buttonsOffset
 
@@ -207,6 +219,7 @@ function Screen.draw()
 		+ highlightsHeight
 		+ difficultyOffset
 		+ tipOffset
+		+ 72
 		+ buttonsOffset
 		+ buttonsHeight
 	local boxW = panelW
@@ -284,6 +297,9 @@ function Screen.draw()
 		getDifficultyLabel() or "--"
 	)
 	Text.printfShadow(contextLine, boxX + paddingX, difficultyY, boxW - paddingX * 2, "center")
+	for i, line in ipairs(summaryLines) do
+		Text.printfShadow(line, boxX + paddingX, difficultyY + 17 + (i - 1) * 15, boxW - paddingX * 2, "center")
+	end
 
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.6 * alpha)
 	Text.printfShadow(L("gameOver.shortcuts"), boxX + paddingX, tipY, boxW - paddingX * 2, "center")
@@ -314,7 +330,10 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.keypressed(key)
-	if key == "escape" then
+	if key == "c" and State.runSummary then
+		love.system.setClipboardText(State.runSummary.code)
+		return true
+	elseif key == "escape" then
 		returnToMenu(false)
 		Sound.play("uiBack")
 	elseif key == "r" then

@@ -38,6 +38,7 @@ local L = require("core.localization")
 local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
 local Onboarding = require("systems.onboarding")
+local RunStats = require("systems.run_stats")
 
 local lg = love.graphics
 
@@ -113,6 +114,7 @@ function resetGame()
 	MapWorldCache.invalidate()
 
 	local diff = Difficulty.get()
+	RunStats.reset({difficulty = Difficulty.key()})
 
     -- Core game state
     State.money = diff.startMoney
@@ -392,6 +394,7 @@ function love.update(dt)
 		if State.waveLeaks == 0 then
 			local bonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
 			State.money = State.money + bonus
+			RunStats.recordIncome(bonus, "flawless")
 
 			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
 		end

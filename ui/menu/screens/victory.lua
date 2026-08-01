@@ -12,6 +12,8 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local Save = require("core.save")
 local L = require("core.localization")
+local Modules = require("systems.modules")
+local RunStats = require("systems.run_stats")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -63,7 +65,7 @@ local headerHeight = 36
 local subheadSpacing = 30
 local statsOffset = 24
 local statsGap = 12
-local statH = 52
+local statH = 44
 local difficultyOffset = 22
 local medalSpacing = 50
 local hintOffset = 22
@@ -159,10 +161,15 @@ end
 
 local function buildStats()
 	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
+	RunStats.captureLoadout(Modules.active, State.selectedContracts or State.contracts)
+	local summary = RunStats.summarize(State.money, State.score)
+	State.runSummary = summary
 	stats = {
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
-		{ label = L("gameOver.score"), value = tostring(State.score or 0) },
-		{ label = L("gameOver.leaks"), value = tostring(State.totalLeaks or 0) },
+		{ label = "Run leaders", value = string.format("MVP %s  •  Leak %s (%d)  •  Damage %s", summary.mvp, summary.leak, summary.leakCount, summary.damageType) },
+		{ label = "Final build", value = (summary.build ~= "" and summary.build or "none") .. (summary.paths ~= "" and "  •  " .. summary.paths or "") },
+		{ label = "Modules / contracts", value = (summary.modules ~= "" and summary.modules or "none") .. "  /  " .. (summary.contracts ~= "" and summary.contracts or "none") },
+		{ label = "Coach / share", value = summary.observation .. "  •  [C] Copy build code" },
 	}
 end
 
@@ -454,7 +461,10 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.keypressed(key)
-	if key == "escape" then
+	if key == "c" and State.runSummary then
+		love.system.setClipboardText(State.runSummary.code)
+		return true
+	elseif key == "escape" then
 		for _, btn in ipairs(buttons) do
 			if btn.id == "menu" and btn.onClick then
 				Sound.play("uiBack")
