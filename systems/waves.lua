@@ -319,7 +319,7 @@ function Waves.startWave()
 
 	-- WaveBuilder enforces boss invariant and returns a simple descriptor
 	local wave = tutorialWave and {
-		count = 4, enemy = "grunt", spacing = 0.85,
+		count = 4, enemy = "grunt", spacing = WaveBuilder.adjustSpawnSpacing(0.85),
 	} or WaveBuilder.build(State.wave)
 
 	-- Boss waves

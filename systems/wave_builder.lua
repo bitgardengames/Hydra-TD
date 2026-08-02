@@ -34,6 +34,11 @@ local unlocks = {
 Builder.endlessTierWaves = 5
 Builder.maxWaveEnemies = 120
 Builder.minSpawnSpacing = 0.28
+Builder.spawnSpacingMultiplier = 1.1
+
+function Builder.adjustSpawnSpacing(spacing)
+	return (spacing or 0) * Builder.spawnSpacingMultiplier
+end
 
 function Builder.getIntensityTier(waveIndex)
 	local endlessWave = math.max(0, (tonumber(waveIndex) or 0) - DifficultyCurve.campaignEnd)
@@ -71,16 +76,24 @@ function Builder.build(waveIndex)
 	if campaignGroups then
 		local count = 0
 		local composition = {}
+		local groups = {}
 		for _, group in ipairs(campaignGroups) do
 			count = count + group.count
 			for _ = 1, group.count do composition[#composition + 1] = group.kind end
+			groups[#groups + 1] = {
+				kind = group.kind,
+				count = group.count,
+				spacing = Builder.adjustSpawnSpacing(group.spacing),
+				delay = group.delay,
+				role = group.role,
+			}
 		end
 		return {
 			boss = campaignGroups[1].kind == "boss",
 			enemy = campaignGroups[1].kind,
 			count = count,
-			spacing = campaignGroups[1].spacing,
-			groups = campaignGroups,
+			spacing = groups[1].spacing,
+			groups = groups,
 			composition = composition,
 			intensityTier = 0,
 		}
@@ -95,7 +108,9 @@ function Builder.build(waveIndex)
 	-- Six more enemies per tier is legible count growth; the cap is the ultimate
 	-- simulation budget. Spacing tightens gently and never becomes a frame burst.
 	local count = math.min(Builder.maxWaveEnemies, template.baseCount + tier * 6)
-	local spacing = math.max(Builder.minSpawnSpacing, template.spacing * (0.94 ^ tier))
+	local spacing = Builder.adjustSpawnSpacing(
+		math.max(Builder.minSpawnSpacing, template.spacing * (0.94 ^ tier))
+	)
 	return {
 		boss = false,
 		enemy = template.enemy,
