@@ -557,30 +557,6 @@ return {
 		tower_upgrade_100 = "Upgrade towers 100 times",
 	},
 
-	towerMastery = {
-		menuButton = "Tower Mastery",
-		title = "Tower Mastery",
-		instructions = "Select a tower • Arrow keys / D-pad navigate • Wheel / Page Up and Page Down scroll details",
-		backHint = "Esc / B: Back",
-		empty = "No tower field records yet. Deploy a tower to begin its dossier.",
-		cardStats = "Kills %d  •  Damage %.0f\nPlaced %d  •  Upgrades %d  •  Best run %.0f",
-		progress = "%d / %d XP",
-		progressMastered = "%d XP • Mastered",
-		rewardsTitle = "UNLOCKED MILESTONES",
-		ranks = {
-			recruit = "Recruit", operator = "Operator", specialist = "Specialist",
-			expert = "Expert", mastered = "Mastered",
-		},
-		rewards = {
-			recruit = "Basic tower dossier",
-			operator = "Operator dossier badge",
-			specialist = "Tower sound-test entry",
-			expert = "Firing-range demonstration",
-			mastered = "Mastery title and optional tower challenge",
-		},
-		stats = { kills = "Kills", damage = "Damage", placements = "Placements", upgrades = "Upgrades", bestRunDamage = "Best-run damage" },
-	},
-
 	towerCodex = {
 		baseStats = "Base — Damage %.1f • Rate %.2f/s • Range %.1f tiles • Cost $%d",
 		upgradeDeltas = "Max base upgrades — Damage +%.0f%% • Range +%.2f tiles per tier",
