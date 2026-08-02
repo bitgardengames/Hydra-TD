@@ -66,6 +66,17 @@ function Screen.load()
 		},
 
 		{
+			id = "tower_mastery",
+			label = L("towerMastery.menuButton"),
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				require("ui.menu.menu").set("tower_mastery")
+				Sound.play("uiConfirm")
+			end
+		},
+
+		{
 			id = "settings",
 			label = L("menu.settings"),
 			w = btnW,
