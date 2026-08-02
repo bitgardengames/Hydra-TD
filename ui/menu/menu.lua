@@ -7,8 +7,6 @@ local Screens = {
 	campaign = require("ui.menu.screens.campaign"),
 	settings = Settings,
 	settings_gameplay = Settings,
-	progress = require("ui.menu.screens.progress"),
-
 	victory = require("ui.menu.screens.victory"),
 	game_over = require("ui.menu.screens.game_over"),
 
