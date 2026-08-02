@@ -22,6 +22,7 @@ local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- Seconds per poison tick
 local HIT_SQUASH_DUR = 0.12
+local POISON_HIT_SQUASH_MULT = 0.8
 
 local EPS = 1e-6
 local BASE_MAX_NUDGE = 10
@@ -453,7 +454,7 @@ local function updateEnemies(dt)
 				end
 
 				e.hitFlash = 0.03
-				e.hitSquash = HIT_SQUASH_DUR
+				e.hitSquash = HIT_SQUASH_DUR * POISON_HIT_SQUASH_MULT
 
 				State.addDamage("poison", dmg, e.boss == true)
 				RunStats.recordDamage(e.poisonSource, "poison", dmg)
