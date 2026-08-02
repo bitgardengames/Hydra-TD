@@ -94,4 +94,8 @@ function BottomBar.getInspectButtons()
 	return Inspect.getButtons()
 end
 
+function BottomBar.getAbilityButtons()
+	return Hud.getButtons()
+end
+
 return BottomBar

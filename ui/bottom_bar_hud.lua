@@ -7,6 +7,7 @@ local WaveBuilder = require("systems.wave_builder")
 local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local L = require("core.localization")
+local AbilityDefs = require("systems.ability_defs")
 
 local lg = love.graphics
 local floor = math.floor
@@ -32,6 +33,7 @@ local MONEY_X = 12
 local LIVES_X = 90
 local WAVE_X = 170
 local STATUS_X = 260
+local abilityButtons = {}
 
 -- Text caches (no per-frame string rebuilding)
 local hudCache = {
@@ -124,6 +126,24 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 		lg.setColor(0.85, 0.85, 0.85, 0.85)
 		Text.printShadow(spawnCache.text, infoX + (intensityTier > 0 and 365 or STATUS_X), y)
 	end
+
+	local def = AbilityDefs[State.equippedAbility]
+	if def then
+		local w, x = 126, infoX + infoW - 126
+		local cooldown = State.abilityCooldown or 0
+		abilityButtons[1] = abilityButtons[1] or {anim = {}}
+		local button = abilityButtons[1]
+		button.x, button.y, button.w, button.h = x, infoY, w, infoH
+		button.enabled = cooldown <= 0
+		lg.setColor(cooldown <= 0 and 0.20 or 0.14, cooldown <= 0 and 0.42 or 0.20, cooldown <= 0 and 0.62 or 0.24, 1)
+		lg.rectangle("fill", x, infoY, w, infoH, 5)
+		lg.setColor(1, 1, 1, cooldown <= 0 and 1 or 0.65)
+		local label = L(def.nameKey)
+		if cooldown > 0 then label = L("ability.cooldown", label, math.ceil(cooldown)) end
+		Text.printfShadow(label, x, y, w, "center")
+	end
 end
+
+function Hud.getButtons() return abilityButtons end
 
 return Hud

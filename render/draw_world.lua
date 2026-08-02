@@ -406,6 +406,21 @@ local function drawWorld()
 	drawScatter()
 end
 
+local function drawAbilityPreview()
+	local targeting = State.abilityTargeting
+	if targeting and targeting.x then
+		local def = require("systems.ability_defs")[targeting.abilityId]
+		if def then
+			local r = def.effect.radius
+			lg.setColor(def.effect.kind == "damage_area" and 1 or 0.35, 0.35, def.effect.kind == "slow_area" and 1 or 0.2, 0.18)
+			lg.circle("fill", targeting.x, targeting.y, r)
+			lg.setColor(1, 1, 1, 0.8)
+			lg.setLineWidth(2)
+			lg.circle("line", targeting.x, targeting.y, r)
+		end
+	end
+end
+
 local function drawGrid()
 	local fade = State.placingFade or 0
 	if fade == 0 then return end
@@ -428,6 +443,7 @@ return {
 	drawScatter = drawScatter,
 	drawGrid = drawGrid,
 	drawWorld = drawWorld,
+	drawAbilityPreview = drawAbilityPreview,
 	updatePathColor = updatePathColor,
 	updateGrassColor = updateGrassColor,
 	updateWaterColor = updateWaterColor,

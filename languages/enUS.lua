@@ -18,6 +18,12 @@ return {
 		paused = "Paused",
 	},
 
+	ability = {
+		meteor = {name = "Meteor", desc = "Blast enemies in a targeted area."},
+		frostNova = {name = "Frost Nova", desc = "Severely slow enemies in a targeted area."},
+		cooldown = "%s  %ds",
+	},
+
 	settings = {
 		title = "Settings",
 		music = "Music Volume",
@@ -70,6 +76,7 @@ return {
 	},
 
 	campaign = {
+		ability = "Ability: %s",
 		locked = "LOCKED",
 		mapOf = "Map %d of %d",
 		completedBest = "Completed: %s • Best: %d",

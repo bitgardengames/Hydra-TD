@@ -762,6 +762,15 @@ local function applyDamage(e, amount, context)
 	return amount, absorbed
 end
 
+local function applySlow(e, factor, duration)
+	if not e or e.hp <= 0 then return false end
+	local newFactor = math.max(0, math.min(1, factor))
+	if not e.slowFactor or newFactor < e.slowFactor then e.slowFactor = newFactor end
+	e.slowTimer = math.max(e.slowTimer or 0, duration or 0)
+	e.slowDuration = math.max(e.slowDuration or 0, duration or 0)
+	return true
+end
+
 return {
 	enemies = enemies,
 	EnemyDefs = EnemyDefs,
@@ -770,5 +779,6 @@ return {
 	updateEnemies = updateEnemies,
 	applyHitImpulse = applyHitImpulse,
 	applyDamage = applyDamage,
+	applySlow = applySlow,
 	clear = clear,
 }

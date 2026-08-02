@@ -41,6 +41,9 @@ local state = {
 	placingFadeT = 0,
 	selectedTower = nil,
 	selectedEnemy = nil,
+	equippedAbility = "meteor",
+	abilityCooldown = 0,
+	abilityTargeting = nil,
 
 	hoverGX = nil,
 	hoverGY = nil,

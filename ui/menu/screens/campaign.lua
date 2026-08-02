@@ -14,6 +14,7 @@ local Tooltip = require("ui.tooltip")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
+local AbilityDefs = require("systems.ability_defs")
 
 local lg = love.graphics
 local floor = math.floor
@@ -128,6 +129,20 @@ local function cycleDifficulty(dir)
 	Difficulty.set(nextDifficulty)
 	Save.flush()
 	Sound.play("uiMove")
+end
+
+local function cycleAbility()
+	local index = 1
+	for i, id in ipairs(AbilityDefs.order) do
+		if id == State.equippedAbility then index = i break end
+	end
+	State.equippedAbility = AbilityDefs.order[index % #AbilityDefs.order + 1]
+	Sound.play("uiMove")
+end
+
+local function abilityButtonLabel()
+	local def = AbilityDefs[State.equippedAbility] or AbilityDefs[AbilityDefs.order[1]]
+	return L("campaign.ability", L(def.nameKey))
 end
 
 local function difficultyButtonLabel()
@@ -359,6 +374,13 @@ function Screen.load()
 				cycleDifficulty(1)
 			end
 		},
+		{
+			id = "ability",
+			label = abilityButtonLabel(),
+			w = btnW,
+			h = btnH,
+			onClick = cycleAbility,
+		},
 
 		{
 			id = "play",
@@ -442,6 +464,8 @@ function Screen.update(dt)
 		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
 		if btn.id == "difficulty" then
 			btn.label = difficultyButtonLabel()
+		elseif btn.id == "ability" then
+			btn.label = abilityButtonLabel()
 		end
 
 		local mx, my = love.mouse.getPosition()
