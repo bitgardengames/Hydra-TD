@@ -17,6 +17,7 @@ local function drawWorld()
 	MapWorldCache.draw()
 
 	DrawWorld.drawGrid()
+	DrawWorld.drawAbilityPreview()
 
 	DrawEntities.drawTowerGhost()
 	DrawEntities.drawTowers()

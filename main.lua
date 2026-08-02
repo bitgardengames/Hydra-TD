@@ -134,7 +134,10 @@ function resetGame()
 
     -- Placement / selection
     State.placing = nil
-    State.selectedTower = nil
+	State.selectedTower = nil
+	State.selectedEnemy = nil
+	State.abilityCooldown = 0
+	State.abilityTargeting = nil
     State.hoverGX = nil
     State.hoverGY = nil
 
@@ -454,15 +457,13 @@ function love.mousepressed(x, y, button)
 	if Onboarding.mousepressed(x, y, button) then return end
 
 	if ModulePicker.isActive() then
-		if ModulePicker.mousepressed(x, y, button) then
-			return
-		end
+		ModulePicker.mousepressed(x, y, button)
+		return
 	end
 
 	if Overlay.isActive() then
-		if Overlay.mousepressed(x, y, button) then
-			return
-		end
+		Overlay.mousepressed(x, y, button)
+		return
 	end
 
 	if State.mode ~= "game" then
@@ -484,10 +485,10 @@ function love.wheelmoved(x, y)
 end
 
 function love.mousereleased(x, y, button)
+	if ModulePicker.isActive() then return end
 	if Overlay.isActive() then
-		if Overlay.mousereleased(x, y, button) then
-			return
-		end
+		Overlay.mousereleased(x, y, button)
+		return
 	end
 
 	if State.mode ~= "game" then
@@ -516,15 +517,13 @@ function love.keypressed(key)
 	end
 
 	if ModulePicker.isActive() then
-		if ModulePicker.keypressed(key) then
-			return
-		end
+		ModulePicker.keypressed(key)
+		return
 	end
 
 	if Overlay.isActive() then
-		if Overlay.keypressed(key) then
-			return
-		end
+		Overlay.keypressed(key)
+		return
 	end
 
 	if State.mode ~= "game" then

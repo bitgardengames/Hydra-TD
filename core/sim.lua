@@ -6,6 +6,7 @@ local Waves = require("systems.waves")
 local State = require("core.state")
 local Effects = require("world.effects")
 local Spatial = require("world.spatial_grid")
+local Abilities = require("systems.abilities")
 
 local Sim = {}
 
@@ -16,6 +17,7 @@ function Sim.update(dt)
 	end
 
 	Spatial.beginFrame()
+	Abilities.update(dt)
 	State.frameId = (State.frameId or 0) + 1
 	Waves.updateSpawner(dt)
 	Enemies.updateEnemies(dt)

@@ -14,6 +14,7 @@ local Sound = require("systems.sound")
 local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
 local Onboarding = require("systems.onboarding")
+local Abilities = require("systems.abilities")
 
 local getTime = love.timer.getTime
 local floor = math.floor
@@ -50,6 +51,9 @@ end
 
 local function updateHover()
 	State.hoverGX, State.hoverGY = screenToGrid(love.mouse.getPosition())
+	if State.abilityTargeting then
+		State.abilityTargeting.x, State.abilityTargeting.y = Camera.screenToWorld(love.mouse.getPosition())
+	end
 end
 
 local function hitButton(list, x, y)
@@ -135,6 +139,11 @@ local function mousepressed(x, y, button)
 
 	-- Shop UI
 	if button == 1 and State.mode == "game" then
+		local abilityButton = handlePanelButtons(BottomBar.getAbilityButtons, x, y, true)
+		if abilityButton then
+			Abilities.beginTargeting()
+			return
+		end
 		-- Tower shop
 		local shopButton = handlePanelButtons(BottomBar.getShopButtons, x, y, true)
 
@@ -159,6 +168,10 @@ local function mousepressed(x, y, button)
 
 	-- World interaction
 	if button == 1 then
+		if State.abilityTargeting then
+			Abilities.activate(wx, wy)
+			return
+		end
 		-- Enemy selection
 		local enemy = findEnemyAt(wx, wy)
 
@@ -213,6 +226,7 @@ local function mousepressed(x, y, button)
 		-- Right click: cancel placement + deselect
 		cancelPlacement()
 		deselect()
+		Abilities.cancelTargeting()
 	end
 end
 
@@ -224,6 +238,11 @@ local function mousereleased(x, y, button)
 	if button ~= 1 or State.mode ~= "game" then
 		return
 	end
+
+	-- Shop buttons
+	handlePanelButtons(BottomBar.getAbilityButtons, x, y, false, function()
+		Abilities.beginTargeting()
+	end)
 
 	-- Shop buttons
 	handlePanelButtons(BottomBar.getShopButtons, x, y, false, function(b)
@@ -299,6 +318,10 @@ local function keypressed(key)
 
 			return
 		elseif State.mode == "game" then
+			if State.abilityTargeting then
+				Abilities.cancelTargeting()
+				return
+			end
 			-- Cancel placement
 			if State.placing then
 				cancelPlacement()
