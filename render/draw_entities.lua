@@ -116,6 +116,15 @@ local function drawEnemy(e)
 	local r = e.radius
 	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
 
+	-- Keep the shadow anchored to the ground while the enemy body reacts to a hit.
+	-- Drawing it before the squash transform also keeps its footprint unchanged.
+	if e.shadow then
+		local shadowAlpha = esA * (enemyAlpha * enemyAlpha)
+
+		lg.setColor(esR, esG, esB, shadowAlpha)
+		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.4, e.radius * 0.4)
+	end
+
 	-- Briefly compress the whole silhouette on impact, while widening it enough to
 	-- preserve roughly the same visual mass. UI such as selection and health bars
 	-- remains unscaled and readable.
@@ -173,14 +182,6 @@ local function drawEnemy(e)
         lg.polygon("fill", 0, 0, hornW, -hornH * 0.5, hornW, hornH * 0.5)
         lg.pop()
     end
-
-    -- Shadow
-	if e.shadow then
-		local shadowAlpha = esA * (enemyAlpha * enemyAlpha)
-
-		lg.setColor(esR, esG, esB, shadowAlpha)
-		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.4, e.radius * 0.4)
-	end
 
 	-- Body outline
 	lg.setColor(outR, outG, outB, enemyAlpha)
