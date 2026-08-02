@@ -6,9 +6,9 @@ local Builder = {}
 -- Templates describe the campaign baseline. Endless tiers add bodies and mixed
 -- pressure, but retain a hard wave budget so progression cannot grow forever.
 local Templates = {
-	standard = { enemy = "grunt", baseCount = 36, spacing = 0.65 },
-	fast = { enemy = "runner", baseCount = 48, spacing = 0.65 },
-	tanky = { enemy = "tank", baseCount = 30, spacing = 1.05 },
+	standard = { enemy = "grunt", baseCount = 36, spacing = 0.7 },
+	fast = { enemy = "runner", baseCount = 48, spacing = 0.7 },
+	tanky = { enemy = "tank", baseCount = 30, spacing = 1.1 },
 }
 
 local TemplateSelectionRules = {
@@ -33,7 +33,7 @@ local unlocks = {
 
 Builder.endlessTierWaves = 5
 Builder.maxWaveEnemies = 120
-Builder.minSpawnSpacing = 0.28
+Builder.minSpawnSpacing = 0.3
 
 function Builder.getIntensityTier(waveIndex)
 	local endlessWave = math.max(0, (tonumber(waveIndex) or 0) - DifficultyCurve.campaignEnd)
