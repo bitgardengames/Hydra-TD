@@ -230,6 +230,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.radius2 = def.radius * def.radius
 	e.hitFlash = 0
 	e.hitSquash = 0
+	e.hitSquashStrength = 1
 	e.dying = false
 	e.deathT = 0
 	e.deathDur = 0.4
@@ -454,6 +455,7 @@ local function updateEnemies(dt)
 
 				e.hitFlash = 0.03
 				e.hitSquash = HIT_SQUASH_DUR
+				e.hitSquashStrength = 0.55
 
 				State.addDamage("poison", dmg, e.boss == true)
 				RunStats.recordDamage(e.poisonSource, "poison", dmg)
@@ -752,7 +754,10 @@ local function applyDamage(e, amount, context)
 		amount = max(0, amount - absorbed)
 	end
 	e.hp = e.hp - amount
-	if amount > 0 or absorbed > 0 then e.hitSquash = HIT_SQUASH_DUR end
+	if amount > 0 or absorbed > 0 then
+		e.hitSquash = HIT_SQUASH_DUR
+		e.hitSquashStrength = 1
+	end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
 	return amount, absorbed
 end
