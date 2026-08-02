@@ -115,6 +115,7 @@ local function drawEnemy(e)
 	e.drawY = iy
 	local r = e.radius
 	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
+	squash = squash * (e.hitSquashStrength or 1)
 
 	-- Keep the shadow anchored to the ground while the enemy body reacts to a hit.
 	-- Drawing it before the squash transform also keeps its footprint unchanged.
