@@ -521,7 +521,10 @@ function Screen.draw()
 	lg.setColor(colorDim)
 	lg.rectangle("fill", plateX, plateY, plateW, plateH, 8, 8)
 
-	Medals.draw(previewX + medalInsetX, previewY + medalInsetY, count, medalR, medalGap)
+	Medals.draw(previewX + medalInsetX, previewY + medalInsetY, count, medalR, medalGap, {
+		time = pulseTime,
+		shine = not Save.data.settings.reducedFlash,
+	})
 
 	--[[ Completion stats
 	local statText = getCompletionString(map.id)

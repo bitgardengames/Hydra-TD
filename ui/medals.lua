@@ -36,6 +36,13 @@ local COLORS = {
 local BASE_RADIUS = 9
 local BASE_GAP = 10
 
+-- Idle shines are deliberately brief and widely spaced. Offsetting each tier by
+-- more than the sweep duration keeps bronze, silver, and gold from flashing at
+-- the same time.
+local SHINE_PERIOD = 6
+local SHINE_DURATION = 0.55
+local SHINE_STAGGER = 1.35
+
 local revealBaseCount = 0
 local revealTargetCount = 0
 
@@ -179,6 +186,33 @@ function Medals.update(dt)
 	end
 end
 
+local function drawShine(x, y, radius, phase, yOffset)
+	if phase == nil or phase < 0 or phase >= 1 then
+		return
+	end
+
+	local cy = y + yOffset
+	local sweepX = x - radius * 1.8 + phase * radius * 3.6
+	local halfWidth = radius * 0.18
+	local slant = radius * 0.65
+
+	-- Clip the diagonal band to the face of the medal so it reads as reflected
+	-- light rather than a translucent shape passing over the medal.
+	lg.stencil(function()
+		lg.circle("fill", x, cy, radius * 0.94)
+	end, "replace", 1)
+	lg.setStencilTest("greater", 0)
+
+	lg.setColor(1, 1, 1, sin(phase * pi) * 0.42)
+	lg.polygon("fill",
+		sweepX - halfWidth - slant, cy - radius,
+		sweepX + halfWidth - slant, cy - radius,
+		sweepX + halfWidth + slant, cy + radius,
+		sweepX - halfWidth + slant, cy + radius)
+
+	lg.setStencilTest()
+end
+
 local function drawMedal(x, y, tier, earned, r, scale, glint, yOffset)
 	local c = COLORS[tier]
 
@@ -212,27 +246,8 @@ local function drawMedal(x, y, tier, earned, r, scale, glint, yOffset)
 		lg.setColor(1, 1, 1, 0.10)
 		lg.circle("fill", x - 4, y - 4 + yOffset, radius * 0.35)
 
-		-- Highlight glint
-		if glint and glint < 1 then
-			local t = glint
-			local flash = sin(t * pi)
-
-			local idle = 0.10
-			local peak = 0.50
-
-			local a = flash * peak
-
-			-- settle toward idle
-			if t > 0.6 then
-				local settle = (t - 0.6) / 0.4
-				a = peak + (idle - peak) * settle
-			end
-
-			local r = radius * (0.28 + flash * 0.12)
-
-			lg.setColor(1, 1, 1, a)
-			lg.circle("fill", x - 3, y - 3 + yOffset, r)
-		end
+		-- Reveal and optional idle shine share the same clipped sweep.
+		drawShine(x, y, radius, glint, yOffset)
 	else
 		lg.setColor(0.1, 0.1, 0.1)
 		lg.circle("fill", x, y, radius + outlineW)
@@ -244,7 +259,7 @@ local function drawMedal(x, y, tier, earned, r, scale, glint, yOffset)
 	lg.pop()
 end
 
-function Medals.draw(x, y, earnedCount, r, g)
+function Medals.draw(x, y, earnedCount, r, g, animation)
 	BASE_RADIUS = r or BASE_RADIUS
 	BASE_GAP = g or BASE_GAP
 
@@ -253,12 +268,29 @@ function Medals.draw(x, y, earnedCount, r, g)
 	local startX = x + BASE_RADIUS
 	local centerY = y + BASE_RADIUS
 	local step = BASE_RADIUS * 2 + BASE_GAP
+	local animationTime
+	local shineEnabled = true
+
+	if type(animation) == "number" then
+		animationTime = animation
+	elseif type(animation) == "table" then
+		animationTime = animation.time
+		shineEnabled = animation.shine ~= false
+	end
 
 	for i = 1, 3 do
 		local mx = startX + (i - 1) * step
 		local earned = i <= baseCount
 
-		drawMedal(mx, centerY, i, earned, BASE_RADIUS)
+		local shinePhase
+		if earned and shineEnabled and animationTime then
+			local elapsed = (animationTime - (i - 1) * SHINE_STAGGER) % SHINE_PERIOD
+			if elapsed < SHINE_DURATION then
+				shinePhase = elapsed / SHINE_DURATION
+			end
+		end
+
+		drawMedal(mx, centerY, i, earned, BASE_RADIUS, nil, shinePhase)
 	end
 end
 
