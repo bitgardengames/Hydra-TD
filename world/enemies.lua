@@ -21,6 +21,7 @@ local colorMoney = Theme.ui.money
 local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- Seconds per poison tick
+local HIT_SQUASH_DUR = 0.12
 
 local EPS = 1e-6
 local BASE_MAX_NUDGE = 10
@@ -228,6 +229,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius
 	e.hitFlash = 0
+	e.hitSquash = 0
 	e.dying = false
 	e.deathT = 0
 	e.deathDur = 0.4
@@ -385,6 +387,7 @@ local function updateEnemies(dt)
 		local e = enemies[i]
 		e.combatAge = (e.combatAge or 0) + dt
 		local isBoss = e.boss
+		e.hitSquash = max(0, (e.hitSquash or 0) - dt)
 
 		-- Spawn fade-in
 		local spawnFade = e.spawnFade
@@ -447,6 +450,7 @@ local function updateEnemies(dt)
 				end
 
 				e.hitFlash = 0.03
+				e.hitSquash = HIT_SQUASH_DUR
 
 				State.addDamage("poison", dmg, e.boss == true)
 				RunStats.recordDamage(e.poisonSource, "poison", dmg)
@@ -743,6 +747,7 @@ local function applyDamage(e, amount, context)
 		amount = max(0, amount - absorbed)
 	end
 	e.hp = e.hp - amount
+	if amount > 0 or absorbed > 0 then e.hitSquash = HIT_SQUASH_DUR end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
 	return amount, absorbed
 end

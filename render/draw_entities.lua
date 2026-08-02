@@ -51,6 +51,7 @@ local HALF_PI = pi / 2
 local towerDefs = Towers.TowerDefs
 local EYE_SMOOTH = 0.35
 local EYE_DEADZONE = 0.03
+local HIT_SQUASH_DUR = 0.12
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
@@ -113,6 +114,15 @@ local function drawEnemy(e)
 	e.drawX = ix
 	e.drawY = iy
 	local r = e.radius
+	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
+
+	-- Briefly compress the whole silhouette on impact, while widening it enough to
+	-- preserve roughly the same visual mass. UI such as selection and health bars
+	-- remains unscaled and readable.
+	lg.push()
+	lg.translate(ix, iy)
+	lg.scale(1 + squash * 0.18, 1 - squash * 0.24)
+	lg.translate(-ix, -iy)
 
 	-- Mechanical silhouettes are deliberately geometric and remain legible without
 	-- their colors: plates, shield arc, regeneration cross, and war banner/aura.
@@ -326,6 +336,8 @@ local function drawEnemy(e)
 		lg.circle("fill", ix - eyeSep + dx, eyeY + dy, eyeSize)
 		lg.circle("fill", ix + eyeSep + dx, eyeY + dy, eyeSize)
     end
+
+	lg.pop()
 
 	-- Selection Ring
 	if State.selectedEnemy == e then
