@@ -155,6 +155,9 @@ local function emitDamage(p, e, dmg)
 	evt.amount = dmg
 	-- Shock arcs and explicit chain graphs are the shield-break counterplay.
 	evt.chain = p.sourceKind == "shock" or p._chain ~= nil
+	-- Presentation metadata survives the pooled event path and is resolved after
+	-- authoritative damage, so spectacular attacks never alter combat outcomes.
+	evt.effectIntensity = dmg >= 100 and "strong" or "normal"
 end
 
 local function beginChainDamageBudget(p)

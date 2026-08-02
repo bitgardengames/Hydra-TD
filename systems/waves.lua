@@ -10,6 +10,7 @@ local EnemyDefs = require("world.enemy_defs")
 local EnemyTraits = require("world.enemy_traits")
 local Spatial = require("world.spatial_grid")
 local Onboarding = require("systems.onboarding")
+local Effects = require("world.effects")
 
 local Waves = {}
 
@@ -245,6 +246,7 @@ function Waves.getWavePreview(waveNumber)
 	end
 
 	if wave.boss then
+		Effects.trigger("boss_wave", {intensity = 4, shake = 5, duration = 0.3, criticalTell = true})
 		local bossIndex = math.max(1, math.floor(waveNumber / 10))
 		local authored = wave.groups and wave.groups[1]
 		addGroup(getBossByArchetype(Maps[State.mapIndex], bossIndex), 1, 0,

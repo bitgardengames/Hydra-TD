@@ -489,6 +489,33 @@ function Screen.load()
 			label = L("settings.tabVideo"),
 			rows = {
 				{
+					id = "screen_shake", label = L("settings.screenShake"), type = "slider",
+					color = Theme.effects.colors.impact,
+					get = function() return Save.data.settings.screenShake end,
+					set = function(v) Save.data.settings.screenShake = v end,
+				},
+				{
+					id = "effects_density", label = L("settings.effectsDensity"), type = "slider",
+					color = Theme.effects.colors.boss,
+					get = function() return Save.data.settings.effectsDensity end,
+					set = function(v) Save.data.settings.effectsDensity = v end,
+				},
+				{
+					id = "damage_numbers", label = L("settings.damageNumbers"), type = "toggle",
+					get = function() return Save.data.settings.showDamageNumbers end,
+					set = function(v) Save.data.settings.showDamageNumbers = v end,
+				},
+				{
+					id = "reduced_flash", label = L("settings.reducedFlash"), type = "toggle",
+					get = function() return Save.data.settings.reducedFlash end,
+					set = function(v) Save.data.settings.reducedFlash = v end,
+				},
+				{
+					id = "hit_stop", label = L("settings.hitStop"), type = "toggle",
+					get = function() return Save.data.settings.hitStop end,
+					set = function(v) Save.data.settings.hitStop = v end,
+				},
+				{
 					id = "fullscreen",
 					label = L("settings.fullscreen"),
 					type = "toggle",

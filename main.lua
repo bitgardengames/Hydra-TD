@@ -279,6 +279,7 @@ end
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
 	dt = min(dt, MAX_FRAME_DT)
+	Camera.update(dt)
 
 	local mode = State.mode
 	local target = (mode == "pause" or mode == "settings_gameplay") and 1 or 0
@@ -306,7 +307,7 @@ function love.update(dt)
 		return
 	end
 
-	Sim.update(dt * State.speed)
+	Sim.update(Effects.consumeHitStop(dt) * State.speed)
 
 	if mode ~= "game" then
 		updateMetaScreens(dt, mode)
