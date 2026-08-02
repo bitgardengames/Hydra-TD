@@ -226,7 +226,7 @@ function Waves.getWavePreview(waveNumber)
 	local wave = WaveBuilder.build(waveNumber)
 	local groups = {}
 
-	local function addGroup(kind, count, spacing, delay, role)
+	local function addGroup(kind, count, spacing, delay)
 		local def = EnemyDefs[kind]
 		local group = {
 			kind = kind,
@@ -234,7 +234,6 @@ function Waves.getWavePreview(waveNumber)
 			count = count,
 			spacing = spacing or 0,
 			delay = delay or 0,
-			role = role,
 			tags = {},
 			counterHints = {},
 		}
@@ -250,10 +249,10 @@ function Waves.getWavePreview(waveNumber)
 		local bossIndex = math.max(1, math.floor(waveNumber / 10))
 		local authored = wave.groups and wave.groups[1]
 		addGroup(getBossByArchetype(Maps[State.mapIndex], bossIndex), 1, 0,
-			authored and authored.delay, authored and authored.role)
+			authored and authored.delay)
 	elseif wave.groups then
 		for _, group in ipairs(wave.groups) do
-			addGroup(group.kind, group.count, group.spacing, group.delay, group.role)
+			addGroup(group.kind, group.count, group.spacing, group.delay)
 		end
 	else
 		-- Endless composition has uniform timing; coalesce adjacent kinds while
@@ -261,7 +260,7 @@ function Waves.getWavePreview(waveNumber)
 		for _, kind in ipairs(wave.composition or {}) do
 			local group = groups[#groups]
 			if group and group.kind == kind then group.count = group.count + 1
-			else addGroup(kind, 1, wave.spacing, 0, nil) end
+			else addGroup(kind, 1, wave.spacing, 0) end
 		end
 	end
 
