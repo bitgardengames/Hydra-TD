@@ -56,7 +56,6 @@ local function refreshPreview()
 		entries[i] = {
 			name = L("hud.compositionEntry", group.count, group.name),
 			timing = L("hud.groupTiming", i, group.delay, group.spacing),
-			role = group.role,
 			tags = table.concat(group.tags, " · "),
 			hint = table.concat(group.counterHints, " "),
 		}
@@ -72,7 +71,7 @@ function WavePreview.draw()
 
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local rowH = textH * 5 + ROW_GAP
+	local rowH = textH * 4 + ROW_GAP
 	local bodyH = math.max(textH, #previewCache.entries * rowH - ROW_GAP)
 	local panelH = PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH
 	local x = SCREEN_PAD
@@ -108,15 +107,11 @@ function WavePreview.draw()
 		Text.printShadow(entry.name, innerX, rowY)
 		lg.setColor(colorWave)
 		Text.printShadow(entry.timing, innerX, rowY + textH)
-		if entry.role then
-			lg.setColor(colorText)
-			Text.printShadow(entry.role, innerX, rowY + textH * 2)
-		end
 		if entry.tags ~= "" then
 			lg.setColor(colorWave)
-			Text.printShadow(entry.tags, innerX, rowY + textH * 3)
+			Text.printShadow(entry.tags, innerX, rowY + textH * 2)
 			lg.setColor(colorText)
-			Text.printfShadow(entry.hint, innerX, rowY + textH * 4, innerW, "left")
+			Text.printfShadow(entry.hint, innerX, rowY + textH * 3, innerW, "left")
 		end
 		rowY = rowY + rowH
 	end
