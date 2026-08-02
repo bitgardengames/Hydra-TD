@@ -7,7 +7,6 @@ return {
 
 	menu = {
 		play = "Play",
-		progress = "Progress",
 		settings = "Settings",
 		quit = "Quit",
 		back = "Back",
@@ -547,29 +546,6 @@ return {
 
 		tower_upgrade_1 = "Upgrade a tower",
 		tower_upgrade_100 = "Upgrade towers 100 times",
-	},
-
-	progress = {
-		title = "Progress",
-		achievements = "Achievements",
-		enemyIntel = "Enemy Intel",
-		towers = "Towers",
-		unlocked = "Unlocked",
-		locked = "Locked",
-		progressValue = "%d / %d",
-		noIntel = "No enemy intel collected yet. Encounter enemies in battle to reveal their files.",
-		armor = "Armor: blocks %g damage; heavy hits (≥ %g) deal ×%g.",
-		shield = "Shield: %g strength; burst and chain attacks break it faster.",
-		regeneration = "Regeneration: restores %g health/sec after %.2fs without damage.",
-		support = "Support: speeds nearby enemies by %d%% within %g range.",
-		basic = "No special mechanics.",
-		basicIntel = "MECHANIC: No special mechanic.\nTELL: Standard silhouette and movement.\nDEFEATS IT: Any two or more complementary damage towers.",
-		mechanic = "MECHANIC — %s: %s",
-		tell = "TELL: %s",
-		defeats = "DEFEATS IT: %s Answers: %s",
-		history = "Kills %d  •  Leaks caused %d",
-		historyFull = "Kills %d  •  Leaks caused %d  •  Fastest %.2fs",
-		scrollHint = "Mouse wheel or ↑/↓ to scroll • Esc to return",
 	},
 
 	towerCodex = {

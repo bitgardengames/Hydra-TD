@@ -107,7 +107,7 @@ end
 local function getMousepressHandler()
 	local mode = State.mode
 
-	if mode == "menu" or mode == "campaign" or mode == "settings" or mode == "progress" or mode == "game_over" or mode == "victory" then
+	if mode == "menu" or mode == "campaign" or mode == "settings" or mode == "game_over" or mode == "victory" then
 		return Menu.mousepressed, true
 	end
 
@@ -321,7 +321,7 @@ local function keypressed(key)
 	end
 
 	-- Menu screens
-	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" or State.mode == "progress" or State.mode == "pause" or State.mode == "game_over" or State.mode == "victory" then
+	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" or State.mode == "pause" or State.mode == "game_over" or State.mode == "victory" then
 		Menu.keypressed(key)
 
 		return
