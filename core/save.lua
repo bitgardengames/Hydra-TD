@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 2 -- Onboarding, achievement, and endless progression updates
+local SAVE_VERSION = 3 -- Presentation accessibility settings
 
 local Hotkeys = require("core.hotkeys")
 
@@ -127,6 +127,11 @@ function Save.load()
 			settings.musicVolume = settings.musicVolume or 0.20
 			settings.sfxVolume = settings.sfxVolume or 0.20
 			settings.difficulty = settings.difficulty or "normal"
+			if type(settings.screenShake) ~= "number" then settings.screenShake = 1 end
+			if type(settings.effectsDensity) ~= "number" then settings.effectsDensity = 1 end
+			if settings.showDamageNumbers == nil then settings.showDamageNumbers = true end
+			if settings.reducedFlash == nil then settings.reducedFlash = false end
+			if settings.hitStop == nil then settings.hitStop = true end
 
 			if settings.fullscreen == nil then
 				settings.fullscreen = true
@@ -219,6 +224,11 @@ function Save.load()
 			musicVolume = 0.20,
 			sfxVolume = 0.20,
 			difficulty = "normal",
+			screenShake = 1,
+			effectsDensity = 1,
+			showDamageNumbers = true,
+			reducedFlash = false,
+			hitStop = true,
 			fullscreen = true,
 			keybinds = Hotkeys.getDefaultBindings(),
 		},

@@ -10,6 +10,11 @@ Camera.oy = 0
 Camera.wx = 0
 Camera.wy = 0
 Camera.wscale = 1.0
+Camera.shakeX = 0
+Camera.shakeY = 0
+Camera.shakeTime = 0
+Camera.shakeDuration = 0
+Camera.shakeStrength = 0
 
 -- Authoring baseline
 local REF_W = 1920
@@ -88,7 +93,27 @@ function Camera.begin()
 
 	lg.push()
 	lg.scale(Camera.wscale, Camera.wscale)
-	lg.translate(-Camera.wx, -Camera.wy)
+	lg.translate(-Camera.wx + Camera.shakeX, -Camera.wy + Camera.shakeY)
+end
+
+function Camera.shake(strength, duration)
+	if strength <= 0 then return end
+	Camera.shakeStrength = math.max(Camera.shakeStrength, strength)
+	Camera.shakeDuration = math.max(Camera.shakeDuration, duration or 0.15)
+	Camera.shakeTime = Camera.shakeDuration
+end
+
+function Camera.update(dt)
+	if Camera.shakeTime <= 0 then
+		Camera.shakeX, Camera.shakeY = 0, 0
+		return
+	end
+	Camera.shakeTime = math.max(0, Camera.shakeTime - dt)
+	local fade = Camera.shakeDuration > 0 and Camera.shakeTime / Camera.shakeDuration or 0
+	local amount = Camera.shakeStrength * fade
+	Camera.shakeX = (love.math.random() * 2 - 1) * amount
+	Camera.shakeY = (love.math.random() * 2 - 1) * amount
+	if Camera.shakeTime == 0 then Camera.shakeStrength = 0 end
 end
 
 function Camera.finish()

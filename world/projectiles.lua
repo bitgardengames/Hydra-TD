@@ -5,6 +5,8 @@ local Sound = require("systems.sound")
 local PB = require("world.projectile_behaviors")
 local Util = require("core.util")
 local RunStats = require("systems.run_stats")
+local Save = require("core.save")
+local Floaters = require("ui.floaters")
 
 local projectiles = {}
 local pool = {}
@@ -371,6 +373,13 @@ local function resolveDamage(p, evt)
 
 	State.addDamage(p.sourceKind, effectiveDamage, e.boss == true)
 	RunStats.recordDamage(t, evt.damageType or p.damageType or p.sourceKind, effectiveDamage)
+	if effectiveDamage > 0 and (not Save.data or Save.data.settings.showDamageNumbers ~= false) then
+		Floaters.add(e.x, e.y - (e.radius or 10), tostring(math.floor(effectiveDamage + 0.5)), 1, 0.82, 0.45)
+	end
+	local highDamage = effectiveDamage >= math.max(40, (e.maxHp or 0) * 0.12)
+	if highDamage then
+		Effects.trigger("high_damage", {intensity = 3, shake = e.boss and 4 or 2.5, hitStop = e.boss and 0.035 or 0.018})
+	end
 end
 
 local function resolveImpulse(evt)

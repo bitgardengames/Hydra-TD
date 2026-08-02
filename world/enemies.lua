@@ -277,6 +277,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	if e.boss then
 		State.activeBoss = e
 		State.activeBossKind = e.kind
+		Effects.trigger("boss_entrance", {intensity = 4, shake = 7, duration = 0.35, hitStop = 0.06, criticalTell = true})
 	end
 end
 
@@ -286,6 +287,7 @@ local function handleEnemyKilled(e, i, isBoss)
 		State.activeBoss = nil
 		State.activeBossKind = nil
 		Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
+		Effects.trigger("boss_defeat", {intensity = 4, shake = 11, duration = 0.45, hitStop = 0.10})
 	else
 		Effects.spawnEnemyDeath(e.x, e.y, e.radius)
 	end
@@ -314,6 +316,7 @@ end
 local function handleEnemyEscaped(e, i, isBoss)
 	Save.recordEnemyResult(e.kind, "leak")
 	RunStats.recordLeak(e.kind)
+	Effects.trigger("enemy_leak", {intensity = isBoss and 4 or 3, shake = isBoss and 12 or 5, hitStop = isBoss and 0.10 or 0.04})
 	if isBoss then
 		State.activeBoss = nil
 		State.activeBossKind = nil

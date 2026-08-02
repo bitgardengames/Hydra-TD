@@ -1,4 +1,7 @@
 local Sound = require("systems.sound")
+local Save = require("core.save")
+local Camera = require("core.camera")
+local Theme = require("core.theme")
 
 local lg = love.graphics
 local random = love.math.random
@@ -17,6 +20,40 @@ local function swapRemove(list, i)
 end
 
 local Effects = {}
+Effects.hitStopRemaining = 0
+
+local function settings()
+	return Save.data and Save.data.settings or {}
+end
+
+function Effects.particleCount(base, intensity, criticalTell)
+	if criticalTell then return math.max(1, base) end
+	local density = settings().effectsDensity
+	if type(density) ~= "number" then density = 1 end
+	return math.max(intensity >= Theme.effects.intensity.strong and 1 or 0, math.floor(base * density + 0.5))
+end
+
+-- Central trigger used by combat systems. Tags make effect priority explicit and
+-- allow accessibility settings to scale spectacle without hiding enemy tells.
+function Effects.trigger(tag, opts)
+	opts = opts or {}
+	local intensity = opts.intensity or Theme.effects.intensity.normal
+	local criticalTell = opts.criticalTell == true
+	local shakeScale = settings().screenShake
+	if type(shakeScale) ~= "number" then shakeScale = 1 end
+	Camera.shake((opts.shake or intensity * 0.8) * shakeScale, opts.duration or 0.14)
+	if settings().hitStop ~= false and opts.hitStop and opts.hitStop > 0 then
+		Effects.hitStopRemaining = math.max(Effects.hitStopRemaining, opts.hitStop)
+	end
+	return { tag = tag, intensity = intensity, color = opts.color, criticalTell = criticalTell }
+end
+
+function Effects.consumeHitStop(dt)
+	if Effects.hitStopRemaining <= 0 then return dt end
+	local consumed = math.min(dt, Effects.hitStopRemaining)
+	Effects.hitStopRemaining = Effects.hitStopRemaining - consumed
+	return dt - consumed
+end
 
 Effects.splashes = {}
 Effects.explosions = {}
@@ -225,7 +262,7 @@ function Effects.spawnBossDeathExplosion(x, y, radius)
 
 	Effects.explosions[#Effects.explosions + 1] = ring
 
-	local count = 28
+	local count = Effects.particleCount(28, Theme.effects.intensity.critical)
 
 	for i = 1, count do
 		local a = (i / count) * pi * 2
@@ -258,7 +295,7 @@ function Effects.spawnCannonImpact(x, y, r)
 
 	Effects.splashes[#Effects.splashes + 1] = s
 
-	for i = 1, 10 do
+	for i = 1, Effects.particleCount(10, Theme.effects.intensity.strong) do
 		local a = random() * pi * 2
 		local sp = 130 + random() * 120
 
@@ -279,7 +316,7 @@ end
 
 -- Frost
 function Effects.spawnFrostBurst(x, y)
-	for i = 1, 9 do
+	for i = 1, Effects.particleCount(9, Theme.effects.intensity.normal) do
 		local a = random() * pi * 2
 		local sp = 100 + random() * 100
 
@@ -301,7 +338,7 @@ end
 
 -- Poison
 function Effects.spawnPoisonSplash(x, y)
-	for i = 1, 7 do -- was 5
+	for i = 1, Effects.particleCount(7, Theme.effects.intensity.normal) do
 		local a = random() * pi * 2
 		local sp = 90 + random() * 90
 
@@ -321,7 +358,7 @@ end
 
 -- Lancer
 function Effects.spawnLancerHit(x, y)
-	for i = 1, 6 do
+	for i = 1, Effects.particleCount(6, Theme.effects.intensity.normal) do
 		local a = random() * pi * 2
 		local sp = 150 + random() * 110
 
@@ -341,7 +378,7 @@ end
 
 -- Plasma
 function Effects.spawnPlasmaHit(x, y, vx, vy)
-	for i = 1, 8 do
+	for i = 1, Effects.particleCount(8, Theme.effects.intensity.normal) do
 		local p = acquire(plasmaParticlePool)
 
 		local ang = random() * pi * 2
@@ -365,7 +402,7 @@ end
 
 -- Tower placement
 function Effects.spawnPlacePuff(x, y)
-	for i = 1, 10 do
+	for i = 1, Effects.particleCount(10, Theme.effects.intensity.subtle) do
 		local a = random() * pi * 2
 		local sp = 110 + random() * 120
 
@@ -598,7 +635,7 @@ function Effects.draw()
 		lg.setColor(1.0, 0.9, 0.7, alpha * 0.2)
 		lg.circle("line", s.x, s.y, radius * 0.8)
 
-		if t < 0.1 then
+		if t < 0.1 and not settings().reducedFlash then
 			local flash = 1 - (t / 0.1)
 
 			lg.setColor(1, 1, 1, 0.9 * flash)
@@ -962,6 +999,7 @@ function Effects.load()
 	Effects.clear()
 end
 function Effects.clear()
+	Effects.hitStopRemaining = 0
 	-- Splashes
 	for i = #Effects.splashes, 1, -1 do
 		local s = Effects.splashes[i]
