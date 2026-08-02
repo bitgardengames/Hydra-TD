@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 4 -- Per-tower codex history
+local SAVE_VERSION = 5 -- Per-difficulty campaign medal timestamps
 
 local Hotkeys = require("core.hotkeys")
 
@@ -115,9 +115,19 @@ function Save.load()
 			Save.data.furthestIndex = Save.data.furthestIndex or 1
 			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 			Save.data.mapStats = Save.data.mapStats or {}
+			local mapStatsChanged = false
 			for _, stats in pairs(Save.data.mapStats) do
-				if type(stats) == "table" then stats.bestEndlessWave = stats.bestEndlessWave or 0 end
+				if type(stats) == "table" then
+					stats.bestEndlessWave = stats.bestEndlessWave or 0
+					if type(stats.medalEarnedAt) ~= "table" then
+						-- Older medals intentionally remain undated. A table is still
+						-- installed so future medals can be timestamped normally.
+						stats.medalEarnedAt = {}
+						mapStatsChanged = true
+					end
+				end
 			end
+			if mapStatsChanged then Save.flush() end
 
 			-- Settings
 			Save.data.settings = Save.data.settings or {}
@@ -291,9 +301,10 @@ function Save.recordMapResult(mapId, wave, difficulty, completed, endless)
 	local s = stats[mapId]
 
 	if not s then
-		s = {bestWave = 0, bestEndlessWave = 0, completedDifficulty = nil}
+		s = {bestWave = 0, bestEndlessWave = 0, completedDifficulty = nil, medalEarnedAt = {}}
 		stats[mapId] = s
 	end
+	s.medalEarnedAt = type(s.medalEarnedAt) == "table" and s.medalEarnedAt or {}
 
 	if endless then
 		if safeWave > (s.bestEndlessWave or 0) then s.bestEndlessWave = safeWave end
@@ -304,9 +315,18 @@ function Save.recordMapResult(mapId, wave, difficulty, completed, endless)
 	if completed then
 		local rank = {easy = 1, normal = 2, hard = 3}
 		local prev = s.completedDifficulty
+		local completedRank = rank[difficulty]
+		local previousRank = rank[prev] or 0
 
-		if not prev or rank[difficulty] > rank[prev] then
+		if completedRank and completedRank > previousRank then
 			s.completedDifficulty = difficulty
+
+			local earnedAt = os.time()
+			for tier, tierRank in pairs(rank) do
+				if tierRank <= completedRank and s.medalEarnedAt[tier] == nil then
+					s.medalEarnedAt[tier] = earnedAt
+				end
+			end
 		end
 	end
 
