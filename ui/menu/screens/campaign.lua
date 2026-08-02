@@ -10,6 +10,7 @@ local Camera = require("core.camera")
 local Text = require("ui.text")
 local Button = require("ui.button")
 local Medals = require("ui.medals")
+local Tooltip = require("ui.tooltip")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
@@ -57,6 +58,48 @@ local PATH_TRIM_END = 72
 local campaignButtons = {}
 local pulseTime = 0
 local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
+local MEDAL_NAMES = {"bronze", "silver", "gold"}
+local medalR = 9
+local medalGap = 10
+local medalInsetX = 22
+local medalInsetY = 20
+local getMapStats
+
+local function hideMedalTooltip()
+	Tooltip.hide()
+end
+
+local function updateMedalTooltip(mapId, previewX, previewY)
+	local stats = getMapStats(mapId)
+	local earnedCount = stats and stats.completedDifficulty and Medals.getCount(stats.completedDifficulty) or 0
+	local mx, my = love.mouse.getPosition()
+	local step = medalR * 2 + medalGap
+
+	for tier = 1, earnedCount do
+		-- These are the three medal hit rectangles, matching Medals.draw's
+		-- centers and diameter exactly.
+		local x = previewX + medalInsetX + (tier - 1) * step
+		local y = previewY + medalInsetY
+		local w, h = medalR * 2, medalR * 2
+
+		if mx >= x and mx <= x + w and my >= y and my <= y + h then
+			local difficultyKey = DIFFICULTY_ORDER[tier]
+			local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[difficultyKey]
+			local earnedDate = L("campaign.medalDateUnavailable")
+			if type(timestamp) == "number" then
+				earnedDate = os.date(L("campaign.medalDateFormat"), timestamp)
+			end
+
+			Tooltip.show({
+				title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[tier]), L("difficulty." .. difficultyKey)),
+				rows = {{label = L("campaign.medalEarnedOn"), value = earnedDate}},
+			})
+			return
+		end
+	end
+
+	hideMedalTooltip()
+end
 
 local function getDifficultyIndex(key)
 	for i, difficultyKey in ipairs(DIFFICULTY_ORDER) do
@@ -273,7 +316,7 @@ local function drawTriangleWithShadow(points, color)
 	lg.polygon("fill", unpack(points))
 end
 
-local function getMapStats(mapId)
+getMapStats = function(mapId)
 	local stats = Save.data.mapStats
 
 	return stats and stats[mapId]
@@ -323,6 +366,7 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
+				hideMedalTooltip()
 				if isMapLocked(State.mapIndex) then
 					Sound.play("uiError")
 					return
@@ -345,6 +389,7 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
+				hideMedalTooltip()
 				State.mode = "menu"
 				Steam.setRichPresence(L("presence.menu"))
 				Sound.play("uiBack")
@@ -367,6 +412,7 @@ function Screen.update(dt)
 	local entry = MapPreviewCache.get(map.id)
 
 	if not entry then
+		hideMedalTooltip()
 		return
 	end
 
@@ -386,6 +432,8 @@ function Screen.update(dt)
 	local previewY = boxY + paddingY
 	local textY = previewY + ph + PAD_PREVIEW
 	local buttonsStartY = textY + PAD_TITLE + PAD_META
+
+	updateMedalTooltip(map.id, cx - pw * 0.5, previewY)
 
 	-- Buttons
 	for i, btn in ipairs(campaignButtons) do
@@ -460,24 +508,20 @@ function Screen.draw()
 	local stats = getMapStats(map.id)
 	local count = stats and stats.completedDifficulty and Medals.getCount(stats.completedDifficulty) or 0
 
-	local medalR = 9
-	local medalGap = 10
-	local insetX = 22
-	local insetY = 20
 	local platePadX = 10
 	local platePadY = 8
 
 	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
 
-	local plateX = previewX + insetX - platePadX
-	local plateY = previewY + insetY - platePadY
+	local plateX = previewX + medalInsetX - platePadX
+	local plateY = previewY + medalInsetY - platePadY
 	local plateW = clusterW + platePadX * 2
 	local plateH = clusterH + platePadY * 2
 
 	lg.setColor(colorDim)
 	lg.rectangle("fill", plateX, plateY, plateW, plateH, 8, 8)
 
-	Medals.draw(previewX + insetX, previewY + insetY, count, medalR, medalGap)
+	Medals.draw(previewX + medalInsetX, previewY + medalInsetY, count, medalR, medalGap)
 
 	--[[ Completion stats
 	local statText = getCompletionString(map.id)
@@ -584,6 +628,7 @@ end
 function Screen.keypressed(key)
 	if key == "left" then
 		if State.mapIndex > 1 then
+			hideMedalTooltip()
 			State.mapIndex = State.resolveMapIndex(State.mapIndex - 1)
 			Sound.play("uiMove")
 		else
@@ -591,6 +636,7 @@ function Screen.keypressed(key)
 		end
 	elseif key == "right" then
 		if State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1) then
+			hideMedalTooltip()
 			State.mapIndex = State.resolveMapIndex(State.mapIndex + 1)
 			Sound.play("uiMove")
 		else
@@ -599,6 +645,7 @@ function Screen.keypressed(key)
 	elseif key == "up" or key == "down" then
 		cycleDifficulty(1)
 	elseif key == "escape" then
+		hideMedalTooltip()
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
 		Sound.play("uiBack")
@@ -644,6 +691,7 @@ function Screen.mousepressed(x, y, button)
 			local ax = boxX + paddingX + ARROW_SIZE * 2
 
 			if pointInTriangle(x, y, ax + ARROW_SIZE * 0.5, arrowY - ARROW_SIZE, ax - ARROW_SIZE * 0.5, arrowY, ax + ARROW_SIZE * 0.5, arrowY + ARROW_SIZE) then
+				hideMedalTooltip()
 				State.mapIndex = State.resolveMapIndex(index - 1)
 				Sound.play("uiMove")
 
@@ -656,6 +704,7 @@ function Screen.mousepressed(x, y, button)
 			local ax = boxX + boxW - paddingX - ARROW_SIZE * 2
 
 			if pointInTriangle(x, y, ax - ARROW_SIZE * 0.5, arrowY - ARROW_SIZE, ax + ARROW_SIZE * 0.5, arrowY, ax - ARROW_SIZE * 0.5, arrowY + ARROW_SIZE) then
+				hideMedalTooltip()
 				State.mapIndex = State.resolveMapIndex(index + 1)
 				Sound.play("uiMove")
 
@@ -681,8 +730,17 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.resize(w, h)
+	hideMedalTooltip()
 	MapPreviewCache.buildAll(520, 312)
 	Backdrop.start()
+end
+
+function Screen.enter()
+	hideMedalTooltip()
+end
+
+function Screen.leave()
+	hideMedalTooltip()
 end
 
 return Screen

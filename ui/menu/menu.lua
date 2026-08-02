@@ -36,6 +36,11 @@ function Menu.update(dt)
 end
 
 function Menu.set(mode)
+	local previousScreen = Screens[State.mode]
+	if previousScreen and previousScreen.leave then
+		previousScreen.leave()
+	end
+
 	State.mode = mode
 	
 	local screen = Screens[mode]

@@ -76,6 +76,15 @@ return {
 		best = "Best: %d",
 		bestEndless = "Endless: wave %d",
 		completedBestEndless = "Completed: %s • Best: %d • Endless: %d",
+		medalTooltipTitle = "%s Medal (%s)",
+		medalEarnedOn = "Earned",
+		medalDateFormat = "%B %d, %Y",
+		medalDateUnavailable = "Date unavailable (legacy save)",
+		medals = {
+			bronze = "Bronze",
+			silver = "Silver",
+			gold = "Gold",
+		},
 	},
 
 	difficulty = {
