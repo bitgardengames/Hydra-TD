@@ -5,6 +5,7 @@ local Settings = require("ui.menu.screens.settings")
 local Screens = {
 	menu = require("ui.menu.screens.main_menu"),
 	campaign = require("ui.menu.screens.campaign"),
+	tower_mastery = require("ui.menu.screens.tower_mastery"),
 	settings = Settings,
 	settings_gameplay = Settings,
 	victory = require("ui.menu.screens.victory"),
@@ -64,6 +65,11 @@ function Menu.keypressed(key)
 	if screen and screen.keypressed then
 		screen.keypressed(key)
 	end
+end
+
+function Menu.gamepadpressed(joystick, button)
+	local screen = Screens[State.mode]
+	if screen and screen.gamepadpressed then screen.gamepadpressed(joystick, button) end
 end
 
 function Menu.mousepressed(x, y, button)
