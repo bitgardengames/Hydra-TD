@@ -121,7 +121,7 @@ local function drawEnemy(e)
 	-- remains unscaled and readable.
 	lg.push()
 	lg.translate(ix, iy)
-	lg.scale(1 + squash * 0.15, 1 - squash * 0.20)
+	lg.scale(1 + squash * 0.12, 1 - squash * 0.16)
 	lg.translate(-ix, -iy)
 
 	-- Mechanical silhouettes are deliberately geometric and remain legible without
