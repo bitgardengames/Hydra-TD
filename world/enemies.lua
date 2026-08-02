@@ -543,6 +543,7 @@ local function updateEnemies(dt)
 					killer.kills = killer.kills + 1
 					killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
 					Achievements.increment(killer._killsStatName)
+					RunStats.recordKill(killer)
 				end
 
 				handleEnemyKilled(e, i, isBoss)
@@ -576,6 +577,7 @@ local function updateEnemies(dt)
 				killer.kills = killer.kills + 1
 				killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
 				Achievements.increment(killer._killsStatName)
+				RunStats.recordKill(killer)
 			end
 
 			handleEnemyKilled(e, i, isBoss)

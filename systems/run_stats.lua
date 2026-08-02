@@ -18,6 +18,7 @@ function RunStats.reset(options)
 		earlyCallBonuses = 0, flawlessBonuses = 0,
 		leaksByEnemy = {}, purchases = {}, sales = {}, branches = {},
 		damageByTower = {}, damageByType = {},
+		killsByTower = {},
 		finalTierWave = {}, towerKinds = {}, towerBranches = {}, soldTowers = {},
 		modules = {}, contracts = {}, difficulty = options.difficulty or "normal",
 	}
@@ -55,6 +56,23 @@ function RunStats.recordLeak(kind) add(ensure().leaksByEnemy, kind, 1) end
 function RunStats.recordDamage(tower, damageType, amount)
 	local d = ensure(); add(d.damageByType, damageType or "other", amount)
 	if tower then add(d.damageByTower, tower.runStatsId or tower.kind, amount) end
+end
+
+function RunStats.recordKill(tower)
+	if tower then add(ensure().killsByTower, tower.runStatsId or tower.kind, 1) end
+end
+
+function RunStats.commitTowerHistory()
+	local Save = require("core.save")
+	local d, totals = ensure(), {}
+	for id, kind in pairs(d.towerKinds) do
+		local total = totals[kind] or {damage = 0, kills = 0}
+		total.damage = total.damage + (d.damageByTower[id] or 0)
+		total.kills = total.kills + (d.killsByTower[id] or 0)
+		totals[kind] = total
+	end
+	for kind, total in pairs(totals) do Save.recordTowerRun(kind, total.damage, total.kills) end
+	Save.flush()
 end
 
 function RunStats.captureLoadout(modules, contracts)

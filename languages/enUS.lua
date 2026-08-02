@@ -389,6 +389,7 @@ return {
 	actions = {
 		upgrade = "Upgrade",
 		sell = "Sell",
+		codex = "Codex",
 	},
 
 	modifier = {
@@ -552,6 +553,7 @@ return {
 		title = "Progress",
 		achievements = "Achievements",
 		enemyIntel = "Enemy Intel",
+		towers = "Towers",
 		unlocked = "Unlocked",
 		locked = "Locked",
 		progressValue = "%d / %d",
@@ -568,6 +570,23 @@ return {
 		history = "Kills %d  •  Leaks caused %d",
 		historyFull = "Kills %d  •  Leaks caused %d  •  Fastest %.2fs",
 		scrollHint = "Mouse wheel or ↑/↓ to scroll • Esc to return",
+	},
+
+	towerCodex = {
+		baseStats = "Base — Damage %.1f • Rate %.2f/s • Range %.1f tiles • Cost $%d",
+		upgradeDeltas = "Max base upgrades — Damage +%.0f%% • Range +%.2f tiles per tier",
+		targeting = "Targeting — %s",
+		fixed = "fixed firing pattern",
+		progressTarget = "enemy furthest along the route; branches may override priority",
+		damageInfo = "Damage / counters — %s",
+		counter = {slow = "slow control", poison = "stacking poison", chain = "chain damage", aoe = "area damage", tick = "repeated field damage", direct = "direct single-target damage"},
+		paths = "SPECIALIZATION PATHS",
+		tier = "Tier %d — %s",
+		silhouette = "███ (%s)",
+		pathUnlock = "choose this path at tower level %d",
+		moduleSilhouette = "██ (acquire this module during a run)",
+		compatible = "Compatible run modules — %s",
+		history = "History — %d placed • %d upgrades • %d kills • %.0f damage • %.0f best run",
 	},
 
 	overlay = {

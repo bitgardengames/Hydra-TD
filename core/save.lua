@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 3 -- Presentation accessibility settings
+local SAVE_VERSION = 4 -- Per-tower codex history
 
 local Hotkeys = require("core.hotkeys")
 
@@ -191,6 +191,8 @@ function Save.load()
 			meta.clearedMaps = meta.clearedMaps or {}
 			meta.encounteredEnemies = meta.encounteredEnemies or {}
 			meta.enemyHistory = meta.enemyHistory or {}
+			meta.towerHistory = meta.towerHistory or {}
+			meta.discoveredModules = meta.discoveredModules or {}
 
 			-- Run map ID migration once
 			if not Save.data.mapIdMigrationDone then
@@ -250,6 +252,8 @@ function Save.load()
 			clearedMaps = {},
 			encounteredEnemies = {},
 			enemyHistory = {},
+			towerHistory = {},
+			discoveredModules = {},
 		},
 
 		mapIdMigrationDone = true, -- new saves don't need migration
@@ -371,6 +375,46 @@ function Save.recordEnemyResult(kind, result, killTime)
 	elseif result == "leak" then
 		history.leaks = (history.leaks or 0) + 1
 	end
+end
+
+local function towerHistory(kind)
+	if not Save.data or type(kind) ~= "string" then return nil end
+	local meta = Save.data.meta
+	meta.towerHistory = meta.towerHistory or {}
+	local history = meta.towerHistory[kind]
+	if type(history) ~= "table" then
+		history = {placements = 0, upgrades = 0, damage = 0, kills = 0, bestRunDamage = 0, discoveredPaths = {}}
+		meta.towerHistory[kind] = history
+	end
+	history.discoveredPaths = history.discoveredPaths or {}
+	return history
+end
+
+function Save.recordTowerPlacement(kind)
+	local history = towerHistory(kind); if not history then return end
+	history.placements = (history.placements or 0) + 1
+	Save.flush()
+end
+
+function Save.recordTowerUpgrade(kind, pathId)
+	local history = towerHistory(kind); if not history then return end
+	history.upgrades = (history.upgrades or 0) + 1
+	if pathId then history.discoveredPaths[pathId] = true end
+	Save.flush()
+end
+
+function Save.recordTowerRun(kind, damage, kills)
+	local history = towerHistory(kind); if not history then return end
+	damage, kills = math.max(0, damage or 0), math.max(0, kills or 0)
+	history.damage = (history.damage or 0) + damage
+	history.kills = (history.kills or 0) + kills
+	history.bestRunDamage = math.max(history.bestRunDamage or 0, damage)
+end
+
+function Save.discoverModule(moduleId)
+	if not Save.data or not moduleId then return end
+	Save.data.meta.discoveredModules = Save.data.meta.discoveredModules or {}
+	Save.data.meta.discoveredModules[moduleId] = true
 end
 
 return Save

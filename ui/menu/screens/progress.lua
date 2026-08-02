@@ -10,6 +10,9 @@ local Sound = require("systems.sound")
 local State = require("core.state")
 local Text = require("ui.text")
 local Theme = require("core.theme")
+local TowerDefs = require("world.tower_defs")
+local TowerCodex = require("ui.tower_codex")
+local Constants = require("core.constants")
 
 local Screen = {}
 local lg = love.graphics
@@ -22,9 +25,13 @@ local backButton = nil
 local viewport = {x = 0, y = 0, w = 0, h = 0}
 local rowHeight = 78
 local intelRowHeight = 142
+local towerRowHeight = TowerCodex.ENTRY_HEIGHT
+local returnMode = "menu"
 
 local function activeRowHeight()
-	return activeTab == "intel" and intelRowHeight or rowHeight
+	if activeTab == "intel" then return intelRowHeight end
+	if activeTab == "towers" then return towerRowHeight end
+	return rowHeight
 end
 
 local enemyOrder = {
@@ -33,7 +40,8 @@ local enemyOrder = {
 }
 
 local function goBack()
-	State.mode = "menu"
+	State.mode = returnMode
+	returnMode = "menu"
 	Sound.play("uiMove")
 end
 
@@ -47,10 +55,19 @@ end
 
 function Screen.load()
 	tabs = {
-		{id = "achievements", label = L("progress.achievements"), w = 190, h = 36, onClick = function() selectTab("achievements") end},
-		{id = "intel", label = L("progress.enemyIntel"), w = 190, h = 36, onClick = function() selectTab("intel") end},
+		{id = "achievements", label = L("progress.achievements"), w = 180, h = 36, onClick = function() selectTab("achievements") end},
+		{id = "intel", label = L("progress.enemyIntel"), w = 180, h = 36, onClick = function() selectTab("intel") end},
+		{id = "towers", label = L("progress.towers"), w = 180, h = 36, onClick = function() selectTab("towers") end},
 	}
 	backButton = {label = L("menu.back"), w = 150, h = 36, onClick = goBack}
+end
+
+function Screen.openTower(kind, fromMode)
+	activeTab, returnMode = "towers", fromMode or "menu"
+	for i, towerKind in ipairs(Constants.TOWER_LIST) do
+		if towerKind == kind then scroll = (i - 1) * towerRowHeight; break end
+	end
+	State.mode = "progress"
 end
 
 local function intelEntries()
@@ -69,6 +86,8 @@ end
 local function entryCount()
 	if activeTab == "achievements" then
 		return #AchievementDefs
+	elseif activeTab == "towers" then
+		return #Constants.TOWER_LIST
 	end
 	return #intelEntries()
 end
@@ -81,7 +100,7 @@ function Screen.update(dt)
 	viewport.w, viewport.h = panelW - 48, math.max(120, sh - 235)
 
 	for i, tab in ipairs(tabs) do
-		tab.x = sw * 0.5 - 195 + (i - 1) * 200
+		tab.x = sw * 0.5 - 280 + (i - 1) * 190
 		tab.y = 91
 		Button.update(tab, love.mouse.getX(), love.mouse.getY(), dt)
 	end
@@ -145,6 +164,11 @@ local function drawIntel(entry, x, y, w)
 	Text.printfShadow(mechanicLines(entry.def), x + 16, y + 36, w - 32, "left")
 end
 
+local function drawTower(kind, x, y, w)
+	panel(x, y, w, towerRowHeight - 10, Theme.ui.panel)
+	TowerCodex.drawEntry(kind, TowerDefs[kind], x + 16, y + 12, w - 32)
+end
+
 function Screen.draw()
 	local sw, sh = lg.getDimensions()
 	Backdrop.draw()
@@ -164,7 +188,7 @@ function Screen.draw()
 	lg.setScissor(viewport.x, viewport.y, viewport.w, viewport.h)
 	if activeTab == "achievements" then
 		for i, def in ipairs(AchievementDefs) do drawAchievement(def, viewport.x + 3, viewport.y + (i - 1) * rowHeight - scroll + 3, viewport.w - 10) end
-	else
+	elseif activeTab == "intel" then
 		local entries = intelEntries()
 		if #entries == 0 then
 			Fonts.set("ui")
@@ -172,6 +196,8 @@ function Screen.draw()
 			Text.printfShadow(L("progress.noIntel"), viewport.x + 40, viewport.y + 35, viewport.w - 80, "center")
 		end
 		for i, entry in ipairs(entries) do drawIntel(entry, viewport.x + 3, viewport.y + (i - 1) * intelRowHeight - scroll + 3, viewport.w - 10) end
+	else
+		for i, kind in ipairs(Constants.TOWER_LIST) do drawTower(kind, viewport.x + 3, viewport.y + (i - 1) * towerRowHeight - scroll + 3, viewport.w - 10) end
 	end
 	lg.setScissor()
 	Fonts.set("tooltip")
@@ -189,7 +215,12 @@ function Screen.keypressed(key)
 	if key == "escape" then goBack()
 	elseif key == "up" then scroll = scroll - activeRowHeight()
 	elseif key == "down" then scroll = scroll + activeRowHeight()
-	elseif key == "left" or key == "right" then selectTab(activeTab == "achievements" and "intel" or "achievements") end
+	elseif key == "left" or key == "right" then
+		local order, index = {"achievements", "intel", "towers"}, 1
+		for i, id in ipairs(order) do if id == activeTab then index = i end end
+		index = ((index - 1 + (key == "right" and 1 or -1)) % #order) + 1
+		selectTab(order[index])
+	end
 end
 
 function Screen.mousepressed(x, y, button)

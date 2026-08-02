@@ -124,6 +124,14 @@ local inspectButtons = {
 				Towers.sellTower(t)
 			end
 		end
+	},
+	{
+		id = "codex", x = 0, y = 0, w = 0, h = 0, canAfford = true,
+		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0},
+		onClick = function()
+			local t = State.selectedTower
+			if t then require("ui.menu.screens.progress").openTower(t.kind, "game") end
+		end,
 	}
 }
 
@@ -258,7 +266,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		-- Buttons layout
 		local actionX = panelX + OUTER_PAD
 		local usableW = w - OUTER_PAD * 2
-		local BUTTON_W = floor((usableW - GAP) * 0.5)
+		local BUTTON_W = floor((usableW - GAP * 2) / 3)
 		local actionY = panelY + h - OUTER_PAD - BUTTON_H
 
 		local upgradeCost = Towers.getUpgradeCost(t)
@@ -283,6 +291,9 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		sellBtn.canAfford = true
 		sellBtn.cost = nil
 		sellBtn.value = t.sellValue
+		local codexBtn = inspectButtons[3]
+		codexBtn.x = actionX + (BUTTON_W + GAP) * 2
+		codexBtn.y, codexBtn.w, codexBtn.h = actionY, BUTTON_W, BUTTON_H
 
 		-- Draw buttons
 		for _, btn in ipairs(inspectButtons) do

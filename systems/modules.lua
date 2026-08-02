@@ -46,6 +46,8 @@ function Modules.add(moduleId, towerType)
 	list[#list + 1] = mod
 	mod.id = mod.id or moduleId
 	Modules.version = Modules.version + 1
+	local Save = require("core.save")
+	Save.discoverModule(moduleId)
 end
 
 function Modules.invalidateTower(tower)
