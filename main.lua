@@ -39,6 +39,8 @@ local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
 local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
+local DailyChallenge = require("systems.daily_challenge")
+local RunRandom = require("systems.run_random")
 
 local lg = love.graphics
 
@@ -70,7 +72,17 @@ function finalizeCurrentRun(completed)
 
 	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
 
-	Save.recordMapResult(mapId, State.wave or 0, Difficulty.key(), completed == true, State.endless == true)
+	if State.dailyChallenge then
+		local waves = State.inPrep and math.max(0, (State.wave or 1) - 1) or (State.wave or 0)
+		local breakdown = DailyChallenge.score(completed == true, State.lives, State.money, waves, State.totalLeaks)
+		State.dailyScore = breakdown
+		Save.recordDailyResult(State.dailyChallenge.date, {
+			score = breakdown.total, completed = completed == true, breakdown = breakdown,
+			seed = State.dailyChallenge.seed, ruleVersion = State.dailyChallenge.ruleVersion,
+		})
+	else
+		Save.recordMapResult(mapId, State.wave or 0, Difficulty.key(), completed == true, State.endless == true)
+	end
 end
 
 function resetGame()
@@ -87,8 +99,9 @@ function resetGame()
     MapMod.clearBlocked()
     MapMod.buildPath(Maps[State.worldMapIndex])
 
-	local seed = 123456 + State.worldMapIndex * 1009
-	love.math.setRandomSeed(seed)
+	local seed = State.dailyChallenge and State.dailyChallenge.seed or (123456 + State.worldMapIndex * 1009)
+	RunRandom.seed(seed)
+	State.dailyScore = nil
 
 	local biome = MapMod.map.biome
 	local scatter = biome and biome.scatter

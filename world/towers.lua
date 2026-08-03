@@ -3,6 +3,7 @@ local Theme = require("core.theme")
 local TowerDefs = require("world.tower_defs")
 local Sound = require("systems.sound")
 local State = require("core.state")
+local DailyChallenge = require("systems.daily_challenge")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
 local Targeting = require("world.targeting")
@@ -222,6 +223,9 @@ local function refreshTargetModeCache(t)
 end
 
 local function addTower(kind, gx, gy)
+	if not DailyChallenge.isTowerAllowed(State.dailyChallenge, kind) then
+		return false, "restricted"
+	end
 	local def = TowerDefs[kind]
 	local tutorialOK, tutorialWhy = Onboarding.validatePlacement(kind, gx, gy)
 	if not tutorialOK then return false, tutorialWhy end
