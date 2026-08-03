@@ -8,6 +8,7 @@ local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local L = require("core.localization")
 local AbilityDefs = require("systems.ability_defs")
+local Mutators = require("systems.mutators")
 
 local lg = love.graphics
 local floor = math.floor
@@ -125,6 +126,18 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 
 		lg.setColor(0.85, 0.85, 0.85, 0.85)
 		Text.printShadow(spawnCache.text, infoX + (intensityTier > 0 and 365 or STATUS_X), y)
+	end
+
+	local rules = Mutators.active()
+	if #rules > 0 then
+		local names = {}
+		for i, rule in ipairs(rules) do names[i] = L(rule.def.nameKey) end
+		local label = L("mutators.hudRules", table.concat(names, " • "))
+		local width = math.min(infoW - 24, lg.getFont():getWidth(label) + 16)
+		lg.setColor(0.03, 0.04, 0.06, 0.90)
+		lg.rectangle("fill", infoX + 8, infoY - textH - 10, width, textH + 6, 5)
+		lg.setColor(0.90, 0.82, 0.48, 1)
+		Text.printShadow(label, infoX + 16, infoY - textH - 7)
 	end
 
 	local def = AbilityDefs[State.equippedAbility]

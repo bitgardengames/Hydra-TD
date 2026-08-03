@@ -1,7 +1,8 @@
 local Maps = require("world.map_defs")
+local MutatorDefs = require("systems.mutator_defs")
 local Daily = {}
 
-Daily.RULE_VERSION = 1
+Daily.RULE_VERSION = 2
 Daily.rules = {
 	[1] = {
 		difficulties = {"normal", "hard", "easy"},
@@ -15,6 +16,10 @@ Daily.rules = {
 			{id = "lean_economy", label = "Lean Economy"},
 			{id = "swift_horde", label = "Swift Horde"},
 		},
+	},
+	[2] = {
+		difficulties = {"normal", "hard", "easy"},
+		mutatorCount = 3,
 	},
 }
 
@@ -36,14 +41,33 @@ function Daily.forDate(date, version)
 	local seed = hash("hydra-daily:" .. version .. ":" .. date)
 	local function pick(list, salt) return list[((seed + salt) % #list) + 1] end
 	local map = Maps[((seed + 17) % #Maps) + 1]
-	local restricted = pick(rules.restrictions, 31)
-	local mutator = pick(rules.mutators, 47)
+	local selected, groups = {}, {}
+	if version == 1 then
+		local restricted = pick(rules.restrictions, 31)
+		selected = {pick(rules.mutators, 47)}
+		return {
+			date = date, seed = seed, ruleVersion = version,
+			mapId = map.id, mapIndex = ((seed + 17) % #Maps) + 1,
+			difficulty = pick(rules.difficulties, 23), restrictedTowers = restricted,
+			mutators = selected,
+		}
+	end
+	local start = (seed + 47) % #MutatorDefs.order
+	for offset = 0, #MutatorDefs.order - 1 do
+		local id = MutatorDefs.order[((start + offset) % #MutatorDefs.order) + 1]
+		local def = MutatorDefs[id]
+		local group = def.compatibilityGroup
+		if not group or not groups[group] then
+			selected[#selected + 1] = {id = id}
+			if group then groups[group] = true end
+			if #selected >= rules.mutatorCount then break end
+		end
+	end
 	return {
 		date = date, seed = seed, ruleVersion = version,
 		mapId = map.id, mapIndex = ((seed + 17) % #Maps) + 1,
-		difficulty = pick(rules.difficulties, 23),
-		restrictedTowers = restricted,
-		mutators = {mutator},
+		difficulty = pick(rules.difficulties, 23), restrictedTowers = {},
+		mutators = selected,
 	}
 end
 

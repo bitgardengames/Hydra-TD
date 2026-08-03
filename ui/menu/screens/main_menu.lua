@@ -10,6 +10,7 @@ local Backdrop = require("scenes.backdrop")
 local L = require("core.localization")
 local Save = require("core.save")
 local DailyChallenge = require("systems.daily_challenge")
+local Mutators = require("systems.mutators")
 local Difficulty = require("systems.difficulty")
 local Maps = require("world.map_defs")
 
@@ -261,8 +262,10 @@ function Screen.draw()
 		Fonts.set("ui")
 		love.graphics.setColor(Theme.ui.text)
 		local status = result and result.completed and ("Completed • Best " .. tostring(result.score)) or "Not completed"
-		love.graphics.printf((map and L(map.nameKey) or daily.mapId) .. " • " .. daily.difficulty .. " • No " .. DailyChallenge.restrictionText(daily), panelX + 8, dailyButton.y + dailyButton.h + 2, panelW - 16, "center")
-		love.graphics.printf(daily.mutators[1].label .. " • " .. status, panelX + 8, dailyButton.y + dailyButton.h + 16, panelW - 16, "center")
+		love.graphics.printf((map and L(map.nameKey) or daily.mapId) .. " • " .. L("difficulty." .. daily.difficulty), panelX + 8, dailyButton.y + dailyButton.h + 2, panelW - 16, "center")
+		local ruleNames = {}
+		for i, rule in ipairs(Mutators.resolve(daily)) do ruleNames[i] = L(rule.def.nameKey) end
+		love.graphics.printf(table.concat(ruleNames, " • ") .. " • " .. status, panelX + 8, dailyButton.y + dailyButton.h + 16, panelW - 16, "center")
 	end
 
 	if storeButton then

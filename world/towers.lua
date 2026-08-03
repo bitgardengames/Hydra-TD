@@ -3,7 +3,7 @@ local Theme = require("core.theme")
 local TowerDefs = require("world.tower_defs")
 local Sound = require("systems.sound")
 local State = require("core.state")
-local DailyChallenge = require("systems.daily_challenge")
+local Mutators = require("systems.mutators")
 local MapMod = require("world.map")
 local Floaters = require("ui.floaters")
 local Targeting = require("world.targeting")
@@ -223,9 +223,8 @@ local function refreshTargetModeCache(t)
 end
 
 local function addTower(kind, gx, gy)
-	if not DailyChallenge.isTowerAllowed(State.dailyChallenge, kind) then
-		return false, "restricted"
-	end
+	local mutatorOK, mutatorWhy = Mutators.canPlaceTower(kind, #towers)
+	if not mutatorOK then return false, mutatorWhy end
 	local def = TowerDefs[kind]
 	local tutorialOK, tutorialWhy = Onboarding.validatePlacement(kind, gx, gy)
 	if not tutorialOK then return false, tutorialWhy end
@@ -405,8 +404,9 @@ end
 
 local function sellTower(t)
 	if not t then
-		return
+		return false
 	end
+	if not Mutators.canSell() then return false, "selling_disabled" end
 
 	State.money = State.money + t.sellValue
 	RunStats.recordSale(t, t.sellValue)
@@ -434,7 +434,7 @@ local function sellTower(t)
 	State.selectedTower = nil
 
 	Sound.play("towerSold")
-
+	return true
 end
 
 local function findTowerAt(gx, gy)
