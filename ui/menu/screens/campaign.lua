@@ -133,17 +133,33 @@ local function cycleDifficulty(dir)
 end
 
 local function cycleAbility()
-	local index = 1
-	for i, id in ipairs(AbilityDefs.order) do
-		if id == State.equippedAbility then index = i break end
+	local equipped = State.equippedAbilities or {}
+	if #equipped > 1 then
+		State.equippedAbilities = {AbilityDefs.order[1]}
+	else
+		local index = 1
+		for i, id in ipairs(AbilityDefs.order) do
+			if id == equipped[1] then index = i break end
+		end
+		if index < #AbilityDefs.order then
+			State.equippedAbilities = {AbilityDefs.order[index + 1]}
+		else
+			State.equippedAbilities = {}
+			for i = 1, math.min(4, #AbilityDefs.order) do
+				State.equippedAbilities[i] = AbilityDefs.order[i]
+			end
+		end
 	end
-	State.equippedAbility = AbilityDefs.order[index % #AbilityDefs.order + 1]
 	Sound.play("uiMove")
 end
 
 local function abilityButtonLabel()
-	local def = AbilityDefs[State.equippedAbility] or AbilityDefs[AbilityDefs.order[1]]
-	return L("campaign.ability", L(def.nameKey))
+	local names = {}
+	for i, id in ipairs(State.equippedAbilities or {}) do
+		local def = AbilityDefs[id]
+		if def then names[#names + 1] = L(def.nameKey) end
+	end
+	return L("campaign.abilities", table.concat(names, " + "))
 end
 
 local function difficultyButtonLabel()

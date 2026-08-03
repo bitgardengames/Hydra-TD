@@ -141,7 +141,7 @@ local function mousepressed(x, y, button)
 	if button == 1 and State.mode == "game" then
 		local abilityButton = handlePanelButtons(BottomBar.getAbilityButtons, x, y, true)
 		if abilityButton then
-			Abilities.beginTargeting()
+			Abilities.beginTargeting(abilityButton.abilityId)
 			return
 		end
 		-- Tower shop
@@ -240,8 +240,8 @@ local function mousereleased(x, y, button)
 	end
 
 	-- Shop buttons
-	handlePanelButtons(BottomBar.getAbilityButtons, x, y, false, function()
-		Abilities.beginTargeting()
+	handlePanelButtons(BottomBar.getAbilityButtons, x, y, false, function(b)
+		Abilities.beginTargeting(b.abilityId)
 	end)
 
 	-- Shop buttons

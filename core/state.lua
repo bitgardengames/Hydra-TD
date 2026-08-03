@@ -41,8 +41,10 @@ local state = {
 	placingFadeT = 0,
 	selectedTower = nil,
 	selectedEnemy = nil,
-	equippedAbility = "meteor",
-	abilityCooldown = 0,
+	-- Up to four abilities can be equipped. Cooldowns are tracked separately so
+	-- using one ability does not lock the rest of the loadout.
+	equippedAbilities = {"meteor", "frost_nova"},
+	abilityCooldowns = {},
 	abilityTargeting = nil,
 
 	hoverGX = nil,

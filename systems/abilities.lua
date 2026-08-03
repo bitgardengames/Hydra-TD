@@ -6,17 +6,18 @@ local Mutators = require("systems.mutators")
 
 local Abilities = {}
 
-function Abilities.getEquipped()
-	return AbilityDefs[State.equippedAbility]
+function Abilities.getEquipped(abilityId)
+	return AbilityDefs[abilityId or (State.equippedAbilities and State.equippedAbilities[1])]
 end
 
-function Abilities.isReady()
-	return Abilities.getEquipped() ~= nil and (State.abilityCooldown or 0) <= 0
+function Abilities.isReady(abilityId)
+	local def = Abilities.getEquipped(abilityId)
+	return def ~= nil and (State.abilityCooldowns[def.id] or 0) <= 0
 end
 
-function Abilities.beginTargeting()
-	local def = Abilities.getEquipped()
-	if not def or not Abilities.isReady() or State.mode ~= "game" or State.modulePicker.active then return false end
+function Abilities.beginTargeting(abilityId)
+	local def = Abilities.getEquipped(abilityId)
+	if not def or not Abilities.isReady(def.id) or State.mode ~= "game" or State.modulePicker.active then return false end
 	State.abilityTargeting = {abilityId = def.id, x = nil, y = nil}
 	State.placing = nil
 	State.selectedTower = nil
@@ -29,8 +30,9 @@ function Abilities.cancelTargeting()
 end
 
 function Abilities.activate(x, y)
-	local def = Abilities.getEquipped()
-	if not def or not Abilities.isReady() or not State.abilityTargeting then return false end
+	local abilityId = State.abilityTargeting and State.abilityTargeting.abilityId
+	local def = Abilities.getEquipped(abilityId)
+	if not def or not Abilities.isReady(abilityId) or not State.abilityTargeting then return false end
 	local effect = def.effect
 	local radius2 = effect.radius * effect.radius
 	for i = 1, #Enemies.enemies do
@@ -52,13 +54,15 @@ function Abilities.activate(x, y)
 		Effects.spawnFrostBurst(x, y)
 		Effects.trigger("ability_frost", {intensity = 2, shake = 1})
 	end
-	State.abilityCooldown = def.cooldown * Mutators.abilityRechargeMultiplier()
+	State.abilityCooldowns[def.id] = def.cooldown * Mutators.abilityRechargeMultiplier()
 	State.abilityTargeting = nil
 	return true
 end
 
 function Abilities.update(dt)
-	State.abilityCooldown = math.max(0, (State.abilityCooldown or 0) - dt)
+	for abilityId, cooldown in pairs(State.abilityCooldowns) do
+		State.abilityCooldowns[abilityId] = math.max(0, cooldown - dt)
+	end
 end
 
 return Abilities

@@ -151,7 +151,7 @@ function resetGame()
     State.placing = nil
 	State.selectedTower = nil
 	State.selectedEnemy = nil
-	State.abilityCooldown = 0
+	State.abilityCooldowns = {}
 	State.abilityTargeting = nil
     State.hoverGX = nil
     State.hoverGY = nil
