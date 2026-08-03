@@ -21,8 +21,6 @@ local simpleCtx = {}
 local frameCache = {
 	frameId = -1,
 	entries = {},
-	usedKeys = {},
-	usedCount = 0,
 }
 local validModes = {
 	[MODES.PROGRESS] = true,
@@ -89,23 +87,17 @@ local function evaluateCandidate(e, c)
 	updateBest(e, c, c.scoreFn(e, c, d2))
 end
 
-local function clearFrameCache(cache)
-	-- Drop per-frame cache tables entirely so stale entries are never reused across
-	-- frames. Reusing entry tables here can return cleared candidate lists and
-	-- prevent towers from acquiring any targets.
-	cache.entries = {}
-	local used = cache.usedKeys
-	for i = 1, cache.usedCount do
-		used[i] = nil
-	end
-	cache.usedCount = 0
+local function clearFrameCache(cache, frameId)
+	-- Entries own their frame stamps, so advancing the cache does not need to
+	-- discard its coordinate tables, entries, or candidate lists. An entry is
+	-- rebuilt lazily before it can be returned in the new frame.
+	cache.frameId = frameId
 end
 
 local function getCandidatesForTower(tower)
 	local frameId = State.frameId or 0
 	if frameCache.frameId ~= frameId then
-		clearFrameCache(frameCache)
-		frameCache.frameId = frameId
+		clearFrameCache(frameCache, frameId)
 	end
 
 	local cx, cy = pointToCell(tower.x, tower.y)
@@ -122,15 +114,22 @@ local function getCandidatesForTower(tower)
 		entriesByY[cy] = entriesByFootprint
 	end
 	local entry = entriesByFootprint[footprintKey]
-	if entry then
+	if entry and entry.frameId == frameId then
 		return entry.list, entry.count
 	end
 
-	entry = {
-		list = {},
-		count = 0,
-	}
-	entriesByFootprint[footprintKey] = entry
+	if not entry then
+		entry = {
+			list = {},
+			count = 0,
+			frameId = -1,
+		}
+		entriesByFootprint[footprintKey] = entry
+	end
+
+	local previousCount = entry.count
+	entry.count = 0
+	entry.frameId = frameId
 
 	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, false)
 	local list = entry.list
@@ -142,14 +141,10 @@ local function getCandidatesForTower(tower)
 			list[count] = e
 		end
 	end
-	for i = count + 1, #list do
+	for i = count + 1, previousCount do
 		list[i] = nil
 	end
 	entry.count = count
-
-	local usedCount = frameCache.usedCount + 1
-	frameCache.usedCount = usedCount
-	frameCache.usedKeys[usedCount] = entry
 
 	return list, count
 end
