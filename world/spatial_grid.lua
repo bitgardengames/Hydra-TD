@@ -105,6 +105,13 @@ local function queryCellRadiusLocal(radius)
 	return cellRadius
 end
 
+-- Towers can share a local-query candidate list when this footprint and their
+-- center cell match. Keep the key tied directly to the traversal policy so
+-- cache callers cannot drift from queryCellsLocal's CELL_SIZE boundaries.
+function Spatial.localQueryFootprintKey(radius)
+	return queryCellRadiusLocal(radius)
+end
+
 local function traverseOccupancy(cx, cy, radiusCells, onCell, context)
 	return eachNeighborInRange(cx, cy, radiusCells or 1, onCell, context)
 end
