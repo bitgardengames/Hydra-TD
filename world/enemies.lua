@@ -7,6 +7,7 @@ local MapMod = require("world.map")
 local Spatial = require("world.spatial_grid")
 local EnemyDefs = require("world.enemy_defs")
 local EnemyAffixDefs = require("world.enemy_affix_defs")
+local Mutators = require("systems.mutators")
 local Floaters = require("ui.floaters")
 local Achievements = require("systems.achievements")
 local L = require("core.localization")
@@ -196,15 +197,16 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.affixes = {}
 	e.affixById = {}
 	local hpAffixMult, speedAffixMult, rewardAffixMult = 1, 1, 1
+	local affixPower = Mutators.affixPowerMultiplier()
 	for _, id in ipairs(opts.affixes or {}) do
 		local affix = EnemyAffixDefs[id]
 		if affix and not e.affixById[id] then
 			e.affixes[#e.affixes + 1] = affix
 			e.affixById[id] = affix
 			local behavior = affix.behavior or {}
-			hpAffixMult = hpAffixMult * (behavior.hpMultiplier or 1)
-			speedAffixMult = speedAffixMult * (behavior.speedMultiplier or 1)
-			rewardAffixMult = rewardAffixMult * (behavior.rewardMultiplier or 1)
+			hpAffixMult = hpAffixMult * (1 + ((behavior.hpMultiplier or 1) - 1) * affixPower)
+			speedAffixMult = speedAffixMult * (1 + ((behavior.speedMultiplier or 1) - 1) * affixPower)
+			rewardAffixMult = rewardAffixMult * (1 + ((behavior.rewardMultiplier or 1) - 1) * affixPower)
 			Save.markAffixEncountered(id)
 		end
 	end

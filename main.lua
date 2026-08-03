@@ -42,6 +42,7 @@ local RunStats = require("systems.run_stats")
 local DailyChallenge = require("systems.daily_challenge")
 local RunRandom = require("systems.run_random")
 local SandboxPanel = require("ui.sandbox_panel")
+local Mutators = require("systems.mutators")
 
 local lg = love.graphics
 
@@ -131,7 +132,7 @@ function resetGame()
 	RunStats.reset({difficulty = Difficulty.key()})
 
     -- Core game state
-	State.money = diff.startMoney
+	State.money = Mutators.startingCurrency(diff.startMoney)
     State.moneyLerp = State.money
 	State.lives = diff.startLives
 	State.livesAnim = 0
