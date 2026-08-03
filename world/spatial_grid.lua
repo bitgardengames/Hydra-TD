@@ -15,6 +15,8 @@ Spatial.grid = grid
 local outerQueryBuffer = {}
 local nestedQueryBuffer = {}
 local occupancyBuffer = {}
+local enemyCellChangedHook
+local enemyRemovedHook
 
 local function nextStamp(ctx)
 	local stamp = ctx.stamp + 1
@@ -259,12 +261,25 @@ function Spatial.updateEnemy(e)
 		return
 	end
 
+	local oldCX, oldCY = e.cellX, e.cellY
 	removeFromCell(e)
 	insertIntoCell(e, cx, cy)
+	if enemyCellChangedHook then
+		enemyCellChangedHook(e, oldCX, oldCY, cx, cy)
+	end
 end
 
 function Spatial.removeEnemy(e)
+	local oldCX, oldCY = e.cellX, e.cellY
 	removeFromCell(e)
+	if enemyRemovedHook and oldCX ~= nil then
+		enemyRemovedHook(e, oldCX, oldCY)
+	end
+end
+
+function Spatial.setEnemyLifecycleHooks(onCellChanged, onRemoved)
+	enemyCellChangedHook = onCellChanged
+	enemyRemovedHook = onRemoved
 end
 
 function Spatial.beginFrame()
@@ -292,6 +307,13 @@ end
 
 function Spatial.pointToCell(x, y)
 	return floor(x * INV_CELL), floor(y * INV_CELL)
+end
+
+function Spatial.queryIncludesCell(x, y, radius, cx, cy)
+	local centerX = floor(x * INV_CELL)
+	local centerY = floor(y * INV_CELL)
+	local cellRadius = queryCellRadius(radius)
+	return math.abs(centerX - cx) <= cellRadius and math.abs(centerY - cy) <= cellRadius
 end
 
 function Spatial.queryOccupancy(cx, cy, radiusCells, out)
