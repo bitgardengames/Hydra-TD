@@ -119,12 +119,73 @@ local function acquireZapSeg()
 end
 
 local function releaseZapSeg(seg)
+	seg.glowCoords = nil
+	seg.mainCoords = nil
+	seg.secondaryCoords = nil
+	seg.coreCoords = nil
+	seg.forkCoords = nil
+	seg.sparkX = nil
+	seg.sparkY = nil
 	seg.x1 = nil
 	seg.y1 = nil
 	seg.x2 = nil
 	seg.y2 = nil
 
 	zapSegPool[#zapSegPool + 1] = seg
+end
+
+local function setCoord(coords, index, x, y)
+	coords[index] = x
+	coords[index + 1] = y
+end
+
+local function buildBoltCoords(coords, x1, y1, x2, y2, bends, offsetX, offsetY, bendJitter)
+	coords = coords or {}
+	setCoord(coords, 1, x1, y1)
+
+	for b = 1, bends do
+		local bt = b / (bends + 1)
+		setCoord(coords, b * 2 + 1,
+			x1 + (x2 - x1) * bt + offsetX + jitter(bendJitter),
+			y1 + (y2 - y1) * bt + offsetY + jitter(bendJitter))
+	end
+
+	local endpoint = (bends + 1) * 2 + 1
+	setCoord(coords, endpoint, x2, y2)
+	for i = endpoint + 2, #coords do coords[i] = nil end
+	return coords
+end
+
+local function refreshZapSegGeometry(seg)
+	local x1, y1, x2, y2 = seg.x1, seg.y1, seg.x2, seg.y2
+	seg.glowCoords = buildBoltCoords(seg.glowCoords, x1, y1, x2, y2, 0, 0, 0, 0)
+	seg.mainCoords = buildBoltCoords(seg.mainCoords, x1, y1, x2, y2, random(1, 2), 0, 0, 10)
+
+	local offset = 2.5
+	seg.secondaryCoords = buildBoltCoords(seg.secondaryCoords, x1, y1, x2, y2,
+		random(1, 2), jitter(offset), jitter(offset), 6)
+	seg.coreCoords = buildBoltCoords(seg.coreCoords, x1, y1, x2, y2, 1, 0, 0, 4)
+	seg.sparkX = x2 + jitter(halfJitter)
+	seg.sparkY = y2 + jitter(halfJitter)
+
+	if random() < 0.45 then
+		local bx = (x1 + x2) * 0.5
+		local by = (y1 + y2) * 0.5
+		local dirx, diry = x2 - x1, y2 - y1
+		local length = sqrt(dirx * dirx + diry * diry)
+		if length > 0 then dirx, diry = dirx / length, diry / length end
+		local angle = (random() * 0.9 + 0.35) * pi
+		local sign = random() < 0.5 and -1 or 1
+		local cosA, sinA = cos(angle * sign), sin(angle * sign)
+		local rx = dirx * cosA - diry * sinA
+		local ry = dirx * sinA + diry * cosA
+		local forkLen = 6 + random() * 10
+		seg.forkCoords = seg.forkCoords or {}
+		setCoord(seg.forkCoords, 1, bx, by)
+		setCoord(seg.forkCoords, 3, bx + rx * forkLen + jitter(3), by + ry * forkLen + jitter(3))
+	else
+		seg.forkCoords = nil
+	end
 end
 
 local function clearZapSegs(segs)
@@ -213,6 +274,7 @@ function Effects.spawnZapEffect(x, y, chain)
 	z.y = y
 	z.t = 0
 	z.life = 0.16
+	for i = 1, #segs do refreshZapSegGeometry(segs[i]) end
 
 	Effects.zaps[#Effects.zaps + 1] = z
 
@@ -235,6 +297,12 @@ local function releaseZapLine(z)
 	zapLinePool[#zapLinePool + 1] = z
 end
 
+local function refreshZapLineGeometry(z)
+	z.glowCoords = buildBoltCoords(z.glowCoords, z.x1, z.y1, z.x2, z.y2, 0, 0, 0, 0)
+	z.mainCoords = buildBoltCoords(z.mainCoords, z.x1, z.y1, z.x2, z.y2, 1, 0, 0, 4)
+	z.coreCoords = buildBoltCoords(z.coreCoords, z.x1, z.y1, z.x2, z.y2, 0, 0, 0, 0)
+end
+
 function Effects.spawnZapLine(x1, y1, x2, y2)
 	local z = acquireZapLine()
 
@@ -245,6 +313,7 @@ function Effects.spawnZapLine(x1, y1, x2, y2)
 
 	z.t = 0
 	z.life = 0.12
+	refreshZapLineGeometry(z)
 
 	Effects.zapLines[#Effects.zapLines + 1] = z
 end
@@ -474,6 +543,9 @@ function Effects.update(dt)
 	for i = #zaps, 1, -1 do
 		local z = zaps[i]
 		z.t = z.t + dt
+		if z.t < z.life then
+			for s = 1, #z.segs do refreshZapSegGeometry(z.segs[s]) end
+		end
 
 		if z.t >= z.life then
 			swapRemove(zaps, i)
@@ -487,6 +559,7 @@ function Effects.update(dt)
 		local z = zapLines[i]
 
 		z.t = z.t + dt
+		if z.t < z.life then refreshZapLineGeometry(z) end
 
 		if z.t >= z.life then
 			zapLines[i] = zapLines[#zapLines]
@@ -684,132 +757,44 @@ function Effects.draw()
 
 			for s = 1, count do
 				local seg = segs[s]
-				local x1, y1 = seg.x1, seg.y1
-				local x2, y2 = seg.x2, seg.y2
-
 				local t = (s - 1) / d
 				local jumpA = 1.0 - 0.16 * (s - 1)
-
-				local jx = jitter(halfJitter)
-				local jy = jitter(halfJitter)
 
 				-- Spark
 				local radius = 2.5 * (1 - t) + 1
 				lg.setColor(0.7, 0.95, 1.0, 0.7 * a * jumpA)
-				lg.circle("fill", x2 + jx, y2 + jy, radius)
+				lg.circle("fill", seg.sparkX, seg.sparkY, radius)
 
 				local w = (3 * (1 - t) + 1) * (0.9 - 0.35 * u)
 
 				-- Soft glow
 				lg.setLineWidth(w * 2.4)
 				lg.setColor(0.5, 0.85, 1.0, 0.18 * a * jumpA)
-				lg.line(x1, y1, x2, y2)
+				lg.line(seg.glowCoords)
 
 				-- Main lightning strand
 				lg.setLineWidth(w)
 				lg.setColor(0.6, 0.9, 1.0, a * jumpA)
 
-				do
-					local bends = random(1, 2)
-					local px = x1
-					local py = y1
-
-					for b = 1, bends do
-						local bt = b / (bends + 1)
-
-						local bx = x1 + (x2 - x1) * bt + jitter(10)
-						local by = y1 + (y2 - y1) * bt + jitter(10)
-
-						lg.line(px, py, bx, by)
-
-						px = bx
-						py = by
-					end
-
-					lg.line(px, py, x2, y2)
-				end
+				lg.line(seg.mainCoords)
 
 				-- Additional beam
 				lg.setLineWidth(w * 0.65)
 				lg.setColor(0.7, 0.95, 1.0, 0.55 * a * jumpA)
 
-				do
-					local offset = 2.5
-					local ox = jitter(offset)
-					local oy = jitter(offset)
-
-					local bends = random(1, 2)
-					local px = x1
-					local py = y1
-
-					for b = 1, bends do
-						local bt = b / (bends + 1)
-
-						local bx = x1 + (x2 - x1) * bt + ox + jitter(6)
-						local by = y1 + (y2 - y1) * bt + oy + jitter(6)
-
-						lg.line(px, py, bx, by)
-
-						px = bx
-						py = by
-					end
-
-					lg.line(px, py, x2, y2)
-				end
+				lg.line(seg.secondaryCoords)
 
 				-- Core line
 				lg.setLineWidth(w * 0.4)
 				lg.setColor(1, 1, 1, 0.9 * a * jumpA)
 
-				do
-					local bends = 1
-					local px = x1
-					local py = y1
-
-					for b = 1, bends do
-						local bt = b / (bends + 1)
-
-						local bx = x1 + (x2 - x1) * bt + jitter(4)
-						local by = y1 + (y2 - y1) * bt + jitter(4)
-
-						lg.line(px, py, bx, by)
-
-						px = bx
-						py = by
-					end
-
-					lg.line(px, py, x2, y2)
-				end
+				lg.line(seg.coreCoords)
 
 				-- Tiny fork
-				if random() < 0.45 then
-					local bx = (x1 + x2) * 0.5
-					local by = (y1 + y2) * 0.5
-
-					local dirx = x2 - x1
-					local diry = y2 - y1
-					local length = sqrt(dirx * dirx + diry * diry)
-
-					if length > 0 then
-						dirx = dirx / length
-						diry = diry / length
-					end
-
-					local angle = (random() * 0.9 + 0.35) * pi
-					local sign = random() < 0.5 and -1 or 1
-
-					local cosA = cos(angle * sign)
-					local sinA = sin(angle * sign)
-
-					local rx = dirx * cosA - diry * sinA
-					local ry = dirx * sinA + diry * cosA
-
-					local forkLen = 6 + random() * 10
-
+				if seg.forkCoords then
 					lg.setLineWidth(w * 0.7)
 					lg.setColor(0.7, 0.95, 1.0, 0.45 * a * jumpA)
-
-					lg.line(bx, by, bx + rx * forkLen + jitter(3), by + ry * forkLen + jitter(3))
+					lg.line(seg.forkCoords)
 				end
 			end
 
@@ -825,7 +810,6 @@ function Effects.draw()
 		local u = z.t / z.life
 		local a = 1.0 - u
 
-		local x1, y1 = z.x1, z.y1
 		local x2, y2 = z.x2, z.y2
 
 		local w = 3 * (0.9 - 0.35 * u)
@@ -833,22 +817,18 @@ function Effects.draw()
 		-- glow
 		lg.setLineWidth(w * 2.2)
 		lg.setColor(0.5, 0.85, 1.0, 0.18 * a)
-		lg.line(x1, y1, x2, y2)
+		lg.line(z.glowCoords)
 
 		-- main bolt
 		lg.setLineWidth(w)
 		lg.setColor(0.6, 0.9, 1.0, a)
 
-		local mx = (x1 + x2) * 0.5 + (love.math.random() - 0.5) * 8
-		local my = (y1 + y2) * 0.5 + (love.math.random() - 0.5) * 8
-
-		lg.line(x1, y1, mx, my)
-		lg.line(mx, my, x2, y2)
+		lg.line(z.mainCoords)
 
 		-- core
 		lg.setLineWidth(w * 0.45)
 		lg.setColor(1, 1, 1, 0.9 * a)
-		lg.line(x1, y1, x2, y2)
+		lg.line(z.coreCoords)
 
 		-- hit spark
 		lg.setColor(0.7, 0.95, 1.0, 0.7 * a)
