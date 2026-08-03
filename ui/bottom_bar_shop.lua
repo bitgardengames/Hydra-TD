@@ -6,6 +6,7 @@ local Text = require("ui.text")
 local Tooltip = require("ui.tooltip")
 local Theme = require("core.theme")
 local L = require("core.localization")
+local DailyChallenge = require("systems.daily_challenge")
 
 local lg = love.graphics
 local min = math.min
@@ -166,7 +167,8 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local yb = startY + row * (SHOP_BTN_H + GAP_Y)
 
 		local selected = State.placing == key
-		local canAfford = State.money >= def.cost
+		local allowed = DailyChallenge.isTowerAllowed(State.dailyChallenge, key)
+		local canAfford = State.money >= def.cost and allowed
 		local pulse = selected and (0.9 + sin(now * 6) * 0.1) or 1
 
 		local btn = getShopButton(i)

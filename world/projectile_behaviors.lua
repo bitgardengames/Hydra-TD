@@ -19,7 +19,7 @@ local cos = math.cos
 local sqrt = math.sqrt
 local atan2 = math.atan2
 local floor = math.floor
-local random = math.random
+local random = require("systems.run_random").random
 local abs = math.abs
 
 local ProjectileBehaviors = {}

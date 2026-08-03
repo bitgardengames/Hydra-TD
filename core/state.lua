@@ -51,6 +51,8 @@ local state = {
 	mode = "menu", -- "menu", "campaign", "game", "pause"
 
 	ignoreStats = false,
+	dailyChallenge = nil,
+	dailyScore = nil,
 
 	modules = {},
 	modulePicker = {

@@ -8,6 +8,10 @@ local Steam = require("core.steam")
 local Fonts = require("core.fonts")
 local Backdrop = require("scenes.backdrop")
 local L = require("core.localization")
+local Save = require("core.save")
+local DailyChallenge = require("systems.daily_challenge")
+local Difficulty = require("systems.difficulty")
+local Maps = require("world.map_defs")
 
 local Screen = {}
 
@@ -28,6 +32,7 @@ local innerRadius = baseRadius - outlineW * 0.25
 
 local buttons = nil
 local storeButton = nil
+local daily = nil
 
 local lancerIdle = {
 	angle = -math.pi / 6,
@@ -53,6 +58,7 @@ function Screen.load()
 
 	Backdrop.start()
 
+	daily = DailyChallenge.today()
 	buttons = {
 		{
 			id = "play",
@@ -60,8 +66,26 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
+				State.dailyChallenge = nil
+				Difficulty.set(Save.data.settings.difficulty)
 				State.mode = "campaign"
 				Sound.play("uiConfirm")
+			end
+		},
+
+		{
+			id = "daily",
+			label = "Daily Challenge — " .. daily.date,
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				State.dailyChallenge = daily
+				State.worldMapIndex = daily.mapIndex
+				State.mapIndex = State.resolveMapIndex(daily.mapIndex)
+				Difficulty.set(daily.difficulty)
+				State.mode = "game"
+				Sound.play("uiConfirm")
+				resetGame()
 			end
 		},
 
@@ -204,6 +228,18 @@ function Screen.draw()
 	-- Draw buttons
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
+	end
+
+	local dailyButton
+	for _, btn in ipairs(buttons) do if btn.id == "daily" then dailyButton = btn end end
+	if dailyButton and daily then
+		local map = Maps[daily.mapIndex]
+		local result = Save.getDailyResult(daily.date)
+		Fonts.set("ui")
+		love.graphics.setColor(Theme.ui.text)
+		local status = result and result.completed and ("Completed • Best " .. tostring(result.score)) or "Not completed"
+		love.graphics.printf((map and L(map.nameKey) or daily.mapId) .. " • " .. daily.difficulty .. " • No " .. DailyChallenge.restrictionText(daily), panelX + 8, dailyButton.y + dailyButton.h + 2, panelW - 16, "center")
+		love.graphics.printf(daily.mutators[1].label .. " • " .. status, panelX + 8, dailyButton.y + dailyButton.h + 16, panelW - 16, "center")
 	end
 
 	if storeButton then
