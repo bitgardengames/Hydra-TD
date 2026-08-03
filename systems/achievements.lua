@@ -73,7 +73,7 @@ local function hasCompletedBaseCampaign(targetDifficulty)
 end
 
 function Achievements.checkCampaignCompletion()
-	if State.ignoreStats or not Save.data then
+	if State.ignoreStats or State.sandboxRun or not Save.data then
 		return
 	end
 
@@ -99,7 +99,7 @@ for _, def in ipairs(AchievementDefs) do
 end
 
 function Achievements.increment(stat, amount)
-	if State.ignoreStats then
+	if State.ignoreStats or State.sandboxRun then
 		return
 	end
 
@@ -120,12 +120,14 @@ function Achievements.increment(stat, amount)
 end
 
 function Achievements.onGameOver()
+	if State.sandboxRun then return end
 	Achievements.checkCampaignCompletion()
 	RunStats.commitTowerHistory()
 	Save.flush()
 end
 
 function Achievements.unlock(id)
+	if State.sandboxRun then return end
 	unlock(id)
 end
 
