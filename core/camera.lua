@@ -87,13 +87,17 @@ function Camera.resize()
 	Camera.setZoom(computeAdaptiveZoom())
 end
 
-function Camera.begin()
+function Camera.begin(suppressShake)
 	lg.setCanvas(Camera.canvas)
 	lg.clear()
 
 	lg.push()
 	lg.scale(Camera.wscale, Camera.wscale)
-	lg.translate(-Camera.wx + Camera.shakeX, -Camera.wy + Camera.shakeY)
+
+	local shakeX = suppressShake and 0 or Camera.shakeX
+	local shakeY = suppressShake and 0 or Camera.shakeY
+
+	lg.translate(-Camera.wx + shakeX, -Camera.wy + shakeY)
 end
 
 function Camera.shake(strength, duration)
