@@ -385,7 +385,6 @@ return {
 		upcomingWave = "Wave %d Preview",
 		waveTotal = "%d total",
 		compositionEntry = "%d %s",
-		groupTiming = "Group %d  •  +%.1fs  •  %.2fs apart",
 	},
 
 	messages = {

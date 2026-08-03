@@ -15,7 +15,7 @@ local colorOutline = Theme.outline.color
 
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
-local PANEL_W = 420
+local PANEL_W = 320
 local HEADER_H = 30
 local HEADER_GAP = 8
 local ROW_GAP = 5
@@ -54,12 +54,7 @@ local function refreshPreview()
 	for i = 1, #preview.composition do
 		local group = preview.composition[i]
 		entries[i] = {
-			name = L("hud.compositionEntry", group.count, group.name)
-				.. (#group.affixNames > 0 and (" — " .. table.concat(group.affixNames, ", ")) or ""),
-			timing = L("hud.groupTiming", i, group.delay, group.spacing),
-			tags = table.concat(group.tags, " · "),
-			hint = #group.affixDescriptions > 0 and table.concat(group.affixDescriptions, " ")
-				or table.concat(group.counterHints, " "),
+			name = L("hud.compositionEntry", group.count, group.name),
 		}
 	end
 end
@@ -73,7 +68,7 @@ function WavePreview.draw()
 
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local rowH = textH * 4 + ROW_GAP
+	local rowH = textH + ROW_GAP
 	local bodyH = math.max(textH, #previewCache.entries * rowH - ROW_GAP)
 	local panelH = PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH
 	local x = SCREEN_PAD
@@ -107,14 +102,6 @@ function WavePreview.draw()
 		local entry = previewCache.entries[i]
 		lg.setColor(colorText)
 		Text.printShadow(entry.name, innerX, rowY)
-		lg.setColor(colorWave)
-		Text.printShadow(entry.timing, innerX, rowY + textH)
-		if entry.tags ~= "" then
-			lg.setColor(colorWave)
-			Text.printShadow(entry.tags, innerX, rowY + textH * 2)
-			lg.setColor(colorText)
-			Text.printfShadow(entry.hint, innerX, rowY + textH * 3, innerW, "left")
-		end
 		rowY = rowY + rowH
 	end
 end
