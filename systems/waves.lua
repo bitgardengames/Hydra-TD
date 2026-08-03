@@ -8,6 +8,7 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
 local EnemyTraits = require("world.enemy_traits")
+local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Spatial = require("world.spatial_grid")
 local Onboarding = require("systems.onboarding")
 local Effects = require("world.effects")
@@ -191,6 +192,7 @@ local spawnerDefaults = {
 	spdMult = 1.0,
 	kind = nil,
 	composition = nil,
+	affixes = nil,
 	compositionIndex = 1,
 	groups = nil,
 	groupIndex = 1,
@@ -226,7 +228,7 @@ function Waves.getWavePreview(waveNumber)
 	local wave = WaveBuilder.build(waveNumber)
 	local groups = {}
 
-	local function addGroup(kind, count, spacing, delay)
+	local function addGroup(kind, count, spacing, delay, affixes)
 		local def = EnemyDefs[kind]
 		local group = {
 			kind = kind,
@@ -236,7 +238,17 @@ function Waves.getWavePreview(waveNumber)
 			delay = delay or 0,
 			tags = {},
 			counterHints = {},
+			affixes = affixes or {},
+			affixNames = {},
+			affixDescriptions = {},
 		}
+		for _, id in ipairs(group.affixes) do
+			local affix = EnemyAffixDefs[id]
+			if affix then
+				group.affixNames[#group.affixNames + 1] = L(affix.nameKey)
+				group.affixDescriptions[#group.affixDescriptions + 1] = L(affix.descriptionKey)
+			end
+		end
 		for _, trait in ipairs(EnemyTraits.forEnemy(def)) do
 			group.tags[#group.tags + 1] = trait.tag
 			group.counterHints[#group.counterHints + 1] = trait.counter
@@ -257,10 +269,13 @@ function Waves.getWavePreview(waveNumber)
 	else
 		-- Endless composition has uniform timing; coalesce adjacent kinds while
 		-- preserving their spawn order rather than aggregating the whole wave.
-		for _, kind in ipairs(wave.composition or {}) do
+		for _, item in ipairs(wave.composition or {}) do
+			local kind = type(item) == "table" and item.kind or item
+			local affixes = type(item) == "table" and item.affixes or {}
+			local affixKey = table.concat(affixes, ",")
 			local group = groups[#groups]
-			if group and group.kind == kind then group.count = group.count + 1
-			else addGroup(kind, 1, wave.spacing, 0) end
+			if group and group.kind == kind and group.affixKey == affixKey then group.count = group.count + 1
+			else addGroup(kind, 1, wave.spacing, 0, affixes); groups[#groups].affixKey = affixKey end
 		end
 	end
 
@@ -380,8 +395,9 @@ function Waves.updateSpawner(dt)
 		while spawner.active and spawner.timer <= 0 and spawner.remaining > 0
 			and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
 			local group = spawner.groups and spawner.groups[spawner.groupIndex]
-			local kind = group and group.kind
-				or (spawner.composition and spawner.composition[spawner.compositionIndex]) or spawner.kind
+			local item = spawner.composition and spawner.composition[spawner.compositionIndex]
+			local kind = group and group.kind or (type(item) == "table" and item.kind or item) or spawner.kind
+			local affixes = group and group.affixes or (type(item) == "table" and item.affixes or nil)
 
 			if not kind then
 				spawner.remaining = 0
@@ -390,7 +406,7 @@ function Waves.updateSpawner(dt)
 				return
 			end
 
-			Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult)
+			Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult, nil, nil, nil, {affixes = affixes})
 			spawner.compositionIndex = spawner.compositionIndex + 1
 
 			spawner.remaining = spawner.remaining - 1

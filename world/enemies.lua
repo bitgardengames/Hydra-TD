@@ -6,6 +6,7 @@ local Effects = require("world.effects")
 local MapMod = require("world.map")
 local Spatial = require("world.spatial_grid")
 local EnemyDefs = require("world.enemy_defs")
+local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Floaters = require("ui.floaters")
 local Achievements = require("systems.achievements")
 local L = require("core.localization")
@@ -173,6 +174,7 @@ end
 
 local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
 	local def = EnemyDefs[kind]
+	opts = opts or {}
 
 	Save.markEnemyEncountered(kind)
 
@@ -191,6 +193,22 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 
 	e.kind = kind
 	e.def = def
+	e.affixes = {}
+	e.affixById = {}
+	local hpAffixMult, speedAffixMult, rewardAffixMult = 1, 1, 1
+	for _, id in ipairs(opts.affixes or {}) do
+		local affix = EnemyAffixDefs[id]
+		if affix and not e.affixById[id] then
+			e.affixes[#e.affixes + 1] = affix
+			e.affixById[id] = affix
+			local behavior = affix.behavior or {}
+			hpAffixMult = hpAffixMult * (behavior.hpMultiplier or 1)
+			speedAffixMult = speedAffixMult * (behavior.speedMultiplier or 1)
+			rewardAffixMult = rewardAffixMult * (behavior.rewardMultiplier or 1)
+			Save.markAffixEncountered(id)
+		end
+	end
+	e.elite = #e.affixes > 0
 
 	-- World position
 	e.x = x
@@ -220,11 +238,11 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.boss = def.boss or false
 	e.hpScale = hpScale
 	e.spdScale = spdScale
-	e.hp = (def.hp * hpScale) or 0
-	e.maxHp = def.hp * hpScale
-	e.baseSpeed = def.speed * spdScale
-	e.speed = def.speed * spdScale
-	e.reward = def.reward * (1.0 + State.wave * 0.01)
+	e.hp = (def.hp * hpScale * hpAffixMult) or 0
+	e.maxHp = def.hp * hpScale * hpAffixMult
+	e.baseSpeed = def.speed * spdScale * speedAffixMult
+	e.speed = e.baseSpeed
+	e.reward = def.reward * (1.0 + State.wave * 0.01) * rewardAffixMult
 	e.score = def.score or 0
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius
@@ -734,6 +752,9 @@ end
 local function applyDamage(e, amount, context)
 	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
 	context = context or {}
+	for _, affix in ipairs(e.affixes or {}) do
+		amount = amount * ((affix.behavior and affix.behavior.damageTakenMultiplier) or 1)
+	end
 	local raw = amount
 	if e.armor then
 		local heavy = context.sourceKind == "cannon" or context.sourceKind == "lancer"
@@ -764,6 +785,9 @@ end
 
 local function applySlow(e, factor, duration)
 	if not e or e.hp <= 0 then return false end
+	for _, affix in ipairs(e.affixes or {}) do
+		duration = (duration or 0) * ((affix.behavior and affix.behavior.statusDurationMultiplier) or 1)
+	end
 	local newFactor = math.max(0, math.min(1, factor))
 	if not e.slowFactor or newFactor < e.slowFactor then e.slowFactor = newFactor end
 	e.slowTimer = math.max(e.slowTimer or 0, duration or 0)

@@ -54,10 +54,12 @@ local function refreshPreview()
 	for i = 1, #preview.composition do
 		local group = preview.composition[i]
 		entries[i] = {
-			name = L("hud.compositionEntry", group.count, group.name),
+			name = L("hud.compositionEntry", group.count, group.name)
+				.. (#group.affixNames > 0 and (" — " .. table.concat(group.affixNames, ", ")) or ""),
 			timing = L("hud.groupTiming", i, group.delay, group.spacing),
 			tags = table.concat(group.tags, " · "),
-			hint = table.concat(group.counterHints, " "),
+			hint = #group.affixDescriptions > 0 and table.concat(group.affixDescriptions, " ")
+				or table.concat(group.counterHints, " "),
 		}
 	end
 end
