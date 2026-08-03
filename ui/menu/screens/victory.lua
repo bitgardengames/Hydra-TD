@@ -14,7 +14,6 @@ local Save = require("core.save")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local RunStats = require("systems.run_stats")
-local DailyChallenge = require("systems.daily_challenge")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -207,10 +206,6 @@ local function buildStats()
 		{ label = "Modules / contracts", value = (summary.modules ~= "" and summary.modules or "none") .. "  /  " .. (summary.contracts ~= "" and summary.contracts or "none") },
 		{ label = "Coach / share", value = summary.observation .. "  •  [C] Copy build code" },
 	}
-	if State.dailyChallenge then
-		local score = State.dailyScore or DailyChallenge.score(true, State.lives, State.money, reachedWave, State.totalLeaks)
-		table.insert(stats, 2, {label = "Daily score", value = string.format("%d = completion %d + lives %d + money %d + waves %d - leaks %d", score.total, score.completion, score.lives, score.money, score.waves, -score.leaks)})
-	end
 end
 
 local function resetConfetti()

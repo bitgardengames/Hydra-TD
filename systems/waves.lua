@@ -12,7 +12,6 @@ local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Spatial = require("world.spatial_grid")
 local Onboarding = require("systems.onboarding")
 local Effects = require("world.effects")
-local Mutators = require("systems.mutators")
 
 local Waves = {}
 
@@ -180,7 +179,7 @@ local function getWaveMultipliers(waveNumber, mapMult, isBoss)
 		and (DifficultyCurve.getBossHpMultiplier(waveNumber) * mapMult)
 		or (DifficultyCurve.getEnemyHpMultiplier(waveNumber) * mapMult)
 	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(waveNumber)
-	return hpMult, spdMult * Mutators.enemySpeedMultiplier()
+	return hpMult, spdMult
 end
 
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)

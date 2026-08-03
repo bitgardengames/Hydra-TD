@@ -58,8 +58,6 @@ local state = {
 	-- system changes the generic flag.
 	sandboxRun = false,
 	sandbox = nil,
-	dailyChallenge = nil,
-	dailyScore = nil,
 
 	modules = {},
 	modulePicker = {

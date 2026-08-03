@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 6 -- Local Daily Challenge results
+local SAVE_VERSION = 5 -- Per-difficulty campaign medal timestamps
 
 local Hotkeys = require("core.hotkeys")
 local State = require("core.state")
@@ -116,7 +116,6 @@ function Save.load()
 			Save.data.furthestIndex = Save.data.furthestIndex or 1
 			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 			Save.data.mapStats = Save.data.mapStats or {}
-			Save.data.dailyResults = Save.data.dailyResults or {}
 			local mapStatsChanged = false
 			for _, stats in pairs(Save.data.mapStats) do
 				if type(stats) == "table" then
@@ -228,7 +227,6 @@ function Save.load()
 		furthestIndex = 1,
 		unlockedMaps = {},
 		mapStats = {},
-		dailyResults = {},
 		tutorialCompleted = false,
 		tutorialOffered = false,
 		tutorialSkipped = false,
@@ -335,22 +333,6 @@ function Save.recordMapResult(mapId, wave, difficulty, completed, endless)
 		end
 	end
 
-	Save.flush()
-end
-
-function Save.getDailyResult(date)
-	return Save.data and Save.data.dailyResults and Save.data.dailyResults[date]
-end
-
-function Save.recordDailyResult(date, result)
-	if not Save.data or type(date) ~= "string" or type(result) ~= "table" then return end
-	Save.data.dailyResults = Save.data.dailyResults or {}
-	local previous = Save.data.dailyResults[date]
-	if not previous or (result.score or 0) > (previous.score or 0) then
-		Save.data.dailyResults[date] = result
-	elseif result.completed and not previous.completed then
-		previous.completed = true
-	end
 	Save.flush()
 end
 

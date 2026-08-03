@@ -15,7 +15,6 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local AbilityDefs = require("systems.ability_defs")
-local Mutators = require("systems.mutators")
 
 local lg = love.graphics
 local floor = math.floor
@@ -416,7 +415,7 @@ function Screen.load()
 				State.worldMapIndex = State.mapIndex
 				State.mode = "game"
 				Backdrop.stop()
-				if not State.dailyChallenge then Difficulty.set(Save.data.settings.difficulty) end
+				Difficulty.set(Save.data.settings.difficulty)
 				resetGame()
 				Sound.playMusic("gameplay")
 			end
@@ -478,8 +477,7 @@ function Screen.update(dt)
 	for i, btn in ipairs(campaignButtons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = buttonsStartY + (i - 1) * gap
-		btn.enabled = ((btn.id ~= "play") or not isMapLocked(State.mapIndex))
-			and (not State.dailyChallenge or (btn.id ~= "difficulty" and btn.id ~= "ability"))
+		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
 		if btn.id == "difficulty" then
 			btn.label = difficultyButtonLabel()
 		elseif btn.id == "ability" then
@@ -659,22 +657,6 @@ function Screen.draw()
 	Fonts.set("ui")
 
 	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
-
-	local activeRules = Mutators.active()
-	if #activeRules > 0 then
-		local ruleX, ruleY, ruleW = previewX + 12, previewY + 12, pw - 24
-		lg.setColor(0.03, 0.04, 0.06, 0.88)
-		lg.rectangle("fill", ruleX, ruleY, ruleW, 26 + #activeRules * 30, 6)
-		lg.setColor(colorText)
-		Text.printShadow(L("mutators.activeRules"), ruleX + 10, ruleY + 6)
-		for i, rule in ipairs(activeRules) do
-			local ry = ruleY + 8 + i * 28
-			Text.printShadow(L(rule.def.nameKey), ruleX + 10, ry)
-			lg.setColor(0.72, 0.75, 0.80, 1)
-			Text.printfShadow(L(rule.def.descriptionKey), ruleX + 135, ry, ruleW - 145, "left")
-			lg.setColor(colorText)
-		end
-	end
 
 	-- Buttons
 	local buttonsStartY = textY + PAD_TITLE + PAD_META

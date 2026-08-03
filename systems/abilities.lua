@@ -2,7 +2,6 @@ local AbilityDefs = require("systems.ability_defs")
 local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local State = require("core.state")
-local Mutators = require("systems.mutators")
 
 local Abilities = {}
 
@@ -54,7 +53,7 @@ function Abilities.activate(x, y)
 		Effects.spawnFrostBurst(x, y)
 		Effects.trigger("ability_frost", {intensity = 2, shake = 1})
 	end
-	State.abilityCooldowns[def.id] = def.cooldown * Mutators.abilityRechargeMultiplier()
+	State.abilityCooldowns[def.id] = def.cooldown
 	State.abilityTargeting = nil
 	return true
 end
