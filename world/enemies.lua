@@ -26,6 +26,7 @@ local HIT_SQUASH_DUR = 0.12
 
 local EPS = 1e-6
 local BASE_MAX_NUDGE = 10
+local NUDGE_IDLE_EPS = 1e-3
 local MIN_NUDGE_DAMP = 5
 local MAX_NUDGE_DAMP = 30
 local NUDGE_TARGET_DAMP_MULT = 0.35
@@ -845,12 +846,28 @@ local function updateEnemies(dt)
 		-- visual-only nudge smoothing:
 		-- 1) target eases back to path
 		-- 2) rendered nudge follows target for softer hit finish
-		local targetDecay = exp(-e.nudgeTargetK * dt)
-		local follow = 1 - exp(-e.nudgeFollowK * dt)
-		e.nudgeTargetX = e.nudgeTargetX * targetDecay
-		e.nudgeTargetY = e.nudgeTargetY * targetDecay
-		e.nudgeX = e.nudgeX + (e.nudgeTargetX - e.nudgeX) * follow
-		e.nudgeY = e.nudgeY + (e.nudgeTargetY - e.nudgeY) * follow
+		local targetX, targetY = e.nudgeTargetX, e.nudgeTargetY
+		local nudgeX, nudgeY = e.nudgeX, e.nudgeY
+		local epsilon = NUDGE_IDLE_EPS
+
+		if targetX > epsilon or targetX < -epsilon
+			or targetY > epsilon or targetY < -epsilon
+			or nudgeX > epsilon or nudgeX < -epsilon
+			or nudgeY > epsilon or nudgeY < -epsilon then
+			local targetDecay = exp(-e.nudgeTargetK * dt)
+			local follow = 1 - exp(-e.nudgeFollowK * dt)
+			targetX = targetX * targetDecay
+			targetY = targetY * targetDecay
+			e.nudgeTargetX = targetX
+			e.nudgeTargetY = targetY
+			e.nudgeX = nudgeX + (targetX - nudgeX) * follow
+			e.nudgeY = nudgeY + (targetY - nudgeY) * follow
+		else
+			e.nudgeTargetX = 0
+			e.nudgeTargetY = 0
+			e.nudgeX = 0
+			e.nudgeY = 0
+		end
 
 		-- gameplay queries use path position only
 		if moved then
