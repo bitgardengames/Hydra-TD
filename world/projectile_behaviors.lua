@@ -205,10 +205,14 @@ local function emitImpulse(p, e, px, py, strength)
 end
 
 local function canHitTarget(p, enemy)
-	for i = 1, #p.behaviors do
-		local b = p.behaviors[i]
-		local def = B[b.id]
-		if def and def.canHit and not def.canHit(p, enemy, b.data) then
+	local predicates = p._canHitPredicates
+	if not predicates then
+		return true
+	end
+
+	for i = 1, #predicates do
+		local predicate = predicates[i]
+		if not predicate.fn(p, enemy, predicate.data) then
 			return false
 		end
 	end
@@ -242,6 +246,8 @@ local HOOK_IDS = {
 
 function ProjectileBehaviors.compileHooks(p)
 	local hooks = {}
+	local drawHandlers = {}
+	local canHitPredicates = {}
 
 	for i = 1, #HOOK_IDS do
 		hooks[HOOK_IDS[i]] = {}
@@ -251,6 +257,14 @@ function ProjectileBehaviors.compileHooks(p)
 		local behavior = p.behaviors[i]
 		local def = B[behavior.id]
 		if def then
+			if def.draw then
+				drawHandlers[#drawHandlers + 1] = { fn = def.draw, data = behavior.data }
+			end
+
+			if def.canHit then
+				canHitPredicates[#canHitPredicates + 1] = { fn = def.canHit, data = behavior.data }
+			end
+
 			local declaredHooks = behavior.hooks
 			local declaredLookup = nil
 			if declaredHooks then
@@ -281,6 +295,8 @@ function ProjectileBehaviors.compileHooks(p)
 	end
 
 	p._hooks = hooks
+	p._drawHandlers = drawHandlers
+	p._canHitPredicates = canHitPredicates
 end
 
 local function consumeProjectile(p)
@@ -2977,13 +2993,14 @@ function ProjectileBehaviors.hit(p, e, ctx)
 end
 
 function ProjectileBehaviors.draw(p, a)
-	for i = 1, #p.behaviors do
-		local b = p.behaviors[i]
-		local def = B[b.id]
+	local handlers = p._drawHandlers
+	if not handlers then
+		return
+	end
 
-		if def and def.draw then
-			def.draw(p, a)
-		end
+	for i = 1, #handlers do
+		local handler = handlers[i]
+		handler.fn(p, a, handler.data)
 	end
 end
 

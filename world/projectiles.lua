@@ -135,6 +135,9 @@ local function resetReusableState(p)
 	p.compiledHooks = nil
 	p._hookFns = nil
 	p._hookList = nil
+	p._hooks = nil
+	p._drawHandlers = nil
+	p._canHitPredicates = nil
 
 	p._defaultHitCtx = p._defaultHitCtx or {}
 	p._defaultHitCtx.origin = nil
@@ -306,6 +309,10 @@ local function spawnDirect(source, target, context, speed, life)
 end
 
 local function resolveSpawnProjectile(parent, evt)
+	if not evt.behaviors and parent and parent.behaviors then
+		evt.behaviors = PB.buildChildBehaviors(parent.behaviors)
+	end
+
 	local newP = spawnEvent(evt)
 
 	if not newP then
@@ -330,11 +337,6 @@ local function resolveSpawnProjectile(parent, evt)
 		end
 	end
 
-	if not evt.behaviors and parent and parent.behaviors then
-		newP.behaviors = PB.buildChildBehaviors(parent.behaviors)
-		PB.compileHooks(newP)
-		PB.init(newP)
-	end
 end
 
 local function resolveDamage(p, evt)
