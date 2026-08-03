@@ -4,6 +4,7 @@ local Theme = require("core.theme")
 local Hud = require("ui.bottom_bar_hud")
 local Shop = require("ui.bottom_bar_shop")
 local Inspect = require("ui.bottom_bar_inspect")
+local AbilityBar = require("ui.ability_bar")
 
 local lg = love.graphics
 local getTime = love.timer.getTime
@@ -84,6 +85,7 @@ function BottomBar.draw()
 	local inspectW = INSPECT_W + PAD * 2
 
 	Inspect.draw(outerX + outerW + PANEL_GAP, outerY, inspectW, outerH, dt, textH, now, mx, my)
+	AbilityBar.draw(dt, mx, my)
 end
 
 function BottomBar.getShopButtons()
@@ -95,7 +97,7 @@ function BottomBar.getInspectButtons()
 end
 
 function BottomBar.getAbilityButtons()
-	return Hud.getButtons()
+	return AbilityBar.getButtons()
 end
 
 return BottomBar

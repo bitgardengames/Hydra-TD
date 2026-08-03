@@ -107,6 +107,7 @@ return {
 
 	campaign = {
 		ability = "Ability: %s",
+		abilities = "Abilities: %s",
 		locked = "LOCKED",
 		mapOf = "Map %d of %d",
 		completedBest = "Completed: %s • Best: %d",
