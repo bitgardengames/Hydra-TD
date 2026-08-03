@@ -118,18 +118,6 @@ local function recomputeSupportBoost(target)
 	target.supportBoost = boost
 end
 
-local function refreshSupportBeforeMovement(target)
-	local contributions = target.supportContributions
-	if not contributions then return end
-	for sourceID, contribution in pairs(contributions) do
-		local source = contribution.source
-		if not source or source.id ~= sourceID or source.hp <= 0 or source._supportRemoved then
-			recomputeSupportBoost(target)
-			return
-		end
-	end
-end
-
 local function clearSupportSource(source, removed)
 	local affected = source.supportAffected
 	if affected then
@@ -156,6 +144,15 @@ local function removeSupportSource(source)
 			last.supportSourceIndex = index
 		end
 		source.supportSourceIndex = nil
+	end
+end
+
+local function removeDeadSupportSource(source)
+	if source.supportSourceIndex and source.hp <= 0 then
+		-- Damage can happen while updateEnemies is walking the enemy list. Detach
+		-- the source now so targets on either side of it in the reverse walk see
+		-- the same boost state.
+		removeSupportSource(source)
 	end
 end
 
@@ -200,6 +197,19 @@ local function updateSupportSource(source)
 	source._supportMultiplier = aura.speedMultiplier
 end
 
+local function syncSupportSourceDefinition(source)
+	local aura = source.def.support
+	if aura ~= source.support then
+		source.support = aura
+	end
+	if source.hp <= 0 then
+		removeDeadSupportSource(source)
+	elseif aura ~= source._supportAura or (aura and (aura.radius ~= source._supportRadius
+		or aura.speedMultiplier ~= source._supportMultiplier)) then
+		updateSupportSource(source)
+	end
+end
+
 local function sourceTouchesCell(source, cx, cy)
 	local aura = source.support
 	if not aura or cx == nil then return false end
@@ -207,14 +217,21 @@ local function sourceTouchesCell(source, cx, cy)
 end
 
 local function onEnemyCellChanged(e, oldCX, oldCY, newCX, newCY)
-	if e.support then
+	if e.supportSourceIndex then
+		syncSupportSourceDefinition(e)
+	end
+	if e.supportSourceIndex then
 		updateSupportSource(e)
 	end
-	for i = 1, supportSourceCount do
+	local i = 1
+	while i <= supportSourceCount do
 		local source = supportSources[i]
-		if source ~= e and (sourceTouchesCell(source, oldCX, oldCY) or sourceTouchesCell(source, newCX, newCY)) then
+		syncSupportSourceDefinition(source)
+		if source.supportSourceIndex and source ~= e
+			and (sourceTouchesCell(source, oldCX, oldCY) or sourceTouchesCell(source, newCX, newCY)) then
 			updateSupportSource(source)
 		end
+		if supportSources[i] == source then i = i + 1 end
 	end
 end
 
@@ -222,11 +239,14 @@ local function onEnemyRemoved(e, oldCX, oldCY)
 	if e.supportSourceIndex then
 		removeSupportSource(e)
 	end
-	for i = 1, supportSourceCount do
+	local i = 1
+	while i <= supportSourceCount do
 		local source = supportSources[i]
-		if sourceTouchesCell(source, oldCX, oldCY) then
+		syncSupportSourceDefinition(source)
+		if source.supportSourceIndex and sourceTouchesCell(source, oldCX, oldCY) then
 			updateSupportSource(source)
 		end
+		if supportSources[i] == source then i = i + 1 end
 	end
 	local contributions = e.supportContributions
 	if contributions then
@@ -558,19 +578,15 @@ local function updateEnemies(dt)
 	local LastSecondThreshold = map.lastSecondThreshold
 	-- Aura definitions may be replaced or tuned at runtime. Only changed sources
 	-- need to refresh their retained affected-enemy membership.
-	for i = 1, supportSourceCount do
-		local source = supportSources[i]
-		local aura = source.def.support
-		if aura ~= source.support then
-			source.support = aura
-		end
+	local supportIndex = 1
+	while supportIndex <= supportSourceCount do
+		local source = supportSources[supportIndex]
+		syncSupportSourceDefinition(source)
+		local aura = source.support
 		if aura and source.hp > 0 then
 			source.supportPulse = ((source.supportPulse or 0) + dt) % aura.pulsePeriod
 		end
-		if aura ~= source._supportAura or (aura and (aura.radius ~= source._supportRadius
-			or aura.speedMultiplier ~= source._supportMultiplier)) then
-			updateSupportSource(source)
-		end
+		if supportSources[supportIndex] == source then supportIndex = supportIndex + 1 end
 	end
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
@@ -632,6 +648,7 @@ local function updateEnemies(dt)
 				local dmg = baseDmg * missingBonus
 
 				e.hp = e.hp - dmg
+				removeDeadSupportSource(e)
 
 				if e.poisonSource then
 					e.poisonSource.damageDealt = e.poisonSource.damageDealt + dmg
@@ -793,9 +810,6 @@ local function updateEnemies(dt)
 		end
 		if e.shieldBreakFlash > 0 then e.shieldBreakFlash = max(0, e.shieldBreakFlash - dt) end
 
-		-- Purge dead/removed sources immediately, including supports killed earlier
-		-- in this tick, before their multiplier can affect movement.
-		refreshSupportBeforeMovement(e)
 		e.speed = e.baseSpeed * e.slowFactor * e.supportBoost
 		e.prevAnimT = e.animT
 		e.animT = e.animT + dt * e.speed * 0.03
@@ -947,6 +961,7 @@ local function applyDamage(e, amount, context)
 		amount = max(0, amount - absorbed)
 	end
 	e.hp = e.hp - amount
+	removeDeadSupportSource(e)
 	if amount > 0 or absorbed > 0 then
 		e.hitSquash = HIT_SQUASH_DUR
 		e.hitSquashStrength = 1
