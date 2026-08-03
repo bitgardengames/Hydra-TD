@@ -5,10 +5,9 @@ local Targeting = {}
 
 local EPS = 0.0001
 local HUGE_NEG = -math.huge
-local floor = math.floor
-local max = math.max
 local pointToCell = Spatial.pointToCell
 local queryCellsLocal = Spatial.queryCellsLocal
+local localQueryFootprintKey = Spatial.localQueryFootprintKey
 Targeting.MODES = {
 	PROGRESS = "progress",
 	LOW_HP = "low_hp",
@@ -102,13 +101,6 @@ local function clearFrameCache(cache)
 	cache.usedCount = 0
 end
 
-local function radiusBucket(range)
-	-- Bucket by world-unit radius so cached candidate sets remain valid for towers
-	-- with different ranges that happen to share a cell. Coarser bucketing can
-	-- under-query neighbor cells for longer-range towers, causing missed targets.
-	return max(1, floor((range or 0) + 0.5))
-end
-
 local function getCandidatesForTower(tower)
 	local frameId = State.frameId or 0
 	if frameCache.frameId ~= frameId then
@@ -117,19 +109,19 @@ local function getCandidatesForTower(tower)
 	end
 
 	local cx, cy = pointToCell(tower.x, tower.y)
-	local radiusKey = radiusBucket(tower.range)
+	local footprintKey = localQueryFootprintKey(tower.range)
 	local entriesByX = frameCache.entries
 	local entriesByY = entriesByX[cx]
 	if not entriesByY then
 		entriesByY = {}
 		entriesByX[cx] = entriesByY
 	end
-	local entriesByRadius = entriesByY[cy]
-	if not entriesByRadius then
-		entriesByRadius = {}
-		entriesByY[cy] = entriesByRadius
+	local entriesByFootprint = entriesByY[cy]
+	if not entriesByFootprint then
+		entriesByFootprint = {}
+		entriesByY[cy] = entriesByFootprint
 	end
-	local entry = entriesByRadius[radiusKey]
+	local entry = entriesByFootprint[footprintKey]
 	if entry then
 		return entry.list, entry.count
 	end
@@ -138,7 +130,7 @@ local function getCandidatesForTower(tower)
 		list = {},
 		count = 0,
 	}
-	entriesByRadius[radiusKey] = entry
+	entriesByFootprint[footprintKey] = entry
 
 	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, false)
 	local list = entry.list
