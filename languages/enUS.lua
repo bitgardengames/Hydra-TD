@@ -581,6 +581,18 @@ return {
 		history = "History — %d placed • %d upgrades • %d kills • %.0f damage • %.0f best run",
 	},
 
+	enemyAffix = {
+		unknown = "◆ Unknown elite affix — encounter it in Endless mode to reveal it",
+		fortified = {
+			name = "Fortified",
+			description = "45% more health and 18% less incoming damage; worth 35% more bounty.",
+		},
+		relentless = {
+			name = "Relentless",
+			description = "Moves 18% faster and recovers from slowing effects 45% sooner; worth 25% more bounty.",
+		},
+	},
+
 	overlay = {
 		demoCompleteTitle = "Demo Complete!",
 		demoCompleteText = "Thank you for playing the Hydra TD demo!\n\nWishlist the full game to be notified of updates and sales.",

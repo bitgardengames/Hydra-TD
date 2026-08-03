@@ -397,6 +397,11 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
         Text.printShadow(L("inspect.hp", formatInt(e.hp), formatInt(e.maxHp)), bodyX, bodyY)
 
 		local statusY = bodyY + 24
+		for _, affix in ipairs(e.affixes or {}) do
+			lg.setColor(affix.color)
+			Text.printShadow(affix.icon .. " " .. L(affix.nameKey) .. " — " .. L(affix.descriptionKey), bodyX, statusY)
+			statusY = statusY + 18
+		end
 
 		-- Slow
 		local slowTimer = e.slowTimer or 0

@@ -200,6 +200,7 @@ function Save.load()
 			meta.unlockedAchievements = meta.unlockedAchievements or {}
 			meta.clearedMaps = meta.clearedMaps or {}
 			meta.encounteredEnemies = meta.encounteredEnemies or {}
+			meta.encounteredAffixes = meta.encounteredAffixes or {}
 			meta.enemyHistory = meta.enemyHistory or {}
 			meta.towerHistory = meta.towerHistory or {}
 			meta.discoveredModules = meta.discoveredModules or {}
@@ -261,6 +262,7 @@ function Save.load()
 			unlockedAchievements = {},
 			clearedMaps = {},
 			encounteredEnemies = {},
+			encounteredAffixes = {},
 			enemyHistory = {},
 			towerHistory = {},
 			discoveredModules = {},
@@ -377,6 +379,16 @@ function Save.markEnemyEncountered(kind)
 
 	if not meta.encounteredEnemies[kind] then
 		meta.encounteredEnemies[kind] = true
+		Save.flush()
+	end
+end
+
+function Save.markAffixEncountered(id)
+	if not Save.data or type(id) ~= "string" then return end
+	local meta = Save.data.meta
+	meta.encounteredAffixes = meta.encounteredAffixes or {}
+	if not meta.encounteredAffixes[id] then
+		meta.encounteredAffixes[id] = true
 		Save.flush()
 	end
 end
