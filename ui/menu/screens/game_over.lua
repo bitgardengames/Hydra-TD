@@ -11,7 +11,6 @@ local Maps = require("world.map_defs")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local RunStats = require("systems.run_stats")
-local DailyChallenge = require("systems.daily_challenge")
 
 local lg = love.graphics
 
@@ -116,11 +115,6 @@ local function buildHighlights()
 		"Modules: " .. (summary.modules ~= "" and summary.modules or "none") .. "  •  Contracts: " .. (summary.contracts ~= "" and summary.contracts or "none"),
 		summary.observation .. "  •  [C] Copy build code",
 	}
-	if State.dailyChallenge then
-		local daily = State.dailyScore or DailyChallenge.score(false, State.lives, State.money, reachedWave, State.totalLeaks)
-		highlights[2] = {label = "Daily score", value = tostring(daily.total)}
-		table.insert(summaryLines, 1, string.format("Score: completion %d + lives %d + money %d + waves %d - leaks %d", daily.completion, daily.lives, daily.money, daily.waves, -daily.leaks))
-	end
 end
 
 local function selectGameOverMessage()

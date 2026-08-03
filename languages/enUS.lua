@@ -42,18 +42,6 @@ return {
 		cooldown = "%s  %ds",
 	},
 
-	mutators = {
-		activeRules = "ACTIVE RULES",
-		hudRules = "Rules: %s",
-		limited_arsenal = {name = "Limited Arsenal", description = "Plasma and Poison towers are unavailable."},
-		tower_limit = {name = "Tactical Limit", description = "No more than 12 towers may be placed."},
-		lean_economy = {name = "Lean Economy", description = "Start with 30% less currency."},
-		no_resale = {name = "No Resale", description = "Towers cannot be sold."},
-		swift_horde = {name = "Swift Horde", description = "Enemies move 20% faster."},
-		rapid_abilities = {name = "Rapid Abilities", description = "Abilities recharge 35% faster."},
-		empowered_affixes = {name = "Empowered Affixes", description = "Elite affix bonuses are 50% stronger."},
-	},
-
 	settings = {
 		title = "Settings",
 		music = "Music Volume",
