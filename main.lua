@@ -272,6 +272,14 @@ local function updateGamePresentation(dt)
 	State.placingFade = p * p * (3 - 2 * p)
 end
 
+local function updateEndStatePresentation(dt)
+	-- Keep the last combat effects alive behind the end-state UI without
+	-- advancing waves, enemies, towers, projectiles, or abilities through Sim.
+	local presentationDt = Effects.consumeHitStop(dt) * State.speed
+	Effects.update(presentationDt)
+	Floaters.update(presentationDt)
+end
+
 local function drawWorldAndUI()
 	Camera.begin()
 	Draw.drawWorld()
@@ -316,21 +324,20 @@ function love.update(dt)
 		return
 	end
 
-	Sim.update(Effects.consumeHitStop(dt) * State.speed)
-
 	if mode ~= "game" then
 		updateMetaScreens(dt, mode)
+
+		if mode == "game_over" or mode == "victory" then
+			updateEndStatePresentation(dt)
+		end
 
 		return
 	end
 
+	Sim.update(Effects.consumeHitStop(dt) * State.speed)
+
 	Input.updateHover()
 	if State.sandboxRun then SandboxPanel.update(dt) end
-
-	if mode == "victory" then
-		Menu.update(dt)
-		Overlay.update(dt)
-	end
 
 	updateGamePresentation(dt)
 
