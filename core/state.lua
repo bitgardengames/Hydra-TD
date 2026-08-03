@@ -51,6 +51,11 @@ local state = {
 	mode = "menu", -- "menu", "campaign", "game", "pause"
 
 	ignoreStats = false,
+	-- Sandbox is a first-class run type.  Keep this separate from ignoreStats so
+	-- persistence systems can explicitly reject sandbox data even if another
+	-- system changes the generic flag.
+	sandboxRun = false,
+	sandbox = nil,
 	dailyChallenge = nil,
 	dailyScore = nil,
 

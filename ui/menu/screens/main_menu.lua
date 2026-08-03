@@ -67,6 +67,8 @@ function Screen.load()
 			h = btnH,
 			onClick = function()
 				State.dailyChallenge = nil
+				State.sandboxRun = false
+				State.ignoreStats = false
 				Difficulty.set(Save.data.settings.difficulty)
 				State.mode = "campaign"
 				Sound.play("uiConfirm")
@@ -80,12 +82,33 @@ function Screen.load()
 			h = btnH,
 			onClick = function()
 				State.dailyChallenge = daily
+				State.sandboxRun = false
+				State.ignoreStats = false
 				State.worldMapIndex = daily.mapIndex
 				State.mapIndex = State.resolveMapIndex(daily.mapIndex)
 				Difficulty.set(daily.difficulty)
 				State.mode = "game"
 				Sound.play("uiConfirm")
 				resetGame()
+			end
+		},
+
+		{
+			id = "sandbox",
+			label = L("menu.sandbox"),
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				State.dailyChallenge = nil
+				State.sandboxRun = true
+				State.ignoreStats = true
+				State.worldMapIndex = 1
+				State.mapIndex = State.resolveMapIndex(1)
+				Difficulty.set(Save.data.settings.difficulty)
+				State.mode = "game"
+				Sound.play("uiConfirm")
+				resetGame()
+				require("ui.sandbox_panel").enter()
 			end
 		},
 
@@ -257,6 +280,13 @@ function Screen.mousepressed(x, y, button)
 	if storeButton and Button.mousepressed(storeButton, x, y, button) then
 		return true
 	end
+end
+
+function Screen.mousereleased(x, y, button)
+	for _, btn in ipairs(buttons) do
+		if Button.mousereleased(btn, x, y, button) then return true end
+	end
+	if storeButton then return Button.mousereleased(storeButton, x, y, button) end
 end
 
 function Screen.mousereleased(x, y, button)

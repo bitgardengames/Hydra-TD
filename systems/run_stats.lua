@@ -1,4 +1,9 @@
 local RunStats = {}
+local State = require("core.state")
+
+local function ignored()
+	return State.sandboxRun == true
+end
 
 local function sortedKeys(t)
 	local keys = {}
@@ -28,18 +33,21 @@ end
 local function ensure() if not RunStats.data then RunStats.reset() end return RunStats.data end
 
 function RunStats.recordIncome(amount, source)
+	if ignored() then return end
 	local d = ensure(); d.moneyEarned = d.moneyEarned + math.max(0, amount or 0)
 	if source == "early_call" then d.earlyCallBonuses = d.earlyCallBonuses + amount
 	elseif source == "flawless" then d.flawlessBonuses = d.flawlessBonuses + amount end
 end
 
 function RunStats.recordPurchase(tower, cost)
+	if ignored() then return end
 	local d = ensure(); RunStats.nextTowerId = RunStats.nextTowerId + 1
 	tower.runStatsId = RunStats.nextTowerId; d.towerKinds[tower.runStatsId] = tower.kind
 	add(d.purchases, tower.kind, 1); d.moneySpent = d.moneySpent + (cost or 0)
 end
 
 function RunStats.recordUpgrade(tower, branch, cost, wave, isFinal)
+	if ignored() then return end
 	local d = ensure(); d.moneySpent = d.moneySpent + (cost or 0)
 	d.towerBranches[tower.runStatsId] = d.towerBranches[tower.runStatsId] or {}
 	table.insert(d.towerBranches[tower.runStatsId], branch); add(d.branches, branch, 1)
@@ -47,22 +55,26 @@ function RunStats.recordUpgrade(tower, branch, cost, wave, isFinal)
 end
 
 function RunStats.recordSale(tower, value)
+	if ignored() then return end
 	local d = ensure(); add(d.sales, tower.kind, 1); d.soldTowers[tower.runStatsId] = true
 	RunStats.recordIncome(value, "sale")
 end
 
-function RunStats.recordLeak(kind) add(ensure().leaksByEnemy, kind, 1) end
+function RunStats.recordLeak(kind) if not ignored() then add(ensure().leaksByEnemy, kind, 1) end end
 
 function RunStats.recordDamage(tower, damageType, amount)
+	if ignored() then return end
 	local d = ensure(); add(d.damageByType, damageType or "other", amount)
 	if tower then add(d.damageByTower, tower.runStatsId or tower.kind, amount) end
 end
 
 function RunStats.recordKill(tower)
+	if ignored() then return end
 	if tower then add(ensure().killsByTower, tower.runStatsId or tower.kind, 1) end
 end
 
 function RunStats.commitTowerHistory()
+	if ignored() then return end
 	local Save = require("core.save")
 	local d, totals = ensure(), {}
 	for id, kind in pairs(d.towerKinds) do
@@ -76,6 +88,7 @@ function RunStats.commitTowerHistory()
 end
 
 function RunStats.captureLoadout(modules, contracts)
+	if ignored() then return end
 	local d = ensure(); d.modules = {}; d.contracts = {}
 	for target, list in pairs(modules or {}) do
 		for _, mod in ipairs(list) do d.modules[#d.modules + 1] = (mod.id or mod.nameKey or "module") .. "@" .. target end

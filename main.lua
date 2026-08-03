@@ -41,6 +41,7 @@ local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
 local DailyChallenge = require("systems.daily_challenge")
 local RunRandom = require("systems.run_random")
+local SandboxPanel = require("ui.sandbox_panel")
 
 local lg = love.graphics
 
@@ -59,7 +60,7 @@ function finalizeCurrentRun(completed)
 	--	return
 	--end
 
-	if State.ignoreStats then
+	if State.ignoreStats or State.sandboxRun then
 		return
 	end
 
@@ -130,9 +131,9 @@ function resetGame()
 	RunStats.reset({difficulty = Difficulty.key()})
 
     -- Core game state
-    State.money = diff.startMoney
+	State.money = diff.startMoney
     State.moneyLerp = State.money
-    State.lives = diff.startLives
+	State.lives = diff.startLives
 	State.livesAnim = 0
     State.score = 0
     State.wave = 1
@@ -180,6 +181,11 @@ function resetGame()
 	State.modulePicker.tower = nil
 	Camera.load()
 	Onboarding.event("map_entered")
+	if State.sandboxRun and State.sandbox then
+		State.money = State.sandbox.gold
+		State.moneyLerp = State.money
+		State.lives = State.sandbox.lives
+	end
 end
 
 local pauseGame = function()
@@ -332,6 +338,7 @@ function love.update(dt)
 	end
 
 	Input.updateHover()
+	if State.sandboxRun then SandboxPanel.update(dt) end
 
 	if mode == "victory" then
 		Menu.update(dt)
@@ -355,7 +362,7 @@ function love.update(dt)
 	end
 
 	-- Loss condition
-	if State.lives <= 0 and not State.gameOver then
+	if not State.sandboxRun and State.lives <= 0 and not State.gameOver then
 		State.gameOver = true
 		State.victory = false
 
@@ -372,7 +379,7 @@ function love.update(dt)
 	end
 
 	-- If wave is finished, go to prep
-	if not State.inPrep and Waves.allEnemiesCleared() then
+	if not State.sandboxRun and not State.inPrep and Waves.allEnemiesCleared() then
 		-- Win condition: wave 20 cleared
 		--if State.wave == 1 and not State.endless then
 		if State.wave == 20 and not State.endless then
@@ -432,6 +439,7 @@ function love.draw()
 
 	if isWorldMode(State.mode) then
 		drawWorldAndUI()
+		if State.mode == "game" and State.sandboxRun then SandboxPanel.draw() end
 
 		if State.mode == "pause" then
 			local t = State.pauseT
@@ -484,6 +492,8 @@ function love.mousepressed(x, y, button)
 		return
 	end
 
+	if State.sandboxRun and SandboxPanel.mousepressed(x, y, button) then return end
+
 	if Messages.mousepressed(x, y, button) then
 		return
 	end
@@ -492,6 +502,7 @@ function love.mousepressed(x, y, button)
 end
 
 function love.wheelmoved(x, y)
+	if State.mode == "game" and State.sandboxRun and SandboxPanel.wheelmoved(x, y) then return end
 	if State.mode ~= "game" and State.mode ~= "pause" then
 		Menu.wheelmoved(x, y)
 	end

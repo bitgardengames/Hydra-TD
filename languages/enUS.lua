@@ -7,6 +7,7 @@ return {
 
 	menu = {
 		play = "Play",
+		sandbox = "Sandbox",
 		settings = "Settings",
 		quit = "Quit",
 		back = "Back",
@@ -16,6 +17,23 @@ return {
 		nextMap = "Next Map",
 		endless = "Endless Mode",
 		paused = "Paused",
+	},
+
+	sandbox = {
+		title = "Sandbox",
+		gold = "Gold",
+		lives = "Lives",
+		speed = "Game speed",
+		enemy = "Enemy",
+		count = "Enemy count",
+		hpMultiplier = "HP multiplier",
+		affix = "Affix",
+		none = "None",
+		start = "Start wave",
+		stop = "Stop wave",
+		clear = "Clear enemies",
+		reset = "Reset map (keep wave)",
+		protected = "No rewards, achievements, or records",
 	},
 
 	ability = {
