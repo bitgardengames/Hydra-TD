@@ -245,7 +245,9 @@ function Backdrop.draw()
 
 	Camera.centerOn(cx + (shot.camera.ox or 0), cy + (shot.camera.oy or 0), shot.camera.zoom or Camera.wscale)
 
-	Camera.begin()
+	-- Combat effects in the simulated scene can request camera shake. Keep the
+	-- menu backdrop stable, especially while a new shot is fading in.
+	Camera.begin(true)
 	Draw.drawWorld()
 	Camera.finish()
 	Camera.present()
