@@ -151,6 +151,7 @@ local maps = {
 		id = "lowvalley",
 		campaignStage = 2,
 		nameKey = "map.lowvalley",
+		-- Low Valley is the campaign's first Bulwark encounter.
 		introducesEnemies = {"bulwark"},
 		biome = "drylands",
 		path = {
