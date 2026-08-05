@@ -62,29 +62,10 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				State.sandboxRun = false
 				State.ignoreStats = false
 				Difficulty.set(Save.data.settings.difficulty)
 				State.mode = "campaign"
 				Sound.play("uiConfirm")
-			end
-		},
-
-		{
-			id = "sandbox",
-			label = L("menu.sandbox"),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				State.sandboxRun = true
-				State.ignoreStats = true
-				State.worldMapIndex = 1
-				State.mapIndex = State.resolveMapIndex(1)
-				Difficulty.set(Save.data.settings.difficulty)
-				State.mode = "game"
-				Sound.play("uiConfirm")
-				resetGame()
-				require("ui.sandbox_panel").enter()
 			end
 		},
 

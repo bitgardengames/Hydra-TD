@@ -371,7 +371,6 @@ function Save.unlockMap(mapId, mapIndex)
 end
 
 function Save.markEnemyEncountered(kind)
-	if State.sandboxRun then return end
 	if not Save.data or type(kind) ~= "string" then
 		return
 	end
@@ -386,7 +385,6 @@ function Save.markEnemyEncountered(kind)
 end
 
 function Save.markAffixEncountered(id)
-	if State.sandboxRun then return end
 	if not Save.data or type(id) ~= "string" then return end
 	local meta = Save.data.meta
 	meta.encounteredAffixes = meta.encounteredAffixes or {}
@@ -397,7 +395,6 @@ function Save.markAffixEncountered(id)
 end
 
 function Save.recordEnemyResult(kind, result, killTime)
-	if State.sandboxRun then return end
 	if not Save.data or type(kind) ~= "string" then return end
 	local meta = Save.data.meta
 	meta.enemyHistory = meta.enemyHistory or {}
@@ -427,14 +424,12 @@ local function towerHistory(kind)
 end
 
 function Save.recordTowerPlacement(kind)
-	if State.sandboxRun then return end
 	local history = towerHistory(kind); if not history then return end
 	history.placements = (history.placements or 0) + 1
 	Save.flush()
 end
 
 function Save.recordTowerUpgrade(kind, pathId)
-	if State.sandboxRun then return end
 	local history = towerHistory(kind); if not history then return end
 	history.upgrades = (history.upgrades or 0) + 1
 	if pathId then history.discoveredPaths[pathId] = true end
@@ -442,7 +437,6 @@ function Save.recordTowerUpgrade(kind, pathId)
 end
 
 function Save.recordTowerRun(kind, damage, kills)
-	if State.sandboxRun then return end
 	local history = towerHistory(kind); if not history then return end
 	damage, kills = math.max(0, damage or 0), math.max(0, kills or 0)
 	history.damage = (history.damage or 0) + damage
@@ -451,7 +445,6 @@ function Save.recordTowerRun(kind, damage, kills)
 end
 
 function Save.discoverModule(moduleId)
-	if State.sandboxRun then return end
 	if not Save.data or not moduleId then return end
 	Save.data.meta.discoveredModules = Save.data.meta.discoveredModules or {}
 	Save.data.meta.discoveredModules[moduleId] = true
