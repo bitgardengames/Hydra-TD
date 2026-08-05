@@ -6,6 +6,7 @@ local Tooltip = require("ui.tooltip")
 local Theme = require("core.theme")
 local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
+local Constants = require("core.constants")
 
 local lg = love.graphics
 local min = math.min
@@ -141,7 +142,7 @@ local IDLE_LIFT = 6
 local totalRowWidth = SHOP_BTN_W * SHOP_COLS + GAP_X * (SHOP_COLS - 1)
 
 function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
-	local towerList = CampaignUnlocks.getUnlockedTowers()
+	local towerList = Constants.TOWER_LIST
 	local totalRows = math.ceil(#towerList / SHOP_COLS)
 	local totalHeight = totalRows * SHOP_BTN_H + (totalRows - 1) * GAP_Y
 
@@ -162,6 +163,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 	for i, key in ipairs(towerList) do
 		local def = Towers.TowerDefs[key]
 		local hotkeyLabel = Hotkeys.getDisplay(key)
+		local lockMessage
 
 		local index = i - 1
 		local col = index % SHOP_COLS
@@ -170,8 +172,9 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local x = startX + col * (SHOP_BTN_W + GAP_X)
 		local yb = startY + row * (SHOP_BTN_H + GAP_Y)
 
-		local selected = State.placing == key
-		local canAfford = State.money >= def.cost
+		local unlocked = CampaignUnlocks.isTowerUnlocked(key)
+		local selected = unlocked and State.placing == key
+		local canAfford = unlocked and State.money >= def.cost
 		local pulse = selected and (0.9 + sin(now * 6) * 0.1) or 1
 
 		local btn = getShopButton(i)
@@ -181,6 +184,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		btn.y = yb
 		btn.w = SHOP_BTN_W
 		btn.h = SHOP_BTN_H
+		btn.unlocked = unlocked
 		btn.canAfford = canAfford
 
 		if btn.cost ~= def.cost then
@@ -236,16 +240,34 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 				local rows = shopTooltip.rows
 
 				shopTooltip.title = L(def.nameKey)
-				rows[1].label = L("stats.damage")
-				rows[1].value = def.damage
 
-				rows[2].label = L("stats.fireRate")
-				rows[2].value = formatInterval(1 / def.fireRate)
+				if unlocked then
+					rows[1].kind = nil
+					rows[1].label = L("stats.damage")
+					rows[1].value = def.damage
 
-				rows[3].label = L("stats.range")
-				rows[3].value = formatStat(def.range)
+					rows[2].kind = nil
+					rows[2].label = L("stats.fireRate")
+					rows[2].value = formatInterval(1 / def.fireRate)
 
-				rows[4].text = L(def.descKey)
+					rows[3].kind = nil
+					rows[3].label = L("stats.range")
+					rows[3].value = formatStat(def.range)
+
+					rows[4].kind = "text"
+					rows[4].text = L(def.descKey)
+				else
+					lockMessage = CampaignUnlocks.getLockMessage(key) or L("campaign.locked")
+
+					rows[1].kind = "text"
+					rows[1].text = lockMessage
+					rows[2].kind = "text"
+					rows[2].text = L(def.descKey)
+					rows[3].kind = "text"
+					rows[3].text = ""
+					rows[4].kind = "text"
+					rows[4].text = ""
+				end
 			end
 
 			Tooltip.show(shopTooltip)
@@ -258,8 +280,10 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local faceG = g * pulse
 		local faceB = b * pulse
 
-		-- If unaffordable, override face color
-		if not canAfford then
+		-- If locked or unaffordable, override face color
+		if not unlocked then
+			faceR, faceG, faceB = cd1 * 0.7, cd2 * 0.7, cd3 * 0.7
+		elseif not canAfford then
 			faceR, faceG, faceB = cd1, cd2, cd3
 		end
 
@@ -288,11 +312,18 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 			nameX = nameX + used
 		end
 
-		lg.setColor(ct1, ct2, ct3, canAfford and 1 or 0.55)
+		local textAlpha = unlocked and (canAfford and 1 or 0.55) or 0.45
+
+		lg.setColor(ct1, ct2, ct3, textAlpha)
 		Text.printShadow(btn.nameText, nameX, ty)
 
-		lg.setColor(canAfford and colorText or colorBad)
-		Text.printfShadow(btn.costText, x + PAD, ty, SHOP_BTN_W - PAD * 2, "right")
+		if unlocked then
+			lg.setColor(canAfford and colorText or colorBad)
+			Text.printfShadow(btn.costText, x + PAD, ty, SHOP_BTN_W - PAD * 2, "right")
+		else
+			lg.setColor(ct1, ct2, ct3, 0.65)
+			Text.printfShadow("🔒 " .. L("campaign.locked"), x + PAD, ty, SHOP_BTN_W - PAD * 2, "right")
+		end
 
 		i = i + 1
 	end
