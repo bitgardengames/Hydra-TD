@@ -162,9 +162,9 @@ local function mousepressed(x, y, button)
 		if shopButton then
 			if shopButton.canAfford and beginTowerPlacement(shopButton.kind) then
 				Onboarding.event("attempting_placement")
-				--Sound.play("ui_click")
+				Sound.play("uiConfirm")
 			else
-				--Sound.play("ui_deny")
+				Sound.play("uiBack")
 			end
 
 			return
@@ -258,14 +258,31 @@ local function mousereleased(x, y, button)
 
 	-- Shop buttons
 	handlePanelButtons(BottomBar.getShopButtons, x, y, false, function(b)
-		if b.unlocked == false or b.canAfford ~= true then
+		if b.unlocked == false then
+			Sound.play("uiBack")
+
+			local wx, wy = Camera.screenToWorld(x, y)
+			Floaters.add(wx, wy, CampaignUnlocks.getLockMessage(b.kind) or L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
+
+			return
+		end
+
+		if b.canAfford ~= true then
+			Sound.play("uiBack")
+
+			local wx, wy = Camera.screenToWorld(x, y)
+			Floaters.add(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
+
 			return
 		end
 
 		local ok, why = beginTowerPlacement(b.kind)
 		if ok then
+			Sound.play("uiConfirm")
 			Onboarding.event("attempting_placement")
 		elseif why == "locked" then
+			Sound.play("uiBack")
+
 			local wx, wy = Camera.screenToWorld(x, y)
 			Floaters.add(wx, wy, CampaignUnlocks.getLockMessage(b.kind) or L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 		end
