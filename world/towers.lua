@@ -226,7 +226,7 @@ local function addTower(kind, gx, gy)
 	local def = TowerDefs[kind]
 	if not def then return false, "unknown_tower" end
 
-	if not CampaignUnlocks.isTowerUnlocked(kind, State.worldMapIndex or State.mapIndex) then
+	if not CampaignUnlocks.isTowerUnlocked(kind) then
 		return false, "locked"
 	end
 

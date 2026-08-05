@@ -50,12 +50,8 @@ local function cancelPlacement()
 	State.placing = nil
 end
 
-local function getPlacementMapIndex()
-	return State.worldMapIndex or State.mapIndex
-end
-
 local function beginTowerPlacement(kind)
-	if not CampaignUnlocks.isTowerUnlocked(kind, getPlacementMapIndex()) then
+	if not CampaignUnlocks.isTowerUnlocked(kind) then
 		return false, "locked"
 	end
 

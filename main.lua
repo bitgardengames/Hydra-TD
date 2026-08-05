@@ -39,6 +39,7 @@ local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
 local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 local SandboxPanel = require("ui.sandbox_panel")
 
 local lg = love.graphics
@@ -371,8 +372,10 @@ function love.update(dt)
 		--if State.wave == 1 and not State.endless then
 		if State.wave == 20 and not State.endless then
 			-- Save
+			local previousFurthestIndex = Save.data.furthestIndex or 1
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
-			Save.data.furthestIndex = max(Save.data.furthestIndex, nextMapIndex)
+			Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)
+			State.unlockedTowersThisVictory = CampaignUnlocks.getNewlyUnlockedTowers(previousFurthestIndex, Save.data.furthestIndex)
 
 			Achievements.onGameOver()
 
