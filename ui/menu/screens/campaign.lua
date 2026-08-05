@@ -387,6 +387,18 @@ local function buildPreviewMessages(map)
 	return messages
 end
 
+local function layoutCampaignButtons(cx, buttonsStartY)
+	for i, btn in ipairs(campaignButtons) do
+		btn.x = cx - btn.w * 0.5
+		btn.y = buttonsStartY + (i - 1) * gap
+		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
+
+		if btn.id == "difficulty" then
+			btn.label = difficultyButtonLabel()
+		end
+	end
+end
+
 -- Load
 function Screen.load()
 	campaignButtons = {
@@ -476,15 +488,10 @@ function Screen.update(dt)
 	updateMedalTooltip(map.id, cx - pw * 0.5, previewY)
 
 	-- Buttons
-	for i, btn in ipairs(campaignButtons) do
-		btn.x = cx - btn.w * 0.5
-		btn.y = buttonsStartY + (i - 1) * gap
-		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
-		if btn.id == "difficulty" then
-			btn.label = difficultyButtonLabel()
-		end
+	layoutCampaignButtons(cx, buttonsStartY)
 
-		local mx, my = love.mouse.getPosition()
+	local mx, my = love.mouse.getPosition()
+	for i, btn in ipairs(campaignButtons) do
 		Button.update(btn, mx, my, dt)
 	end
 end
@@ -666,6 +673,7 @@ function Screen.draw()
 
 	-- Buttons
 	local buttonsStartY = textY + PAD_TITLE + PAD_META
+	layoutCampaignButtons(cx, buttonsStartY)
 
 	Fonts.set("menu")
 
