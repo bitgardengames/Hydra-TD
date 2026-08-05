@@ -76,8 +76,8 @@ local maps = {
 		},
 		waves = {
 			encounters = {
-				boss_displacement = { flankBurst = 3, interval = 5.4, maxAliveAdds = 16 },
-				boss_summoner = { flankKind = "runner", flankBurst = 5, interval = 5.2 },
+				boss_displacement = { flankKind = "grunt", flankBurst = 3, interval = 5.4, maxAliveAdds = 16 },
+				boss_summoner = { flankKind = "grunt", flankBurst = 5, interval = 5.2 },
 			},
 		},
 	},
@@ -97,7 +97,7 @@ local maps = {
 		waves = {
 			encounters = {
 				boss_suppression = { flankBurst = 2, interval = 7.9, addHpMult = 1.35, maxAliveAdds = 12 },
-				boss_displacement = { flankKind = "runner", flankBurst = 2, initialDelay = 2.0 },
+				boss_displacement = { flankKind = "grunt", flankBurst = 2, initialDelay = 2.0 },
 			},
 		},
 	},
@@ -106,6 +106,8 @@ local maps = {
 		id = "snaketrail",
 		campaignStage = 2,
 		nameKey = "map.snaketrail",
+		-- Keep runners out of earlier map-specific encounters so this remains
+		-- their first campaign introduction.
 		introducesEnemies = {"runner"},
 		biome = "default",
 		path = {

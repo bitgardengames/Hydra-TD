@@ -18,6 +18,7 @@ local rewardsByMapId = {
 	roundabout = {type = "ability", id = "meteor", label = "Meteor active ability"},
 	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
 	gauntlet = {type = "tower", id = "shock", label = "Shock tower"},
+	-- Frost Nova is earned after the map that introduces runners.
 	snaketrail = {type = "ability", id = "frost_nova", label = "Frost Nova active ability"},
 	lowvalley = {type = "targeting", id = "high_hp", label = "Strongest targeting option"},
 	circuit = {type = "module_category", id = "utility", label = "Utility module category"},
