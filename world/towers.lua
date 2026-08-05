@@ -17,6 +17,7 @@ local TowerBranchDefs = require("world.tower_branch_defs")
 local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 --local Steam = require("luasteam")
 
 local towers = {}
@@ -223,6 +224,12 @@ end
 
 local function addTower(kind, gx, gy)
 	local def = TowerDefs[kind]
+	if not def then return false, "unknown_tower" end
+
+	if not CampaignUnlocks.isTowerUnlocked(kind, State.worldMapIndex or State.mapIndex) then
+		return false, "locked"
+	end
+
 	local tutorialOK, tutorialWhy = Onboarding.validatePlacement(kind, gx, gy)
 	if not tutorialOK then return false, tutorialWhy end
 

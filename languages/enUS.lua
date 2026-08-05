@@ -144,6 +144,10 @@ return {
 		plasma = "Plasma",
 	},
 
+	towerUnlock = {
+		lockedUntil = "Unlocked after clearing Map %d.",
+	},
+
 	towerDesc = {
 		lancer = "Rapid single-target fire",
 		slow = "Chills enemies, slowing their movement",

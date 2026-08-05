@@ -15,6 +15,7 @@ local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
 local Onboarding = require("systems.onboarding")
 local Abilities = require("systems.abilities")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 
 local getTime = love.timer.getTime
 local floor = math.floor
@@ -47,6 +48,21 @@ end
 
 local function cancelPlacement()
 	State.placing = nil
+end
+
+local function getPlacementMapIndex()
+	return State.worldMapIndex or State.mapIndex
+end
+
+local function beginTowerPlacement(kind)
+	if not CampaignUnlocks.isTowerUnlocked(kind, getPlacementMapIndex()) then
+		return false, "locked"
+	end
+
+	State.placing = kind
+	State.selectedTower = nil
+
+	return true
 end
 
 local function updateHover()
@@ -148,9 +164,7 @@ local function mousepressed(x, y, button)
 		local shopButton = handlePanelButtons(BottomBar.getShopButtons, x, y, true)
 
 		if shopButton then
-			if shopButton.canAfford then
-				State.placing = shopButton.kind
-				State.selectedTower = nil
+			if shopButton.canAfford and beginTowerPlacement(shopButton.kind) then
 				Onboarding.event("attempting_placement")
 				--Sound.play("ui_click")
 			else
@@ -200,6 +214,8 @@ local function mousepressed(x, y, button)
 						Floaters.add(wx, wy, L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 					elseif why == "money" then
 						Floaters.add(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
+					elseif why == "locked" then
+						Floaters.add(wx, wy, CampaignUnlocks.getLockMessage(State.placing) or L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 					end
 				end
 			end
@@ -375,24 +391,19 @@ local function keypressed(key)
 	end
 
 	-- Gameplay hotkeys
-	if key == Hotkeys.getShopKey("lancer") then
-		State.placing = "lancer"
-		deselect()
-	elseif key == Hotkeys.getShopKey("slow") then
-		State.placing = "slow"
-		deselect()
-	elseif key == Hotkeys.getShopKey("cannon") then
-		State.placing = "cannon"
-		deselect()
-	elseif key == Hotkeys.getShopKey("shock") then
-		State.placing = "shock"
-		deselect()
-	elseif key == Hotkeys.getShopKey("poison") then
-		State.placing = "poison"
-		deselect()
-	elseif key == Hotkeys.getShopKey("plasma") then
-		State.placing = "plasma"
-		deselect()
+	local towerKind
+
+	for _, kind in ipairs(Constants.TOWER_LIST) do
+		if key == Hotkeys.getShopKey(kind) then
+			towerKind = kind
+			break
+		end
+	end
+
+	if towerKind then
+		if beginTowerPlacement(towerKind) then
+			deselect()
+		end
 	else
 		local action
 		if key == Hotkeys.getActionKey("fastForward") then

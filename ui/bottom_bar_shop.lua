@@ -1,4 +1,3 @@
-local Constants = require("core.constants")
 local State = require("core.state")
 local Towers = require("world.towers")
 local Hotkeys = require("core.hotkeys")
@@ -6,6 +5,7 @@ local Text = require("ui.text")
 local Tooltip = require("ui.tooltip")
 local Theme = require("core.theme")
 local L = require("core.localization")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 
 local lg = love.graphics
 local min = math.min
@@ -43,8 +43,6 @@ local shopButtons = {}
 local shopAnims = {}
 
 local lastTooltipKey = nil
-
-local towerList = Constants.TOWER_LIST
 
 local shopTooltip = {
 	title = "",
@@ -142,10 +140,11 @@ local IDLE_LIFT = 6
 
 local totalRowWidth = SHOP_BTN_W * SHOP_COLS + GAP_X * (SHOP_COLS - 1)
 
-local totalRows = math.ceil(#towerList / SHOP_COLS)
-local totalHeight = totalRows * SHOP_BTN_H + (totalRows - 1) * GAP_Y
-
 function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
+	local towerList = CampaignUnlocks.getUnlockedTowers(State.worldMapIndex or State.mapIndex)
+	local totalRows = math.ceil(#towerList / SHOP_COLS)
+	local totalHeight = totalRows * SHOP_BTN_H + (totalRows - 1) * GAP_Y
+
 	local font = lg.getFont()
 	local textH = font:getHeight()
 
@@ -153,6 +152,12 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 
 	local startX = floor(panelX + (panelW - totalRowWidth) * 0.5)
 	local startY = floor(panelY + (panelH - totalHeight) * 0.5 + 3)
+
+	for i = #towerList + 1, #shopButtons do
+		shopButtons[i].kind = nil
+		shopButtons[i].w = 0
+		shopButtons[i].h = 0
+	end
 
 	for i, key in ipairs(towerList) do
 		local def = Towers.TowerDefs[key]
