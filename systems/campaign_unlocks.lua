@@ -12,21 +12,21 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 -- Rewards intentionally avoid mandatory stat power and instead emphasize new
 -- verbs, optional build utilities, and information that teaches counters.
 local rewardsByMapId = {
-	riverbend = {type = "codex", id = "path_basics", label = "Pathing codex: bends and overlap"},
+	riverbend = {type = "ability", id = "meteor", label = "Meteor active ability"},
 	switchback = {type = "tower", id = "cannon", label = "Cannon tower"},
 	highpass = {type = "tower", id = "poison", label = "Poison tower"},
 	roundabout = {type = "tower", id = "shock", label = "Shock tower"},
 	gauntlet = {type = "tower", id = "plasma", label = "Plasma tower"},
 	snaketrail = {type = "ability", id = "frost_nova", label = "Frost Nova active ability"},
-	backtrack = {type = "targeting", id = "strongest", label = "Strongest targeting option"},
-	lowvalley = {type = "module_slot", id = "utility_slot_1", label = "Optional utility module slot"},
-	circuit = {type = "module", id = "cull_weak", label = "Cull Weak poison module"},
-	outerloop = {type = "challenge", id = "no_leaks", label = "No-leaks challenge badge"},
-	terrace = {type = "codex", id = "support_roles", label = "Support enemy codex entries"},
-	highridge = {type = "targeting", id = "shield_priority", label = "Shield-priority targeting option"},
-	crossflow = {type = "module", id = "chain_fork", label = "Chain Fork shock module"},
-	steppingstones = {type = "build_utility", id = "saved_loadouts", label = "Optional saved build loadouts"},
-	twinloop = {type = "challenge", id = "endless_variants", label = "Endless variant challenge modes"},
+	backtrack = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
+	lowvalley = {type = "targeting", id = "high_hp", label = "Strongest targeting option"},
+	circuit = {type = "module_category", id = "utility", label = "Utility module category"},
+	outerloop = {type = "module_category", id = "damage", label = "Damage module category"},
+	terrace = {type = "wave_preview", id = "enhanced", label = "Enhanced wave preview"},
+	highridge = {type = "targeting", id = "low_hp", label = "Weakest targeting option"},
+	crossflow = {type = "module_category", id = "movement", label = "Movement module category"},
+	steppingstones = {type = "ability_slot", id = "ability_slots_3_4", slots = 4, label = "Third and fourth active ability slots"},
+	twinloop = {type = "campaign_complete", id = "challenge_endless", label = "Challenge and Endless modes"},
 }
 
 local requiredMapByTower = {
@@ -34,12 +34,24 @@ local requiredMapByTower = {
 	slow = 1,
 }
 
+local requiredMapByFeature = {}
+local rewardOrder = {}
+
+local function featureKey(featureType, id)
+	return tostring(featureType) .. ":" .. tostring(id)
+end
+
 for mapIndex, map in ipairs(Maps) do
 	local reward = rewardsByMapId[map.id]
-	if reward and reward.type == "tower" then
-		-- A map's tower reward is earned after clearing that map, so the tower
-		-- becomes usable starting on the next campaign map.
-		requiredMapByTower[reward.id] = mapIndex + 1
+	if reward then
+		rewardOrder[map.id] = mapIndex
+		local requiredMap = mapIndex + 1
+		requiredMapByFeature[featureKey(reward.type, reward.id)] = requiredMap
+		if reward.type == "tower" then
+			-- A map's tower reward is earned after clearing that map, so the tower
+			-- becomes usable starting on the next campaign map.
+			requiredMapByTower[reward.id] = requiredMap
+		end
 	end
 
 	for _, kind in ipairs(map.rewardTowers or {}) do
@@ -57,8 +69,16 @@ local function getProgressIndex()
 	return normalizeProgressIndex(Save.data and Save.data.furthestIndex)
 end
 
+local function isFeatureUnlocked(featureType, id)
+	return getProgressIndex() >= (requiredMapByFeature[featureKey(featureType, id)] or UNKNOWN_REQUIRED_MAP)
+end
+
 function CampaignUnlocks.getRequiredMap(kind)
 	return requiredMapByTower[kind] or UNKNOWN_REQUIRED_MAP
+end
+
+function CampaignUnlocks.getRequiredFeatureMap(featureType, id)
+	return requiredMapByFeature[featureKey(featureType, id)] or UNKNOWN_REQUIRED_MAP
 end
 
 function CampaignUnlocks.getRewardForMap(mapOrId)
@@ -68,6 +88,53 @@ end
 
 function CampaignUnlocks.getRewardsByMapId()
 	return rewardsByMapId
+end
+
+function CampaignUnlocks.isAbilityUnlocked(abilityId)
+	return isFeatureUnlocked("ability", abilityId)
+end
+
+function CampaignUnlocks.getUnlockedAbilitySlots()
+	local slots = 1
+	for _, reward in pairs(rewardsByMapId) do
+		if reward.type == "ability_slot" and isFeatureUnlocked(reward.type, reward.id) then
+			slots = math.max(slots, reward.slots or slots)
+		end
+	end
+	return slots
+end
+
+
+function CampaignUnlocks.getEquippedAbilities()
+	local AbilityDefs = require("systems.ability_defs")
+	local equipped = {}
+	local maxSlots = CampaignUnlocks.getUnlockedAbilitySlots()
+	for _, abilityId in ipairs(AbilityDefs.order or {}) do
+		if CampaignUnlocks.isAbilityUnlocked(abilityId) and #equipped < maxSlots then
+			equipped[#equipped + 1] = abilityId
+		end
+	end
+	return equipped
+end
+
+function CampaignUnlocks.isTargetingUnlocked(mode)
+	return mode == "progress" or mode == "farthest" or isFeatureUnlocked("targeting", mode)
+end
+
+function CampaignUnlocks.isModuleCategoryUnlocked(category)
+	return category == "identity" or category == "special" or isFeatureUnlocked("module_category", category)
+end
+
+function CampaignUnlocks.hasEnhancedWavePreview()
+	return isFeatureUnlocked("wave_preview", "enhanced")
+end
+
+function CampaignUnlocks.isChallengeModeUnlocked()
+	return isFeatureUnlocked("campaign_complete", "challenge_endless")
+end
+
+function CampaignUnlocks.isEndlessUnlocked()
+	return CampaignUnlocks.isChallengeModeUnlocked()
 end
 
 function CampaignUnlocks.isTowerUnlocked(kind)
@@ -99,6 +166,20 @@ function CampaignUnlocks.getNewlyUnlockedTowers(previousProgressIndex, nextProgr
 	end
 
 	return unlocked
+end
+
+function CampaignUnlocks.getNewRewards(previousProgressIndex, nextProgressIndex)
+	local rewards = {}
+	local previous = normalizeProgressIndex(previousProgressIndex)
+	local nextIndex = normalizeProgressIndex(nextProgressIndex)
+	for _, map in ipairs(Maps) do
+		local reward = rewardsByMapId[map.id]
+		local requiredMap = reward and rewardOrder[map.id] and (rewardOrder[map.id] + 1)
+		if reward and requiredMap > previous and requiredMap <= nextIndex then
+			rewards[#rewards + 1] = reward
+		end
+	end
+	return rewards
 end
 
 function CampaignUnlocks.getLockMessage(kind)

@@ -398,7 +398,7 @@ local function keypressed(key)
 
 	-- Victory / game over
 	if State.gameOver and State.victory then
-		if key == Hotkeys.getActionKey("endless") then
+		if key == Hotkeys.getActionKey("endless") and CampaignUnlocks.isEndlessUnlocked() then
 			State.gameOver = false
 			State.victory = false
 			State.endless = true

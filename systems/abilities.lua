@@ -1,4 +1,5 @@
 local AbilityDefs = require("systems.ability_defs")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local State = require("core.state")
@@ -6,7 +7,9 @@ local State = require("core.state")
 local Abilities = {}
 
 function Abilities.getEquipped(abilityId)
-	return AbilityDefs[abilityId or (State.equippedAbilities and State.equippedAbilities[1])]
+	local id = abilityId or (State.equippedAbilities and State.equippedAbilities[1])
+	if not id or not CampaignUnlocks.isAbilityUnlocked(id) then return nil end
+	return AbilityDefs[id]
 end
 
 function Abilities.isReady(abilityId)

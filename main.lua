@@ -137,6 +137,7 @@ function resetGame()
     State.placing = nil
 	State.selectedTower = nil
 	State.selectedEnemy = nil
+	State.equippedAbilities = CampaignUnlocks.getEquippedAbilities()
 	State.abilityCooldowns = {}
 	State.abilityTargeting = nil
     State.hoverGX = nil
@@ -370,6 +371,13 @@ function love.update(dt)
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
 			Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)
 			State.unlockedTowersThisVictory = CampaignUnlocks.getNewlyUnlockedTowers(previousFurthestIndex, Save.data.furthestIndex)
+			State.unlockedRewardsThisVictory = CampaignUnlocks.getNewRewards(previousFurthestIndex, Save.data.furthestIndex)
+			State.unlockedAbilitiesThisVictory = {}
+			for _, reward in ipairs(State.unlockedRewardsThisVictory) do
+				if reward.type == "ability" then
+					State.unlockedAbilitiesThisVictory[#State.unlockedAbilitiesThisVictory + 1] = reward.id
+				end
+			end
 
 			Achievements.onGameOver()
 

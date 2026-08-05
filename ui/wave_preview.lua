@@ -3,6 +3,7 @@ local Theme = require("core.theme")
 local Waves = require("systems.waves")
 local Text = require("ui.text")
 local L = require("core.localization")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 
 local lg = love.graphics
 local floor = math.floor
@@ -54,7 +55,7 @@ local function refreshPreview()
 	for i = 1, #preview.composition do
 		local group = preview.composition[i]
 		entries[i] = {
-			name = L("hud.compositionEntry", group.count, group.name),
+			name = CampaignUnlocks.hasEnhancedWavePreview() and L("hud.compositionEntry", group.count, group.name) or L("hud.compositionUnknown", group.count),
 		}
 	end
 end
