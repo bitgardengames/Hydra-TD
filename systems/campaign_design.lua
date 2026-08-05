@@ -68,9 +68,9 @@ local teachingByMapId = {
 		counterplay = "Focus Shock chains and heavy Cannon bursts on each barrier, then clean up the exposed formation once the shield breaks.",
 	},
 	crossflow = {
-		lesson = "Exploit crossing lanes where projectile chains and forked hits can solve multiple fronts at once.",
-		pressure = "Mixed shieldbearer/regenerator waves stress both shield break and finishing power across separated water pockets.",
-		counterplay = "Install Chain Fork on Shock near lane crossings and pair it with Poison finishers for enemies that survive the chain burst.",
+		lesson = "Mix shield, support, and regeneration counters where crossing lanes let one coordinated defense cover multiple fronts.",
+		pressure = "Shieldbearers, Warcallers, and Regenerators overlap across crossing lanes, testing barrier break, support priority, and finishing power at the same time.",
+		counterplay = "Place Shock near the crossings to break shields, use Plasma to focus Warcallers, and keep Poison on Regenerators so they cannot recover between engagements.",
 	},
 	steppingstones = {
 		lesson = "Assemble reusable build plans for maps with disconnected pockets and staggered engagement ranges.",
