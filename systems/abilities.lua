@@ -9,7 +9,26 @@ local Abilities = {}
 function Abilities.getEquipped(abilityId)
 	local id = abilityId or (State.equippedAbilities and State.equippedAbilities[1])
 	if not id or not CampaignUnlocks.isAbilityUnlocked(id) then return nil end
-	return AbilityDefs[id]
+
+	for slotIndex, equippedId in ipairs(State.equippedAbilities or {}) do
+		if equippedId == id then
+			if CampaignUnlocks.isAbilitySlotUnlocked(slotIndex) then
+				return AbilityDefs[id]
+			end
+
+			return nil
+		end
+	end
+
+	return nil
+end
+
+local function getEffect(def)
+	if CampaignUnlocks.isAbilityUpgradeUnlocked("enhanced_abilities") then
+		return def.upgradedEffect or def.effect
+	end
+
+	return def.effect
 end
 
 function Abilities.isReady(abilityId)
@@ -35,7 +54,7 @@ function Abilities.activate(x, y)
 	local abilityId = State.abilityTargeting and State.abilityTargeting.abilityId
 	local def = Abilities.getEquipped(abilityId)
 	if not def or not Abilities.isReady(abilityId) or not State.abilityTargeting then return false end
-	local effect = def.effect
+	local effect = getEffect(def)
 	local radius2 = effect.radius * effect.radius
 	for i = 1, #Enemies.enemies do
 		local enemy = Enemies.enemies[i]

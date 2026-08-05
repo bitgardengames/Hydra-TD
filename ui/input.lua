@@ -128,7 +128,7 @@ local function rejectAbilityButton(b, x, y)
 	end
 
 	local wx, wy = Camera.screenToWorld(x, y)
-	Floaters.add(wx, wy, L("floater.abilityCoolingDown"), colorBad[1], colorBad[2], colorBad[3])
+	Floaters.add(wx, wy, b.lockMessage or L("floater.abilityCoolingDown"), colorBad[1], colorBad[2], colorBad[3])
 end
 
 local function tryBeginAbilityTargeting(b, x, y)

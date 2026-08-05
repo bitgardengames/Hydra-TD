@@ -12,20 +12,18 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 -- Rewards intentionally avoid mandatory stat power and instead emphasize new
 -- verbs, optional build utilities, and information that teaches counters.
 local rewardsByMapId = {
-	riverbend = {type = "ability", id = "meteor", label = "Meteor active ability"},
 	switchback = {type = "tower", id = "cannon", label = "Cannon tower"},
 	highpass = {type = "tower", id = "poison", label = "Poison tower"},
 	roundabout = {type = "tower", id = "shock", label = "Shock tower"},
-	gauntlet = {type = "tower", id = "plasma", label = "Plasma tower"},
+	gauntlet = {type = "ability", id = "meteor", label = "Meteor active ability"},
 	snaketrail = {type = "ability", id = "frost_nova", label = "Frost Nova active ability"},
-	backtrack = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
 	lowvalley = {type = "targeting", id = "high_hp", label = "Strongest targeting option"},
 	circuit = {type = "module_category", id = "utility", label = "Utility module category"},
-	outerloop = {type = "module_category", id = "damage", label = "Damage module category"},
+	outerloop = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
 	terrace = {type = "wave_preview", id = "enhanced", label = "Enhanced wave preview"},
 	highridge = {type = "targeting", id = "low_hp", label = "Weakest targeting option"},
 	crossflow = {type = "module_category", id = "movement", label = "Movement module category"},
-	steppingstones = {type = "ability_slot", id = "ability_slots_3_4", slots = 4, label = "Third and fourth active ability slots"},
+	steppingstones = {type = "ability_upgrade", id = "enhanced_abilities", label = "Enhanced active ability effects"},
 	twinloop = {type = "campaign_complete", id = "challenge_endless", label = "Challenge and Endless modes"},
 }
 
@@ -94,6 +92,14 @@ function CampaignUnlocks.isAbilityUnlocked(abilityId)
 	return isFeatureUnlocked("ability", abilityId)
 end
 
+function CampaignUnlocks.isAbilitySlotUnlocked(slotIndex)
+	return (tonumber(slotIndex) or 1) <= CampaignUnlocks.getUnlockedAbilitySlots()
+end
+
+function CampaignUnlocks.isAbilityUpgradeUnlocked(upgradeId)
+	return isFeatureUnlocked("ability_upgrade", upgradeId)
+end
+
 function CampaignUnlocks.getUnlockedAbilitySlots()
 	local slots = 1
 	for _, reward in pairs(rewardsByMapId) do
@@ -108,12 +114,11 @@ end
 function CampaignUnlocks.getEquippedAbilities()
 	local AbilityDefs = require("systems.ability_defs")
 	local equipped = {}
-	local maxSlots = CampaignUnlocks.getUnlockedAbilitySlots()
+
 	for _, abilityId in ipairs(AbilityDefs.order or {}) do
-		if CampaignUnlocks.isAbilityUnlocked(abilityId) and #equipped < maxSlots then
-			equipped[#equipped + 1] = abilityId
-		end
+		equipped[#equipped + 1] = abilityId
 	end
+
 	return equipped
 end
 
@@ -180,6 +185,31 @@ function CampaignUnlocks.getNewRewards(previousProgressIndex, nextProgressIndex)
 		end
 	end
 	return rewards
+end
+
+function CampaignUnlocks.getAbilityLockMessage(abilityId, slotIndex)
+	local requiredMap = CampaignUnlocks.getRequiredFeatureMap("ability", abilityId)
+
+	if requiredMap == UNKNOWN_REQUIRED_MAP then
+		return L("towerUnlock.locked")
+	elseif requiredMap > 1 and getProgressIndex() < requiredMap then
+		return L("towerUnlock.lockedUntil", requiredMap - 1)
+	end
+
+	if not CampaignUnlocks.isAbilitySlotUnlocked(slotIndex) then
+		local slotRequiredMap = UNKNOWN_REQUIRED_MAP
+		for _, reward in pairs(rewardsByMapId) do
+			if reward.type == "ability_slot" and (reward.slots or 1) >= (tonumber(slotIndex) or 1) then
+				slotRequiredMap = math.min(slotRequiredMap, CampaignUnlocks.getRequiredFeatureMap(reward.type, reward.id))
+			end
+		end
+		if slotRequiredMap ~= UNKNOWN_REQUIRED_MAP then
+			return L("towerUnlock.lockedUntil", slotRequiredMap - 1)
+		end
+		return L("towerUnlock.locked")
+	end
+
+	return nil
 end
 
 function CampaignUnlocks.getLockMessage(kind)

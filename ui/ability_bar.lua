@@ -1,6 +1,7 @@
 local State = require("core.state")
 local Theme = require("core.theme")
 local AbilityDefs = require("systems.ability_defs")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 local Text = require("ui.text")
 
 local lg = love.graphics
@@ -86,12 +87,15 @@ function AbilityBar.draw(dt, mx, my)
 		if def then
 			local x, y = sw - RIGHT - SIZE, startY + (i - 1) * (SIZE + GAP)
 			local cooldown = State.abilityCooldowns[abilityId] or 0
-			local ready = cooldown <= 0
+			local lockMessage = CampaignUnlocks.getAbilityLockMessage(abilityId, i)
+			local available = lockMessage == nil
+			local ready = available and cooldown <= 0
 			local hovered = mx >= x and mx <= x + SIZE and my >= y and my <= y + SIZE
 			local button = buttons[i] or {anim = {}}
 			buttons[i] = button
 			button.x, button.y, button.w, button.h = x, y, SIZE, SIZE
 			button.abilityId, button.enabled = abilityId, ready
+			button.lockMessage = lockMessage
 			local anim = ensureAnim(button)
 
 			if hovered ~= anim.hovered then
@@ -137,13 +141,19 @@ function AbilityBar.draw(dt, mx, my)
 
 			lg.setColor(colorOutline)
 			lg.rectangle("fill", fx - outlineW, fy - outlineW, SIZE + outlineW * 2, SIZE + outlineW * 2, outerRadius)
-			lg.setColor(r, g, b, 0.96)
+			lg.setColor(r, g, b, available and 0.96 or 0.48)
 			lg.rectangle("fill", fx, fy, SIZE, SIZE, innerRadius)
 
 			local drawer = iconDrawers[abilityId]
-			if drawer then drawer(fx + SIZE * 0.5, fy + SIZE * 0.5, 1) end
+			if drawer then drawer(fx + SIZE * 0.5, fy + SIZE * 0.5, available and 1 or 0.82) end
 
-			if not ready then
+			if not available then
+				lg.setColor(0.02 + 0.35 * errorEase, 0.03, 0.05, 0.7 + 0.18 * errorEase)
+				lg.rectangle("fill", fx, fy, SIZE, SIZE, innerRadius)
+				lg.setColor(1, 1 - 0.55 * errorEase, 1 - 0.55 * errorEase, 0.95)
+				Text.printfShadow("🔒", fx, fy + 6, SIZE, "center")
+				Text.printfShadow(lockMessage, fx + 3, fy + SIZE - 25, SIZE - 6, "center")
+			elseif not ready then
 				local ratio = min(1, cooldown / def.cooldown)
 				lg.setColor(0.02 + 0.35 * errorEase, 0.03, 0.05, 0.72 + 0.18 * errorEase)
 				lg.rectangle("fill", fx, fy + SIZE * (1 - ratio), SIZE, SIZE * ratio, innerRadius)
