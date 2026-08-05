@@ -21,7 +21,7 @@ local rewardsByMapId = {
 	-- Frost Nova is earned after the map that introduces runners.
 	snaketrail = {type = "ability", id = "frost_nova", label = "Frost Nova active ability"},
 	backtrack = {type = "targeting", id = "high_hp", label = "Strongest targeting option"},
-	circuit = {type = "module_category", id = "utility", label = "Utility module category"},
+	lowvalley = {type = "module_category", id = "utility", label = "Utility module category"},
 	outerloop = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
 	terrace = {type = "wave_preview", id = "enhanced", label = "Enhanced wave preview"},
 	highridge = {type = "targeting", id = "low_hp", label = "Weakest targeting option"},

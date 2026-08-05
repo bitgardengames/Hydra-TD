@@ -43,9 +43,9 @@ local teachingByMapId = {
 		counterplay = "Focus Poison or Plasma on the highest-health tanks while Cannon clears their escorts; after clearing Backtrack, set towers to Strongest targeting to keep that priority automatic.",
 	},
 	lowvalley = {
-		lesson = "Learn shield and bulwark timing: break protection before committing burst damage.",
-		pressure = "Bulwarks introduce protected fronts that reduce the value of scattered low-impact hits.",
-		counterplay = "Stack Shock or sustained Lancer fire at the shield-break point, then spend the utility module slot on control or cleanup.",
+		lesson = "Counter Bulwark armor with Cannon blasts and other heavy hits instead of relying on rapid low-damage attacks.",
+		pressure = "Bulwarks introduce armor that shrugs off small hits, forcing each attack to deal enough damage to punch through.",
+		counterplay = "Place Cannon at shared bends for repeated heavy blasts, then add Lancer or other high-damage fire to crack surviving Bulwarks before they leave the kill zone.",
 	},
 	circuit = {
 		lesson = "Finish regenerating enemies decisively and avoid letting them idle between damage pockets.",
