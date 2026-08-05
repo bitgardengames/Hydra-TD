@@ -13,7 +13,84 @@ local Screens = {
 	pause = require("ui.menu.pause"),
 }
 
-local Menu = {}
+local Menu = {
+	transition = nil,
+}
+
+local TRANSITION_DURATION = 0.18
+local TRANSITION_OFFSET = 28
+
+local transitionCanvas = nil
+local transitionCanvasW = 0
+local transitionCanvasH = 0
+
+local function getTransitionCanvas()
+	local w, h = love.graphics.getDimensions()
+	if not transitionCanvas or transitionCanvasW ~= w or transitionCanvasH ~= h then
+		transitionCanvas = love.graphics.newCanvas(w, h)
+		transitionCanvasW = w
+		transitionCanvasH = h
+	end
+	return transitionCanvas
+end
+
+local function shouldTransition(from, to)
+	if from == to then
+		return false
+	end
+
+	-- Gameplay and pause swaps should stay immediate so input never feels delayed.
+	if from == "game" or to == "game" or from == "pause" or to == "pause" then
+		return false
+	end
+
+	if from == "settings_gameplay" or to == "settings_gameplay" then
+		return false
+	end
+
+	return Screens[from] ~= nil and Screens[to] ~= nil
+end
+
+local function finishTransition(transition)
+	local previousScreen = Screens[transition.from]
+	if previousScreen and previousScreen.leave then
+		previousScreen.leave()
+	end
+
+	State.mode = transition.to
+
+	local screen = Screens[transition.to]
+	if screen and screen.enter then
+		screen.enter()
+	end
+
+	transition.switched = true
+end
+
+local function drawScreen(mode, alpha, offsetX)
+	local screen = Screens[mode]
+	if not (screen and screen.draw) then
+		return
+	end
+
+	if alpha >= 0.999 and (not offsetX or offsetX == 0) then
+		screen.draw()
+		return
+	end
+
+	local canvas = getTransitionCanvas()
+	love.graphics.push("all")
+	love.graphics.setCanvas(canvas)
+	love.graphics.clear(0, 0, 0, 0)
+	love.graphics.origin()
+	screen.draw()
+	love.graphics.pop()
+
+	love.graphics.push("all")
+	love.graphics.setColor(1, 1, 1, alpha or 1)
+	love.graphics.draw(canvas, offsetX or 0, 0)
+	love.graphics.pop()
+end
 
 
 function Menu.load()
@@ -28,6 +105,22 @@ function Menu.load()
 end
 
 function Menu.update(dt)
+	local transition = Menu.transition
+	if transition then
+		transition.t = math.min(transition.t + dt, transition.duration)
+
+		if not transition.switched and transition.t >= transition.duration * 0.5 then
+			finishTransition(transition)
+		end
+
+		if transition.t >= transition.duration then
+			if not transition.switched then
+				finishTransition(transition)
+			end
+			Menu.transition = nil
+		end
+	end
+
 	local screen = Screens[State.mode]
 
 	if screen and screen.update then
@@ -36,26 +129,53 @@ function Menu.update(dt)
 end
 
 function Menu.set(mode)
-	local previousScreen = Screens[State.mode]
-	if previousScreen and previousScreen.leave then
-		previousScreen.leave()
+	local from = State.mode
+
+	if Menu.transition then
+		if Menu.transition.to == mode then
+			return
+		end
+		Menu.transition = nil
 	end
 
-	State.mode = mode
-	
-	local screen = Screens[mode]
+	if not shouldTransition(from, mode) then
+		local previousScreen = Screens[State.mode]
+		if previousScreen and previousScreen.leave then
+			previousScreen.leave()
+		end
 
-	if screen and screen.enter then
-		screen.enter()
+		State.mode = mode
+
+		local screen = Screens[mode]
+		if screen and screen.enter then
+			screen.enter()
+		end
+		return
 	end
+
+	Menu.transition = {
+		from = from,
+		to = mode,
+		t = 0,
+		duration = TRANSITION_DURATION,
+		switched = false,
+	}
 end
 
 function Menu.draw()
-	local screen = Screens[State.mode]
+	local transition = Menu.transition
+	if transition then
+		local progress = math.min(transition.t / transition.duration, 1)
+		local eased = progress * progress * (3 - 2 * progress)
+		local incomingX = TRANSITION_OFFSET * (1 - eased)
+		local outgoingX = -TRANSITION_OFFSET * eased
 
-	if screen and screen.draw then
-		screen.draw()
+		drawScreen(transition.from, 1 - eased, outgoingX)
+		drawScreen(transition.to, eased, incomingX)
+		return
 	end
+
+	drawScreen(State.mode, 1, 0)
 end
 
 function Menu.keypressed(key)

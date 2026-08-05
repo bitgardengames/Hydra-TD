@@ -64,7 +64,7 @@ function Screen.load()
 			onClick = function()
 				State.ignoreStats = false
 				Difficulty.set(Save.data.settings.difficulty)
-				State.mode = "campaign"
+				require("ui.menu.menu").set("campaign")
 				Sound.play("uiConfirm")
 			end
 		},
@@ -75,7 +75,7 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				State.mode = "settings"
+				require("ui.menu.menu").set("settings")
 				Sound.play("uiConfirm")
 			end
 		},
