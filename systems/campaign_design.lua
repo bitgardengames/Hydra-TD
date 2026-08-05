@@ -28,9 +28,9 @@ local teachingByMapId = {
 		counterplay = "Place Poison where the loop repeatedly re-enters range, then use Slow and Lancer/Cannon retargeting to keep poisoned enemies under fire until the damage-over-time finishes them.",
 	},
 	gauntlet = {
-		lesson = "Build layered kill boxes for mixed armor and speed instead of relying on one choke.",
-		pressure = "Suppression and displacement boss variants add flank bursts while the lane alternates tight and open sections.",
-		counterplay = "Combine Plasma focus damage with Slow control and reserve Cannon/Shock for groups that enter the gauntlet together.",
+		lesson = "Pass the campaign's first fundamentals test by combining Lancer, Slow, Cannon, Poison, and Meteor in one plan.",
+		pressure = "Mixed waves and suppression and displacement boss variants test every tool learned so far across alternating tight and open sections.",
+		counterplay = "Line up Lancer on long lanes, use Slow and Cannon where enemies bunch, keep Poison on durable targets, and save Meteor for the most dangerous breakthrough.",
 	},
 	snaketrail = {
 		lesson = "React to fast runners before they exit tower coverage, especially on short linking segments.",

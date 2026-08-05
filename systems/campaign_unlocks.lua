@@ -16,6 +16,7 @@ local rewardsByMapId = {
 	switchback = {type = "tower", id = "cannon", label = "Cannon tower"},
 	highpass = {type = "tower", id = "poison", label = "Poison tower"},
 	roundabout = {type = "ability", id = "meteor", label = "Meteor active ability"},
+	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
 	gauntlet = {type = "tower", id = "shock", label = "Shock tower"},
 	snaketrail = {type = "ability", id = "frost_nova", label = "Frost Nova active ability"},
 	lowvalley = {type = "targeting", id = "high_hp", label = "Strongest targeting option"},
