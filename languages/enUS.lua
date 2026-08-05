@@ -426,6 +426,7 @@ return {
 		upgrade = "Upgrade!",
 		cannotPlace = "Can't",
 		needMoney = "Need $",
+		maxLevel = "Max level",
 		abilityCoolingDown = "Ability cooling down",
 		tutorialTile = "Use highlighted tile",
 	},
