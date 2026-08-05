@@ -12,6 +12,7 @@ local floor = math.floor
 local Screen = {}
 
 local buttons
+local enterAnim = Overlay.newEnterAnimation()
 
 local btnW = 260
 local btnH = 44
@@ -28,6 +29,7 @@ local outerRadius = baseRadius + outlineW * 0.5
 local innerRadius = baseRadius - outlineW * 0.25
 
 function Screen.enter()
+	enterAnim = Overlay.newEnterAnimation()
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 
@@ -68,6 +70,7 @@ function Screen.enter()
 end
 
 function Screen.update(dt)
+	Overlay.updateEnterAnimation(enterAnim, dt)
 	for _, btn in ipairs(buttons) do
 		local mx, my = love.mouse.getPosition()
 		Button.update(btn, mx, my, dt)
@@ -79,7 +82,7 @@ function Screen.draw()
 	local cx = floor(sw * 0.5)
 
 	-- Dim background
-	lg.setColor(0, 0, 0, 0.45)
+	lg.setColor(0, 0, 0, Overlay.dimAlpha(enterAnim, 0.45))
 	lg.rectangle("fill", 0, 0, sw, sh)
 
 	-- Panel layout
@@ -87,6 +90,9 @@ function Screen.draw()
 	local boxH = 260
 	local boxX = cx - boxW * 0.5
 	local boxY = floor(sh * 0.42 - boxH * 0.5)
+	local boxCX, boxCY = boxX + boxW * 0.5, boxY + boxH * 0.5
+
+	Overlay.pushPanelTransform(boxCX, boxCY, enterAnim)
 
 	-- Panel outline
 	lg.setColor(colorOutline)
@@ -117,6 +123,8 @@ function Screen.draw()
 	for _, btn in ipairs(buttons) do
 		Button.draw(btn)
 	end
+
+	Overlay.popPanelTransform()
 end
 
 function Screen.mousepressed(x, y, button)

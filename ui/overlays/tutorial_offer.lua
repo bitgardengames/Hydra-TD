@@ -7,8 +7,10 @@ local L = require("core.localization")
 
 local Screen = {}
 local buttons = {}
+local enterAnim = Overlay.newEnterAnimation()
 
 function Screen.enter()
+	enterAnim = Overlay.newEnterAnimation()
 	local sw, sh = love.graphics.getDimensions()
 	local x, y = sw * 0.5, sh * 0.5
 	buttons = {
@@ -20,6 +22,7 @@ function Screen.enter()
 end
 
 function Screen.update(dt)
+	Overlay.updateEnterAnimation(enterAnim, dt)
 	local mx, my = love.mouse.getPosition()
 	for _, button in ipairs(buttons) do Button.update(button, mx, my, dt) end
 end
@@ -29,7 +32,9 @@ function Screen.draw()
 	local sw, sh = lg.getDimensions()
 	local w, h = 560, 290
 	local x, y = (sw - w) * 0.5, (sh - h) * 0.5
-	lg.setColor(0, 0, 0, 0.55); lg.rectangle("fill", 0, 0, sw, sh)
+	local cx, cy = x + w * 0.5, y + h * 0.5
+	lg.setColor(0, 0, 0, Overlay.dimAlpha(enterAnim, 0.55)); lg.rectangle("fill", 0, 0, sw, sh)
+	Overlay.pushPanelTransform(cx, cy, enterAnim)
 	lg.setColor(Theme.outline.color); lg.rectangle("fill", x - 3, y - 3, w + 6, h + 6, 18)
 	lg.setColor(Theme.ui.backdrop); lg.rectangle("fill", x, y, w, h, 16)
 	Fonts.set("title"); lg.setColor(Theme.ui.text)
@@ -37,6 +42,7 @@ function Screen.draw()
 	Fonts.set("menu")
 	Text.printfShadow(L("tutorial.offerText"), x + 42, y + 88, w - 84, "center")
 	for _, button in ipairs(buttons) do Button.draw(button) end
+	Overlay.popPanelTransform()
 end
 
 function Screen.mousepressed(x, y, button)
