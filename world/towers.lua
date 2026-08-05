@@ -297,6 +297,7 @@ local function addTower(kind, gx, gy)
 		poison = def.poison,
 		plasma = def.plasma,
 		specializationId = nil,
+		appliedModules = {},
 		branchSelections = {},
 		_upgradePreview = {
 			specializationId = nil,

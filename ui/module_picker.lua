@@ -147,6 +147,47 @@ function ModulePicker.open(options)
 	return true
 end
 
+function ModulePicker.openPurchase(choices)
+	return ModulePicker.open({
+		mode = "purchase_module",
+		choices = choices,
+		title = L("modulePicker.purchaseTitle"),
+		subtitle = L("modulePicker.purchaseSubtitle"),
+		hint = L("modulePicker.hint"),
+	})
+end
+
+function ModulePicker.openApplyOwned(tower)
+	if not tower then
+		return false
+	end
+
+	local inventory = Modules.getInventory()
+	local choices = {}
+	for moduleId, count in pairs(inventory) do
+		if count > 0 and Modules.canApplyToTower(moduleId, tower) then
+			choices[#choices + 1] = {
+				moduleId = moduleId,
+				target = tower.kind,
+				count = count,
+			}
+		end
+	end
+
+	table.sort(choices, function(a, b)
+		return a.moduleId < b.moduleId
+	end)
+
+	return ModulePicker.open({
+		mode = "apply_module",
+		choices = choices,
+		tower = tower,
+		title = L("modulePicker.applyTitle", L(tower.def.nameKey)),
+		subtitle = L("modulePicker.applySubtitle"),
+		hint = L("modulePicker.hint"),
+	})
+end
+
 function ModulePicker.openTowerUpgrade(tower)
 	if not tower then
 		return false
@@ -194,6 +235,16 @@ function ModulePicker.choose(index)
 
 	if picker.mode == "tower_upgrade" then
 		local ok = Towers.upgradeTower(picker.tower, choice.moduleId)
+		if not ok then
+			return false
+		end
+	elseif picker.mode == "apply_module" then
+		local ok = Modules.applyToTower(choice.moduleId, picker.tower)
+		if not ok then
+			return false
+		end
+	elseif picker.mode == "purchase_module" then
+		local ok = Modules.purchase(choice.moduleId)
 		if not ok then
 			return false
 		end
@@ -284,7 +335,7 @@ function ModulePicker.draw()
 		local choice = choices[i]
 		local mod = Modules.getDef(choice.moduleId)
 		local c = cards[i]
-		local towerColor = Theme.tower[choice.target] or text
+		local towerColor = Theme.tower[choice.target or (picker.tower and picker.tower.kind)] or text
 
 		local intro = easeOutBack((now - openedAt - c.delay) * 6.0)
 		local alpha = Util.clamp((now - openedAt - c.delay) * 5.0, 0, 1)
@@ -339,7 +390,7 @@ function ModulePicker.draw()
 				lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.14 + 0.08 * pulse) * alpha)
 				lg.rectangle("line", drawX - 2, drawY - 2, drawW + 4, drawH + 4, innerRadius + 2, innerRadius + 2)
 
-				local cta = picker.mode == "tower_upgrade" and L("modulePicker.selectCta") or "Click to Claim"
+				local cta = picker.mode == "tower_upgrade" and L("modulePicker.selectCta") or (picker.mode == "apply_module" and L("modulePicker.applyCta") or (picker.mode == "purchase_module" and L("modulePicker.purchaseCta") or "Click to Claim"))
 				lg.setColor(1, 1, 1, (0.72 + 0.20 * pulse) * alpha)
 				Fonts.set("ui")
 				lg.printf(cta, drawX + 18, drawY + drawH - 30, drawW - 36, "right")
