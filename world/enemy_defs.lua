@@ -52,7 +52,9 @@ return {
 		nameKey = "enemy.shieldbearer",
 		descriptionKey = "enemy.shieldbearerDescription",
 		hp = 72 * mult, speed = 50, reward = 14, score = 32, radius = 13,
-		shield = { hp = 30 * mult, burstThreshold = 12, burstMultiplier = 1.6, chainMultiplier = 1.75 },
+		-- Chain amplification rewards Shock against the barrier without raising its
+		-- raw damage against isolated, unshielded targets such as bosses.
+		shield = { hp = 30 * mult, burstThreshold = 12, burstMultiplier = 1.6, chainMultiplier = 2.4 },
 		traits = {"shielded"},
 	},
 
