@@ -8,6 +8,7 @@ local AbilityDefs = {
 		cooldown = 35,
 		targeting = "point",
 		effect = {kind = "damage_area", radius = 82, damage = 85},
+		upgradedEffect = {kind = "damage_area", radius = 96, damage = 115},
 	},
 	frost_nova = {
 		id = "frost_nova",
@@ -16,6 +17,7 @@ local AbilityDefs = {
 		cooldown = 28,
 		targeting = "point",
 		effect = {kind = "slow_area", radius = 105, factor = 0.35, duration = 5},
+		upgradedEffect = {kind = "slow_area", radius = 120, factor = 0.28, duration = 6.5},
 	},
 }
 
