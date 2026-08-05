@@ -26,7 +26,7 @@ local rewardsByMapId = {
 	-- Plasma is earned after the long-map midgame exam.
 	outerloop = {type = "tower", id = "plasma", label = "Plasma tower"},
 	terrace = {type = "wave_preview", id = "enhanced", label = "Enhanced wave preview"},
-	crossflow = {type = "module_category", id = "movement", label = "Movement module category"},
+	highridge = {type = "module_category", id = "movement", label = "Movement module category"},
 	steppingstones = {type = "ability_upgrade", id = "enhanced_abilities", label = "Enhanced active ability effects"},
 	twinloop = {type = "campaign_complete", id = "challenge_endless", label = "Challenge and Endless modes"},
 }
