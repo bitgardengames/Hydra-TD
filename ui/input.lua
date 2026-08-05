@@ -258,10 +258,16 @@ local function mousereleased(x, y, button)
 
 	-- Shop buttons
 	handlePanelButtons(BottomBar.getShopButtons, x, y, false, function(b)
-		if b.canAfford then
-			State.placing = b.kind
-			State.selectedTower = nil
+		if b.unlocked == false or b.canAfford ~= true then
+			return
+		end
+
+		local ok, why = beginTowerPlacement(b.kind)
+		if ok then
 			Onboarding.event("attempting_placement")
+		elseif why == "locked" then
+			local wx, wy = Camera.screenToWorld(x, y)
+			Floaters.add(wx, wy, CampaignUnlocks.getLockMessage(b.kind) or L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
 		end
 	end)
 
