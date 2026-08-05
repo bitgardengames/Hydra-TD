@@ -1,5 +1,6 @@
 local ModuleDefs = require("systems.module_defs")
 local TowerBranchDefs = require("world.tower_branch_defs")
+local State = require("core.state")
 
 local Modules = {}
 
@@ -14,6 +15,36 @@ Modules.active = {
 }
 
 Modules.version = 0
+
+
+local function getInventory()
+	State.moduleInventory = State.moduleInventory or {}
+
+	return State.moduleInventory
+end
+
+local function getModule(moduleId)
+	local mod = ModuleDefs[moduleId]
+	if mod then
+		mod.id = mod.id or moduleId
+	end
+
+	return mod
+end
+
+local function applyModuleIds(ctx, moduleIds)
+	if not moduleIds then
+		return
+	end
+
+	for i = 1, #moduleIds do
+		local moduleId = moduleIds[i]
+		local mod = getModule(moduleId)
+		if mod and mod.apply then
+			mod.apply(ctx)
+		end
+	end
+end
 
 local function bumpTowerCacheState(tower)
 	if not tower then
@@ -37,17 +68,87 @@ function Modules.clear()
 end
 
 function Modules.add(moduleId, towerType)
-	local mod = ModuleDefs[moduleId]
+	local mod = getModule(moduleId)
 	if not mod then return end
 
 	local list = Modules.active[towerType]
 	if not list then return end
 
 	list[#list + 1] = mod
-	mod.id = mod.id or moduleId
 	Modules.version = Modules.version + 1
 	local Save = require("core.save")
 	Save.discoverModule(moduleId)
+end
+
+function Modules.getInventory()
+	return getInventory()
+end
+
+function Modules.addToInventory(moduleId, count)
+	local mod = getModule(moduleId)
+	if not mod then
+		return false, "invalid_module"
+	end
+
+	count = count or 1
+	if count <= 0 then
+		return false, "invalid_count"
+	end
+
+	local inventory = getInventory()
+	inventory[moduleId] = (inventory[moduleId] or 0) + count
+	Modules.version = Modules.version + 1
+
+	local Save = require("core.save")
+	Save.discoverModule(moduleId)
+
+	return true
+end
+
+function Modules.purchase(moduleId)
+	return Modules.addToInventory(moduleId, 1)
+end
+
+function Modules.canApplyToTower(moduleId, tower)
+	if not tower or not tower.kind then
+		return false, "missing_tower"
+	end
+
+	local mod = getModule(moduleId)
+	if not mod then
+		return false, "invalid_module"
+	end
+
+	local inventory = getInventory()
+	if (inventory[moduleId] or 0) <= 0 then
+		return false, "not_owned"
+	end
+
+	if mod.target and mod.target ~= "global" and mod.target ~= tower.kind then
+		return false, "incompatible_tower"
+	end
+
+	return true
+end
+
+function Modules.applyToTower(moduleId, tower)
+	local ok, reason = Modules.canApplyToTower(moduleId, tower)
+	if not ok then
+		return false, reason
+	end
+
+	local inventory = getInventory()
+	inventory[moduleId] = inventory[moduleId] - 1
+	if inventory[moduleId] <= 0 then
+		inventory[moduleId] = nil
+	end
+
+	tower.appliedModules = tower.appliedModules or {}
+	tower.appliedModules[#tower.appliedModules + 1] = moduleId
+	Modules.invalidateTower(tower)
+	Modules.version = Modules.version + 1
+
+	return true
 end
 
 function Modules.invalidateTower(tower)
@@ -289,19 +390,16 @@ function Modules.buildContext(tower)
 		end
 	end
 
-	-- tower branch modules (selected through upgrade tiers)
+	-- tower-specific inventory modules applied by the player
+	applyModuleIds(ctx, tower and tower.appliedModules)
+
+	-- tower branch modules (legacy upgrade-tier compatibility path)
 	local branchSelections = tower and tower.branchSelections
 	if branchSelections then
-		for i = 1, #branchSelections do
-			local moduleId = branchSelections[i]
-			local branchMod = ModuleDefs[moduleId]
-			if branchMod and branchMod.apply then
-				branchMod.apply(ctx)
-			end
-		end
+		applyModuleIds(ctx, branchSelections)
 	elseif tower and tower.specializationId then
 		-- backward compatibility for older saves
-		local specialization = ModuleDefs[tower.specializationId]
+		local specialization = getModule(tower.specializationId)
 		if specialization and specialization.apply then
 			specialization.apply(ctx)
 		end
@@ -377,7 +475,7 @@ function Modules.getFireProfile(tower)
 end
 
 function Modules.getDef(moduleId)
-	return ModuleDefs[moduleId]
+	return getModule(moduleId)
 end
 
 function Modules.getActive()
@@ -387,21 +485,24 @@ end
 function Modules.getTargetMode(towerOrKind)
 	local towerKind = towerOrKind
 	local branchSelections = nil
+	local appliedModules = nil
 	local legacySpecializationId = nil
 
 	if type(towerOrKind) == "table" then
 		towerKind = towerOrKind.kind
 		branchSelections = towerOrKind.branchSelections
+		appliedModules = towerOrKind.appliedModules
 		legacySpecializationId = towerOrKind.specializationId
 	end
 
 	local mode = nil
 	mode = applyTargetModeFromModules(Modules.active.global, mode)
 	mode = applyTargetModeFromModules(Modules.active[towerKind], mode)
+	mode = applyTargetModeFromIds(appliedModules, mode)
 	mode = applyTargetModeFromIds(branchSelections, mode)
 
 	if legacySpecializationId and not branchSelections then
-		mode = applyTargetMode(mode, ModuleDefs[legacySpecializationId])
+		mode = applyTargetMode(mode, getModule(legacySpecializationId))
 	end
 
 	return mode

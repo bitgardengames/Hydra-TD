@@ -55,6 +55,7 @@ local state = {
 	ignoreStats = false,
 
 	modules = {},
+	moduleInventory = {},
 	modulePicker = {
 		active = false,
 		choices = nil,

@@ -157,6 +157,7 @@ function resetGame()
 
 	-- Modules
 	Modules.clear()
+	State.moduleInventory = {}
 
 	State.modulePicker.active = false
 	State.modulePicker.choices = nil
