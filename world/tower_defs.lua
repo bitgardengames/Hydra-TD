@@ -98,7 +98,8 @@ return {
 
 	-- Role: heavy burst and armor counter. High per-shot damage and splash punish
 	-- packed or armored waves, but premium cost, short reach, and low fire rate
-	-- leave it vulnerable to leaks without support.
+	-- leave it vulnerable to leaks. Slow, unguided shells make runner control a
+	-- job for the Slow tower rather than letting the cannon cover every role.
 	cannon = {
 		nameKey = "tower.cannon",
 		descKey = "towerDesc.cannon",
@@ -108,8 +109,8 @@ return {
 		damage = 32,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
-		projSpeed = 320,
-		turnSpeed = 8,
+		projSpeed = 280,
+		turnSpeed = 7,
 		color = Theme.tower.cannon,
 		canRotate = true,
 		upgrade = {
@@ -119,7 +120,7 @@ return {
 			splashAdd = 5, -- increase AoE radius per upgrade
 		},
 		behaviors = {
-			{id = "move_homing"},
+			{id = "move_linear"},
 			{id = "hit_circle", data = {radius = 12}},
 			{id = "aoe_damage", data = {radius = 44}},
 			{id = "draw_cannon" }
