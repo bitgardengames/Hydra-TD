@@ -217,7 +217,7 @@ local maps = {
 		id = "terrace",
 		campaignStage = 3,
 		nameKey = "map.terrace",
-		introducesEnemies = {"shieldbearer", "warcaller"},
+		introducesEnemies = {"warcaller", "shieldbearer"},
 		biome = "winter",
 		path = {
 			{5, 3}, {14, 3},
