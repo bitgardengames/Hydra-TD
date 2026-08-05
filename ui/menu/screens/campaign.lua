@@ -14,7 +14,6 @@ local Tooltip = require("ui.tooltip")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
-local EnemyDefs = require("world.enemy_defs")
 local Towers = require("world.towers")
 
 local lg = love.graphics
@@ -349,17 +348,6 @@ local function getCompletionString(mapId)
 	return nil
 end
 
-local function localizedEnemyList(kinds)
-	local names = {}
-
-	for _, kind in ipairs(kinds or {}) do
-		local def = EnemyDefs[kind]
-		names[#names + 1] = L((def and def.nameKey) or ("enemy." .. kind))
-	end
-
-	return table.concat(names, L("campaign.previewListSeparator"))
-end
-
 local function localizedTowerList(kinds)
 	local names = {}
 
@@ -373,11 +361,6 @@ end
 
 local function buildPreviewMessages(map)
 	local messages = {}
-
-	if map.introducesEnemies and #map.introducesEnemies > 0 then
-		local key = (#map.introducesEnemies == 1) and "campaign.newEnemy" or "campaign.newEnemies"
-		messages[#messages + 1] = L(key, localizedEnemyList(map.introducesEnemies))
-	end
 
 	if map.rewardTowers and #map.rewardTowers > 0 then
 		local key = (#map.rewardTowers == 1) and "campaign.newTowerReward" or "campaign.newTowerRewards"
