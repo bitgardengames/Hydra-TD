@@ -19,9 +19,9 @@ return {
 		color = Theme.tower.slow,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 1.45,
+			dmgMult = 1.2,
 			rangeAdd = 0.14 * Constants.TILE,
-			fireMult = 1.06,
+			fireMult = 1.04,
 			slowDurAdd = 0.45,
 		},
 		behaviors = {

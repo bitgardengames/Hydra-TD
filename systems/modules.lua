@@ -352,6 +352,7 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 		return
 	end
 
+	local slowDurAdd = upgrade.slowDurAdd or 0
 	local poisonDurAdd = upgrade.poisonDurAdd or 0
 	local poisonDpsMult = upgrade.poisonDpsMult or 1
 	local stackAdd = upgrade.stackAdd or 0
@@ -361,7 +362,9 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 		local b = ctx.behaviors[i]
 		local data = b.data
 		if data then
-			if b.id == "apply_poison" then
+			if b.id == "apply_slow" and slowDurAdd ~= 0 then
+				data.dur = (data.dur or 0) + slowDurAdd * upgrades
+			elseif b.id == "apply_poison" then
 				if poisonDurAdd ~= 0 then
 					data.dur = (data.dur or 0) + poisonDurAdd * upgrades
 				end
