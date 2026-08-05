@@ -366,7 +366,7 @@ local function buildPreviewMessages(map)
 
 	if reward then
 		if reward.type == "tower" then
-			messages[#messages + 1] = L("campaign.newTowerReward", localizedTowerList({reward.id}))
+			messages[#messages + 1] = L("campaign.newTowerReward", reward.label or localizedTowerList({reward.id}))
 		elseif reward.label then
 			messages[#messages + 1] = L("campaign.newTowerReward", reward.label)
 		end
