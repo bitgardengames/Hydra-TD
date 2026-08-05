@@ -178,19 +178,54 @@ local function createContext(base)
 		for i = 1, #self.behaviors do
 			if self.behaviors[i].id == id then
 				self.behaviors[i] = behavior
-				return
+				return true
 			end
 		end
+
+		return false
 	end
 	ctx.modifyBehavior = function(self, id, fn)
 		for i = 1, #self.behaviors do
 			local behavior = self.behaviors[i]
 			if behavior.id == id then
 				behavior.data = behavior.data or {}
-				fn(behavior.data)
-				return
+				fn(behavior.data, behavior)
+				return true
 			end
 		end
+
+		return false
+	end
+	ctx.replaceBehaviorByRole = function(self, role, behavior)
+		for i = 1, #self.behaviors do
+			if self:getBehaviorRole(self.behaviors[i].id) == role then
+				self.behaviors[i] = behavior
+				return true
+			end
+		end
+
+		return false
+	end
+	ctx.setTargetMode = function(self, mode)
+		self.targetMode = mode
+	end
+	ctx.getBehaviorRole = function(self, id)
+		if id == "move_homing" or id == "move_linear" or id == "move_boomerang" or id == "move_wave" or id == "move_spiral" or id == "move_orbit" or id == "move_suspend" then
+			return "movement"
+		end
+		if id == "hit_circle" or id == "hit_line" or id == "instant_hit" or id == "emit_on_target" then
+			return "hit"
+		end
+		if id == "hit_damage" or id == "aoe_damage" or id == "tick_damage" or id == "hit_chain" then
+			return "damage"
+		end
+		if id:sub(1, 5) == "draw_" then
+			return "draw"
+		end
+		if id == "chain_zap_fx" or id == "lancer_hit_fx" then
+			return "impact_fx"
+		end
+		return nil
 	end
 	ctx.removeByType = function(self, typeName)
 		for i = #self.behaviors, 1, -1 do
@@ -201,6 +236,29 @@ local function createContext(base)
 	end
 
 	return ctx
+end
+
+local function validateCoreBehaviors(ctx, base)
+	local required = {}
+
+	for i = 1, #base do
+		local behavior = base[i]
+		local role = ctx:getBehaviorRole(behavior.id)
+		if role == "movement" or role == "hit" or role == "damage" or role == "draw" or role == "impact_fx" then
+			required[role] = required[role] or behavior
+		end
+	end
+
+	for i = 1, #ctx.behaviors do
+		local role = ctx:getBehaviorRole(ctx.behaviors[i].id)
+		if role and required[role] then
+			required[role] = nil
+		end
+	end
+
+	for _, behavior in pairs(required) do
+		ctx:addBehavior(copyBehaviors({ behavior })[1])
+	end
 end
 
 function Modules.buildContext(tower)
@@ -249,6 +307,7 @@ function Modules.buildContext(tower)
 		end
 	end
 
+	validateCoreBehaviors(ctx, base)
 	applyTowerUpgradeBehaviorScaling(ctx, tower)
 
 	-- Normalize/validate post-module behavior list in one pass.
