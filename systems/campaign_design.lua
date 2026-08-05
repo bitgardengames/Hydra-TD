@@ -53,9 +53,9 @@ local teachingByMapId = {
 		counterplay = "Keep focused fire on wounded Regenerators, then use the Weakest targeting option earned after Circuit to automate finishing low-health targets before they recover.",
 	},
 	outerloop = {
-		lesson = "Plan full-map coverage and leak prevention when the path stretches towers away from the exit.",
-		pressure = "Long outer lanes split attention between early damage economy and late emergency control.",
-		counterplay = "Create an early economy-neutral kill zone, keep Frost Nova for the final leg, and use targeting options to stop leaks for the challenge badge.",
+		lesson = "Pass a long-map midgame exam by coordinating every counter learned for runners, tanks, Bulwarks, and Regenerators.",
+		pressure = "Mixed runner, tank, Bulwark, and Regenerator waves stretch full-map coverage across long outer lanes and punish gaps between kill zones.",
+		counterplay = "Use active abilities to contain runner leaks, Strongest targeting to focus tanks and Bulwarks, and Weakest targeting to finish Regenerators before they recover.",
 	},
 	terrace = {
 		lesson = "Identify support enemies quickly and remove them before their aura value compounds.",

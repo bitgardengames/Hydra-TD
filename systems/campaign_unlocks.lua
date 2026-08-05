@@ -23,7 +23,8 @@ local rewardsByMapId = {
 	backtrack = {type = "targeting", id = "high_hp", label = "Strongest targeting option"},
 	lowvalley = {type = "module_category", id = "utility", label = "Utility module category"},
 	circuit = {type = "targeting", id = "low_hp", label = "Weakest targeting option"},
-	outerloop = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
+	-- Plasma is earned after the long-map midgame exam.
+	outerloop = {type = "tower", id = "plasma", label = "Plasma tower"},
 	terrace = {type = "wave_preview", id = "enhanced", label = "Enhanced wave preview"},
 	crossflow = {type = "module_category", id = "movement", label = "Movement module category"},
 	steppingstones = {type = "ability_upgrade", id = "enhanced_abilities", label = "Enhanced active ability effects"},
