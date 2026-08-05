@@ -88,10 +88,10 @@ local function buildComposition(waveIndex, baseKind, count, tier)
 	return composition
 end
 
-function Builder.build(waveIndex)
+function Builder.build(waveIndex, mapDef)
 	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
 	local tier = Builder.getIntensityTier(waveIndex)
-	local campaignGroups = CampaignWaveDefs[waveIndex]
+	local campaignGroups = CampaignWaveDefs.get(mapDef and mapDef.campaignStage, waveIndex)
 	if campaignGroups then
 		local count = 0
 		local composition = {}
