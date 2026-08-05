@@ -4,7 +4,7 @@ local maps = {
 		id = "riverbend",
 		campaignStage = 1,
 		nameKey = "map.riverbend",
-		introducesEnemies = {"grunt", "runner", "tank"},
+		introducesEnemies = {"grunt"},
 		rewardTowers = {"slow"},
 		biome = "default",
 		path = {
@@ -111,7 +111,7 @@ local maps = {
 		id = "snaketrail",
 		campaignStage = 2,
 		nameKey = "map.snaketrail",
-		introducesEnemies = {"bulwark", "regenerator"},
+		introducesEnemies = {"runner"},
 		biome = "default",
 		path = {
 			{5, 9}, {16, 9},
@@ -135,6 +135,7 @@ local maps = {
 		id = "backtrack",
 		campaignStage = 2,
 		nameKey = "map.backtrack",
+		introducesEnemies = {"tank"},
 		biome = "autumn",
 		path = {
 			{5, 7}, {16, 7},
@@ -153,6 +154,7 @@ local maps = {
 		id = "lowvalley",
 		campaignStage = 2,
 		nameKey = "map.lowvalley",
+		introducesEnemies = {"bulwark"},
 		biome = "drylands",
 		path = {
 			{5, 5}, {17, 5},
@@ -176,6 +178,7 @@ local maps = {
 		id = "circuit",
 		campaignStage = 2,
 		nameKey = "map.circuit",
+		introducesEnemies = {"regenerator"},
 		biome = "default",
 		path = {
 			{5, 6}, {11, 6},
@@ -217,7 +220,7 @@ local maps = {
 		id = "terrace",
 		campaignStage = 3,
 		nameKey = "map.terrace",
-		introducesEnemies = {"warcaller", "shieldbearer"},
+		introducesEnemies = {"warcaller"},
 		biome = "winter",
 		path = {
 			{5, 3}, {14, 3},
@@ -245,6 +248,7 @@ local maps = {
 		id = "highridge",
 		campaignStage = 3,
 		nameKey = "map.highridge",
+		introducesEnemies = {"shieldbearer"},
 		biome = "default",
 		path = {
 			{5, 5}, {12, 5},
