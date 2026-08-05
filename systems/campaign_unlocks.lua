@@ -12,6 +12,7 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 -- Rewards intentionally avoid mandatory stat power and instead emphasize new
 -- verbs, optional build utilities, and information that teaches counters.
 local rewardsByMapId = {
+	riverbend = {type = "tower", id = "slow", label = "Slow Tower"},
 	switchback = {type = "tower", id = "cannon", label = "Cannon tower"},
 	highpass = {type = "tower", id = "poison", label = "Poison tower"},
 	roundabout = {type = "tower", id = "shock", label = "Shock tower"},
@@ -29,7 +30,6 @@ local rewardsByMapId = {
 
 local requiredMapByTower = {
 	lancer = 1,
-	slow = 1,
 }
 
 local requiredMapByFeature = {}
