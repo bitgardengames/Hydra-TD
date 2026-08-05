@@ -73,9 +73,9 @@ local teachingByMapId = {
 		counterplay = "Place Shock near the crossings to break shields, use Plasma to focus Warcallers, and keep Poison on Regenerators so they cannot recover between engagements.",
 	},
 	steppingstones = {
-		lesson = "Assemble reusable build plans for maps with disconnected pockets and staggered engagement ranges.",
-		pressure = "Alternating short steps make tower placement mistakes expensive because enemies repeatedly leave range.",
-		counterplay = "Use saved build loadouts to compare control-heavy and burst-heavy plans, then place Slow/Plasma around the most repeated pockets.",
+		lesson = "Plan two active abilities together so disconnected build pockets can support one another despite their staggered engagement ranges.",
+		pressure = "Alternating short steps make tower placement mistakes expensive and force each ability to cover threats that leave one pocket before reaching the next.",
+		counterplay = "Assign Frost Nova to hold enemies in one pocket and Meteor to burst a pack threatening another, then alternate their cooldowns so both pockets are protected.",
 	},
 	twinloop = {
 		lesson = "Synthesize every counter into a final route that revisits itself and changes threat direction mid-map.",
