@@ -6,6 +6,7 @@ local Text = require("ui.text")
 local lg = love.graphics
 local floor = math.floor
 local min = math.min
+local max = math.max
 
 local AbilityBar = {}
 local buttons = {}
@@ -14,6 +15,39 @@ local SIZE = 58
 local GAP = 10
 local RIGHT = 18
 local MAX_ABILITIES = 4
+local IDLE_LIFT = 5
+
+local colorButton = Theme.ui.button
+local colorButtonHover = Theme.ui.buttonHover
+local colorOutline = Theme.outline.color
+local outlineW = Theme.outline.width
+
+local cb1, cb2, cb3 = colorButton[1], colorButton[2], colorButton[3]
+local ch1, ch2, ch3 = colorButtonHover[1], colorButtonHover[2], colorButtonHover[3]
+
+local cbd1 = ch1 - cb1
+local cbd2 = ch2 - cb2
+local cbd3 = ch3 - cb3
+
+local outerRadius = 9 + outlineW * 0.5
+local innerRadius = 9 - outlineW * 0.25
+
+local function ensureAnim(button)
+	local anim = button.anim
+
+	if not anim then
+		anim = {}
+		button.anim = anim
+	end
+
+	anim.hovered = anim.hovered or false
+	anim.active = anim.active or false
+	anim.t = anim.t or 0
+	anim.pressed = anim.pressed or false
+	anim.pressT = anim.pressT or 0
+
+	return anim
+end
 
 local function drawMeteor(cx, cy, scale)
 	lg.setLineWidth(5 * scale)
@@ -57,25 +91,62 @@ function AbilityBar.draw(dt, mx, my)
 			buttons[i] = button
 			button.x, button.y, button.w, button.h = x, y, SIZE, SIZE
 			button.abilityId, button.enabled = abilityId, ready
+			local anim = ensureAnim(button)
 
-			lg.setColor(Theme.outline.color)
-			lg.rectangle("fill", x - 3, y - 3, SIZE + 6, SIZE + 6, 12)
-			lg.setColor(hovered and 0.25 or 0.13, hovered and 0.31 or 0.16, hovered and 0.38 or 0.20, 0.96)
-			lg.rectangle("fill", x, y, SIZE, SIZE, 9)
+			if hovered ~= anim.hovered then
+				anim.active = true
+			end
+
+			anim.hovered = hovered
+
+			if anim.pressed then
+				anim.pressT = min(1, anim.pressT + dt * 20)
+			else
+				anim.pressT = max(0, anim.pressT - dt * 20)
+			end
+
+			if anim.active then
+				local speed = dt * 10
+
+				anim.t = hovered and min(1, anim.t + speed) or max(0, anim.t - speed)
+
+				if anim.t == 0 or anim.t == 1 then
+					anim.active = false
+				end
+			end
+
+			local ease = anim.t * anim.t * (3 - 2 * anim.t)
+			local pressEase = anim.pressT
+			local lift = IDLE_LIFT * (1 - pressEase)
+			local fy = y - lift
+
+			local r = cb1 + cbd1 * ease
+			local g = cb2 + cbd2 * ease
+			local b = cb3 + cbd3 * ease
+
+			lg.setColor(colorOutline)
+			lg.rectangle("fill", x - outlineW, y - outlineW, SIZE + outlineW * 2, SIZE + outlineW * 2, outerRadius)
+			lg.setColor(r * 0.4, g * 0.4, b * 0.4, 0.96)
+			lg.rectangle("fill", x, y, SIZE, SIZE, innerRadius)
+
+			lg.setColor(colorOutline)
+			lg.rectangle("fill", x - outlineW, fy - outlineW, SIZE + outlineW * 2, SIZE + outlineW * 2, outerRadius)
+			lg.setColor(r, g, b, 0.96)
+			lg.rectangle("fill", x, fy, SIZE, SIZE, innerRadius)
 
 			local drawer = iconDrawers[abilityId]
-			if drawer then drawer(x + SIZE * 0.5, y + SIZE * 0.5, 1) end
+			if drawer then drawer(x + SIZE * 0.5, fy + SIZE * 0.5, 1) end
 
 			if not ready then
 				local ratio = min(1, cooldown / def.cooldown)
 				lg.setColor(0.02, 0.03, 0.05, 0.72)
-				lg.rectangle("fill", x, y + SIZE * (1 - ratio), SIZE, SIZE * ratio, 9)
+				lg.rectangle("fill", x, fy + SIZE * (1 - ratio), SIZE, SIZE * ratio, innerRadius)
 				lg.setColor(1, 1, 1, 0.9)
-				Text.printfShadow(tostring(math.ceil(cooldown)), x, y + 20, SIZE, "center")
+				Text.printfShadow(tostring(math.ceil(cooldown)), x, fy + 20, SIZE, "center")
 			elseif State.abilityTargeting and State.abilityTargeting.abilityId == abilityId then
 				lg.setColor(1, 0.86, 0.35, 1)
 				lg.setLineWidth(3)
-				lg.rectangle("line", x + 1, y + 1, SIZE - 2, SIZE - 2, 8)
+				lg.rectangle("line", x + 1, fy + 1, SIZE - 2, SIZE - 2, 8)
 			end
 		end
 	end
