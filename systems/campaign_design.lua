@@ -48,9 +48,9 @@ local teachingByMapId = {
 		counterplay = "Place Cannon at shared bends for repeated heavy blasts, then add Lancer or other high-damage fire to crack surviving Bulwarks before they leave the kill zone.",
 	},
 	circuit = {
-		lesson = "Finish regenerating enemies decisively and avoid letting them idle between damage pockets.",
-		pressure = "Regenerators punish partial damage on a circuit with several safe recovery intervals.",
-		counterplay = "Use Poison uptime plus Cull Weak to execute low-health targets before regeneration erases progress.",
+		lesson = "Finish damaged enemies before regeneration recovers the health already taken from them.",
+		pressure = "Regenerators punish partial damage on a circuit with several safe recovery intervals between damage pockets.",
+		counterplay = "Keep focused fire on wounded Regenerators, then use the Weakest targeting option earned after Circuit to automate finishing low-health targets before they recover.",
 	},
 	outerloop = {
 		lesson = "Plan full-map coverage and leak prevention when the path stretches towers away from the exit.",
