@@ -120,6 +120,25 @@ local function handlePanelButtons(getButtons, x, y, isPress, onReleaseInside)
 	return handleButtonPressRelease(getButtons(), x, y, isPress, onReleaseInside)
 end
 
+local function rejectAbilityButton(b, x, y)
+	Sound.play("uiError")
+
+	if b.anim then
+		b.anim.errorT = 1
+	end
+
+	local wx, wy = Camera.screenToWorld(x, y)
+	Floaters.add(wx, wy, L("floater.abilityCoolingDown"), colorBad[1], colorBad[2], colorBad[3])
+end
+
+local function tryBeginAbilityTargeting(b, x, y)
+	if b.enabled == true then
+		Abilities.beginTargeting(b.abilityId)
+	else
+		rejectAbilityButton(b, x, y)
+	end
+end
+
 local function getMousepressHandler()
 	local mode = State.mode
 
@@ -153,7 +172,6 @@ local function mousepressed(x, y, button)
 	if button == 1 and State.mode == "game" then
 		local abilityButton = handlePanelButtons(BottomBar.getAbilityButtons, x, y, true)
 		if abilityButton then
-			Abilities.beginTargeting(abilityButton.abilityId)
 			return
 		end
 		-- Tower shop
@@ -246,7 +264,7 @@ local function mousereleased(x, y, button)
 
 	-- Shop buttons
 	handlePanelButtons(BottomBar.getAbilityButtons, x, y, false, function(b)
-		Abilities.beginTargeting(b.abilityId)
+		tryBeginAbilityTargeting(b, x, y)
 	end)
 
 	-- Shop buttons
