@@ -85,6 +85,86 @@ local lateWaves = {
 	[20] = {{ kind = "boss", count = 1, spacing = 0, delay = 0 }},
 }
 
+-- Stage 1 (especially High Pass / map 3) teaches Cannon splash by sending
+-- dense grunt packs with only a few tanks mixed in as durable anchors. Tanks
+-- should be noticeable, not the main population pressure, because Poison is not
+-- available until after High Pass is cleared.
+local stageOneWaves = {
+	[1] = {{ kind = "grunt", count = 14, spacing = 0.65, delay = 0 }},
+	[2] = {{ kind = "grunt", count = 20, spacing = 0.5, delay = 0 }},
+	[3] = {
+		{ kind = "grunt", count = 18, spacing = 0.42, delay = 0 },
+		{ kind = "grunt", count = 10, spacing = 0.38, delay = 1.2 },
+	},
+	[4] = {
+		{ kind = "grunt", count = 24, spacing = 0.35, delay = 0 },
+		{ kind = "tank", count = 1, spacing = 0, delay = 1.8 },
+	},
+	[5] = {
+		{ kind = "grunt", count = 28, spacing = 0.32, delay = 0 },
+		{ kind = "tank", count = 2, spacing = 1.35, delay = 2.0 },
+	},
+	[6] = {
+		{ kind = "grunt", count = 32, spacing = 0.3, delay = 0 },
+		{ kind = "tank", count = 2, spacing = 1.25, delay = 1.6 },
+	},
+	[7] = {
+		{ kind = "grunt", count = 22, spacing = 0.32, delay = 0 },
+		{ kind = "grunt", count = 16, spacing = 0.28, delay = 1.0 },
+		{ kind = "tank", count = 2, spacing = 1.2, delay = 1.4 },
+	},
+	[8] = {
+		{ kind = "grunt", count = 38, spacing = 0.27, delay = 0 },
+		{ kind = "tank", count = 3, spacing = 1.15, delay = 1.3 },
+	},
+	[9] = {
+		{ kind = "grunt", count = 26, spacing = 0.29, delay = 0 },
+		{ kind = "tank", count = 3, spacing = 1.1, delay = 0.8 },
+		{ kind = "grunt", count = 18, spacing = 0.26, delay = 1.1 },
+	},
+	[10] = {{ kind = "boss", count = 1, spacing = 0, delay = 0 }},
+	[11] = {
+		{ kind = "grunt", count = 42, spacing = 0.25, delay = 0 },
+		{ kind = "tank", count = 3, spacing = 1.05, delay = 1.0 },
+	},
+	[12] = {
+		{ kind = "grunt", count = 30, spacing = 0.26, delay = 0 },
+		{ kind = "tank", count = 4, spacing = 1.0, delay = 0.8 },
+		{ kind = "grunt", count = 20, spacing = 0.24, delay = 1.2 },
+	},
+	[13] = {
+		{ kind = "grunt", count = 48, spacing = 0.23, delay = 0 },
+		{ kind = "tank", count = 4, spacing = 0.95, delay = 1.0 },
+	},
+	[14] = {
+		{ kind = "grunt", count = 34, spacing = 0.24, delay = 0 },
+		{ kind = "grunt", count = 24, spacing = 0.22, delay = 0.9 },
+		{ kind = "tank", count = 4, spacing = 0.95, delay = 1.1 },
+	},
+	[15] = {
+		{ kind = "grunt", count = 52, spacing = 0.22, delay = 0 },
+		{ kind = "tank", count = 5, spacing = 0.9, delay = 0.9 },
+	},
+	[16] = {
+		{ kind = "grunt", count = 60, spacing = 0.2, delay = 0 },
+		{ kind = "tank", count = 4, spacing = 0.9, delay = 1.0 },
+	},
+	[17] = {
+		{ kind = "grunt", count = 42, spacing = 0.21, delay = 0 },
+		{ kind = "tank", count = 5, spacing = 0.85, delay = 0.6 },
+		{ kind = "grunt", count = 28, spacing = 0.2, delay = 1.1 },
+	},
+	[18] = {
+		{ kind = "grunt", count = 64, spacing = 0.2, delay = 0 },
+		{ kind = "tank", count = 5, spacing = 0.85, delay = 0.8 },
+	},
+	[19] = {
+		{ kind = "grunt", count = 48, spacing = 0.2, delay = 0 },
+		{ kind = "tank", count = 6, spacing = 0.8, delay = 0.6 },
+		{ kind = "grunt", count = 32, spacing = 0.19, delay = 1.0 },
+	},
+	[20] = {{ kind = "boss", count = 1, spacing = 0, delay = 0 }},
+}
 
 local function cloneGroups(groups, kindMap)
 	local cloned = {}
@@ -109,12 +189,7 @@ end
 -- durable support specialists while postponing the full specialist mix until
 -- late campaign maps.
 local stageWaves = {
-	[1] = deriveStage(lateWaves, {
-		bulwark = "tank",
-		regenerator = "tank",
-		shieldbearer = "tank",
-		warcaller = "runner",
-	}),
+	[1] = stageOneWaves,
 	[2] = deriveStage(lateWaves, {
 		shieldbearer = "bulwark",
 		warcaller = "regenerator",

@@ -18,9 +18,9 @@ local teachingByMapId = {
 		counterplay = "Anchor Slow where multiple switchback legs overlap, then line up Lancer shots down the bends so slowed packs stay in piercing lanes.",
 	},
 	highpass = {
-		lesson = "Separate durable targets from trash and plan damage-over-time coverage before the exit.",
-		pressure = "Early tank substitutions ask the player to maintain damage on enemies that survive one pass.",
-		counterplay = "Use Cannon to soften clumps, then Poison long straights so high-health targets keep taking damage between towers.",
+		lesson = "Use Cannon splash as the primary answer to dense grunt packs before they overwhelm single-target towers.",
+		pressure = "High Pass sends compact grunt waves with only a few tanks mixed in, making splash placement the main lesson while previewing tougher health profiles.",
+		counterplay = "Place Cannon where bends keep packed grunts inside the blast radius, then look ahead to Poison as the upcoming reward for sustained tank damage.",
 	},
 	roundabout = {
 		lesson = "Cover a central loop from several angles and value chain paths that jump across clustered enemies.",
