@@ -1,7 +1,9 @@
 -- The hand-authored campaign is intentionally a sequence, not a bag of
 -- enemies.  `delay` is the pause before a group begins and `spacing` is the
 -- interval between its members.
-local waves = {
+local CampaignWaveDefs = {}
+
+local lateWaves = {
 	[1] = {{ kind = "grunt", count = 12, spacing = 0.9, delay = 0 }},
 	[2] = {
 		{ kind = "grunt", count = 10, spacing = 0.8, delay = 0 },
@@ -83,4 +85,51 @@ local waves = {
 	[20] = {{ kind = "boss", count = 1, spacing = 0, delay = 0 }},
 }
 
-return waves
+
+local function cloneGroups(groups, kindMap)
+	local cloned = {}
+	for i, group in ipairs(groups) do
+		local copy = {}
+		for key, value in pairs(group) do copy[key] = value end
+		copy.kind = kindMap[copy.kind] or copy.kind
+		cloned[i] = copy
+	end
+	return cloned
+end
+
+local function deriveStage(baseWaves, kindMap)
+	local waves = {}
+	for waveIndex, groups in pairs(baseWaves) do
+		waves[waveIndex] = cloneGroups(groups, kindMap)
+	end
+	return waves
+end
+
+-- Early maps focus on core movement and health profiles only. Mid maps add
+-- durable support specialists while postponing the full specialist mix until
+-- late campaign maps.
+local stageWaves = {
+	[1] = deriveStage(lateWaves, {
+		bulwark = "tank",
+		regenerator = "tank",
+		shieldbearer = "tank",
+		warcaller = "runner",
+	}),
+	[2] = deriveStage(lateWaves, {
+		shieldbearer = "bulwark",
+		warcaller = "regenerator",
+	}),
+	[3] = lateWaves,
+}
+
+function CampaignWaveDefs.get(stage, waveIndex)
+	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
+	if waveIndex > 20 then return nil end
+
+	stage = math.max(1, math.min(3, math.floor(tonumber(stage) or 3)))
+	return stageWaves[stage][waveIndex]
+end
+
+CampaignWaveDefs.stageWaves = stageWaves
+
+return CampaignWaveDefs

@@ -1,6 +1,7 @@
 local maps = {
 	{
 		id = "riverbend",
+		campaignStage = 1,
 		nameKey = "map.riverbend",
 		biome = "default",
 		path = {
@@ -25,6 +26,7 @@ local maps = {
 
 	{
 		id = "switchback",
+		campaignStage = 1,
 		nameKey = "map.switchback",
 		biome = "default",
 		path = {
@@ -38,6 +40,7 @@ local maps = {
 
 	{
 		id = "highpass",
+		campaignStage = 1,
 		nameKey = "map.highpass",
 		biome = "default",
 		path = {
@@ -55,6 +58,7 @@ local maps = {
 
 	{
 		id = "roundabout",
+		campaignStage = 1,
 		nameKey = "map.roundabout",
 		biome = "highlands",
 		path = {
@@ -78,6 +82,7 @@ local maps = {
 
 	{
 		id = "gauntlet",
+		campaignStage = 1,
 		nameKey = "map.gauntlet",
 		biome = "autumn",
 		path = {
@@ -97,6 +102,7 @@ local maps = {
 
 	{
 		id = "snaketrail",
+		campaignStage = 2,
 		nameKey = "map.snaketrail",
 		biome = "default",
 		path = {
@@ -119,6 +125,7 @@ local maps = {
 
 	{
 		id = "backtrack",
+		campaignStage = 2,
 		nameKey = "map.backtrack",
 		biome = "autumn",
 		path = {
@@ -136,6 +143,7 @@ local maps = {
 
 	{
 		id = "lowvalley",
+		campaignStage = 2,
 		nameKey = "map.lowvalley",
 		biome = "drylands",
 		path = {
@@ -158,6 +166,7 @@ local maps = {
 
 	{
 		id = "circuit",
+		campaignStage = 2,
 		nameKey = "map.circuit",
 		biome = "default",
 		path = {
@@ -179,6 +188,7 @@ local maps = {
 
 	{
 		id = "outerloop",
+		campaignStage = 2,
 		nameKey = "map.outerloop",
 		biome = "drylands",
 		path = {
@@ -197,6 +207,7 @@ local maps = {
 
 	{
 		id = "terrace",
+		campaignStage = 3,
 		nameKey = "map.terrace",
 		biome = "winter",
 		path = {
@@ -223,6 +234,7 @@ local maps = {
 
 	{
 		id = "highridge",
+		campaignStage = 3,
 		nameKey = "map.highridge",
 		biome = "default",
 		path = {
@@ -237,6 +249,7 @@ local maps = {
 
 	{
 		id = "crossflow",
+		campaignStage = 3,
 		nameKey = "map.crossflow",
 		biome = "winter",
 		path = {
@@ -258,6 +271,7 @@ local maps = {
 
 	{
 		id = "steppingstones",
+		campaignStage = 3,
 		nameKey = "map.steppingstones",
 		biome = "autumn",
 		path = {
@@ -279,6 +293,7 @@ local maps = {
 
 	{
 		id = "twinloop",
+		campaignStage = 3,
 		nameKey = "map.twinloop",
 		biome = "winter",
 		path = {
