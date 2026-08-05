@@ -466,30 +466,99 @@ add("beam_conversion", {
 -- TOWER SPECIALIZATIONS
 -- =========================
 
-local function addSpec(id, nameKey, descKey, behaviors, targetMode)
-	local function cloneBehaviors()
-		local out = {}
+local function cloneBehavior(src)
+	local copy = {id = src.id}
 
-		for i = 1, #behaviors do
-			local src = behaviors[i]
-			local copy = {id = src.id}
+	if src.noInherit then
+		copy.noInherit = true
+	end
 
-			if src.noInherit then
-				copy.noInherit = true
-			end
-
-			if src.data then
-				local data = {}
-				for k, v in pairs(src.data) do
-					data[k] = v
-				end
-				copy.data = data
-			end
-
-			out[#out + 1] = copy
+	if src.data then
+		local data = {}
+		for k, v in pairs(src.data) do
+			data[k] = v
 		end
+		copy.data = data
+	end
 
-		return out
+	if src.hooks then
+		local hooks = {}
+		for i = 1, #src.hooks do
+			hooks[i] = src.hooks[i]
+		end
+		copy.hooks = hooks
+	end
+
+	return copy
+end
+
+local function cloneBehaviors(behaviors)
+	local out = {}
+
+	for i = 1, #behaviors do
+		out[#out + 1] = cloneBehavior(behaviors[i])
+	end
+
+	return out
+end
+
+local function copyBehaviorFields(target, source)
+	target.noInherit = source.noInherit or nil
+	target.hooks = nil
+
+	if source.hooks then
+		target.hooks = {}
+		for i = 1, #source.hooks do
+			target.hooks[i] = source.hooks[i]
+		end
+	end
+
+	if source.data then
+		target.data = target.data or {}
+		for k in pairs(target.data) do
+			target.data[k] = nil
+		end
+		for k, v in pairs(source.data) do
+			target.data[k] = v
+		end
+	else
+		target.data = nil
+	end
+end
+
+local function behaviorRole(id)
+	if id == "move_homing" or id == "move_linear" or id == "move_boomerang" or id == "move_wave" or id == "move_spiral" or id == "move_orbit" or id == "move_suspend" then
+		return "movement"
+	end
+	if id == "hit_circle" or id == "hit_line" or id == "instant_hit" or id == "emit_on_target" then
+		return "hit"
+	end
+	if id == "hit_damage" or id == "aoe_damage" or id == "tick_damage" or id == "hit_chain" then
+		return "damage"
+	end
+	if id:sub(1, 5) == "draw_" then
+		return "draw"
+	end
+	if id == "chain_zap_fx" or id == "lancer_hit_fx" then
+		return "impact_fx"
+	end
+	return nil
+end
+
+local function addSpec(id, nameKey, descKey, behaviors, targetMode)
+	local operations = {}
+
+	if targetMode then
+		operations[#operations + 1] = {op = "setTargetMode", mode = targetMode}
+	end
+
+	for i = 1, #behaviors do
+		local behavior = cloneBehavior(behaviors[i])
+		operations[#operations + 1] = {
+			op = "addOrModify",
+			behavior = behavior,
+			role = behaviorRole(behavior.id),
+		}
 	end
 
 	add(id, {
@@ -497,10 +566,37 @@ local function addSpec(id, nameKey, descKey, behaviors, targetMode)
 		descKey = descKey,
 		category = "special",
 		targetMode = targetMode,
-		behaviors = cloneBehaviors(),
+		behaviors = cloneBehaviors(behaviors),
+		branchOps = operations,
 
 		apply = function(ctx)
-			ctx.behaviors = cloneBehaviors()
+			for i = 1, #operations do
+				local op = operations[i]
+
+				if op.op == "setTargetMode" then
+					ctx:setTargetMode(op.mode)
+				elseif op.op == "add" then
+					ctx:addBehavior(cloneBehavior(op.behavior))
+				elseif op.op == "modify" then
+					ctx:modifyBehavior(op.id or op.behavior.id, function(data, behavior)
+						copyBehaviorFields(behavior, op.behavior)
+					end)
+				elseif op.op == "replaceById" then
+					ctx:replaceBehavior(op.id, cloneBehavior(op.behavior))
+				elseif op.op == "addOrModify" then
+					local updated = ctx:modifyBehavior(op.behavior.id, function(data, behavior)
+						copyBehaviorFields(behavior, op.behavior)
+					end)
+
+					if not updated and op.role then
+						updated = ctx:replaceBehaviorByRole(op.role, cloneBehavior(op.behavior))
+					end
+
+					if not updated then
+						ctx:addBehavior(cloneBehavior(op.behavior))
+					end
+				end
+			end
 		end
 	})
 end
