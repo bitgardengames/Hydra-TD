@@ -78,9 +78,9 @@ local teachingByMapId = {
 		counterplay = "Assign Frost Nova to hold enemies in one pocket and Meteor to burst a pack threatening another, then alternate their cooldowns so both pockets are protected.",
 	},
 	twinloop = {
-		lesson = "Synthesize every counter into a final route that revisits itself and changes threat direction mid-map.",
-		pressure = "Full specialist mixes and boss pressure test runners, tanks, bulwarks, regenerators, warcallers, and shieldbearers together.",
-		counterplay = "Use optional endless variants to practice specialized loadouts: Shock for shields, Poison for regen, Plasma for priority, Slow/Frost Nova for leaks.",
+		lesson = "Complete the final synthesis map by combining all towers and enhanced abilities; Twin Loop introduces no new teaching systems.",
+		pressure = "Every enemy role appears in full specialist mixes and boss pressure, testing the complete campaign arsenal on a route that revisits itself and changes threat direction.",
+		counterplay = "Coordinate Lancer, Slow, Cannon, Poison, Shock, and Plasma with enhanced Meteor and Frost Nova to apply every previously learned counter where the loops overlap.",
 	},
 }
 
