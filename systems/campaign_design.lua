@@ -13,9 +13,9 @@ local teachingByMapId = {
 		counterplay = "Use Lancer on long lanes and Slow near overlapping corners to turn bends into shared damage windows.",
 	},
 	switchback = {
-		lesson = "Recognize switchbacks as splash chokepoints and time area damage around compact packs.",
-		pressure = "Dense grunt groups bunch up through repeated turns and punish single-target-only builds.",
-		counterplay = "Anchor Slow at the middle return and add Cannon splash where two switchback legs fit in range.",
+		lesson = "Use switchback bends to make Slow multiply Lancer damage as enemies linger through repeated long-lane shots.",
+		pressure = "Dense grunt groups stretch across the repeated turns and punish Lancers that fire without enough control time.",
+		counterplay = "Anchor Slow where multiple switchback legs overlap, then line up Lancer shots down the bends so slowed packs stay in piercing lanes.",
 	},
 	highpass = {
 		lesson = "Separate durable targets from trash and plan damage-over-time coverage before the exit.",
