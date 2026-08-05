@@ -63,9 +63,9 @@ local teachingByMapId = {
 		counterplay = "Focus Warcallers first, using Plasma as the premium sustained-damage option while Slow keeps each priority target in range.",
 	},
 	highridge = {
-		lesson = "Counter shields with deliberate priority rather than letting towers waste shots into protected followers.",
-		pressure = "Shieldbearers create defensive formations on dry terrain with fewer natural stall pockets.",
-		counterplay = "Enable shield-priority targeting, break the carrier with Shock chains or Plasma focus, then let Cannon clean exposed followers.",
+		lesson = "Use Shock and burst-focused attacks to break shields quickly instead of wasting sustained fire on an intact barrier.",
+		pressure = "The first Shieldbearers create defensive formations that reward chained shocks and concentrated burst damage before protected enemies leave the kill zone.",
+		counterplay = "Focus Shock chains and heavy Cannon bursts on each barrier, then clean up the exposed formation once the shield breaks.",
 	},
 	crossflow = {
 		lesson = "Exploit crossing lanes where projectile chains and forked hits can solve multiple fronts at once.",

@@ -247,6 +247,7 @@ local maps = {
 		id = "highridge",
 		campaignStage = 3,
 		nameKey = "map.highridge",
+		-- High Ridge is the campaign's first Shieldbearer encounter.
 		introducesEnemies = {"shieldbearer"},
 		biome = "default",
 		path = {
