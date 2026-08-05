@@ -2,9 +2,11 @@ local State = require("core.state")
 local Util = require("core.util")
 local Towers = require("world.towers")
 local Modules = require("systems.modules")
+local Sound = require("systems.sound")
 local ModulePicker = require("ui.module_picker")
 local Hotkeys = require("core.hotkeys")
 local Tooltip = require("ui.tooltip")
+local Floaters = require("ui.floaters")
 local Text = require("ui.text")
 local Theme = require("core.theme")
 local L = require("core.localization")
@@ -64,6 +66,20 @@ local innerRadius = baseRadius - outlineW * 0.25
 local outerSmallRadius = 6 + outlineW * 0.5
 local innerSmallRadius = 6 - outlineW * 0.25
 
+local inspectButtons
+
+local function showUpgradeFailure(t, messageKey)
+	Sound.play("uiError")
+
+	local upgradeBtn = inspectButtons[1]
+	if upgradeBtn and upgradeBtn.anim then
+		upgradeBtn.anim.errorT = 1
+	end
+
+	local floaterY = (t.renderY or t.y) - 30
+	Floaters.add(t.x, floaterY, L(messageKey), colorBad[1], colorBad[2], colorBad[3], true)
+end
+
 local function drawHotkeyVisual(action, x, y, textY)
 	local label = Hotkeys.getDisplay(action)
 
@@ -78,7 +94,7 @@ local function drawHotkeyVisual(action, x, y, textY)
 end
 
 -- Buttons
-local inspectButtons = {
+inspectButtons = {
 	{
 		id = "upgrade",
 		x = 0,
@@ -88,7 +104,7 @@ local inspectButtons = {
 		canAfford = false,
 		cost = nil,
 		value = nil,
-		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0},
+		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0, errorT = 0},
 		onClick = function()
 			local t = State.selectedTower
 
@@ -102,7 +118,7 @@ local inspectButtons = {
 			if upgradeCost and State.money >= upgradeCost then
 				ModulePicker.openTowerUpgrade(t)
 			else
-				-- optional error sound / floater
+				showUpgradeFailure(t, upgradeCost and "floater.needMoney" or "floater.maxLevel")
 			end
 		end,
 	},
@@ -116,7 +132,7 @@ local inspectButtons = {
 		canAfford = true,
 		cost = nil,
 		value = nil,
-		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0},
+		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0, errorT = 0},
 		onClick = function()
 			local t = State.selectedTower
 
@@ -286,6 +302,10 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		-- Draw buttons
 		for _, btn in ipairs(inspectButtons) do
 			local bx, by = btn.x, btn.y
+			if btn.anim and btn.anim.errorT and btn.anim.errorT > 0 then
+				local shake = ((floor(btn.anim.errorT * 24) % 2 == 0) and 1 or -1) * 3 * btn.anim.errorT
+				bx = bx + shake
+			end
 			local bw, bh = btn.w, btn.h
 
 			local hovered = mx >= bx and mx <= bx + bw and my >= by and my <= by + bh
@@ -313,6 +333,10 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			end
 
 			-- press animation
+			if anim.errorT and anim.errorT > 0 then
+				anim.errorT = max(0, anim.errorT - dt * 4)
+			end
+
 			if anim.pressed then
 				anim.pressT = min(1, anim.pressT + dt * 20)
 			else
@@ -334,6 +358,13 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			if not btn.canAfford then
 				faceR, faceG, faceB = cd1, cd2, cd3
+			end
+
+			if anim.errorT and anim.errorT > 0 then
+				local errorPulse = anim.errorT * anim.errorT
+				faceR = faceR + (colorBad[1] - faceR) * errorPulse
+				faceG = faceG + (colorBad[2] - faceG) * errorPulse
+				faceB = faceB + (colorBad[3] - faceB) * errorPulse
 			end
 
 			-- Base

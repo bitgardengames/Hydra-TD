@@ -330,10 +330,14 @@ local function addTower(kind, gx, gy)
 end
 
 local function getUpgradeCost(tower)
-    local base = tower.def.cost
-    local exp = 1.55
+	if not tower or not TowerBranchDefs.getChoices(tower.kind, (tower.level or 1) + 1) then
+		return nil
+	end
 
-    return floor(base * (exp ^ tower.level) + 0.5)
+	local base = tower.def.cost
+	local exp = 1.55
+
+	return floor(base * (exp ^ tower.level) + 0.5)
 end
 
 local function upgradeTower(t, specializationId)
@@ -346,6 +350,10 @@ local function upgradeTower(t, specializationId)
 	end
 
 	local cost = getUpgradeCost(t)
+
+	if not cost then
+		return false, "max_level"
+	end
 
 	if State.money < cost then
 		return false, "money"
