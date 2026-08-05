@@ -72,7 +72,7 @@ return {
 		cost = 60,
 		range = 3.55 * Constants.TILE,
 		fireRate = 1.35,
-		damage = 3,
+		damage = 2,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 16,
 		projSpeed = 360,
@@ -91,7 +91,7 @@ return {
 			{id = "move_homing"},
 			{id = "hit_circle", data = {radius = 12}},
 			{id = "hit_damage"},
-			{id = "apply_poison", data = {dps = 5, dur = 3.2, maxStacks = 8}},
+			{id = "apply_poison", data = {dps = 4, dur = 4.5, maxStacks = 8}},
 			{id = "draw_poison"}
 		}
 	},

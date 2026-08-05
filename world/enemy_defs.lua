@@ -44,6 +44,7 @@ return {
 		descriptionKey = "enemy.regeneratorDescription",
 		hp = 76 * mult, speed = 53, reward = 12, score = 28, radius = 12,
 		regeneration = { hpPerSecond = 5 * mult, delay = 1.25 },
+		modifiers = { poison = 1.25 },
 		traits = {"regenerates"},
 	},
 
