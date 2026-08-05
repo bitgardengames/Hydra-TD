@@ -9,6 +9,7 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 
 local requiredMapByTower = {
 	lancer = 1,
+	slow = 1,
 }
 
 for mapIndex, map in ipairs(Maps) do

@@ -5,7 +5,6 @@ local maps = {
 		campaignStage = 1,
 		nameKey = "map.riverbend",
 		introducesEnemies = {"grunt"},
-		rewardTowers = {"slow"},
 		biome = "default",
 		path = {
 			{5, 7}, {13, 7},
