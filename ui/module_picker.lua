@@ -165,11 +165,14 @@ function ModulePicker.openApplyOwned(tower)
 	local inventory = Modules.getInventory()
 	local choices = {}
 	for moduleId, count in pairs(inventory) do
-		if count > 0 and Modules.canApplyToTower(moduleId, tower) then
+		if count > 0 then
+			local status = Modules.getApplyStatus(moduleId, tower)
 			choices[#choices + 1] = {
 				moduleId = moduleId,
 				target = tower.kind,
 				count = count,
+				disabled = not status.ok,
+				statusText = status.message,
 			}
 		end
 	end
@@ -230,6 +233,10 @@ function ModulePicker.choose(index)
 	local choice = picker.choices and picker.choices[index]
 
 	if not choice then
+		return false
+	end
+
+	if choice.disabled then
 		return false
 	end
 
@@ -335,7 +342,7 @@ function ModulePicker.draw()
 		local choice = choices[i]
 		local mod = Modules.getDef(choice.moduleId)
 		local c = cards[i]
-		local towerColor = Theme.tower[choice.target or (picker.tower and picker.tower.kind)] or text
+		local towerColor = choice.disabled and {0.45, 0.45, 0.45} or (Theme.tower[choice.target or (picker.tower and picker.tower.kind)] or text)
 
 		local intro = easeOutBack((now - openedAt - c.delay) * 6.0)
 		local alpha = Util.clamp((now - openedAt - c.delay) * 5.0, 0, 1)
@@ -382,15 +389,20 @@ function ModulePicker.draw()
 			lg.printf(getModuleName(mod), panelX + 8, titleY, panelW - 42, "left")
 
 			Fonts.set("ui")
-			lg.setColor(1, 1, 1, 0.84 * alpha)
+			lg.setColor(1, 1, 1, choice.disabled and 0.46 * alpha or 0.84 * alpha)
 			lg.printf(getModuleDesc(mod), drawX + 18, bodyY + 56, drawW - 36, "left")
+
+			if choice.statusText then
+				lg.setColor(choice.disabled and 1 or towerColor[1], choice.disabled and 0.5 or towerColor[2], choice.disabled and 0.35 or towerColor[3], 0.86 * alpha)
+				lg.printf(choice.statusText, drawX + 18, drawY + drawH - 54, drawW - 36, "left")
+			end
 
 			if hovered then
 				local pulse = 0.5 + 0.5 * math.sin(now * 8 + i)
 				lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.14 + 0.08 * pulse) * alpha)
 				lg.rectangle("line", drawX - 2, drawY - 2, drawW + 4, drawH + 4, innerRadius + 2, innerRadius + 2)
 
-				local cta = picker.mode == "tower_upgrade" and L("modulePicker.selectCta") or (picker.mode == "apply_module" and L("modulePicker.applyCta") or (picker.mode == "purchase_module" and L("modulePicker.purchaseCta") or "Click to Claim"))
+				local cta = choice.disabled and (choice.statusText or "Unavailable") or (picker.mode == "tower_upgrade" and L("modulePicker.selectCta") or (picker.mode == "apply_module" and L("modulePicker.applyCta") or (picker.mode == "purchase_module" and L("modulePicker.purchaseCta") or "Click to Claim")))
 				lg.setColor(1, 1, 1, (0.72 + 0.20 * pulse) * alpha)
 				Fonts.set("ui")
 				lg.printf(cta, drawX + 18, drawY + drawH - 30, drawW - 36, "right")

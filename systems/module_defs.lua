@@ -28,8 +28,65 @@ local Targeting = require("world.targeting")
 --]]
 
 -- helper for cleaner modules
-local function add(id, def)
+local function appendUnique(list, value)
+	for i = 1, #list do
+		if list[i] == value then
+			return
+		end
+	end
+
+	list[#list + 1] = value
+end
+
+local towerKinds = { "slow", "lancer", "poison", "cannon", "shock", "plasma" }
+
+local function inferTowerKind(id)
+	for i = 1, #towerKinds do
+		local kind = towerKinds[i]
+		if id == kind or id:sub(1, #kind + 1) == kind .. "_" then
+			return kind
+		end
+	end
+
+	return nil
+end
+
+local function normalizeMetadata(id, def)
 	def.id = id
+	def.slot = def.slot or def.category or "utility"
+	def.tags = def.tags or {}
+
+	appendUnique(def.tags, def.category or def.slot)
+
+	if def.category == "movement" then
+		def.exclusiveGroup = def.exclusiveGroup or "movement_conversion"
+		def.conflictsWith = def.conflictsWith or { "output_conversion" }
+		appendUnique(def.tags, "movement")
+	elseif id == "beam_conversion" then
+		def.slot = "output"
+		def.exclusiveGroup = def.exclusiveGroup or "output_conversion"
+		def.conflictsWith = def.conflictsWith or { "movement_conversion" }
+		appendUnique(def.tags, "beam")
+		appendUnique(def.tags, "output")
+	elseif def.targetMode then
+		def.slot = "targeting"
+		def.exclusiveGroup = def.exclusiveGroup or "target_mode"
+		appendUnique(def.tags, "targeting")
+	elseif def.behaviors then
+		def.slot = "identity"
+		def.exclusiveGroup = def.exclusiveGroup or "tower_identity"
+		def.requiresTowerKind = def.requiresTowerKind or inferTowerKind(id)
+		appendUnique(def.tags, "tower_identity")
+	end
+
+	if not def.stackLimit then
+		def.stackLimit = def.exclusiveGroup and 1 or nil
+	end
+end
+
+-- helper for cleaner modules
+local function add(id, def)
+	normalizeMetadata(id, def)
 	ModuleDefs[id] = def
 end
 
@@ -565,6 +622,11 @@ local function addSpec(id, nameKey, descKey, behaviors, targetMode)
 		nameKey = nameKey,
 		descKey = descKey,
 		category = "special",
+		slot = targetMode and "targeting" or "identity",
+		tags = targetMode and { "targeting", "tower_identity" } or { "tower_identity" },
+		exclusiveGroup = targetMode and "target_mode" or "tower_identity",
+		stackLimit = 1,
+		requiresTowerKind = inferTowerKind(id),
 		targetMode = targetMode,
 		behaviors = cloneBehaviors(behaviors),
 		branchOps = operations,
