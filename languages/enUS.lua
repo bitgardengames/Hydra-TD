@@ -150,6 +150,7 @@ return {
 	},
 
 	towerUnlock = {
+		locked = "Unlock through campaign progress.",
 		lockedUntil = "Unlocked after clearing Map %d.",
 	},
 

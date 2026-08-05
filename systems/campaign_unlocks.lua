@@ -5,6 +5,8 @@ local Maps = require("world.map_defs")
 
 local CampaignUnlocks = {}
 
+local UNKNOWN_REQUIRED_MAP = math.huge
+
 local requiredMapByTower = {
 	lancer = 1,
 }
@@ -26,7 +28,7 @@ local function getProgressIndex()
 end
 
 function CampaignUnlocks.getRequiredMap(kind)
-	return requiredMapByTower[kind] or 1
+	return requiredMapByTower[kind] or UNKNOWN_REQUIRED_MAP
 end
 
 function CampaignUnlocks.isTowerUnlocked(kind)
@@ -63,7 +65,9 @@ end
 function CampaignUnlocks.getLockMessage(kind)
 	local requiredMap = CampaignUnlocks.getRequiredMap(kind)
 
-	if requiredMap <= 1 then
+	if requiredMap == UNKNOWN_REQUIRED_MAP then
+		return L("towerUnlock.locked")
+	elseif requiredMap <= 1 then
 		return nil
 	end
 
