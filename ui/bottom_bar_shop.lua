@@ -141,7 +141,7 @@ local IDLE_LIFT = 6
 local totalRowWidth = SHOP_BTN_W * SHOP_COLS + GAP_X * (SHOP_COLS - 1)
 
 function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
-	local towerList = CampaignUnlocks.getUnlockedTowers(State.worldMapIndex or State.mapIndex)
+	local towerList = CampaignUnlocks.getUnlockedTowers()
 	local totalRows = math.ceil(#towerList / SHOP_COLS)
 	local totalHeight = totalRows * SHOP_BTN_H + (totalRows - 1) * GAP_Y
 

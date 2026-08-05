@@ -1,4 +1,5 @@
 local Constants = require("core.constants")
+local Save = require("core.save")
 local L = require("core.localization")
 
 local CampaignUnlocks = {}
@@ -12,24 +13,42 @@ local requiredMapByTower = {
 	plasma = 6,
 }
 
-local function normalizeMapIndex(mapIndex)
-	return math.max(1, tonumber(mapIndex) or 1)
+local function normalizeProgressIndex(progressIndex)
+	return math.max(1, tonumber(progressIndex) or 1)
+end
+
+local function getProgressIndex()
+	return normalizeProgressIndex(Save.data and Save.data.furthestIndex)
 end
 
 function CampaignUnlocks.getRequiredMap(kind)
 	return requiredMapByTower[kind] or 1
 end
 
-function CampaignUnlocks.isTowerUnlocked(kind, mapIndex)
-	return normalizeMapIndex(mapIndex) >= CampaignUnlocks.getRequiredMap(kind)
+function CampaignUnlocks.isTowerUnlocked(kind)
+	return getProgressIndex() >= CampaignUnlocks.getRequiredMap(kind)
 end
 
-function CampaignUnlocks.getUnlockedTowers(mapIndex)
+function CampaignUnlocks.getUnlockedTowers()
 	local unlocked = {}
-	local normalizedMapIndex = normalizeMapIndex(mapIndex)
 
 	for _, kind in ipairs(Constants.TOWER_LIST) do
-		if CampaignUnlocks.isTowerUnlocked(kind, normalizedMapIndex) then
+		if CampaignUnlocks.isTowerUnlocked(kind) then
+			unlocked[#unlocked + 1] = kind
+		end
+	end
+
+	return unlocked
+end
+
+function CampaignUnlocks.getNewlyUnlockedTowers(previousProgressIndex, nextProgressIndex)
+	local unlocked = {}
+	local previous = normalizeProgressIndex(previousProgressIndex)
+	local nextIndex = normalizeProgressIndex(nextProgressIndex)
+
+	for _, kind in ipairs(Constants.TOWER_LIST) do
+		local requiredMap = CampaignUnlocks.getRequiredMap(kind)
+		if requiredMap > previous and requiredMap <= nextIndex then
 			unlocked[#unlocked + 1] = kind
 		end
 	end

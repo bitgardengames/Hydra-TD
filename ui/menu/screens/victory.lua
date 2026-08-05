@@ -199,6 +199,11 @@ local function buildStats()
 	RunStats.captureLoadout(Modules.active, State.selectedContracts or State.contracts)
 	local summary = RunStats.summarize(State.money, State.score)
 	State.runSummary = summary
+	local rewardNames = {}
+	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
+		rewardNames[#rewardNames + 1] = L("tower." .. kind)
+	end
+
 	stats = {
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
 		{ label = "Run leaders", value = string.format("MVP %s  •  Leak %s (%d)  •  Damage %s", summary.mvp, summary.leak, summary.leakCount, summary.damageType) },
@@ -206,6 +211,10 @@ local function buildStats()
 		{ label = "Modules / contracts", value = (summary.modules ~= "" and summary.modules or "none") .. "  /  " .. (summary.contracts ~= "" and summary.contracts or "none") },
 		{ label = "Coach / share", value = summary.observation .. "  •  [C] Copy build code" },
 	}
+
+	if #rewardNames > 0 then
+		table.insert(stats, 2, { label = L("victory.newTowerReward"), value = table.concat(rewardNames, "  •  ") })
+	end
 end
 
 local function resetConfetti()
