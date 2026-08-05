@@ -160,13 +160,6 @@ local function mousepressed(x, y, button)
 		local shopButton = handlePanelButtons(BottomBar.getShopButtons, x, y, true)
 
 		if shopButton then
-			if shopButton.canAfford and beginTowerPlacement(shopButton.kind) then
-				Onboarding.event("attempting_placement")
-				Sound.play("uiConfirm")
-			else
-				Sound.play("uiBack")
-			end
-
 			return
 		end
 
