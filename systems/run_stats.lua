@@ -1,8 +1,6 @@
 local RunStats = {}
-local State = require("core.state")
-
 local function ignored()
-	return State.sandboxRun == true
+	return false
 end
 
 local function sortedKeys(t)

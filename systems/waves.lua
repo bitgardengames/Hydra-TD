@@ -315,9 +315,6 @@ end
 
 -- Wave start
 function Waves.startWave()
-	if State.sandboxRun then
-		return false
-	end
 	if not Onboarding.canStartWave() then return false end
 	local tutorialWave = Onboarding.isTutorialWave()
 	Onboarding.event("wave_started")
@@ -385,29 +382,6 @@ function Waves.startWave()
 
 	beginSpawner(kind, count, gap, hpMult, spdMult, wave.composition, wave.groups)
 	return true
-end
-
--- Sandbox uses the regular queued spawner, including affix application and
--- active-enemy backpressure.  Unit construction remains owned by Enemies.
-function Waves.startSandboxWave(config)
-	if not State.sandboxRun or not config or not EnemyDefs[config.enemy] then return false end
-	local count = max(1, math.floor(tonumber(config.count) or 1))
-	local hpMult = max(0.05, tonumber(config.hpMultiplier) or 1)
-	local affixes = {}
-	if config.affix and EnemyAffixDefs[config.affix]
-		and EnemyAffixDefs.isEligible(config.affix, EnemyDefs[config.enemy], {}) then
-		affixes[1] = config.affix
-	end
-	local composition = {}
-	for i = 1, count do composition[i] = {kind = config.enemy, affixes = affixes} end
-	beginSpawner(config.enemy, count, 0.35, hpMult, 1, composition)
-	return true
-end
-
-function Waves.stopSandboxWave()
-	if not State.sandboxRun then return end
-	Waves.resetSpawner()
-	State.inPrep = true
 end
 
 -- Spawning update
