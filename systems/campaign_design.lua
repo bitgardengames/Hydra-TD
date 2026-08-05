@@ -58,9 +58,9 @@ local teachingByMapId = {
 		counterplay = "Use active abilities to contain runner leaks, Strongest targeting to focus tanks and Bulwarks, and Weakest targeting to finish Regenerators before they recover.",
 	},
 	terrace = {
-		lesson = "Identify support enemies quickly and remove them before their aura value compounds.",
-		pressure = "Warcallers introduce support-role pressure by accelerating or enabling nearby waves.",
-		counterplay = "Use codex information to spot support roles, then assign priority fire from Lancer/Plasma while Slow holds the pack in range.",
+		lesson = "Prioritize support enemies and eliminate them before their aura value compounds across the wave.",
+		pressure = "Warcallers accelerate nearby enemies, making each delayed support kill increase the pressure from the pack around it.",
+		counterplay = "Focus Warcallers first, using Plasma as the premium sustained-damage option while Slow keeps each priority target in range.",
 	},
 	highridge = {
 		lesson = "Counter shields with deliberate priority rather than letting towers waste shots into protected followers.",
