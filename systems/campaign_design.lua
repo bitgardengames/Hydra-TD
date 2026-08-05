@@ -23,9 +23,9 @@ local teachingByMapId = {
 		counterplay = "Place Cannon where bends keep packed grunts inside the blast radius, then look ahead to Poison as the upcoming reward for sustained tank damage.",
 	},
 	roundabout = {
-		lesson = "Cover a central loop from several angles and value chain paths that jump across clustered enemies.",
-		pressure = "Roundabout traffic and first boss-add pressure create simultaneous front and back threats.",
-		counterplay = "Place Shock near the pond-side convergence and retarget Lancer/Cannon to keep adds from slipping through.",
+		lesson = "Keep sustained damage ticking around the central loop by maintaining Poison uptime on durable enemies.",
+		pressure = "Roundabout traffic and first boss-add pressure stretch poison coverage across simultaneous front and back threats.",
+		counterplay = "Place Poison where the loop repeatedly re-enters range, then use Slow and Lancer/Cannon retargeting to keep poisoned enemies under fire until the damage-over-time finishes them.",
 	},
 	gauntlet = {
 		lesson = "Build layered kill boxes for mixed armor and speed instead of relying on one choke.",
