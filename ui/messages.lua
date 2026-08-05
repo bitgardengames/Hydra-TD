@@ -1,4 +1,5 @@
 local Constants = require("core.constants")
+local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local Text = require("ui.text")
 
@@ -16,15 +17,40 @@ local X = 36
 local PADDING_X = 8
 local PADDING_Y = 4
 local GAP = 4
+local TIP_MARGIN = 24
+local TIP_PADDING_X = 12
+local TIP_PADDING_Y = 8
+local TIP_GAP = 10
+local TIP_DISMISS_PADDING_X = 10
+local TIP_DISMISS_PADDING_Y = 4
 
 local list = {}
 local activeTip = nil
 local tipRect = nil
+local tipDismissRect = nil
+local tipDismissPressed = false
+local tipDismissHovered = false
 
 local function getBaseY()
 	local _, sh = lg.getDimensions()
 
 	return sh - Constants.UI_H - 56
+end
+
+local function pointInRect(px, py, rect)
+	return rect and px >= rect.x and px <= rect.x + rect.w and py >= rect.y and py <= rect.y + rect.h
+end
+
+local function setColor(color, alpha)
+	lg.setColor(color[1], color[2], color[3], alpha or color[4] or 1)
+end
+
+local function clearTipState()
+	activeTip = nil
+	tipRect = nil
+	tipDismissRect = nil
+	tipDismissPressed = false
+	tipDismissHovered = false
 end
 
 local function removeAt(index)
@@ -74,8 +100,7 @@ end
 
 function Messages.clearTip(id)
 	if activeTip and (not id or activeTip.id == id) then
-		activeTip = nil
-		tipRect = nil
+		clearTipState()
 	end
 end
 
@@ -148,32 +173,78 @@ function Messages.draw()
 
 	if activeTip then
 		local sw = lg.getWidth()
-		local font = lg.getFont()
-		local label = activeTip.text .. "   " .. activeTip.dismissText
-		local w = math.min(sw - 48, font:getWidth(label) + 28)
-		local h = font:getHeight() + 16
+		local message = activeTip.text
+		local dismissText = activeTip.dismissText
+		local messageW = font:getWidth(message)
+		local dismissW = font:getWidth(dismissText) + TIP_DISMISS_PADDING_X * 2
+		local textAreaW = math.min(messageW, sw - TIP_MARGIN * 2 - TIP_PADDING_X * 2 - TIP_GAP - dismissW)
+		local w = math.min(sw - TIP_MARGIN * 2, textAreaW + TIP_GAP + dismissW + TIP_PADDING_X * 2)
+		local h = font:getHeight() + TIP_PADDING_Y * 2
 		local x = (sw - w) * 0.5
 		local y = 24
+		local dismissH = font:getHeight() + TIP_DISMISS_PADDING_Y * 2
+		local dismissX = x + w - TIP_PADDING_X - dismissW
+		local dismissY = y + (h - dismissH) * 0.5
 		tipRect = {x = x, y = y, w = w, h = h}
+		tipDismissRect = {x = dismissX, y = dismissY, w = dismissW, h = dismissH}
+
+		local mx, my = love.mouse.getPosition()
+		local dismissHovered = pointInRect(mx, my, tipDismissRect)
+		if dismissHovered and not tipDismissHovered then
+			Sound.play("uiMove")
+		end
+		tipDismissHovered = dismissHovered
+
 		lg.setColor(0.10, 0.11, 0.15, 0.94)
 		lg.rectangle("fill", x, y, w, h, 8)
-		lg.setColor(1, 1, 1, 1)
-		Text.printfShadow(label, x + 10, y + 8, w - 20, "center")
+		setColor(Theme.outline.color, 0.85)
+		lg.rectangle("line", x, y, w, h, 8)
+
+		local lift = (tipDismissHovered and not tipDismissPressed) and 2 or 0
+		local chipY = dismissY - lift
+		setColor(tipDismissHovered and Theme.ui.buttonHover or Theme.ui.button, 1)
+		lg.rectangle("fill", dismissX, chipY, dismissW, dismissH, 6)
+		setColor(tipDismissHovered and Theme.ui.selected or Theme.outline.color, 1)
+		lg.rectangle("line", dismissX, chipY, dismissW, dismissH, 6)
+
+		setColor(Theme.ui.text, 1)
+		Text.printfShadow(message, x + TIP_PADDING_X, y + TIP_PADDING_Y, textAreaW, "left")
+		Text.printfShadow(dismissText, dismissX, chipY + TIP_DISMISS_PADDING_Y, dismissW, "center")
 	end
 end
 
 function Messages.mousepressed(x, y, button)
-	if button ~= 1 or not activeTip or not tipRect then
+	if button ~= 1 or not activeTip or not tipDismissRect then
 		return false
 	end
-	if x >= tipRect.x and x <= tipRect.x + tipRect.w and y >= tipRect.y and y <= tipRect.y + tipRect.h then
-		local callback = activeTip.onDismiss
-		activeTip = nil
-		tipRect = nil
-		if callback then callback() end
+
+	if pointInRect(x, y, tipDismissRect) then
+		tipDismissPressed = true
+
 		return true
 	end
-	return false
+
+	return pointInRect(x, y, tipRect)
+end
+
+function Messages.mousereleased(x, y, button)
+	if button ~= 1 or not activeTip then
+		return false
+	end
+
+	local wasPressed = tipDismissPressed
+	tipDismissPressed = false
+
+	if wasPressed and pointInRect(x, y, tipDismissRect) then
+		local callback = activeTip.onDismiss
+		clearTipState()
+		Sound.play("uiConfirm")
+		if callback then callback() end
+
+		return true
+	end
+
+	return pointInRect(x, y, tipRect)
 end
 
 return Messages

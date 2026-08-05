@@ -500,6 +500,10 @@ function love.mousereleased(x, y, button)
 		return
 	end
 
+	if Messages.mousereleased(x, y, button) then
+		return
+	end
+
 	Input.mousereleased(x, y, button)
 end
 
