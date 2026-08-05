@@ -14,6 +14,9 @@ local Save = require("core.save")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local RunStats = require("systems.run_stats")
+local TowerDefs = require("world.tower_defs")
+local AbilityDefs = require("systems.ability_defs")
+local DrawEntities = require("render.draw_entities")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -26,6 +29,7 @@ local max = math.max
 local format = string.format
 local sin = math.sin
 local random = love.math.random
+local cos = math.cos
 
 local Screen = {}
 local selectedHeadline = nil
@@ -40,6 +44,8 @@ local t = 0
 local panelT = 0
 local recapScroll = 0
 local layout = nil
+local rewardCardT = 0
+local rewardCards = {}
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -61,6 +67,9 @@ local paddingY = 30
 local btnW = 240
 local btnH = 42
 local panelW = 560
+local rewardCardW = 420
+local rewardCardH = 176
+local rewardInputDelay = 1.25
 
 local statsGap = 12
 local statH = 44
@@ -76,6 +85,128 @@ local confettiColors = {
 	Theme.medal.gold,
 	Theme.medal.silver,
 }
+
+
+local function easeOutBack(x)
+	local c1 = 1.70158
+	local c3 = c1 + 1
+	return 1 + c3 * ((x - 1) ^ 3) + c1 * ((x - 1) ^ 2)
+end
+
+local function drawAbilityIcon(abilityId, cx, cy, scale, alpha)
+	if abilityId == "meteor" then
+		lg.setLineWidth(5 * scale)
+		lg.setColor(1, 0.48, 0.18, 0.9 * alpha)
+		lg.line(cx - 15 * scale, cy - 15 * scale, cx - 5 * scale, cy - 5 * scale)
+		lg.setColor(1, 0.76, 0.28, alpha)
+		lg.circle("fill", cx + 3 * scale, cy + 3 * scale, 12 * scale)
+		lg.setColor(1, 0.92, 0.55, alpha)
+		lg.circle("fill", cx, cy, 5 * scale)
+	elseif abilityId == "frost_nova" then
+		lg.setColor(0.55, 0.88, 1, alpha)
+		lg.setLineWidth(3 * scale)
+		for i = 0, 2 do
+			local angle = i * math.pi / 3
+			local dx, dy = cos(angle) * 17 * scale, math.sin(angle) * 17 * scale
+			lg.line(cx - dx, cy - dy, cx + dx, cy + dy)
+		end
+		lg.circle("fill", cx, cy, 4 * scale)
+	else
+		lg.setColor(Theme.ui.selected[1], Theme.ui.selected[2], Theme.ui.selected[3], alpha)
+		lg.circle("fill", cx, cy, 18 * scale)
+		lg.setColor(1, 1, 1, alpha)
+		Text.printfShadow("★", cx - 18 * scale, cy - 12 * scale, 36 * scale, "center")
+	end
+end
+
+local function buildRewardCards()
+	rewardCards = {}
+
+	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
+		local def = TowerDefs[kind]
+		rewardCards[#rewardCards + 1] = {
+			type = "tower",
+			id = kind,
+			name = L((def and def.nameKey) or ("tower." .. kind)),
+			description = L((def and def.descKey) or ("towerDesc." .. kind)),
+			color = (def and def.color) or Theme.ui.good,
+		}
+	end
+
+	for _, abilityId in ipairs(State.unlockedAbilitiesThisVictory or {}) do
+		local def = AbilityDefs[abilityId]
+		rewardCards[#rewardCards + 1] = {
+			type = "ability",
+			id = abilityId,
+			name = L((def and def.nameKey) or ("ability." .. abilityId .. ".name")),
+			description = L((def and def.descKey) or ("ability." .. abilityId .. ".desc")),
+			color = Theme.ui.selected,
+		}
+	end
+end
+
+local function rewardCardBlockingInput()
+	return #rewardCards > 0 and rewardCardT < rewardInputDelay
+end
+
+local function drawRewardUnlockCard(g)
+	if #rewardCards <= 0 then return end
+
+	local index = min(#rewardCards, math.floor(rewardCardT / 2.8) + 1)
+	local card = rewardCards[index]
+	local intro = min(1, rewardCardT * 2.2)
+	local scale = 0.78 + 0.22 * easeOutBack(intro)
+	local alpha = min(1, rewardCardT * 3)
+	local sw, sh = g.sw, g.sh
+	local w = min(rewardCardW, sw - 36)
+	local h = rewardCardH
+	local x = (sw - w) * 0.5
+	local targetY = max(18, g.boxY + 24)
+	local y = targetY - 40 * (1 - intro)
+	local cx, cy = x + w * 0.5, y + h * 0.5
+
+	lg.push()
+	lg.translate(cx, cy)
+	lg.scale(scale, scale)
+	lg.translate(-cx, -cy)
+
+	lg.setColor(0.02, 0.03, 0.05, 0.72 * alpha)
+	lg.rectangle("fill", x + 10, y + 14, w, h, 20, 20)
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
+	lg.rectangle("fill", x - outlineW, y - outlineW, w + outlineW * 2, h + outlineW * 2, 20, 20)
+	lg.setColor(colorBackdrop[1], colorBackdrop[2], colorBackdrop[3], alpha)
+	lg.rectangle("fill", x, y, w, h, 18, 18)
+	lg.setColor(card.color[1], card.color[2], card.color[3], 0.18 * alpha)
+	lg.rectangle("fill", x + 8, y + 8, w - 16, h - 16, 14, 14)
+
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], alpha)
+	Text.printfShadow(L("victory.rewardUnlocked"), x + 18, y + 16, w - 36, "center")
+
+	local iconX, iconY = x + 74, y + 96
+	lg.setColor(0.04, 0.05, 0.07, 0.8 * alpha)
+	lg.circle("fill", iconX, iconY, 43)
+	if card.type == "tower" then
+		DrawEntities.drawTowerBase(card.id, iconX, iconY + 10, alpha)
+		DrawEntities.drawTowerCore(card.id, iconX, iconY + 10, -0.65, 0, alpha)
+	else
+		drawAbilityIcon(card.id, iconX, iconY, 1.45, alpha)
+	end
+
+	Fonts.set("menu")
+	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	Text.printfShadow(card.name, x + 132, y + 58, w - 154, "left")
+	Fonts.set("ui")
+	lg.setColor(colorText[1], colorText[2], colorText[3], 0.82 * alpha)
+	Text.printfShadow(card.description, x + 132, y + 94, w - 154, "left")
+
+	if #rewardCards > 1 then
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.55 * alpha)
+		Text.printfShadow(('%d / %d'):format(index, #rewardCards), x + 18, y + h - 28, w - 36, "right")
+	end
+
+	lg.pop()
+end
 
 local function getDifficultyLabel()
 	local key = Difficulty.key()
@@ -292,8 +423,10 @@ end
 function Screen.enter()
 	t = 0
 	panelT = 0
+	rewardCardT = 0
 	recapScroll = 0
 	buildStats()
+	buildRewardCards()
 	resetConfetti()
 	Medals.resetAnimations()
 	selectedHeadline, selectedSubheadline = selectVictoryMessage()
@@ -328,6 +461,10 @@ function Screen.update(dt)
 
 	buildStats()
 	layoutButtons()
+
+	if #rewardCards > 0 then
+		rewardCardT = rewardCardT + dt
+	end
 
 	Medals.update(dt)
 	local sw, sh = lg.getDimensions()
@@ -457,6 +594,8 @@ function Screen.draw()
 	end
 
 	lg.pop()
+
+	drawRewardUnlockCard(g)
 end
 
 function Screen.wheelmoved(_, y)
@@ -465,6 +604,8 @@ function Screen.wheelmoved(_, y)
 end
 
 function Screen.mousepressed(x, y, button)
+	if rewardCardBlockingInput() then return true end
+
 	for _, btn in ipairs(buttons) do
 		if Button.mousepressed(btn, x, y, button) then
 			return true
@@ -473,6 +614,8 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
+	if rewardCardBlockingInput() then return true end
+
 	for _, btn in ipairs(buttons) do
 		if Button.mousereleased(btn, x, y, button) then
 			return true
@@ -481,6 +624,8 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.keypressed(key)
+	if rewardCardBlockingInput() then return true end
+
 	if key == "c" and State.runSummary then
 		love.system.setClipboardText(State.runSummary.code)
 		return true

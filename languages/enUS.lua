@@ -478,6 +478,7 @@ return {
 			highPerformance = "Elite run: high score, minimal leaks, and strong control.",
 		},
 		medalProgress = "Difficulty medals earned",
+		rewardUnlocked = "Reward Unlocked",
 		newTowerReward = "New tower unlocked",
 		hint = "Push to a higher difficulty or continue in Endless Mode for a tougher run.",
 		shortcuts = "Press N for next map • Esc for main menu",
