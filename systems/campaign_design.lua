@@ -38,9 +38,9 @@ local teachingByMapId = {
 		counterplay = "Pre-place Slow at segment exits, use Lancer along the longest straight, and trigger Frost Nova when runners pass the central bend.",
 	},
 	backtrack = {
-		lesson = "Prioritize high-health enemies when the path revisits the same build pocket.",
+		lesson = "Prioritize high-health enemies when the path revisits the same build pocket, then unlock Strongest targeting to automate that focus.",
 		pressure = "Tanks absorb shots while faster enemies hide behind them on a backtracking lane.",
-		counterplay = "Use Strongest targeting with Poison or Plasma to keep tank damage continuous while Cannon clears escorts.",
+		counterplay = "Focus Poison or Plasma on the highest-health tanks while Cannon clears their escorts; after clearing Backtrack, set towers to Strongest targeting to keep that priority automatic.",
 	},
 	lowvalley = {
 		lesson = "Learn shield and bulwark timing: break protection before committing burst damage.",
