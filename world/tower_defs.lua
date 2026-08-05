@@ -128,15 +128,15 @@ return {
 	},
 
 	-- Role: chain damage and shield counter. Multi-target jumps spread medium
-	-- damage across shielded packs, but reduced single-target efficiency keeps
-	-- lancer and cannon relevant for isolated threats.
+	-- damage across shielded packs, with shield-specific amplification supplying
+	-- its payoff. Low raw damage keeps it inefficient against isolated threats.
 	shock = {
 		nameKey = "tower.shock",
 		descKey = "towerDesc.shock",
 		cost = 75,
 		range = 3.7 * Constants.TILE,
 		fireRate = 1.05,
-		damage = 7,
+		damage = 6,
 		recoilStrength = Constants.TILE * 0.03,
 		recoilDecay = 5, -- Dramatic because the recoil is so small
 		turnSpeed = 9,
