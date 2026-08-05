@@ -1,6 +1,7 @@
 local ModuleDefs = require("systems.module_defs")
 local TowerBranchDefs = require("world.tower_branch_defs")
 local State = require("core.state")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 
 local Modules = {}
 
@@ -378,7 +379,7 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 end
 
 local function applyTargetMode(mode, mod)
-	if mod and mod.targetMode then
+	if mod and mod.targetMode and CampaignUnlocks.isTargetingUnlocked(mod.targetMode) then
 		return mod.targetMode
 	end
 
@@ -671,7 +672,8 @@ function Modules.rollTowerUpgradeChoices(tower)
 
 	for i = 1, #branchChoices do
 		local moduleId = branchChoices[i]
-		if ModuleDefs[moduleId] then
+		local mod = ModuleDefs[moduleId]
+		if mod and CampaignUnlocks.isModuleCategoryUnlocked(mod.category or mod.slot) then
 			out[#out + 1] = {
 				moduleId = moduleId,
 				target = tower.kind,

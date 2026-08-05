@@ -372,6 +372,7 @@ return {
 		upcomingWave = "Wave %d Preview",
 		waveTotal = "%d total",
 		compositionEntry = "%d %s",
+		compositionUnknown = "%d enemies",
 	},
 
 	messages = {
@@ -487,6 +488,7 @@ return {
 		},
 		medalProgress = "Difficulty medals earned",
 		rewardUnlocked = "Reward Unlocked",
+		rewardGenericDesc = "New campaign option available on future runs.",
 		newTowerReward = "New tower unlocked",
 		hint = "Push to a higher difficulty or continue in Endless Mode for a tougher run.",
 		shortcuts = "Press N for next map • Esc for main menu",

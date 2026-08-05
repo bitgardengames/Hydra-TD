@@ -16,6 +16,7 @@ local Modules = require("systems.modules")
 local RunStats = require("systems.run_stats")
 local TowerDefs = require("world.tower_defs")
 local AbilityDefs = require("systems.ability_defs")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 local DrawEntities = require("render.draw_entities")
 
 local Overlay = require("ui.overlay")
@@ -142,6 +143,18 @@ local function buildRewardCards()
 			description = L((def and def.descKey) or ("ability." .. abilityId .. ".desc")),
 			color = Theme.ui.selected,
 		}
+	end
+
+	for _, reward in ipairs(State.unlockedRewardsThisVictory or {}) do
+		if reward.type ~= "tower" and reward.type ~= "ability" then
+			rewardCards[#rewardCards + 1] = {
+				type = reward.type,
+				id = reward.id,
+				name = reward.label or reward.id,
+				description = L("victory.rewardGenericDesc"),
+				color = Theme.ui.good,
+			}
+		end
 	end
 end
 
@@ -399,7 +412,7 @@ function Screen.load()
 				State.victory = false
 				State.mode = "game"
 			end,
-			enabled = not Constants.IS_DEMO,
+			enabled = not Constants.IS_DEMO and CampaignUnlocks.isEndlessUnlocked(),
 		},
 
 		{
