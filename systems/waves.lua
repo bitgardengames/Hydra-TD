@@ -225,7 +225,7 @@ resetTable(bossAdds, bossAddsDefaults)
 -- Build a display-only description of a wave.  Keep this independent of the
 -- live spawner tables so callers (notably the prep HUD) can safely look ahead.
 function Waves.getWavePreview(waveNumber)
-	local wave = WaveBuilder.build(waveNumber)
+	local wave = WaveBuilder.build(waveNumber, Maps[State.mapIndex])
 	local groups = {}
 
 	local function addGroup(kind, count, spacing, delay, affixes)
