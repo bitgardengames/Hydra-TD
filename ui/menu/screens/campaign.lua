@@ -14,6 +14,7 @@ local Tooltip = require("ui.tooltip")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 local Towers = require("world.towers")
 
 local lg = love.graphics
@@ -361,10 +362,14 @@ end
 
 local function buildPreviewMessages(map)
 	local messages = {}
+	local reward = CampaignUnlocks.getRewardForMap(map)
 
-	if map.rewardTowers and #map.rewardTowers > 0 then
-		local key = (#map.rewardTowers == 1) and "campaign.newTowerReward" or "campaign.newTowerRewards"
-		messages[#messages + 1] = L(key, localizedTowerList(map.rewardTowers))
+	if reward then
+		if reward.type == "tower" then
+			messages[#messages + 1] = L("campaign.newTowerReward", localizedTowerList({reward.id}))
+		elseif reward.label then
+			messages[#messages + 1] = L("campaign.newTowerReward", reward.label)
+		end
 	end
 
 	return messages
