@@ -176,6 +176,7 @@ local maps = {
 		id = "circuit",
 		campaignStage = 2,
 		nameKey = "map.circuit",
+		-- Circuit is the campaign's first Regenerator encounter.
 		introducesEnemies = {"regenerator"},
 		biome = "default",
 		path = {
