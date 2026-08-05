@@ -32,18 +32,52 @@ local function getModule(moduleId)
 	return mod
 end
 
-local function applyModuleIds(ctx, moduleIds)
+local function addModuleCandidate(out, moduleId, order, source)
+	local mod = getModule(moduleId)
+	if mod and mod.apply then
+		out[#out + 1] = { id = moduleId, mod = mod, order = order, source = source }
+	end
+end
+
+local function applyResolvedModules(ctx, candidates)
+	local winners = {}
+	local skipped = {}
+
+	for i = 1, #candidates do
+		local candidate = candidates[i]
+		local group = candidate.mod.exclusiveGroup
+		if group then
+			winners[group] = candidate
+		else
+			winners[#winners + 1] = candidate
+		end
+	end
+
+	for i = 1, #candidates do
+		local candidate = candidates[i]
+		local group = candidate.mod.exclusiveGroup
+		if not group or winners[group] == candidate then
+			candidate.mod.apply(ctx)
+		else
+			skipped[#skipped + 1] = { id = candidate.id, replacedBy = winners[group].id, group = group }
+		end
+	end
+
+	ctx.exclusiveResolutions = skipped
+end
+
+local function collectModuleIds(out, moduleIds, source, orderStart)
+	local order = orderStart or 0
 	if not moduleIds then
-		return
+		return order
 	end
 
 	for i = 1, #moduleIds do
-		local moduleId = moduleIds[i]
-		local mod = getModule(moduleId)
-		if mod and mod.apply then
-			mod.apply(ctx)
-		end
+		order = order + 1
+		addModuleCandidate(out, moduleIds[i], order, source)
 	end
+
+	return order
 end
 
 local function bumpTowerCacheState(tower)
@@ -109,7 +143,70 @@ function Modules.purchase(moduleId)
 	return Modules.addToInventory(moduleId, 1)
 end
 
-function Modules.canApplyToTower(moduleId, tower)
+local function moduleListHasGroup(moduleIds, group)
+	if not moduleIds or not group then
+		return nil
+	end
+
+	for i = 1, #moduleIds do
+		local existing = getModule(moduleIds[i])
+		if existing and existing.exclusiveGroup == group then
+			return moduleIds[i]
+		end
+	end
+
+	return nil
+end
+
+local function moduleListHasConflict(moduleIds, mod)
+	if not moduleIds or not mod then
+		return nil, nil
+	end
+
+	local conflicts = mod.conflictsWith or {}
+	for i = 1, #moduleIds do
+		local existingId = moduleIds[i]
+		local existing = getModule(existingId)
+		if existing then
+			for j = 1, #conflicts do
+				if existing.exclusiveGroup == conflicts[j] then
+					return existingId, conflicts[j]
+				end
+			end
+			for j = 1, #(existing.conflictsWith or {}) do
+				if mod.exclusiveGroup == existing.conflictsWith[j] then
+					return existingId, existing.conflictsWith[j]
+				end
+			end
+		end
+	end
+
+	return nil, nil
+end
+
+local reasonText = {
+	missing_tower = "select a tower first",
+	invalid_module = "unknown module",
+	not_owned = "not owned",
+	incompatible_tower = "wrong tower type",
+	requires_tower_kind = "wrong tower type",
+	exclusive_group = "replaces existing module",
+	stack_limit = "stack limit reached",
+	conflicts_with = "cannot combine",
+}
+
+function Modules.describeApplyResult(reason, detail)
+	if reason == "exclusive_group" and detail and detail.group then
+		return "replaces " .. detail.group:gsub("_", " ")
+	elseif reason == "conflicts_with" and detail and detail.group then
+		return "cannot combine with " .. detail.group:gsub("_", " ")
+	end
+
+	return reasonText[reason] or tostring(reason or "unavailable")
+end
+
+function Modules.canApplyToTower(moduleId, tower, options)
+	options = options or {}
 	if not tower or not tower.kind then
 		return false, "missing_tower"
 	end
@@ -119,16 +216,53 @@ function Modules.canApplyToTower(moduleId, tower)
 		return false, "invalid_module"
 	end
 
-	local inventory = getInventory()
-	if (inventory[moduleId] or 0) <= 0 then
-		return false, "not_owned"
+	if not options.ignoreInventory then
+		local inventory = getInventory()
+		if (inventory[moduleId] or 0) <= 0 then
+			return false, "not_owned"
+		end
 	end
 
 	if mod.target and mod.target ~= "global" and mod.target ~= tower.kind then
 		return false, "incompatible_tower"
 	end
 
+	if mod.requiresTowerKind and mod.requiresTowerKind ~= tower.kind then
+		return false, "requires_tower_kind", { required = mod.requiresTowerKind }
+	end
+
+	local appliedModules = tower.appliedModules or {}
+	local count = 0
+	for i = 1, #appliedModules do
+		if appliedModules[i] == moduleId then
+			count = count + 1
+		end
+	end
+	if mod.stackLimit and count >= mod.stackLimit then
+		return false, "stack_limit", { limit = mod.stackLimit }
+	end
+
+	local conflictId, conflictGroup = moduleListHasConflict(appliedModules, mod)
+	if conflictId then
+		return false, "conflicts_with", { moduleId = conflictId, group = conflictGroup }
+	end
+
+	local replacedId = moduleListHasGroup(appliedModules, mod.exclusiveGroup)
+	if replacedId and replacedId ~= moduleId then
+		return true, "exclusive_group", { moduleId = replacedId, group = mod.exclusiveGroup }
+	end
+
 	return true
+end
+
+function Modules.getApplyStatus(moduleId, tower, options)
+	local ok, reason, detail = Modules.canApplyToTower(moduleId, tower, options)
+	return {
+		ok = ok,
+		reason = reason,
+		detail = detail,
+		message = reason and Modules.describeApplyResult(reason, detail) or nil,
+	}
 end
 
 function Modules.applyToTower(moduleId, tower)
@@ -144,6 +278,15 @@ function Modules.applyToTower(moduleId, tower)
 	end
 
 	tower.appliedModules = tower.appliedModules or {}
+	local mod = getModule(moduleId)
+	if mod and mod.exclusiveGroup then
+		for i = #tower.appliedModules, 1, -1 do
+			local existing = getModule(tower.appliedModules[i])
+			if existing and existing.exclusiveGroup == mod.exclusiveGroup and tower.appliedModules[i] ~= moduleId then
+				table.remove(tower.appliedModules, i)
+			end
+		end
+	end
 	tower.appliedModules[#tower.appliedModules + 1] = moduleId
 	Modules.invalidateTower(tower)
 	Modules.version = Modules.version + 1
@@ -376,34 +519,38 @@ function Modules.buildContext(tower)
 	local base = tower.def.behaviors
 	local ctx = createContext(base)
 
+	local candidates = {}
+	local order = 0
+
 	-- global modules
 	local global = Modules.active.global
 	for i = 1, #global do
-		global[i].apply(ctx)
+		order = order + 1
+		candidates[#candidates + 1] = { id = global[i].id, mod = global[i], order = order, source = "global" }
 	end
 
 	-- tower modules
 	local list = Modules.active[tower.kind]
 	if list then
 		for i = 1, #list do
-			list[i].apply(ctx)
+			order = order + 1
+			candidates[#candidates + 1] = { id = list[i].id, mod = list[i], order = order, source = "tower" }
 		end
 	end
 
 	-- tower-specific inventory modules applied by the player
-	applyModuleIds(ctx, tower and tower.appliedModules)
+	order = collectModuleIds(candidates, tower and tower.appliedModules, "applied", order)
 
 	-- tower branch modules (legacy upgrade-tier compatibility path)
 	local branchSelections = tower and tower.branchSelections
 	if branchSelections then
-		applyModuleIds(ctx, branchSelections)
+		collectModuleIds(candidates, branchSelections, "branch", order)
 	elseif tower and tower.specializationId then
 		-- backward compatibility for older saves
-		local specialization = getModule(tower.specializationId)
-		if specialization and specialization.apply then
-			specialization.apply(ctx)
-		end
+		addModuleCandidate(candidates, tower.specializationId, order + 1, "legacy_specialization")
 	end
+
+	applyResolvedModules(ctx, candidates)
 
 	validateCoreBehaviors(ctx, base)
 	applyTowerUpgradeBehaviorScaling(ctx, tower)
