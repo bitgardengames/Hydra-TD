@@ -45,6 +45,7 @@ local function ensureAnim(button)
 	anim.t = anim.t or 0
 	anim.pressed = anim.pressed or false
 	anim.pressT = anim.pressT or 0
+	anim.errorT = anim.errorT or 0
 
 	return anim
 end
@@ -105,6 +106,8 @@ function AbilityBar.draw(dt, mx, my)
 				anim.pressT = max(0, anim.pressT - dt * 20)
 			end
 
+			anim.errorT = max(0, anim.errorT - dt * 4)
+
 			if anim.active then
 				local speed = dt * 10
 
@@ -117,7 +120,10 @@ function AbilityBar.draw(dt, mx, my)
 
 			local ease = anim.t * anim.t * (3 - 2 * anim.t)
 			local pressEase = anim.pressT
+			local errorEase = anim.errorT * anim.errorT * (3 - 2 * anim.errorT)
 			local lift = IDLE_LIFT * (1 - pressEase)
+			local shake = math.sin(anim.errorT * math.pi * 8) * errorEase * 4
+			local fx = x + shake
 			local fy = y - lift
 
 			local r = cb1 + cbd1 * ease
@@ -130,23 +136,23 @@ function AbilityBar.draw(dt, mx, my)
 			lg.rectangle("fill", x, y, SIZE, SIZE, innerRadius)
 
 			lg.setColor(colorOutline)
-			lg.rectangle("fill", x - outlineW, fy - outlineW, SIZE + outlineW * 2, SIZE + outlineW * 2, outerRadius)
+			lg.rectangle("fill", fx - outlineW, fy - outlineW, SIZE + outlineW * 2, SIZE + outlineW * 2, outerRadius)
 			lg.setColor(r, g, b, 0.96)
-			lg.rectangle("fill", x, fy, SIZE, SIZE, innerRadius)
+			lg.rectangle("fill", fx, fy, SIZE, SIZE, innerRadius)
 
 			local drawer = iconDrawers[abilityId]
-			if drawer then drawer(x + SIZE * 0.5, fy + SIZE * 0.5, 1) end
+			if drawer then drawer(fx + SIZE * 0.5, fy + SIZE * 0.5, 1) end
 
 			if not ready then
 				local ratio = min(1, cooldown / def.cooldown)
-				lg.setColor(0.02, 0.03, 0.05, 0.72)
-				lg.rectangle("fill", x, fy + SIZE * (1 - ratio), SIZE, SIZE * ratio, innerRadius)
-				lg.setColor(1, 1, 1, 0.9)
-				Text.printfShadow(tostring(math.ceil(cooldown)), x, fy + 20, SIZE, "center")
+				lg.setColor(0.02 + 0.35 * errorEase, 0.03, 0.05, 0.72 + 0.18 * errorEase)
+				lg.rectangle("fill", fx, fy + SIZE * (1 - ratio), SIZE, SIZE * ratio, innerRadius)
+				lg.setColor(1, 1 - 0.55 * errorEase, 1 - 0.55 * errorEase, 0.9 + 0.1 * errorEase)
+				Text.printfShadow(tostring(math.ceil(cooldown)), fx, fy + 20, SIZE, "center")
 			elseif State.abilityTargeting and State.abilityTargeting.abilityId == abilityId then
 				lg.setColor(1, 0.86, 0.35, 1)
 				lg.setLineWidth(3)
-				lg.rectangle("line", x + 1, fy + 1, SIZE - 2, SIZE - 2, 8)
+				lg.rectangle("line", fx + 1, fy + 1, SIZE - 2, SIZE - 2, 8)
 			end
 		end
 	end
