@@ -410,9 +410,9 @@ local function buildPreviewMessages(map)
 		messages[#messages + 1] = L(key, localizedEnemyList(map.introducesEnemies))
 	end
 
-	if map.unlocksTowers and #map.unlocksTowers > 0 then
-		local key = (#map.unlocksTowers == 1) and "campaign.newTowerReward" or "campaign.newTowerRewards"
-		messages[#messages + 1] = L(key, localizedTowerList(map.unlocksTowers))
+	if map.rewardTowers and #map.rewardTowers > 0 then
+		local key = (#map.rewardTowers == 1) and "campaign.newTowerReward" or "campaign.newTowerRewards"
+		messages[#messages + 1] = L(key, localizedTowerList(map.rewardTowers))
 	end
 
 	return messages

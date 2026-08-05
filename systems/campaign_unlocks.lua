@@ -1,17 +1,21 @@
 local Constants = require("core.constants")
 local Save = require("core.save")
 local L = require("core.localization")
+local Maps = require("world.map_defs")
 
 local CampaignUnlocks = {}
 
 local requiredMapByTower = {
 	lancer = 1,
-	slow = 2,
-	cannon = 3,
-	poison = 4,
-	shock = 5,
-	plasma = 6,
 }
+
+for mapIndex, map in ipairs(Maps) do
+	for _, kind in ipairs(map.rewardTowers or {}) do
+		-- A map's rewardTowers are earned after clearing that map, so the tower
+		-- becomes usable starting on the next campaign map.
+		requiredMapByTower[kind] = mapIndex + 1
+	end
+end
 
 local function normalizeProgressIndex(progressIndex)
 	return math.max(1, tonumber(progressIndex) or 1)

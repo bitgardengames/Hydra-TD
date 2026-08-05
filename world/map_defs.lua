@@ -1,10 +1,11 @@
+-- rewardTowers lists tower kinds granted after the first clear of that map.
 local maps = {
 	{
 		id = "riverbend",
 		campaignStage = 1,
 		nameKey = "map.riverbend",
 		introducesEnemies = {"grunt", "runner", "tank"},
-		unlocksTowers = {"slow"},
+		rewardTowers = {"slow"},
 		biome = "default",
 		path = {
 			{5, 7}, {13, 7},
@@ -30,7 +31,7 @@ local maps = {
 		id = "switchback",
 		campaignStage = 1,
 		nameKey = "map.switchback",
-		unlocksTowers = {"cannon"},
+		rewardTowers = {"cannon"},
 		biome = "default",
 		path = {
 			{5, 7}, {15, 7},
@@ -45,7 +46,7 @@ local maps = {
 		id = "highpass",
 		campaignStage = 1,
 		nameKey = "map.highpass",
-		unlocksTowers = {"poison"},
+		rewardTowers = {"poison"},
 		biome = "default",
 		path = {
 			{5, 5}, {21, 5},
@@ -64,7 +65,7 @@ local maps = {
 		id = "roundabout",
 		campaignStage = 1,
 		nameKey = "map.roundabout",
-		unlocksTowers = {"shock"},
+		rewardTowers = {"shock"},
 		biome = "highlands",
 		path = {
 			{5, 9}, {12, 9},
@@ -89,7 +90,7 @@ local maps = {
 		id = "gauntlet",
 		campaignStage = 1,
 		nameKey = "map.gauntlet",
-		unlocksTowers = {"plasma"},
+		rewardTowers = {"plasma"},
 		biome = "autumn",
 		path = {
 			{5, 11}, {19, 11},
