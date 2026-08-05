@@ -3,6 +3,8 @@ local maps = {
 		id = "riverbend",
 		campaignStage = 1,
 		nameKey = "map.riverbend",
+		introducesEnemies = {"grunt", "runner", "tank"},
+		unlocksTowers = {"slow"},
 		biome = "default",
 		path = {
 			{5, 7}, {13, 7},
@@ -28,6 +30,7 @@ local maps = {
 		id = "switchback",
 		campaignStage = 1,
 		nameKey = "map.switchback",
+		unlocksTowers = {"cannon"},
 		biome = "default",
 		path = {
 			{5, 7}, {15, 7},
@@ -42,6 +45,7 @@ local maps = {
 		id = "highpass",
 		campaignStage = 1,
 		nameKey = "map.highpass",
+		unlocksTowers = {"poison"},
 		biome = "default",
 		path = {
 			{5, 5}, {21, 5},
@@ -60,6 +64,7 @@ local maps = {
 		id = "roundabout",
 		campaignStage = 1,
 		nameKey = "map.roundabout",
+		unlocksTowers = {"shock"},
 		biome = "highlands",
 		path = {
 			{5, 9}, {12, 9},
@@ -84,6 +89,7 @@ local maps = {
 		id = "gauntlet",
 		campaignStage = 1,
 		nameKey = "map.gauntlet",
+		unlocksTowers = {"plasma"},
 		biome = "autumn",
 		path = {
 			{5, 11}, {19, 11},
@@ -104,6 +110,7 @@ local maps = {
 		id = "snaketrail",
 		campaignStage = 2,
 		nameKey = "map.snaketrail",
+		introducesEnemies = {"bulwark", "regenerator"},
 		biome = "default",
 		path = {
 			{5, 9}, {16, 9},
@@ -209,6 +216,7 @@ local maps = {
 		id = "terrace",
 		campaignStage = 3,
 		nameKey = "map.terrace",
+		introducesEnemies = {"shieldbearer", "warcaller"},
 		biome = "winter",
 		path = {
 			{5, 3}, {14, 3},

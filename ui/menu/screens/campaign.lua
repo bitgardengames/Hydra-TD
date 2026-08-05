@@ -15,6 +15,8 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local AbilityDefs = require("systems.ability_defs")
+local EnemyDefs = require("world.enemy_defs")
+local Towers = require("world.towers")
 
 local lg = love.graphics
 local floor = math.floor
@@ -40,7 +42,7 @@ local innerRadius = baseRadius - outlineW * 0.25
 
 local PAD_PREVIEW = 44
 local PAD_TITLE = 60
-local PAD_META = 18
+local PAD_META = 58
 local TITLE_OFFSET = -22
 
 local paddingX = 28
@@ -378,6 +380,44 @@ local function getCompletionString(mapId)
 	return nil
 end
 
+local function localizedEnemyList(kinds)
+	local names = {}
+
+	for _, kind in ipairs(kinds or {}) do
+		local def = EnemyDefs[kind]
+		names[#names + 1] = L((def and def.nameKey) or ("enemy." .. kind))
+	end
+
+	return table.concat(names, L("campaign.previewListSeparator"))
+end
+
+local function localizedTowerList(kinds)
+	local names = {}
+
+	for _, kind in ipairs(kinds or {}) do
+		local def = Towers.TowerDefs[kind]
+		names[#names + 1] = L((def and def.nameKey) or ("tower." .. kind))
+	end
+
+	return table.concat(names, L("campaign.previewListSeparator"))
+end
+
+local function buildPreviewMessages(map)
+	local messages = {}
+
+	if map.introducesEnemies and #map.introducesEnemies > 0 then
+		local key = (#map.introducesEnemies == 1) and "campaign.newEnemy" or "campaign.newEnemies"
+		messages[#messages + 1] = L(key, localizedEnemyList(map.introducesEnemies))
+	end
+
+	if map.unlocksTowers and #map.unlocksTowers > 0 then
+		local key = (#map.unlocksTowers == 1) and "campaign.newTowerReward" or "campaign.newTowerRewards"
+		messages[#messages + 1] = L(key, localizedTowerList(map.unlocksTowers))
+	end
+
+	return messages
+end
+
 -- Load
 function Screen.load()
 	campaignButtons = {
@@ -657,6 +697,12 @@ function Screen.draw()
 	Fonts.set("ui")
 
 	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
+
+	local previewMessages = buildPreviewMessages(map)
+	local metaY = textY + PAD_TITLE + 20
+	for i, message in ipairs(previewMessages) do
+		Text.printfShadow(message, 0, metaY + (i - 1) * 18, sw, "center")
+	end
 
 	-- Buttons
 	local buttonsStartY = textY + PAD_TITLE + PAD_META
