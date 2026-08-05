@@ -27,6 +27,7 @@ local rewardsByMapId = {
 	outerloop = {type = "tower", id = "plasma", label = "Plasma tower"},
 	terrace = {type = "wave_preview", id = "enhanced", label = "Enhanced wave preview"},
 	highridge = {type = "module_category", id = "movement", label = "Movement module category"},
+	crossflow = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
 	steppingstones = {type = "ability_upgrade", id = "enhanced_abilities", label = "Enhanced active ability effects"},
 	twinloop = {type = "campaign_complete", id = "challenge_endless", label = "Challenge and Endless modes"},
 }
