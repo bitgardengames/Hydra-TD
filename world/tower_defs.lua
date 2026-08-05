@@ -32,9 +32,10 @@ return {
 		}
 	},
 
-	-- Role: cheap single-target baseline. Reliable range, projectile speed, and
-	-- steady upgrades make it the efficient default for focused damage, but it
-	-- lacks crowd control, armor/shield utility, and splash.
+	-- Role: cheap single-target baseline. Medium range and highly reliable shots
+	-- make it the efficient default for focused damage, while strong damage
+	-- scaling rewards upgrades. It lacks crowd control, armor/shield utility,
+	-- and splash.
 	lancer = {
 		nameKey = "tower.lancer",
 		descKey = "towerDesc.lancer",
@@ -44,18 +45,18 @@ return {
 		damage = 9,
 		recoilStrength = Constants.TILE * 0.08,
 		recoilDecay = 18,
-		projSpeed = 460,
-		turnSpeed = 15,
+		projSpeed = 520,
+		turnSpeed = 18,
 		color = Theme.tower.lancer,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 1.9,
+			dmgMult = 2.2,
 			rangeAdd = 0.06 * Constants.TILE,
 			fireMult = 1.08,
 		},
 		behaviors = {
 			{id = "move_homing"},
-			{id = "hit_circle", data = {radius = 10 }},
+			{id = "hit_circle", data = {radius = 12}},
 			{id = "hit_damage"},
 			{id = "lancer_hit_fx"},
 			{id = "draw_lancer"}
