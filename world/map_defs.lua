@@ -106,9 +106,9 @@ local maps = {
 		id = "snaketrail",
 		campaignStage = 2,
 		nameKey = "map.snaketrail",
-		-- Keep runners out of earlier map-specific encounters so this remains
-		-- their first campaign introduction.
-		introducesEnemies = {"runner"},
+		-- Stage one teaches Grunts and Tanks in its authored waves. Snake Trail
+		-- marks the Tank's campaign-map introduction before Backtrack adds Runners.
+		introducesEnemies = {"tank"},
 		biome = "default",
 		path = {
 			{5, 9}, {16, 9},
@@ -132,7 +132,9 @@ local maps = {
 		id = "backtrack",
 		campaignStage = 2,
 		nameKey = "map.backtrack",
-		introducesEnemies = {"tank"},
+		-- Keep runners out of earlier map-specific encounters so this remains
+		-- their first campaign-map introduction.
+		introducesEnemies = {"runner"},
 		biome = "autumn",
 		path = {
 			{5, 7}, {16, 7},

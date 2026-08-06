@@ -3,6 +3,12 @@
 -- interval between its members.
 local CampaignWaveDefs = {}
 
+-- Campaign teaching order is deliberate: Grunt, Tank, Runner, Bulwark,
+-- Regenerator, Warcaller, then Shieldbearer. Stage one establishes the first
+-- two profiles; stage two adds the next three; stage three completes the
+-- support roster. Boss slots are milestone exams and must not be used to
+-- introduce an ordinary enemy ahead of that curriculum.
+
 -- Every campaign stage follows the same readable dramatic arc:
 --   1-3   give players room to learn where the layout creates long sightlines,
 --   4-9   add a new source of pressure at a time,
@@ -47,7 +53,7 @@ local lateWaves = {
 		{ kind = "tank", count = 7, spacing = 0.95, delay = 0.8 },
 		{ kind = "warcaller", count = 3, spacing = 0.45, delay = 0.1 },
 	},
-	-- Mid-map spike: the escort prevents the boss from being a pure single-
+	-- Mid-map milestone exam: the escort prevents the boss from being a pure single-
 	-- target damage check, without yet asking for the full specialist mix.
 	[10] = {
 		{ kind = "boss", count = 1, spacing = 0, delay = 0 },
@@ -96,7 +102,7 @@ local lateWaves = {
 		{ kind = "shieldbearer", count = 8, spacing = 0.45, delay = 0.25 },
 		{ kind = "regenerator", count = 8, spacing = 0.45, delay = 0.25 },
 	},
-	-- Capstone: the boss arrives first so the formation catches up to it and
+	-- Final milestone exam: the boss arrives first so the formation catches up to it and
 	-- forces target-priority decisions instead of becoming post-boss cleanup.
 	[20] = {
 		{ kind = "boss", count = 1, spacing = 0, delay = 0 },
@@ -147,7 +153,7 @@ local stageOneWaves = {
 		{ kind = "tank", count = 3, spacing = 1.1, delay = 0.8 },
 		{ kind = "grunt", count = 18, spacing = 0.26, delay = 1.1 },
 	},
-	-- Mid-map spike: a readable boss plus a compact splash check.
+	-- Mid-map milestone exam: a readable boss plus a compact splash check.
 	[10] = {
 		{ kind = "boss", count = 1, spacing = 0, delay = 0 },
 		{ kind = "grunt", count = 18, spacing = 0.3, delay = 2.8 },
@@ -193,7 +199,7 @@ local stageOneWaves = {
 		{ kind = "tank", count = 6, spacing = 0.8, delay = 0.6 },
 		{ kind = "grunt", count = 32, spacing = 0.19, delay = 1.0 },
 	},
-	-- Capstone: the campaign's foundational crowd and tank checks support the
+	-- Final milestone exam: the campaign's foundational crowd and tank checks support the
 	-- boss without introducing a specialist that the player has not learned.
 	[20] = {
 		{ kind = "boss", count = 1, spacing = 0, delay = 0 },
