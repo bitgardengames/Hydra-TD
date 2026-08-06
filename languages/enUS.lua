@@ -400,6 +400,9 @@ return {
 		warcaller = "Warcaller",
 		warcallerDescription = "Accelerates nearby enemies; eliminate the standard-bearer first.",
 		boss = "Boss",
+		bossSummoner = "Summoner",
+		bossDisplacement = "Vanguard",
+		bossSuppression = "Suppressor",
 	},
 
 	hud = {

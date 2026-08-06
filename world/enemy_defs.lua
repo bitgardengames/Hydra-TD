@@ -84,7 +84,7 @@ return {
 	},
 
 	boss_summoner = {
-		nameKey = "enemy.boss",
+		nameKey = "enemy.bossSummoner",
 		hp = 280,
 		speed = 42,
 		reward = 110,
@@ -97,7 +97,7 @@ return {
 	},
 
 	boss_displacement = {
-		nameKey = "enemy.boss",
+		nameKey = "enemy.bossDisplacement",
 		hp = 320,
 		speed = 48,
 		reward = 125,
@@ -110,7 +110,7 @@ return {
 	},
 
 	boss_suppression = {
-		nameKey = "enemy.boss",
+		nameKey = "enemy.bossSuppression",
 		hp = 350,
 		speed = 40,
 		reward = 140,

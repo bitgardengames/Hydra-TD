@@ -145,6 +145,30 @@ local function drawEnemy(e)
 		lg.rectangle("fill", ix + r * 0.55, iy - r * 2.0, 3, r * 1.7)
 		lg.polygon("fill", ix + r * 0.7, iy - r * 1.9, ix + r * 1.65, iy - r * 1.55, ix + r * 0.7, iy - r * 1.2)
 	end
+	-- Boss archetypes need a readable silhouette of their own. In particular, the
+	-- Summoner previously reused the plain round enemy body and could be mistaken
+	-- for the first Grunt reinforcement promised by its preview.
+	if e.kind == "boss_summoner" then
+		local orbit = animT * 1.4
+		lg.setColor(0.78, 0.45, 1, 0.85 * enemyAlpha)
+		lg.setLineWidth(3)
+		lg.circle("line", ix, iy, r + 8)
+		for n = 0, 2 do
+			local angle = orbit + n * pi * 2 / 3
+			local sx = ix + cos(angle) * (r + 8)
+			local sy = iy + sin(angle) * (r + 8)
+			lg.polygon("fill", sx, sy - 4, sx + 4, sy, sx, sy + 4, sx - 4, sy)
+		end
+	elseif e.kind == "boss_displacement" then
+		lg.setColor(1, 0.66, 0.22, 0.8 * enemyAlpha)
+		lg.setLineWidth(3)
+		lg.line(ix - r - 9, iy - 5, ix - r - 3, iy, ix - r - 9, iy + 5)
+		lg.line(ix + r + 9, iy - 5, ix + r + 3, iy, ix + r + 9, iy + 5)
+	elseif e.kind == "boss_suppression" then
+		lg.setColor(0.9, 0.25, 0.3, (0.55 + sin(animT * 2) * 0.15) * enemyAlpha)
+		lg.setLineWidth(4)
+		lg.arc("line", "open", ix, iy, r + 8, pi * 0.12, pi * 0.88)
+	end
 	if e.kind == "bulwark" then
 		lg.setColor(outR, outG, outB, enemyAlpha)
 		for a = 0, 3 do
