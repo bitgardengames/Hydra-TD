@@ -420,10 +420,19 @@ function Waves.updateSpawner(dt)
 				if spawner.groupRemaining <= 0 and spawner.remaining > 0 then
 					spawner.groupIndex = spawner.groupIndex + 1
 					local nextGroup = spawner.groups[spawner.groupIndex]
-					spawner.groupRemaining = nextGroup.count
-					spawner.timer = spawner.timer + nextGroup.delay
+					if nextGroup then
+						spawner.groupRemaining = nextGroup.count
+						spawner.timer = spawner.timer + (nextGroup.delay or 0)
+					else
+						-- A group list is the authoritative spawn sequence. If its
+						-- advertised total and the spawner count ever disagree, finish
+						-- the sequence instead of indexing past it (or duplicating the
+						-- fallback kind for the unmatched remainder).
+						spawner.remaining = 0
+						spawner.active = false
+					end
 				else
-					spawner.timer = spawner.timer + group.spacing
+					spawner.timer = spawner.timer + (group.spacing or spawner.gap)
 				end
 			else
 				spawner.timer = spawner.timer + spawner.gap
