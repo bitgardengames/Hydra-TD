@@ -245,9 +245,33 @@ local function drawEnemy(e)
 		lg.setColor(1, 1, 1, a * enemyAlpha); lg.setLineWidth(3)
 		lg.line(ix - r, iy - r, ix + r, iy + r); lg.line(ix + r, iy - r, ix - r, iy + r)
 	end
+	if e.shieldHitFlash > 0 and e.shieldHp > 0 then
+		local a = e.shieldHitFlash / 0.18
+		lg.setColor(0.55, 0.9, 1, a * enemyAlpha); lg.setLineWidth(5)
+		lg.circle("line", ix, iy, r + 7 + (1 - a) * 5)
+	end
+	if e.shieldCounterFlash > 0 then
+		local a = e.shieldCounterFlash / 0.26
+		lg.setColor(1, 0.95, 0.45, a * enemyAlpha); lg.setLineWidth(4)
+		for n = 0, 3 do
+			local angle = n * HALF_PI + animT
+			lg.line(ix + cos(angle) * (r + 4), iy + sin(angle) * (r + 4),
+				ix + cos(angle) * (r + 12), iy + sin(angle) * (r + 12))
+		end
+	end
+	if e.armorHitFlash > 0 or e.armorCounterFlash > 0 then
+		local countered = e.armorCounterFlash > 0
+		local a = (countered and e.armorCounterFlash / 0.22 or e.armorHitFlash / 0.22)
+		lg.setColor(countered and 1 or 0.55, countered and 0.82 or 0.58, countered and 0.25 or 0.62, a * enemyAlpha)
+		lg.setLineWidth(countered and 4 or 2); lg.circle("line", ix, iy, r + 5)
+	end
 	if e.regeneration and e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0 then
 		lg.setColor(0.55, 1, 0.55, enemyAlpha); lg.setLineWidth(2)
 		lg.line(ix - 6, iy + r + 5, ix, iy + r + 1, ix + 6, iy + r + 5)
+		if e.regenVisualPulse > 0 then
+			local a = e.regenVisualPulse / 0.28
+			lg.circle("line", ix, iy, r + 4 + (1 - a) * 8)
+		end
 	end
 	if (e.supportBoost or 1) > 1 then
 		lg.setColor(1, 0.8, 0.35, 0.8 * enemyAlpha); lg.setLineWidth(2)

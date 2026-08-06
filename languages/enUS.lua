@@ -405,6 +405,19 @@ return {
 		waveTotal = "%d total",
 		compositionEntry = "%d %s",
 		compositionUnknown = "%d enemies",
+		threatTags = "Threats: %s",
+		counterHint = "Counter: %s",
+	},
+
+	enemyTrait = {
+		armored = {tag = "ARMORED", counter = "Use heavy Cannon or Lancer hits to punch through its plates."},
+		regenerates = {tag = "REGENERATING", counter = "Keep damage or poison on it so its healing cannot restart."},
+		shielded = {tag = "SHIELDED", counter = "Break its barrier quickly with burst volleys or chained Shock hits."},
+		support = {tag = "SUPPORT", counter = "Focus the Warcaller first to remove its speed aura."},
+		fast = {tag = "FAST", counter = "Cover the route early with slows or rapid attacks."},
+		boss_summoner = {tag = "SUMMONER", counter = "Clear its escorts with area or chain damage while focusing the boss."},
+		boss_displacement = {tag = "FAST ESCORTS", counter = "Slow the runner escorts while maintaining damage on the boss."},
+		boss_suppression = {tag = "ARMORED ESCORTS", counter = "Use heavy focused hits on its tank escorts while burning down the boss."},
 	},
 
 	messages = {

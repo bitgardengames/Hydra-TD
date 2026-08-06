@@ -16,7 +16,7 @@ local colorOutline = Theme.outline.color
 
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
-local PANEL_W = 320
+local PANEL_W = 440
 local HEADER_H = 30
 local HEADER_GAP = 8
 local ROW_GAP = 5
@@ -54,8 +54,12 @@ local function refreshPreview()
 
 	for i = 1, #preview.composition do
 		local group = preview.composition[i]
+		local threats = #group.tags > 0 and L("hud.threatTags", table.concat(group.tags, " • ")) or nil
+		local counter = #group.counterHints > 0 and L("hud.counterHint", table.concat(group.counterHints, " ")) or nil
 		entries[i] = {
 			name = CampaignUnlocks.hasEnhancedWavePreview() and L("hud.compositionEntry", group.count, group.name) or L("hud.compositionUnknown", group.count),
+			threats = threats,
+			counter = counter,
 		}
 	end
 end
@@ -69,8 +73,19 @@ function WavePreview.draw()
 
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local rowH = textH + ROW_GAP
-	local bodyH = math.max(textH, #previewCache.entries * rowH - ROW_GAP)
+	local counterW = PANEL_W - PANEL_PAD * 2 - 8
+	local bodyH = 0
+	for _, entry in ipairs(previewCache.entries) do
+		bodyH = bodyH + textH
+		if entry.threats then bodyH = bodyH + textH end
+		if entry.counter then
+			local _, lines = font:getWrap(entry.counter, counterW)
+			entry.counterLineCount = math.max(1, #lines)
+			bodyH = bodyH + textH * entry.counterLineCount
+		end
+		bodyH = bodyH + ROW_GAP
+	end
+	bodyH = math.max(textH, bodyH - ROW_GAP)
 	local panelH = PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH
 	local x = SCREEN_PAD
 	local y = SCREEN_PAD
@@ -103,7 +118,18 @@ function WavePreview.draw()
 		local entry = previewCache.entries[i]
 		lg.setColor(colorText)
 		Text.printShadow(entry.name, innerX, rowY)
-		rowY = rowY + rowH
+		rowY = rowY + textH
+		if entry.threats then
+			lg.setColor(Theme.ui.warn)
+			Text.printShadow(entry.threats, innerX + 8, rowY)
+			rowY = rowY + textH
+		end
+		if entry.counter then
+			lg.setColor(Theme.ui.good)
+			Text.printfShadow(entry.counter, innerX + 8, rowY, innerW - 8, "left")
+			rowY = rowY + textH * (entry.counterLineCount or 1)
+		end
+		rowY = rowY + ROW_GAP
 	end
 end
 
