@@ -99,6 +99,7 @@ function CampaignDesign.get(mapIndex)
 		pressure = teaching.pressure,
 		reward = CampaignUnlocks.getRewardForMap(map),
 		counterplay = teaching.counterplay,
+		hintKey = "campaign.hints." .. map.id,
 	}
 end
 
