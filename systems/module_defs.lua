@@ -584,7 +584,7 @@ local function copyBehaviorFields(target, source)
 end
 
 local function behaviorRole(id)
-	if id == "move_homing" or id == "move_linear" or id == "move_boomerang" or id == "move_wave" or id == "move_spiral" or id == "move_orbit" or id == "move_suspend" then
+	if id == "move_homing" or id == "move_linear" or id == "move_to_target_point" or id == "move_boomerang" or id == "move_wave" or id == "move_spiral" or id == "move_orbit" or id == "move_suspend" then
 		return "movement"
 	end
 	if id == "hit_circle" or id == "hit_line" or id == "instant_hit" or id == "emit_on_target" then
