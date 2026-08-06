@@ -145,6 +145,10 @@ function Backdrop.start(index)
 	Difficulty.set("hard")
 
 	resetGame()
+	-- Backdrop shots intentionally use waves beyond the ten-wave campaign.
+	-- Build them with the endless wave set instead of requesting a missing
+	-- campaign definition from WaveBuilder.
+	State.endless = true
 
 	State.ignoreStats = true
 
