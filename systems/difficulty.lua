@@ -13,7 +13,7 @@ Difficulty.defs = {
 		rewardBias = 1.05,
 
 		-- Player affordances
-		startMoney = 120,
+		startMoney = 135,
 		startLives = 25,
 		sellRefund = 0.85,
 	},
@@ -27,6 +27,7 @@ Difficulty.defs = {
 
 		rewardBias = 1.0,
 
+		-- Supports either two entry towers or one premium opening investment.
 		startMoney = 120,
 		startLives = 20,
 		sellRefund = 0.75,
@@ -41,7 +42,7 @@ Difficulty.defs = {
 
 		rewardBias = 1.0,
 
-		startMoney = 120,
+		startMoney = 110,
 		startLives = 15,
 		sellRefund = 0.60,
 	},

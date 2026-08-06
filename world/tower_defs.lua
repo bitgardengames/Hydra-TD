@@ -8,7 +8,7 @@ return {
 	slow = {
 		nameKey = "tower.slow",
 		descKey = "towerDesc.slow",
-		cost = 45,
+		cost = 55,
 		range = 4.25 * Constants.TILE,
 		fireRate = 1.15,
 		damage = 3,
@@ -39,7 +39,7 @@ return {
 	lancer = {
 		nameKey = "tower.lancer",
 		descKey = "towerDesc.lancer",
-		cost = 50,
+		cost = 60,
 		range = 3.75 * Constants.TILE,
 		fireRate = 2.15, -- shots/sec
 		damage = 9,
@@ -69,7 +69,7 @@ return {
 	poison = {
 		nameKey = "tower.poison",
 		descKey = "towerDesc.poison",
-		cost = 60,
+		cost = 65,
 		range = 3.55 * Constants.TILE,
 		fireRate = 1.35,
 		damage = 2,
@@ -103,7 +103,7 @@ return {
 	cannon = {
 		nameKey = "tower.cannon",
 		descKey = "towerDesc.cannon",
-		cost = 80,
+		cost = 90,
 		range = 3.05 * Constants.TILE,
 		fireRate = 0.68,
 		damage = 32,
@@ -133,7 +133,7 @@ return {
 	shock = {
 		nameKey = "tower.shock",
 		descKey = "towerDesc.shock",
-		cost = 75,
+		cost = 85,
 		range = 3.7 * Constants.TILE,
 		fireRate = 1.05,
 		damage = 6,
@@ -160,7 +160,7 @@ return {
 	plasma = {
 		nameKey = "tower.plasma",
 		descKey = "towerDesc.plasma",
-		cost = 95,
+		cost = 120,
 		range = 3.4 * Constants.TILE,
 		fireRate = 0.72,
 		damage = 5,

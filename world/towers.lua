@@ -53,6 +53,10 @@ local AIM_RECOMPUTE_STALE_FRAMES = 6
 local SPLASH_LEAD_SPEED_THRESHOLD = 20
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_BRANCH_UPGRADES = 4
+-- Each entry is the cost of the next specialization as a multiple of the
+-- tower's purchase price. Keeping this curve explicit prevents a base-cost
+-- balance pass from being amplified by an opaque exponential formula.
+local UPGRADE_COST_MULTIPLIERS = {1.25, 1.75, 2.4, 3.2}
 local RETARGET_JITTER = 0.10
 local RETARGET_MIN_FACTOR = 0.5
 local RETARGET_MAX_FACTOR = 1.5
@@ -244,6 +248,7 @@ local function addTower(kind, gx, gy)
 	end
 
 	local x, y = MapMod.gridToCenter(gx, gy)
+	local diff = Difficulty.get()
 
 	local t = {
 		kind = kind,
@@ -290,7 +295,7 @@ local function addTower(kind, gx, gy)
 		turnSpeed = def.turnSpeed or 12,
 		canRotate = def.canRotate ~= false,
 		color = def.color,
-		sellValue = floor(def.cost * 0.75),
+		sellValue = floor(def.cost * diff.sellRefund),
 		slow = def.onHitSlow,
 		splash = def.splash,
 		chain = def.chain,
@@ -335,10 +340,14 @@ local function getUpgradeCost(tower)
 		return nil
 	end
 
-	local base = tower.def.cost
-	local exp = 1.55
+	local upgradeIndex = tower.level or 1
+	local multiplier = UPGRADE_COST_MULTIPLIERS[upgradeIndex]
 
-	return floor(base * (exp ^ tower.level) + 0.5)
+	if not multiplier then
+		return nil
+	end
+
+	return floor(tower.def.cost * multiplier + 0.5)
 end
 
 local function upgradeTower(t, specializationId)
