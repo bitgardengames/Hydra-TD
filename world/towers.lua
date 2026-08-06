@@ -336,7 +336,10 @@ local function addTower(kind, gx, gy)
 end
 
 local function getUpgradeCost(tower)
-	if not tower or not TowerBranchDefs.getChoices(tower.kind, (tower.level or 1) + 1) then
+	if not tower or (tower.level or 1) >= 5 then
+		return nil
+	end
+	if State.isReplayMode() and not TowerBranchDefs.getChoices(tower.kind, (tower.level or 1) + 1) then
 		return nil
 	end
 
@@ -355,10 +358,6 @@ local function upgradeTower(t, specializationId)
 		return false, "missing_tower"
 	end
 
-	if not specializationId then
-		return false, "missing_choice"
-	end
-
 	local cost = getUpgradeCost(t)
 
 	if not cost then
@@ -372,7 +371,10 @@ local function upgradeTower(t, specializationId)
 	local diff = Difficulty.get()
 	local nextLevel = (t.level or 1) + 1
 
-	if not TowerBranchDefs.isValidChoice(t.kind, nextLevel, specializationId) then
+	if State.isReplayMode() and not specializationId then
+		return false, "missing_choice"
+	end
+	if specializationId and not TowerBranchDefs.isValidChoice(t.kind, nextLevel, specializationId) then
 		return false, "invalid_choice"
 	end
 
@@ -382,10 +384,12 @@ local function upgradeTower(t, specializationId)
 	t.prevHeight = t.height
 	t.height = (t.level - 1) * 4
 	t.levelUpAnim = 1
-	t.specializationId = specializationId
-	t.branchSelections = t.branchSelections or {}
-	t.branchSelections[#t.branchSelections + 1] = specializationId
-	RunStats.recordUpgrade(t, specializationId, cost, State.wave, TowerBranchDefs.getChoices(t.kind, t.level + 1) == nil)
+	if State.isReplayMode() then
+		t.specializationId = specializationId
+		t.branchSelections = t.branchSelections or {}
+		t.branchSelections[#t.branchSelections + 1] = specializationId
+	end
+	RunStats.recordUpgrade(t, specializationId, cost, State.wave, t.level >= 5)
 	Save.recordTowerUpgrade(t.kind, specializationId)
 	recomputeTowerStats(t)
 	Modules.invalidateTower(t)

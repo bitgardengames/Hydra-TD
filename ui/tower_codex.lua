@@ -1,11 +1,9 @@
 local Constants = require("core.constants")
 local Fonts = require("core.fonts")
 local L = require("core.localization")
-local ModuleDefs = require("systems.module_defs")
 local Save = require("core.save")
 local Text = require("ui.text")
 local Theme = require("core.theme")
-local TowerBranchDefs = require("world.tower_branch_defs")
 
 local Codex = {}
 local lg = love.graphics
@@ -49,33 +47,6 @@ function Codex.drawDamageInfo(def, x, y, w)
 	line(L("towerCodex.damageInfo", behaviorSummary(def)), x, y, w, Theme.ui.warn)
 end
 
-function Codex.drawPaths(kind, x, y, w)
-	local history = ((Save.data.meta.towerHistory or {})[kind] or {})
-	local known = history.discoveredPaths or {}
-	for level = 2, 5 do
-		local choices = TowerBranchDefs.getChoices(kind, level) or {}
-		local names = {}
-		for _, id in ipairs(choices) do
-			local def = ModuleDefs[id]
-			if known[id] then names[#names + 1] = def and L(def.nameKey) or id
-			else names[#names + 1] = L("towerCodex.silhouette", L("towerCodex.pathUnlock", level)) end
-		end
-		line(L("towerCodex.tier", level, table.concat(names, "  /  ")), x, y + (level - 2) * 20, w)
-	end
-end
-
-function Codex.drawCompatibleModules(kind, x, y, w)
-	local discovered = Save.data.meta.discoveredModules or {}
-	local names = {}
-	for id, def in pairs(ModuleDefs) do
-		if def.category ~= "special" then
-			names[#names + 1] = discovered[id] and L(def.nameKey) or L("towerCodex.moduleSilhouette")
-		end
-	end
-	table.sort(names)
-	line(L("towerCodex.compatible", table.concat(names, ", ")), x, y, w)
-end
-
 function Codex.drawEntry(kind, def, x, y, w)
 	local h = ((Save.data.meta.towerHistory or {})[kind] or {})
 	Fonts.set("ui"); lg.setColor(def.color or Theme.ui.text); Text.printShadow(L(def.nameKey), x, y)
@@ -85,10 +56,8 @@ function Codex.drawEntry(kind, def, x, y, w)
 	Codex.drawUpgradeDeltas(def, x, y + 68, w)
 	Codex.drawTargetingRules(def, x, y + 88, w)
 	Codex.drawDamageInfo(def, x, y + 108, w)
-	line(L("towerCodex.paths"), x, y + 132, w, Theme.ui.selected)
-	Codex.drawPaths(kind, x, y + 152, w)
-	Codex.drawCompatibleModules(kind, x, y + 238, w)
+	line(L("towerCodex.nativeRole", L(def.descKey)), x, y + 132, w, Theme.ui.selected)
 end
 
-Codex.ENTRY_HEIGHT = 350
+Codex.ENTRY_HEIGHT = 220
 return Codex

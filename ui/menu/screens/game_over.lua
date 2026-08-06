@@ -112,9 +112,11 @@ local function buildHighlights()
 	summaryLines = {
 		string.format("MVP %s  •  Leak %s (%d)  •  Damage %s", summary.mvp, summary.leak, summary.leakCount, summary.damageType),
 		"Build: " .. (summary.build ~= "" and summary.build or "none") .. (summary.paths ~= "" and "  •  " .. summary.paths or ""),
-		"Modules: " .. (summary.modules ~= "" and summary.modules or "none") .. "  •  Contracts: " .. (summary.contracts ~= "" and summary.contracts or "none"),
 		summary.observation .. "  •  [C] Copy build code",
 	}
+	if State.isReplayMode() and (summary.modules ~= "" or summary.contracts ~= "") then
+		table.insert(summaryLines, 3, "Modules: " .. (summary.modules ~= "" and summary.modules or "none") .. "  •  Contracts: " .. (summary.contracts ~= "" and summary.contracts or "none"))
+	end
 end
 
 local function selectGameOverMessage()

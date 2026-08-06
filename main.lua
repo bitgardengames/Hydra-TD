@@ -129,6 +129,8 @@ function resetGame()
 	State.totalLeaks = 0
 
 	State.modules = {}
+	State.contracts = State.isReplayMode() and (State.contracts or {}) or {}
+	State.selectedContracts = State.isReplayMode() and (State.selectedContracts or {}) or {}
 
     State.inPrep = true
     State.paused = false
