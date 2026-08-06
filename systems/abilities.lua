@@ -24,7 +24,9 @@ function Abilities.getEquipped(abilityId)
 end
 
 local function getEffect(def)
-	if CampaignUnlocks.isAbilityUpgradeUnlocked("enhanced_abilities") then
+	-- Enhancements are opt-in per definition so merely adding an upgradedEffect
+	-- cannot grant it before its authored campaign reward.
+	if def.upgradeId and CampaignUnlocks.isAbilityUpgradeUnlocked(def.upgradeId) then
 		return def.upgradedEffect or def.effect
 	end
 
