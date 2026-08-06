@@ -2,40 +2,46 @@ local Difficulty = require("systems.difficulty")
 
 local DifficultyCurve = {}
 
--- Each authored map is a complete ten-wave arc. Durability starts at the
--- literal enemy definition on wave one and eases upward to the final exam.
+-- Campaign durability is a repeatable, local ten-wave arc. Map progression is
+-- deliberately shallow: Twin Loop (map 15) is 1.75x map one unless a designer
+-- supplies an explicit hpScalar on a map definition.
 DifficultyCurve.campaignEnd = 10
-DifficultyCurve.campaignStartHp = 1.0
-DifficultyCurve.campaignEndHp = 3.25
-DifficultyCurve.campaignExponent = 1.35
+DifficultyCurve.localStartHp = 1.0
+DifficultyCurve.localEndHp = 1.62
+DifficultyCurve.localExponent = 1.25
+DifficultyCurve.mapIndexCap = 15
+DifficultyCurve.finalMapHp = 1.75
 
--- Count and composition become the primary endless levers. A small compound
--- step per five-wave tier keeps durability relevant without runaway HP.
-DifficultyCurve.endlessHpPerTier = 1.12
-DifficultyCurve.endlessHpPerWave = 0.018
+-- Endless adds restrained durability tiers after evaluating the same local arc.
+DifficultyCurve.endlessHpPerTier = 1.10
 
-function DifficultyCurve.getEnemyHpMultiplier(waveIndex)
-	waveIndex = math.max(1, tonumber(waveIndex) or 1)
-	local endlessWave = math.max(0, waveIndex - DifficultyCurve.campaignEnd)
-	local tier = endlessWave > 0 and math.floor((endlessWave - 1) / 5) or 0
-	local progress = math.min(1, (waveIndex - 1) / (DifficultyCurve.campaignEnd - 1))
-	local campaignHp = DifficultyCurve.campaignStartHp
-		+ (DifficultyCurve.campaignEndHp - DifficultyCurve.campaignStartHp)
-			* (progress ^ DifficultyCurve.campaignExponent)
-	local baseHp = waveIndex <= DifficultyCurve.campaignEnd and campaignHp
-		or (DifficultyCurve.campaignEndHp * (DifficultyCurve.endlessHpPerTier ^ tier)
-			* (1 + endlessWave * DifficultyCurve.endlessHpPerWave))
+function DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
+	if tonumber(authoredScalar) then return math.max(0.1, tonumber(authoredScalar)) end
+	mapIndex = math.max(1, math.floor(tonumber(mapIndex) or 1))
+	local progress = math.min(1, (mapIndex - 1) / (DifficultyCurve.mapIndexCap - 1))
+	return 1 + (DifficultyCurve.finalMapHp - 1) * progress
+end
 
-	return baseHp * Difficulty.get().enemyHpBias
+function DifficultyCurve.getEnemyHpMultiplier(waveIndex, mapIndex, authoredScalar)
+	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
+	local localWave = ((waveIndex - 1) % DifficultyCurve.campaignEnd) + 1
+	local progress = (localWave - 1) / (DifficultyCurve.campaignEnd - 1)
+	local localHp = DifficultyCurve.localStartHp
+		+ (DifficultyCurve.localEndHp - DifficultyCurve.localStartHp)
+			* (progress ^ DifficultyCurve.localExponent)
+	local endlessTier = math.max(0, math.floor((waveIndex - 1) / DifficultyCurve.campaignEnd))
+	local endlessHp = DifficultyCurve.endlessHpPerTier ^ endlessTier
+	local mapHp = DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
+	return localHp * endlessHp * mapHp * Difficulty.get().enemyHpBias
 end
 
 function DifficultyCurve.getEnemySpeedMultiplier(_waveIndex)
 	return Difficulty.get().enemySpeedBias
 end
 
-function DifficultyCurve.getBossHpMultiplier(waveIndex)
-	-- Boss danger comes from faster add cycles and larger encounters in Waves.
-	return Difficulty.get().bossHpBias * DifficultyCurve.getEnemyHpMultiplier(waveIndex) * 0.9
+function DifficultyCurve.getBossHpMultiplier(waveIndex, mapIndex, authoredScalar)
+	return Difficulty.get().bossHpBias
+		* DifficultyCurve.getEnemyHpMultiplier(waveIndex, mapIndex, authoredScalar) * 0.9
 end
 
 return DifficultyCurve

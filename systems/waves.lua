@@ -174,10 +174,11 @@ local function resolveBossEncounterTemplate(map, bossKind, bossIndex)
 	}
 end
 
-local function getWaveMultipliers(waveNumber, mapMult, isBoss)
+local function getWaveMultipliers(waveNumber, mapIndex, map, isBoss)
+	local authoredScalar = map and map.hpScalar
 	local hpMult = isBoss
-		and (DifficultyCurve.getBossHpMultiplier(waveNumber) * mapMult)
-		or (DifficultyCurve.getEnemyHpMultiplier(waveNumber) * mapMult)
+		and DifficultyCurve.getBossHpMultiplier(waveNumber, mapIndex, authoredScalar)
+		or DifficultyCurve.getEnemyHpMultiplier(waveNumber, mapIndex, authoredScalar)
 	local spdMult = DifficultyCurve.getEnemySpeedMultiplier(waveNumber)
 	return hpMult, spdMult
 end
@@ -238,6 +239,7 @@ function Waves.getWavePreview(waveNumber)
 			delay = delay or 0,
 			tags = {},
 			counterHints = {},
+			traitIds = {},
 			affixes = affixes or {},
 			affixNames = {},
 			affixDescriptions = {},
@@ -249,9 +251,13 @@ function Waves.getWavePreview(waveNumber)
 				group.affixDescriptions[#group.affixDescriptions + 1] = L(affix.descriptionKey)
 			end
 		end
-		for _, trait in ipairs(EnemyTraits.forEnemy(def)) do
-			group.tags[#group.tags + 1] = trait.tag
-			group.counterHints[#group.counterHints + 1] = trait.counter
+		for _, traitId in ipairs((def and def.traits) or {}) do
+			local trait = EnemyTraits.get(traitId)
+			if trait then
+				group.traitIds[#group.traitIds + 1] = traitId
+				group.tags[#group.tags + 1] = L("enemyTrait." .. traitId .. ".tag")
+				group.counterHints[#group.counterHints + 1] = L("enemyTrait." .. traitId .. ".counter")
+			end
 		end
 		groups[#groups + 1] = group
 	end
@@ -320,7 +326,6 @@ function Waves.startWave()
 	Onboarding.event("wave_started")
 	local map = Maps[State.mapIndex]
 	local mapWaveDefs = getMapWaveDefs(map)
-	local mapMult = State.mapCoverageMult or 1.0
 
 	State.waveLeaks = 0
 
@@ -343,8 +348,8 @@ function Waves.startWave()
 		local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
 		local tier = WaveBuilder.getIntensityTier(State.wave)
 
-		local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, true)
-		local addHpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave) * mapMult
+		local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, true)
+		local addHpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave, State.mapIndex, map and map.hpScalar)
 
 		State.activeBoss = nil
 		State.activeBossKind = bossKind
@@ -376,7 +381,7 @@ function Waves.startWave()
 	local count = max(1, wave.count or 1)
 	local kind = wave.enemy or "grunt"
 
-	local hpMult, spdMult = getWaveMultipliers(State.wave, mapMult, false)
+	local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, false)
 
 	local gap = wave.spacing or 1.0
 

@@ -3,8 +3,24 @@ local Fonts = require("core.fonts")
 local L = require("core.localization")
 local Save = require("core.save")
 local Text = require("ui.text")
+local Traits = require("world.enemy_traits")
 
 local Codex = {}
+
+-- Enemy entries can use this alongside their authored description. Keeping the
+-- same localized sentences as the wave preview makes counter advice consistent.
+function Codex.drawCounters(def, x, y, width)
+	local rows = 0
+	for _, id in ipairs((def and def.traits) or {}) do
+		if Traits.get(id) then
+			love.graphics.setColor(1, 0.78, 0.3)
+			Text.printfShadow(L("enemyTrait." .. id .. ".tag") .. " — "
+				.. L("enemyTrait." .. id .. ".counter"), x, y + rows * 32, width, "left")
+			rows = rows + 1
+		end
+	end
+	return rows * 32
+end
 
 -- Shared by codex screens: undiscovered elite mechanics stay silhouetted until
 -- the player actually encounters one, just like enemy archetype discovery.
