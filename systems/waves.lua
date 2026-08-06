@@ -225,7 +225,7 @@ resetTable(bossAdds, bossAddsDefaults)
 -- Build a display-only description of a wave.  Keep this independent of the
 -- live spawner tables so callers (notably the prep HUD) can safely look ahead.
 function Waves.getWavePreview(waveNumber)
-	local wave = WaveBuilder.build(waveNumber, Maps[State.mapIndex])
+	local wave = WaveBuilder.build(waveNumber, Maps[State.mapIndex], State.endless)
 	local groups = {}
 
 	local function addGroup(kind, count, spacing, delay, affixes)
@@ -334,7 +334,7 @@ function Waves.startWave()
 	-- WaveBuilder enforces boss invariant and returns a simple descriptor
 	local wave = tutorialWave and {
 		count = 4, enemy = "grunt", spacing = 0.85,
-	} or WaveBuilder.build(State.wave, map)
+	} or WaveBuilder.build(State.wave, map, State.endless)
 
 	-- Boss waves
 	if wave.boss then
