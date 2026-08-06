@@ -1,4 +1,5 @@
 local State = require("core.state")
+local Save = require("core.save")
 local Theme = require("core.theme")
 local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
@@ -75,7 +76,9 @@ end
 local iconDrawers = {meteor = drawMeteor, frost_nova = drawFrost}
 
 function AbilityBar.draw(dt, mx, my)
-	local equipped = State.equippedAbilities or {}
+	-- Draw the persisted selections so a chosen ability and a locked slot can
+	-- explain their distinct prerequisites. State contains only usable abilities.
+	local equipped = (Save.data and Save.data.equippedAbilities) or State.equippedAbilities or {}
 	local count = min(#equipped, MAX_ABILITIES)
 	local sw, sh = lg.getDimensions()
 	local totalH = count * SIZE + math.max(0, count - 1) * GAP
