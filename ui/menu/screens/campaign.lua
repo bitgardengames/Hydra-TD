@@ -15,6 +15,7 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
+local CampaignDesign = require("systems.campaign_design")
 local Towers = require("world.towers")
 
 local lg = love.graphics
@@ -41,7 +42,7 @@ local innerRadius = baseRadius - outlineW * 0.25
 
 local PAD_PREVIEW = 44
 local PAD_TITLE = 60
-local PAD_META = 58
+local PAD_META = 92
 local TITLE_OFFSET = -22
 
 local paddingX = 28
@@ -360,16 +361,38 @@ local function localizedTowerList(kinds)
 	return table.concat(names, L("campaign.previewListSeparator"))
 end
 
-local function buildPreviewMessages(map)
+local function localizedEnemyList(kinds)
+	local names = {}
+
+	for _, kind in ipairs(kinds or {}) do
+		names[#names + 1] = L("enemy." .. kind)
+	end
+
+	return table.concat(names, L("campaign.previewListSeparator"))
+end
+
+local function buildPreviewMessages(map, mapIndex)
 	local messages = {}
+	local introducedEnemies = map.introducesEnemies or {}
 	local reward = CampaignUnlocks.getRewardForMap(map)
+	local design = CampaignDesign.get(mapIndex)
+
+	if #introducedEnemies == 1 then
+		messages[#messages + 1] = L("campaign.newEnemy", localizedEnemyList(introducedEnemies))
+	elseif #introducedEnemies > 1 then
+		messages[#messages + 1] = L("campaign.newEnemies", localizedEnemyList(introducedEnemies))
+	end
 
 	if reward then
 		if reward.type == "tower" then
-			messages[#messages + 1] = L("campaign.newTowerReward", reward.label or localizedTowerList({reward.id}))
+			messages[#messages + 1] = L("campaign.clearReward", reward.label or localizedTowerList({reward.id}))
 		elseif reward.label then
-			messages[#messages + 1] = L("campaign.newTowerReward", reward.label)
+			messages[#messages + 1] = L("campaign.clearReward", reward.label)
 		end
+	end
+
+	if design and design.hintKey then
+		messages[#messages + 1] = L("campaign.tacticalHint", L(design.hintKey))
 	end
 
 	return messages
@@ -653,7 +676,7 @@ function Screen.draw()
 
 	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
 
-	local previewMessages = buildPreviewMessages(map)
+	local previewMessages = buildPreviewMessages(map, index)
 	local metaY = textY + PAD_TITLE + 20
 	for i, message in ipairs(previewMessages) do
 		Text.printfShadow(message, 0, metaY + (i - 1) * 18, sw, "center")
