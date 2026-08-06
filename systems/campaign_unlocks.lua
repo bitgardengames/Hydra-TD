@@ -27,8 +27,11 @@ local rewardsByMapId = {
 	outerloop = {type = "tower", id = "plasma", label = "Plasma tower"},
 	terrace = {type = "wave_preview", id = "enhanced", label = "Enhanced wave preview"},
 	highridge = {type = "module_category", id = "movement", label = "Movement module category"},
+	-- Clearing Crossflow opens the second slot for the campaign's final two maps.
+	-- Keeping this late preserves the single-ability decisions in the early game.
 	crossflow = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
-	-- Enhanced abilities are earned only after Stepping Stones tests planning with both ability slots.
+	-- Stepping Stones is the final-map preparation milestone. Enhanced effects
+	-- are intentionally unavailable before this reward and debut on Twin Loop.
 	steppingstones = {type = "ability_upgrade", id = "enhanced_abilities", label = "Enhanced active ability effects"},
 	twinloop = {type = "campaign_complete", id = "challenge_endless", label = "Challenge and Endless modes"},
 }
