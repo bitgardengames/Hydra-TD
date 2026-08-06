@@ -482,12 +482,13 @@ function Waves.getWaveCompletionBonus(wave, waveLeaks)
 		return 0
 	end
 
-	local base = 2 * wave
+	-- Flawless income acknowledges clean play without outrunning purchase anchors.
+	local base = Difficulty.get().perfectWaveBonus
 	local bossKind = State.activeBossKind
 	local def = bossKind and EnemyDefs[bossKind] or nil
 	local mechanicWeight = (def and def.mechanicWeight) or 1.0
 	local archetypeBonus = (def and def.boss and def.mechanicPackage) and 0.2 or 0
-	local milestoneBonus = (wave % 5 == 0) and 0.12 or 0
+	local milestoneBonus = (wave % 5 == 0) and 0.10 or 0
 	local mult = 1.0 + archetypeBonus + milestoneBonus + ((mechanicWeight - 1.0) * 0.75)
 
 	return math.floor((base * mult) + 0.5)

@@ -13,6 +13,7 @@ local L = require("core.localization")
 local Save = require("core.save")
 local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
+local Difficulty = require("systems.difficulty")
 
 local enemies = {}
 local enemyPool = {}
@@ -424,7 +425,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.maxHp = def.hp * hpScale * hpAffixMult
 	e.baseSpeed = def.speed * spdScale * speedAffixMult
 	e.speed = e.baseSpeed
-	e.reward = def.reward * (1.0 + State.wave * 0.01) * rewardAffixMult
+	-- Kill income is the economic floor for imperfect play; wave number does not
+	-- compound it independently of authored counts and compositions.
+	e.reward = def.reward * Difficulty.get().rewardBias * rewardAffixMult
 	e.score = def.score or 0
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius

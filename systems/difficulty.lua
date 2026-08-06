@@ -14,6 +14,7 @@ Difficulty.defs = {
 
 		-- Economy
 		rewardBias = 1.05,
+		perfectWaveBonus = 1.25,
 
 		-- Player affordances
 		startMoney = 120,
@@ -29,6 +30,8 @@ Difficulty.defs = {
 		bossHpBias = 1.05,
 
 		rewardBias = 1.0,
+		-- Ten flawless non-boss waves yield only $10; kills remain the income floor.
+		perfectWaveBonus = 1.0,
 
 		-- Supports either two entry towers or one premium opening investment.
 		startMoney = 120,
@@ -44,6 +47,7 @@ Difficulty.defs = {
 		bossHpBias = 1.2,
 
 		rewardBias = 0.95,
+		perfectWaveBonus = 0.75,
 
 		startMoney = 120,
 		startLives = 15,
