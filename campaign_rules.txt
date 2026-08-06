@@ -1,0 +1,54 @@
+Core Campaign Philosophy
+Hydra TD should use this structure:
+
+Each map teaches one clear thing.
+
+“This map teaches bends.”
+
+“This map teaches splash.”
+
+“This map teaches fast enemies.”
+
+“This map teaches shields.”
+
+“This map tests everything.”
+
+Unlocks are mostly utility, not permanent power.
+
+Successful TD campaigns rarely need RPG-like stat growth.
+
+The player should win because they learned placement, tower roles, upgrades, targeting, and abilities.
+
+Power should come from in-map economy and upgrades, not meta-level damage boosts.
+
+Every tower remains relevant all campaign.
+
+Do not unlock a tower and then make earlier towers obsolete.
+
+Lancer stays the efficient baseline.
+
+Slow stays the control multiplier.
+
+Cannon handles packs and armor.
+
+Poison handles sustained damage and regeneration.
+
+Shock handles chains and shields.
+
+Plasma handles expensive zone/priority damage.
+
+Active abilities fill campaign rewards nicely.
+
+Meteor and Frost Nova are perfect mid-campaign unlocks because they add emergency decisions without rewriting tower balance.
+
+Keep the game legible.
+
+Simple map order.
+
+Simple star/medal progression.
+
+Simple tower role descriptions.
+
+Simple enemy introductions.
+
+Simple difficulty differences.
