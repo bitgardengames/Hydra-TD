@@ -30,9 +30,9 @@ local rewardsByMapId = {
 	-- Clearing Crossflow opens the second slot for the campaign's final two maps.
 	-- Keeping this late preserves the single-ability decisions in the early game.
 	crossflow = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
-	-- Stepping Stones is the final-map preparation milestone. Enhanced effects
-	-- are intentionally unavailable before this reward and debut on Twin Loop.
-	steppingstones = {type = "ability_upgrade", id = "enhanced_abilities", label = "Enhanced active ability effects"},
+	-- The final-map unlock is progression, not a permanent damage or cooldown
+	-- increase. Campaign clears never require a meta-stat growth track.
+	steppingstones = {type = "map", id = "twinloop", label = "Twin Loop final map"},
 	twinloop = {type = "campaign_complete", id = "challenge_endless", label = "Challenge and Endless modes"},
 }
 
