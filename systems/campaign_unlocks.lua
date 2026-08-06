@@ -12,32 +12,25 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 -- Rewards intentionally avoid mandatory stat power and instead emphasize new
 -- verbs, optional build utilities, and information that teaches counters.
 local rewardsByMapId = {
-	riverbend = {type = "tower", id = "slow", label = "Slow Tower"},
-	switchback = {type = "tower", id = "cannon", label = "Cannon tower"},
+	riverbend = {type = "tower", id = "cannon", labelKey = "campaign.rewards.cannon"},
+	switchback = {type = "ability", id = "meteor", labelKey = "campaign.rewards.meteor"},
 	highpass = {type = "tower", id = "poison", label = "Poison tower"},
-	roundabout = {type = "ability", id = "meteor", label = "Meteor active ability"},
+	roundabout = {type = "targeting", id = "high_hp", labelKey = "campaign.rewards.strongest"},
 	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
 	gauntlet = {type = "tower", id = "shock", label = "Shock tower"},
-	-- Frost Nova is earned after the map that introduces runners.
+	-- Frost Nova is earned before the map that introduces runners.
 	snaketrail = {type = "ability", id = "frost_nova", label = "Frost Nova active ability"},
-	backtrack = {type = "targeting", id = "high_hp", label = "Strongest targeting option"},
-	lowvalley = {type = "module_category", id = "utility", label = "Utility module category"},
-	circuit = {type = "targeting", id = "low_hp", label = "Weakest targeting option"},
-	-- Plasma is earned after the long-map midgame exam.
-	outerloop = {type = "tower", id = "plasma", label = "Plasma tower"},
-	terrace = {type = "wave_preview", id = "enhanced", label = "Enhanced wave preview"},
-	highridge = {type = "module_category", id = "movement", label = "Movement module category"},
-	-- Clearing Crossflow opens the second slot for the campaign's final two maps.
-	-- Keeping this late preserves the single-ability decisions in the early game.
-	crossflow = {type = "ability_slot", id = "ability_slot_2", slots = 2, label = "Second active ability slot"},
-	-- The final-map unlock is progression, not a permanent damage or cooldown
-	-- increase. Campaign clears never require a meta-stat growth track.
-	steppingstones = {type = "map", id = "twinloop", label = "Twin Loop final map"},
-	twinloop = {type = "campaign_complete", id = "challenge_endless", label = "Challenge and Endless modes"},
+	backtrack = {type = "targeting", id = "low_hp", labelKey = "campaign.rewards.weakest"},
+	lowvalley = {type = "wave_preview", id = "enhanced", labelKey = "campaign.rewards.enhancedPreview"},
+	circuit = {type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
+	outerloop = {type = "ability_slot", id = "ability_slot_2", slots = 2, labelKey = "campaign.rewards.secondAbilitySlot"},
+	highridge = {type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"},
+	twinloop = {type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"},
 }
 
 local requiredMapByTower = {
 	lancer = 1,
+	slow = 1,
 }
 
 local requiredMapByFeature = {}
@@ -46,6 +39,43 @@ local rewardOrder = {}
 local function featureKey(featureType, id)
 	return tostring(featureType) .. ":" .. tostring(id)
 end
+
+local function validateRewards()
+	local AbilityDefs = require("systems.ability_defs")
+	local Targeting = require("world.targeting")
+	local knownMaps, knownTowers, knownAbilities, knownUpgrades, knownTargeting = {}, {}, {}, {}, {}
+	for _, map in ipairs(Maps) do knownMaps[map.id] = true end
+	for _, towerId in ipairs(Constants.TOWER_LIST) do knownTowers[towerId] = true end
+	for abilityId, def in pairs(AbilityDefs) do
+		if type(def) == "table" and def.id then
+			knownAbilities[abilityId] = true
+			if def.upgradeId then knownUpgrades[def.upgradeId] = true end
+		end
+	end
+	for _, targetingId in pairs(Targeting.MODES) do knownTargeting[targetingId] = true end
+
+	for mapId, reward in pairs(rewardsByMapId) do
+		assert(knownMaps[mapId], "campaign reward uses unknown map ID: " .. tostring(mapId))
+		if reward.type == "tower" then
+			assert(knownTowers[reward.id], "campaign reward uses unknown tower ID: " .. tostring(reward.id))
+		elseif reward.type == "ability" then
+			assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id))
+		elseif reward.type == "ability_upgrade" then
+			assert(knownUpgrades[reward.id], "campaign reward uses unknown ability upgrade ID: " .. tostring(reward.id))
+		elseif reward.type == "targeting" then
+			assert(knownTargeting[reward.id], "campaign reward uses unknown targeting ID: " .. tostring(reward.id))
+		elseif reward.type == "map" then
+			assert(knownMaps[reward.id], "campaign reward uses unknown map ID: " .. tostring(reward.id))
+		end
+	end
+	for _, map in ipairs(Maps) do
+		if map.prerequisiteMapId then
+			assert(knownMaps[map.prerequisiteMapId], "campaign route uses unknown map ID: " .. tostring(map.prerequisiteMapId))
+		end
+	end
+end
+
+validateRewards()
 
 for mapIndex, map in ipairs(Maps) do
 	local reward = rewardsByMapId[map.id]
