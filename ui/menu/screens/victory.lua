@@ -12,8 +12,6 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local Save = require("core.save")
 local L = require("core.localization")
-local Modules = require("systems.modules")
-local RunStats = require("systems.run_stats")
 local TowerDefs = require("world.tower_defs")
 local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
@@ -340,9 +338,6 @@ end
 
 local function buildStats()
 	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
-	RunStats.captureLoadout(Modules.active, State.selectedContracts or State.contracts)
-	local summary = RunStats.summarize(State.money, State.score)
-	State.runSummary = summary
 	local rewardNames = {}
 	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
 		rewardNames[#rewardNames + 1] = L("tower." .. kind)
@@ -350,13 +345,7 @@ local function buildStats()
 
 	stats = {
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
-		{ label = "Run leaders", value = string.format("MVP %s  •  Leak %s (%d)  •  Damage %s", summary.mvp, summary.leak, summary.leakCount, summary.damageType) },
-		{ label = "Final build", value = (summary.build ~= "" and summary.build or "none") .. (summary.paths ~= "" and "  •  " .. summary.paths or "") },
-		{ label = "Coach / share", value = summary.observation .. "  •  [C] Copy build code" },
 	}
-	if State.isReplayMode() and (summary.modules ~= "" or summary.contracts ~= "") then
-		table.insert(stats, 4, { label = "Modules / contracts", value = (summary.modules ~= "" and summary.modules or "none") .. "  /  " .. (summary.contracts ~= "" and summary.contracts or "none") })
-	end
 
 	if #rewardNames > 0 then
 		table.insert(stats, 2, { label = L("victory.newTowerReward"), value = table.concat(rewardNames, "  •  ") })
@@ -641,10 +630,7 @@ end
 function Screen.keypressed(key)
 	if rewardCardBlockingInput() then return true end
 
-	if key == "c" and State.runSummary then
-		love.system.setClipboardText(State.runSummary.code)
-		return true
-	elseif key == "escape" then
+	if key == "escape" then
 		for _, btn in ipairs(buttons) do
 			if btn.id == "menu" and btn.onClick then
 				Sound.play("uiBack")
