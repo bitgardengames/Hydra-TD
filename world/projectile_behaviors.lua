@@ -562,6 +562,65 @@ B.move_linear = {
 	end
 }
 
+-- Fly to the target's position at the instant the projectile was created.
+-- Unlike homing movement, this deliberately does not update the destination as
+-- the enemy moves (or disappears), so an unguided shell always reaches and
+-- detonates at its original aim point.
+B.move_to_target_point = {
+	type = "movement",
+
+	init = function(p)
+		local tx = p.lastTX
+		local ty = p.lastTY
+		local dx = tx - p.x
+		local dy = ty - p.y
+		local dist = sqrt(dx * dx + dy * dy)
+
+		-- Carpet-fire children retain their angular spread while using the same
+		-- range as the parent shell's snapshotted destination.
+		if p.hitOrigin == "carpet_child" then
+			local ang = p.angle or 0
+			tx = p.x + cos(ang) * dist
+			ty = p.y + sin(ang) * dist
+			dx = tx - p.x
+			dy = ty - p.y
+		end
+
+		p._targetPointX = tx
+		p._targetPointY = ty
+
+		if dist > 1e-6 then
+			p.vx = dx / dist
+			p.vy = dy / dist
+		else
+			p.vx = 0
+			p.vy = 0
+		end
+		p.rotation = atan2(dy, dx)
+	end,
+
+	update = function(p, dt)
+		local dx = p._targetPointX - p.x
+		local dy = p._targetPointY - p.y
+		local dist2 = dx * dx + dy * dy
+		local step = (p.speed or 0) * dt
+
+		if dist2 <= step * step or dist2 < 1e-12 then
+			p.x = p._targetPointX
+			p.y = p._targetPointY
+
+			local evt = emitEvent(p, "hit")
+			evt.target = nil
+			evt.origin = p.hitOrigin or "primary"
+
+			return "consume"
+		end
+
+		p.x = p.x + p.vx * step
+		p.y = p.y + p.vy * step
+	end
+}
+
 B.move_boomerang = {
 	type = "movement",
 
@@ -2907,7 +2966,7 @@ function ProjectileBehaviors.buildChildBehaviors(parentBehaviors)
 	for i = 1, #out do
 		local id = out[i].id
 
-		if id == "hit_circle" or id == "instant_hit" or id == "emit_on_target" then
+		if id == "hit_circle" or id == "instant_hit" or id == "emit_on_target" or id == "move_to_target_point" then
 			hasHitDetector = true
 		end
 

@@ -120,8 +120,7 @@ return {
 			splashAdd = 5, -- increase AoE radius per upgrade
 		},
 		behaviors = {
-			{id = "move_linear"},
-			{id = "hit_circle", data = {radius = 12}},
+			{id = "move_to_target_point"},
 			{id = "aoe_damage", data = {radius = 44}},
 			{id = "draw_cannon" }
 		}
