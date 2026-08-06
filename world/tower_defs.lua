@@ -154,30 +154,30 @@ return {
 		}
 	},
 
-	-- Role: expensive sustained zone damage. Slow-moving projectiles create
-	-- lingering kill zones that melt dense lanes, but high cost and delayed
-	-- damage make it poor as an emergency or single-target answer.
+	-- Role: premium sustained lane damage. Slow, infrequent projectiles trade
+	-- immediate reliability for punishing repeated ticks when aimed along a path;
+	-- slows keep enemies inside that coverage long enough to realize its damage.
 	plasma = {
 		nameKey = "tower.plasma",
 		descKey = "towerDesc.plasma",
 		cost = 95,
 		range = 3.4 * Constants.TILE,
-		fireRate = 0.82,
-		damage = 4,
+		fireRate = 0.72,
+		damage = 5,
 		recoilStrength = Constants.TILE * 0.14,
 		recoilDecay = 18,
-		projSpeed = 140,
+		projSpeed = 120,
 		turnSpeed = 8,
 		color = Theme.tower.plasma,
 		canRotate = true,
 		upgrade = {
 			dmgMult = 1.7,
 			rangeAdd = 0.05 * Constants.TILE,
-			fireMult = 1.12,
+			fireMult = 1.08,
 		},
 		behaviors = {
 			{id = "move_linear", data = {dist = 330}},
-			{id = "tick_damage", data = {radius = 16, rate = 0.12}},
+			{id = "tick_damage", data = {radius = 16, rate = 0.14}},
 			{id = "draw_plasma"}
 		}
 	},
