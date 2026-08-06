@@ -369,7 +369,9 @@ function love.update(dt)
 		if campaignFinalWave and State.wave == campaignFinalWave and not State.endless then
 			-- Save
 			local previousFurthestIndex = Save.data.furthestIndex or 1
-			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
+			-- Preserve one post-campaign progress step so Twin Loop's clear reward is
+			-- earned only after the final map, just like every other clear reward.
+			local nextMapIndex = State.worldMapIndex + 1
 			Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)
 			State.unlockedTowersThisVictory = CampaignUnlocks.getNewlyUnlockedTowers(previousFurthestIndex, Save.data.furthestIndex)
 			State.unlockedRewardsThisVictory = CampaignUnlocks.getNewRewards(previousFurthestIndex, Save.data.furthestIndex)

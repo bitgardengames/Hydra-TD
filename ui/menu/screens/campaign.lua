@@ -17,6 +17,7 @@ local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignDesign = require("systems.campaign_design")
 local Towers = require("world.towers")
+local EnemyDefs = require("world.enemy_defs")
 
 local lg = love.graphics
 local floor = math.floor
@@ -371,11 +372,21 @@ local function buildPreviewMessages(map, mapIndex)
 		messages[#messages + 1] = L("campaign.pressure", design.pressure)
 	end
 
+	if #(map.introducesEnemies or {}) > 0 then
+		local names = {}
+		for _, enemyId in ipairs(map.introducesEnemies) do
+			local def = EnemyDefs[enemyId]
+			names[#names + 1] = L((def and def.nameKey) or ("enemy." .. enemyId))
+		end
+		messages[#messages + 1] = L(#names == 1 and "campaign.newEnemy" or "campaign.newEnemies", table.concat(names, L("campaign.previewListSeparator")))
+	end
+
 	if reward then
+		local rewardLabel = reward.labelKey and L(reward.labelKey) or reward.label
 		if reward.type == "tower" then
-			messages[#messages + 1] = L("campaign.clearReward", reward.label or localizedTowerList({reward.id}))
-		elseif reward.label then
-			messages[#messages + 1] = L("campaign.clearReward", reward.label)
+			messages[#messages + 1] = L("campaign.clearReward", rewardLabel or localizedTowerList({reward.id}))
+		elseif rewardLabel then
+			messages[#messages + 1] = L("campaign.clearReward", rewardLabel)
 		end
 	end
 

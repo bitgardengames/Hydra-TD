@@ -308,6 +308,8 @@ local maps = {
 
 	{
 		id = "twinloop",
+		-- Twin Loop follows Stepping Stones through ordinary linear route progression.
+		prerequisiteMapId = "steppingstones",
 		campaignStage = 3,
 		nameKey = "map.twinloop",
 		biome = "winter",
