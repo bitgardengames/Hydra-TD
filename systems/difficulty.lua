@@ -1,5 +1,8 @@
 local Difficulty = {}
 
+-- Difficulty changes durability and economy only. Starting cash and enemy
+-- behavior stay consistent so campaign progression has the same rules on every
+-- difficulty.
 Difficulty.defs = {
 	easy = {
 		key = "easy",
@@ -13,7 +16,7 @@ Difficulty.defs = {
 		rewardBias = 1.05,
 
 		-- Player affordances
-		startMoney = 135,
+		startMoney = 120,
 		startLives = 25,
 		sellRefund = 0.85,
 	},
@@ -40,24 +43,12 @@ Difficulty.defs = {
 		enemyHpBias = 1.12,
 		bossHpBias = 1.2,
 
-		rewardBias = 1.0,
+		rewardBias = 0.95,
 
-		startMoney = 110,
+		startMoney = 120,
 		startLives = 15,
 		sellRefund = 0.60,
 	},
-
-	--[[expert = {
-		enemySpeedBias = 1.0,
-		enemyHpBias = 1.09,
-		bossHpBias = 1.09,
-
-		rewardBias = 1.00,
-
-		startMoney = 120,
-		startLives = 10,
-		sellRefund = 0.50,
-	}]]
 }
 
 local default = "normal"
