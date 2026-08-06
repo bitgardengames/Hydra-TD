@@ -8,7 +8,7 @@ return {
 	slow = {
 		nameKey = "tower.slow",
 		descKey = "towerDesc.slow",
-		cost = 55,
+		cost = 50,
 		range = 4.25 * Constants.TILE,
 		fireRate = 1.15,
 		damage = 3,
@@ -69,7 +69,7 @@ return {
 	poison = {
 		nameKey = "tower.poison",
 		descKey = "towerDesc.poison",
-		cost = 65,
+		cost = 70,
 		range = 3.55 * Constants.TILE,
 		fireRate = 1.35,
 		damage = 2,
@@ -133,7 +133,7 @@ return {
 	shock = {
 		nameKey = "tower.shock",
 		descKey = "towerDesc.shock",
-		cost = 85,
+		cost = 95,
 		range = 3.7 * Constants.TILE,
 		fireRate = 1.05,
 		damage = 6,

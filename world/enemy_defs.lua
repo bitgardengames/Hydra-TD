@@ -1,11 +1,11 @@
-local mult = 0.5
-
--- Modifiers here eventually would go hard
+-- These are the actual wave-zero hit-point values. Wave and difficulty scaling
+-- are applied once, at spawn time; literal values keep encounter budgets and
+-- balance fixtures auditable without a hidden global multiplier.
 
 return {
 	grunt = {
 		nameKey = "enemy.grunt",
-		hp = 30 * mult,
+		hp = 15,
 		speed = 70,
 		reward = 5,
 		score = 10,
@@ -14,7 +14,7 @@ return {
 
 	tank = {
 		nameKey = "enemy.tank",
-		hp = 80 * mult,
+		hp = 40,
 		speed = 45,
 		reward = 10,
 		score = 22,
@@ -23,7 +23,7 @@ return {
 
 	runner = {
 		nameKey = "enemy.runner",
-		hp = 22 * mult,
+		hp = 11,
 		speed = 95,
 		reward = 6,
 		score = 12,
@@ -34,7 +34,7 @@ return {
 	bulwark = {
 		nameKey = "enemy.bulwark",
 		descriptionKey = "enemy.bulwarkDescription",
-		hp = 105 * mult, speed = 40, reward = 13, score = 30, radius = 14,
+		hp = 52.5, speed = 40, reward = 13, score = 30, radius = 14,
 		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
 		traits = {"armored"},
 	},
@@ -42,8 +42,8 @@ return {
 	regenerator = {
 		nameKey = "enemy.regenerator",
 		descriptionKey = "enemy.regeneratorDescription",
-		hp = 76 * mult, speed = 53, reward = 12, score = 28, radius = 12,
-		regeneration = { hpPerSecond = 5 * mult, delay = 1.25 },
+		hp = 38, speed = 53, reward = 12, score = 28, radius = 12,
+		regeneration = { hpPerSecond = 2.5, delay = 1.25 },
 		modifiers = { poison = 1.25 },
 		traits = {"regenerates"},
 	},
@@ -51,17 +51,17 @@ return {
 	shieldbearer = {
 		nameKey = "enemy.shieldbearer",
 		descriptionKey = "enemy.shieldbearerDescription",
-		hp = 72 * mult, speed = 50, reward = 14, score = 32, radius = 13,
+		hp = 36, speed = 50, reward = 14, score = 32, radius = 13,
 		-- Chain amplification rewards Shock against the barrier without raising its
 		-- raw damage against isolated, unshielded targets such as bosses.
-		shield = { hp = 30 * mult, burstThreshold = 12, burstMultiplier = 1.6, chainMultiplier = 2.4 },
+		shield = { hp = 15, burstThreshold = 12, burstMultiplier = 1.6, chainMultiplier = 2.4 },
 		traits = {"shielded"},
 	},
 
 	warcaller = {
 		nameKey = "enemy.warcaller",
 		descriptionKey = "enemy.warcallerDescription",
-		hp = 68 * mult, speed = 48, reward = 16, score = 38, radius = 13,
+		hp = 34, speed = 48, reward = 16, score = 38, radius = 13,
 		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
 		targetPriority = 34,
 		traits = {"support"},
@@ -69,7 +69,7 @@ return {
 
 	boss = {
 		nameKey = "enemy.boss",
-		hp = 625 * mult,
+		hp = 312.5,
 		speed = 45,
 		reward = 70,
 		score = 300,
@@ -85,7 +85,7 @@ return {
 
 	boss_summoner = {
 		nameKey = "enemy.boss",
-		hp = 560 * mult,
+		hp = 280,
 		speed = 42,
 		reward = 110,
 		score = 380,
@@ -98,7 +98,7 @@ return {
 
 	boss_displacement = {
 		nameKey = "enemy.boss",
-		hp = 640 * mult,
+		hp = 320,
 		speed = 48,
 		reward = 125,
 		score = 430,
@@ -111,7 +111,7 @@ return {
 
 	boss_suppression = {
 		nameKey = "enemy.boss",
-		hp = 700 * mult,
+		hp = 350,
 		speed = 40,
 		reward = 140,
 		score = 500,
