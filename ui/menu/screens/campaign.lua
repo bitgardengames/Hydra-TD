@@ -433,6 +433,8 @@ function Screen.load()
 				Sound.play("uiConfirm")
 
 				State.worldMapIndex = State.mapIndex
+				State.challenge = false
+				State.endless = false
 				State.mode = "game"
 				Backdrop.stop()
 				Difficulty.set(Save.data.settings.difficulty)

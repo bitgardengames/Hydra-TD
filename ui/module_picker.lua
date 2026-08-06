@@ -128,6 +128,9 @@ local function drawBackdropEffects(sw, sh, alpha)
 end
 
 function ModulePicker.open(options)
+	if not Modules.isEnabled() then
+		return false
+	end
 	local choices = options and options.choices or options
 
 	if not choices or #choices == 0 then
@@ -194,6 +197,9 @@ end
 function ModulePicker.openTowerUpgrade(tower)
 	if not tower then
 		return false
+	end
+	if not Modules.isEnabled() then
+		return Towers.upgradeTower(tower)
 	end
 
 	local choices = Modules.rollTowerUpgradeChoices(tower)

@@ -169,12 +169,12 @@ return {
 	},
 
 	towerDesc = {
-		lancer = "Rapid single-target fire",
-		slow = "Chills enemies, slowing their movement",
-		cannon = "Explosive shots with heavy splash",
-		shock = "Chains lightning between targets",
-		poison = "Stacks damage over time",
-		plasma = "Burns through enemies along its path",
+		lancer = "Reliable single-target damage; upgrade it to focus down priority enemies.",
+		slow = "Long-range control that keeps runners and bosses in other towers' fire.",
+		cannon = "Heavy splash damage for packed and armored waves; pair it with Slow control.",
+		shock = "Chain damage built to strip shields and punish tightly grouped enemies.",
+		poison = "Stacking damage over time for durable and regenerating enemies on long paths.",
+		plasma = "Sustained lane damage that rewards aiming along the route and controlling enemies in its field.",
 	},
 
 	module = {
@@ -429,7 +429,7 @@ return {
 		wave = "Great! Start the small wave when you're ready.",
 		combat = "Watch your tower defend the path. You can use ordinary controls now.",
 		inspect = "Select your Lancer to inspect its stats.",
-		upgrade = "Choose Upgrade, then pick an upgrade module.",
+		upgrade = "Choose Upgrade to strengthen the Lancer's native single-target role.",
 		completeTitle = "You're ready!",
 		complete = "Tutorial complete. Your campaign is ready.",
 		continue = "Continue to campaign",
@@ -494,7 +494,7 @@ return {
 		recapMid = "Solid start, then pressure won. Shift more power into mid-wave stabilization.",
 		tipBossBreach = "A boss slipped through. Add focused burst damage and slows before the next boss wave.",
 		tipOutOfLives = "Leaks add up quickly. Build earlier lane coverage and upgrade your core towers sooner.",
-		tipDefault = "Adjust your tower mix and module choices to handle mid-wave pressure spikes.",
+		tipDefault = "Combine each tower's native strengths to handle mid-wave pressure spikes.",
 		headline = {
 			lateWave = "So Close",
 			hardFight = "Defeat",
@@ -630,7 +630,7 @@ return {
 		upgradeDeltas = "Max base upgrades — Damage +%.0f%% • Range +%.2f tiles per tier",
 		targeting = "Targeting — %s",
 		fixed = "fixed firing pattern",
-		progressTarget = "enemy furthest along the route; branches may override priority",
+		progressTarget = "enemy furthest along the route",
 		damageInfo = "Damage / counters — %s",
 		counter = {slow = "slow control", poison = "stacking poison", chain = "chain damage", aoe = "area damage", tick = "repeated field damage", direct = "direct single-target damage"},
 		paths = "SPECIALIZATION PATHS",
@@ -640,6 +640,7 @@ return {
 		moduleSilhouette = "██ (acquire this module during a run)",
 		compatible = "Compatible run modules — %s",
 		history = "History — %d placed • %d upgrades • %d kills • %.0f damage • %.0f best run",
+		nativeRole = "NATIVE ROLE — %s",
 	},
 
 	enemyAffix = {

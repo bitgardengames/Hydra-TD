@@ -5,6 +5,10 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 
 local Modules = {}
 
+function Modules.isEnabled()
+	return State.isReplayMode()
+end
+
 Modules.active = {
 	global = {},
 	slow = {},
@@ -103,23 +107,31 @@ function Modules.clear()
 end
 
 function Modules.add(moduleId, towerType)
+	if not Modules.isEnabled() then return false, "campaign_disabled" end
 	local mod = getModule(moduleId)
-	if not mod then return end
+	if not mod then return false, "invalid_module" end
 
 	local list = Modules.active[towerType]
-	if not list then return end
+	if not list then return false, "invalid_target" end
 
 	list[#list + 1] = mod
 	Modules.version = Modules.version + 1
 	local Save = require("core.save")
 	Save.discoverModule(moduleId)
+	return true
 end
 
 function Modules.getInventory()
+	if not Modules.isEnabled() then
+		return {}
+	end
 	return getInventory()
 end
 
 function Modules.addToInventory(moduleId, count)
+	if not Modules.isEnabled() then
+		return false, "campaign_disabled"
+	end
 	local mod = getModule(moduleId)
 	if not mod then
 		return false, "invalid_module"
@@ -207,6 +219,9 @@ function Modules.describeApplyResult(reason, detail)
 end
 
 function Modules.canApplyToTower(moduleId, tower, options)
+	if not Modules.isEnabled() then
+		return false, "campaign_disabled"
+	end
 	options = options or {}
 	if not tower or not tower.kind then
 		return false, "missing_tower"
@@ -510,12 +525,13 @@ local function validateCoreBehaviors(ctx, base)
 end
 
 function Modules.buildContext(tower)
+	local experimental = Modules.isEnabled()
 	if tower then
 		local cache = tower._cache
 		local cached = cache and cache.moduleContext
 		local cacheVersion = tower._cacheVersion or 0
 
-		if cached and cached.modulesVersion == Modules.version and cached.cacheVersion == cacheVersion then
+		if cached and cached.modulesVersion == Modules.version and cached.cacheVersion == cacheVersion and cached.experimental == experimental then
 			return cached.value
 		end
 	end
@@ -527,14 +543,14 @@ function Modules.buildContext(tower)
 	local order = 0
 
 	-- global modules
-	local global = Modules.active.global
+	local global = Modules.isEnabled() and Modules.active.global or {}
 	for i = 1, #global do
 		order = order + 1
 		candidates[#candidates + 1] = { id = global[i].id, mod = global[i], order = order, source = "global" }
 	end
 
 	-- tower modules
-	local list = Modules.active[tower.kind]
+	local list = Modules.isEnabled() and Modules.active[tower.kind] or nil
 	if list then
 		for i = 1, #list do
 			order = order + 1
@@ -543,13 +559,15 @@ function Modules.buildContext(tower)
 	end
 
 	-- tower-specific inventory modules applied by the player
-	order = collectModuleIds(candidates, tower and tower.appliedModules, "applied", order)
+	if Modules.isEnabled() then
+		order = collectModuleIds(candidates, tower and tower.appliedModules, "applied", order)
+	end
 
 	-- tower branch modules (legacy upgrade-tier compatibility path)
-	local branchSelections = tower and tower.branchSelections
+	local branchSelections = Modules.isEnabled() and tower and tower.branchSelections
 	if branchSelections then
 		collectModuleIds(candidates, branchSelections, "branch", order)
-	elseif tower and tower.specializationId then
+	elseif Modules.isEnabled() and tower and tower.specializationId then
 		-- backward compatibility for older saves
 		addModuleCandidate(candidates, tower.specializationId, order + 1, "legacy_specialization")
 	end
@@ -584,6 +602,7 @@ function Modules.buildContext(tower)
 			value = ctx,
 			modulesVersion = Modules.version,
 			cacheVersion = tower._cacheVersion or 0,
+			experimental = experimental,
 		}
 	end
 
@@ -644,6 +663,10 @@ function Modules.getTargetMode(towerOrKind)
 		branchSelections = towerOrKind.branchSelections
 		appliedModules = towerOrKind.appliedModules
 		legacySpecializationId = towerOrKind.specializationId
+	end
+
+	if not Modules.isEnabled() then
+		return nil
 	end
 
 	local mode = nil

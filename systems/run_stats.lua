@@ -47,8 +47,10 @@ end
 function RunStats.recordUpgrade(tower, branch, cost, wave, isFinal)
 	if ignored() then return end
 	local d = ensure(); d.moneySpent = d.moneySpent + (cost or 0)
-	d.towerBranches[tower.runStatsId] = d.towerBranches[tower.runStatsId] or {}
-	table.insert(d.towerBranches[tower.runStatsId], branch); add(d.branches, branch, 1)
+	if branch then
+		d.towerBranches[tower.runStatsId] = d.towerBranches[tower.runStatsId] or {}
+		table.insert(d.towerBranches[tower.runStatsId], branch); add(d.branches, branch, 1)
+	end
 	if isFinal then d.finalTierWave[tower.runStatsId] = wave end
 end
 

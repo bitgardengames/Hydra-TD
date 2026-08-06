@@ -408,15 +408,19 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			-- Upgrade tooltip
 			if hovered and btn.id == "upgrade" and upgradeCost then
+				local tooltipText = L(t.def.descKey)
 				local specName = nil
-				if t.specializationId then
+				if State.isReplayMode() and t.specializationId then
 					local mod = Modules.getDef(t.specializationId)
 					specName = mod and L(mod.nameKey) or nil
+				end
+				if State.isReplayMode() then
+					tooltipText = specName and L("modulePicker.currentSpec", specName) or L("modulePicker.noSpec")
 				end
 
 				Tooltip.show({
 					title = L("inspect.upgradeTitle", t.level + 1),
-					text = specName and L("modulePicker.currentSpec", specName) or L("modulePicker.noSpec"),
+					text = tooltipText,
 				})
 			end
 		end

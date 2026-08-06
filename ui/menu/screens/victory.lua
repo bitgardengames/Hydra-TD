@@ -352,9 +352,11 @@ local function buildStats()
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
 		{ label = "Run leaders", value = string.format("MVP %s  •  Leak %s (%d)  •  Damage %s", summary.mvp, summary.leak, summary.leakCount, summary.damageType) },
 		{ label = "Final build", value = (summary.build ~= "" and summary.build or "none") .. (summary.paths ~= "" and "  •  " .. summary.paths or "") },
-		{ label = "Modules / contracts", value = (summary.modules ~= "" and summary.modules or "none") .. "  /  " .. (summary.contracts ~= "" and summary.contracts or "none") },
 		{ label = "Coach / share", value = summary.observation .. "  •  [C] Copy build code" },
 	}
+	if State.isReplayMode() and (summary.modules ~= "" or summary.contracts ~= "") then
+		table.insert(stats, 4, { label = "Modules / contracts", value = (summary.modules ~= "" and summary.modules or "none") .. "  /  " .. (summary.contracts ~= "" and summary.contracts or "none") })
+	end
 
 	if #rewardNames > 0 then
 		table.insert(stats, 2, { label = L("victory.newTowerReward"), value = table.concat(rewardNames, "  •  ") })
