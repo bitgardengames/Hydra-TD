@@ -168,6 +168,13 @@ return {
 		lockedUntil = "Unlocked after clearing Map %d.",
 	},
 
+	abilityUnlock = {
+		notEarned = "Ability not earned.",
+		abilityNotEarned = "Ability not earned. Clear %s.",
+		slotLocked = "Ability slot not earned.",
+		slotNotEarned = "Second ability slot not earned. Clear %s.",
+	},
+
 	towerDesc = {
 		lancer = "Reliable single-target damage; upgrade it to focus down priority enemies.",
 		slow = "Long-range control that keeps runners and bosses in other towers' fire.",

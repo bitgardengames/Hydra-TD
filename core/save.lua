@@ -2,7 +2,7 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 5 -- Per-difficulty campaign medal timestamps
+local SAVE_VERSION = 6 -- Persist the active-ability slot selections
 
 local Hotkeys = require("core.hotkeys")
 local State = require("core.state")
@@ -116,6 +116,11 @@ function Save.load()
 			Save.data.furthestIndex = Save.data.furthestIndex or 1
 			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 			Save.data.mapStats = Save.data.mapStats or {}
+			local abilitySelectionsChanged = false
+			if type(Save.data.equippedAbilities) ~= "table" then
+				Save.data.equippedAbilities = {"meteor", "frost_nova"}
+				abilitySelectionsChanged = true
+			end
 			local mapStatsChanged = false
 			for _, stats in pairs(Save.data.mapStats) do
 				if type(stats) == "table" then
@@ -128,7 +133,7 @@ function Save.load()
 					end
 				end
 			end
-			if mapStatsChanged then Save.flush() end
+			if mapStatsChanged or abilitySelectionsChanged then Save.flush() end
 
 			-- Settings
 			Save.data.settings = Save.data.settings or {}
@@ -227,6 +232,7 @@ function Save.load()
 		furthestIndex = 1,
 		unlockedMaps = {},
 		mapStats = {},
+		equippedAbilities = {"meteor", "frost_nova"},
 		tutorialCompleted = false,
 		tutorialOffered = false,
 		tutorialSkipped = false,
@@ -287,6 +293,18 @@ function Save.flush()
 	end
 
 	love.filesystem.write(SAVE_FILE, serialized)
+end
+
+function Save.setEquippedAbilities(abilityIds)
+	if not Save.data or type(abilityIds) ~= "table" then return false end
+
+	local selections = {}
+	for slotIndex, abilityId in ipairs(abilityIds) do
+		if type(abilityId) == "string" then selections[slotIndex] = abilityId end
+	end
+	Save.data.equippedAbilities = selections
+	Save.flush()
+	return true
 end
 
 function Save.isMapUnlocked(i, mapId)

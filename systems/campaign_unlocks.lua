@@ -24,6 +24,8 @@ local rewardsByMapId = {
 	lowvalley = {type = "wave_preview", id = "enhanced", labelKey = "campaign.rewards.enhancedPreview"},
 	circuit = {type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
 	outerloop = {type = "ability_slot", id = "ability_slot_2", slots = 2, labelKey = "campaign.rewards.secondAbilitySlot"},
+	-- Clearing High Ridge earns the shared enhancement through the same reward
+	-- lookup used by every other campaign unlock.
 	highridge = {type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"},
 	twinloop = {type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"},
 }
@@ -109,6 +111,10 @@ local function isFeatureUnlocked(featureType, id)
 	return getProgressIndex() >= (requiredMapByFeature[featureKey(featureType, id)] or UNKNOWN_REQUIRED_MAP)
 end
 
+local function isRewardUnlocked(rewardType, rewardId)
+	return isFeatureUnlocked(rewardType, rewardId)
+end
+
 function CampaignUnlocks.getRequiredMap(kind)
 	return requiredMapByTower[kind] or UNKNOWN_REQUIRED_MAP
 end
@@ -135,7 +141,7 @@ function CampaignUnlocks.isAbilitySlotUnlocked(slotIndex)
 end
 
 function CampaignUnlocks.isAbilityUpgradeUnlocked(upgradeId)
-	return isFeatureUnlocked("ability_upgrade", upgradeId)
+	return isRewardUnlocked("ability_upgrade", upgradeId)
 end
 
 function CampaignUnlocks.getUnlockedAbilitySlots()
@@ -152,9 +158,14 @@ end
 function CampaignUnlocks.getEquippedAbilities()
 	local AbilityDefs = require("systems.ability_defs")
 	local equipped = {}
+	local selections = Save.data and Save.data.equippedAbilities or {"meteor", "frost_nova"}
+	local unlockedSlots = CampaignUnlocks.getUnlockedAbilitySlots()
 
-	for _, abilityId in ipairs(AbilityDefs.order or {}) do
-		equipped[#equipped + 1] = abilityId
+	for slotIndex = 1, unlockedSlots do
+		local abilityId = selections[slotIndex]
+		if AbilityDefs[abilityId] and CampaignUnlocks.isAbilityUnlocked(abilityId) then
+			equipped[#equipped + 1] = abilityId
+		end
 	end
 
 	return equipped
@@ -227,11 +238,16 @@ end
 
 function CampaignUnlocks.getAbilityLockMessage(abilityId, slotIndex)
 	local requiredMap = CampaignUnlocks.getRequiredFeatureMap("ability", abilityId)
+	local function clearedMapName(requiredIndex)
+		local map = Maps[requiredIndex - 1]
+		return map and L(map.nameKey) or nil
+	end
 
 	if requiredMap == UNKNOWN_REQUIRED_MAP then
-		return L("towerUnlock.locked")
+		return L("abilityUnlock.notEarned")
 	elseif requiredMap > 1 and getProgressIndex() < requiredMap then
-		return L("towerUnlock.lockedUntil", requiredMap - 1)
+		local mapName = clearedMapName(requiredMap)
+		return mapName and L("abilityUnlock.abilityNotEarned", mapName) or L("abilityUnlock.notEarned")
 	end
 
 	if not CampaignUnlocks.isAbilitySlotUnlocked(slotIndex) then
@@ -242,9 +258,10 @@ function CampaignUnlocks.getAbilityLockMessage(abilityId, slotIndex)
 			end
 		end
 		if slotRequiredMap ~= UNKNOWN_REQUIRED_MAP then
-			return L("towerUnlock.lockedUntil", slotRequiredMap - 1)
+			local mapName = clearedMapName(slotRequiredMap)
+			return mapName and L("abilityUnlock.slotNotEarned", mapName) or L("abilityUnlock.slotLocked")
 		end
-		return L("towerUnlock.locked")
+		return L("abilityUnlock.slotLocked")
 	end
 
 	return nil
