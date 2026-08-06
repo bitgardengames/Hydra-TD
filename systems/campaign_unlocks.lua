@@ -158,13 +158,26 @@ end
 function CampaignUnlocks.getEquippedAbilities()
 	local AbilityDefs = require("systems.ability_defs")
 	local equipped = {}
+	local equippedById = {}
 	local selections = Save.data and Save.data.equippedAbilities or {"meteor", "frost_nova"}
 	local unlockedSlots = CampaignUnlocks.getUnlockedAbilitySlots()
 
 	for slotIndex = 1, unlockedSlots do
 		local abilityId = selections[slotIndex]
-		if AbilityDefs[abilityId] and CampaignUnlocks.isAbilityUnlocked(abilityId) then
+		if AbilityDefs[abilityId] and CampaignUnlocks.isAbilityUnlocked(abilityId) and not equippedById[abilityId] then
 			equipped[#equipped + 1] = abilityId
+			equippedById[abilityId] = true
+		end
+	end
+
+	-- A newly earned ability must be usable even when an older profile has an
+	-- empty slot or has a still-locked ability selected there. Build the runtime
+	-- loadout from campaign progress rather than rewriting the player's save.
+	for _, abilityId in ipairs(AbilityDefs.order) do
+		if #equipped >= unlockedSlots then break end
+		if CampaignUnlocks.isAbilityUnlocked(abilityId) and not equippedById[abilityId] then
+			equipped[#equipped + 1] = abilityId
+			equippedById[abilityId] = true
 		end
 	end
 

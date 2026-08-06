@@ -76,9 +76,22 @@ end
 local iconDrawers = {meteor = drawMeteor, frost_nova = drawFrost}
 
 function AbilityBar.draw(dt, mx, my)
-	-- Draw the persisted selections so a chosen ability and a locked slot can
-	-- explain their distinct prerequisites. State contains only usable abilities.
-	local equipped = (Save.data and Save.data.equippedAbilities) or State.equippedAbilities or {}
+	-- resetGame resolves persisted selections against the abilities and slots
+	-- currently earned. Prefer that runtime loadout so progression fallbacks (for
+	-- example, Meteor immediately after Map 2) are visible and usable, then keep
+	-- unequipped saved choices visible as previews of their prerequisites.
+	local equipped = {}
+	local included = {}
+	for _, abilityId in ipairs(State.equippedAbilities or {}) do
+		equipped[#equipped + 1] = abilityId
+		included[abilityId] = true
+	end
+	for _, abilityId in ipairs((Save.data and Save.data.equippedAbilities) or {}) do
+		if not included[abilityId] then
+			equipped[#equipped + 1] = abilityId
+			included[abilityId] = true
+		end
+	end
 	local count = min(#equipped, MAX_ABILITIES)
 	local sw, sh = lg.getDimensions()
 	local totalH = count * SIZE + math.max(0, count - 1) * GAP
