@@ -88,10 +88,10 @@ local function buildComposition(waveIndex, baseKind, count, tier)
 	return composition
 end
 
-function Builder.build(waveIndex, mapDef)
+function Builder.build(waveIndex, mapDef, isEndless)
 	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
 	local tier = Builder.getIntensityTier(waveIndex)
-	local campaignGroups = CampaignWaveDefs.get(mapDef and mapDef.campaignStage, waveIndex)
+	local campaignGroups = not isEndless and CampaignWaveDefs.get(mapDef, waveIndex)
 	if campaignGroups then
 		local count = 0
 		local composition = {}
@@ -111,6 +111,9 @@ function Builder.build(waveIndex, mapDef)
 	end
 
 	-- Everything below this point is the separate, deterministic endless mode.
+	-- A missing campaign definition must not silently fall through to procedural content.
+	if not isEndless then return nil end
+
 	if waveIndex % 10 == 0 then
 		return { boss = true, enemy = "boss", count = 1, spacing = 0, intensityTier = tier }
 	end

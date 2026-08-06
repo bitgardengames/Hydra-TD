@@ -40,6 +40,7 @@ local ModulePicker = require("ui.module_picker")
 local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
 local CampaignUnlocks = require("systems.campaign_unlocks")
+local CampaignWaveDefs = require("systems.campaign_wave_defs")
 
 local lg = love.graphics
 
@@ -363,9 +364,9 @@ function love.update(dt)
 
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
-		-- Win condition: wave 20 cleared
-		--if State.wave == 1 and not State.endless then
-		if State.wave == 20 and not State.endless then
+		-- Each campaign map ends after its own authored sequence.
+		local campaignFinalWave = CampaignWaveDefs.getFinalWave(Maps[State.mapIndex])
+		if campaignFinalWave and State.wave == campaignFinalWave and not State.endless then
 			-- Save
 			local previousFurthestIndex = Save.data.furthestIndex or 1
 			local nextMapIndex = min(State.worldMapIndex + 1, #Maps)
