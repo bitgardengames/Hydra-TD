@@ -2,7 +2,9 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
-local SAVE_VERSION = 6 -- Persist the active-ability slot selections
+local SAVE_VERSION = 7 -- Repair profiles that lost their default active-ability selections
+
+local DEFAULT_EQUIPPED_ABILITIES = {"meteor", "frost_nova"}
 
 local Hotkeys = require("core.hotkeys")
 local State = require("core.state")
@@ -117,8 +119,14 @@ function Save.load()
 			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
 			Save.data.mapStats = Save.data.mapStats or {}
 			local abilitySelectionsChanged = false
-			if type(Save.data.equippedAbilities) ~= "table" then
-				Save.data.equippedAbilities = {"meteor", "frost_nova"}
+			if type(Save.data.equippedAbilities) ~= "table" or #Save.data.equippedAbilities == 0 then
+				-- Some existing profiles contain an empty selection table. An empty
+				-- table is truthy in Lua, so the runtime fallback never applied and
+				-- Meteor stayed absent even after its campaign reward was earned.
+				Save.data.equippedAbilities = {
+					DEFAULT_EQUIPPED_ABILITIES[1],
+					DEFAULT_EQUIPPED_ABILITIES[2],
+				}
 				abilitySelectionsChanged = true
 			end
 			local mapStatsChanged = false
@@ -232,7 +240,7 @@ function Save.load()
 		furthestIndex = 1,
 		unlockedMaps = {},
 		mapStats = {},
-		equippedAbilities = {"meteor", "frost_nova"},
+		equippedAbilities = {DEFAULT_EQUIPPED_ABILITIES[1], DEFAULT_EQUIPPED_ABILITIES[2]},
 		tutorialCompleted = false,
 		tutorialOffered = false,
 		tutorialSkipped = false,
