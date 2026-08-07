@@ -4,6 +4,8 @@ local Theme = require("core.theme")
 local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local Text = require("ui.text")
+local Tooltip = require("ui.tooltip")
+local L = require("core.localization")
 
 local lg = love.graphics
 local floor = math.floor
@@ -12,6 +14,7 @@ local max = math.max
 
 local AbilityBar = {}
 local buttons = {}
+local abilityTooltips = {}
 
 local SIZE = 58
 local GAP = 10
@@ -80,6 +83,24 @@ local function drawGoldRush(cx,cy,s) lg.setColor(1,.78,.16,1); lg.circle("fill",
 local function drawLastStand(cx,cy,s) lg.setColor(1,.62,.2,1); lg.setLineWidth(3*s); lg.circle("line",cx,cy,16*s); lg.line(cx-20*s,cy,cx+20*s,cy); lg.line(cx,cy-20*s,cx,cy+20*s) end
 local iconDrawers = {meteor=drawMeteor, frost_nova=drawFrost, overdrive=drawOverdrive, gravity_well=drawGravity, gold_rush=drawGoldRush, last_stand=drawLastStand}
 
+local function showTooltip(abilityId, def)
+	local title = L(def.nameKey)
+	local description = L(def.descKey)
+	local tooltip = abilityTooltips[abilityId]
+
+	-- Rebuild if localization changed, while keeping the rows table stable during
+	-- normal hovering so Tooltip does not recalculate its layout every frame.
+	if not tooltip or tooltip.title ~= title or tooltip.rows[1].text ~= description then
+		tooltip = {
+			title = title,
+			rows = {{kind = "text", text = description}},
+		}
+		abilityTooltips[abilityId] = tooltip
+	end
+
+	Tooltip.show(tooltip)
+end
+
 function AbilityBar.draw(dt, mx, my)
 	-- resetGame resolves persisted selections against the abilities and slots
 	-- currently earned. Prefer that runtime loadout so progression fallbacks (for
@@ -120,6 +141,9 @@ function AbilityBar.draw(dt, mx, my)
 			local available = lockMessage == nil
 			local ready = available and cooldown <= 0
 			local hovered = mx >= x and mx <= x + SIZE and my >= y and my <= y + SIZE
+			if hovered then
+				showTooltip(abilityId, def)
+			end
 			local button = buttons[i] or {anim = {}}
 			buttons[i] = button
 			button.x, button.y, button.w, button.h = x, y, SIZE, SIZE
