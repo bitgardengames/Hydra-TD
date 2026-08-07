@@ -514,11 +514,15 @@ local function handleEnemyKilled(e, i, isBoss)
 		State.selectedEnemy = nil
 	end
 
-	local reward = floor(e.reward + 0.5)
+	-- Gold Rush affects kill income only; sales and wave bonuses are awarded in
+	-- their own systems and deliberately never pass through this calculation.
+	local incomeMultiplier = require("systems.abilities").getKillIncomeMultiplier(e)
+	local reward = floor(e.reward * incomeMultiplier + 0.5)
 	State.money = State.money + reward
 	RunStats.recordIncome(reward, "kill")
 	State.score = State.score + (e.score or 0)
-	Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
+	local rewardText = incomeMultiplier > 1 and L("floater.goldRushReward", reward, incomeMultiplier) or "+" .. reward
+	Floaters.add(e.x, e.y - 20, rewardText, cmR, cmG, cmB, true)
 
 	Achievements.increment("ENEMIES_KILLED")
 

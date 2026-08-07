@@ -662,10 +662,6 @@ local function updateTowers(dt)
 
 				if canFire then
 					Emissions.emit(t, target)
-					if t.powerGridPeers then
-						for _, peer in ipairs(t.powerGridPeers) do if peer ~= t then peer.cooldown = max(0, (peer.cooldown or 0) - 0.12) end end
-					end
-
 					t.fireAnim = 1
 					t.recoil = t.recoilStrength or 0
 
