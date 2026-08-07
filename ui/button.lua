@@ -83,6 +83,13 @@ end
 
 function Button.draw(btn)
 	local x, y, w, h = btn.x, btn.y, btn.w, btn.h
+
+	-- Screens can be drawn during a menu transition before their first update
+	-- has had a chance to calculate the button layout.
+	if not (x and y and w and h) then
+		return
+	end
+
 	local anim = btn.anim
 	local t = anim and anim.t or 0
 
