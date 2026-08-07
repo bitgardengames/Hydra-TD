@@ -43,6 +43,7 @@ local recapScroll = 0
 local layout = nil
 local rewardCardT = 0
 local rewardCards = {}
+local rewardClosePressed = false
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -67,6 +68,7 @@ local panelW = 560
 local rewardCardW = 420
 local rewardCardH = 176
 local rewardInputDelay = 1.25
+local rewardCloseSize = 32
 
 local statsGap = 12
 local statH = 44
@@ -158,6 +160,29 @@ local function rewardCardBlockingInput()
 	return #rewardCards > 0 and rewardCardT < rewardInputDelay
 end
 
+local function getRewardCardBounds(g)
+	local w = min(rewardCardW, g.sw - 36)
+	local h = rewardCardH
+	local x = (g.sw - w) * 0.5
+	local y = max(18, g.boxY + 24)
+	return x, y, w, h
+end
+
+local function pointInRewardClose(x, y)
+	if #rewardCards <= 0 or not layout then return false end
+	local cardX, cardY, cardW = getRewardCardBounds(layout)
+	local closeX = cardX + cardW - rewardCloseSize - 10
+	local closeY = cardY + 10
+	return x >= closeX and x <= closeX + rewardCloseSize
+		and y >= closeY and y <= closeY + rewardCloseSize
+end
+
+local function closeRewardCard()
+	rewardCards = {}
+	rewardClosePressed = false
+	Sound.play("uiBack")
+end
+
 local function drawRewardUnlockCard(g)
 	if #rewardCards <= 0 then return end
 
@@ -166,11 +191,7 @@ local function drawRewardUnlockCard(g)
 	local intro = min(1, rewardCardT * 2.2)
 	local scale = 0.78 + 0.22 * easeOutBack(intro)
 	local alpha = min(1, rewardCardT * 3)
-	local sw, sh = g.sw, g.sh
-	local w = min(rewardCardW, sw - 36)
-	local h = rewardCardH
-	local x = (sw - w) * 0.5
-	local targetY = max(18, g.boxY + 24)
+	local x, targetY, w, h = getRewardCardBounds(g)
 	local y = targetY - 40 * (1 - intro)
 	local cx, cy = x + w * 0.5, y + h * 0.5
 
@@ -191,6 +212,19 @@ local function drawRewardUnlockCard(g)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], alpha)
 	Text.printfShadow(L("victory.rewardUnlocked"), x + 18, y + 16, w - 36, "center")
+
+	local closeX = x + w - rewardCloseSize - 10
+	local closeY = y + 10
+	local closeHovered = pointInRewardClose(love.mouse.getPosition())
+	local closeColor = closeHovered and Theme.ui.buttonHover or Theme.ui.button
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
+	lg.rectangle("fill", closeX - 2, closeY - 2, rewardCloseSize + 4, rewardCloseSize + 4, 8, 8)
+	lg.setColor(closeColor[1], closeColor[2], closeColor[3], alpha)
+	lg.rectangle("fill", closeX, closeY, rewardCloseSize, rewardCloseSize, 6, 6)
+	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	lg.setLineWidth(3)
+	lg.line(closeX + 10, closeY + 10, closeX + 22, closeY + 22)
+	lg.line(closeX + 22, closeY + 10, closeX + 10, closeY + 22)
 
 	local iconX, iconY = x + 74, y + 96
 	lg.setColor(0.04, 0.05, 0.07, 0.8 * alpha)
@@ -399,6 +433,7 @@ function Screen.enter()
 	t = 0
 	panelT = 0
 	rewardCardT = 0
+	rewardClosePressed = false
 	recapScroll = 0
 	buildStats()
 	buildRewardCards()
@@ -580,6 +615,10 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if rewardCardBlockingInput() then return true end
+	if button == 1 and pointInRewardClose(x, y) then
+		rewardClosePressed = true
+		return true
+	end
 
 	for _, btn in ipairs(buttons) do
 		if Button.mousepressed(btn, x, y, button) then
@@ -590,6 +629,12 @@ end
 
 function Screen.mousereleased(x, y, button)
 	if rewardCardBlockingInput() then return true end
+	if button == 1 and rewardClosePressed then
+		local shouldClose = pointInRewardClose(x, y)
+		rewardClosePressed = false
+		if shouldClose then closeRewardCard() end
+		return true
+	end
 
 	for _, btn in ipairs(buttons) do
 		if Button.mousereleased(btn, x, y, button) then
