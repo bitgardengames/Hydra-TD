@@ -45,7 +45,6 @@ return {
 		hitStop = "Hit-stop impulses",
 		hitStopDesc = "Briefly pauses action on the heaviest impacts.",
 		tabAudio = "Audio",
-		tabGameplay = "Gameplay",
 		tabVideo = "Video",
 		tabControls = "Controls",
 		tabControlsKeybinds = "Keybinds",
@@ -71,9 +70,6 @@ return {
 		controlConflictSwapApplied = "Swap applied.",
 		controlsRestoreDefaults = "Restore Default Keybinds",
 		controlsDefaultsRestored = "Default keybinds restored.",
-		gameplayTips = "Enable gameplay tips",
-		replayTutorial = "Replay tutorial",
-		replay = "Replay",
 		reset = "Reset",
 		on = "On",
 		off = "Off",
@@ -439,30 +435,6 @@ return {
 		bonus = "Perfect Wave +$%s",
 	},
 
-	onboarding = {
-		tower_placement = "Choose a tower, then click a clear tile to place it.",
-		wave_start = "Press Space when you're ready to start the wave.",
-		inspection_upgrade = "Select a tower to inspect it and buy an upgrade when affordable.",
-		enemy_intel = "Select an enemy to inspect its health, speed, and defenses.",
-		dismiss = "Dismiss ×",
-	},
-
-	tutorial = {
-		offerTitle = "New to Hydra TD?",
-		offerText = "Learn the basics in a quick one-minute battle.",
-		start = "Quick 1-minute tutorial",
-		skip = "Jump straight in",
-		skipShort = "Skip tutorial",
-		place = "Place the Lancer on the highlighted tile.",
-		wave = "Great! Start the small wave when you're ready.",
-		combat = "Watch your tower defend the path. You can use ordinary controls now.",
-		inspect = "Select your Lancer to inspect its stats.",
-		upgrade = "Choose Upgrade to strengthen the Lancer's native single-target role.",
-		completeTitle = "You're ready!",
-		complete = "Tutorial complete. Your campaign is ready.",
-		continue = "Continue to campaign",
-	},
-
 	inspect = {
 		towerTitle = "%s level %d",
 		upgradeTitle = "Upgrade to level %d",
@@ -496,7 +468,6 @@ return {
 		maxLevel = "Max level",
 		abilityCoolingDown = "Ability cooling down",
 		goldRushReward = "+$%d  GOLD RUSH x%g",
-		tutorialTile = "Use highlighted tile",
 	},
 
 	game = {

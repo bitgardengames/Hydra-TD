@@ -10,7 +10,6 @@ local EnemyDefs = require("world.enemy_defs")
 local EnemyTraits = require("world.enemy_traits")
 local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Spatial = require("world.spatial_grid")
-local Onboarding = require("systems.onboarding")
 local Effects = require("world.effects")
 
 local Waves = {}
@@ -349,9 +348,6 @@ end
 
 -- Wave start
 function Waves.startWave()
-	if not Onboarding.canStartWave() then return false end
-	local tutorialWave = Onboarding.isTutorialWave()
-	Onboarding.event("wave_started")
 	local map = Maps[State.mapIndex]
 	local mapWaveDefs = getMapWaveDefs(map)
 
@@ -365,9 +361,7 @@ function Waves.startWave()
 	end
 
 	-- WaveBuilder enforces boss invariant and returns a simple descriptor
-	local wave = tutorialWave and {
-		count = 4, enemy = "grunt", spacing = 0.85,
-	} or WaveBuilder.build(State.wave, map, State.endless)
+	local wave = WaveBuilder.build(State.wave, map, State.endless)
 
 	-- Boss waves
 	if wave.boss then

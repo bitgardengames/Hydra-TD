@@ -37,7 +37,6 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local ModulePicker = require("ui.module_picker")
-local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
@@ -173,7 +172,6 @@ function resetGame()
 	State.modulePicker.hint = nil
 	State.modulePicker.tower = nil
 	Camera.load()
-	Onboarding.event("map_entered")
 end
 
 local pauseGame = function()
@@ -230,8 +228,6 @@ function love.load(arg)
 		require("core.bootstrap").initFull()
 
 		Steam.setOverlayHook(pauseGame)
-		Onboarding.load()
-		Onboarding.offerIfNeeded()
 	end
 
 	collectgarbage("collect")
@@ -276,12 +272,10 @@ end
 local function drawWorldAndUI()
 	Camera.begin()
 	Draw.drawWorld()
-	Onboarding.drawWorld()
 	Camera.finish()
 	Camera.present()
 
 	Draw.drawUI()
-	Onboarding.draw()
 	ModulePicker.draw()
 	Tooltip.draw()
 end
@@ -336,14 +330,6 @@ function love.update(dt)
 
 	Tooltip.update(dt)
 	Messages.update(dt)
-	if State.selectedTower then
-		local cost = Towers.getUpgradeCost(State.selectedTower)
-		if cost and State.money >= cost then
-			Onboarding.event("affordable_upgrade")
-		end
-	end
-	Onboarding.update()
-
 	if gameplayFrozen then
 		return
 	end
@@ -471,8 +457,6 @@ function love.mousepressed(x, y, button)
 			return
 		end
 	end
-
-	if Onboarding.mousepressed(x, y, button) then return end
 
 	if ModulePicker.isActive() then
 		ModulePicker.mousepressed(x, y, button)

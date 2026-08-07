@@ -92,12 +92,8 @@ function Save.load()
 			local version = Save.data.version or 0
 
 			-- Apply every save-structure change made during this game version as a
-			-- single upgrade. Existing players should not unexpectedly receive the
-			-- first-launch tutorial offer; they can still start it from Settings.
+			-- single upgrade.
 			if version < SAVE_VERSION then
-				if Save.data.tutorialOffered == nil then
-					Save.data.tutorialOffered = true
-				end
 				if type(Save.data.mapStats) == "table" then
 					for _, stats in pairs(Save.data.mapStats) do
 						if type(stats) == "table" and (tonumber(stats.bestWave) or 0) > 20 then
@@ -152,35 +148,6 @@ function Save.load()
 				settings.fullscreen = true
 			end
 
-			-- Onboarding. Keep these defaults explicit so profiles from every older
-			-- save version get the same safe, non-blocking first-run experience.
-			local onboardingChanged = false
-			if Save.data.tutorialCompleted == nil then
-				Save.data.tutorialCompleted = false
-				onboardingChanged = true
-			end
-			if Save.data.tutorialOffered == nil then
-				Save.data.tutorialOffered = false
-				onboardingChanged = true
-			end
-			if Save.data.tutorialSkipped == nil then
-				Save.data.tutorialSkipped = false
-				onboardingChanged = true
-			end
-			if type(Save.data.tutorialDemonstratedIds) ~= "table" then
-				Save.data.tutorialDemonstratedIds = {}
-				onboardingChanged = true
-			end
-			if Save.data.contextualTipsEnabled == nil then
-				Save.data.contextualTipsEnabled = true
-				onboardingChanged = true
-			end
-			if type(Save.data.dismissedTipIds) ~= "table" then
-				Save.data.dismissedTipIds = {}
-				onboardingChanged = true
-			end
-			if onboardingChanged then Save.flush() end
-
 			if ensureKeybinds(settings) then
 				Save.flush()
 			end
@@ -232,13 +199,6 @@ function Save.load()
 		unlockedMaps = {},
 		mapStats = {},
 		equippedAbilities = {"meteor", "frost_nova"},
-		tutorialCompleted = false,
-		tutorialOffered = false,
-		tutorialSkipped = false,
-		tutorialDemonstratedIds = {},
-		contextualTipsEnabled = true,
-		dismissedTipIds = {},
-
 		settings = {
 			musicVolume = 0.20,
 			sfxVolume = 0.20,
