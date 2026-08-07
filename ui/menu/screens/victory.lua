@@ -31,8 +31,6 @@ local random = love.math.random
 local cos = math.cos
 
 local Screen = {}
-local selectedHeadline = nil
-local selectedSubheadline = nil
 
 local buttons = nil
 local previousMedalCount = 0
@@ -224,24 +222,9 @@ local function getDifficultyLabel()
 	return L("difficulty." .. key)
 end
 
-local function getCompletionTier()
-	local completed = Save.data
-		and Save.data.mapStats
-		and Save.data.mapStats[Maps[State.worldMapIndex] and Maps[State.worldMapIndex].id or ""]
-		and Save.data.mapStats[Maps[State.worldMapIndex].id].completedDifficulty
-	return completed or "none"
-end
-
-local function selectVictoryMessage()
-	local score = State.score or 0
-	local leaks = State.totalLeaks or 0
-	local lives = State.lives or 0
+local function recordFirstClear()
 	local map = Maps[State.worldMapIndex]
 	local mapId = map and map.id or nil
-	local completionTier = getCompletionTier()
-	local diff = Difficulty.key()
-	local scoreBand = score >= 25000 and "high" or (score >= 10000 and "mid" or "low")
-
 	local firstClear = mapId and not (Save.data.meta.clearedMaps and Save.data.meta.clearedMaps[mapId]) or false
 	State.wasFirstClear = firstClear
 
@@ -249,20 +232,6 @@ local function selectVictoryMessage()
 		Save.data.meta.clearedMaps[mapId] = true
 		Save.flush()
 	end
-
-	if scoreBand == "high" and leaks == 0 and lives >= 15 then
-		return L("victory.headline.highPerformance"), L("victory.subheadline.highPerformance")
-	end
-
-	if firstClear then
-		return L("victory.headline.firstClear"), L("victory.subheadline.firstClear")
-	end
-
-	if completionTier ~= "none" or diff == "hard" then
-		return L("victory.headline.repeatClear"), L("victory.subheadline.repeatClear")
-	end
-
-	return L("game.victory"), L("victory.subtitle")
 end
 
 local function calculateLayout()
@@ -272,17 +241,13 @@ local function calculateLayout()
 	local edge = compact and 10 or 24
 	local boxW = min(panelW, sw - edge * 2)
 	local boxX = cx - boxW * 0.5
-	local boxY = edge
-	local boxH = sh - edge * 2
 	local padX = min(paddingX, max(12, boxW * 0.05))
 	local padY = compact and 12 or paddingY
 	local buttonGap = compact and 8 or 14
 	local buttonHeight = compact and 36 or btnH
 	local buttonsHeight = #buttons * buttonHeight + max(0, #buttons - 1) * buttonGap
-	local buttonsStartY = boxY + boxH - padY - buttonsHeight
 	local titleHeight = compact and 54 or 76
-	local recapY = boxY + padY + titleHeight
-	local recapBottom = buttonsStartY - (compact and 8 or 18)
+	local sectionGap = compact and 8 or 18
 	local cardW = boxW - padX * 2
 	local valueFont = compact and Fonts.ui or Fonts.menu
 	local labelFont = Fonts.ui
@@ -303,6 +268,12 @@ local function calculateLayout()
 	local _, clusterH = Medals.getClusterSize(medalR, medalGap)
 	local medalY = difficultyY + (compact and 30 or 38)
 	local recapContentH = medalY + clusterH + 14
+	local desiredBoxH = padY * 2 + titleHeight + recapContentH + sectionGap + buttonsHeight
+	local boxH = min(desiredBoxH, sh - edge * 2)
+	local boxY = floor((sh - boxH) * 0.5)
+	local buttonsStartY = boxY + boxH - padY - buttonsHeight
+	local recapY = boxY + padY + titleHeight
+	local recapBottom = buttonsStartY - sectionGap
 	local viewportH = max(0, recapBottom - recapY)
 	recapScroll = min(max(0, recapScroll), max(0, recapContentH - viewportH))
 
@@ -433,7 +404,7 @@ function Screen.enter()
 	buildRewardCards()
 	resetConfetti()
 	Medals.resetAnimations()
-	selectedHeadline, selectedSubheadline = selectVictoryMessage()
+	recordFirstClear()
 
 	previousMedalCount = Medals.getCount(State.previousCompletionDifficulty)
 	currentMedalCount = Medals.getCount(Difficulty.key())
@@ -540,11 +511,11 @@ function Screen.draw()
 
 	Fonts.set(g.compact and "menu" or "title")
 	lg.setColor(colorGood[1], colorGood[2], colorGood[3], alpha)
-	Text.printfShadow(selectedHeadline or L("game.victory"), boxX + g.padX, titleY, boxW - g.padX * 2, "center")
+	Text.printfShadow(L("game.victory"), boxX + g.padX, titleY, boxW - g.padX * 2, "center")
 
 	Fonts.set(g.compact and "ui" or "menu")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.85 * alpha)
-	Text.printfShadow(selectedSubheadline or L("victory.subtitle"), boxX + g.padX, titleY + (g.compact and 25 or 36), boxW - g.padX * 2, "center")
+	Text.printfShadow(L("victory.subtitle"), boxX + g.padX, titleY + (g.compact and 25 or 36), boxW - g.padX * 2, "center")
 
 	-- The recap may scroll, but the heading and action buttons remain outside its clip.
 	lg.setScissor(g.boxX, g.recapY, g.boxW, g.recapH)
