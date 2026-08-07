@@ -732,9 +732,9 @@ function Screen.draw()
 
 	-- Tabs
 	Fonts.set("menu")
-	for i, tab in ipairs(tabs) do
-		local rect = tabRects[i]
-		local hovered = rect and lm.getX() >= rect.x and lm.getX() <= rect.x + rect.w and lm.getY() >= rect.y and lm.getY() <= rect.y + rect.h
+	for i, rect in ipairs(tabRects) do
+		local tab = tabs[i]
+		local hovered = lm.getX() >= rect.x and lm.getX() <= rect.x + rect.w and lm.getY() >= rect.y and lm.getY() <= rect.y + rect.h
 		local active = i == activeTab
 		local anim = tabAnim[i] or 0
 		local wobble = active and (sin(tabTime * 4 + i * 0.6) * 0.5 + 0.5) or 0
