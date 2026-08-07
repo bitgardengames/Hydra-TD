@@ -233,6 +233,9 @@ local bossAddsDefaults = {
 	maxAlive = 0,
 	maxTotal = 0,
 	totalSpawned = 0,
+	queued = 0,
+	queueTimer = 0,
+	queueGap = 0.18,
 	hpMult = 1.0,
 	spdMult = 1.0,
 }
@@ -489,10 +492,12 @@ function Waves.updateSpawner(dt)
 		local bossAlive = boss and boss.hp and boss.hp > 0 and not boss.dying
 		if not bossAlive then
 			bossAdds.active = false
+			bossAdds.queued = 0
 			return
 		end
 
 		bossAdds.timer = bossAdds.timer - dt
+		bossAdds.queueTimer = bossAdds.queueTimer - dt
 
 		if bossAdds.timer <= 0 and bossAdds.totalSpawned < bossAdds.maxTotal then
 			local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, 320, true)
@@ -504,22 +509,42 @@ function Waves.updateSpawner(dt)
 				end
 			end
 
-			local available = min(bossAdds.maxAlive - aliveAdds, activeCap - #Enemies.enemies)
+			-- Reserve alive/total budget for already queued adds. A slow or capped
+			-- frame must not allow repeated encounter timers to overfill the queue.
+			local available = min(bossAdds.maxAlive - aliveAdds - bossAdds.queued,
+				activeCap - #Enemies.enemies - bossAdds.queued)
 			if available > 0 then
-				local toSpawn = max(0, min(bossAdds.burst, available, bossAdds.maxTotal - bossAdds.totalSpawned))
+				local toSpawn = max(0, min(bossAdds.burst, available,
+					bossAdds.maxTotal - bossAdds.totalSpawned - bossAdds.queued))
 				if toSpawn > 0 then
-					beginSpawner(bossAdds.kind, toSpawn, 0.18, bossAdds.hpMult, bossAdds.spdMult)
-					bossAdds.totalSpawned = bossAdds.totalSpawned + toSpawn
+					bossAdds.queued = bossAdds.queued + toSpawn
 				end
 			end
 
 			bossAdds.timer = bossAdds.interval
 		end
+
+		-- Boss reinforcements own their queue: never route them through the authored
+		-- wave spawner, whose group cursor and remaining count must stay intact.
+		while bossAdds.queued > 0 and bossAdds.queueTimer <= 0
+			and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
+			Enemies.spawnEnemy(bossAdds.kind, bossAdds.hpMult, bossAdds.spdMult)
+			bossAdds.queued = bossAdds.queued - 1
+			bossAdds.totalSpawned = bossAdds.totalSpawned + 1
+			bossAdds.queueTimer = bossAdds.queueTimer + bossAdds.queueGap
+			spawnLoops = spawnLoops + 1
+		end
+
+		if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and bossAdds.queueTimer <= 0 then
+			bossAdds.queueTimer = 0
+		elseif #Enemies.enemies >= activeCap and bossAdds.queued > 0 then
+			bossAdds.queueTimer = max(bossAdds.queueTimer, SPAWN_BACKPRESSURE_DELAY)
+		end
 	end
 end
 
 function Waves.allEnemiesCleared()
-	return #Enemies.enemies == 0 and not spawner.active
+	return #Enemies.enemies == 0 and not spawner.active and bossAdds.queued == 0
 end
 
 function Waves.getWaveCompletionBonus(wave, waveLeaks)
