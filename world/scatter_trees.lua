@@ -22,9 +22,6 @@ local TILE = Constants.TILE
 local GRID_W = Constants.GRID_W
 local GRID_H = Constants.GRID_H
 
-local EVERGREEN_SWAY_SPEED = 1.35
-local EVERGREEN_SWAY_ANGLE = 0.025
-
 local rng = love.math.newRandomGenerator()
 
 local function random(a, b)
@@ -181,7 +178,6 @@ function Trees.generate()
 			style = random(#styles),
 			shape = shapes[random(#shapes)],
 			scale = 0.8 + random() * 0.6,
-			swayPhase = random() * math.pi * 2,
 		}
 
 		setOccupied(gx, gy)
@@ -195,7 +191,7 @@ function Trees.generate()
 	end)
 end
 
-function Trees.draw(mode)
+function Trees.draw()
 	local trees = Trees.list
 
 	if #trees == 0 then
@@ -205,22 +201,9 @@ function Trees.draw(mode)
 	local styles = getTreeStyles()
 	local trunk = getTreeTrunk()
 	local trunkOutline = getTreeTrunkOutline()
-	local swayTime = love.timer.getTime()
 
-	local function nextTree(_, index)
-		while index < #trees do
-			index = index + 1
-			local tree = trees[index]
-			local matchesMode = (mode ~= "static" or tree.shape ~= "evergreen")
-				and (mode ~= "evergreen" or tree.shape == "evergreen")
-
-			if matchesMode then
-				return index, tree
-			end
-		end
-	end
-
-	for _, t in nextTree, nil, 0 do
+	for i = 1, #trees do
+		local t = trees[i]
 		local style = styles[t.style]
 
 		local x = t.x
@@ -295,13 +278,6 @@ function Trees.draw(mode)
 		elseif t.shape == "evergreen" then
 			local layers = 3
 			local baseSize = TILE * 0.34 * s
-			local sway = math.sin(swayTime * EVERGREEN_SWAY_SPEED + (t.swayPhase or 0)) * EVERGREEN_SWAY_ANGLE
-
-			-- Pivot the canopy at its base so the three layers move as one in the breeze.
-			lg.push()
-			lg.translate(x, trunkY)
-			lg.rotate(sway)
-			lg.translate(-x, -trunkY)
 
 			local yOffset = 0
 
@@ -365,8 +341,6 @@ function Trees.draw(mode)
 				lg.setColor(style.fill)
 				lg.polygon("fill", hx1, hy1, hx2, hy2, hx3, hy3)
 			end
-
-			lg.pop()
 		end
 	end
 end
