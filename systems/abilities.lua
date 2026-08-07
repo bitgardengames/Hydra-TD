@@ -74,11 +74,12 @@ function Abilities.update(dt)
 end
 function Abilities.getActive() return active,clock end
 function Abilities.getKillIncomeMultiplier(enemy)
+	local isBoss=enemy and (enemy.boss or (enemy.def and enemy.def.boss))
+	if isBoss then return 1 end
 	local multiplier=1
 	for _,a in ipairs(active) do
 		if a.kind=="income_multiplier" and clock<a.expires then
-			local isBoss=enemy and (enemy.boss or (enemy.def and enemy.def.boss))
-			multiplier=math.max(multiplier, (isBoss and a.bossMultiplier) or a.multiplier or 1)
+			multiplier=math.max(multiplier, a.multiplier or 1)
 		end
 	end
 	return multiplier

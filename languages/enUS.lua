@@ -23,7 +23,7 @@ return {
 		frostNova = {name = "Frost Nova", desc = "Severely slow enemies in a targeted area."},
 		overdrive = {name = "Overdrive", desc = "Supercharge towers in an area for a short barrage."},
 		gravityWell = {name = "Gravity Well", desc = "Pull a formation backward, then burst for damage."},
-		goldRush = {name = "Gold Rush", desc = "Double kill income for 8 seconds. Enhanced: lasts 12 seconds and triples boss rewards."},
+		goldRush = {name = "Gold Rush", desc = "Gain 50% more kill income for 8 seconds. Does not work on bosses."},
 		lastStand = {name = "Last Stand", desc = "Fortify towers to focus and volley at escaping enemies."},
 		cooldown = "%s  %ds",
 	},
