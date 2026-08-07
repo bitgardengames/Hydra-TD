@@ -67,6 +67,15 @@ return {
 		traits = {"support"},
 	},
 
+	summoner = {
+		nameKey = "enemy.summoner",
+		descriptionKey = "enemy.summonerDescription",
+		hp = 46, speed = 42, reward = 18, score = 44, radius = 14,
+		summon = { kind = "runner", count = 2, period = 6.0, initialDelay = 2.5, spacing = 9 },
+		targetPriority = 38,
+		traits = {"summons"},
+	},
+
 	boss = {
 		nameKey = "enemy.boss",
 		hp = 312.5,

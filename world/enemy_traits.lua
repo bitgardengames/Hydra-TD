@@ -30,6 +30,13 @@ local Traits = {
 		counter = "Use priority targeting or concentrated fire to remove it first.",
 		answers = {"Strongest/priority targeting", "Lancer / Focus Fire"},
 	},
+	summons = {
+		tag = "Summoner",
+		mechanic = "Periodically creates two runners at its current position on the path.",
+		tell = "Orbiting runes contract as its next pair of runners approaches.",
+		counter = "Focus it early or use area damage to clear each runner pair.",
+		answers = {"Priority targeting", "Cannon area specializations"},
+	},
 	fast = {
 		tag = "Fast",
 		mechanic = "Crosses uncovered sections of the path quickly.",

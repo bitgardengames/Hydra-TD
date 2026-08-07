@@ -323,9 +323,9 @@ local wavesByMapId = {
 		-- orientation
 		[1] = { g("grunt", 36, 0.69, 0.0) },
 		-- demonstration
-		[2] = { g("shieldbearer", 20, 0.82, 0.0) },
+		[2] = { g("summoner", 5, 1.35, 0.0) },
 		-- demonstration
-		[3] = { g("grunt", 25, 0.68, 0.0), g("shieldbearer", 9, 0.78, 1.5) },
+		[3] = { g("grunt", 18, 0.68, 0.0), g("summoner", 4, 1.10, 1.5) },
 		-- practice
 		[4] = { g("shieldbearer", 22, 0.65, 0.0), g("grunt", 25, 0.54, 0.8) },
 		-- practice

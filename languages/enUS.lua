@@ -403,6 +403,8 @@ return {
 		shieldbearerDescription = "Its barrier breaks quickly under bursts and chained shocks.",
 		warcaller = "Warcaller",
 		warcallerDescription = "Accelerates nearby enemies; eliminate the standard-bearer first.",
+		summoner = "Summoner",
+		summonerDescription = "Periodically summons pairs of runners at its position on the path.",
 		boss = "Boss",
 		bossSummoner = "Summoner",
 		bossDisplacement = "Vanguard",

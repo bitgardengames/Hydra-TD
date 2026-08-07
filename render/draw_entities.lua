@@ -145,6 +145,17 @@ local function drawEnemy(e)
 		lg.rectangle("fill", ix + r * 0.55, iy - r * 2.0, 3, r * 1.7)
 		lg.polygon("fill", ix + r * 0.7, iy - r * 1.9, ix + r * 1.65, iy - r * 1.55, ix + r * 0.7, iy - r * 1.2)
 	end
+	if e.summon then
+		local readiness = 1 - min(1, max(0, (e.summonTimer or 0) / e.summon.period))
+		local orbitRadius = r + 7 - readiness * 3
+		lg.setColor(0.72, 0.38, 0.95, (0.55 + readiness * 0.35) * enemyAlpha)
+		for n = 0, 1 do
+			local angle = animT * 1.8 + n * pi
+			local sx = ix + cos(angle) * orbitRadius
+			local sy = iy + sin(angle) * orbitRadius
+			lg.polygon("fill", sx, sy - 4, sx + 4, sy, sx, sy + 4, sx - 4, sy)
+		end
+	end
 	-- Boss archetypes need a readable silhouette of their own. In particular, the
 	-- Summoner previously reused the plain round enemy body and could be mistaken
 	-- for the first Grunt reinforcement promised by its preview.
