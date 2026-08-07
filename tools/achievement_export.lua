@@ -3,7 +3,6 @@ local DrawEntities = require("render.draw_entities")
 local Medals = require("ui.medals")
 local Theme = require("core.theme")
 local Fonts = require("core.fonts")
-local Text = require("ui.text")
 local Enemies = require("world.enemies")
 local Projectiles = require("world.projectiles")
 local Effects = require("world.effects")
@@ -38,20 +37,6 @@ local ACH_DIR = EXPORT_DIR .. "/achievements"
 
 local colorFace = Theme.enemy.face
 local colorBody = Theme.enemy.body
-local colorText = Theme.ui.text
-
-local tiers = {
-	[1] = "bronze",
-	[2] = "silver",
-	[3] = "gold",
-}
-
-local roman = {
-	[1] = "I",
-	[2] = "II",
-	[3] = "III",
-}
-
 local ribbonColors = {
 	[1] = {0.18, 0.42, 0.26}, -- bronze (green)
 	[2] = {0.22, 0.40, 0.78}, -- silver (blue)
@@ -625,7 +610,6 @@ local function drawTowerUpgradeIcon(kind, level)
 
 		local ay = cy
 		local verticalOffset = -height -- -height?
-		local overlap = tipH * 0.45
 
 		lg.setColor(Theme.outline.color)
 

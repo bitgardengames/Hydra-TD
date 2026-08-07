@@ -31,11 +31,6 @@ local AVATAR_DIR = EXPORT_DIR .. "/avatars"
 local ANIM_DIR = EXPORT_DIR .. "/anim"
 local PATCH_DIR = EXPORT_DIR .. "/patch"
 
--- Canonical banner reference
-local REF_W = 920
-local REF_H = 430
-local REF_TITLE_FONT = 78
-
 local BANNERS = {
 	-- Steam banner sizes
 	main_capsule = {w = 1232, h = 706},
@@ -74,12 +69,6 @@ local TRANSPARENT_BANNERS = {
 	header_capsule = true,
 	small_capsule = true,
 	desktop  = true,
-}
-
--- Steam announcement cover and header
-local PATCH_BANNERS = {
-	update = {w = 800, h = 450},
-	update_header = {w = 1920, h = 622},
 }
 
 -- Helpers
@@ -447,7 +436,6 @@ function Export.exportSocialAvatar()
 			-- Mouth
 			local mouthY = cy + radius * 0.32
 			local outerR = radius * 0.56
-			local innerR = outerR * 0.60
 			local lipOffset = radius * 0.07
 
 			local startAngle = -pi * 0.02
@@ -1036,10 +1024,6 @@ function Export.exportPatchCover(text, ver)
 
 	exportCanvas(canvas, string.format("%s/update_%s_%dx%d", PATCH_DIR, ver, w, h))
 end
-
-local SIZE = 256
-local REF_ICON_SIZE = 64
-local TOWER_SCALE = (SIZE / REF_ICON_SIZE) * 1.5 -- 1.5 scale
 
 function Export.exportTowerFiringAnimations()
 	local SIZE = 256

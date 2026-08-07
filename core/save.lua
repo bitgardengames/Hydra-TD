@@ -5,7 +5,6 @@ local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local SAVE_VERSION = 6 -- Persist the active-ability slot selections
 
 local Hotkeys = require("core.hotkeys")
-local State = require("core.state")
 
 Save.data = nil
 

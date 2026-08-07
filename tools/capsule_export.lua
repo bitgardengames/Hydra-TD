@@ -1,6 +1,5 @@
 local DrawWorld = require("render.draw_world")
 local DrawEntities = require("render.draw_entities")
-local TowersDefs = require("world.tower_defs")
 local EnemyDefs = require("world.enemy_defs")
 local Title = require("ui.title")
 

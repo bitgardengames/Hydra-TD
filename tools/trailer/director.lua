@@ -378,7 +378,6 @@ local function drawFadedBannerForText(text, font, y, alpha)
 	-- Visual tuning knobs
 	local fade = 120
 	local paddingX = 20
-	local featherY = 8
 
 	lg.setFont(font)
 

@@ -1,7 +1,6 @@
 local Camera = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
 local Constants = require("core.constants")
-local Maps = require("world.map_defs")
 
 local mapCX = Constants.GRID_W * Constants.TILE * 0.5
 local mapCY = Constants.GRID_H * Constants.TILE * 0.5

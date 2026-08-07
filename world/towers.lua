@@ -18,7 +18,6 @@ local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
 local CampaignUnlocks = require("systems.campaign_unlocks")
---local Steam = require("luasteam")
 
 local towers = {}
 local towersByCell = {}

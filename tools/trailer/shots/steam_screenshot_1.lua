@@ -1,6 +1,4 @@
-local Camera = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
-local Constants = require("core.constants")
 
 return {
 	map = 1,
