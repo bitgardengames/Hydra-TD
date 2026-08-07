@@ -22,16 +22,16 @@ local wavesByMapId = {
 		[4] = { g("grunt", 20, 0.48, 0.0) },
 		-- practice
 		[5] = { g("grunt", 24, 0.43, 0.0) },
-		-- practice
-		[6] = { g("grunt", 10, 0.52, 0.0) },
-		-- mixed check
-		[7] = { g("grunt", 5, 0.48, 0.0) },
-		-- mixed check
-		[8] = { g("grunt", 7, 0.43, 0.0) },
-		-- mixed check
-		[9] = { g("grunt", 6, 0.40, 0.0) },
-		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 5, 0.43, 1.8) },
+		-- practice: a sustained stream hands off to a trailing pack
+		[6] = { g("grunt", 16, 0.44, 0.0), g("grunt", 10, 0.40, 0.65) },
+		-- mixed check: two packs compress the recovery window
+		[7] = { g("grunt", 14, 0.40, 0.0), g("grunt", 14, 0.34, 0.30) },
+		-- mixed check: staggered packs overlap the player's engagement windows
+		[8] = { g("grunt", 13, 0.38, 0.0), g("grunt", 9, 0.32, 0.15), g("grunt", 8, 0.28, 0.12) },
+		-- mixed check: a tight three-pack density exam
+		[9] = { g("grunt", 13, 0.34, 0.0), g("grunt", 10, 0.29, 0.08), g("grunt", 9, 0.25, 0.08) },
+		-- final exam: boss with an authored vanguard, body, and rear escort
+		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 12, 0.36, 1.0), g("grunt", 13, 0.30, 0.35), g("grunt", 9, 0.26, 0.25) },
 	},
 	switchback = {
 		-- orientation
@@ -44,16 +44,16 @@ local wavesByMapId = {
 		[4] = { g("grunt", 22, 0.48, 0.0) },
 		-- practice
 		[5] = { g("grunt", 26, 0.43, 0.0) },
-		-- practice
-		[6] = { g("grunt", 11, 0.52, 0.0) },
-		-- mixed check
-		[7] = { g("grunt", 6, 0.48, 0.0) },
-		-- mixed check
-		[8] = { g("grunt", 8, 0.43, 0.0) },
-		-- mixed check
-		[9] = { g("grunt", 7, 0.40, 0.0) },
-		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 6, 0.43, 1.8) },
+		-- practice: a sustained stream hands off to a trailing pack
+		[6] = { g("grunt", 17, 0.44, 0.0), g("grunt", 11, 0.40, 0.65) },
+		-- mixed check: two packs compress the recovery window
+		[7] = { g("grunt", 15, 0.40, 0.0), g("grunt", 15, 0.34, 0.30) },
+		-- mixed check: staggered packs overlap the player's engagement windows
+		[8] = { g("grunt", 14, 0.38, 0.0), g("grunt", 10, 0.32, 0.15), g("grunt", 8, 0.28, 0.12) },
+		-- mixed check: a tight three-pack density exam
+		[9] = { g("grunt", 14, 0.34, 0.0), g("grunt", 11, 0.29, 0.08), g("grunt", 9, 0.25, 0.08) },
+		-- final exam: boss with an authored vanguard, body, and rear escort
+		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 12, 0.36, 1.0), g("grunt", 14, 0.30, 0.35), g("grunt", 10, 0.26, 0.25) },
 	},
 	highpass = {
 		-- orientation
@@ -66,16 +66,16 @@ local wavesByMapId = {
 		[4] = { g("grunt", 24, 0.48, 0.0) },
 		-- practice
 		[5] = { g("grunt", 28, 0.43, 0.0) },
-		-- practice
-		[6] = { g("grunt", 12, 0.52, 0.0) },
-		-- mixed check
-		[7] = { g("grunt", 6, 0.48, 0.0) },
-		-- mixed check
-		[8] = { g("grunt", 8, 0.43, 0.0) },
-		-- mixed check
-		[9] = { g("grunt", 7, 0.40, 0.0) },
-		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 6, 0.43, 1.8) },
+		-- practice: a sustained stream hands off to a trailing pack
+		[6] = { g("grunt", 18, 0.44, 0.0), g("grunt", 12, 0.40, 0.65) },
+		-- mixed check: two packs compress the recovery window
+		[7] = { g("grunt", 16, 0.40, 0.0), g("grunt", 16, 0.34, 0.30) },
+		-- mixed check: staggered packs overlap the player's engagement windows
+		[8] = { g("grunt", 15, 0.38, 0.0), g("grunt", 11, 0.32, 0.15), g("grunt", 8, 0.28, 0.12) },
+		-- mixed check: a tight three-pack density exam
+		[9] = { g("grunt", 14, 0.34, 0.0), g("grunt", 12, 0.29, 0.08), g("grunt", 10, 0.25, 0.08) },
+		-- final exam: boss with an authored vanguard, body, and rear escort
+		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 13, 0.36, 1.0), g("grunt", 15, 0.30, 0.35), g("grunt", 10, 0.26, 0.25) },
 	},
 	roundabout = {
 		-- orientation
@@ -88,16 +88,16 @@ local wavesByMapId = {
 		[4] = { g("grunt", 26, 0.48, 0.0) },
 		-- practice
 		[5] = { g("grunt", 30, 0.43, 0.0) },
-		-- practice
-		[6] = { g("grunt", 13, 0.52, 0.0) },
-		-- mixed check
-		[7] = { g("grunt", 7, 0.48, 0.0) },
-		-- mixed check
-		[8] = { g("grunt", 9, 0.43, 0.0) },
-		-- mixed check
-		[9] = { g("grunt", 8, 0.40, 0.0) },
-		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 7, 0.43, 1.8) },
+		-- practice: a sustained stream hands off to a trailing pack
+		[6] = { g("grunt", 19, 0.44, 0.0), g("grunt", 13, 0.40, 0.65) },
+		-- mixed check: two packs compress the recovery window
+		[7] = { g("grunt", 17, 0.40, 0.0), g("grunt", 17, 0.34, 0.30) },
+		-- mixed check: staggered packs overlap the player's engagement windows
+		[8] = { g("grunt", 16, 0.38, 0.0), g("grunt", 11, 0.32, 0.15), g("grunt", 9, 0.28, 0.12) },
+		-- mixed check: a tight three-pack density exam
+		[9] = { g("grunt", 15, 0.34, 0.0), g("grunt", 12, 0.29, 0.08), g("grunt", 11, 0.25, 0.08) },
+		-- final exam: boss with an authored vanguard, body, and rear escort
+		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 14, 0.36, 1.0), g("grunt", 16, 0.30, 0.35), g("grunt", 10, 0.26, 0.25) },
 	},
 	gauntlet = {
 		-- orientation
@@ -110,16 +110,16 @@ local wavesByMapId = {
 		[4] = { g("grunt", 28, 0.48, 0.0) },
 		-- practice
 		[5] = { g("grunt", 32, 0.43, 0.0) },
-		-- practice
-		[6] = { g("grunt", 14, 0.52, 0.0) },
-		-- mixed check
-		[7] = { g("grunt", 7, 0.48, 0.0) },
-		-- mixed check
-		[8] = { g("grunt", 9, 0.43, 0.0) },
-		-- mixed check
-		[9] = { g("grunt", 8, 0.40, 0.0) },
-		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 7, 0.43, 1.8) },
+		-- practice: a sustained stream hands off to a trailing pack
+		[6] = { g("grunt", 20, 0.44, 0.0), g("grunt", 14, 0.40, 0.65) },
+		-- mixed check: two packs compress the recovery window
+		[7] = { g("grunt", 18, 0.40, 0.0), g("grunt", 18, 0.34, 0.30) },
+		-- mixed check: staggered packs overlap the player's engagement windows
+		[8] = { g("grunt", 17, 0.38, 0.0), g("grunt", 12, 0.32, 0.15), g("grunt", 9, 0.28, 0.12) },
+		-- mixed check: a tight three-pack density exam
+		[9] = { g("grunt", 16, 0.34, 0.0), g("grunt", 13, 0.29, 0.08), g("grunt", 11, 0.25, 0.08) },
+		-- final exam: boss with an authored vanguard, body, and rear escort
+		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 14, 0.36, 1.0), g("grunt", 16, 0.30, 0.35), g("grunt", 12, 0.26, 0.25) },
 	},
 	snaketrail = {
 		-- orientation
