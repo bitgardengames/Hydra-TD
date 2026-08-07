@@ -35,7 +35,8 @@ function MapRender.renderWorldToCanvas(canvas, scale)
 
 	DrawWorld.drawGrass()
 	DrawWorld.drawPath()
-	DrawWorld.drawScatter()
+	-- Evergreens are animated separately so the rest of the world can stay cached.
+	DrawWorld.drawScatter("static")
 
 	lg.pop()
 	lg.setCanvas()
