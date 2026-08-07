@@ -106,7 +106,9 @@ return {
 		cost = 90,
 		range = 3.05 * Constants.TILE,
 		fireRate = 0.68,
-		damage = 32,
+		-- Splash lets every shell apply this damage to several enemies, so keep
+		-- its per-target output below the cheaper, single-target Lancer.
+		damage = 24,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
 		projSpeed = 280,
