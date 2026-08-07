@@ -312,6 +312,7 @@ local maps = {
 		prerequisiteMapId = "steppingstones",
 		campaignStage = 3,
 		nameKey = "map.twinloop",
+		introducesEnemies = {"summoner"},
 		biome = "winter",
 		path = {
 			{5, 7}, {12, 7},

@@ -24,6 +24,7 @@ local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- Seconds per poison tick
 local HIT_SQUASH_DUR = 0.12
+local MAX_ACTIVE_ENEMIES = 180
 
 local EPS = 1e-6
 local BASE_MAX_NUDGE = 10
@@ -358,6 +359,7 @@ end
 local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
 	local def = EnemyDefs[kind]
 	opts = opts or {}
+	assert(def, "unknown enemy kind: " .. tostring(kind))
 
 	Save.markEnemyEncountered(kind)
 
@@ -400,10 +402,10 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.prevY = y
 
 	-- Path driver
-	e.dist = 0
+	e.dist = opts.pathDistance or 0
 	e.prevDist = 0
 	e.pathSeg = pathIndex or 1
-	e.pathT = 0
+	e.pathT = opts.pathT or 0
 	e.anchorX = x
 	e.anchorY = y
 
@@ -469,6 +471,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.armorCounterFlash = 0
 	e.regenVisualPulse = 0
 	e.support = def.support
+	e.summon = def.summon
+	e.summonTimer = def.summon and (def.summon.initialDelay or def.summon.period) or 0
 	e.supportBoost = 1
 	e.supportContributions = e.supportContributions or {}
 	e.supportPulse = 0
@@ -497,6 +501,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 		State.activeBossKind = e.kind
 		Effects.trigger("boss_entrance", {intensity = 4, shake = 7, duration = 0.35, hitStop = 0.06, criticalTell = true})
 	end
+
+	return e
 end
 
 local function handleEnemyKilled(e, i, isBoss)
@@ -828,6 +834,30 @@ local function updateEnemies(dt)
 		if e.armorHitFlash > 0 then e.armorHitFlash = max(0, e.armorHitFlash - dt) end
 		if e.armorCounterFlash > 0 then e.armorCounterFlash = max(0, e.armorCounterFlash - dt) end
 		if e.regenVisualPulse > 0 then e.regenVisualPulse = max(0, e.regenVisualPulse - dt) end
+
+		-- Summoned runners join at the caster's current path progress rather than at
+		-- the map entrance. One cast is resolved per frame, so a long frame cannot
+		-- create an unbounded catch-up burst.
+		if e.summon then
+			e.summonTimer = e.summonTimer - dt
+			if e.summonTimer <= 0 then
+				local summon = e.summon
+				e.summonTimer = summon.period
+				local availableSlots = max(0, MAX_ACTIVE_ENEMIES - #enemies)
+				for n = 1, min(summon.count, availableSlots) do
+					local child = spawnEnemy(summon.kind, e.hpScale, e.spdScale, e.x, e.y, e.pathSeg, {
+						pathDistance = e.dist,
+						pathT = e.pathT,
+					})
+					-- Opposing visual offsets make the pair readable without changing
+					-- their shared gameplay position on the path.
+					local side = n % 2 == 0 and 1 or -1
+					child.nudgeTargetY = side * (summon.spacing or 0)
+					child.nudgeY = child.nudgeTargetY
+				end
+				Effects.trigger("enemy_summon", {intensity = 3, x = e.x, y = e.y})
+			end
+		end
 
 		e.speed = e.baseSpeed * e.slowFactor * e.supportBoost
 		e.prevAnimT = e.animT
