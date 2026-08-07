@@ -368,7 +368,6 @@ local function buildPreviewMessages(map, mapIndex)
 	local design = CampaignDesign.get(mapIndex)
 
 	if design then
-		messages[#messages + 1] = L("campaign.lesson", design.lesson)
 		messages[#messages + 1] = L("campaign.pressure", design.pressure)
 	end
 
