@@ -106,9 +106,10 @@ return {
 		cost = 90,
 		range = 3.05 * Constants.TILE,
 		fireRate = 0.68,
-		-- Splash lets every shell apply this damage to several enemies, so keep
-		-- its per-target output below the cheaper, single-target Lancer.
-		damage = 24,
+		-- At three targets, splash already gives this about twice the Lancer's
+		-- total damage per second. Keep the shell to two Lancer hits so
+		-- Cannon pays for that crowd damage with weaker single-target efficiency.
+		damage = 18,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
 		projSpeed = 280,
@@ -116,7 +117,9 @@ return {
 		color = Theme.tower.cannon,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 2.35,
+			-- Match Lancer's damage curve instead of letting Cannon's splash scale
+			-- faster at the levels where packed waves are largest.
+			dmgMult = 2.2,
 			rangeAdd = 0.04 * Constants.TILE,
 			fireMult = 1.03,
 			splashAdd = 5, -- increase AoE radius per upgrade
