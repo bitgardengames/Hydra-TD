@@ -14,7 +14,6 @@ local Emissions = require("world.emissions")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local TowerBranchDefs = require("world.tower_branch_defs")
-local Onboarding = require("systems.onboarding")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
 local CampaignUnlocks = require("systems.campaign_unlocks")
@@ -233,9 +232,6 @@ local function addTower(kind, gx, gy)
 		return false, "locked"
 	end
 
-	local tutorialOK, tutorialWhy = Onboarding.validatePlacement(kind, gx, gy)
-	if not tutorialOK then return false, tutorialWhy end
-
 	if State.money < def.cost then
 		return false, "money"
 	end
@@ -328,7 +324,6 @@ local function addTower(kind, gx, gy)
 	Effects.spawnPlacePuff(x, y)
 
 	Sound.play("towerPlaced")
-	Onboarding.event("tower_placed", t)
 
 
 	return true
@@ -402,7 +397,6 @@ local function upgradeTower(t, specializationId)
 	Sound.play("towerUpgraded")
 
 	Achievements.increment("TOWER_UPGRADES")
-	Onboarding.event("tower_upgraded", t)
 	if TowerBranchDefs.getChoices(t.kind, t.level + 1) == nil then
 		Effects.trigger("final_tier_upgrade", {intensity = 4, shake = 6, duration = 0.3, hitStop = 0.06})
 	end

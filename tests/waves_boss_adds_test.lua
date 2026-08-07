@@ -41,11 +41,6 @@ stub("world.enemy_defs", {
 })
 stub("world.enemy_traits", {get = function() return nil end})
 stub("world.enemy_affix_defs", {})
-stub("systems.onboarding", {
-	canStartWave = function() return true end,
-	isTutorialWave = function() return false end,
-	event = function() end,
-})
 stub("world.effects", {trigger = function() end})
 stub("world.enemies", enemies)
 stub("world.spatial_grid", {
