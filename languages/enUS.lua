@@ -499,7 +499,7 @@ return {
 	},
 
 	game = {
-		victory = "Victory!",
+		victory = "Victory",
 		gameOver = "Defeat",
 		bossBreach = "Boss breach",
 		outOfLives = "Out of lives",
@@ -536,16 +536,6 @@ return {
 
 	victory = {
 		subtitle = "Defense successful",
-		headline = {
-			firstClear = "First Clear!",
-			repeatClear = "Cleared Again",
-			highPerformance = "Flawless Command",
-		},
-		subheadline = {
-			firstClear = "Map secured for the first time. Keep the momentum going.",
-			repeatClear = "Another successful run. Push for a cleaner or faster finish.",
-			highPerformance = "Elite run: high score, minimal leaks, and strong control.",
-		},
 		medalProgress = "Difficulty medals earned",
 		rewardUnlocked = "Reward Unlocked",
 		rewardGenericDesc = "New campaign option available on future runs.",
@@ -557,7 +547,6 @@ return {
 			campaign_complete = "Challenge and Endless modes are now available.",
 		},
 		newTowerReward = "New tower unlocked",
-		hint = "Push to a higher difficulty or continue in Endless Mode for a tougher run.",
 		shortcuts = "Press N for next map • Esc for main menu",
 	},
 
