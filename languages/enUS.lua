@@ -21,6 +21,10 @@ return {
 	ability = {
 		meteor = {name = "Meteor", desc = "Blast enemies in a targeted area."},
 		frostNova = {name = "Frost Nova", desc = "Severely slow enemies in a targeted area."},
+		overdrive = {name = "Overdrive", desc = "Supercharge towers in an area for a short barrage."},
+		gravityWell = {name = "Gravity Well", desc = "Pull a formation backward, then burst for damage."},
+		powerGrid = {name = "Power Grid", desc = "Select two nearby towers to link and accelerate."},
+		lastStand = {name = "Last Stand", desc = "Fortify towers to focus and volley at escaping enemies."},
 		cooldown = "%s  %ds",
 	},
 

@@ -16,7 +16,7 @@ local buttons = {}
 local SIZE = 58
 local GAP = 10
 local RIGHT = 18
-local MAX_ABILITIES = 4
+local MAX_ABILITIES = 6
 local IDLE_LIFT = 5
 
 local colorButton = Theme.ui.button
@@ -73,7 +73,12 @@ local function drawFrost(cx, cy, scale)
 	lg.circle("fill", cx, cy, 4 * scale)
 end
 
-local iconDrawers = {meteor = drawMeteor, frost_nova = drawFrost}
+
+local function drawOverdrive(cx,cy,s) lg.setColor(1,.75,.2,1); lg.setLineWidth(3*s); lg.circle("line",cx,cy,16*s); lg.line(cx,cy-15*s,cx+7*s,cy-3*s,cx+1*s,cy-3*s,cx+8*s,cy+14*s) end
+local function drawGravity(cx,cy,s) lg.setColor(.65,.35,1,1); lg.setLineWidth(3*s); for r=6,17,5 do lg.arc("line",cx,cy,r*s,r*.4,r*.4+4.7) end end
+local function drawGrid(cx,cy,s) lg.setColor(.25,.9,1,1); lg.setLineWidth(3*s); lg.circle("fill",cx-13*s,cy,5*s); lg.circle("fill",cx+13*s,cy,5*s); lg.line(cx-9*s,cy,cx+9*s,cy) end
+local function drawLastStand(cx,cy,s) lg.setColor(1,.62,.2,1); lg.setLineWidth(3*s); lg.circle("line",cx,cy,16*s); lg.line(cx-20*s,cy,cx+20*s,cy); lg.line(cx,cy-20*s,cx,cy+20*s) end
+local iconDrawers = {meteor=drawMeteor, frost_nova=drawFrost, overdrive=drawOverdrive, gravity_well=drawGravity, power_grid=drawGrid, last_stand=drawLastStand}
 
 function AbilityBar.draw(dt, mx, my)
 	-- resetGame resolves persisted selections against the abilities and slots

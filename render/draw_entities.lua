@@ -1108,6 +1108,11 @@ local function drawTowers()
 
 		-- Top
 		drawTowerInstance(t, cx, renderY)
+		if (t.abilityAttackSpeed or 1) > 1 then
+			local pulse = .55 + .3 * sin((State.abilityClock or 0) * 7 + i)
+			lg.setColor(t.powerGridPeers and .2 or 1, t.powerGridPeers and .9 or .7, 1, pulse)
+			lg.setLineWidth(2); lg.circle("line", cx, groundY, size * (.72 + .06*sin((State.abilityClock or 0)*5)))
+		end
 
 		drawTowerFX(t)
 

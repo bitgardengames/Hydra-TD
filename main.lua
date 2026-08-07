@@ -143,6 +143,7 @@ function resetGame()
 	State.equippedAbilities = CampaignUnlocks.getEquippedAbilities()
 	State.abilityCooldowns = {}
 	State.abilityTargeting = nil
+	require("systems.abilities").reset()
     State.hoverGX = nil
     State.hoverGY = nil
 

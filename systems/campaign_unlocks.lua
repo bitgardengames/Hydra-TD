@@ -30,6 +30,15 @@ local rewardsByMapId = {
 	twinloop = {type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"},
 }
 
+-- Additional rewards can share a clear without displacing the campaign's
+-- existing tower and teaching rewards.
+local bonusRewardsByMapId = {
+	highpass = {{type="ability", id="overdrive", label="Overdrive active ability"}, {type="ability_slot", id="ability_slot_3", slots=3, label="Third ability slot"}},
+	gauntlet = {{type="ability", id="gravity_well", label="Gravity Well active ability"}, {type="ability_slot", id="ability_slot_4", slots=4, label="Fourth ability slot"}},
+	backtrack = {{type="ability", id="power_grid", label="Power Grid active ability"}, {type="ability_slot", id="ability_slot_5", slots=5, label="Fifth ability slot"}},
+	circuit = {{type="ability", id="last_stand", label="Last Stand active ability"}, {type="ability_slot", id="ability_slot_6", slots=6, label="Sixth ability slot"}},
+}
+
 local requiredMapByTower = {
 	lancer = 1,
 	slow = 1,
@@ -70,6 +79,12 @@ local function validateRewards()
 			assert(knownMaps[reward.id], "campaign reward uses unknown map ID: " .. tostring(reward.id))
 		end
 	end
+	for mapId, rewards in pairs(bonusRewardsByMapId) do
+		assert(knownMaps[mapId], "campaign bonus reward uses unknown map ID: " .. tostring(mapId))
+		for _, reward in ipairs(rewards) do
+			if reward.type == "ability" then assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id)) end
+		end
+	end
 	for _, map in ipairs(Maps) do
 		if map.prerequisiteMapId then
 			assert(knownMaps[map.prerequisiteMapId], "campaign route uses unknown map ID: " .. tostring(map.prerequisiteMapId))
@@ -90,6 +105,10 @@ for mapIndex, map in ipairs(Maps) do
 			-- becomes usable starting on the next campaign map.
 			requiredMapByTower[reward.id] = requiredMap
 		end
+	end
+
+	for _, bonus in ipairs(bonusRewardsByMapId[map.id] or {}) do
+		requiredMapByFeature[featureKey(bonus.type, bonus.id)] = mapIndex + 1
 	end
 
 	for _, kind in ipairs(map.rewardTowers or {}) do
@@ -147,10 +166,11 @@ end
 function CampaignUnlocks.getUnlockedAbilitySlots()
 	local slots = 1
 	for _, reward in pairs(rewardsByMapId) do
-		if reward.type == "ability_slot" and isFeatureUnlocked(reward.type, reward.id) then
-			slots = math.max(slots, reward.slots or slots)
-		end
+		if reward.type == "ability_slot" and isFeatureUnlocked(reward.type, reward.id) then slots = math.max(slots, reward.slots or slots) end
 	end
+	for _, rewards in pairs(bonusRewardsByMapId) do for _, reward in ipairs(rewards) do
+		if reward.type == "ability_slot" and isFeatureUnlocked(reward.type, reward.id) then slots = math.max(slots, reward.slots or slots) end
+	end end
 	return slots
 end
 
@@ -239,11 +259,12 @@ function CampaignUnlocks.getNewRewards(previousProgressIndex, nextProgressIndex)
 	local rewards = {}
 	local previous = normalizeProgressIndex(previousProgressIndex)
 	local nextIndex = normalizeProgressIndex(nextProgressIndex)
-	for _, map in ipairs(Maps) do
+	for mapIndex, map in ipairs(Maps) do
 		local reward = rewardsByMapId[map.id]
 		local requiredMap = reward and rewardOrder[map.id] and (rewardOrder[map.id] + 1)
-		if reward and requiredMap > previous and requiredMap <= nextIndex then
-			rewards[#rewards + 1] = reward
+		if reward and requiredMap > previous and requiredMap <= nextIndex then rewards[#rewards + 1] = reward end
+		if mapIndex + 1 > previous and mapIndex + 1 <= nextIndex then
+			for _, bonus in ipairs(bonusRewardsByMapId[map.id] or {}) do rewards[#rewards + 1] = bonus end
 		end
 	end
 	return rewards
@@ -266,10 +287,11 @@ function CampaignUnlocks.getAbilityLockMessage(abilityId, slotIndex)
 	if not CampaignUnlocks.isAbilitySlotUnlocked(slotIndex) then
 		local slotRequiredMap = UNKNOWN_REQUIRED_MAP
 		for _, reward in pairs(rewardsByMapId) do
-			if reward.type == "ability_slot" and (reward.slots or 1) >= (tonumber(slotIndex) or 1) then
-				slotRequiredMap = math.min(slotRequiredMap, CampaignUnlocks.getRequiredFeatureMap(reward.type, reward.id))
-			end
+			if reward.type == "ability_slot" and (reward.slots or 1) >= (tonumber(slotIndex) or 1) then slotRequiredMap = math.min(slotRequiredMap, CampaignUnlocks.getRequiredFeatureMap(reward.type, reward.id)) end
 		end
+		for _, list in pairs(bonusRewardsByMapId) do for _, reward in ipairs(list) do
+			if reward.type == "ability_slot" and (reward.slots or 1) >= (tonumber(slotIndex) or 1) then slotRequiredMap = math.min(slotRequiredMap, CampaignUnlocks.getRequiredFeatureMap(reward.type, reward.id)) end
+		end end
 		if slotRequiredMap ~= UNKNOWN_REQUIRED_MAP then
 			local mapName = clearedMapName(slotRequiredMap)
 			return mapName and L("abilityUnlock.slotNotEarned", mapName) or L("abilityUnlock.slotLocked")
