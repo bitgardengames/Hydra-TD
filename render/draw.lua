@@ -15,6 +15,7 @@ local MapWorldCache = require("world.map_world_cache")
 local function drawWorld()
 	MapWorldCache.build()
 	MapWorldCache.draw()
+	DrawWorld.drawAnimatedScatter()
 
 	DrawWorld.drawGrid()
 	DrawWorld.drawAbilityPreview()

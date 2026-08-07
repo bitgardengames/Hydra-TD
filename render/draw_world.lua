@@ -216,7 +216,7 @@ local function updateWaterColor(color)
 end
 
 -- This system is already getting ready for a rework
-local function drawScatter()
+local function drawScatter(treeMode)
 	local biome = MapMod.map and MapMod.map.biome
 	local scatter = biome and biome.scatter
 
@@ -229,7 +229,7 @@ local function drawScatter()
 	end
 
 	if scatter.trees and scatter.trees.enabled then
-		Trees.draw()
+		Trees.draw(treeMode)
 	end
 
 	if scatter.cactus and scatter.cactus.enabled then
@@ -238,6 +238,15 @@ local function drawScatter()
 
 	if scatter.mushrooms and scatter.mushrooms.enabled then
 		Mushrooms.draw()
+	end
+end
+
+local function drawAnimatedScatter()
+	local biome = MapMod.map and MapMod.map.biome
+	local trees = biome and biome.scatter and biome.scatter.trees
+
+	if trees and trees.enabled then
+		Trees.draw("evergreen")
 	end
 end
 
@@ -446,6 +455,7 @@ return {
 	drawWater = drawWater,
 	drawPath = drawPath,
 	drawScatter = drawScatter,
+	drawAnimatedScatter = drawAnimatedScatter,
 	drawGrid = drawGrid,
 	drawWorld = drawWorld,
 	drawAbilityPreview = drawAbilityPreview,
