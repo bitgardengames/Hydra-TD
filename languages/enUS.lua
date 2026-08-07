@@ -93,7 +93,6 @@ return {
 		newTowerReward = "Clear reward: unlock %s",
 		newTowerRewards = "Clear reward: unlock %s",
 		clearReward = "Clear reward: %s",
-		lesson = "Lesson: %s",
 		pressure = "Pressure: %s",
 		rewards = {
 			cannon = "Cannon tower",
