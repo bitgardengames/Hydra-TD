@@ -1005,6 +1005,20 @@ local function applyDamage(e, amount, context)
 	return amount, absorbed
 end
 
+local function setPathDistance(e, distance)
+	local map = MapMod.map
+	local lengths = map.pathSegLen or {}
+	local path = map.pathWorld or {}
+	distance = max(0, min(map.totalWorldLength or distance, distance))
+	local remaining, seg = distance, 1
+	while seg < #path and remaining > (lengths[seg] or 0) do remaining = remaining - (lengths[seg] or 0); seg = seg + 1 end
+	e.dist, e.pathSeg = distance, seg
+	local len = lengths[seg] or 0
+	e.pathT = len > EPS and min(1, remaining / len) or 0
+	updateEnemyPathPosition(e, path)
+	Spatial.updateEnemy(e)
+end
+
 local function applySlow(e, factor, duration)
 	if not e or e.hp <= 0 then return false end
 	for _, affix in ipairs(e.affixes or {}) do
@@ -1026,5 +1040,6 @@ return {
 	applyHitImpulse = applyHitImpulse,
 	applyDamage = applyDamage,
 	applySlow = applySlow,
+	setPathDistance = setPathDistance,
 	clear = clear,
 }

@@ -515,9 +515,20 @@ local function updateTowers(dt)
 	for i = 1, #towers do
 		local t = towers[i]
 
+		local attackSpeed, rangeMult, lastStand = 1, 1, false
+		local buffs = t.abilityBuffs
+		if buffs then
+			for bi = #buffs, 1, -1 do
+				local buff = buffs[bi]
+				if (buff.expires or 0) <= (State.abilityClock or 0) then table.remove(buffs, bi)
+				else attackSpeed = min(2.5, attackSpeed * (buff.attackSpeed or 1)); rangeMult = max(rangeMult, buff.range or 1); lastStand = lastStand or buff.kind == "last_stand" end
+			end
+		end
+		t.abilityAttackSpeed, t.abilityRangeMultiplier = attackSpeed, rangeMult
+		t.range2 = (t.range * rangeMult) ^ 2
 		local prevWindUp = t.windUp or 0
-		t.cooldown = max(0, (t.cooldown or 0) - dt)
-		t.windUp = max(0, prevWindUp - dt)
+		t.cooldown = max(0, (t.cooldown or 0) - dt * attackSpeed)
+		t.windUp = max(0, prevWindUp - dt * attackSpeed)
 		t.retargetT = max(0, (t.retargetT or 0) - dt)
 		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
 
@@ -531,6 +542,7 @@ local function updateTowers(dt)
 		end
 
 		refreshTargetModeCache(t)
+		if lastStand then t.targetMode = Targeting.MODES.PROGRESS end
 
 		local target = t.target
 
@@ -650,6 +662,9 @@ local function updateTowers(dt)
 
 				if canFire then
 					Emissions.emit(t, target)
+					if t.powerGridPeers then
+						for _, peer in ipairs(t.powerGridPeers) do if peer ~= t then peer.cooldown = max(0, (peer.cooldown or 0) - 0.12) end end
+					end
 
 					t.fireAnim = 1
 					t.recoil = t.recoilStrength or 0

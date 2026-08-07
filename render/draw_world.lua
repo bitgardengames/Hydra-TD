@@ -407,16 +407,22 @@ local function drawWorld()
 end
 
 local function drawAbilityPreview()
-	local targeting = State.abilityTargeting
+	local Abilities = require("systems.abilities")
+	local active, clock = Abilities.getActive()
+	for _, a in ipairs(active) do
+		if a.x then
+			local alpha = math.min(.24, math.max(.04, (a.expires-clock)*.08))
+			local r,g,b = a.kind=="gravity_well" and .55 or 1, a.kind=="gravity_well" and .25 or .7, a.kind=="tower_haste_area" and 1 or .25
+			lg.setColor(r,g,b,alpha); lg.circle("fill",a.x,a.y,a.radius); lg.setColor(r,g,b,.75); lg.setLineWidth(2); lg.circle("line",a.x,a.y,a.radius)
+		end
+		if a.kind=="power_grid" then lg.setColor(.25,.9,1,.8); lg.setLineWidth(3); for i=2,#a.towers do lg.line(a.towers[i-1].x,a.towers[i-1].y,a.towers[i].x,a.towers[i].y) end end
+	end
+	local targeting=State.abilityTargeting
 	if targeting and targeting.x then
-		local def = require("systems.ability_defs")[targeting.abilityId]
-		if def then
-			local r = def.effect.radius
-			lg.setColor(def.effect.kind == "damage_area" and 1 or 0.35, 0.35, def.effect.kind == "slow_area" and 1 or 0.2, 0.18)
-			lg.circle("fill", targeting.x, targeting.y, r)
-			lg.setColor(1, 1, 1, 0.8)
-			lg.setLineWidth(2)
-			lg.circle("line", targeting.x, targeting.y, r)
+		local def=require("systems.ability_defs")[targeting.abilityId]; local effect=def and Abilities.getEffect(def)
+		if effect then
+			if effect.radius then lg.setColor(effect.kind=="gravity_well" and .55 or 1,.45,effect.kind=="tower_haste_area" and 1 or .3,.18); lg.circle("fill",targeting.x,targeting.y,effect.radius); lg.setColor(1,1,1,.8); lg.circle("line",targeting.x,targeting.y,effect.radius)
+			elseif targeting.firstTower then lg.setColor(.25,.9,1,.7); lg.circle("line",targeting.firstTower.x,targeting.firstTower.y,effect.maxDistance); lg.line(targeting.firstTower.x,targeting.firstTower.y,targeting.x,targeting.y) end
 		end
 	end
 end
