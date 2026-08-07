@@ -183,6 +183,30 @@ local function getWaveMultipliers(waveNumber, mapIndex, map, isBoss)
 	return hpMult, spdMult
 end
 
+-- Campaign definitions use the generic "boss" kind so the same authored wave
+-- can select the appropriate archetype for each map. Resolve that placeholder
+-- once and use the resulting roster for both the preview and live spawner.
+-- Keeping this transformation shared prevents the HUD from advertising one
+-- enemy while startWave silently substitutes (or drops) it.
+local function resolveWaveGroups(wave, map, waveNumber)
+	if not wave.groups then return nil end
+
+	local bossIndex = math.max(1, math.floor(waveNumber / 10))
+	local groups = {}
+	for i, group in ipairs(wave.groups) do
+		groups[i] = {
+			kind = group.kind == "boss" and getBossByArchetype(map, bossIndex) or group.kind,
+			count = group.count,
+			spacing = group.spacing,
+			delay = group.delay,
+			affixes = group.affixes,
+			hpMult = group.hpMult,
+			spdMult = group.spdMult,
+		}
+	end
+	return groups
+end
+
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
 local spawnerDefaults = {
 	active = false,
@@ -226,7 +250,9 @@ resetTable(bossAdds, bossAddsDefaults)
 -- Build a display-only description of a wave.  Keep this independent of the
 -- live spawner tables so callers (notably the prep HUD) can safely look ahead.
 function Waves.getWavePreview(waveNumber)
-	local wave = WaveBuilder.build(waveNumber, Maps[State.mapIndex], State.endless)
+	local map = Maps[State.mapIndex]
+	local wave = WaveBuilder.build(waveNumber, map, State.endless)
+	local resolvedGroups = resolveWaveGroups(wave, map, waveNumber)
 	local groups = {}
 
 	local function addGroup(kind, count, spacing, delay, affixes)
@@ -264,12 +290,11 @@ function Waves.getWavePreview(waveNumber)
 
 	if wave.boss then
 		Effects.trigger("boss_wave", {intensity = 4, shake = 5, duration = 0.3, criticalTell = true})
-		local bossIndex = math.max(1, math.floor(waveNumber / 10))
-		local authored = wave.groups and wave.groups[1]
-		addGroup(getBossByArchetype(Maps[State.mapIndex], bossIndex), 1, 0,
-			authored and authored.delay)
-	elseif wave.groups then
-		for _, group in ipairs(wave.groups) do
+		for _, group in ipairs(resolvedGroups or {}) do
+			addGroup(group.kind, group.count, group.spacing, group.delay, group.affixes)
+		end
+	elseif resolvedGroups then
+		for _, group in ipairs(resolvedGroups) do
 			addGroup(group.kind, group.count, group.spacing, group.delay)
 		end
 	else
@@ -353,7 +378,12 @@ function Waves.startWave()
 
 		State.activeBoss = nil
 		State.activeBossKind = bossKind
-		beginSpawner(bossKind, 1, 0, hpMult, spdMult)
+		local groups = resolveWaveGroups(wave, map, State.wave)
+		for i, group in ipairs(groups or {}) do
+			group.hpMult = i == 1 and hpMult or addHpMult
+			group.spdMult = spdMult
+		end
+		beginSpawner(bossKind, wave.count or 1, 0, hpMult, spdMult, nil, groups)
 		if encounter then
 			resetTable(bossAdds, bossAddsDefaults, {
 				active = true,
@@ -370,7 +400,7 @@ function Waves.startWave()
 			bossAdds.active = false
 		end
 
-		return
+		return true
 	end
 
 	State.activeBoss = nil
@@ -411,7 +441,8 @@ function Waves.updateSpawner(dt)
 				return
 			end
 
-			Enemies.spawnEnemy(kind, spawner.hpMult, spawner.spdMult, nil, nil, nil, {affixes = affixes})
+			Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
+				(group and group.spdMult) or spawner.spdMult, nil, nil, nil, {affixes = affixes})
 			spawner.compositionIndex = spawner.compositionIndex + 1
 
 			spawner.remaining = spawner.remaining - 1
