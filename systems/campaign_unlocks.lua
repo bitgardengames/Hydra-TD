@@ -35,7 +35,7 @@ local rewardsByMapId = {
 local bonusRewardsByMapId = {
 	highpass = {{type="ability", id="overdrive", label="Overdrive active ability"}, {type="ability_slot", id="ability_slot_3", slots=3, label="Third ability slot"}},
 	gauntlet = {{type="ability", id="gravity_well", label="Gravity Well active ability"}, {type="ability_slot", id="ability_slot_4", slots=4, label="Fourth ability slot"}},
-	backtrack = {{type="ability", id="power_grid", label="Power Grid active ability"}, {type="ability_slot", id="ability_slot_5", slots=5, label="Fifth ability slot"}},
+	backtrack = {{type="ability", id="gold_rush", label="Gold Rush active ability"}, {type="ability_slot", id="ability_slot_5", slots=5, label="Fifth ability slot"}},
 	circuit = {{type="ability", id="last_stand", label="Last Stand active ability"}, {type="ability_slot", id="ability_slot_6", slots=6, label="Sixth ability slot"}},
 }
 

@@ -415,7 +415,6 @@ local function drawAbilityPreview()
 			local r,g,b = a.kind=="gravity_well" and .55 or 1, a.kind=="gravity_well" and .25 or .7, a.kind=="tower_haste_area" and 1 or .25
 			lg.setColor(r,g,b,alpha); lg.circle("fill",a.x,a.y,a.radius); lg.setColor(r,g,b,.75); lg.setLineWidth(2); lg.circle("line",a.x,a.y,a.radius)
 		end
-		if a.kind=="power_grid" then lg.setColor(.25,.9,1,.8); lg.setLineWidth(3); for i=2,#a.towers do lg.line(a.towers[i-1].x,a.towers[i-1].y,a.towers[i].x,a.towers[i].y) end end
 	end
 	local targeting=State.abilityTargeting
 	if targeting and targeting.x then

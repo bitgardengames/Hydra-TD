@@ -76,9 +76,9 @@ end
 
 local function drawOverdrive(cx,cy,s) lg.setColor(1,.75,.2,1); lg.setLineWidth(3*s); lg.circle("line",cx,cy,16*s); lg.line(cx,cy-15*s,cx+7*s,cy-3*s,cx+1*s,cy-3*s,cx+8*s,cy+14*s) end
 local function drawGravity(cx,cy,s) lg.setColor(.65,.35,1,1); lg.setLineWidth(3*s); for r=6,17,5 do lg.arc("line",cx,cy,r*s,r*.4,r*.4+4.7) end end
-local function drawGrid(cx,cy,s) lg.setColor(.25,.9,1,1); lg.setLineWidth(3*s); lg.circle("fill",cx-13*s,cy,5*s); lg.circle("fill",cx+13*s,cy,5*s); lg.line(cx-9*s,cy,cx+9*s,cy) end
+local function drawGoldRush(cx,cy,s) lg.setColor(1,.78,.16,1); lg.circle("fill",cx,cy,17*s); lg.setColor(1,.94,.5,1); lg.circle("line",cx,cy,13*s); lg.setColor(.35,.2,.03,1); Text.printfShadow("$",cx-10*s,cy-13*s,20*s,"center") end
 local function drawLastStand(cx,cy,s) lg.setColor(1,.62,.2,1); lg.setLineWidth(3*s); lg.circle("line",cx,cy,16*s); lg.line(cx-20*s,cy,cx+20*s,cy); lg.line(cx,cy-20*s,cx,cy+20*s) end
-local iconDrawers = {meteor=drawMeteor, frost_nova=drawFrost, overdrive=drawOverdrive, gravity_well=drawGravity, power_grid=drawGrid, last_stand=drawLastStand}
+local iconDrawers = {meteor=drawMeteor, frost_nova=drawFrost, overdrive=drawOverdrive, gravity_well=drawGravity, gold_rush=drawGoldRush, last_stand=drawLastStand}
 
 function AbilityBar.draw(dt, mx, my)
 	-- resetGame resolves persisted selections against the abilities and slots
@@ -98,6 +98,13 @@ function AbilityBar.draw(dt, mx, my)
 		end
 	end
 	local count = min(#equipped, MAX_ABILITIES)
+	local activeRemaining = {}
+	do
+		local active, clock = require("systems.abilities").getActive()
+		for _, effect in ipairs(active) do
+			if effect.abilityId then activeRemaining[effect.abilityId] = max(0, effect.expires - clock) end
+		end
+	end
 	local sw, sh = lg.getDimensions()
 	local totalH = count * SIZE + math.max(0, count - 1) * GAP
 	local startY = floor((sh - totalH) * 0.5)
@@ -108,6 +115,7 @@ function AbilityBar.draw(dt, mx, my)
 		if def then
 			local x, y = sw - RIGHT - SIZE, startY + (i - 1) * (SIZE + GAP)
 			local cooldown = State.abilityCooldowns[abilityId] or 0
+			local activeTime = activeRemaining[abilityId]
 			local lockMessage = CampaignUnlocks.getAbilityLockMessage(abilityId, i)
 			local available = lockMessage == nil
 			local ready = available and cooldown <= 0
@@ -167,6 +175,12 @@ function AbilityBar.draw(dt, mx, my)
 
 			local drawer = iconDrawers[abilityId]
 			if drawer then drawer(fx + SIZE * 0.5, fy + SIZE * 0.5, available and 1 or 0.82) end
+			if activeTime then
+				lg.setColor(1, .78, .12, .95)
+				lg.setLineWidth(3)
+				lg.rectangle("line", fx + 1, fy + 1, SIZE - 2, SIZE - 2, 8)
+				Text.printfShadow(string.format("%.1fs", activeTime), fx, fy + SIZE - 20, SIZE, "center")
+			end
 
 			if not available then
 				lg.setColor(0.02 + 0.35 * errorEase, 0.03, 0.05, 0.7 + 0.18 * errorEase)
@@ -174,7 +188,7 @@ function AbilityBar.draw(dt, mx, my)
 				lg.setColor(1, 1 - 0.55 * errorEase, 1 - 0.55 * errorEase, 0.95)
 				Text.printfShadow("🔒", fx, fy + 6, SIZE, "center")
 				Text.printfShadow(lockMessage, fx + 3, fy + SIZE - 25, SIZE - 6, "center")
-			elseif not ready then
+			elseif not ready and not activeTime then
 				local ratio = min(1, cooldown / def.cooldown)
 				lg.setColor(0.02 + 0.35 * errorEase, 0.03, 0.05, 0.72 + 0.18 * errorEase)
 				lg.rectangle("fill", fx, fy + SIZE * (1 - ratio), SIZE, SIZE * ratio, innerRadius)

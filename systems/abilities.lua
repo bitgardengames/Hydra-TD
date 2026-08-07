@@ -24,14 +24,11 @@ function Abilities.isReady(id) local d=Abilities.getEquipped(id); return d and (
 function Abilities.beginTargeting(id)
 	local d=Abilities.getEquipped(id)
 	if not d or not Abilities.isReady(d.id) or State.mode~="game" or State.modulePicker.active then return false end
-	State.abilityTargeting={abilityId=d.id,x=nil,y=nil,firstTower=nil}; State.placing=nil; State.selectedTower=nil; State.selectedEnemy=nil; return true
+	State.abilityTargeting={abilityId=d.id,x=nil,y=nil,firstTower=nil}; State.placing=nil; State.selectedTower=nil; State.selectedEnemy=nil
+	if d.targeting=="instant" then return Abilities.activate() end
+	return true
 end
 function Abilities.cancelTargeting() State.abilityTargeting=nil end
-local function towerAt(x,y)
-	local best,bd=nil,24*24
-	for _,t in ipairs(Towers.towers) do local dx,dy=t.x-x,t.y-y; local d=dx*dx+dy*dy; if d<=bd then best,bd=t,d end end
-	return best
-end
 local function buffTower(t,e,kind)
 	-- Expiries and multipliers never rewrite the authored tower statistics.
 	t.abilityBuffs=t.abilityBuffs or {}; t.abilityBuffs[#t.abilityBuffs+1]={kind=kind,expires=clock+e.duration,attackSpeed=e.attackSpeed or 1,range=e.range or 1}
@@ -41,22 +38,8 @@ function Abilities.activate(x,y)
 	local target=State.abilityTargeting; local def=target and Abilities.getEquipped(target.abilityId)
 	if not def or not Abilities.isReady(def.id) then return false end
 	local e=getEffect(def)
-	if e.kind=="power_grid" then
-		local t=towerAt(x,y); if not t then return false end
-		if not target.firstTower then target.firstTower=t; target.x,target.y=t.x,t.y; return true end
-		local first=target.firstTower; local dx,dy=t.x-first.x,t.y-first.y
-		if t==first or dx*dx+dy*dy>e.maxDistance*e.maxDistance then return false end
-		local linked={first,t}
-		if e.chain then
-			local best,score
-			for _,candidate in ipairs(Towers.towers) do if candidate~=first and candidate~=t then
-				local lineDx,lineDy=t.x-first.x,t.y-first.y; local u=((candidate.x-first.x)*lineDx+(candidate.y-first.y)*lineDy)/(lineDx*lineDx+lineDy*lineDy); u=math.max(0,math.min(1,u)); local px,py=first.x+lineDx*u,first.y+lineDy*u; local dd=(candidate.x-px)^2+(candidate.y-py)^2
-				if dd<45^2 and (not score or dd<score) then best,score=candidate,dd end
-			end end
-			if best then linked[#linked+1]=best end
-		end
-		for _,tower in ipairs(linked) do buffTower(tower,e,"power_grid"); tower.powerGridPeers=linked end
-		addActive({kind="power_grid",towers=linked,expires=clock+e.duration,assist=e.cooldownAssist})
+	if e.kind=="income_multiplier" then
+		addActive({kind=e.kind,abilityId=def.id,expires=clock+e.duration,multiplier=e.multiplier,bossMultiplier=e.bossMultiplier})
 	else
 		local r2=e.radius*e.radius
 		if e.kind=="tower_haste_area" or e.kind=="last_stand" then
@@ -85,11 +68,20 @@ function Abilities.update(dt)
 		end
 		if clock>=a.expires then
 			if a.kind=="gravity_well" then for _,e in ipairs(Enemies.enemies) do local dx,dy=e.x-a.x,e.y-a.y;if e.hp>0 and dx*dx+dy*dy<=a.radius*a.radius then Enemies.applyDamage(e,a.damage,{sourceKind="ability"}) end end; Effects.spawnCannonImpact(a.x,a.y,a.radius) end
-			if a.kind=="power_grid" then for _,t in ipairs(a.towers) do t.powerGridPeers=nil end end
 			table.remove(active,i)
 		end
 	end
 end
 function Abilities.getActive() return active,clock end
+function Abilities.getKillIncomeMultiplier(enemy)
+	local multiplier=1
+	for _,a in ipairs(active) do
+		if a.kind=="income_multiplier" and clock<a.expires then
+			local isBoss=enemy and (enemy.boss or (enemy.def and enemy.def.boss))
+			multiplier=math.max(multiplier, (isBoss and a.bossMultiplier) or a.multiplier or 1)
+		end
+	end
+	return multiplier
+end
 function Abilities.reset() active={}; clock=0; State.abilityClock=0 end
 return Abilities
