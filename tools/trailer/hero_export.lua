@@ -1,4 +1,3 @@
-local Constants = require("core.constants")
 local Camera = require("core.camera")
 local State  = require("core.state")
 local Title  = require("ui.title")
@@ -266,13 +265,7 @@ function HeroExport.renderWorldToCanvas(w, h, renderWorldFn)
     Camera.canvas = canvas
 
     -- Live screen size
-    local liveW, liveH = love.graphics.getDimensions()
-
-    -- Preserve exact world center
-    local centerWorldX = prevWx + (liveW / (2 * prevScale))
-    local centerWorldY = prevWy + (liveH / (2 * prevScale))
-	-- Apply vertical lift in world space
-	local liftAmount = HeroExport.frameLift or 0
+    local liveW = love.graphics.getWidth()
 
 	local scaleFactor = w / liveW
 	local newScale = prevScale * scaleFactor * HeroExport.extraZoom

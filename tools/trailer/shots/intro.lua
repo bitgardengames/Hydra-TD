@@ -1,6 +1,5 @@
 local Camera = require("tools.trailer.camera")
 local Actions = require("tools.trailer.actions")
-local Constants = require("core.constants")
 local Maps = require("world.map_defs")
 
 -- Insert a straight map

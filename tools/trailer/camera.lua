@@ -1,4 +1,3 @@
-local Constants = require("core.constants")
 local Camera = require("core.camera")
 
 local CineCam = {}
@@ -39,7 +38,6 @@ function CineCam.follow(opts)
 
 			local inHold = opts.startAt and time < trackFrom
 			local inAcquire = acquireDur > 0 and time >= trackFrom and time < trackFrom + acquireDur
-			local inFollow = time >= trackFrom + acquireDur
 
 			-- Hold
 			if inHold then

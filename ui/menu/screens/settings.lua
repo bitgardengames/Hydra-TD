@@ -94,7 +94,6 @@ local pendingBindingChange = nil
 local capturingHint = nil
 local settingsDirty = false
 local settingsFlushTimer = nil
-local settingsFlushDelay = 0.2
 
 local keyboardControlsLayout = {
 	{kind = "action", id = "escape", label = "settings.controlPause"},
