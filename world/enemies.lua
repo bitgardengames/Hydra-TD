@@ -5,6 +5,7 @@ local State = require("core.state")
 local Effects = require("world.effects")
 local MapMod = require("world.map")
 local Spatial = require("world.spatial_grid")
+local EnemySupport = require("world.enemy_support")
 local EnemyDefs = require("world.enemy_defs")
 local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Floaters = require("ui.floaters")
@@ -88,179 +89,8 @@ local function releaseEnemy(e)
 end
 
 local computeNudgeParams
-local supportSources = {}
-local supportSourceCount = 0
 
-local function removeSupportContribution(source, target)
-	local contributions = target.supportContributions
-	if contributions then
-		contributions[source.id] = nil
-	end
-	if source.supportAffected then
-		source.supportAffected[target] = nil
-	end
-end
-
-local function recomputeSupportBoost(target)
-	local boost = 1
-	local contributions = target.supportContributions
-	if contributions then
-		for sourceID, contribution in pairs(contributions) do
-			local source = contribution.source
-			if not source or source.id ~= sourceID or source.hp <= 0 or source._supportRemoved then
-				contributions[sourceID] = nil
-				if source and source.supportAffected then
-					source.supportAffected[target] = nil
-				end
-			else
-				boost = max(boost, contribution.multiplier)
-			end
-		end
-	end
-	target.supportBoost = boost
-end
-
-local function clearSupportSource(source, removed)
-	local affected = source.supportAffected
-	if affected then
-		for target in pairs(affected) do
-			removeSupportContribution(source, target)
-			recomputeSupportBoost(target)
-		end
-	end
-	source._supportRemoved = removed == true
-	source._supportAura = source.support
-	source._supportRadius = source.support and source.support.radius or nil
-	source._supportMultiplier = source.support and source.support.speedMultiplier or nil
-end
-
-local function removeSupportSource(source)
-	clearSupportSource(source, true)
-	local index = source.supportSourceIndex
-	if index then
-		local last = supportSources[supportSourceCount]
-		supportSources[index] = last
-		supportSources[supportSourceCount] = nil
-		supportSourceCount = supportSourceCount - 1
-		if last and last ~= source then
-			last.supportSourceIndex = index
-		end
-		source.supportSourceIndex = nil
-	end
-end
-
-local function removeDeadSupportSource(source)
-	if source.supportSourceIndex and source.hp <= 0 then
-		-- Damage can happen while updateEnemies is walking the enemy list. Detach
-		-- the source now so targets on either side of it in the reverse walk see
-		-- the same boost state.
-		removeSupportSource(source)
-	end
-end
-
-local function updateSupportSource(source)
-	local aura = source.support
-	if not aura or source.hp <= 0 or source._supportRemoved then
-		clearSupportSource(source, source._supportRemoved or source.hp <= 0)
-		return
-	end
-
-	local affected = source.supportAffected
-	for target in pairs(affected) do
-		affected[target] = false
-	end
-	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius)
-	for i = 1, count do
-		local target = nearby[i]
-		if target ~= source and target.hp > 0 then
-			affected[target] = true
-			local contributions = target.supportContributions
-			if not contributions then
-				contributions = {}
-				target.supportContributions = contributions
-			end
-			local contribution = contributions[source.id]
-			if not contribution then
-				contribution = {source = source}
-				contributions[source.id] = contribution
-			end
-			contribution.multiplier = aura.speedMultiplier
-			recomputeSupportBoost(target)
-		end
-	end
-	for target, present in pairs(affected) do
-		if not present then
-			removeSupportContribution(source, target)
-			recomputeSupportBoost(target)
-		end
-	end
-	source._supportAura = aura
-	source._supportRadius = aura.radius
-	source._supportMultiplier = aura.speedMultiplier
-end
-
-local function syncSupportSourceDefinition(source)
-	local aura = source.def.support
-	if aura ~= source.support then
-		source.support = aura
-	end
-	if source.hp <= 0 then
-		removeDeadSupportSource(source)
-	elseif aura ~= source._supportAura or (aura and (aura.radius ~= source._supportRadius
-		or aura.speedMultiplier ~= source._supportMultiplier)) then
-		updateSupportSource(source)
-	end
-end
-
-local function sourceTouchesCell(source, cx, cy)
-	local aura = source.support
-	if not aura or cx == nil then return false end
-	return Spatial.queryIncludesCell(source.x, source.y, aura.radius, cx, cy)
-end
-
-local function onEnemyCellChanged(e, oldCX, oldCY, newCX, newCY)
-	if e.supportSourceIndex then
-		syncSupportSourceDefinition(e)
-	end
-	if e.supportSourceIndex then
-		updateSupportSource(e)
-	end
-	local i = 1
-	while i <= supportSourceCount do
-		local source = supportSources[i]
-		syncSupportSourceDefinition(source)
-		if source.supportSourceIndex and source ~= e
-			and (sourceTouchesCell(source, oldCX, oldCY) or sourceTouchesCell(source, newCX, newCY)) then
-			updateSupportSource(source)
-		end
-		if supportSources[i] == source then i = i + 1 end
-	end
-end
-
-local function onEnemyRemoved(e, oldCX, oldCY)
-	if e.supportSourceIndex then
-		removeSupportSource(e)
-	end
-	local i = 1
-	while i <= supportSourceCount do
-		local source = supportSources[i]
-		syncSupportSourceDefinition(source)
-		if source.supportSourceIndex and sourceTouchesCell(source, oldCX, oldCY) then
-			updateSupportSource(source)
-		end
-		if supportSources[i] == source then i = i + 1 end
-	end
-	local contributions = e.supportContributions
-	if contributions then
-		for _, contribution in pairs(contributions) do
-			local source = contribution.source
-			if source and source.supportAffected then source.supportAffected[e] = nil end
-		end
-		Util.clearTable(contributions)
-	end
-end
-
-Spatial.setEnemyLifecycleHooks(onEnemyCellChanged, onEnemyRemoved)
+Spatial.setEnemyLifecycleHooks(EnemySupport.onEnemyCellChanged, EnemySupport.onEnemyRemoved)
 
 local function updateEnemyPathPosition(e, pathWorld)
 	local seg = e.pathSeg or 1
@@ -486,13 +316,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	updateEnemyPathPosition(e, MapMod.map.pathWorld)
 
 	enemies[#enemies + 1] = e
-	if e.support then
-		e.supportAffected = e.supportAffected or {}
-		e._supportRemoved = false
-		supportSourceCount = supportSourceCount + 1
-		supportSources[supportSourceCount] = e
-		e.supportSourceIndex = supportSourceCount
-	end
+	EnemySupport.register(e)
 	Spatial.updateEnemy(e)
 
 	if e.boss then
@@ -595,16 +419,7 @@ local function updateEnemies(dt)
 	local LastSecondThreshold = map.lastSecondThreshold
 	-- Aura definitions may be replaced or tuned at runtime. Only changed sources
 	-- need to refresh their retained affected-enemy membership.
-	local supportIndex = 1
-	while supportIndex <= supportSourceCount do
-		local source = supportSources[supportIndex]
-		syncSupportSourceDefinition(source)
-		local aura = source.support
-		if aura and source.hp > 0 then
-			source.supportPulse = ((source.supportPulse or 0) + dt) % aura.pulsePeriod
-		end
-		if supportSources[supportIndex] == source then supportIndex = supportIndex + 1 end
-	end
+	EnemySupport.update(dt)
 	for i = #enemies, 1, -1 do
 		local e = enemies[i]
 		e.combatAge = (e.combatAge or 0) + dt
@@ -665,7 +480,7 @@ local function updateEnemies(dt)
 				local dmg = baseDmg * missingBonus
 
 				e.hp = e.hp - dmg
-				removeDeadSupportSource(e)
+				EnemySupport.detachDead(e)
 
 				if e.poisonSource then
 					e.poisonSource.damageDealt = e.poisonSource.damageDealt + dmg
@@ -971,8 +786,7 @@ local function clear()
 	end
 
 	nextID = 0
-	supportSourceCount = 0
-	Util.clearTable(supportSources)
+	EnemySupport.clear()
 end
 
 local function applyHitImpulse(e, dx, dy, strength)
@@ -1028,7 +842,7 @@ local function applyDamage(e, amount, context)
 		amount = max(0, amount - absorbed)
 	end
 	e.hp = e.hp - amount
-	removeDeadSupportSource(e)
+	EnemySupport.detachDead(e)
 	if amount > 0 or absorbed > 0 then
 		e.hitSquash = HIT_SQUASH_DUR
 		e.hitSquashStrength = 1
