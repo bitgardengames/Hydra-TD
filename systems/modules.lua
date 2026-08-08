@@ -2,6 +2,7 @@ local ModuleDefs = require("systems.module_defs")
 local TowerBranchDefs = require("world.tower_branch_defs")
 local State = require("core.state")
 local CampaignUnlocks = require("systems.campaign_unlocks")
+local BehaviorContext = require("systems.behavior_context")
 
 local Modules = {}
 
@@ -323,38 +324,6 @@ function Modules.invalidateTower(tower)
 end
 
 -- CONTEXT BUILDER
-local function copyBehaviors(list)
-	local out = {}
-
-	for i = 1, #list do
-		local b = list[i]
-
-		local copy = {
-			id = b.id
-		}
-
-		if b.data and next(b.data) ~= nil then
-			local d = {}
-			for k, v in pairs(b.data) do
-				d[k] = v
-			end
-			copy.data = d
-		end
-
-		if b.hooks then
-			local hooks = {}
-			for j = 1, #b.hooks do
-				hooks[j] = b.hooks[j]
-			end
-			copy.hooks = hooks
-		end
-
-		out[#out + 1] = copy
-	end
-
-	return out
-end
-
 local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	if not tower or not tower.def then
 		return
@@ -428,102 +397,6 @@ local function applyTargetModeFromIds(moduleIds, mode)
 	return mode
 end
 
-local function createContext(base)
-	local ctx = {
-		behaviors = copyBehaviors(base),
-		output = "projectile",
-	}
-
-	ctx.addBehavior = function(self, behavior)
-		self.behaviors[#self.behaviors + 1] = behavior
-	end
-	ctx.replaceBehavior = function(self, id, behavior)
-		for i = 1, #self.behaviors do
-			if self.behaviors[i].id == id then
-				self.behaviors[i] = behavior
-				return true
-			end
-		end
-
-		return false
-	end
-	ctx.modifyBehavior = function(self, id, fn)
-		for i = 1, #self.behaviors do
-			local behavior = self.behaviors[i]
-			if behavior.id == id then
-				behavior.data = behavior.data or {}
-				fn(behavior.data, behavior)
-				return true
-			end
-		end
-
-		return false
-	end
-	ctx.replaceBehaviorByRole = function(self, role, behavior)
-		for i = 1, #self.behaviors do
-			if self:getBehaviorRole(self.behaviors[i].id) == role then
-				self.behaviors[i] = behavior
-				return true
-			end
-		end
-
-		return false
-	end
-	ctx.setTargetMode = function(self, mode)
-		self.targetMode = mode
-	end
-	ctx.getBehaviorRole = function(self, id)
-		if id == "move_homing" or id == "move_linear" or id == "move_boomerang" or id == "move_wave" or id == "move_spiral" or id == "move_orbit" or id == "move_suspend" then
-			return "movement"
-		end
-		if id == "hit_circle" or id == "hit_line" or id == "instant_hit" or id == "emit_on_target" then
-			return "hit"
-		end
-		if id == "hit_damage" or id == "aoe_damage" or id == "tick_damage" or id == "hit_chain" then
-			return "damage"
-		end
-		if id:sub(1, 5) == "draw_" then
-			return "draw"
-		end
-		if id == "chain_zap_fx" or id == "lancer_hit_fx" then
-			return "impact_fx"
-		end
-		return nil
-	end
-	ctx.removeByType = function(self, typeName)
-		for i = #self.behaviors, 1, -1 do
-			if self.behaviors[i].type == typeName then
-				table.remove(self.behaviors, i)
-			end
-		end
-	end
-
-	return ctx
-end
-
-local function validateCoreBehaviors(ctx, base)
-	local required = {}
-
-	for i = 1, #base do
-		local behavior = base[i]
-		local role = ctx:getBehaviorRole(behavior.id)
-		if role == "movement" or role == "hit" or role == "damage" or role == "draw" or role == "impact_fx" then
-			required[role] = required[role] or behavior
-		end
-	end
-
-	for i = 1, #ctx.behaviors do
-		local role = ctx:getBehaviorRole(ctx.behaviors[i].id)
-		if role and required[role] then
-			required[role] = nil
-		end
-	end
-
-	for _, behavior in pairs(required) do
-		ctx:addBehavior(copyBehaviors({ behavior })[1])
-	end
-end
-
 function Modules.buildContext(tower)
 	local experimental = Modules.isEnabled()
 	if tower then
@@ -537,7 +410,7 @@ function Modules.buildContext(tower)
 	end
 
 	local base = tower.def.behaviors
-	local ctx = createContext(base)
+	local ctx = BehaviorContext.new(base)
 
 	local candidates = {}
 	local order = 0
@@ -574,7 +447,7 @@ function Modules.buildContext(tower)
 
 	applyResolvedModules(ctx, candidates)
 
-	validateCoreBehaviors(ctx, base)
+	ctx:restoreRequiredBehaviors(base)
 	applyTowerUpgradeBehaviorScaling(ctx, tower)
 
 	-- Normalize/validate post-module behavior list in one pass.
