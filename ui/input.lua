@@ -17,7 +17,6 @@ local ModulePicker = require("ui.module_picker")
 local Abilities = require("systems.abilities")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 
-local getTime = love.timer.getTime
 local floor = math.floor
 local min = math.min
 
@@ -68,30 +67,76 @@ local function updateHover()
 	end
 end
 
-local function handlePanelButtons(getButtons, x, y, isPress, onReleaseInside)
-	if isPress then
-		return Button.pressInList(getButtons(), x, y)
-	end
-
-	return Button.releaseInList(getButtons(), x, y, onReleaseInside)
+local function showFloaterAtScreen(x, y, message)
+	local wx, wy = Camera.screenToWorld(x, y)
+	Floaters.add(wx, wy, message, colorBad[1], colorBad[2], colorBad[3])
 end
 
-local function rejectAbilityButton(b, x, y)
-	Sound.play("uiError")
+local function releaseAbilityButton(b, x, y)
+	if b.enabled == true then
+		Abilities.beginTargeting(b.abilityId)
+		return
+	end
 
+	Sound.play("uiError")
 	if b.anim then
 		b.anim.errorT = 1
 	end
-
-	local wx, wy = Camera.screenToWorld(x, y)
-	Floaters.add(wx, wy, b.lockMessage or L("floater.abilityCoolingDown"), colorBad[1], colorBad[2], colorBad[3])
+	showFloaterAtScreen(x, y, b.lockMessage or L("floater.abilityCoolingDown"))
 end
 
-local function tryBeginAbilityTargeting(b, x, y)
-	if b.enabled == true then
-		Abilities.beginTargeting(b.abilityId)
-	else
-		rejectAbilityButton(b, x, y)
+local function releaseShopButton(b, x, y)
+	if b.unlocked == false then
+		Sound.play("uiBack")
+		showFloaterAtScreen(x, y, CampaignUnlocks.getLockMessage(b.kind) or L("floater.cannotPlace"))
+		return
+	end
+
+	if b.canAfford ~= true then
+		Sound.play("uiBack")
+		showFloaterAtScreen(x, y, L("floater.needMoney"))
+		return
+	end
+
+	local ok, why = beginTowerPlacement(b.kind)
+	if ok then
+		Sound.play("uiConfirm")
+	elseif why == "locked" then
+		Sound.play("uiBack")
+		showFloaterAtScreen(x, y, CampaignUnlocks.getLockMessage(b.kind) or L("floater.cannotPlace"))
+	end
+end
+
+local function releaseInspectButton(b)
+	if b.onClick then
+		b.onClick()
+	end
+end
+
+-- The bottom bar is visually split into panels, but all of its buttons obey
+-- the same press/release contract. Keeping that routing in one ordered table
+-- makes adding a panel a data change instead of another pair of input branches.
+local bottomBarGroups = {
+	{ buttons = BottomBar.getAbilityButtons, release = releaseAbilityButton },
+	{ buttons = BottomBar.getShopButtons, release = releaseShopButton },
+	{ buttons = BottomBar.getInspectButtons, release = releaseInspectButton },
+}
+
+local function pressBottomBar(x, y)
+	for i = 1, #bottomBarGroups do
+		local group = bottomBarGroups[i]
+		if Button.pressInList(group.buttons(), x, y) then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function releaseBottomBar(x, y)
+	for i = 1, #bottomBarGroups do
+		local group = bottomBarGroups[i]
+		Button.releaseInList(group.buttons(), x, y, group.release)
 	end
 end
 
@@ -113,19 +158,7 @@ local function mousepressed(x, y, button)
 
 	-- Shop UI
 	if button == 1 and State.mode == "game" then
-		local abilityButton = handlePanelButtons(BottomBar.getAbilityButtons, x, y, true)
-		if abilityButton then
-			return
-		end
-		-- Tower shop
-		local shopButton = handlePanelButtons(BottomBar.getShopButtons, x, y, true)
-
-		if shopButton then
-			return
-		end
-
-		-- Inspect panel (upgrade & sell)
-		if handlePanelButtons(BottomBar.getInspectButtons, x, y, true) then
+		if pressBottomBar(x, y) then
 			return
 		end
 	end
@@ -201,48 +234,7 @@ local function mousereleased(x, y, button)
 		return
 	end
 
-	-- Shop buttons
-	handlePanelButtons(BottomBar.getAbilityButtons, x, y, false, function(b)
-		tryBeginAbilityTargeting(b, x, y)
-	end)
-
-	-- Shop buttons
-	handlePanelButtons(BottomBar.getShopButtons, x, y, false, function(b)
-		if b.unlocked == false then
-			Sound.play("uiBack")
-
-			local wx, wy = Camera.screenToWorld(x, y)
-			Floaters.add(wx, wy, CampaignUnlocks.getLockMessage(b.kind) or L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
-
-			return
-		end
-
-		if b.canAfford ~= true then
-			Sound.play("uiBack")
-
-			local wx, wy = Camera.screenToWorld(x, y)
-			Floaters.add(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
-
-			return
-		end
-
-		local ok, why = beginTowerPlacement(b.kind)
-		if ok then
-			Sound.play("uiConfirm")
-		elseif why == "locked" then
-			Sound.play("uiBack")
-
-			local wx, wy = Camera.screenToWorld(x, y)
-			Floaters.add(wx, wy, CampaignUnlocks.getLockMessage(b.kind) or L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
-		end
-	end)
-
-	-- Inspect buttons
-	handlePanelButtons(BottomBar.getInspectButtons, x, y, false, function(b)
-		if b.onClick then
-			b.onClick()
-		end
-	end)
+	releaseBottomBar(x, y)
 end
 
 local gameplayActions = {
