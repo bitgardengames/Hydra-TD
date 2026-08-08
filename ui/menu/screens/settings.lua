@@ -482,11 +482,6 @@ function Screen.load()
 					set = function(v) Save.data.settings.reducedFlash = v end,
 				},
 				{
-					id = "hit_stop", label = L("settings.hitStop"), type = "toggle",
-					get = function() return Save.data.settings.hitStop end,
-					set = function(v) Save.data.settings.hitStop = v end,
-				},
-				{
 					id = "fullscreen",
 					label = L("settings.fullscreen"),
 					type = "toggle",

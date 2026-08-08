@@ -20,7 +20,6 @@ local function swapRemove(list, i)
 end
 
 local Effects = {}
-Effects.hitStopRemaining = 0
 
 local function settings()
 	return Save.data and Save.data.settings or {}
@@ -42,17 +41,7 @@ function Effects.trigger(tag, opts)
 	local shakeScale = settings().screenShake
 	if type(shakeScale) ~= "number" then shakeScale = 1 end
 	Camera.shake((opts.shake or intensity * 0.8) * shakeScale, opts.duration or 0.14)
-	if settings().hitStop ~= false and opts.hitStop and opts.hitStop > 0 then
-		Effects.hitStopRemaining = math.max(Effects.hitStopRemaining, opts.hitStop)
-	end
 	return { tag = tag, intensity = intensity, color = opts.color, criticalTell = criticalTell }
-end
-
-function Effects.consumeHitStop(dt)
-	if Effects.hitStopRemaining <= 0 then return dt end
-	local consumed = math.min(dt, Effects.hitStopRemaining)
-	Effects.hitStopRemaining = Effects.hitStopRemaining - consumed
-	return dt - consumed
 end
 
 Effects.splashes = {}
@@ -999,7 +988,6 @@ function Effects.load()
 	Effects.clear()
 end
 function Effects.clear()
-	Effects.hitStopRemaining = 0
 	-- Splashes
 	for i = #Effects.splashes, 1, -1 do
 		local s = Effects.splashes[i]

@@ -311,7 +311,7 @@ function love.update(dt)
 		return
 	end
 
-	Sim.update(Effects.consumeHitStop(dt) * State.speed)
+	Sim.update(dt * State.speed)
 
 	if mode ~= "game" then
 		updateMetaScreens(dt, mode)
