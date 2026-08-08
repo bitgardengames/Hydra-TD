@@ -129,35 +129,54 @@ local function activateGravityWell(x, y, effect)
 	})
 end
 
-local function activateEnemyArea(x, y, effect)
+local function activateDamageArea(_, effect, x, y)
 	forEachEnemyInRadius(x, y, effect.radius, function(enemy)
-		if effect.kind == "damage_area" then
-			Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
-		else
-			Enemies.applySlow(enemy, effect.factor, effect.duration)
-		end
+		Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
 	end, true)
 end
 
-local function activateEffect(def, effect, x, y)
-	if effect.kind == "income_multiplier" then
-		activateIncomeMultiplier(def, effect)
-	elseif effect.kind == "tower_haste_area" or effect.kind == "last_stand" then
-		activateTowerArea(x, y, effect)
-	elseif effect.kind == "gravity_well" then
-		activateGravityWell(x, y, effect)
-	else
-		activateEnemyArea(x, y, effect)
-	end
+local function activateSlowArea(_, effect, x, y)
+	forEachEnemyInRadius(x, y, effect.radius, function(enemy)
+		Enemies.applySlow(enemy, effect.factor, effect.duration)
+	end, true)
 end
 
+local function activateTowerAreaEffect(_, effect, x, y)
+	activateTowerArea(x, y, effect)
+end
+
+local function activateGravityWellEffect(_, effect, x, y)
+	activateGravityWell(x, y, effect)
+end
+
+local effectActivators = {
+	damage_area = activateDamageArea,
+	slow_area = activateSlowArea,
+	income_multiplier = activateIncomeMultiplier,
+	tower_haste_area = activateTowerAreaEffect,
+	last_stand = activateTowerAreaEffect,
+	gravity_well = activateGravityWellEffect,
+}
+
+local function playMeteorEffect(effect, x, y)
+	Effects.spawnCannonImpact(x, y, effect.radius)
+	Effects.trigger("ability_meteor", { intensity = 3, shake = 4 })
+end
+
+local function playFrostEffect(_, x, y)
+	Effects.spawnFrostBurst(x, y)
+	Effects.trigger("ability_frost", { intensity = 2, shake = 1 })
+end
+
+local activationEffects = {
+	damage_area = playMeteorEffect,
+	slow_area = playFrostEffect,
+}
+
 local function playActivationEffect(effect, x, y)
-	if effect.kind == "damage_area" then
-		Effects.spawnCannonImpact(x, y, effect.radius)
-		Effects.trigger("ability_meteor", { intensity = 3, shake = 4 })
-	elseif effect.kind == "slow_area" then
-		Effects.spawnFrostBurst(x, y)
-		Effects.trigger("ability_frost", { intensity = 2, shake = 1 })
+	local play = activationEffects[effect.kind]
+	if play then
+		play(effect, x, y)
 	else
 		Effects.trigger("ability_cast", { intensity = 2, shake = 1 })
 	end
@@ -171,6 +190,11 @@ function Abilities.activate(x, y)
 	end
 
 	local effect = getEffect(def)
+	local activateEffect = effectActivators[effect.kind]
+	if not activateEffect then
+		return false
+	end
+
 	activateEffect(def, effect, x, y)
 	playActivationEffect(effect, x, y)
 	State.abilityCooldowns[def.id] = def.cooldown
@@ -216,16 +240,21 @@ local function updateLastStand(effect)
 	end
 end
 
-local function expireEffect(effect)
-	if effect.kind ~= "gravity_well" then
-		return
-	end
-
+local function expireGravityWell(effect)
 	forEachEnemyInRadius(effect.x, effect.y, effect.radius, function(enemy)
 		Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
 	end)
 	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius)
 end
+
+local effectUpdaters = {
+	gravity_well = updateGravityWell,
+	last_stand = updateLastStand,
+}
+
+local effectExpirationHandlers = {
+	gravity_well = expireGravityWell,
+}
 
 function Abilities.update(dt)
 	clock = clock + dt
@@ -236,14 +265,16 @@ function Abilities.update(dt)
 
 	for i = #active, 1, -1 do
 		local effect = active[i]
-		if effect.kind == "gravity_well" then
-			updateGravityWell(effect, dt)
-		elseif effect.kind == "last_stand" then
-			updateLastStand(effect)
+		local updateEffect = effectUpdaters[effect.kind]
+		if updateEffect then
+			updateEffect(effect, dt)
 		end
 
 		if clock >= effect.expires then
-			expireEffect(effect)
+			local handleExpiration = effectExpirationHandlers[effect.kind]
+			if handleExpiration then
+				handleExpiration(effect)
+			end
 			table.remove(active, i)
 		end
 	end
