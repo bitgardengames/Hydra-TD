@@ -1,7 +1,6 @@
 -- Hydra TD: Dec 19 2025, 2:22 AM
 
 local Constants = require("core.constants")
-local Scale = require("core.scale")
 local Camera = require("core.camera")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
@@ -30,7 +29,6 @@ local Difficulty = require("systems.difficulty")
 local Achievements = require("systems.achievements")
 local Menu = require("ui.menu.menu")
 local Overlay = require("ui.overlay")
-local Hotkeys = require("core.hotkeys")
 local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
 local Steam = require("core.steam")
@@ -40,6 +38,8 @@ local ModulePicker = require("ui.module_picker")
 local RunStats = require("systems.run_stats")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
+local Bootstrap = require("core.bootstrap")
+local ModeLoader = require("core.mode_loader")
 
 local lg = love.graphics
 
@@ -196,39 +196,13 @@ function love.load(arg)
 
 	require("core.environment").load()
 
-	-- Just make a loader already, if there's this many modes now
-	if mode == "art" then
-		return require("tools.art_export").run()
-	elseif mode == "achievements" then
-		require("tools.achievement_export").run()
-	elseif mode == "map" then
-		return require("tools.map_export.main").run()
-	elseif mode == "trailer" then
-		require("tools.trailer.trailer_main").run()
-	elseif mode == "capsule" then
-		require("tools.capsule_export").run()
-	else
-		Save.load()
-		Hotkeys.refreshFromSave()
-
-		local settings = Save.data.settings or {}
-
-		-- Decide window mode
-		if settings.fullscreen then
-			local dmW, dmH = love.window.getDesktopDimensions()
-			local msaa = Scale.suggestMSAA(dmW, dmH) or 8
-
-			love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
-		else
-			local msaa = Scale.suggestMSAA(1280, 800) or 8
-
-			love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
-		end
-
-		require("core.bootstrap").initFull()
-
-		Steam.setOverlayHook(pauseGame)
+	local handled, result = ModeLoader.run(mode)
+	if handled then
+		return result
 	end
+
+	Bootstrap.initFull()
+	Steam.setOverlayHook(pauseGame)
 
 	collectgarbage("collect")
 end
@@ -543,8 +517,6 @@ function love.keypressed(key)
 end
 
 function love.resize(w, h)
-	--Scale.update()
-	--Camera.resize()
 	MapWorldCache.invalidate()
 	require("ui.title").invalidateCache()
 	require("ui.menu.screens.campaign").resize(w, h)
