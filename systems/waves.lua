@@ -441,124 +441,137 @@ function Waves.startWave()
 	return true
 end
 
--- Spawning update
-function Waves.updateSpawner(dt)
-	local spawnLoops = 0
-	local activeCap = getActiveEnemyCap(State.wave)
+local function applySpawnBackpressure(owner, timerKey, pending, spawnLoops, activeCap)
+	if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and owner[timerKey] <= 0 then
+		owner[timerKey] = 0
+	elseif #Enemies.enemies >= activeCap and pending > 0 then
+		-- Do not accumulate catch-up debt while the active-enemy cap is full.
+		owner[timerKey] = max(owner[timerKey], SPAWN_BACKPRESSURE_DELAY)
+	end
+end
 
-	if spawner.active then
-		spawner.timer = spawner.timer - dt
+local function currentSpawnEntry()
+	local group = spawner.groups and spawner.groups[spawner.groupIndex]
+	local item = spawner.composition and spawner.composition[spawner.compositionIndex]
+	local itemKind = type(item) == "table" and item.kind or item
+	local itemAffixes = type(item) == "table" and item.affixes or nil
 
-		while spawner.active and spawner.timer <= 0 and spawner.remaining > 0
-			and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
-			local group = spawner.groups and spawner.groups[spawner.groupIndex]
-			local item = spawner.composition and spawner.composition[spawner.compositionIndex]
-			local kind = group and group.kind or (type(item) == "table" and item.kind or item) or spawner.kind
-			local affixes = group and group.affixes or (type(item) == "table" and item.affixes or nil)
+	return group, group and group.kind or itemKind or spawner.kind,
+		group and group.affixes or itemAffixes
+end
 
-			if not kind then
-				spawner.remaining = 0
-				spawner.active = false
-
-				return
-			end
-
-			Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
-				(group and group.spdMult) or spawner.spdMult, nil, nil, nil, {affixes = affixes})
-			spawner.compositionIndex = spawner.compositionIndex + 1
-
-			spawner.remaining = spawner.remaining - 1
-			if group then
-				spawner.groupRemaining = spawner.groupRemaining - 1
-				if spawner.groupRemaining <= 0 and spawner.remaining > 0 then
-					spawner.groupIndex = spawner.groupIndex + 1
-					local nextGroup = spawner.groups[spawner.groupIndex]
-					if nextGroup then
-						spawner.groupRemaining = nextGroup.count
-						spawner.timer = spawner.timer + (nextGroup.delay or 0)
-					else
-						-- A group list is the authoritative spawn sequence. If its
-						-- advertised total and the spawner count ever disagree, finish
-						-- the sequence instead of indexing past it (or duplicating the
-						-- fallback kind for the unmatched remainder).
-						spawner.remaining = 0
-						spawner.active = false
-					end
-				else
-					spawner.timer = spawner.timer + (group.spacing or spawner.gap)
-				end
-			else
-				spawner.timer = spawner.timer + spawner.gap
-			end
-			spawnLoops = spawnLoops + 1
-		end
-
-		if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and spawner.timer <= 0 then
-			spawner.timer = 0
-		elseif #Enemies.enemies >= activeCap and spawner.remaining > 0 then
-			-- Discard accumulated catch-up debt while capped. Once room opens, spawning
-			-- resumes smoothly rather than releasing the entire backlog in one frame.
-			spawner.timer = max(spawner.timer, SPAWN_BACKPRESSURE_DELAY)
-		end
-
-		if spawner.remaining <= 0 then
-			spawner.active = false
-		end
+local function advanceSpawner(group)
+	spawner.remaining = spawner.remaining - 1
+	if not group then
+		spawner.timer = spawner.timer + spawner.gap
+		return
 	end
 
-	if bossAdds.active then
-		local boss = State.activeBoss
-		local bossAlive = boss and boss.hp and boss.hp > 0 and not boss.dying
-		if not bossAlive then
-			bossAdds.active = false
-			bossAdds.queued = 0
-			return
+	spawner.groupRemaining = spawner.groupRemaining - 1
+	if spawner.groupRemaining > 0 or spawner.remaining <= 0 then
+		spawner.timer = spawner.timer + (group.spacing or spawner.gap)
+		return
+	end
+
+	spawner.groupIndex = spawner.groupIndex + 1
+	local nextGroup = spawner.groups[spawner.groupIndex]
+	if nextGroup then
+		spawner.groupRemaining = nextGroup.count
+		spawner.timer = spawner.timer + (nextGroup.delay or 0)
+	else
+		-- Groups are authoritative; never fill a mismatched count with fallback enemies.
+		spawner.remaining = 0
+		spawner.active = false
+	end
+end
+
+local function updateWaveSpawner(dt, activeCap, spawnLoops)
+	if not spawner.active then
+		return spawnLoops, false
+	end
+
+	spawner.timer = spawner.timer - dt
+	while spawner.active and spawner.timer <= 0 and spawner.remaining > 0
+		and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
+		local group, kind, affixes = currentSpawnEntry()
+		if not kind then
+			spawner.remaining = 0
+			spawner.active = false
+			return spawnLoops, true
 		end
 
-		bossAdds.timer = bossAdds.timer - dt
-		bossAdds.queueTimer = bossAdds.queueTimer - dt
+		Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
+			(group and group.spdMult) or spawner.spdMult, nil, nil, nil, {affixes = affixes})
+		spawner.compositionIndex = spawner.compositionIndex + 1
+		advanceSpawner(group)
+		spawnLoops = spawnLoops + 1
+	end
 
-		if bossAdds.timer <= 0 and bossAdds.totalSpawned < bossAdds.maxTotal then
-			local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, 320, true)
-			local aliveAdds = 0
-			for i = 1, nearbyCount do
-				local e = nearbyAdds[i]
-				if not e.boss and e.kind == bossAdds.kind and e.hp > 0 then
-					aliveAdds = aliveAdds + 1
-				end
-			end
+	applySpawnBackpressure(spawner, "timer", spawner.remaining, spawnLoops, activeCap)
+	spawner.active = spawner.remaining > 0
+	return spawnLoops, false
+end
 
-			-- Reserve alive/total budget for already queued adds. A slow or capped
-			-- frame must not allow repeated encounter timers to overfill the queue.
-			local available = min(bossAdds.maxAlive - aliveAdds - bossAdds.queued,
-				activeCap - #Enemies.enemies - bossAdds.queued)
-			if available > 0 then
-				local toSpawn = max(0, min(bossAdds.burst, available,
-					bossAdds.maxTotal - bossAdds.totalSpawned - bossAdds.queued))
-				if toSpawn > 0 then
-					bossAdds.queued = bossAdds.queued + toSpawn
-				end
-			end
-
-			bossAdds.timer = bossAdds.interval
+local function countNearbyBossAdds(boss)
+	local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, 320, true)
+	local aliveAdds = 0
+	for i = 1, nearbyCount do
+		local enemy = nearbyAdds[i]
+		if not enemy.boss and enemy.kind == bossAdds.kind and enemy.hp > 0 then
+			aliveAdds = aliveAdds + 1
 		end
+	end
+	return aliveAdds
+end
 
-		-- Boss reinforcements own their queue: never route them through the authored
-		-- wave spawner, whose group cursor and remaining count must stay intact.
-		while bossAdds.queued > 0 and bossAdds.queueTimer <= 0
-			and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
-			Enemies.spawnEnemy(bossAdds.kind, bossAdds.hpMult, bossAdds.spdMult)
-			bossAdds.queued = bossAdds.queued - 1
-			bossAdds.totalSpawned = bossAdds.totalSpawned + 1
-			bossAdds.queueTimer = bossAdds.queueTimer + bossAdds.queueGap
-			spawnLoops = spawnLoops + 1
-		end
+local function queueBossReinforcements(boss, activeCap)
+	if bossAdds.timer > 0 or bossAdds.totalSpawned >= bossAdds.maxTotal then
+		return
+	end
 
-		if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and bossAdds.queueTimer <= 0 then
-			bossAdds.queueTimer = 0
-		elseif #Enemies.enemies >= activeCap and bossAdds.queued > 0 then
-			bossAdds.queueTimer = max(bossAdds.queueTimer, SPAWN_BACKPRESSURE_DELAY)
-		end
+	-- Queued adds reserve both the nearby and global capacity budgets.
+	local aliveAdds = countNearbyBossAdds(boss)
+	local available = min(bossAdds.maxAlive - aliveAdds - bossAdds.queued,
+		activeCap - #Enemies.enemies - bossAdds.queued)
+	local totalRemaining = bossAdds.maxTotal - bossAdds.totalSpawned - bossAdds.queued
+	local toSpawn = max(0, min(bossAdds.burst, available, totalRemaining))
+	bossAdds.queued = bossAdds.queued + toSpawn
+	bossAdds.timer = bossAdds.interval
+end
+
+local function updateBossAdds(dt, activeCap, spawnLoops)
+	if not bossAdds.active then return end
+
+	local boss = State.activeBoss
+	if not (boss and boss.hp and boss.hp > 0 and not boss.dying) then
+		bossAdds.active = false
+		bossAdds.queued = 0
+		return
+	end
+
+	bossAdds.timer = bossAdds.timer - dt
+	bossAdds.queueTimer = bossAdds.queueTimer - dt
+	queueBossReinforcements(boss, activeCap)
+
+	-- Reinforcements have their own queue so they cannot disturb authored groups.
+	while bossAdds.queued > 0 and bossAdds.queueTimer <= 0
+		and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
+		Enemies.spawnEnemy(bossAdds.kind, bossAdds.hpMult, bossAdds.spdMult)
+		bossAdds.queued = bossAdds.queued - 1
+		bossAdds.totalSpawned = bossAdds.totalSpawned + 1
+		bossAdds.queueTimer = bossAdds.queueTimer + bossAdds.queueGap
+		spawnLoops = spawnLoops + 1
+	end
+
+	applySpawnBackpressure(bossAdds, "queueTimer", bossAdds.queued, spawnLoops, activeCap)
+end
+
+-- Spawning update
+function Waves.updateSpawner(dt)
+	local activeCap = getActiveEnemyCap(State.wave)
+	local spawnLoops, invalidSequence = updateWaveSpawner(dt, activeCap, 0)
+	if not invalidSequence then
+		updateBossAdds(dt, activeCap, spawnLoops)
 	end
 end
 
