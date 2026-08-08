@@ -496,10 +496,7 @@ function Screen.update(dt)
 		end
 	end
 
-	for _, btn in ipairs(buttons) do
-		local mx, my = love.mouse.getPosition()
-		Button.update(btn, mx, my, dt)
-	end
+	Button.updateList(buttons, dt)
 end
 
 function Screen.draw()
@@ -599,9 +596,7 @@ function Screen.draw()
 	lg.setScissor()
 
 	-- Buttons
-	for _, btn in ipairs(buttons) do
-		Button.draw(btn)
-	end
+	Button.drawList(buttons)
 
 	lg.pop()
 
@@ -620,11 +615,7 @@ function Screen.mousepressed(x, y, button)
 		return true
 	end
 
-	for _, btn in ipairs(buttons) do
-		if Button.mousepressed(btn, x, y, button) then
-			return true
-		end
-	end
+	return Button.mousepressedList(buttons, x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
@@ -636,11 +627,7 @@ function Screen.mousereleased(x, y, button)
 		return true
 	end
 
-	for _, btn in ipairs(buttons) do
-		if Button.mousereleased(btn, x, y, button) then
-			return true
-		end
-	end
+	return Button.mousereleasedList(buttons, x, y, button)
 end
 
 function Screen.keypressed(key)
