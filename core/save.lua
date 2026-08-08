@@ -11,7 +11,50 @@ Save.data = nil
 local format = string.format
 local rep = string.rep
 
--- Map ID migration (old campaign -> new campaign)
+local DEFAULT_SETTINGS = {
+	musicVolume = 0.20,
+	sfxVolume = 0.20,
+	difficulty = "normal",
+	screenShake = true,
+	showDamageNumbers = true,
+	reducedFlash = false,
+	fullscreen = true,
+}
+
+local META_COUNTERS = {
+	"ENEMIES_KILLED",
+	"BOSSES_KILLED",
+	"TOWER_LANCER_KILLS",
+	"TOWER_SLOW_KILLS",
+	"TOWER_CANNON_KILLS",
+	"TOWER_SHOCK_KILLS",
+	"TOWER_POISON_KILLS",
+	"TOWER_PLASMA_KILLS",
+	"TOWER_UPGRADES",
+}
+
+local META_TABLES = {
+	"unlockedAchievements",
+	"clearedMaps",
+	"encounteredEnemies",
+	"encounteredAffixes",
+	"enemyHistory",
+	"towerHistory",
+	"discoveredModules",
+}
+
+local function defaultValue(tbl, key, value)
+	if tbl[key] ~= nil then return false end
+	tbl[key] = value
+	return true
+end
+
+local function defaultTable(tbl, key)
+	if type(tbl[key]) == "table" then return false end
+	tbl[key] = {}
+	return true
+end
+
 local function ensureKeybinds(settings)
 	local changed = false
 
@@ -37,6 +80,56 @@ local function ensureKeybinds(settings)
 	end
 
 	return changed
+end
+
+local function normalizeMapStats(mapStats)
+	local changed = false
+	for _, stats in pairs(mapStats) do
+		if type(stats) == "table" then
+			changed = defaultValue(stats, "bestEndlessWave", 0) or changed
+			if type(stats.medalEarnedAt) ~= "table" then
+				-- Older medals intentionally remain undated.
+				stats.medalEarnedAt = {}
+				changed = true
+			end
+		end
+	end
+	return changed
+end
+
+local function normalizeSettings(data)
+	local changed = defaultTable(data, "settings")
+	local settings = data.settings
+	for key, value in pairs(DEFAULT_SETTINGS) do
+		changed = defaultValue(settings, key, value) or changed
+	end
+	return ensureKeybinds(settings) or changed
+end
+
+local function normalizeMeta(data)
+	local changed = defaultTable(data, "meta")
+	local meta = data.meta
+	for _, key in ipairs(META_COUNTERS) do
+		changed = defaultValue(meta, key, 0) or changed
+	end
+	for _, key in ipairs(META_TABLES) do
+		changed = defaultTable(meta, key) or changed
+	end
+	return changed
+end
+
+local function migrateVersion(data)
+	if (data.version or 0) >= SAVE_VERSION then return false end
+	if type(data.mapStats) == "table" then
+		for _, stats in pairs(data.mapStats) do
+			if type(stats) == "table" and (tonumber(stats.bestWave) or 0) > 20 then
+				stats.bestEndlessWave = math.max(stats.bestEndlessWave or 0, stats.bestWave)
+				stats.bestWave = stats.completedDifficulty and 20 or 0
+			end
+		end
+	end
+	data.version = SAVE_VERSION
+	return true
 end
 
 local function migrateMapIds()
@@ -81,6 +174,37 @@ local function migrateMapIds()
 	return changed
 end
 
+local function normalizeLoadedData(data)
+	local changed = migrateVersion(data)
+	changed = defaultValue(data, "furthestIndex", 1) or changed
+	changed = defaultTable(data, "unlockedMaps") or changed
+	changed = defaultTable(data, "mapStats") or changed
+	if type(data.equippedAbilities) ~= "table" then
+		data.equippedAbilities = {"meteor", "frost_nova"}
+		changed = true
+	end
+	changed = normalizeMapStats(data.mapStats) or changed
+	changed = normalizeSettings(data) or changed
+	changed = normalizeMeta(data) or changed
+
+	if not data.mapIdMigrationDone then
+		changed = migrateMapIds() or changed
+		data.mapIdMigrationDone = true
+		changed = true
+	end
+	return changed
+end
+
+local function createFreshData()
+	local data = {
+		version = SAVE_VERSION,
+		equippedAbilities = {"meteor", "frost_nova"},
+		mapIdMigrationDone = true,
+	}
+	normalizeLoadedData(data)
+	return data
+end
+
 function Save.load()
 	if love.filesystem.getInfo(SAVE_FILE) then
 		local chunk = love.filesystem.load(SAVE_FILE)
@@ -88,150 +212,12 @@ function Save.load()
 
 		if ok and type(data) == "table" then
 			Save.data = data
-
-			local version = Save.data.version or 0
-
-			-- Apply every save-structure change made during this game version as a
-			-- single upgrade.
-			if version < SAVE_VERSION then
-				if type(Save.data.mapStats) == "table" then
-					for _, stats in pairs(Save.data.mapStats) do
-						if type(stats) == "table" and (tonumber(stats.bestWave) or 0) > 20 then
-							stats.bestEndlessWave = math.max(stats.bestEndlessWave or 0, stats.bestWave)
-							stats.bestWave = stats.completedDifficulty and 20 or 0
-						end
-					end
-				end
-
-				Save.data.version = SAVE_VERSION
-				Save.flush()
-			end
-
-			-- Campaign progression
-			Save.data.furthestIndex = Save.data.furthestIndex or 1
-			Save.data.unlockedMaps = Save.data.unlockedMaps or {}
-			Save.data.mapStats = Save.data.mapStats or {}
-			local abilitySelectionsChanged = false
-			if type(Save.data.equippedAbilities) ~= "table" then
-				Save.data.equippedAbilities = {"meteor", "frost_nova"}
-				abilitySelectionsChanged = true
-			end
-			local mapStatsChanged = false
-			for _, stats in pairs(Save.data.mapStats) do
-				if type(stats) == "table" then
-					stats.bestEndlessWave = stats.bestEndlessWave or 0
-					if type(stats.medalEarnedAt) ~= "table" then
-						-- Older medals intentionally remain undated. A table is still
-						-- installed so future medals can be timestamped normally.
-						stats.medalEarnedAt = {}
-						mapStatsChanged = true
-					end
-				end
-			end
-			if mapStatsChanged or abilitySelectionsChanged then Save.flush() end
-
-			-- Settings
-			Save.data.settings = Save.data.settings or {}
-
-			local settings = Save.data.settings
-
-			settings.musicVolume = settings.musicVolume or 0.20
-			settings.sfxVolume = settings.sfxVolume or 0.20
-			settings.difficulty = settings.difficulty or "normal"
-			if settings.screenShake == nil then settings.screenShake = true end
-			if settings.showDamageNumbers == nil then settings.showDamageNumbers = true end
-			if settings.reducedFlash == nil then settings.reducedFlash = false end
-
-			if settings.fullscreen == nil then
-				settings.fullscreen = true
-			end
-
-			if ensureKeybinds(settings) then
-				Save.flush()
-			end
-
-			-- Achievement stats
-			Save.data.meta = Save.data.meta or {}
-
-			local meta = Save.data.meta
-
-			meta.ENEMIES_KILLED = meta.ENEMIES_KILLED or 0
-			meta.BOSSES_KILLED = meta.BOSSES_KILLED or 0
-
-			meta.TOWER_LANCER_KILLS = meta.TOWER_LANCER_KILLS or 0
-			meta.TOWER_SLOW_KILLS = meta.TOWER_SLOW_KILLS or 0
-			meta.TOWER_CANNON_KILLS = meta.TOWER_CANNON_KILLS or 0
-			meta.TOWER_SHOCK_KILLS = meta.TOWER_SHOCK_KILLS or 0
-			meta.TOWER_POISON_KILLS = meta.TOWER_POISON_KILLS or 0
-			meta.TOWER_PLASMA_KILLS = meta.TOWER_PLASMA_KILLS or 0
-
-			meta.TOWER_UPGRADES = meta.TOWER_UPGRADES or 0
-
-			meta.unlockedAchievements = meta.unlockedAchievements or {}
-			meta.clearedMaps = meta.clearedMaps or {}
-			meta.encounteredEnemies = meta.encounteredEnemies or {}
-			meta.encounteredAffixes = meta.encounteredAffixes or {}
-			meta.enemyHistory = meta.enemyHistory or {}
-			meta.towerHistory = meta.towerHistory or {}
-			meta.discoveredModules = meta.discoveredModules or {}
-
-			-- Run map ID migration once
-			if not Save.data.mapIdMigrationDone then
-				local changed = migrateMapIds()
-
-				Save.data.mapIdMigrationDone = true
-
-				if changed then
-					Save.flush()
-				end
-			end
-
+			if normalizeLoadedData(data) then Save.flush() end
 			return
 		end
 	end
 
-	-- Fresh save
-	Save.data = {
-		version = SAVE_VERSION,
-		furthestIndex = 1,
-		unlockedMaps = {},
-		mapStats = {},
-		equippedAbilities = {"meteor", "frost_nova"},
-		settings = {
-			musicVolume = 0.20,
-			sfxVolume = 0.20,
-			difficulty = "normal",
-			screenShake = true,
-			showDamageNumbers = true,
-			reducedFlash = false,
-			fullscreen = true,
-			keybinds = Hotkeys.getDefaultBindings(),
-		},
-
-		meta = {
-			ENEMIES_KILLED = 0,
-			BOSSES_KILLED = 0,
-
-			TOWER_LANCER_KILLS = 0,
-			TOWER_SLOW_KILLS = 0,
-			TOWER_CANNON_KILLS = 0,
-			TOWER_SHOCK_KILLS = 0,
-			TOWER_POISON_KILLS = 0,
-			TOWER_PLASMA_KILLS = 0,
-
-			TOWER_UPGRADES = 0,
-
-			unlockedAchievements = {},
-			clearedMaps = {},
-			encounteredEnemies = {},
-			encounteredAffixes = {},
-			enemyHistory = {},
-			towerHistory = {},
-			discoveredModules = {},
-		},
-
-		mapIdMigrationDone = true, -- new saves don't need migration
-	}
+	Save.data = createFreshData()
 end
 
 function Save.flush()
