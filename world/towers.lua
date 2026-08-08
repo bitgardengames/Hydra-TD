@@ -398,7 +398,7 @@ local function upgradeTower(t, specializationId)
 
 	Achievements.increment("TOWER_UPGRADES")
 	if TowerBranchDefs.getChoices(t.kind, t.level + 1) == nil then
-		Effects.trigger("final_tier_upgrade", {intensity = 4, shake = 6, duration = 0.3, hitStop = 0.06})
+		Effects.trigger("final_tier_upgrade", {intensity = 4, shake = 6, duration = 0.3})
 	end
 
 
