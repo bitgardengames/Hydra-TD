@@ -460,8 +460,7 @@ function Screen.load()
 			label = L("settings.tabVideo"),
 			rows = {
 				{
-					id = "screen_shake", label = L("settings.screenShake"), type = "slider",
-					color = Theme.effects.colors.impact,
+					id = "screen_shake", label = L("settings.screenShake"), type = "toggle",
 					get = function() return Save.data.settings.screenShake end,
 					set = function(v) Save.data.settings.screenShake = v end,
 				},

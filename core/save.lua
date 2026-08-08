@@ -138,7 +138,11 @@ function Save.load()
 			settings.musicVolume = settings.musicVolume or 0.20
 			settings.sfxVolume = settings.sfxVolume or 0.20
 			settings.difficulty = settings.difficulty or "normal"
-			if type(settings.screenShake) ~= "number" then settings.screenShake = 1 end
+			if type(settings.screenShake) == "number" then
+				settings.screenShake = settings.screenShake > 0
+			elseif type(settings.screenShake) ~= "boolean" then
+				settings.screenShake = true
+			end
 			if settings.showDamageNumbers == nil then settings.showDamageNumbers = true end
 			if settings.reducedFlash == nil then settings.reducedFlash = false end
 
@@ -201,7 +205,7 @@ function Save.load()
 			musicVolume = 0.20,
 			sfxVolume = 0.20,
 			difficulty = "normal",
-			screenShake = 1,
+			screenShake = true,
 			showDamageNumbers = true,
 			reducedFlash = false,
 			fullscreen = true,

@@ -36,8 +36,7 @@ function Effects.trigger(tag, opts)
 	opts = opts or {}
 	local intensity = opts.intensity or Theme.effects.intensity.normal
 	local criticalTell = opts.criticalTell == true
-	local shakeScale = settings().screenShake
-	if type(shakeScale) ~= "number" then shakeScale = 1 end
+	local shakeScale = settings().screenShake == false and 0 or 1
 	Camera.shake((opts.shake or intensity * 0.8) * shakeScale, opts.duration or 0.14)
 	return { tag = tag, intensity = intensity, color = opts.color, criticalTell = criticalTell }
 end
