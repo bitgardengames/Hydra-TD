@@ -189,7 +189,7 @@ function AbilityBar.draw(dt, mx, my)
 			if hovered then
 				showTooltip(abilityId, def)
 			end
-			local button = buttons[i] or {anim = {}}
+			local button = buttons[i] or {}
 			buttons[i] = button
 			button.x, button.y, button.w, button.h = x, y, SIZE, SIZE
 			button.abilityId = abilityId

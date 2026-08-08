@@ -60,6 +60,15 @@ function Button.newAnimation(extra)
 end
 
 function Button.updateAnimation(anim, hovered, dt)
+	-- Custom-rendered buttons can retain animation tables created before all of
+	-- the shared fields were initialized. Normalize them here so those callers
+	-- can safely adopt the shared state machine without crashing mid-draw.
+	if anim.hovered == nil then anim.hovered = false end
+	if anim.active == nil then anim.active = false end
+	if anim.t == nil then anim.t = 0 end
+	if anim.pressed == nil then anim.pressed = false end
+	if anim.pressT == nil then anim.pressT = 0 end
+
 	if hovered ~= anim.hovered then
 		anim.active = true
 	end
