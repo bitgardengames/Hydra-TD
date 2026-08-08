@@ -274,7 +274,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		-- Buttons layout
 		local actionX = panelX + OUTER_PAD
 		local usableW = w - OUTER_PAD * 2
-		local BUTTON_W = floor((usableW - GAP * 2) / 3)
+		local BUTTON_W = floor((usableW - GAP) / 2)
 		local actionY = panelY + h - OUTER_PAD - BUTTON_H
 
 		local upgradeCost = Towers.getUpgradeCost(t)
