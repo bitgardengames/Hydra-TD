@@ -10,6 +10,7 @@ local Waves = require("systems.waves")
 local Maps = require("world.map_defs")
 local Menu = require("ui.menu.menu")
 local BottomBar = require("ui.bottom_bar")
+local Button = require("ui.button")
 local Sound = require("systems.sound")
 local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
@@ -67,56 +68,12 @@ local function updateHover()
 	end
 end
 
-local function hitButton(list, x, y)
-	if not list then
-		return nil
-	end
-
-	for i = 1, #list do
-		local b = list[i]
-		if x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-			return b
-		end
-	end
-
-	return nil
-end
-
-local function handleButtonPressRelease(list, x, y, isPress, onReleaseInside)
-	if isPress then
-		local b = hitButton(list, x, y)
-		if b and b.anim then
-			b.anim.pressed = true
-		end
-
-		return b
-	end
-
-	if not list then
-		return nil
-	end
-
-	for i = 1, #list do
-		local b = list[i]
-		if b.anim then
-			local wasPressed = b.anim.pressed
-			b.anim.pressed = false
-
-			if wasPressed and x >= b.x and x <= b.x + b.w and y >= b.y and y <= b.y + b.h then
-				if onReleaseInside then
-					onReleaseInside(b)
-				end
-
-				return b
-			end
-		end
-	end
-
-	return nil
-end
-
 local function handlePanelButtons(getButtons, x, y, isPress, onReleaseInside)
-	return handleButtonPressRelease(getButtons(), x, y, isPress, onReleaseInside)
+	if isPress then
+		return Button.pressInList(getButtons(), x, y)
+	end
+
+	return Button.releaseInList(getButtons(), x, y, onReleaseInside)
 end
 
 local function rejectAbilityButton(b, x, y)
