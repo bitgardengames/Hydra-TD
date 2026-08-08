@@ -92,6 +92,18 @@ local function drawScreen(mode, alpha, offsetX)
 	love.graphics.pop()
 end
 
+local function dispatch(mode, event, ...)
+	local screen = Screens[mode]
+	local handler = screen and screen[event]
+	if handler then
+		return handler(...)
+	end
+end
+
+function Menu.handlesMode(mode)
+	return Screens[mode] ~= nil
+end
+
 
 function Menu.load()
 	local loaded = {}
@@ -121,11 +133,7 @@ function Menu.update(dt)
 		end
 	end
 
-	local screen = Screens[State.mode]
-
-	if screen and screen.update then
-		screen.update(dt)
-	end
+	dispatch(State.mode, "update", dt)
 end
 
 function Menu.set(mode)
@@ -179,53 +187,36 @@ function Menu.draw()
 end
 
 function Menu.keypressed(key)
-	local screen = Screens[State.mode]
-
-	if screen and screen.keypressed then
-		screen.keypressed(key)
-	end
+	return dispatch(State.mode, "keypressed", key)
 end
 
 function Menu.gamepadpressed(joystick, button)
-	local screen = Screens[State.mode]
-	if screen and screen.gamepadpressed then screen.gamepadpressed(joystick, button) end
+	return dispatch(State.mode, "gamepadpressed", joystick, button)
 end
 
 function Menu.mousepressed(x, y, button)
-	local screen = Screens[State.mode]
-
-	if screen and screen.mousepressed then
-		screen.mousepressed(x, y, button)
-	end
+	return dispatch(State.mode, "mousepressed", x, y, button)
 end
 
 function Menu.mousereleased(x, y, button)
-	local screen = Screens[State.mode]
-
-	if screen and screen.mousereleased then
-		screen.mousereleased(x, y, button)
-	end
+	return dispatch(State.mode, "mousereleased", x, y, button)
 end
 
 function Menu.wheelmoved(x, y)
-	local screen = Screens[State.mode]
-
-	if screen and screen.wheelmoved then
-		screen.wheelmoved(x, y)
-	end
+	return dispatch(State.mode, "wheelmoved", x, y)
 end
 
 -- Pause overlay (called from main loop)
 function Menu.updatePause(dt)
-	Screens.pause.update(dt)
+	return dispatch("pause", "update", dt)
 end
 
 function Menu.drawPause()
-	Screens.pause.draw()
+	return dispatch("pause", "draw")
 end
 
 function Menu.mousepressedPause(x, y, button)
-	return Screens.pause.mousepressed(x, y, button)
+	return dispatch("pause", "mousepressed", x, y, button)
 end
 
 return Menu

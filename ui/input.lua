@@ -138,27 +138,14 @@ local function tryBeginAbilityTargeting(b, x, y)
 	end
 end
 
-local function getMousepressHandler()
-	local mode = State.mode
-
-	if mode == "menu" or mode == "campaign" or mode == "settings" or mode == "game_over" or mode == "victory" then
-		return Menu.mousepressed, true
-	end
-
-	if mode == "pause" then
-		return Menu.mousepressedPause, false
-	end
-
-	return nil, false
-end
-
 local function mousepressed(x, y, button)
-	local modeHandler, alwaysConsume = getMousepressHandler()
-	if modeHandler then
-		local consumed = modeHandler(x, y, button)
-		if alwaysConsume or consumed then
+	if State.mode == "pause" then
+		if Menu.mousepressedPause(x, y, button) then
 			return
 		end
+	elseif Menu.handlesMode(State.mode) then
+		Menu.mousepressed(x, y, button)
+		return
 	end
 
 	if State.lives <= 0 then
@@ -301,52 +288,60 @@ local function mousereleased(x, y, button)
 	end)
 end
 
-local function runGameplayAction(action)
-	if action == "fastForward" then
+local gameplayActions = {
+	fastForward = function()
 		State.speed = (State.speed == 1) and 4 or 1
-
-		return true
-	end
-
-	if action == "skipPrep" then
+	end,
+	skipPrep = function()
 		if State.inPrep then
 			Waves.startWave()
 		end
-
-		return true
-	end
-
-	if action == "upgrade" then
+	end,
+	upgrade = function()
 		if State.selectedTower then
 			ModulePicker.openTowerUpgrade(State.selectedTower)
 		end
-
-		return true
-	end
-
-	if action == "sell" then
+	end,
+	sell = function()
 		if State.selectedTower then
 			Towers.sellTower(State.selectedTower)
 		end
-
-		return true
-	end
-
-	if action == "toggleMeter" then
+	end,
+	toggleMeter = function()
 		State.combatStats.showDamageMeter = not State.combatStats.showDamageMeter
-
-		return true
-	end
-
-	if action == "toggleMeterInfo" then
+	end,
+	toggleMeterInfo = function()
 		if State.combatStats.showDamageMeter then
 			State.combatStats.damageView = (State.combatStats.damageView + 1) % 2
 		end
+	end,
+}
 
-		return true
+local function runGameplayAction(action)
+	local handler = gameplayActions[action]
+	if not handler then
+		return false
 	end
 
-	return false
+	handler()
+	return true
+end
+
+local gameplayHotkeyActions = {
+	"fastForward",
+	"skipPrep",
+	"upgrade",
+	"sell",
+	"toggleMeter",
+	"toggleMeterInfo",
+}
+
+local function getGameplayHotkeyAction(key)
+	for _, action in ipairs(gameplayHotkeyActions) do
+		if key == Hotkeys.getActionKey(action) then
+			return action
+		end
+	end
 end
 
 local function keypressed(key)
@@ -384,7 +379,7 @@ local function keypressed(key)
 	end
 
 	-- Menu screens
-	if State.mode == "menu" or State.mode == "campaign" or State.mode == "settings" or State.mode == "pause" or State.mode == "game_over" or State.mode == "victory" then
+	if Menu.handlesMode(State.mode) then
 		Menu.keypressed(key)
 
 		return
@@ -429,22 +424,7 @@ local function keypressed(key)
 			deselect()
 		end
 	else
-		local action
-		if key == Hotkeys.getActionKey("fastForward") then
-			action = "fastForward"
-		elseif key == Hotkeys.getActionKey("skipPrep") then
-			action = "skipPrep"
-		elseif key == Hotkeys.getActionKey("upgrade") then
-			action = "upgrade"
-		elseif key == Hotkeys.getActionKey("sell") then
-			action = "sell"
-		elseif key == Hotkeys.getActionKey("toggleMeter") then
-			action = "toggleMeter"
-		elseif key == Hotkeys.getActionKey("toggleMeterInfo") then
-			action = "toggleMeterInfo"
-		end
-
-		runGameplayAction(action)
+		runGameplayAction(getGameplayHotkeyAction(key))
 	end
 end
 
