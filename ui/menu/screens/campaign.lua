@@ -15,7 +15,6 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
-local CampaignDesign = require("systems.campaign_design")
 local Towers = require("world.towers")
 local EnemyDefs = require("world.enemy_defs")
 
@@ -362,14 +361,9 @@ local function localizedTowerList(kinds)
 	return table.concat(names, L("campaign.previewListSeparator"))
 end
 
-local function buildPreviewMessages(map, mapIndex)
+local function buildPreviewMessages(map)
 	local messages = {}
 	local reward = CampaignUnlocks.getRewardForMap(map)
-	local design = CampaignDesign.get(mapIndex)
-
-	if design then
-		messages[#messages + 1] = L("campaign.pressure", design.pressure)
-	end
 
 	if #(map.introducesEnemies or {}) > 0 then
 		local names = {}
@@ -672,7 +666,7 @@ function Screen.draw()
 
 	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
 
-	local previewMessages = buildPreviewMessages(map, index)
+	local previewMessages = buildPreviewMessages(map)
 	local metaY = textY + PAD_TITLE + 20
 	for i, message in ipairs(previewMessages) do
 		Text.printfShadow(message, 0, metaY + (i - 1) * 18, sw, "center")

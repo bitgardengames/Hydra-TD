@@ -84,9 +84,9 @@ return {
 		completedBestEndless = "Completed: %s • Best: %d • Endless: %d",
 		newEnemy = "New enemy: %s",
 		newEnemies = "New enemies: %s",
-		newTowerReward = "Clear reward: unlock %s",
-		newTowerRewards = "Clear reward: unlock %s",
-		clearReward = "Clear reward: %s",
+		newTowerReward = "Reward: unlock %s",
+		newTowerRewards = "Reward: unlock %s",
+		clearReward = "Reward: %s",
 		pressure = "Pressure: %s",
 		rewards = {
 			cannon = "Cannon tower",
