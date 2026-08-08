@@ -271,23 +271,21 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local nameX = x + PAD
 		local ty = fy + (SHOP_BTN_H - textH) * 0.5
 
-		if hotkeyLabel then
-			local used = drawHotkeyVisual(key, x + PAD, fy, ty)
-
-			nameX = nameX + used
-		end
-
-		local textAlpha = unlocked and (canAfford and 1 or 0.55) or 0.45
-
-		lg.setColor(ct1, ct2, ct3, textAlpha)
-		Text.printShadow(btn.nameText, nameX, ty)
-
 		if unlocked then
+			if hotkeyLabel then
+				local used = drawHotkeyVisual(key, x + PAD, fy, ty)
+
+				nameX = nameX + used
+			end
+
+			lg.setColor(ct1, ct2, ct3, canAfford and 1 or 0.55)
+			Text.printShadow(btn.nameText, nameX, ty)
+
 			lg.setColor(canAfford and colorText or colorBad)
 			Text.printfShadow(btn.costText, x + PAD, ty, SHOP_BTN_W - PAD * 2, "right")
 		else
 			lg.setColor(ct1, ct2, ct3, 0.65)
-			Text.printfShadow("🔒 " .. L("campaign.locked"), x + PAD, ty, SHOP_BTN_W - PAD * 2, "right")
+			Text.printfShadow(L("campaign.locked"), x, ty, SHOP_BTN_W, "center")
 		end
 
 		i = i + 1
