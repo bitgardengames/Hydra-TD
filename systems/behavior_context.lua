@@ -15,6 +15,7 @@ local roles = {
 	hit_line = "hit",
 	instant_hit = "hit",
 	emit_on_target = "hit",
+	move_to_target_point = "hit",
 	hit_damage = "damage",
 	aoe_damage = "damage",
 	tick_damage = "damage",
@@ -32,7 +33,14 @@ local function getRole(id)
 end
 
 local function cloneBehavior(behavior)
-	local copy = { id = behavior.id }
+	-- Behavior descriptors are open-ended. Preserve metadata such as noInherit
+	-- instead of silently dropping every field that this helper does not know.
+	local copy = {}
+	for key, value in pairs(behavior) do
+		if key ~= "data" and key ~= "hooks" then
+			copy[key] = value
+		end
+	end
 
 	if behavior.data and next(behavior.data) ~= nil then
 		copy.data = {}
@@ -58,6 +66,10 @@ local function cloneBehaviors(behaviors)
 	end
 	return copies
 end
+
+BehaviorContext.cloneBehavior = cloneBehavior
+BehaviorContext.cloneBehaviors = cloneBehaviors
+BehaviorContext.getBehaviorRole = getRole
 
 local Context = {}
 Context.__index = Context

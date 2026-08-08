@@ -1,5 +1,6 @@
 local Constants = require("core.constants")
 local Spatial = require("world.spatial_grid")
+local BehaviorContext = require("systems.behavior_context")
 
 --[[
 	NOTE; ALL SYSTEMS MUST WORK TOGETHER FLUIDLY. This rule cannot be broken.
@@ -232,29 +233,31 @@ local function projectileHasHit(p, id)
 	return p.hitSet[id] == true
 end
 
-local HOOK_COMPAT = {
-	on_shot = "init",
-	on_tick = "update",
-	on_hit = "onHit",
-	on_kill = "onKill",
-	on_expire = "onExpire",
+local HOOKS = {
+	{ id = "on_shot", legacy = "init" },
+	{ id = "on_tick", legacy = "update" },
+	{ id = "on_hit", legacy = "onHit" },
+	{ id = "on_kill", legacy = "onKill" },
+	{ id = "on_expire", legacy = "onExpire" },
 }
 
-local HOOK_IDS = {
-	"on_shot",
-	"on_tick",
-	"on_hit",
-	"on_kill",
-	"on_expire",
-}
+local function hookIsDeclared(declared, hook)
+	if not declared then return true end
+	for i = 1, #declared do
+		if declared[i] == hook.id or declared[i] == hook.legacy then
+			return true
+		end
+	end
+	return false
+end
 
 function ProjectileBehaviors.compileHooks(p)
 	local hooks = {}
 	local drawHandlers = {}
 	local canHitPredicates = {}
 
-	for i = 1, #HOOK_IDS do
-		hooks[HOOK_IDS[i]] = {}
+	for i = 1, #HOOKS do
+		hooks[HOOKS[i].id] = {}
 	end
 
 	for i = 1, #p.behaviors do
@@ -269,30 +272,12 @@ function ProjectileBehaviors.compileHooks(p)
 				canHitPredicates[#canHitPredicates + 1] = { fn = def.canHit, data = behavior.data }
 			end
 
-			local declaredHooks = behavior.hooks
-			local declaredLookup = nil
-			if declaredHooks then
-				declaredLookup = {}
-				for j = 1, #declaredHooks do
-					declaredLookup[declaredHooks[j]] = true
-				end
-			end
-
-			for j = 1, #HOOK_IDS do
-				local hookId = HOOK_IDS[j]
-				local compatHookId = HOOK_COMPAT[hookId]
-				local fn = def[hookId] or def[compatHookId]
-
-				if fn then
-					local enabled = true
-					if declaredLookup then
-						enabled = declaredLookup[hookId] or (compatHookId and declaredLookup[compatHookId]) or false
-					end
-
-					if enabled then
-						local arr = hooks[hookId]
-						arr[#arr + 1] = { fn = fn, data = behavior.data }
-					end
+			for j = 1, #HOOKS do
+				local hook = HOOKS[j]
+				local fn = def[hook.id] or def[hook.legacy]
+				if fn and hookIsDeclared(behavior.hooks, hook) then
+					local arr = hooks[hook.id]
+					arr[#arr + 1] = { fn = fn, data = behavior.data }
 				end
 			end
 		end
@@ -2936,50 +2921,27 @@ end
 
 function ProjectileBehaviors.buildChildBehaviors(parentBehaviors)
 	local out = {}
+	local hasRole = { hit = false, damage = false }
 
 	for i = 1, #parentBehaviors do
-		local b = parentBehaviors[i]
+		local behavior = parentBehaviors[i]
 
 		-- skip behaviors that should not propagate
-		if not b.noInherit then
-			local copy = {
-				id = b.id
-			}
-
-			-- deep copy data
-			if b.data then
-				local d = {}
-				for k, v in pairs(b.data) do
-					d[k] = v
-				end
-				copy.data = d
+		if not behavior.noInherit then
+			out[#out + 1] = BehaviorContext.cloneBehavior(behavior)
+			local role = BehaviorContext.getBehaviorRole(behavior.id)
+			if hasRole[role] ~= nil then
+				hasRole[role] = true
 			end
-
-			out[#out + 1] = copy
 		end
 	end
 
-	-- CRITICAL SAFETY: ensure child can actually collide and apply damage.
-	local hasHitDetector = false
-	local hasHitDamage = false
-
-	for i = 1, #out do
-		local id = out[i].id
-
-		if id == "hit_circle" or id == "instant_hit" or id == "emit_on_target" or id == "move_to_target_point" then
-			hasHitDetector = true
-		end
-
-		if id == "hit_damage" or id == "aoe_damage" or id == "hit_chain" then
-			hasHitDamage = true
-		end
-	end
-
-	if not hasHitDetector then
+	-- A child must still be able to collide and deal damage after filters run.
+	if not hasRole.hit then
 		out[#out + 1] = { id = "hit_circle", data = { radius = 10 } }
 	end
 
-	if not hasHitDamage then
+	if not hasRole.damage then
 		out[#out + 1] = { id = "hit_damage" }
 	end
 
