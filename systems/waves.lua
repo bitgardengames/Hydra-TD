@@ -249,67 +249,91 @@ end
 resetTable(spawner, spawnerDefaults)
 resetTable(bossAdds, bossAddsDefaults)
 
+local function describeEnemyGroup(kind, count, spacing, delay, affixes)
+	local def = EnemyDefs[kind]
+	local group = {
+		kind = kind,
+		name = L((def and def.nameKey) or ("enemy." .. kind)),
+		count = count,
+		spacing = spacing or 0,
+		delay = delay or 0,
+		tags = {},
+		counterHints = {},
+		traitIds = {},
+		affixes = affixes or {},
+		affixNames = {},
+		affixDescriptions = {},
+	}
+
+	for _, id in ipairs(group.affixes) do
+		local affix = EnemyAffixDefs[id]
+		if affix then
+			group.affixNames[#group.affixNames + 1] = L(affix.nameKey)
+			group.affixDescriptions[#group.affixDescriptions + 1] = L(affix.descriptionKey)
+		end
+	end
+
+	for _, traitId in ipairs((def and def.traits) or {}) do
+		local trait = EnemyTraits.get(traitId)
+		if trait then
+			group.traitIds[#group.traitIds + 1] = traitId
+			group.tags[#group.tags + 1] = L("enemyTrait." .. traitId .. ".tag")
+			group.counterHints[#group.counterHints + 1] = L("enemyTrait." .. traitId .. ".counter")
+		end
+	end
+
+	return group
+end
+
+local function describeAuthoredGroups(groups, includeAffixes)
+	local descriptions = {}
+	for _, group in ipairs(groups or {}) do
+		descriptions[#descriptions + 1] = describeEnemyGroup(
+			group.kind,
+			group.count,
+			group.spacing,
+			group.delay,
+			includeAffixes and group.affixes or nil
+		)
+	end
+	return descriptions
+end
+
+local function describeComposition(composition, spacing)
+	local descriptions = {}
+	for _, item in ipairs(composition or {}) do
+		local kind = type(item) == "table" and item.kind or item
+		local affixes = type(item) == "table" and item.affixes or {}
+		local affixKey = table.concat(affixes, ",")
+		local previous = descriptions[#descriptions]
+
+		-- Coalesce only adjacent identical entries so the preview preserves spawn
+		-- order while avoiding a row for every enemy in an endless wave.
+		if previous and previous.kind == kind and previous.affixKey == affixKey then
+			previous.count = previous.count + 1
+		else
+			local description = describeEnemyGroup(kind, 1, spacing, 0, affixes)
+			description.affixKey = affixKey
+			descriptions[#descriptions + 1] = description
+		end
+	end
+	return descriptions
+end
+
 -- Build a display-only description of a wave.  Keep this independent of the
 -- live spawner tables so callers (notably the prep HUD) can safely look ahead.
 function Waves.getWavePreview(waveNumber)
 	local map = Maps[State.mapIndex]
 	local wave = WaveBuilder.build(waveNumber, map, State.endless)
 	local resolvedGroups = resolveWaveGroups(wave, map, waveNumber)
-	local groups = {}
-
-	local function addGroup(kind, count, spacing, delay, affixes)
-		local def = EnemyDefs[kind]
-		local group = {
-			kind = kind,
-			name = L((def and def.nameKey) or ("enemy." .. kind)),
-			count = count,
-			spacing = spacing or 0,
-			delay = delay or 0,
-			tags = {},
-			counterHints = {},
-			traitIds = {},
-			affixes = affixes or {},
-			affixNames = {},
-			affixDescriptions = {},
-		}
-		for _, id in ipairs(group.affixes) do
-			local affix = EnemyAffixDefs[id]
-			if affix then
-				group.affixNames[#group.affixNames + 1] = L(affix.nameKey)
-				group.affixDescriptions[#group.affixDescriptions + 1] = L(affix.descriptionKey)
-			end
-		end
-		for _, traitId in ipairs((def and def.traits) or {}) do
-			local trait = EnemyTraits.get(traitId)
-			if trait then
-				group.traitIds[#group.traitIds + 1] = traitId
-				group.tags[#group.tags + 1] = L("enemyTrait." .. traitId .. ".tag")
-				group.counterHints[#group.counterHints + 1] = L("enemyTrait." .. traitId .. ".counter")
-			end
-		end
-		groups[#groups + 1] = group
-	end
+	local groups
 
 	if wave.boss then
-		Effects.trigger("boss_wave", {intensity = 4, shake = 5, duration = 0.3, criticalTell = true})
-		for _, group in ipairs(resolvedGroups or {}) do
-			addGroup(group.kind, group.count, group.spacing, group.delay, group.affixes)
-		end
+		groups = describeAuthoredGroups(resolvedGroups, true)
 	elseif resolvedGroups then
-		for _, group in ipairs(resolvedGroups) do
-			addGroup(group.kind, group.count, group.spacing, group.delay)
-		end
+		groups = describeAuthoredGroups(resolvedGroups, false)
 	else
-		-- Endless composition has uniform timing; coalesce adjacent kinds while
-		-- preserving their spawn order rather than aggregating the whole wave.
-		for _, item in ipairs(wave.composition or {}) do
-			local kind = type(item) == "table" and item.kind or item
-			local affixes = type(item) == "table" and item.affixes or {}
-			local affixKey = table.concat(affixes, ",")
-			local group = groups[#groups]
-			if group and group.kind == kind and group.affixKey == affixKey then group.count = group.count + 1
-			else addGroup(kind, 1, wave.spacing, 0, affixes); groups[#groups].affixKey = affixKey end
-		end
+		groups = describeComposition(wave.composition, wave.spacing)
 	end
 
 	local counts = {}
@@ -365,6 +389,7 @@ function Waves.startWave()
 
 	-- Boss waves
 	if wave.boss then
+		Effects.trigger("boss_wave", {intensity = 4, shake = 5, duration = 0.3, criticalTell = true})
 		local bossIndex = math.max(1, math.floor(State.wave / 10))
 		local bossKind = getBossByArchetype(map, bossIndex)
 		local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
