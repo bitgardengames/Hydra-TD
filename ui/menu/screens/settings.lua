@@ -91,6 +91,7 @@ local tabTime = 0
 local keybindCapture = KeybindCapture.new()
 local settingsDirty = false
 local settingsFlushTimer = nil
+local settingsFlushDelay = 0.35
 
 local keyboardControlsLayout = {
 	{kind = "action", id = "escape", label = "settings.controlPause"},
@@ -122,6 +123,29 @@ local function flushSettingsNow()
 	end
 
 	settingsFlushTimer = nil
+end
+
+local function settingsChanged(flushImmediately)
+	settingsDirty = true
+	settingsFlushTimer = settingsFlushDelay
+
+	if flushImmediately then
+		flushSettingsNow()
+	end
+end
+
+local function sliderRow(id, label, color, get, set)
+	return {id = id, label = label, type = "slider", color = color, get = get, set = set}
+end
+
+local function toggleRow(id, label, setting, set)
+	return {
+		id = id,
+		label = label,
+		type = "toggle",
+		get = function() return Save.data.settings[setting] end,
+		set = set or function(value) Save.data.settings[setting] = value end,
+	}
 end
 
 local function exitToMenu()
@@ -322,55 +346,29 @@ function Screen.load()
 			id = "audio",
 			label = L("settings.tabAudio"),
 			rows = {
-				{
-					id = "music",
-					label = L("settings.music"),
-					type = "slider",
-					color = Theme.tower.shock,
-					get = function() return Save.data.settings.musicVolume end,
-					set = function(v)
+				sliderRow("music", L("settings.music"), Theme.tower.shock,
+					function() return Save.data.settings.musicVolume end,
+					function(v)
 						Save.data.settings.musicVolume = v
 						Sound.setMusicVolume(v)
-					end,
-				},
-				{
-					id = "sfx",
-					label = L("settings.sfx"),
-					type = "slider",
-					color = Theme.tower.cannon,
-					get = function() return Save.data.settings.sfxVolume end,
-					set = function(v)
+					end),
+				sliderRow("sfx", L("settings.sfx"), Theme.tower.cannon,
+					function() return Save.data.settings.sfxVolume end,
+					function(v)
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
-					end,
-				},
+					end),
 			},
 		},
 		{
 			id = "video",
 			label = L("settings.tabVideo"),
 			rows = {
-				{
-					id = "screen_shake", label = L("settings.screenShake"), type = "toggle",
-					get = function() return Save.data.settings.screenShake end,
-					set = function(v) Save.data.settings.screenShake = v end,
-				},
-				{
-					id = "damage_numbers", label = L("settings.damageNumbers"), type = "toggle",
-					get = function() return Save.data.settings.showDamageNumbers end,
-					set = function(v) Save.data.settings.showDamageNumbers = v end,
-				},
-				{
-					id = "reduced_flash", label = L("settings.reducedFlash"), type = "toggle",
-					get = function() return Save.data.settings.reducedFlash end,
-					set = function(v) Save.data.settings.reducedFlash = v end,
-				},
-				{
-					id = "fullscreen",
-					label = L("settings.fullscreen"),
-					type = "toggle",
-					get = function() return Save.data.settings.fullscreen end,
-					set = function(v)
+				toggleRow("screen_shake", L("settings.screenShake"), "screenShake"),
+				toggleRow("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers"),
+				toggleRow("reduced_flash", L("settings.reducedFlash"), "reducedFlash"),
+				toggleRow("fullscreen", L("settings.fullscreen"), "fullscreen",
+					function(v)
 						if v then
 							local sw, sh = love.graphics.getDimensions()
 							local msaa = require("core.scale").suggestMSAA(sw, sh) or 8
@@ -385,10 +383,7 @@ function Screen.load()
 
 						local sw, sh = love.graphics.getDimensions()
 						love.resize(sw, sh)
-
-						Save.flush()
-					end,
-				},
+					end),
 			},
 		},
 		{
@@ -501,7 +496,7 @@ function Screen.update(dt)
 			local t = Util.clamp((lm.getX() - rect.x) / rect.w, 0, 1)
 
 			rows[draggingSlider].set(t)
-			settingsDirty = true
+			settingsChanged()
 		end
 	end
 
@@ -652,7 +647,7 @@ function Screen.mousepressed(x, y, button)
 					if x >= slider.x and x <= slider.x + slider.w then
 						local t = Util.clamp((x - slider.x) / slider.w, 0, 1)
 						row.set(t)
-						settingsDirty = true
+						settingsChanged()
 						draggingSlider = i
 						return true
 					end
@@ -661,6 +656,7 @@ function Screen.mousepressed(x, y, button)
 				-- Toggle
 				if row.type == "toggle" then
 					row.set(not row.get())
+					settingsChanged(row.id == "fullscreen")
 					Sound.play("uiConfirm")
 					return true
 				end
