@@ -146,6 +146,22 @@ function Button.draw(btn)
 	Text.printfShadow(btn.label, x, ty, w, "center")
 end
 
+-- Most screens treat buttons as a single group. Keep the iteration and event
+-- short-circuiting here so every screen does not grow its own button router.
+function Button.updateList(buttons, dt, mx, my)
+	mx, my = mx or love.mouse.getX(), my or love.mouse.getY()
+
+	for _, btn in ipairs(buttons or {}) do
+		Button.update(btn, mx, my, dt)
+	end
+end
+
+function Button.drawList(buttons)
+	for _, btn in ipairs(buttons or {}) do
+		Button.draw(btn)
+	end
+end
+
 function Button.mousepressed(btn, x, y, button)
 	if button ~= 1 or btn.enabled == false then
 		return
@@ -184,6 +200,26 @@ function Button.mousereleased(btn, x, y, button)
 			return true
 		end
 	end
+end
+
+function Button.mousepressedList(buttons, x, y, button)
+	for _, btn in ipairs(buttons or {}) do
+		if Button.mousepressed(btn, x, y, button) then
+			return true
+		end
+	end
+
+	return false
+end
+
+function Button.mousereleasedList(buttons, x, y, button)
+	for _, btn in ipairs(buttons or {}) do
+		if Button.mousereleased(btn, x, y, button) then
+			return true
+		end
+	end
+
+	return false
 end
 
 -- Custom-rendered gameplay panels keep their buttons in short lists. Handle

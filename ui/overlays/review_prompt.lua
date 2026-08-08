@@ -71,10 +71,7 @@ end
 
 function Screen.update(dt)
 	Overlay.updateEnterAnimation(enterAnim, dt)
-	for _, btn in ipairs(buttons) do
-		local mx, my = love.mouse.getPosition()
-		Button.update(btn, mx, my, dt)
-	end
+	Button.updateList(buttons, dt)
 end
 
 function Screen.draw()
@@ -120,27 +117,17 @@ function Screen.draw()
 	Text.printfShadow(L("overlay.reviewText"), boxX, textY, boxW, "center")
 
 	-- Buttons
-	for _, btn in ipairs(buttons) do
-		Button.draw(btn)
-	end
+	Button.drawList(buttons)
 
 	Overlay.popPanelTransform()
 end
 
 function Screen.mousepressed(x, y, button)
-	for _, btn in ipairs(buttons) do
-		if Button.mousepressed(btn, x, y, button) then
-			return true
-		end
-	end
+	return Button.mousepressedList(buttons, x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
-	for _, btn in ipairs(buttons) do
-		if Button.mousereleased(btn, x, y, button) then
-			return true
-		end
-	end
+	return Button.mousereleasedList(buttons, x, y, button)
 end
 
 function Screen.keypressed(key)

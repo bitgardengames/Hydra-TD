@@ -145,10 +145,9 @@ function Page.update(dt)
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = startY + (i - 1) * gap
-
-		local mx, my = love.mouse.getPosition()
-		Button.update(btn, mx, my, dt)
 	end
+
+	Button.updateList(buttons, dt)
 end
 
 function Page.draw()
@@ -190,27 +189,15 @@ function Page.draw()
 	Fonts.set("menu")
 
 	-- Draw buttons
-	for _, btn in ipairs(buttons) do
-		Button.draw(btn)
-	end
+	Button.drawList(buttons)
 end
 
 function Page.mousepressed(x, y, button)
-	for _, btn in ipairs(buttons) do
-		if Button.mousepressed(btn, x, y, button) then
-			return true
-		end
-	end
-
-	return false
+	return Button.mousepressedList(buttons, x, y, button)
 end
 
 function Page.mousereleased(x, y, button)
-	for _, btn in ipairs(buttons) do
-		if Button.mousereleased(btn, x, y, button) then
-			return true
-		end
-	end
+	return Button.mousereleasedList(buttons, x, y, button)
 end
 
 function Page.keypressed(key)
