@@ -60,6 +60,15 @@ function Button.newAnimation(extra)
 end
 
 function Button.updateAnimation(anim, hovered, dt)
+	-- Custom button renderers may retain animation tables created before the
+	-- shared press animation was initialized. Normalize partial state here so a
+	-- UI draw can safely update those buttons without requiring a reload.
+	anim.hovered = anim.hovered or false
+	anim.active = anim.active or false
+	anim.t = anim.t or 0
+	anim.pressed = anim.pressed or false
+	anim.pressT = anim.pressT or 0
+
 	if hovered ~= anim.hovered then
 		anim.active = true
 	end
