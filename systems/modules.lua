@@ -38,14 +38,14 @@ local function getModule(moduleId)
 	return mod
 end
 
-local function addModuleCandidate(out, moduleId, order, source)
-	local mod = getModule(moduleId)
+local function addModuleCandidate(out, moduleId)
+	local mod = type(moduleId) == "table" and moduleId or getModule(moduleId)
 	if mod and mod.apply then
-		out[#out + 1] = { id = moduleId, mod = mod, order = order, source = source }
+		out[#out + 1] = { id = mod.id or moduleId, mod = mod }
 	end
 end
 
-local function applyResolvedModules(ctx, candidates)
+local function resolveModules(candidates, apply)
 	local winners = {}
 	local skipped = {}
 
@@ -63,27 +63,46 @@ local function applyResolvedModules(ctx, candidates)
 		local candidate = candidates[i]
 		local group = candidate.mod.exclusiveGroup
 		if not group or winners[group] == candidate then
-			candidate.mod.apply(ctx)
+			apply(candidate.mod)
 		else
 			skipped[#skipped + 1] = { id = candidate.id, replacedBy = winners[group].id, group = group }
 		end
 	end
 
-	ctx.exclusiveResolutions = skipped
+	return skipped
 end
 
-local function collectModuleIds(out, moduleIds, source, orderStart)
-	local order = orderStart or 0
+local function collectModuleIds(out, moduleIds)
 	if not moduleIds then
-		return order
+		return
 	end
 
 	for i = 1, #moduleIds do
-		order = order + 1
-		addModuleCandidate(out, moduleIds[i], order, source)
+		addModuleCandidate(out, moduleIds[i])
+	end
+end
+
+-- Keep module precedence in one place. Both behavior construction and targeting
+-- consume this list, so they cannot drift into subtly different interpretations
+-- of global, tower, applied, branch, and legacy modules.
+local function collectTowerModules(towerOrKind)
+	local tower = type(towerOrKind) == "table" and towerOrKind or nil
+	local towerKind = tower and tower.kind or towerOrKind
+	local candidates = {}
+
+	collectModuleIds(candidates, Modules.active.global)
+	collectModuleIds(candidates, Modules.active[towerKind])
+
+	if tower then
+		collectModuleIds(candidates, tower.appliedModules)
+		if tower.branchSelections then
+			collectModuleIds(candidates, tower.branchSelections)
+		elseif tower.specializationId then
+			addModuleCandidate(candidates, tower.specializationId)
+		end
 	end
 
-	return order
+	return candidates
 end
 
 local function bumpTowerCacheState(tower)
@@ -365,38 +384,6 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	end
 end
 
-local function applyTargetMode(mode, mod)
-	if mod and mod.targetMode and CampaignUnlocks.isTargetingUnlocked(mod.targetMode) then
-		return mod.targetMode
-	end
-
-	return mode
-end
-
-local function applyTargetModeFromModules(modules, mode)
-	if not modules then
-		return mode
-	end
-
-	for i = 1, #modules do
-		mode = applyTargetMode(mode, modules[i])
-	end
-
-	return mode
-end
-
-local function applyTargetModeFromIds(moduleIds, mode)
-	if not moduleIds then
-		return mode
-	end
-
-	for i = 1, #moduleIds do
-		mode = applyTargetMode(mode, ModuleDefs[moduleIds[i]])
-	end
-
-	return mode
-end
-
 function Modules.buildContext(tower)
 	local experimental = Modules.isEnabled()
 	if tower then
@@ -412,40 +399,10 @@ function Modules.buildContext(tower)
 	local base = tower.def.behaviors
 	local ctx = BehaviorContext.new(base)
 
-	local candidates = {}
-	local order = 0
-
-	-- global modules
-	local global = Modules.isEnabled() and Modules.active.global or {}
-	for i = 1, #global do
-		order = order + 1
-		candidates[#candidates + 1] = { id = global[i].id, mod = global[i], order = order, source = "global" }
-	end
-
-	-- tower modules
-	local list = Modules.isEnabled() and Modules.active[tower.kind] or nil
-	if list then
-		for i = 1, #list do
-			order = order + 1
-			candidates[#candidates + 1] = { id = list[i].id, mod = list[i], order = order, source = "tower" }
-		end
-	end
-
-	-- tower-specific inventory modules applied by the player
-	if Modules.isEnabled() then
-		order = collectModuleIds(candidates, tower and tower.appliedModules, "applied", order)
-	end
-
-	-- tower branch modules (legacy upgrade-tier compatibility path)
-	local branchSelections = Modules.isEnabled() and tower and tower.branchSelections
-	if branchSelections then
-		collectModuleIds(candidates, branchSelections, "branch", order)
-	elseif Modules.isEnabled() and tower and tower.specializationId then
-		-- backward compatibility for older saves
-		addModuleCandidate(candidates, tower.specializationId, order + 1, "legacy_specialization")
-	end
-
-	applyResolvedModules(ctx, candidates)
+	local candidates = experimental and collectTowerModules(tower) or {}
+	ctx.exclusiveResolutions = resolveModules(candidates, function(mod)
+		mod.apply(ctx)
+	end)
 
 	ctx:restoreRequiredBehaviors(base)
 	applyTowerUpgradeBehaviorScaling(ctx, tower)
@@ -526,31 +483,16 @@ function Modules.getActive()
 end
 
 function Modules.getTargetMode(towerOrKind)
-	local towerKind = towerOrKind
-	local branchSelections = nil
-	local appliedModules = nil
-	local legacySpecializationId = nil
-
-	if type(towerOrKind) == "table" then
-		towerKind = towerOrKind.kind
-		branchSelections = towerOrKind.branchSelections
-		appliedModules = towerOrKind.appliedModules
-		legacySpecializationId = towerOrKind.specializationId
-	end
-
 	if not Modules.isEnabled() then
 		return nil
 	end
 
 	local mode = nil
-	mode = applyTargetModeFromModules(Modules.active.global, mode)
-	mode = applyTargetModeFromModules(Modules.active[towerKind], mode)
-	mode = applyTargetModeFromIds(appliedModules, mode)
-	mode = applyTargetModeFromIds(branchSelections, mode)
-
-	if legacySpecializationId and not branchSelections then
-		mode = applyTargetMode(mode, getModule(legacySpecializationId))
-	end
+	resolveModules(collectTowerModules(towerOrKind), function(mod)
+		if mod.targetMode and CampaignUnlocks.isTargetingUnlocked(mod.targetMode) then
+			mode = mod.targetMode
+		end
+	end)
 
 	return mode
 end
