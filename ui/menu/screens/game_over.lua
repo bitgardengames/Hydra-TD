@@ -98,7 +98,7 @@ local function getMapName()
 	return L(map.nameKey)
 end
 
-local function buildHighlights()
+local function buildRunSummary()
 	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
 	local score = State.score or 0
 
@@ -141,7 +141,7 @@ end
 function Screen.enter()
 	t = 0
 	panelT = 0
-	buildHighlights()
+	buildRunSummary()
 	selectedHeadline, selectedSubheadline = selectGameOverMessage()
 end
 
@@ -187,8 +187,6 @@ function Screen.update(dt)
 	panelW = math.min(560, sw - 64)
 	panelX = cx - panelW * 0.5
 
-	buildHighlights()
-
 	contentStartY = floor(sh * 0.5 - 190)
 
 	titleY = contentStartY
@@ -199,11 +197,10 @@ function Screen.update(dt)
 
 	local buttonsStartY = tipY + buttonsOffset
 
+	local mx, my = love.mouse.getPosition()
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
 		btn.y = buttonsStartY + (i - 1) * gap
-
-		local mx, my = love.mouse.getPosition()
 		Button.update(btn, mx, my, dt)
 	end
 end
