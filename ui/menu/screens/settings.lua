@@ -466,12 +466,6 @@ function Screen.load()
 					set = function(v) Save.data.settings.screenShake = v end,
 				},
 				{
-					id = "effects_density", label = L("settings.effectsDensity"), type = "slider",
-					color = Theme.effects.colors.boss,
-					get = function() return Save.data.settings.effectsDensity end,
-					set = function(v) Save.data.settings.effectsDensity = v end,
-				},
-				{
 					id = "damage_numbers", label = L("settings.damageNumbers"), type = "toggle",
 					get = function() return Save.data.settings.showDamageNumbers end,
 					set = function(v) Save.data.settings.showDamageNumbers = v end,

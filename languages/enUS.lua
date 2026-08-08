@@ -36,8 +36,6 @@ return {
 		fullscreen = "Fullscreen",
 		screenShake = "Screen-shake intensity",
 		screenShakeDesc = "Scales camera motion from impacts; zero disables it.",
-		effectsDensity = "Effects density",
-		effectsDensityDesc = "Controls decorative particle quantity without hiding enemy tells.",
 		damageNumbers = "Show damage numbers",
 		damageNumbersDesc = "Displays floating combat damage values.",
 		reducedFlash = "Reduced-flash mode",
