@@ -2,6 +2,7 @@ local State = require("core.state")
 local Towers = require("world.towers")
 local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
+local Button = require("ui.button")
 local Tooltip = require("ui.tooltip")
 local Theme = require("core.theme")
 local L = require("core.localization")
@@ -9,8 +10,6 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 local Constants = require("core.constants")
 
 local lg = love.graphics
-local min = math.min
-local max = math.max
 local sin = math.sin
 local abs = math.abs
 local floor = math.floor
@@ -21,20 +20,12 @@ local Shop = {}
 
 local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
-local colorButton = Theme.ui.button
-local colorButtonHover = Theme.ui.buttonHover
 local colorDisabled = Theme.ui.buttonDisabled
 local colorOutline = Theme.outline.color
 
 local ct1, ct2, ct3 = colorText[1], colorText[2], colorText[3]
 
-local cb1, cb2, cb3 = colorButton[1], colorButton[2], colorButton[3]
-local ch1, ch2, ch3 = colorButtonHover[1], colorButtonHover[2], colorButtonHover[3]
 local cd1, cd2, cd3 = colorDisabled[1], colorDisabled[2], colorDisabled[3]
-
-local cbd1 = ch1 - cb1
-local cbd2 = ch2 - cb2
-local cbd3 = ch3 - cb3
 
 local outlineW = Theme.outline.width
 local outerRadius = 6 + outlineW * 0.5
@@ -112,7 +103,7 @@ end
 
 local function ensureShopAnim(kind)
 	if not shopAnims[kind] then
-		shopAnims[kind] = {hovered = false, active = false, t = 0, pressed = false, pressT = 0}
+		shopAnims[kind] = Button.newAnimation()
 	end
 
 	return shopAnims[kind]
@@ -200,35 +191,9 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local hovered = mx >= x and mx <= x + SHOP_BTN_W and my >= yb and my <= yb + SHOP_BTN_H
 		local anim = ensureShopAnim(key)
 
-		if hovered ~= anim.hovered then
-			anim.active = true
-		end
-
 		btn.anim = anim
-		anim.hovered = hovered
-
-		-- Press animation
-		if anim.pressed then
-			anim.pressT = min(1, anim.pressT + dt * 20)
-		else
-			anim.pressT = max(0, anim.pressT - dt * 20)
-		end
-
-		if anim.active then
-			local speed = dt * 10
-
-			anim.t = hovered and min(1, anim.t + speed) or max(0, anim.t - speed)
-
-			if anim.t == 0 or anim.t == 1 then
-				anim.active = false
-			end
-		end
-
-		local ease = anim.t * anim.t * (3 - 2 * anim.t)
-
-		local r = cb1 + cbd1 * ease
-		local g = cb2 + cbd2 * ease
-		local b = cb3 + cbd3 * ease
+		Button.updateAnimation(anim, hovered, dt)
+		local r, g, b = Button.getHoverColor(anim)
 
 		if hovered then
 			hoveredAnything = true

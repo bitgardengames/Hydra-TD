@@ -35,10 +35,46 @@ end
 
 local function ensureAnim(btn)
 	if not btn.anim then
-		btn.anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0}
+		btn.anim = Button.newAnimation()
 	end
 
 	return btn.anim
+end
+
+-- Shared animation state for buttons which need custom rendering (shop,
+-- inspector, ability icons). Keeping the timing here prevents each UI from
+-- growing its own subtly different hover/press state machine.
+function Button.newAnimation(extra)
+	local anim = extra or {}
+	anim.hovered = false
+	anim.active = false
+	anim.t = 0
+	anim.pressed = false
+	anim.pressT = 0
+	return anim
+end
+
+function Button.updateAnimation(anim, hovered, dt)
+	if hovered ~= anim.hovered then
+		anim.active = true
+	end
+
+	anim.hovered = hovered
+	anim.pressT = anim.pressed and min(1, anim.pressT + dt * 20) or max(0, anim.pressT - dt * 20)
+
+	if anim.active then
+		local direction = hovered and 1 or -1
+		anim.t = min(1, max(0, anim.t + direction * dt * 10))
+		anim.active = anim.t > 0 and anim.t < 1
+	end
+
+	return anim
+end
+
+function Button.getHoverColor(anim)
+	local t = anim.t
+	local ease = t * t * (3 - 2 * t)
+	return lerpColor(colorBase, colorHover, ease)
 end
 
 function Button.update(btn, mx, my, dt)
@@ -52,33 +88,8 @@ function Button.update(btn, mx, my, dt)
 	local anim = ensureAnim(btn)
 	local hovered = pointInRect(mx, my, btn.x, btn.y, btn.w, btn.h)
 
-	if hovered ~= anim.hovered then
-		anim.active = true
-	end
-
-	anim.hovered = hovered
+	Button.updateAnimation(anim, hovered, dt)
 	btn.hovered = hovered
-
-	-- Press animation
-	if anim.pressed then
-		anim.pressT = min(1, anim.pressT + dt * 20)
-	else
-		anim.pressT = max(0, anim.pressT - dt * 20)
-	end
-
-	if anim.active then
-		local speed = dt * 10
-
-		if anim.hovered then
-			anim.t = min(1, anim.t + speed)
-		else
-			anim.t = max(0, anim.t - speed)
-		end
-
-		if anim.t == 0 or anim.t == 1 then
-			anim.active = false
-		end
-	end
 end
 
 function Button.draw(btn)
