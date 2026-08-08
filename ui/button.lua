@@ -25,6 +25,11 @@ local function pointInRect(px, py, x, y, w, h)
 	return px >= x and px <= x + w and py >= y and py <= y + h
 end
 
+local function contains(btn, x, y)
+	return btn.x and btn.y and btn.w and btn.h
+		and pointInRect(x, y, btn.x, btn.y, btn.w, btn.h)
+end
+
 local function lerp(a, b, t)
 	return a + (b - a) * t
 end
@@ -177,6 +182,39 @@ function Button.mousereleased(btn, x, y, button)
 			btn.onClick()
 
 			return true
+		end
+	end
+end
+
+-- Custom-rendered gameplay panels keep their buttons in short lists. Handle
+-- their shared press/release state here rather than duplicating hit testing in
+-- every input router. Unlike mousepressed(), disabled buttons are deliberately
+-- accepted so callers can show their own locked/cooldown feedback on release.
+function Button.pressInList(buttons, x, y)
+	for _, btn in ipairs(buttons or {}) do
+		if contains(btn, x, y) then
+			if btn.anim then
+				btn.anim.pressed = true
+			end
+
+			return btn
+		end
+	end
+end
+
+function Button.releaseInList(buttons, x, y, onRelease)
+	for _, btn in ipairs(buttons or {}) do
+		if btn.anim then
+			local wasPressed = btn.anim.pressed
+			btn.anim.pressed = false
+
+			if wasPressed and contains(btn, x, y) then
+				if onRelease then
+					onRelease(btn)
+				end
+
+				return btn
+			end
 		end
 	end
 end
