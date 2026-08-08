@@ -26,6 +26,12 @@ local findEnemyAt = Enemies.findEnemyAt
 
 local colorBad = Theme.ui.bad
 
+local placementErrorMessages = {
+	path = "floater.cannotPlace",
+	occupied = "floater.cannotPlace",
+	money = "floater.needMoney",
+}
+
 local function worldToGrid(wx, wy)
 	if wx < 0 or wy < 0 then
 		return nil, nil
@@ -140,12 +146,80 @@ local function releaseBottomBar(x, y)
 	end
 end
 
+local function showPlacementError(why, kind, wx, wy)
+	local messageKey = placementErrorMessages[why]
+	local message = messageKey and L(messageKey)
+	if why == "locked" then
+		message = CampaignUnlocks.getLockMessage(kind) or L("floater.cannotPlace")
+	end
+	if message then
+		Floaters.add(wx, wy, message, colorBad[1], colorBad[2], colorBad[3])
+	end
+end
+
+local function placeTower(gx, gy, wx, wy)
+	if not gx then
+		return
+	end
+
+	local kind = State.placing
+	local ok, why = Towers.addTower(kind, gx, gy)
+	if ok then
+		cancelPlacement()
+		deselect()
+	else
+		showPlacementError(why, kind, wx, wy)
+	end
+end
+
+local function selectWorldEntity(wx, wy)
+	local enemy = findEnemyAt(wx, wy)
+	if enemy then
+		State.selectedEnemy = enemy
+		State.selectedTower = nil
+		return
+	end
+
+	local gx, gy = worldToGrid(wx, wy)
+	if State.placing then
+		placeTower(gx, gy, wx, wy)
+		return
+	end
+
+	local tower = gx and Towers.findTowerAt(gx, gy)
+	if tower then
+		State.selectedTower = tower
+		State.selectedEnemy = nil
+	else
+		deselect()
+	end
+end
+
+local function pressWorld(x, y, button)
+	if button == 2 then
+		cancelPlacement()
+		deselect()
+		Abilities.cancelTargeting()
+		return
+	end
+	if button ~= 1 then
+		return
+	end
+
+	local wx, wy = Camera.screenToWorld(x, y)
+	if State.abilityTargeting then
+		Abilities.activate(wx, wy)
+	else
+		selectWorldEntity(wx, wy)
+	end
+end
+
 local function mousepressed(x, y, button)
 	if State.mode == "pause" then
-		if Menu.mousepressedPause(x, y, button) then
-			return
-		end
-	elseif Menu.handlesMode(State.mode) then
+		Menu.mousepressedPause(x, y, button)
+		return
+	end
+	if Menu.handlesMode(State.mode) then
 		Menu.mousepressed(x, y, button)
 		return
 	end
@@ -154,75 +228,13 @@ local function mousepressed(x, y, button)
 		return
 	end
 
-	local wx, wy = Camera.screenToWorld(x, y)
-
-	-- Shop UI
 	if button == 1 and State.mode == "game" then
 		if pressBottomBar(x, y) then
 			return
 		end
 	end
 
-	-- World interaction
-	if button == 1 then
-		if State.abilityTargeting then
-			Abilities.activate(wx, wy)
-			return
-		end
-		-- Enemy selection
-		local enemy = findEnemyAt(wx, wy)
-
-		if enemy then
-			State.selectedEnemy = enemy
-			State.selectedTower = nil
-
-			return
-		end
-
-		local gx, gy = worldToGrid(wx, wy)
-
-		-- Placement mode
-		if State.placing then
-			if gx then
-				local ok, why = Towers.addTower(State.placing, gx, gy)
-
-				if ok then
-					cancelPlacement()
-					deselect()
-				else
-					if why == "path" or why == "occupied" then
-						Floaters.add(wx, wy, L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
-					elseif why == "money" then
-						Floaters.add(wx, wy, L("floater.needMoney"), colorBad[1], colorBad[2], colorBad[3])
-					elseif why == "locked" then
-						Floaters.add(wx, wy, CampaignUnlocks.getLockMessage(State.placing) or L("floater.cannotPlace"), colorBad[1], colorBad[2], colorBad[3])
-					end
-				end
-			end
-
-			return
-		end
-
-		-- Tower selection
-		if gx then
-			local t = Towers.findTowerAt(gx, gy)
-
-			if t then
-				State.selectedTower = t
-				State.selectedEnemy = nil
-
-				return
-			end
-		end
-
-		-- Clicked empty ground
-		deselect()
-	elseif button == 2 then
-		-- Right click: cancel placement + deselect
-		cancelPlacement()
-		deselect()
-		Abilities.cancelTargeting()
-	end
+	pressWorld(x, y, button)
 end
 
 local function mousereleased(x, y, button)
@@ -293,38 +305,77 @@ local function getGameplayHotkeyAction(key)
 	end
 end
 
-local function keypressed(key)
-	-- Toggle pause
-	if key == Hotkeys.getActionKey("escape") then
-		if State.mode == "pause" then
-			State.mode = "game"
-			Sound.exitPause()
+local function handleEscape()
+	if State.mode == "pause" then
+		State.mode = "game"
+		Sound.exitPause()
+		return true
+	end
+	if State.mode ~= "game" then
+		return false
+	end
 
-			return
-		elseif State.mode == "game" then
-			if State.abilityTargeting then
-				Abilities.cancelTargeting()
-				return
-			end
-			-- Cancel placement
-			if State.placing then
-				cancelPlacement()
+	if State.abilityTargeting then
+		Abilities.cancelTargeting()
+	elseif State.placing then
+		cancelPlacement()
+	elseif State.selectedTower or State.selectedEnemy then
+		deselect()
+	else
+		State.mode = "pause"
+		Sound.enterPause()
+	end
+	return true
+end
 
-				return
-			end
+local function handleVictoryHotkey(key)
+	if not (State.gameOver and State.victory) then
+		return false
+	end
+	if key == Hotkeys.getActionKey("endless") and CampaignUnlocks.isEndlessUnlocked() then
+		State.gameOver = false
+		State.victory = false
+		State.endless = true
+		State.inPrep = true
+		return true
+	end
+	if key ~= Hotkeys.getActionKey("nextMap") then
+		return false
+	end
 
-			-- Deselect
-			if State.selectedTower or State.selectedEnemy then
-				deselect()
+	local nextIndex = min(State.worldMapIndex + 1, #Maps)
+	State.worldMapIndex = nextIndex
+	State.mapIndex = State.resolveMapIndex(nextIndex)
+	State.endless = false
+	State.gameOver = false
+	State.victory = false
+	State.mode = "campaign"
+	return true
+end
 
-				return
-			end
-
-			State.mode = "pause"
-			Sound.enterPause()
-
-			return
+local function getTowerHotkeyKind(key)
+	for _, kind in ipairs(Constants.TOWER_LIST) do
+		if key == Hotkeys.getShopKey(kind) then
+			return kind
 		end
+	end
+end
+
+local function handleGameplayHotkey(key)
+	local towerKind = getTowerHotkeyKind(key)
+	if not towerKind then
+		return runGameplayAction(getGameplayHotkeyAction(key))
+	end
+
+	if beginTowerPlacement(towerKind) then
+		deselect()
+	end
+	return true
+end
+
+local function keypressed(key)
+	if key == Hotkeys.getActionKey("escape") and handleEscape() then
+		return
 	end
 
 	-- Menu screens
@@ -334,47 +385,11 @@ local function keypressed(key)
 		return
 	end
 
-	-- Victory / game over
-	if State.gameOver and State.victory then
-		if key == Hotkeys.getActionKey("endless") and CampaignUnlocks.isEndlessUnlocked() then
-			State.gameOver = false
-			State.victory = false
-			State.endless = true
-			State.inPrep = true
-
-			return
-		elseif key == Hotkeys.getActionKey("nextMap") then
-			local nextIndex = min(State.worldMapIndex + 1, #Maps)
-
-			State.worldMapIndex = nextIndex
-			State.mapIndex = State.resolveMapIndex(nextIndex)
-
-			State.endless = false
-			State.gameOver = false
-			State.victory = false
-			State.mode = "campaign"
-
-			return
-		end
+	if handleVictoryHotkey(key) then
+		return
 	end
 
-	-- Gameplay hotkeys
-	local towerKind
-
-	for _, kind in ipairs(Constants.TOWER_LIST) do
-		if key == Hotkeys.getShopKey(kind) then
-			towerKind = kind
-			break
-		end
-	end
-
-	if towerKind then
-		if beginTowerPlacement(towerKind) then
-			deselect()
-		end
-	else
-		runGameplayAction(getGameplayHotkeyAction(key))
-	end
+	handleGameplayHotkey(key)
 end
 
 return {
