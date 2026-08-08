@@ -142,6 +142,7 @@ function Save.load()
 			if type(settings.effectsDensity) ~= "number" then settings.effectsDensity = 1 end
 			if settings.showDamageNumbers == nil then settings.showDamageNumbers = true end
 			if settings.reducedFlash == nil then settings.reducedFlash = false end
+			if settings.hitStop == nil then settings.hitStop = true end
 
 			if settings.fullscreen == nil then
 				settings.fullscreen = true
@@ -206,6 +207,7 @@ function Save.load()
 			effectsDensity = 1,
 			showDamageNumbers = true,
 			reducedFlash = false,
+			hitStop = true,
 			fullscreen = true,
 			keybinds = Hotkeys.getDefaultBindings(),
 		},

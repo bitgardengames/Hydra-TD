@@ -42,6 +42,8 @@ return {
 		damageNumbersDesc = "Displays floating combat damage values.",
 		reducedFlash = "Reduced-flash mode",
 		reducedFlashDesc = "Replaces bright impact flashes with lower-contrast effects.",
+		hitStop = "Hit-stop impulses",
+		hitStopDesc = "Briefly pauses action on the heaviest impacts.",
 		tabAudio = "Audio",
 		tabVideo = "Video",
 		tabControls = "Controls",

@@ -50,7 +50,7 @@ function Abilities.activate(x,y)
 			for _,enemy in ipairs(Enemies.enemies) do local ex,ey=enemy.rx or enemy.x,enemy.ry or enemy.y; local dx,dy=ex-x,ey-y; if enemy.hp>0 and dx*dx+dy*dy<=r2 then if e.kind=="damage_area" then Enemies.applyDamage(enemy,e.damage,{sourceKind="ability"}) else Enemies.applySlow(enemy,e.factor,e.duration) end end end
 		end
 	end
-	if e.kind=="damage_area" then Effects.spawnCannonImpact(x,y,e.radius); Effects.trigger("ability_meteor",{intensity=3,shake=4}) elseif e.kind=="slow_area" then Effects.spawnFrostBurst(x,y); Effects.trigger("ability_frost",{intensity=2,shake=1}) else Effects.trigger("ability_cast",{intensity=2,shake=1}) end
+	if e.kind=="damage_area" then Effects.spawnCannonImpact(x,y,e.radius); Effects.trigger("ability_meteor",{intensity=3,shake=4,hitStop=.025}) elseif e.kind=="slow_area" then Effects.spawnFrostBurst(x,y); Effects.trigger("ability_frost",{intensity=2,shake=1}) else Effects.trigger("ability_cast",{intensity=2,shake=1}) end
 	State.abilityCooldowns[def.id]=def.cooldown; State.abilityTargeting=nil; return true
 end
 local function triggerVolley(a, enemy)
