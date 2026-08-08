@@ -10,6 +10,7 @@ local Button = require("ui.button")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
+local KeybindCapture = require("ui.keybind_capture")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -87,10 +88,7 @@ local tabs = {}
 local activeTab = 1
 local tabAnim = {}
 local tabTime = 0
-local capturingRowId = nil
-local conflictMessage = nil
-local pendingBindingChange = nil
-local capturingHint = nil
+local keybindCapture = KeybindCapture.new()
 local settingsDirty = false
 local settingsFlushTimer = nil
 
@@ -109,120 +107,12 @@ local keyboardControlsLayout = {
 	{kind = "action", id = "toggleMeter", label = "settings.controlDamageMeter"},
 }
 
-local function closeCapture()
-	capturingRowId = nil
-	conflictMessage = nil
-	pendingBindingChange = nil
-	capturingHint = nil
-end
-
-local function startCapture(row)
-	capturingRowId = row.id
-	conflictMessage = nil
-	pendingBindingChange = nil
-	capturingHint = L("settings.controlListeningHint")
-	Sound.play("uiMove")
-end
-
-local function getBinding(row)
-	local keybinds = Save.data.settings.keybinds
-
-	if row.bindingKind == "shop" then
-		return keybinds.shop[row.bindingId]
-	end
-
-	return keybinds.actions[row.bindingId]
-end
-
-local function getBindingSection(bindingKind)
-	local keybinds = Save.data.settings.keybinds
-
-	if bindingKind == "shop" then
-		return keybinds.shop
-	end
-
-	return keybinds.actions
-end
-
-local function formatBindingValue(row, key)
-	if not key or key == "" or key == "none" then
-		return L("settings.controlUnbound")
-	end
-
-	return key:upper()
-end
-
-local function commitBindingChange(change)
-	local section = getBindingSection(change.row.bindingKind)
-
-	if change.conflictRow then
-		local conflictSection = getBindingSection(change.conflictRow.bindingKind)
-		conflictSection[change.conflictRow.bindingId] = change.previous
-	end
-
-	section[change.row.bindingId] = change.key
-	Hotkeys.refreshFromSave()
-	Save.flush()
-end
-
-local function setBinding(row, key)
-	local section = getBindingSection(row.bindingKind)
-	local previous = section[row.bindingId]
-	local conflictRow = nil
-
-	if key and key ~= "none" then
-		for _, other in ipairs(rows) do
-			if other.type == "keybind" and other.id ~= row.id and getBinding(other) == key then
-				conflictRow = other
-				break
-			end
-		end
-	end
-
-	if conflictRow then
-		pendingBindingChange = {
-			row = row,
-			key = key,
-			previous = previous,
-			conflictRow = conflictRow,
-			conflictPrevious = getBinding(conflictRow),
-		}
-		conflictMessage = L(
-			"settings.controlConflictSwapPreview",
-			row.label,
-			formatBindingValue(row, previous),
-			formatBindingValue(row, key),
-			conflictRow.label,
-			formatBindingValue(conflictRow, pendingBindingChange.conflictPrevious),
-			formatBindingValue(conflictRow, previous)
-		)
-		capturingHint = L("settings.controlConflictConfirmHint")
-		Sound.play("uiMove")
-		return
-	end
-
-	conflictMessage = nil
-	pendingBindingChange = nil
-	capturingHint = L("settings.controlListeningHint")
-	commitBindingChange({row = row, key = key, previous = previous})
-end
-
 local function restoreDefaultKeybinds()
-	Save.data.settings.keybinds = Hotkeys.getDefaultBindings()
-	Hotkeys.refreshFromSave()
-	Save.flush()
-	conflictMessage = L("settings.controlsDefaultsRestored")
-	pendingBindingChange = nil
-	Sound.play("uiConfirm")
+	keybindCapture:restoreDefaults()
 end
 
 local function keybindText(row)
-	if capturingRowId == row.id then
-		return L("settings.controlListening")
-	end
-
-	local key = getBinding(row)
-	return formatBindingValue(row, key)
+	return keybindCapture:text(row)
 end
 
 local function flushSettingsNow()
@@ -236,7 +126,7 @@ end
 
 local function exitToMenu()
 	flushSettingsNow()
-	closeCapture()
+	keybindCapture:close()
 
 	if State.mode == "settings_gameplay" then
 		State.mode = "pause"
@@ -260,7 +150,7 @@ local function switchTab(nextTab)
 			rebuildControlsRows()
 		end
 		draggingSlider = nil
-		closeCapture()
+		keybindCapture:close()
 		Sound.play("uiMove")
 	end
 end
@@ -421,6 +311,7 @@ end
 
 function Screen.load()
 	Hotkeys.refreshFromSave()
+	keybindCapture:close()
 	activeTab = 1
 	tabTime = 0
 	settingsDirty = false
@@ -538,7 +429,7 @@ function Screen.update(dt)
 
 	rows = getActiveRows()
 	if not isControlsTab(activeTab) then
-		closeCapture()
+		keybindCapture:close()
 	end
 	tabTime = tabTime + dt
 
@@ -677,13 +568,13 @@ function Screen.draw()
 		lg.rectangle("fill", trackX, thumbY, scrollbarW, thumbH, 4, 4)
 	end
 
-	if capturingRowId then
+	if keybindCapture.rowId then
 		for i, row in ipairs(rows) do
-			if row.id == capturingRowId then
+			if row.id == keybindCapture.rowId then
 				local focusedRect = rowRects[i]
 				if focusedRect then
 					lg.setColor(colorText)
-					Text.printfShadow(capturingHint or L("settings.controlListeningHint"), focusedRect.x, focusedRect.y + focusedRect.h + 6, focusedRect.w, "left")
+					Text.printfShadow(keybindCapture.hint or L("settings.controlListeningHint"), focusedRect.x, focusedRect.y + focusedRect.h + 6, focusedRect.w, "left")
 				end
 				break
 			end
@@ -725,52 +616,14 @@ function Screen.draw()
 		Button.draw(btn)
 	end
 
-	if isControlsTab(activeTab) and conflictMessage then
+	if isControlsTab(activeTab) and keybindCapture.conflictMessage then
 		lg.setColor(colorText)
-		Text.printfShadow(conflictMessage, listX, buttonsStartY - 24, ROW_W, "left")
+		Text.printfShadow(keybindCapture.conflictMessage, listX, buttonsStartY - 24, ROW_W, "left")
 	end
 end
 
 function Screen.keypressed(key)
-	if capturingRowId then
-		local row = nil
-		for _, candidate in ipairs(rows) do
-			if candidate.id == capturingRowId then
-				row = candidate
-				break
-			end
-		end
-
-		if key == "escape" then
-			closeCapture()
-			Sound.play("uiBack")
-			return
-		end
-
-		if pendingBindingChange then
-			if key == "return" then
-				commitBindingChange(pendingBindingChange)
-				closeCapture()
-				Sound.play("uiConfirm")
-			end
-			return
-		end
-
-		if row then
-			if key == "backspace" then
-				setBinding(row, "none")
-				closeCapture()
-				Sound.play("uiConfirm")
-				return
-			end
-
-			setBinding(row, key)
-			if not pendingBindingChange then
-				closeCapture()
-				Sound.play("uiConfirm")
-			end
-		end
-
+	if keybindCapture:keypressed(key, rows) then
 		return
 	end
 
@@ -813,7 +666,7 @@ function Screen.mousepressed(x, y, button)
 				end
 
 				if row.type == "keybind" then
-					startCapture(row)
+					keybindCapture:start(row)
 					return true
 				end
 
