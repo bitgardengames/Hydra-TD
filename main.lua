@@ -1,7 +1,6 @@
 -- Hydra TD: Dec 19 2025, 2:22 AM
 
 local Constants = require("core.constants")
-local Scale = require("core.scale")
 local Camera = require("core.camera")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
@@ -30,7 +29,6 @@ local Difficulty = require("systems.difficulty")
 local Achievements = require("systems.achievements")
 local Menu = require("ui.menu.menu")
 local Overlay = require("ui.overlay")
-local Hotkeys = require("core.hotkeys")
 local Victory = require("ui.menu.screens.victory")
 local GameOver = require("ui.menu.screens.game_over")
 local Steam = require("core.steam")
@@ -192,43 +190,8 @@ function love.load(arg)
 	math.randomseed(os.time())
 	math.random()
 
-	local mode = arg and arg[1]
-
 	require("core.environment").load()
-
-	-- Just make a loader already, if there's this many modes now
-	if mode == "art" then
-		return require("tools.art_export").run()
-	elseif mode == "achievements" then
-		require("tools.achievement_export").run()
-	elseif mode == "map" then
-		return require("tools.map_export.main").run()
-	elseif mode == "trailer" then
-		require("tools.trailer.trailer_main").run()
-	elseif mode == "capsule" then
-		require("tools.capsule_export").run()
-	else
-		Save.load()
-		Hotkeys.refreshFromSave()
-
-		local settings = Save.data.settings or {}
-
-		-- Decide window mode
-		if settings.fullscreen then
-			local dmW, dmH = love.window.getDesktopDimensions()
-			local msaa = Scale.suggestMSAA(dmW, dmH) or 8
-
-			love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
-		else
-			local msaa = Scale.suggestMSAA(1280, 800) or 8
-
-			love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
-		end
-
-		require("core.bootstrap").initFull()
-
-		Steam.setOverlayHook(pauseGame)
-	end
+	require("core.launcher").run(arg and arg[1], pauseGame)
 
 	collectgarbage("collect")
 end
