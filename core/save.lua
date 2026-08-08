@@ -139,7 +139,6 @@ function Save.load()
 			settings.sfxVolume = settings.sfxVolume or 0.20
 			settings.difficulty = settings.difficulty or "normal"
 			if type(settings.screenShake) ~= "number" then settings.screenShake = 1 end
-			if type(settings.effectsDensity) ~= "number" then settings.effectsDensity = 1 end
 			if settings.showDamageNumbers == nil then settings.showDamageNumbers = true end
 			if settings.reducedFlash == nil then settings.reducedFlash = false end
 
@@ -203,7 +202,6 @@ function Save.load()
 			sfxVolume = 0.20,
 			difficulty = "normal",
 			screenShake = 1,
-			effectsDensity = 1,
 			showDamageNumbers = true,
 			reducedFlash = false,
 			fullscreen = true,

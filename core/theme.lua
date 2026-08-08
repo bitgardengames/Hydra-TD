@@ -48,8 +48,8 @@ Theme.projectiles = {
 	plasma = {0.85, 0.55, 1.0}, -- 1.0, 0.75, 1.0
 }
 
--- Shared presentation vocabulary. Gameplay tells should use `criticalTell`; the
--- effects density setting never suppresses that intensity.
+-- Shared presentation vocabulary. Gameplay tells should use `criticalTell` so
+-- their importance remains explicit at the call site.
 Theme.effects = {
 	intensity = { subtle = 1, normal = 2, strong = 3, critical = 4, criticalTell = 5 },
 	colors = {
