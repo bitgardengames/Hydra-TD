@@ -80,10 +80,6 @@ function Trees.hasTreeAt(gx, gy)
 	return col and col[gy] or false
 end
 
-local function nearPath(gx, gy)
-	return ScatterCommon.isNearPath(Map.map.isPath, gx, gy)
-end
-
 function Trees.generate()
 	Trees.clear()
 
@@ -143,29 +139,16 @@ function Trees.generate()
 		return false
 	end
 
-	-- Generation
-	while #Trees.list < count do
-		local gx = random(2, GRID_W - 1)
-		local gy = random(2, GRID_H - 1)
-
+	local function canPlace(gx, gy)
 		local isCluster = inCluster(gx, gy)
 
 		-- Individuals
-		if not isCluster then
-			if random() < 0.55 then
-				goto continue
-			end
-		end
+		if not isCluster and random() < 0.55 then return false end
 
-		-- Path avoidance
-		if nearPath(gx, gy) then
-			goto continue
-		end
+		return not ScatterCommon.isNearPath(Map.map.isPath, gx, gy) and not Map.isBlocked(gx, gy)
+	end
 
-		if Map.isBlocked(gx, gy) then
-			goto continue
-		end
-
+	local function create(gx, gy)
 		-- Offset
 		local cx = (gx - 0.5) * TILE
 		local cy = (gy - 0.5) * TILE
@@ -173,7 +156,7 @@ function Trees.generate()
 		local x = cx + random(-10, 10)
 		local y = cy + random(-10, 10)
 
-		Trees.list[#Trees.list + 1] = {
+		local tree = {
 			x = x,
 			y = y,
 			gx = gx,
@@ -187,8 +170,10 @@ function Trees.generate()
 		setOccupied(gx, gy)
 		Map.setBlocked(gx, gy)
 
-		::continue::
+		return tree
 	end
+
+	ScatterCommon.populate(Trees.list, count, random, GRID_W, GRID_H, canPlace, create)
 
 	table.sort(Trees.list, function(a, b)
 		return a.y < b.y

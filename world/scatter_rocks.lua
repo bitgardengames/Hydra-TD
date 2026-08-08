@@ -40,10 +40,6 @@ function Rocks.clear()
 	Rocks.list = {}
 end
 
-local function nearPath(gx, gy)
-	return ScatterCommon.isNearPath(Map.map.isPath, gx, gy)
-end
-
 function Rocks.generate()
 	Rocks.clear()
 
@@ -54,26 +50,11 @@ function Rocks.generate()
 
 	local styles = getRockStyles()
 
-	local occupied = {}
+	local function canPlace(gx, gy)
+		return not ScatterCommon.isNearPath(Map.map.isPath, gx, gy) and not treeAt(gx, gy)
+	end
 
-	while #Rocks.list < count do
-		local gx = random(2, GRID_W - 1)
-		local gy = random(2, GRID_H - 1)
-
-		occupied[gx] = occupied[gx] or {}
-
-		if occupied[gx][gy] then
-			goto continue
-		end
-
-		if nearPath(gx, gy) then
-			goto continue
-		end
-
-		if treeAt(gx, gy) then
-			goto continue
-		end
-
+	local function create(gx, gy)
 		local cx = (gx - 0.5) * TILE
 		local cy = (gy - 0.5) * TILE
 
@@ -89,11 +70,10 @@ function Rocks.generate()
 			rock.pairScale = 0.75 + random() * 0.55 -- Paired rock is usually smaller
 		end
 
-		Rocks.list[#Rocks.list + 1] = rock
-		occupied[gx][gy] = true
-
-		::continue::
+		return rock
 	end
+
+	ScatterCommon.populate(Rocks.list, count, random, GRID_W, GRID_H, canPlace, create)
 end
 
 function Rocks.draw()

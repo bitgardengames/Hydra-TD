@@ -48,10 +48,6 @@ function Mushrooms.clear()
 	Mushrooms.list = {}
 end
 
-local function nearPath(gx, gy)
-	return ScatterCommon.isNearPath(Map.map.isPath, gx, gy)
-end
-
 function Mushrooms.generate()
 	Mushrooms.clear()
 
@@ -60,18 +56,11 @@ function Mushrooms.generate()
 
 	local styles = getMushroomStyles()
 	local count = 44
-	local occupied = {}
+	local function canPlace(gx, gy)
+		return not ScatterCommon.isNearPath(Map.map.isPath, gx, gy) and not Map.isBlocked(gx, gy)
+	end
 
-	while #Mushrooms.list < count do
-		local gx = rand(2, GRID_W - 1)
-		local gy = rand(2, GRID_H - 1)
-
-		occupied[gx] = occupied[gx] or {}
-
-		if occupied[gx][gy] then goto continue end
-		if nearPath(gx, gy) then goto continue end
-		if Map.isBlocked(gx, gy) then goto continue end
-
+	local function create(gx, gy)
 		local cx = (gx - 0.5) * TILE
 		local cy = (gy - 0.5) * TILE
 
@@ -80,7 +69,7 @@ function Mushrooms.generate()
 			scale = scale * 1.18
 		end
 
-		Mushrooms.list[#Mushrooms.list + 1] = {
+		return {
 			x = cx + rand(-14, 14),
 			y = cy + rand(-14, 14),
 
@@ -97,10 +86,9 @@ function Mushrooms.generate()
 			capLift = rand() * 2.5,
 		}
 
-		occupied[gx][gy] = true
-
-		::continue::
 	end
+
+	ScatterCommon.populate(Mushrooms.list, count, rand, GRID_W, GRID_H, canPlace, create)
 
 	table.sort(Mushrooms.list, function(a, b)
 		return a.y < b.y
