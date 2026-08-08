@@ -255,7 +255,7 @@ function Button.releaseInList(buttons, x, y, onRelease)
 
 			if wasPressed and contains(btn, x, y) then
 				if onRelease then
-					onRelease(btn)
+					onRelease(btn, x, y)
 				end
 
 				return btn
