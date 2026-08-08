@@ -1,18 +1,34 @@
 local Bootstrap = {}
 
+local Save = require("core.save")
+local Difficulty = require("systems.difficulty")
+local L = require("core.localization")
+local Fonts = require("core.fonts")
+local Scale = require("core.scale")
+local Camera = require("core.camera")
+local Steam = require("core.steam")
+local Sound = require("systems.sound")
+local Hotkeys = require("core.hotkeys")
+local MapPreviewCache = require("world.map_preview_cache")
+local Menu = require("ui.menu.menu")
+local Effects = require("world.effects")
+local Projectiles = require("world.projectiles")
+
+local function configureGameWindow(settings)
+	if settings.fullscreen then
+		local width, height = love.window.getDesktopDimensions()
+		local msaa = Scale.suggestMSAA(width, height) or 8
+		love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
+	else
+		local msaa = Scale.suggestMSAA(1280, 800) or 8
+		love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
+	end
+end
+
 function Bootstrap.initFull()
-	local Save = require("core.save")
-	local Difficulty = require("systems.difficulty")
-	local L = require("core.localization")
-	local Fonts = require("core.fonts")
-	local Scale = require("core.scale")
-	local Camera = require("core.camera")
-	local Steam = require("core.steam")
-	local Sound = require("systems.sound")
-	local MapPreviewCache = require("world.map_preview_cache")
-	local Menu = require("ui.menu.menu")
-	local Effects = require("world.effects")
-	local Projectiles = require("world.projectiles")
+	Save.load()
+	Hotkeys.refreshFromSave()
+	configureGameWindow(Save.data.settings or {})
 
 	Difficulty.set(Save.data.settings.difficulty)
 	L.load(Save.data.settings.language or "enUS")
@@ -39,12 +55,12 @@ function Bootstrap.initMinimal()
 		msaa = 8
 	})
 
-	require("core.save").load()
-	require("core.localization").load("enUS")
-	require("systems.sound").load()
-	require("core.fonts").load()
-	require("core.scale").update()
-	require("core.camera").load()
+	Save.load()
+	L.load("enUS")
+	Sound.load()
+	Fonts.load()
+	Scale.update()
+	Camera.load()
 end
 
 return Bootstrap
