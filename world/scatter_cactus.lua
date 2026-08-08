@@ -44,10 +44,6 @@ function Cactus.clear()
 	Cactus.list = {}
 end
 
-local function nearPath(gx, gy)
-	return ScatterCommon.isNearPath(Map.map.isPath, gx, gy)
-end
-
 local function drawPart(x, baseY, w, h, style)
 	local fill = style.fill
 	local outline = style.outline
@@ -104,19 +100,13 @@ function Cactus.generate()
 	local count = 10 + rand(0, 6)
 	local styles = getCactusStyles()
 
-	local occupied = {}
+	local function canPlace(gx, gy)
+		return not ScatterCommon.isNearPath(Map.map.isPath, gx, gy)
+			and not Map.isBlocked(gx, gy)
+			and not Trees.hasTreeAt(gx, gy)
+	end
 
-	while #Cactus.list < count do
-		local gx = rand(2, GRID_W - 1)
-		local gy = rand(2, GRID_H - 1)
-
-		occupied[gx] = occupied[gx] or {}
-
-		if occupied[gx][gy] then goto continue end
-		if nearPath(gx, gy) then goto continue end
-		if Map.isBlocked(gx, gy) then goto continue end
-		if Trees.hasTreeAt and Trees.hasTreeAt(gx, gy) then goto continue end
-
+	local function create(gx, gy)
 		local cx = (gx - 0.5) * TILE
 		local cy = (gy - 0.5) * TILE
 
@@ -140,7 +130,7 @@ function Cactus.generate()
 		local side1 = rand() < 0.5 and -1 or 1
 		local side2 = (armMode == 2) and -side1 or side1
 
-		Cactus.list[#Cactus.list + 1] = {
+		return {
 			x = cx + rand(-10, 10),
 			y = cy + rand(-10, 10),
 
@@ -159,10 +149,9 @@ function Cactus.generate()
 			arm2 = {side = side2, height = rand(), width = rand(), offset = rand(), y = rand()},
 		}
 
-		occupied[gx][gy] = true
-
-		::continue::
 	end
+
+	ScatterCommon.populate(Cactus.list, count, rand, GRID_W, GRID_H, canPlace, create)
 
 	table.sort(Cactus.list, function(a, b)
 		return a.y < b.y
