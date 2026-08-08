@@ -18,6 +18,33 @@ local mapH = Constants.GRID_H * Constants.TILE
 
 local cache = {}
 
+local function buildPreviewPath(pathWorld, previewW, previewH, winW, winH, cameraScale)
+	if not pathWorld or #pathWorld < 2 then
+		return nil
+	end
+
+	local centerX, centerY = mapW * 0.5, mapH * 0.5
+	local cameraX = centerX - winW / (2 * cameraScale)
+	local cameraY = centerY - winH / (2 * cameraScale)
+	local scaleX = previewW / winW
+	local scaleY = previewH / winH
+	local points = {}
+	local totalLength = 0
+
+	for i, worldPoint in ipairs(pathWorld) do
+		local x = (worldPoint[1] - cameraX) * cameraScale * scaleX
+		local y = (worldPoint[2] - cameraY) * cameraScale * scaleY
+		if i > 1 then
+			local previous = points[i - 1]
+			local dx, dy = x - previous.x, y - previous.y
+			totalLength = totalLength + math.sqrt(dx * dx + dy * dy)
+		end
+		points[i] = {x = x, y = y, distance = totalLength}
+	end
+
+	return {points = points, totalLength = totalLength}
+end
+
 local function clearTable(t)
 	for k in pairs(t) do
 		t[k] = nil
@@ -46,14 +73,6 @@ local function withMapContext(context, previousMap, fn)
 	if not ok then
 		error(err)
 	end
-end
-
-local function clonePathWorld(path)
-	local out = {}
-	for i = 1, #path do
-		out[i] = {path[i][1], path[i][2]}
-	end
-	return out
 end
 
 function MapPreviewCache.buildAll(w, h)
@@ -106,12 +125,7 @@ function MapPreviewCache.buildAll(w, h)
 
 		cache[mapDef.id] = {
 			canvas = canvas,
-			pathWorld = clonePathWorld(context.map.pathWorld),
-			mapW = mapW,
-			mapH = mapH,
-			winW = winW,
-			winH = winH,
-			camScale = Camera.wscale,
+			previewPath = buildPreviewPath(context.map.pathWorld, w, h, winW, winH, Camera.wscale),
 		}
 	end
 
