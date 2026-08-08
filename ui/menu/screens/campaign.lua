@@ -6,7 +6,6 @@ local State = require("core.state")
 local Save = require("core.save")
 local Maps = require("world.map_defs")
 local MapPreviewCache = require("world.map_preview_cache")
-local Camera = require("core.camera")
 local Text = require("ui.text")
 local Button = require("ui.button")
 local Medals = require("ui.medals")
@@ -144,62 +143,26 @@ local function isMapLocked(i)
 	return not Save.isMapUnlocked(i, Maps[i].id)
 end
 
-local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
-	local path = entry.pathWorld
-	if not path or #path < 2 then return end
-
-	local function toScreen(wx, wy)
-		-- same logic as MapRender
-		local winW = entry.winW or love.graphics.getWidth()
-		local winH = entry.winH or love.graphics.getHeight()
-
-		local sx = pw / winW
-		local sy = ph / winH
-
-		local z = entry.camScale or Camera.wscale
-
-		local mapW = entry.mapW
-		local mapH = entry.mapH
-
-		local cx = mapW * 0.5
-		local cy = mapH * 0.5
-
-		local camWX = cx - (winW / (2 * z))
-		local camWY = cy - (winH / (2 * z))
-
-		-- apply camera transform
-		local screenX = (wx - camWX) * z
-		local screenY = (wy - camWY) * z
-
-		-- apply canvas scaling
-		screenX = screenX * sx
-		screenY = screenY * sy
-
-		return previewX + screenX, previewY + screenY
+local function pointAlongPath(path, distance)
+	local points = path.points
+	for i = 2, #points do
+		local point = points[i]
+		if distance <= point.distance then
+			local previous = points[i - 1]
+			local segmentLength = point.distance - previous.distance
+			local progress = segmentLength > 0 and (distance - previous.distance) / segmentLength or 0
+			return previous.x + (point.x - previous.x) * progress,
+				previous.y + (point.y - previous.y) * progress
+		end
 	end
 
-	-- Precompute segment lengths
-	local lengths = {}
-	local points = {}
-	local totalLen = 0
+	local last = points[#points]
+	return last.x, last.y
+end
 
-	for i = 1, #path do
-		local px, py = toScreen(path[i][1], path[i][2])
-		points[i] = {px, py}
-	end
-
-	for i = 1, #points - 1 do
-		local x1, y1 = points[i][1], points[i][2]
-		local x2, y2 = points[i + 1][1], points[i + 1][2]
-
-		local dx = x2 - x1
-		local dy = y2 - y1
-		local len = math.sqrt(dx*dx + dy*dy)
-
-		lengths[i] = len
-		totalLen = totalLen + len
-	end
-
+local function drawPathCurrent(entry, previewX, previewY, pulseT)
+	local path = entry.previewPath
+	local totalLen = path and path.totalLength or 0
 	if totalLen <= 0 then return end
 
 	-- Animate along path
@@ -225,61 +188,19 @@ local function drawPathCurrent(entry, previewX, previewY, pw, ph, pulseT)
 
 	local headAlphaScale = math.min(fadeIn, fadeOut)
 
-	local acc = 0
-
-	for i = 1, #lengths do
-		local segLen = lengths[i]
-
-		if dist <= acc + segLen then
-			local t = (dist - acc) / segLen
-
-			local x1, y1 = points[i][1], points[i][2]
-			local x2, y2 = points[i + 1][1], points[i + 1][2]
-
-			local px = x1 + (x2 - x1) * t
-			local py = y1 + (y2 - y1) * t
-
-			-- Tail glow along the travelled section for a subtle routing cue.
-			local tail = 0
-
-			while tail < tailDist do
-				local trailDist = math.max(trimStart, dist - tail)
-
-				local trailAcc = 0
-				local trailX, trailY = px, py
-
-				for seg = 1, #lengths do
-					local trailSegLen = lengths[seg]
-
-					if trailDist <= trailAcc + trailSegLen then
-						local trailT = (trailDist - trailAcc) / trailSegLen
-						local tx1, ty1 = points[seg][1], points[seg][2]
-						local tx2, ty2 = points[seg + 1][1], points[seg + 1][2]
-						trailX = tx1 + (tx2 - tx1) * trailT
-						trailY = ty1 + (ty2 - ty1) * trailT
-						break
-					end
-
-					trailAcc = trailAcc + trailSegLen
-				end
-
-				local fade = 1 - (tail / tailDist)
-				local alpha = tailMaxAlpha * fade * fade * headAlphaScale
-				local radius = 4 + fade * 2
-				lg.setColor(1, 1, 1, alpha)
-				lg.circle("fill", trailX, trailY, radius)
-				tail = tail + 8
-			end
-
-			-- Core
-			lg.setColor(1, 1, 1, 0.9 * headAlphaScale)
-			lg.circle("fill", px, py, 3)
-
-			return
-		end
-
-		acc = acc + segLen
+	local headX, headY = pointAlongPath(path, dist)
+	local tail = 0
+	while tail < tailDist do
+		local trailX, trailY = pointAlongPath(path, math.max(trimStart, dist - tail))
+		local fade = 1 - tail / tailDist
+		local alpha = tailMaxAlpha * fade * fade * headAlphaScale
+		lg.setColor(1, 1, 1, alpha)
+		lg.circle("fill", previewX + trailX, previewY + trailY, 4 + fade * 2)
+		tail = tail + 8
 	end
+
+	lg.setColor(1, 1, 1, 0.9 * headAlphaScale)
+	lg.circle("fill", previewX + headX, previewY + headY, 3)
 end
 
 local function pointInTriangle(px, py, ax, ay, bx, by, cx, cy)
@@ -585,7 +506,7 @@ function Screen.draw()
 
 	lg.draw(layout.preview, previewX, previewY)
 
-	drawPathCurrent(entry, previewX, previewY, pw, ph, pulseTime)
+	drawPathCurrent(entry, previewX, previewY, pulseTime)
 
 	-- Completion medals
 	local stats = getMapStats(map.id)
