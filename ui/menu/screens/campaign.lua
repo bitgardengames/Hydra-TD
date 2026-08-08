@@ -398,6 +398,77 @@ local function layoutCampaignButtons(cx, buttonsStartY)
 	end
 end
 
+local function getCampaignLayout(entry)
+	local sw, sh = lg.getDimensions()
+	local preview = entry.canvas
+	local pw, ph = preview:getWidth(), preview:getHeight()
+	local cx = floor(sw * 0.5)
+	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
+	local contentH = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + buttonsBlockH
+	local boxW = pw + paddingX * 2
+	local boxH = contentH + paddingY * 2
+	local boxX = cx - boxW * 0.5
+	local boxY = floor(sh * 0.5 - boxH * 0.5)
+	local previewX = cx - pw * 0.5
+	local previewY = boxY + paddingY
+	local textY = previewY + ph + PAD_PREVIEW + TITLE_OFFSET
+
+	return {
+		sw = sw,
+		sh = sh,
+		cx = cx,
+		preview = preview,
+		previewX = previewX,
+		previewY = previewY,
+		previewW = pw,
+		previewH = ph,
+		boxX = boxX,
+		boxY = boxY,
+		boxW = boxW,
+		boxH = boxH,
+		textY = textY,
+		arrowY = textY + 28,
+		buttonsStartY = textY + PAD_TITLE + PAD_META,
+	}
+end
+
+local function canNavigateMaps(direction)
+	local nextIndex = State.mapIndex + direction
+	if nextIndex < 1 or nextIndex > #Maps then
+		return false
+	end
+
+	return direction < 0 or not isMapLocked(nextIndex)
+end
+
+local function navigateMaps(direction)
+	if not canNavigateMaps(direction) then
+		Sound.play("uiError")
+		return false
+	end
+
+	hideMedalTooltip()
+	State.mapIndex = State.resolveMapIndex(State.mapIndex + direction)
+	Sound.play("uiMove")
+	return true
+end
+
+local function getArrowPoints(layout, direction)
+	local ax
+	if direction < 0 then
+		ax = layout.boxX + paddingX + ARROW_SIZE * 2
+		return {ax + ARROW_SIZE * 0.5, layout.arrowY - ARROW_SIZE, ax - ARROW_SIZE * 0.5, layout.arrowY, ax + ARROW_SIZE * 0.5, layout.arrowY + ARROW_SIZE}
+	end
+
+	ax = layout.boxX + layout.boxW - paddingX - ARROW_SIZE * 2
+	return {ax - ARROW_SIZE * 0.5, layout.arrowY - ARROW_SIZE, ax + ARROW_SIZE * 0.5, layout.arrowY, ax - ARROW_SIZE * 0.5, layout.arrowY + ARROW_SIZE}
+end
+
+local function pointInArrow(x, y, layout, direction)
+	local points = getArrowPoints(layout, direction)
+	return pointInTriangle(x, y, points[1], points[2], points[3], points[4], points[5], points[6])
+end
+
 -- Load
 function Screen.load()
 	campaignButtons = {
@@ -454,9 +525,6 @@ end
 function Screen.update(dt)
 	pulseTime = pulseTime + dt
 
-	local sw, sh = lg.getDimensions()
-	local cx = floor(sw * 0.5)
-
 	Backdrop.update(dt)
 	Medals.update(dt)
 
@@ -469,27 +537,11 @@ function Screen.update(dt)
 		return
 	end
 
-	local preview = entry.canvas
-	local pw, ph = preview:getWidth(), preview:getHeight()
-
-	-- Layout
-	local previewBlockH = ph
-	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
-	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
-	local contentH = previewBlockH + titleBlockH + buttonsBlockH
-
-	local boxW = pw + paddingX * 2
-	local boxH = contentH + paddingY * 2
-	local boxY = floor(sh * 0.5 - boxH * 0.5)
-
-	local previewY = boxY + paddingY
-	local textY = previewY + ph + PAD_PREVIEW
-	local buttonsStartY = textY + PAD_TITLE + PAD_META
-
-	updateMedalTooltip(map.id, cx - pw * 0.5, previewY)
+	local layout = getCampaignLayout(entry)
+	updateMedalTooltip(map.id, layout.previewX, layout.previewY)
 
 	-- Buttons
-	layoutCampaignButtons(cx, buttonsStartY)
+	layoutCampaignButtons(layout.cx, layout.buttonsStartY)
 
 	local mx, my = love.mouse.getPosition()
 	for i, btn in ipairs(campaignButtons) do
@@ -498,8 +550,6 @@ function Screen.update(dt)
 end
 
 function Screen.draw()
-	local sw, sh = lg.getDimensions()
-
 	Backdrop.draw()
 
 	local index = State.mapIndex
@@ -511,22 +561,10 @@ function Screen.draw()
 		return
 	end
 
-	local preview = entry.canvas
-	local pw, ph = preview:getWidth(), preview:getHeight()
-
-	local cx = floor(sw * 0.5)
-
-	-- Layout
-	local previewBlockH = ph
-	local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
-	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
-
-	local contentH = previewBlockH + titleBlockH + buttonsBlockH
-	local boxW = pw + paddingX * 2
-	local boxH = contentH + paddingY * 2
-
-	local boxX = cx - boxW * 0.5
-	local boxY = floor(sh * 0.5 - boxH * 0.5)
+	local layout = getCampaignLayout(entry)
+	local sw, sh = layout.sw, layout.sh
+	local previewX, previewY = layout.previewX, layout.previewY
+	local pw, ph = layout.previewW, layout.previewH
 
 	-- Dim background
 	lg.setColor(colorDim)
@@ -534,21 +572,18 @@ function Screen.draw()
 
 	-- Panel
 	lg.setColor(colorOutline)
-	lg.rectangle("fill", boxX - outlineW, boxY - outlineW, boxW + outlineW * 2, boxH + outlineW * 2, outerRadius)
+	lg.rectangle("fill", layout.boxX - outlineW, layout.boxY - outlineW, layout.boxW + outlineW * 2, layout.boxH + outlineW * 2, outerRadius)
 
 	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
+	lg.rectangle("fill", layout.boxX, layout.boxY, layout.boxW, layout.boxH, innerRadius)
 
 	-- Preview
-	local previewX = cx - pw * 0.5
-	local previewY = boxY + paddingY
-
 	local locked = isMapLocked(index)
 	local alpha = locked and 0.35 or 1.0
 
 	lg.setColor(1, 1, 1, alpha)
 
-	lg.draw(preview, previewX, previewY)
+	lg.draw(layout.preview, previewX, previewY)
 
 	drawPathCurrent(entry, previewX, previewY, pw, ph, pulseTime)
 
@@ -620,25 +655,17 @@ function Screen.draw()
 		Text.printfShadow(L("campaign.locked"), previewX, previewY + ph * 0.5 - 16, pw, "center")
 	end
 
-	local bandY = previewY + ph + PAD_PREVIEW
-	local textY = bandY + TITLE_OFFSET
+	local textY = layout.textY
 
 	-- Arrows
-	local leftEnabled = State.mapIndex > 1
-	local rightEnabled = State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1)
-
-	local arrowY = textY + 28
-	local size = ARROW_SIZE
+	local leftEnabled = canNavigateMaps(-1)
+	local rightEnabled = canNavigateMaps(1)
+	local mx, my = love.mouse.getPosition()
 
 	-- Left
 	do
-		local ax = boxX + paddingX + ARROW_SIZE * 2
-		local hover = false
-		local points = {ax + size * 0.5, arrowY - size, ax - size * 0.5, arrowY, ax + size * 0.5, arrowY + size}
-
-		if leftEnabled then
-			hover = pointInTriangle(love.mouse.getPosition(), points[1], points[2], points[3], points[4], points[5], points[6])
-		end
+		local points = getArrowPoints(layout, -1)
+		local hover = leftEnabled and pointInArrow(mx, my, layout, -1)
 
 		local color = resolveArrowColor(leftEnabled, hover)
 		drawTriangleWithShadow(points, color)
@@ -646,13 +673,8 @@ function Screen.draw()
 
 	-- Right
 	do
-		local ax = boxX + boxW - paddingX - ARROW_SIZE * 2
-		local hover = false
-		local points = {ax - size * 0.5, arrowY - size, ax + size * 0.5, arrowY, ax - size * 0.5, arrowY + size}
-
-		if rightEnabled then
-			hover = pointInTriangle(love.mouse.getPosition(), points[1], points[2], points[3], points[4], points[5], points[6])
-		end
+		local points = getArrowPoints(layout, 1)
+		local hover = rightEnabled and pointInArrow(mx, my, layout, 1)
 
 		local color = resolveArrowColor(rightEnabled, hover)
 		drawTriangleWithShadow(points, color)
@@ -673,8 +695,7 @@ function Screen.draw()
 	end
 
 	-- Buttons
-	local buttonsStartY = textY + PAD_TITLE + PAD_META
-	layoutCampaignButtons(cx, buttonsStartY)
+	layoutCampaignButtons(layout.cx, layout.buttonsStartY)
 
 	Fonts.set("menu")
 
@@ -685,21 +706,9 @@ end
 
 function Screen.keypressed(key)
 	if key == "left" then
-		if State.mapIndex > 1 then
-			hideMedalTooltip()
-			State.mapIndex = State.resolveMapIndex(State.mapIndex - 1)
-			Sound.play("uiMove")
-		else
-			Sound.play("uiError")
-		end
+		navigateMaps(-1)
 	elseif key == "right" then
-		if State.mapIndex < #Maps and not isMapLocked(State.mapIndex + 1) then
-			hideMedalTooltip()
-			State.mapIndex = State.resolveMapIndex(State.mapIndex + 1)
-			Sound.play("uiMove")
-		else
-			Sound.play("uiError")
-		end
+		navigateMaps(1)
 	elseif key == "up" or key == "down" then
 		cycleDifficulty(1)
 	elseif key == "escape" then
@@ -712,7 +721,6 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if button == 1 then
-		local sw, sh = lg.getDimensions()
 		local index = State.mapIndex
 		local map = Maps[index]
 		local entry = MapPreviewCache.get(map.id)
@@ -721,53 +729,18 @@ function Screen.mousepressed(x, y, button)
 			return
 		end
 
-		local preview = entry.canvas
-		local pw, ph = preview:getWidth(), preview:getHeight()
-
-		local cx = floor(sw * 0.5)
-
-		-- Layout
-		local previewBlockH = ph
-		local titleBlockH = PAD_PREVIEW + PAD_TITLE + PAD_META
-		local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
-		local contentH = previewBlockH + titleBlockH + buttonsBlockH
-
-		local boxW = pw + paddingX * 2
-		local boxH = contentH + paddingY * 2
-		local boxX = cx - boxW * 0.5
-		local boxY = floor(sh * 0.5 - boxH * 0.5)
-
-		local previewX = cx - pw * 0.5
-		local previewY = boxY + paddingY
-
-		local bandY = previewY + ph + PAD_PREVIEW
-		local textY = bandY + TITLE_OFFSET
-		local arrowY = textY + 28
+		local layout = getCampaignLayout(entry)
 
 		-- Left
-		if index > 1 then
-			local ax = boxX + paddingX + ARROW_SIZE * 2
-
-			if pointInTriangle(x, y, ax + ARROW_SIZE * 0.5, arrowY - ARROW_SIZE, ax - ARROW_SIZE * 0.5, arrowY, ax + ARROW_SIZE * 0.5, arrowY + ARROW_SIZE) then
-				hideMedalTooltip()
-				State.mapIndex = State.resolveMapIndex(index - 1)
-				Sound.play("uiMove")
-
-				return true
-			end
+		if canNavigateMaps(-1) and pointInArrow(x, y, layout, -1) then
+			navigateMaps(-1)
+			return true
 		end
 
 		-- Right
-		if index < #Maps and not isMapLocked(index + 1) then
-			local ax = boxX + boxW - paddingX - ARROW_SIZE * 2
-
-			if pointInTriangle(x, y, ax - ARROW_SIZE * 0.5, arrowY - ARROW_SIZE, ax + ARROW_SIZE * 0.5, arrowY, ax - ARROW_SIZE * 0.5, arrowY + ARROW_SIZE) then
-				hideMedalTooltip()
-				State.mapIndex = State.resolveMapIndex(index + 1)
-				Sound.play("uiMove")
-
-				return true
-			end
+		if canNavigateMaps(1) and pointInArrow(x, y, layout, 1) then
+			navigateMaps(1)
+			return true
 		end
 	end
 
