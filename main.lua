@@ -161,14 +161,7 @@ function resetGame()
 	Modules.clear()
 	State.moduleInventory = {}
 
-	State.modulePicker.active = false
-	State.modulePicker.choices = nil
-	State.modulePicker.waveOffered = 0
-	State.modulePicker.mode = "wave_reward"
-	State.modulePicker.title = nil
-	State.modulePicker.subtitle = nil
-	State.modulePicker.hint = nil
-	State.modulePicker.tower = nil
+	ModulePicker.reset()
 	Camera.load()
 end
 

@@ -150,6 +150,23 @@ function ModulePicker.open(options)
 	return true
 end
 
+local function clearPicker()
+	State.modulePicker.active = false
+	State.modulePicker.choices = nil
+	State.modulePicker.mode = "wave_reward"
+	State.modulePicker.title = nil
+	State.modulePicker.subtitle = nil
+	State.modulePicker.hint = nil
+	State.modulePicker.tower = nil
+	cards = {}
+	openedAt = 0
+end
+
+function ModulePicker.reset()
+	clearPicker()
+	State.modulePicker.waveOffered = 0
+end
+
 function ModulePicker.openPurchase(choices)
 	return ModulePicker.open({
 		mode = "purchase_module",
@@ -220,14 +237,7 @@ function ModulePicker.openTowerUpgrade(tower)
 end
 
 function ModulePicker.close()
-	State.modulePicker.active = false
-	State.modulePicker.choices = nil
-	State.modulePicker.mode = "wave_reward"
-	State.modulePicker.title = nil
-	State.modulePicker.subtitle = nil
-	State.modulePicker.hint = nil
-	State.modulePicker.tower = nil
-	cards = {}
+	clearPicker()
 end
 
 function ModulePicker.isActive()
