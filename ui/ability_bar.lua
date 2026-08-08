@@ -7,6 +7,7 @@ local Abilities = require("systems.abilities")
 local Text = require("ui.text")
 local Tooltip = require("ui.tooltip")
 local L = require("core.localization")
+local Button = require("ui.button")
 
 local lg = love.graphics
 local floor = math.floor
@@ -23,38 +24,11 @@ local RIGHT = 18
 local MAX_ABILITIES = 6
 local IDLE_LIFT = 5
 
-local colorButton = Theme.ui.button
-local colorButtonHover = Theme.ui.buttonHover
 local colorOutline = Theme.outline.color
 local outlineW = Theme.outline.width
 
-local cb1, cb2, cb3 = colorButton[1], colorButton[2], colorButton[3]
-local ch1, ch2, ch3 = colorButtonHover[1], colorButtonHover[2], colorButtonHover[3]
-
-local cbd1 = ch1 - cb1
-local cbd2 = ch2 - cb2
-local cbd3 = ch3 - cb3
-
 local outerRadius = 9 + outlineW * 0.5
 local innerRadius = 9 - outlineW * 0.25
-
-local function ensureAnim(button)
-	local anim = button.anim
-
-	if not anim then
-		anim = {}
-		button.anim = anim
-	end
-
-	anim.hovered = anim.hovered or false
-	anim.active = anim.active or false
-	anim.t = anim.t or 0
-	anim.pressed = anim.pressed or false
-	anim.pressT = anim.pressT or 0
-	anim.errorT = anim.errorT or 0
-
-	return anim
-end
 
 local function drawMeteor(cx, cy, scale)
 	lg.setLineWidth(5 * scale)
@@ -135,20 +109,13 @@ local function getActiveTimes()
 end
 
 local function updateButton(button, hovered, dt)
-	local anim = ensureAnim(button)
-	if hovered ~= anim.hovered then
-		anim.active = true
+	local anim = button.anim
+	if not anim then
+		anim = Button.newAnimation({errorT = 0})
+		button.anim = anim
 	end
-	anim.hovered = hovered
-	anim.pressT = anim.pressed and min(1, anim.pressT + dt * 20) or max(0, anim.pressT - dt * 20)
+	Button.updateAnimation(anim, hovered, dt)
 	anim.errorT = max(0, anim.errorT - dt * 4)
-
-	if anim.active then
-		local direction = hovered and 1 or -1
-		anim.t = min(1, max(0, anim.t + direction * dt * 10))
-		anim.active = anim.t > 0 and anim.t < 1
-	end
-
 	return anim
 end
 
@@ -160,13 +127,10 @@ local function drawButton(button, def, activeTime, dt, hovered)
 	button.enabled = ready
 
 	local anim = updateButton(button, hovered, dt)
-	local ease = anim.t * anim.t * (3 - 2 * anim.t)
 	local errorEase = anim.errorT * anim.errorT * (3 - 2 * anim.errorT)
 	local fx = x + math.sin(anim.errorT * math.pi * 8) * errorEase * 4
 	local fy = y - IDLE_LIFT * (1 - anim.pressT)
-	local r = cb1 + cbd1 * ease
-	local g = cb2 + cbd2 * ease
-	local b = cb3 + cbd3 * ease
+	local r, g, b = Button.getHoverColor(anim)
 
 	lg.setColor(colorOutline)
 	lg.rectangle("fill", x - outlineW, y - outlineW, SIZE + outlineW * 2, SIZE + outlineW * 2, outerRadius)

@@ -8,6 +8,7 @@ local Hotkeys = require("core.hotkeys")
 local Tooltip = require("ui.tooltip")
 local Floaters = require("ui.floaters")
 local Text = require("ui.text")
+local Button = require("ui.button")
 local Theme = require("core.theme")
 local L = require("core.localization")
 
@@ -33,21 +34,14 @@ local colorText = Theme.ui.text
 local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
 local colorDisabled = Theme.ui.buttonDisabled
-local colorButton = Theme.ui.button
-local colorButtonHover = Theme.ui.buttonHover
 local colorSlow = Theme.tower.slow
 local colorPoison = Theme.tower.poison
 
 local ct1, ct2, ct3 = colorText[1], colorText[2], colorText[3]
-local cb1, cb2, cb3 = colorButton[1], colorButton[2], colorButton[3]
-local ch1, ch2, ch3 = colorButtonHover[1], colorButtonHover[2], colorButtonHover[3]
 local cs1, cs2, cs3 = colorSlow[1], colorSlow[2], colorSlow[3]
 local cp1, cp2, cp3 = colorPoison[1], colorPoison[2], colorPoison[3]
 local cd1, cd2, cd3 = colorDisabled[1], colorDisabled[2], colorDisabled[3]
 
-local cbd1 = ch1 - cb1
-local cbd2 = ch2 - cb2
-local cbd3 = ch3 - cb3
 
 -- Layout constants local to inspect
 local OUTER_PAD = 12
@@ -104,7 +98,7 @@ inspectButtons = {
 		canAfford = false,
 		cost = nil,
 		value = nil,
-		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0, errorT = 0},
+		anim = Button.newAnimation({errorT = 0}),
 		onClick = function()
 			local t = State.selectedTower
 
@@ -132,7 +126,7 @@ inspectButtons = {
 		canAfford = true,
 		cost = nil,
 		value = nil,
-		anim = {hovered = false, active = false, t = 0, pressed = false, pressT = 0, errorT = 0},
+		anim = Button.newAnimation({errorT = 0}),
 		onClick = function()
 			local t = State.selectedTower
 
@@ -312,42 +306,14 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			local anim = btn.anim
 
-			if hovered ~= anim.hovered then
-				anim.active = true
-			end
-
-			anim.hovered = hovered
-
-			if anim.active then
-				local speed = dt * 10
-
-				if anim.hovered then
-					anim.t = min(1, anim.t + speed)
-				else
-					anim.t = max(0, anim.t - speed)
-				end
-
-				if anim.t == 0 or anim.t == 1 then
-					anim.active = false
-				end
-			end
+			Button.updateAnimation(anim, hovered, dt)
 
 			-- press animation
 			if anim.errorT and anim.errorT > 0 then
 				anim.errorT = max(0, anim.errorT - dt * 4)
 			end
 
-			if anim.pressed then
-				anim.pressT = min(1, anim.pressT + dt * 20)
-			else
-				anim.pressT = max(0, anim.pressT - dt * 20)
-			end
-
-			local ease = anim.t * anim.t * (3 - 2 * anim.t)
-
-			local r = cb1 + cbd1 * ease
-			local g = cb2 + cbd2 * ease
-			local b = cb3 + cbd3 * ease
+			local r, g, b = Button.getHoverColor(anim)
 
 			local pressEase = anim.pressT
 			local lift = IDLE_LIFT * (1 - pressEase)
