@@ -313,22 +313,23 @@ local function drawActionRow(row, x, yTop)
 	end
 end
 
+local rowRenderers = {
+	slider = drawSliderRow,
+	toggle = drawToggleRow,
+	keybind = drawKeybindRow,
+	action = drawActionRow,
+	info = drawInfoRow,
+}
+
 local function drawRow(row, hovered, x, yTop, index)
 	rowRectFor(index, x, yTop)
 	drawRowHighlight(index, hovered)
 
 	lg.setColor(colorText)
 
-	if row.type == "slider" then
-		drawSliderRow(row, x, yTop, hovered, index)
-	elseif row.type == "toggle" then
-		drawToggleRow(row, x, yTop)
-	elseif row.type == "keybind" then
-		drawKeybindRow(row, x, yTop)
-	elseif row.type == "action" then
-		drawActionRow(row, x, yTop)
-	elseif row.type == "info" then
-		drawInfoRow(row, x, yTop)
+	local render = rowRenderers[row.type]
+	if render then
+		render(row, x, yTop, hovered, index)
 	end
 end
 
@@ -623,57 +624,75 @@ function Screen.keypressed(key)
 	end
 end
 
+local function contains(rect, x, y)
+	return rect and x >= rect.x and x <= rect.x + rect.w
+		and y >= rect.y and y <= rect.y + rect.h
+end
+
+local function findRectAt(rects, x, y)
+	-- Row rectangles are intentionally sparse when the list is scrolled because
+	-- only visible rows are drawn and hit-testable.
+	for i, rect in pairs(rects) do
+		if contains(rect, x, y) then
+			return i
+		end
+	end
+end
+
+local function setSliderFromMouse(index, x)
+	local slider = sliderRects[index]
+	if not slider or x < slider.x or x > slider.x + slider.w then
+		return
+	end
+
+	rows[index].set(Util.clamp((x - slider.x) / slider.w, 0, 1))
+	settingsChanged()
+	draggingSlider = index
+	return true
+end
+
+local rowPressHandlers = {
+	slider = function(row, index, x)
+		return setSliderFromMouse(index, x)
+	end,
+	toggle = function(row)
+		row.set(not row.get())
+		settingsChanged(row.id == "fullscreen")
+		Sound.play("uiConfirm")
+		return true
+	end,
+	keybind = function(row)
+		keybindCapture:start(row)
+		return true
+	end,
+	action = function(row)
+		if row.onClick then
+			row.onClick()
+		end
+		return true
+	end,
+	info = function()
+		Sound.play("uiMove")
+		return true
+	end,
+}
+
 function Screen.mousepressed(x, y, button)
 	if button == 1 then
-		for i, rect in ipairs(tabRects) do
-			if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
-				switchTab(i)
-				return true
-			end
+		local tabIndex = findRectAt(tabRects, x, y)
+		if tabIndex then
+			switchTab(tabIndex)
+			return true
 		end
 
-		-- Rows
-		for i, rect in pairs(rowRects) do
-			if x >= rect.x and x <= rect.x + rect.w and y >= rect.y and y <= rect.y + rect.h then
-				local row = rows[i]
-				local slider = sliderRects[i]
-
-				-- Slider
-				if row.type == "slider" and slider then
-					if x >= slider.x and x <= slider.x + slider.w then
-						local t = Util.clamp((x - slider.x) / slider.w, 0, 1)
-						row.set(t)
-						settingsChanged()
-						draggingSlider = i
-						return true
-					end
-				end
-
-				-- Toggle
-				if row.type == "toggle" then
-					row.set(not row.get())
-					settingsChanged(row.id == "fullscreen")
-					Sound.play("uiConfirm")
-					return true
-				end
-
-				if row.type == "keybind" then
-					keybindCapture:start(row)
-					return true
-				end
-
-				if row.type == "action" and row.onClick then
-					row.onClick()
-					return true
-				end
-
-				if row.type == "info" then
-					Sound.play("uiMove")
-					return true
-				end
-
-				return true
+		local rowIndex = findRectAt(rowRects, x, y)
+		if rowIndex then
+			local row = rows[rowIndex]
+			local handlePress = row and rowPressHandlers[row.type]
+			if handlePress then
+				handlePress(row, rowIndex, x)
 			end
+			return true
 		end
 	end
 
