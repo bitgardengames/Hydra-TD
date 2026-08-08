@@ -12,31 +12,38 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 -- Rewards intentionally avoid mandatory stat power and instead emphasize new
 -- verbs, optional build utilities, and information that teaches counters.
 local rewardsByMapId = {
-	riverbend = {type = "tower", id = "cannon", labelKey = "campaign.rewards.cannon"},
-	switchback = {type = "ability", id = "meteor", labelKey = "campaign.rewards.meteor"},
-	highpass = {type = "tower", id = "poison", label = "Poison tower"},
-	roundabout = {type = "targeting", id = "high_hp", labelKey = "campaign.rewards.strongest"},
+	riverbend = {{type = "tower", id = "cannon", labelKey = "campaign.rewards.cannon"}},
+	switchback = {{type = "ability", id = "meteor", labelKey = "campaign.rewards.meteor"}},
+	highpass = {
+		{type = "tower", id = "poison", label = "Poison tower"},
+		{type = "ability", id = "overdrive", label = "Overdrive active ability"},
+		{type = "ability_slot", id = "ability_slot_3", slots = 3, label = "Third ability slot"},
+	},
+	roundabout = {{type = "targeting", id = "high_hp", labelKey = "campaign.rewards.strongest"}},
 	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
-	gauntlet = {type = "tower", id = "shock", label = "Shock tower"},
+	gauntlet = {
+		{type = "tower", id = "shock", label = "Shock tower"},
+		{type = "ability", id = "gravity_well", label = "Gravity Well active ability"},
+		{type = "ability_slot", id = "ability_slot_4", slots = 4, label = "Fourth ability slot"},
+	},
 	-- Frost Nova is earned before the map that introduces runners.
-	snaketrail = {type = "ability", id = "frost_nova", label = "Frost Nova active ability"},
-	backtrack = {type = "targeting", id = "low_hp", labelKey = "campaign.rewards.weakest"},
-	lowvalley = {type = "wave_preview", id = "enhanced", labelKey = "campaign.rewards.enhancedPreview"},
-	circuit = {type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
-	outerloop = {type = "ability_slot", id = "ability_slot_2", slots = 2, labelKey = "campaign.rewards.secondAbilitySlot"},
+	snaketrail = {{type = "ability", id = "frost_nova", label = "Frost Nova active ability"}},
+	backtrack = {
+		{type = "targeting", id = "low_hp", labelKey = "campaign.rewards.weakest"},
+		{type = "ability", id = "gold_rush", label = "Gold Rush active ability"},
+		{type = "ability_slot", id = "ability_slot_5", slots = 5, label = "Fifth ability slot"},
+	},
+	lowvalley = {{type = "wave_preview", id = "enhanced", labelKey = "campaign.rewards.enhancedPreview"}},
+	circuit = {
+		{type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
+		{type = "ability", id = "last_stand", label = "Last Stand active ability"},
+		{type = "ability_slot", id = "ability_slot_6", slots = 6, label = "Sixth ability slot"},
+	},
+	outerloop = {{type = "ability_slot", id = "ability_slot_2", slots = 2, labelKey = "campaign.rewards.secondAbilitySlot"}},
 	-- Clearing High Ridge earns the shared enhancement through the same reward
 	-- lookup used by every other campaign unlock.
-	highridge = {type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"},
-	twinloop = {type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"},
-}
-
--- Additional rewards can share a clear without displacing the campaign's
--- existing tower and teaching rewards.
-local bonusRewardsByMapId = {
-	highpass = {{type="ability", id="overdrive", label="Overdrive active ability"}, {type="ability_slot", id="ability_slot_3", slots=3, label="Third ability slot"}},
-	gauntlet = {{type="ability", id="gravity_well", label="Gravity Well active ability"}, {type="ability_slot", id="ability_slot_4", slots=4, label="Fourth ability slot"}},
-	backtrack = {{type="ability", id="gold_rush", label="Gold Rush active ability"}, {type="ability_slot", id="ability_slot_5", slots=5, label="Fifth ability slot"}},
-	circuit = {{type="ability", id="last_stand", label="Last Stand active ability"}, {type="ability_slot", id="ability_slot_6", slots=6, label="Sixth ability slot"}},
+	highridge = {{type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"}},
+	twinloop = {{type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"}},
 }
 
 local requiredMapByTower = {
@@ -45,7 +52,7 @@ local requiredMapByTower = {
 }
 
 local requiredMapByFeature = {}
-local rewardOrder = {}
+local requiredMapByAbilitySlot = {}
 
 local function featureKey(featureType, id)
 	return tostring(featureType) .. ":" .. tostring(id)
@@ -65,24 +72,20 @@ local function validateRewards()
 	end
 	for _, targetingId in pairs(Targeting.MODES) do knownTargeting[targetingId] = true end
 
-	for mapId, reward in pairs(rewardsByMapId) do
+	for mapId, rewards in pairs(rewardsByMapId) do
 		assert(knownMaps[mapId], "campaign reward uses unknown map ID: " .. tostring(mapId))
-		if reward.type == "tower" then
-			assert(knownTowers[reward.id], "campaign reward uses unknown tower ID: " .. tostring(reward.id))
-		elseif reward.type == "ability" then
-			assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id))
-		elseif reward.type == "ability_upgrade" then
-			assert(knownUpgrades[reward.id], "campaign reward uses unknown ability upgrade ID: " .. tostring(reward.id))
-		elseif reward.type == "targeting" then
-			assert(knownTargeting[reward.id], "campaign reward uses unknown targeting ID: " .. tostring(reward.id))
-		elseif reward.type == "map" then
-			assert(knownMaps[reward.id], "campaign reward uses unknown map ID: " .. tostring(reward.id))
-		end
-	end
-	for mapId, rewards in pairs(bonusRewardsByMapId) do
-		assert(knownMaps[mapId], "campaign bonus reward uses unknown map ID: " .. tostring(mapId))
 		for _, reward in ipairs(rewards) do
-			if reward.type == "ability" then assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id)) end
+			if reward.type == "tower" then
+				assert(knownTowers[reward.id], "campaign reward uses unknown tower ID: " .. tostring(reward.id))
+			elseif reward.type == "ability" then
+				assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id))
+			elseif reward.type == "ability_upgrade" then
+				assert(knownUpgrades[reward.id], "campaign reward uses unknown ability upgrade ID: " .. tostring(reward.id))
+			elseif reward.type == "targeting" then
+				assert(knownTargeting[reward.id], "campaign reward uses unknown targeting ID: " .. tostring(reward.id))
+			elseif reward.type == "map" then
+				assert(knownMaps[reward.id], "campaign reward uses unknown map ID: " .. tostring(reward.id))
+			end
 		end
 	end
 	for _, map in ipairs(Maps) do
@@ -95,20 +98,18 @@ end
 validateRewards()
 
 for mapIndex, map in ipairs(Maps) do
-	local reward = rewardsByMapId[map.id]
-	if reward then
-		rewardOrder[map.id] = mapIndex
-		local requiredMap = mapIndex + 1
+	local requiredMap = mapIndex + 1
+	for _, reward in ipairs(rewardsByMapId[map.id] or {}) do
 		requiredMapByFeature[featureKey(reward.type, reward.id)] = requiredMap
 		if reward.type == "tower" then
 			-- A map's tower reward is earned after clearing that map, so the tower
 			-- becomes usable starting on the next campaign map.
 			requiredMapByTower[reward.id] = requiredMap
+		elseif reward.type == "ability_slot" then
+			for slot = 2, reward.slots or 1 do
+				requiredMapByAbilitySlot[slot] = math.min(requiredMapByAbilitySlot[slot] or UNKNOWN_REQUIRED_MAP, requiredMap)
+			end
 		end
-	end
-
-	for _, bonus in ipairs(bonusRewardsByMapId[map.id] or {}) do
-		requiredMapByFeature[featureKey(bonus.type, bonus.id)] = mapIndex + 1
 	end
 
 	for _, kind in ipairs(map.rewardTowers or {}) do
@@ -144,11 +145,21 @@ end
 
 function CampaignUnlocks.getRewardForMap(mapOrId)
 	local mapId = type(mapOrId) == "table" and mapOrId.id or mapOrId
-	return mapId and rewardsByMapId[mapId] or nil
+	local rewards = mapId and rewardsByMapId[mapId]
+	return rewards and rewards[1] or nil
 end
 
 function CampaignUnlocks.getRewardsByMapId()
-	return rewardsByMapId
+	local primaryRewards = {}
+	for mapId, rewards in pairs(rewardsByMapId) do
+		primaryRewards[mapId] = rewards[1]
+	end
+	return primaryRewards
+end
+
+function CampaignUnlocks.getRewardsForMap(mapOrId)
+	local mapId = type(mapOrId) == "table" and mapOrId.id or mapOrId
+	return (mapId and rewardsByMapId[mapId]) or {}
 end
 
 function CampaignUnlocks.isAbilityUnlocked(abilityId)
@@ -165,12 +176,12 @@ end
 
 function CampaignUnlocks.getUnlockedAbilitySlots()
 	local slots = 1
-	for _, reward in pairs(rewardsByMapId) do
-		if reward.type == "ability_slot" and isFeatureUnlocked(reward.type, reward.id) then slots = math.max(slots, reward.slots or slots) end
+	local progress = getProgressIndex()
+	for slot, requiredMap in pairs(requiredMapByAbilitySlot) do
+		if progress >= requiredMap then
+			slots = math.max(slots, slot)
+		end
 	end
-	for _, rewards in pairs(bonusRewardsByMapId) do for _, reward in ipairs(rewards) do
-		if reward.type == "ability_slot" and isFeatureUnlocked(reward.type, reward.id) then slots = math.max(slots, reward.slots or slots) end
-	end end
 	return slots
 end
 
@@ -260,11 +271,11 @@ function CampaignUnlocks.getNewRewards(previousProgressIndex, nextProgressIndex)
 	local previous = normalizeProgressIndex(previousProgressIndex)
 	local nextIndex = normalizeProgressIndex(nextProgressIndex)
 	for mapIndex, map in ipairs(Maps) do
-		local reward = rewardsByMapId[map.id]
-		local requiredMap = reward and rewardOrder[map.id] and (rewardOrder[map.id] + 1)
-		if reward and requiredMap > previous and requiredMap <= nextIndex then rewards[#rewards + 1] = reward end
-		if mapIndex + 1 > previous and mapIndex + 1 <= nextIndex then
-			for _, bonus in ipairs(bonusRewardsByMapId[map.id] or {}) do rewards[#rewards + 1] = bonus end
+		local requiredMap = mapIndex + 1
+		if requiredMap > previous and requiredMap <= nextIndex then
+			for _, reward in ipairs(rewardsByMapId[map.id] or {}) do
+				rewards[#rewards + 1] = reward
+			end
 		end
 	end
 	return rewards
@@ -285,13 +296,7 @@ function CampaignUnlocks.getAbilityLockMessage(abilityId, slotIndex)
 	end
 
 	if not CampaignUnlocks.isAbilitySlotUnlocked(slotIndex) then
-		local slotRequiredMap = UNKNOWN_REQUIRED_MAP
-		for _, reward in pairs(rewardsByMapId) do
-			if reward.type == "ability_slot" and (reward.slots or 1) >= (tonumber(slotIndex) or 1) then slotRequiredMap = math.min(slotRequiredMap, CampaignUnlocks.getRequiredFeatureMap(reward.type, reward.id)) end
-		end
-		for _, list in pairs(bonusRewardsByMapId) do for _, reward in ipairs(list) do
-			if reward.type == "ability_slot" and (reward.slots or 1) >= (tonumber(slotIndex) or 1) then slotRequiredMap = math.min(slotRequiredMap, CampaignUnlocks.getRequiredFeatureMap(reward.type, reward.id)) end
-		end end
+		local slotRequiredMap = requiredMapByAbilitySlot[tonumber(slotIndex) or 1] or UNKNOWN_REQUIRED_MAP
 		if slotRequiredMap ~= UNKNOWN_REQUIRED_MAP then
 			local mapName = clearedMapName(slotRequiredMap)
 			return mapName and L("abilityUnlock.slotNotEarned", mapName) or L("abilityUnlock.slotLocked")
