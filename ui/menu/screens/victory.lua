@@ -277,7 +277,7 @@ local function calculateLayout()
 	local buttonGap = compact and 8 or 14
 	local buttonHeight = compact and 36 or btnH
 	local buttonsHeight = #buttons * buttonHeight + max(0, #buttons - 1) * buttonGap
-	local titleHeight = compact and 54 or 76
+	local titleHeight = compact and 34 or 50
 	local sectionGap = compact and 8 or 18
 	local cardW = boxW - padX * 2
 	local valueFont = compact and Fonts.ui or Fonts.menu
@@ -330,18 +330,15 @@ local function layoutButtons()
 end
 
 local function buildStats()
-	local reachedWave = RunRecap.getReachedWave()
 	local rewardNames = {}
 	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
 		rewardNames[#rewardNames + 1] = L("tower." .. kind)
 	end
 
-	stats = {
-		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
-	}
+	stats = {}
 
 	if #rewardNames > 0 then
-		table.insert(stats, 2, { label = L("victory.newTowerReward"), value = table.concat(rewardNames, "  •  ") })
+		stats[#stats + 1] = { label = L("victory.newTowerReward"), value = table.concat(rewardNames, "  •  ") }
 	end
 end
 
@@ -532,10 +529,6 @@ function Screen.draw()
 	Fonts.set(g.compact and "menu" or "title")
 	lg.setColor(colorGood[1], colorGood[2], colorGood[3], alpha)
 	Text.printfShadow(L("game.victory"), boxX + g.padX, titleY, boxW - g.padX * 2, "center")
-
-	Fonts.set(g.compact and "ui" or "menu")
-	lg.setColor(colorText[1], colorText[2], colorText[3], 0.85 * alpha)
-	Text.printfShadow(L("victory.subtitle"), boxX + g.padX, titleY + (g.compact and 25 or 36), boxW - g.padX * 2, "center")
 
 	-- The recap may scroll, but the heading and action buttons remain outside its clip.
 	lg.setScissor(g.boxX, g.recapY, g.boxW, g.recapH)
