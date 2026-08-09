@@ -219,10 +219,8 @@ local function getActiveRows()
 end
 
 -- Layout helpers
-local function rowRectFor(index, x, yTop)
-	rowRects[index] = {x = x, y = yTop, w = ROW_W, h = ROW_H}
-
-	return rowRects[index]
+local function rowRectFor(x, yTop)
+	return {x = x, y = yTop, w = ROW_W, h = ROW_H}
 end
 
 local function rowTextY(yTop)
@@ -250,8 +248,6 @@ local function drawSliderRow(row, x, yTop, hovered, index)
 
 	local sliderX = x + LABEL_W
 	local sliderY = rowSliderY(yTop)
-
-	sliderRects[index] = {x = sliderX, y = sliderY, w = SLIDER_W, h = SLIDER_H}
 
 	local t = max(0, min(1, row.get()))
 
@@ -322,7 +318,6 @@ local rowRenderers = {
 }
 
 local function drawRow(row, hovered, x, yTop, index)
-	rowRectFor(index, x, yTop)
 	drawRowHighlight(index, hovered)
 
 	lg.setColor(colorText)
@@ -330,6 +325,33 @@ local function drawRow(row, hovered, x, yTop, index)
 	local render = rowRenderers[row.type]
 	if render then
 		render(row, x, yTop, hovered, index)
+	end
+end
+
+local function contains(rect, x, y)
+	return rect and x >= rect.x and x <= rect.x + rect.w
+		and y >= rect.y and y <= rect.y + rect.h
+end
+
+-- Interaction geometry is layout state, not a side effect of rendering. Build
+-- it once so update, drawing, and input all operate on the same frame's rows.
+local function layoutRows()
+	rowRects = {}
+	sliderRects = {}
+
+	for i, row in ipairs(rows) do
+		local yTop = rowsStartY + (i - 1) * activeLineH - rowsScroll.offset
+		if yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH then
+			rowRects[i] = rowRectFor(listX, yTop)
+			if row.type == "slider" then
+				sliderRects[i] = {
+					x = listX + LABEL_W,
+					y = rowSliderY(yTop),
+					w = SLIDER_W,
+					h = SLIDER_H,
+				}
+			end
+		end
 	end
 end
 
@@ -416,7 +438,6 @@ function Screen.load()
 end
 
 function Screen.update(dt)
-	-- do NOT clear rowRects/sliderRects here. Update uses rects built during the previous draw for hover/drag.
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 
@@ -457,6 +478,7 @@ function Screen.update(dt)
 	-- Center the row block inside the panel width
 	local rowRectX = cx - (ROW_W * 0.5)
 	listX = rowRectX
+	layoutRows()
 
 	-- Buttons (layout in update, like pause)
 	buttonsStartY = boxY + boxH - paddingY - btnBlockH
@@ -474,8 +496,9 @@ function Screen.update(dt)
 		}
 	end
 
+	local mouseX, mouseY = lm.getPosition()
 	for i, rect in ipairs(tabRects) do
-		local hovered = lm.getX() >= rect.x and lm.getX() <= rect.x + rect.w and lm.getY() >= rect.y and lm.getY() <= rect.y + rect.h
+		local hovered = contains(rect, mouseX, mouseY)
 		local target = (i == activeTab) and 1 or (hovered and 0.65 or 0)
 		local a = tabAnim[i] or 0
 		tabAnim[i] = a + (target - a) * min(1, dt * tabAnimSpeed)
@@ -509,10 +532,8 @@ function Screen.update(dt)
 end
 
 function Screen.draw()
-	rowRects = {}
-	sliderRects = {}
-
 	local sw, sh = lg.getDimensions()
+	local mouseX, mouseY = lm.getPosition()
 
 	if State.mode ~= "settings_gameplay" then
 		Backdrop.draw()
@@ -540,11 +561,9 @@ function Screen.draw()
 
 	lg.setScissor(listX, rowsViewportY, ROW_W, rowsViewportH)
 	for i, row in ipairs(rows) do
-		local yTop = rowsStartY + (i - 1) * activeLineH - rowsScroll.offset
-		if yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH then
-			local r = {x = listX, y = yTop, w = ROW_W, h = ROW_H}
-			local hovered = lm.getX() >= r.x and lm.getX() <= r.x + r.w and lm.getY() >= r.y and lm.getY() <= r.y + r.h
-			drawRow(row, hovered, listX, yTop, i)
+		local rect = rowRects[i]
+		if rect then
+			drawRow(row, contains(rect, mouseX, mouseY), rect.x, rect.y, i)
 		end
 	end
 	lg.setScissor()
@@ -577,7 +596,7 @@ function Screen.draw()
 	Fonts.set("menu")
 	for i, rect in ipairs(tabRects) do
 		local tab = tabs[i]
-		local hovered = lm.getX() >= rect.x and lm.getX() <= rect.x + rect.w and lm.getY() >= rect.y and lm.getY() <= rect.y + rect.h
+		local hovered = contains(rect, mouseX, mouseY)
 		local active = i == activeTab
 		local anim = tabAnim[i] or 0
 		local wobble = active and (sin(tabTime * 4 + i * 0.6) * 0.5 + 0.5) or 0
@@ -620,11 +639,6 @@ function Screen.keypressed(key)
 	if key == "escape" then
 		exitToMenu()
 	end
-end
-
-local function contains(rect, x, y)
-	return rect and x >= rect.x and x <= rect.x + rect.w
-		and y >= rect.y and y <= rect.y + rect.h
 end
 
 local function findRectAt(rects, x, y)
