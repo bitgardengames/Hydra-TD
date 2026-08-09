@@ -491,7 +491,6 @@ return {
 	},
 
 	victory = {
-		subtitle = "Defense successful",
 		medalProgress = "Difficulty medals earned",
 		rewardUnlocked = "Reward Unlocked",
 		rewardGenericDesc = "New campaign option available on future runs.",
