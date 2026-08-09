@@ -419,7 +419,9 @@ local function drawAbilityPreview()
 	local Abilities = require("systems.abilities")
 	local active, clock = Abilities.getActive()
 	for _, a in ipairs(active) do
-		if a.x then
+		-- Overdrive already highlights each buffed tower, so retaining its full
+		-- targeting area only adds visual clutter after the ability is cast.
+		if a.x and a.kind ~= "tower_haste_area" then
 			local alpha = math.min(.24, math.max(.04, (a.expires-clock)*.08))
 			local r,g,b = a.kind=="gravity_well" and .55 or 1, a.kind=="gravity_well" and .25 or .7, a.kind=="tower_haste_area" and 1 or .25
 			lg.setColor(r,g,b,alpha); lg.circle("fill",a.x,a.y,a.radius); lg.setColor(r,g,b,.75); lg.setLineWidth(2); lg.circle("line",a.x,a.y,a.radius)
