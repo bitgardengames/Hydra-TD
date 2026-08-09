@@ -8,6 +8,7 @@ local Text = require("ui.text")
 local Tooltip = require("ui.tooltip")
 local L = require("core.localization")
 local Button = require("ui.button")
+local Hotkeys = require("core.hotkeys")
 
 local lg = love.graphics
 local floor = math.floor
@@ -175,6 +176,12 @@ local function drawButton(button, def, activeTime, dt, hovered)
 		lg.setLineWidth(3)
 		lg.rectangle("line", fx + 1, fy + 1, SIZE - 2, SIZE - 2, 8)
 	end
+
+	local binding = Hotkeys.getDisplay("abilitySlot" .. button.slotIndex)
+	if binding then
+		lg.setColor(1, 1, 1, available and 0.95 or 0.6)
+		Text.printfShadow(binding, fx + 4, fy + 2, SIZE - 8, "right")
+	end
 end
 
 function AbilityBar.draw(dt, mx, my)
@@ -211,6 +218,7 @@ function AbilityBar.draw(dt, mx, my)
 			buttons[i] = button
 			button.x, button.y, button.w, button.h = x, y, SIZE, SIZE
 			button.abilityId = abilityId
+			button.slotIndex = i
 			button.lockMessage = lockMessage
 			drawButton(button, def, activeRemaining[abilityId], dt, hovered)
 		end
