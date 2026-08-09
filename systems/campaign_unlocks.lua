@@ -33,7 +33,9 @@ local rewardsByMapId = {
 		{type = "ability", id = "gold_rush", label = "Gold Rush active ability"},
 		{type = "ability_slot", id = "ability_slot_5", slots = 5, label = "Fifth ability slot"},
 	},
-	lowvalley = {{type = "wave_preview", id = "enhanced", labelKey = "campaign.rewards.enhancedPreview"}},
+	-- Low Valley intentionally has no unlock reward; its campaign preview and
+	-- victory presentation already omit reward messaging for an empty list.
+	lowvalley = {},
 	circuit = {
 		{type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
 		{type = "ability", id = "last_stand", label = "Last Stand active ability"},
@@ -221,10 +223,6 @@ end
 
 function CampaignUnlocks.isModuleCategoryUnlocked(category)
 	return category == "identity" or category == "special" or isFeatureUnlocked("module_category", category)
-end
-
-function CampaignUnlocks.hasEnhancedWavePreview()
-	return isFeatureUnlocked("wave_preview", "enhanced")
 end
 
 function CampaignUnlocks.isChallengeModeUnlocked()
