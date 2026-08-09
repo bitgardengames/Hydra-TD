@@ -11,6 +11,7 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local KeybindCapture = require("ui.keybind_capture")
+local ScrollView = require("ui.scroll_view")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -65,8 +66,7 @@ local maxPanelHeight = 0
 local rowsViewportY = 0
 local rowsViewportH = 0
 local rowsContentH = 0
-local rowsScroll = 0
-local maxRowsScroll = 0
+local rowsScroll = ScrollView.new()
 
 local LABEL_W = 180
 local SLIDER_W = 160
@@ -337,6 +337,7 @@ end
 function Screen.load()
 	Hotkeys.refreshFromSave()
 	keybindCapture:close()
+	rowsScroll:reset()
 	activeTab = 1
 	tabTime = 0
 	settingsDirty = false
@@ -451,8 +452,7 @@ function Screen.update(dt)
 	rowsStartY = titleY + headerHeight + headerSpacing
 	rowsViewportY = rowsStartY
 	rowsViewportH = rowsBlockH
-	maxRowsScroll = max(0, rowsContentH - rowsViewportH)
-	rowsScroll = Util.clamp(rowsScroll, 0, maxRowsScroll)
+	rowsScroll:update(rowsContentH, rowsViewportH)
 
 	-- Center the row block inside the panel width
 	local rowRectX = cx - (ROW_W * 0.5)
@@ -540,7 +540,7 @@ function Screen.draw()
 
 	lg.setScissor(listX, rowsViewportY, ROW_W, rowsViewportH)
 	for i, row in ipairs(rows) do
-		local yTop = rowsStartY + (i - 1) * activeLineH - rowsScroll
+		local yTop = rowsStartY + (i - 1) * activeLineH - rowsScroll.offset
 		if yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH then
 			local r = {x = listX, y = yTop, w = ROW_W, h = ROW_H}
 			local hovered = lm.getX() >= r.x and lm.getX() <= r.x + r.w and lm.getY() >= r.y and lm.getY() <= r.y + r.h
@@ -549,13 +549,11 @@ function Screen.draw()
 	end
 	lg.setScissor()
 
-	if maxRowsScroll > 0 then
+	if rowsScroll:canScroll() then
 		local trackX = boxX + boxW + scrollbarMargin
 		local trackY = rowsViewportY
 		local trackH = rowsViewportH
-		local thumbH = max(scrollbarMinThumbH, trackH * (rowsViewportH / rowsContentH))
-		local t = rowsScroll / maxRowsScroll
-		local thumbY = trackY + (trackH - thumbH) * t
+		local thumbY, thumbH = rowsScroll:getThumb(trackY, trackH, scrollbarMinThumbH)
 		lg.setColor(0, 0, 0, 0.28)
 		lg.rectangle("fill", trackX, trackY, scrollbarW, trackH, 4, 4)
 		lg.setColor(1, 1, 1, 0.35)
@@ -713,11 +711,11 @@ end
 
 
 function Screen.wheelmoved(_, y)
-	if maxRowsScroll <= 0 or y == 0 then
+	if not rowsScroll:canScroll() or y == 0 then
 		return
 	end
 
-	rowsScroll = Util.clamp(rowsScroll - y * activeLineH, 0, maxRowsScroll)
+	rowsScroll:move(-y * activeLineH)
 end
 
 return Screen

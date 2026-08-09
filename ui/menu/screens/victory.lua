@@ -17,6 +17,7 @@ local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local DrawEntities = require("render.draw_entities")
 local RunRecap = require("ui.run_recap")
+local ScrollView = require("ui.scroll_view")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -40,7 +41,7 @@ local stats = {}
 local confetti = {}
 local t = 0
 local panelT = 0
-local recapScroll = 0
+local recapScroll = ScrollView.new()
 local layout = nil
 local rewardCardT = 0
 local rewardCards = {}
@@ -305,7 +306,7 @@ local function calculateLayout()
 	local recapY = boxY + padY + titleHeight
 	local recapBottom = buttonsStartY - sectionGap
 	local viewportH = max(0, recapBottom - recapY)
-	recapScroll = min(max(0, recapScroll), max(0, recapContentH - viewportH))
+	recapScroll:update(recapContentH, viewportH)
 
 	return {
 		sw = sw, sh = sh, cx = cx, compact = compact,
@@ -421,7 +422,7 @@ function Screen.enter()
 	panelT = 0
 	rewardCardT = 0
 	rewardClosePressed = false
-	recapScroll = 0
+	recapScroll:reset()
 	buildStats()
 	buildRewardCards()
 	resetConfetti()
@@ -538,7 +539,7 @@ function Screen.draw()
 
 	-- The recap may scroll, but the heading and action buttons remain outside its clip.
 	lg.setScissor(g.boxX, g.recapY, g.boxW, g.recapH)
-	local statsY = g.recapY - recapScroll
+	local statsY = g.recapY - recapScroll.offset
 	local cardW = g.cardW
 	for i, item in ipairs(stats) do
 		local row = g.rows[i]
@@ -591,8 +592,8 @@ function Screen.draw()
 end
 
 function Screen.wheelmoved(_, y)
-	if not layout or layout.recapContentH <= layout.recapH then return end
-	recapScroll = min(max(0, recapScroll - y * 36), layout.recapContentH - layout.recapH)
+	if not layout then return end
+	recapScroll:move(-y * 36)
 end
 
 function Screen.mousepressed(x, y, button)
