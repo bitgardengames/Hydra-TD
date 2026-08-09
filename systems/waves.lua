@@ -370,74 +370,72 @@ local function beginSpawner(kind, count, gap, hpMult, spdMult, composition, grou
 	State.inPrep = false
 end
 
--- Wave start
-function Waves.startWave()
-	local map = Maps[State.mapIndex]
-	local mapWaveDefs = getMapWaveDefs(map)
-
-	State.waveLeaks = 0
-
-	if State.mode == "game" then -- Make sure the background scene doesn't set the status
-		local diffKey = Difficulty.key()
-		local diffText = L("difficulty." .. diffKey)
-
-		Steam.setRichPresence(L("presence.gameStatus", State.wave, diffText))
-	end
-
-	-- WaveBuilder enforces boss invariant and returns a simple descriptor
-	local wave = WaveBuilder.build(State.wave, map, State.endless)
-
-	-- Boss waves
-	if wave.boss then
-		Effects.trigger("boss_wave", {intensity = 4, shake = 5, duration = 0.3, criticalTell = true})
-		local bossIndex = math.max(1, math.floor(State.wave / 10))
-		local bossKind = getBossByArchetype(map, bossIndex)
-		local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
-		local tier = WaveBuilder.getIntensityTier(State.wave)
-
-		local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, true)
-		local addHpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave, State.mapIndex, map and map.hpScalar)
-
-		State.activeBoss = nil
-		State.activeBossKind = bossKind
-		local groups = resolveWaveGroups(wave, map, State.wave)
-		for i, group in ipairs(groups or {}) do
-			group.hpMult = i == 1 and hpMult or addHpMult
-			group.spdMult = spdMult
-		end
-		beginSpawner(bossKind, wave.count or 1, 0, hpMult, spdMult, nil, groups)
-		if encounter then
-			resetTable(bossAdds, bossAddsDefaults, {
-				active = true,
-				kind = encounter.flankKind,
-				burst = min(8, encounter.flankBurst + math.floor(tier / 2)),
-				timer = max(1.5, encounter.initialDelay - tier * 0.12),
-				interval = max(3.0, encounter.interval * (0.96 ^ tier)),
-				maxAlive = min(32, encounter.maxAliveAdds + tier * 2),
-				maxTotal = min(72, encounter.maxTotalAdds + tier * 5),
-				hpMult = addHpMult * encounter.addHpMult,
-				spdMult = spdMult * encounter.addSpdMult,
-			})
-		else
-			bossAdds.active = false
-		end
-
-		return true
-	end
+local function startBossWave(wave, map)
+	Effects.trigger("boss_wave", {intensity = 4, shake = 5, duration = 0.3, criticalTell = true})
+	local bossIndex = math.max(1, math.floor(State.wave / 10))
+	local bossKind = getBossByArchetype(map, bossIndex)
+	local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
+	local tier = WaveBuilder.getIntensityTier(State.wave)
+	local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, true)
+	local addHpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave, State.mapIndex, map and map.hpScalar)
+	local groups = resolveWaveGroups(wave, map, State.wave)
 
 	State.activeBoss = nil
-	State.activeBossKind = nil
-	bossAdds.active = false
+	State.activeBossKind = bossKind
+	for i, group in ipairs(groups or {}) do
+		group.hpMult = i == 1 and hpMult or addHpMult
+		group.spdMult = spdMult
+	end
+	beginSpawner(bossKind, wave.count or 1, 0, hpMult, spdMult, nil, groups)
 
-	-- Normal waves: single enemy kind with count + spacing
+	if not encounter then
+		resetTable(bossAdds, bossAddsDefaults)
+		return
+	end
+
+	resetTable(bossAdds, bossAddsDefaults, {
+		active = true,
+		kind = encounter.flankKind,
+		burst = min(8, encounter.flankBurst + math.floor(tier / 2)),
+		timer = max(1.5, encounter.initialDelay - tier * 0.12),
+		interval = max(3.0, encounter.interval * (0.96 ^ tier)),
+		maxAlive = min(32, encounter.maxAliveAdds + tier * 2),
+		maxTotal = min(72, encounter.maxTotalAdds + tier * 5),
+		hpMult = addHpMult * encounter.addHpMult,
+		spdMult = spdMult * encounter.addSpdMult,
+	})
+end
+
+local function startNormalWave(wave, map)
+	State.activeBoss = nil
+	State.activeBossKind = nil
+	resetTable(bossAdds, bossAddsDefaults)
 	local count = max(1, wave.count or 1)
 	local kind = wave.enemy or "grunt"
-
 	local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, false)
-
 	local gap = wave.spacing or 1.0
 
 	beginSpawner(kind, count, gap, hpMult, spdMult, wave.composition, wave.groups)
+end
+
+-- Wave start
+function Waves.startWave()
+	local map = Maps[State.mapIndex]
+	State.waveLeaks = 0
+
+	if State.mode == "game" then -- Make sure the background scene doesn't set the status
+		local diffText = L("difficulty." .. Difficulty.key())
+		Steam.setRichPresence(L("presence.gameStatus", State.wave, diffText))
+	end
+
+	-- WaveBuilder enforces the boss invariant, leaving startup as a simple dispatch.
+	local wave = WaveBuilder.build(State.wave, map, State.endless)
+	if wave.boss then
+		startBossWave(wave, map)
+	else
+		startNormalWave(wave, map)
+	end
+
 	return true
 end
 
