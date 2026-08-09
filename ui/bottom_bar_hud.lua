@@ -32,6 +32,7 @@ local MONEY_X = 12
 local LIVES_X = 90
 local WAVE_X = 170
 local STATUS_X = 260
+local SPEED_X = 235
 
 -- Text caches (no per-frame string rebuilding)
 local hudCache = {
@@ -40,6 +41,7 @@ local hudCache = {
 	wave = {value = nil, text = ""},
 	prep = {value = nil, text = "", action = nil},
 	spawn = {remaining = nil, count = nil, text = ""},
+	speed = {value = nil, text = ""},
 }
 
 function Hud.draw(infoX, infoY, infoW, infoH, dt)
@@ -96,6 +98,14 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt)
 
 	lg.setColor(ct1, ct2, ct3, 1)
 	Text.printShadow(waveCache.text, infoX + WAVE_X, y)
+
+	-- Always expose the active simulation multiplier, including during prep.
+	local speedCache = hudCache.speed
+	if speedCache.value ~= State.speed then
+		speedCache.value = State.speed
+		speedCache.text = L("hud.speed", State.speed)
+	end
+	Text.printShadow(speedCache.text, infoX + (intensityTier > 0 and 340 or SPEED_X), y)
 
 	-- Prep / spawning block
 	if State.inPrep then

@@ -16,6 +16,7 @@ local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
 local Abilities = require("systems.abilities")
 local CampaignUnlocks = require("systems.campaign_unlocks")
+local GameSpeed = require("core.game_speed")
 
 local floor = math.floor
 local min = math.min
@@ -289,7 +290,7 @@ local gameplayActions = {
 	abilitySlot3 = function() activateAbilitySlot(3) end,
 	abilitySlot4 = function() activateAbilitySlot(4) end,
 	fastForward = function()
-		State.speed = (State.speed == 1) and 4 or 1
+		GameSpeed.cycle()
 	end,
 	skipPrep = function()
 		if State.inPrep then
@@ -328,6 +329,7 @@ end
 
 local function handleEscape()
 	if State.mode == "pause" then
+		-- Resuming intentionally preserves the multiplier selected for this run.
 		State.mode = "game"
 		Sound.exitPause()
 		return true

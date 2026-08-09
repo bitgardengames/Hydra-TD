@@ -38,6 +38,7 @@ local ModulePicker = require("ui.module_picker")
 local RunStats = require("systems.run_stats")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
+local GameSpeed = require("core.game_speed")
 
 local lg = love.graphics
 
@@ -131,7 +132,7 @@ function resetGame()
 
     State.inPrep = true
     State.paused = false
-    State.speed = 1
+	GameSpeed.reset()
 
     -- Placement / selection
     State.placing = nil
