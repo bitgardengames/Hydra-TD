@@ -30,6 +30,9 @@ local innerSmallRadius = 6 - outlineW * 0.25
 
 local previewCache = {
 	wave = nil,
+	mapIndex = nil,
+	endless = nil,
+	enhanced = nil,
 	title = "",
 	total = "",
 	entries = {},
@@ -38,12 +41,19 @@ local previewCache = {
 local WavePreview = {}
 
 local function refreshPreview()
-	if previewCache.wave == State.wave then
+	local enhanced = CampaignUnlocks.hasEnhancedWavePreview()
+	if previewCache.wave == State.wave
+		and previewCache.mapIndex == State.mapIndex
+		and previewCache.endless == State.endless
+		and previewCache.enhanced == enhanced then
 		return
 	end
 
 	local preview = Waves.getWavePreview(State.wave)
 	previewCache.wave = State.wave
+	previewCache.mapIndex = State.mapIndex
+	previewCache.endless = State.endless
+	previewCache.enhanced = enhanced
 	previewCache.title = L("hud.upcomingWave", State.wave)
 	previewCache.total = L("hud.waveTotal", preview.count)
 
@@ -57,7 +67,7 @@ local function refreshPreview()
 		local threats = #group.tags > 0 and L("hud.threatTags", table.concat(group.tags, " • ")) or nil
 		local counter = #group.counterHints > 0 and L("hud.counterHint", table.concat(group.counterHints, " ")) or nil
 		entries[i] = {
-			name = CampaignUnlocks.hasEnhancedWavePreview() and L("hud.compositionEntry", group.count, group.name) or L("hud.compositionUnknown", group.count),
+			name = enhanced and L("hud.compositionEntry", group.count, group.name) or L("hud.compositionUnknown", group.count),
 			threats = threats,
 			counter = counter,
 		}
