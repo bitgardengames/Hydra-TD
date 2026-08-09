@@ -409,6 +409,7 @@ return {
 		lives = "Lives %d",
 		wave = "Wave %d",
 		endlessTier = "Wave %d • Endless Tier %d",
+		speed = "%gx",
 		prep = "Press %s to start",
 		spawning = "Spawning %d - Alive %d",
 		upcomingWave = "Wave %d Preview",
