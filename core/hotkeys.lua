@@ -1,5 +1,7 @@
 local Hotkeys = {}
 
+local bindingByKey = {}
+
 Hotkeys.defaultKb = {
 	shop = {
 		slow = "1",
@@ -34,6 +36,22 @@ local function cloneBindings(src)
 	return out
 end
 
+local function rebuildBindingIndex()
+	bindingByKey = {}
+
+	-- Shop bindings take precedence, matching gameplay's original lookup order.
+	-- Keybind capture normally prevents conflicts, but save files can be edited.
+	for kind, key in pairs(Hotkeys.kb.shop) do
+		bindingByKey[key] = {kind = "shop", id = kind}
+	end
+
+	for action, key in pairs(Hotkeys.kb.actions) do
+		if not bindingByKey[key] then
+			bindingByKey[key] = {kind = "action", id = action}
+		end
+	end
+end
+
 function Hotkeys.getDefaultKeyboardBindings()
 	return cloneBindings(Hotkeys.defaultKb)
 end
@@ -66,6 +84,7 @@ function Hotkeys.applyKeyboardBindings(bindings)
 	end
 
 	Hotkeys.kb = applied
+	rebuildBindingIndex()
 end
 
 function Hotkeys.refreshFromSave()
@@ -80,6 +99,16 @@ Hotkeys.applyKeyboardBindings(nil)
 
 function Hotkeys.getShopKey(kind) return Hotkeys.kb.shop[kind] end
 function Hotkeys.getActionKey(action) return Hotkeys.kb.actions[action] end
+
+-- Input routers should not need to know how bindings are stored or repeatedly
+-- scan every action and tower. Return the logical binding for a physical key.
+function Hotkeys.getBinding(key)
+	local binding = bindingByKey[key]
+
+	if binding then
+		return binding.kind, binding.id
+	end
+end
 
 function Hotkeys.getDisplay(action)
 	local key = Hotkeys.kb.actions[action] or Hotkeys.kb.shop[action]
