@@ -461,7 +461,12 @@ function Screen.update(dt)
 		rewardCardT = rewardCardT + dt
 	end
 
-	Medals.update(dt)
+	-- Let the reward have the player's full attention before revealing the
+	-- newly earned medal behind it. The reveal's own delay starts once the
+	-- reward card has been dismissed.
+	if #rewardCards == 0 then
+		Medals.update(dt)
+	end
 	local sw, sh = lg.getDimensions()
 
 	for _, p in ipairs(confetti) do
