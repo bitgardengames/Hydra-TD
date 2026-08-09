@@ -288,23 +288,6 @@ local function runGameplayAction(action)
 	return true
 end
 
-local gameplayHotkeyActions = {
-	"fastForward",
-	"skipPrep",
-	"upgrade",
-	"sell",
-	"toggleMeter",
-	"toggleMeterInfo",
-}
-
-local function getGameplayHotkeyAction(key)
-	for _, action in ipairs(gameplayHotkeyActions) do
-		if key == Hotkeys.getActionKey(action) then
-			return action
-		end
-	end
-end
-
 local function handleEscape()
 	if State.mode == "pause" then
 		State.mode = "game"
@@ -353,21 +336,16 @@ local function handleVictoryHotkey(key)
 	return true
 end
 
-local function getTowerHotkeyKind(key)
-	for _, kind in ipairs(Constants.TOWER_LIST) do
-		if key == Hotkeys.getShopKey(kind) then
-			return kind
-		end
-	end
-end
-
 local function handleGameplayHotkey(key)
-	local towerKind = getTowerHotkeyKind(key)
-	if not towerKind then
-		return runGameplayAction(getGameplayHotkeyAction(key))
+	local bindingKind, bindingId = Hotkeys.getBinding(key)
+	if bindingKind == "action" then
+		return runGameplayAction(bindingId)
+	end
+	if bindingKind ~= "shop" then
+		return false
 	end
 
-	if beginTowerPlacement(towerKind) then
+	if beginTowerPlacement(bindingId) then
 		deselect()
 	end
 	return true
