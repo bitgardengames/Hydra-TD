@@ -176,45 +176,53 @@ function Modules.purchase(moduleId)
 	return Modules.addToInventory(moduleId, 1)
 end
 
-local function moduleListHasGroup(moduleIds, group)
-	if not moduleIds or not group then
-		return nil
+local function toSet(values)
+	local set = {}
+	for i = 1, #(values or {}) do
+		set[values[i]] = true
 	end
-
-	for i = 1, #moduleIds do
-		local existing = getModule(moduleIds[i])
-		if existing and existing.exclusiveGroup == group then
-			return moduleIds[i]
-		end
-	end
-
-	return nil
+	return set
 end
 
-local function moduleListHasConflict(moduleIds, mod)
-	if not moduleIds or not mod then
-		return nil, nil
+local function contains(values, value)
+	if value == nil then return false end
+	for i = 1, #(values or {}) do
+		if values[i] == value then return true end
 	end
+	return false
+end
 
-	local conflicts = mod.conflictsWith or {}
-	for i = 1, #moduleIds do
+-- Inventory validation used to walk the tower's modules separately for stack
+-- limits, replacements, and both directions of conflicts. Build that complete
+-- picture in one pass instead; this keeps all compatibility rules together and
+-- makes adding another validation independent of the size of the module list.
+local function inspectAppliedModules(moduleIds, moduleId, mod)
+	local result = { count = 0 }
+	local conflicts = toSet(mod.conflictsWith)
+
+	for i = 1, #(moduleIds or {}) do
 		local existingId = moduleIds[i]
 		local existing = getModule(existingId)
+
+		if existingId == moduleId then
+			result.count = result.count + 1
+		end
 		if existing then
-			for j = 1, #conflicts do
-				if existing.exclusiveGroup == conflicts[j] then
-					return existingId, conflicts[j]
-				end
+			local group = existing.exclusiveGroup
+			if mod.exclusiveGroup and group == mod.exclusiveGroup then
+				result.replacedId = existingId
 			end
-			for j = 1, #(existing.conflictsWith or {}) do
-				if mod.exclusiveGroup == existing.conflictsWith[j] then
-					return existingId, existing.conflictsWith[j]
+			if not result.conflictId and conflicts[group] then
+				result.conflictId, result.conflictGroup = existingId, group
+			elseif not result.conflictId then
+				if contains(existing.conflictsWith, mod.exclusiveGroup) then
+					result.conflictId, result.conflictGroup = existingId, mod.exclusiveGroup
 				end
 			end
 		end
 	end
 
-	return nil, nil
+	return result
 end
 
 local reasonText = {
@@ -268,24 +276,17 @@ function Modules.canApplyToTower(moduleId, tower, options)
 	end
 
 	local appliedModules = tower.appliedModules or {}
-	local count = 0
-	for i = 1, #appliedModules do
-		if appliedModules[i] == moduleId then
-			count = count + 1
-		end
-	end
-	if mod.stackLimit and count >= mod.stackLimit then
+	local applied = inspectAppliedModules(appliedModules, moduleId, mod)
+	if mod.stackLimit and applied.count >= mod.stackLimit then
 		return false, "stack_limit", { limit = mod.stackLimit }
 	end
 
-	local conflictId, conflictGroup = moduleListHasConflict(appliedModules, mod)
-	if conflictId then
-		return false, "conflicts_with", { moduleId = conflictId, group = conflictGroup }
+	if applied.conflictId then
+		return false, "conflicts_with", { moduleId = applied.conflictId, group = applied.conflictGroup }
 	end
 
-	local replacedId = moduleListHasGroup(appliedModules, mod.exclusiveGroup)
-	if replacedId and replacedId ~= moduleId then
-		return true, "exclusive_group", { moduleId = replacedId, group = mod.exclusiveGroup }
+	if applied.replacedId and applied.replacedId ~= moduleId then
+		return true, "exclusive_group", { moduleId = applied.replacedId, group = mod.exclusiveGroup }
 	end
 
 	return true
