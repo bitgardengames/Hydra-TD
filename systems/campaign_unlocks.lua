@@ -58,34 +58,49 @@ local function featureKey(featureType, id)
 	return tostring(featureType) .. ":" .. tostring(id)
 end
 
+local function toSet(values, valueSelector, iterator)
+	local result = {}
+	for key, value in (iterator or pairs)(values) do
+		result[valueSelector and valueSelector(key, value) or value] = true
+	end
+	return result
+end
+
 local function validateRewards()
 	local AbilityDefs = require("systems.ability_defs")
 	local Targeting = require("world.targeting")
-	local knownMaps, knownTowers, knownAbilities, knownUpgrades, knownTargeting = {}, {}, {}, {}, {}
-	for _, map in ipairs(Maps) do knownMaps[map.id] = true end
-	for _, towerId in ipairs(Constants.TOWER_LIST) do knownTowers[towerId] = true end
+	local knownMaps = toSet(Maps, function(_, map) return map.id end, ipairs)
+	local knownTowers = toSet(Constants.TOWER_LIST, nil, ipairs)
+	local knownAbilities, knownUpgrades = {}, {}
 	for abilityId, def in pairs(AbilityDefs) do
 		if type(def) == "table" and def.id then
 			knownAbilities[abilityId] = true
 			if def.upgradeId then knownUpgrades[def.upgradeId] = true end
 		end
 	end
-	for _, targetingId in pairs(Targeting.MODES) do knownTargeting[targetingId] = true end
+	local knownTargeting = toSet(Targeting.MODES)
+	local knownIdsByRewardType = {
+		tower = knownTowers,
+		ability = knownAbilities,
+		ability_upgrade = knownUpgrades,
+		targeting = knownTargeting,
+		map = knownMaps,
+	}
+	local standaloneRewardTypes = {
+		ability_slot = true,
+		wave_preview = true,
+		campaign_complete = true,
+		module_category = true,
+	}
 
 	for mapId, rewards in pairs(rewardsByMapId) do
 		assert(knownMaps[mapId], "campaign reward uses unknown map ID: " .. tostring(mapId))
 		for _, reward in ipairs(rewards) do
-			if reward.type == "tower" then
-				assert(knownTowers[reward.id], "campaign reward uses unknown tower ID: " .. tostring(reward.id))
-			elseif reward.type == "ability" then
-				assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id))
-			elseif reward.type == "ability_upgrade" then
-				assert(knownUpgrades[reward.id], "campaign reward uses unknown ability upgrade ID: " .. tostring(reward.id))
-			elseif reward.type == "targeting" then
-				assert(knownTargeting[reward.id], "campaign reward uses unknown targeting ID: " .. tostring(reward.id))
-			elseif reward.type == "map" then
-				assert(knownMaps[reward.id], "campaign reward uses unknown map ID: " .. tostring(reward.id))
-			end
+			local knownIds = knownIdsByRewardType[reward.type]
+			assert(knownIds or standaloneRewardTypes[reward.type], "campaign reward uses unknown type: " .. tostring(reward.type))
+			assert(not knownIds or knownIds[reward.id], "campaign reward uses unknown " .. reward.type .. " ID: " .. tostring(reward.id))
+			assert(reward.type ~= "ability_slot" or (type(reward.slots) == "number" and reward.slots >= 2),
+				"ability slot reward requires at least two slots: " .. tostring(reward.id))
 		end
 	end
 	for _, map in ipairs(Maps) do
@@ -97,19 +112,23 @@ end
 
 validateRewards()
 
+local function indexReward(reward, requiredMap)
+	requiredMapByFeature[featureKey(reward.type, reward.id)] = requiredMap
+	if reward.type == "tower" then
+		requiredMapByTower[reward.id] = requiredMap
+	elseif reward.type == "ability_slot" then
+		for slot = 2, reward.slots do
+			requiredMapByAbilitySlot[slot] = math.min(requiredMapByAbilitySlot[slot] or UNKNOWN_REQUIRED_MAP, requiredMap)
+		end
+	end
+end
+
 for mapIndex, map in ipairs(Maps) do
 	local requiredMap = mapIndex + 1
 	for _, reward in ipairs(rewardsByMapId[map.id] or {}) do
-		requiredMapByFeature[featureKey(reward.type, reward.id)] = requiredMap
-		if reward.type == "tower" then
-			-- A map's tower reward is earned after clearing that map, so the tower
-			-- becomes usable starting on the next campaign map.
-			requiredMapByTower[reward.id] = requiredMap
-		elseif reward.type == "ability_slot" then
-			for slot = 2, reward.slots or 1 do
-				requiredMapByAbilitySlot[slot] = math.min(requiredMapByAbilitySlot[slot] or UNKNOWN_REQUIRED_MAP, requiredMap)
-			end
-		end
+		-- A reward is earned after clearing its map, so it becomes usable on
+		-- the following campaign map.
+		indexReward(reward, requiredMap)
 	end
 
 	for _, kind in ipairs(map.rewardTowers or {}) do
