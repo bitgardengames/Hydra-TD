@@ -105,6 +105,10 @@ local keyboardControlsLayout = {
 	{kind = "shop", id = "cannon", label = "settings.controlPlaceCannon"},
 	{kind = "shop", id = "shock", label = "settings.controlPlaceShock"},
 	{kind = "shop", id = "plasma", label = "settings.controlPlacePlasma"},
+	{kind = "action", id = "abilitySlot1", label = "settings.controlAbilitySlot1"},
+	{kind = "action", id = "abilitySlot2", label = "settings.controlAbilitySlot2"},
+	{kind = "action", id = "abilitySlot3", label = "settings.controlAbilitySlot3"},
+	{kind = "action", id = "abilitySlot4", label = "settings.controlAbilitySlot4"},
 	{kind = "action", id = "toggleMeter", label = "settings.controlDamageMeter"},
 }
 

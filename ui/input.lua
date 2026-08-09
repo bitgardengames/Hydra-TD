@@ -78,17 +78,51 @@ local function showFloaterAtScreen(x, y, message)
 	Floaters.add(wx, wy, message, colorBad[1], colorBad[2], colorBad[3])
 end
 
+local function rejectAbilityActivation(b, x, y)
+	Sound.play("uiError")
+	if b.anim then
+		b.anim.errorT = 1
+	end
+	showFloaterAtScreen(x, y, b.lockMessage or L("floater.abilityCoolingDown"))
+end
+
 local function releaseAbilityButton(b, x, y)
 	if b.enabled == true then
 		Abilities.beginTargeting(b.abilityId)
 		return
 	end
 
-	Sound.play("uiError")
-	if b.anim then
-		b.anim.errorT = 1
+	rejectAbilityActivation(b, x, y)
+end
+
+local function showAbilityError(abilityId)
+	for _, button in ipairs(BottomBar.getAbilityButtons()) do
+		if button.abilityId == abilityId then
+			rejectAbilityActivation(
+				button,
+				button.x + button.w * 0.5,
+				button.y + button.h * 0.5
+			)
+			return
+		end
 	end
-	showFloaterAtScreen(x, y, b.lockMessage or L("floater.abilityCoolingDown"))
+
+	Sound.play("uiError")
+end
+
+local function activateAbilitySlot(slotIndex)
+	local abilityId = State.equippedAbilities and State.equippedAbilities[slotIndex]
+
+	-- A second press of the slot currently being aimed always cancels it. This
+	-- keeps keyboard activation predictable and matches Escape/right-click.
+	if abilityId and State.abilityTargeting and State.abilityTargeting.abilityId == abilityId then
+		Abilities.cancelTargeting()
+		return
+	end
+
+	if not abilityId or not Abilities.beginTargeting(abilityId) then
+		showAbilityError(abilityId)
+	end
 end
 
 local function releaseShopButton(b, x, y)
@@ -250,6 +284,10 @@ local function mousereleased(x, y, button)
 end
 
 local gameplayActions = {
+	abilitySlot1 = function() activateAbilitySlot(1) end,
+	abilitySlot2 = function() activateAbilitySlot(2) end,
+	abilitySlot3 = function() activateAbilitySlot(3) end,
+	abilitySlot4 = function() activateAbilitySlot(4) end,
 	fastForward = function()
 		State.speed = (State.speed == 1) and 4 or 1
 	end,
