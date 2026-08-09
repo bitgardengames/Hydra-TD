@@ -25,6 +25,22 @@ local function addActive(effect)
 	active[#active + 1] = effect
 end
 
+local function addTimedEffect(effect, fields)
+	fields.kind = effect.kind
+	fields.expires = clock + effect.duration
+	addActive(fields)
+end
+
+local function forEachTowerInRadius(x, y, radius, callback)
+	local radiusSquared = radius * radius
+	for _, tower in ipairs(Towers.towers) do
+		local dx, dy = tower.x - x, tower.y - y
+		if dx * dx + dy * dy <= radiusSquared then
+			callback(tower)
+		end
+	end
+end
+
 function Abilities.getEquipped(abilityId)
 	local id = abilityId or (State.equippedAbilities and State.equippedAbilities[1])
 	if not id or not CampaignUnlocks.isAbilityUnlocked(id) then
@@ -83,11 +99,9 @@ local function buffTower(tower, effect)
 	}
 end
 
-local function activateIncomeMultiplier(def, effect)
-	addActive({
-		kind = effect.kind,
-		abilityId = def.id,
-		expires = clock + effect.duration,
+local function activateIncomeMultiplier(effect, _x, _y, abilityId)
+	addTimedEffect(effect, {
+		abilityId = abilityId,
 		multiplier = effect.multiplier,
 		bossMultiplier = effect.bossMultiplier,
 	})
@@ -95,22 +109,16 @@ end
 
 local function activateTowerArea(x, y, effect)
 	local affected = {}
-	local radiusSquared = effect.radius * effect.radius
-	for _, tower in ipairs(Towers.towers) do
-		local dx, dy = tower.x - x, tower.y - y
-		if dx * dx + dy * dy <= radiusSquared then
-			buffTower(tower, effect)
-			affected[#affected + 1] = tower
-		end
-	end
+	forEachTowerInRadius(x, y, effect.radius, function(tower)
+		buffTower(tower, effect)
+		affected[#affected + 1] = tower
+	end)
 
-	addActive({
-		kind = effect.kind,
+	addTimedEffect(effect, {
 		x = x,
 		y = y,
 		radius = effect.radius,
 		towers = affected,
-		expires = clock + effect.duration,
 		volleys = effect.volleys,
 		lastVolley = -math.huge,
 		inside = {},
@@ -118,34 +126,32 @@ local function activateTowerArea(x, y, effect)
 end
 
 local function activateGravityWell(x, y, effect)
-	addActive({
-		kind = effect.kind,
+	addTimedEffect(effect, {
 		x = x,
 		y = y,
 		radius = effect.radius,
-		expires = clock + effect.duration,
 		damage = effect.damage,
 		pullSpeed = effect.pullSpeed,
 	})
 end
 
-local function activateDamageArea(_, effect, x, y)
+local function activateDamageArea(effect, x, y)
 	forEachEnemyInRadius(x, y, effect.radius, function(enemy)
 		Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
 	end, true)
 end
 
-local function activateSlowArea(_, effect, x, y)
+local function activateSlowArea(effect, x, y)
 	forEachEnemyInRadius(x, y, effect.radius, function(enemy)
 		Enemies.applySlow(enemy, effect.factor, effect.duration)
 	end, true)
 end
 
-local function activateTowerAreaEffect(_, effect, x, y)
+local function activateTowerAreaEffect(effect, x, y)
 	activateTowerArea(x, y, effect)
 end
 
-local function activateGravityWellEffect(_, effect, x, y)
+local function activateGravityWellEffect(effect, x, y)
 	activateGravityWell(x, y, effect)
 end
 
@@ -195,7 +201,9 @@ function Abilities.activate(x, y)
 		return false
 	end
 
-	activateEffect(def, effect, x, y)
+	-- Every activator follows the same contract, regardless of whether it
+	-- creates a timed effect or resolves immediately.
+	activateEffect(effect, x, y, def.id)
 	playActivationEffect(effect, x, y)
 	State.abilityCooldowns[def.id] = def.cooldown
 	State.abilityTargeting = nil
@@ -247,13 +255,11 @@ local function expireGravityWell(effect)
 	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius)
 end
 
-local effectUpdaters = {
-	gravity_well = updateGravityWell,
-	last_stand = updateLastStand,
-}
-
-local effectExpirationHandlers = {
-	gravity_well = expireGravityWell,
+-- Timed-effect behavior lives in one registry so adding a lifecycle does not
+-- require keeping separate kind-to-callback tables in sync.
+local timedEffectHandlers = {
+	gravity_well = { update = updateGravityWell, expire = expireGravityWell },
+	last_stand = { update = updateLastStand },
 }
 
 function Abilities.update(dt)
@@ -265,15 +271,14 @@ function Abilities.update(dt)
 
 	for i = #active, 1, -1 do
 		local effect = active[i]
-		local updateEffect = effectUpdaters[effect.kind]
-		if updateEffect then
-			updateEffect(effect, dt)
+		local handlers = timedEffectHandlers[effect.kind]
+		if handlers and handlers.update then
+			handlers.update(effect, dt)
 		end
 
 		if clock >= effect.expires then
-			local handleExpiration = effectExpirationHandlers[effect.kind]
-			if handleExpiration then
-				handleExpiration(effect)
+			if handlers and handlers.expire then
+				handlers.expire(effect)
 			end
 			table.remove(active, i)
 		end
