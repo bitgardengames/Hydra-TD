@@ -251,7 +251,14 @@ local function hookIsDeclared(declared, hook)
 	return false
 end
 
-function ProjectileBehaviors.compileHooks(p)
+-- Behavior lists come from a tower's cached fire profile and are shared by all
+-- of its projectiles. Compiling the same list for every shot used to rebuild
+-- several arrays (and one wrapper per hook) in the hottest part of firing.
+-- Keep an immutable dispatch plan per list instead; weak keys allow temporary
+-- child behavior lists to be collected normally.
+local compiledPlans = setmetatable({}, { __mode = "k" })
+
+local function compilePlan(behaviors)
 	local hooks = {}
 	local drawHandlers = {}
 	local canHitPredicates = {}
@@ -260,8 +267,8 @@ function ProjectileBehaviors.compileHooks(p)
 		hooks[HOOKS[i].id] = {}
 	end
 
-	for i = 1, #p.behaviors do
-		local behavior = p.behaviors[i]
+	for i = 1, #behaviors do
+		local behavior = behaviors[i]
 		local def = B[behavior.id]
 		if def then
 			if def.draw then
@@ -283,9 +290,24 @@ function ProjectileBehaviors.compileHooks(p)
 		end
 	end
 
-	p._hooks = hooks
-	p._drawHandlers = drawHandlers
-	p._canHitPredicates = canHitPredicates
+	return {
+		hooks = hooks,
+		drawHandlers = drawHandlers,
+		canHitPredicates = canHitPredicates,
+	}
+end
+
+function ProjectileBehaviors.compileHooks(p)
+	local behaviors = p.behaviors
+	local plan = compiledPlans[behaviors]
+	if not plan then
+		plan = compilePlan(behaviors)
+		compiledPlans[behaviors] = plan
+	end
+
+	p._hooks = plan.hooks
+	p._drawHandlers = plan.drawHandlers
+	p._canHitPredicates = plan.canHitPredicates
 end
 
 local function consumeProjectile(p)
