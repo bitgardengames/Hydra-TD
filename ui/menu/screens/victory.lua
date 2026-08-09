@@ -16,6 +16,7 @@ local TowerDefs = require("world.tower_defs")
 local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local DrawEntities = require("render.draw_entities")
+local RunRecap = require("ui.run_recap")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -251,11 +252,6 @@ local function drawRewardUnlockCard(g)
 	lg.pop()
 end
 
-local function getDifficultyLabel()
-	local key = Difficulty.key()
-	return L("difficulty." .. key)
-end
-
 local function recordFirstClear()
 	local map = Maps[State.worldMapIndex]
 	local mapId = map and map.id or nil
@@ -332,17 +328,8 @@ local function layoutButtons()
 	end
 end
 
-local function getMapName()
-	local map = Maps[State.worldMapIndex]
-	if not map then
-		return "--"
-	end
-
-	return L(map.nameKey)
-end
-
 local function buildStats()
-	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
+	local reachedWave = RunRecap.getReachedWave()
 	local rewardNames = {}
 	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
 		rewardNames[#rewardNames + 1] = L("tower." .. kind)
@@ -571,13 +558,13 @@ function Screen.draw()
 	end
 
 	-- Difficulty
-	local difficultyLabel = getDifficultyLabel()
+	local difficultyLabel = RunRecap.getDifficultyLabel()
 	local difficultyY = statsY + g.difficultyY
 
 	if difficultyLabel then
 		Fonts.set("ui")
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.78 * alpha)
-		Text.printfShadow(format("%s: %s  •  %s: %s", L("gameOver.map"), getMapName(), L("settings.difficulty"), difficultyLabel), boxX + g.padX, difficultyY, boxW - g.padX * 2, "center")
+		Text.printfShadow(format("%s: %s  •  %s: %s", L("gameOver.map"), RunRecap.getMapName(), L("settings.difficulty"), difficultyLabel), boxX + g.padX, difficultyY, boxW - g.padX * 2, "center")
 	end
 
 	-- Medals
