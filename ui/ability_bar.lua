@@ -58,17 +58,59 @@ local function drawGoldRush(cx,cy,s) lg.setColor(1,.78,.16,1); lg.circle("fill",
 local function drawLastStand(cx,cy,s) lg.setColor(1,.62,.2,1); lg.setLineWidth(3*s); lg.circle("line",cx,cy,16*s); lg.line(cx-20*s,cy,cx+20*s,cy); lg.line(cx,cy-20*s,cx,cy+20*s) end
 local iconDrawers = {meteor=drawMeteor, frost_nova=drawFrost, overdrive=drawOverdrive, gravity_well=drawGravity, gold_rush=drawGoldRush, last_stand=drawLastStand}
 
+local function stat(labelKey, value)
+	return {label = L("ability.stats." .. labelKey), value = value}
+end
+
+local function percent(multiplier)
+	return string.format("%+g%%", (multiplier - 1) * 100)
+end
+
+local function buildTooltipRows(def)
+	local effect = Abilities.getEffect(def)
+	local rows = {{kind = "text", text = L(def.descKey), padAfter = 4}}
+	local kind = effect.kind
+
+	if kind == "damage_area" then
+		rows[#rows + 1] = stat("damage", effect.damage)
+	elseif kind == "slow_area" then
+		rows[#rows + 1] = stat("slow", string.format("%g%%", (1 - effect.factor) * 100))
+	elseif kind == "tower_haste_area" then
+		rows[#rows + 1] = stat("attackSpeed", percent(effect.attackSpeed))
+	elseif kind == "gravity_well" then
+		rows[#rows + 1] = stat("pullSpeed", string.format("%g/sec", effect.pullSpeed))
+		rows[#rows + 1] = stat("heavyPull", "20%")
+		rows[#rows + 1] = stat("damage", effect.damage)
+	elseif kind == "income_multiplier" then
+		rows[#rows + 1] = stat("killIncome", percent(effect.multiplier))
+		rows[#rows + 1] = stat("bossIncome", "+0%")
+	elseif kind == "last_stand" then
+		rows[#rows + 1] = stat("attackSpeed", percent(effect.attackSpeed))
+		rows[#rows + 1] = stat("volleys", effect.volleys)
+	end
+
+	if effect.duration then
+		rows[#rows + 1] = stat("duration", string.format("%g sec", effect.duration))
+	end
+	if effect.radius then
+		rows[#rows + 1] = stat("radius", effect.radius)
+	end
+
+	return rows, tostring(effect)
+end
+
 local function showTooltip(abilityId, def)
 	local title = L(def.nameKey)
-	local description = L(def.descKey)
+	local rows, effectKey = buildTooltipRows(def)
 	local tooltip = abilityTooltips[abilityId]
 
-	-- Rebuild if localization changed, while keeping the rows table stable during
-	-- normal hovering so Tooltip does not recalculate its layout every frame.
-	if not tooltip or tooltip.title ~= title or tooltip.rows[1].text ~= description then
+	-- Rebuild for localization or progression changes, while keeping the rows
+	-- table stable during normal hovering so layout is not recalculated each frame.
+	if not tooltip or tooltip.title ~= title or tooltip.rows[1].text ~= rows[1].text or tooltip.effectKey ~= effectKey then
 		tooltip = {
 			title = title,
-			rows = {{kind = "text", text = description}},
+			rows = rows,
+			effectKey = effectKey,
 		}
 		abilityTooltips[abilityId] = tooltip
 	end
