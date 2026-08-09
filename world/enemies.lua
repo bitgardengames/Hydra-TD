@@ -364,6 +364,32 @@ local function handleEnemyKilled(e, i, isBoss)
 	swapRemove(enemies, i)
 end
 
+local function recordKiller(e)
+	local killer = e.lastHitTower
+	if not killer then
+		return
+	end
+
+	killer.kills = killer.kills + 1
+	killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
+	Achievements.increment(killer._killsStatName)
+	RunStats.recordKill(killer)
+end
+
+local function beginGameOver(reason)
+	State.lives = 0
+	State.gameOver = true
+	State.victory = false
+	Achievements.onGameOver()
+	State.mode = "game_over"
+	State.endT = 0
+	State.endReady = false
+	State.endTitle = L("game.gameOver")
+	State.endReason = reason
+	Sound.play("gameOver")
+	Sound.playMusic("gameOver")
+end
+
 local function handleEnemyEscaped(e, i, isBoss)
 	Save.recordEnemyResult(e.kind, "leak")
 	RunStats.recordLeak(e.kind)
@@ -371,17 +397,7 @@ local function handleEnemyEscaped(e, i, isBoss)
 	if isBoss then
 		State.activeBoss = nil
 		State.activeBossKind = nil
-		State.lives = 0
-		State.gameOver = true
-		State.victory = false
-		Achievements.onGameOver()
-		State.mode = "game_over"
-		State.endT = 0
-		State.endReady = false
-		State.endTitle = L("game.gameOver")
-		State.endReason = L("game.bossBreach")
-		Sound.play("gameOver")
-		Sound.playMusic("gameOver")
+		beginGameOver(L("game.bossBreach"))
 	else
 		State.lives = State.lives - 1
 		State.waveLeaks = State.waveLeaks + 1
@@ -396,6 +412,86 @@ local function handleEnemyEscaped(e, i, isBoss)
 	Spatial.removeEnemy(e)
 	releaseEnemy(e)
 	swapRemove(enemies, i)
+end
+
+local function updatePoison(e, dt)
+	if e.poisonStacks <= 0 then
+		return
+	end
+
+	e.poisonTimer = e.poisonTimer - dt
+	e.poisonTickTimer = e.poisonTickTimer + dt
+	if e.poisonTickTimer >= POISON_TICK then
+		local ticks = floor(e.poisonTickTimer / POISON_TICK)
+		e.poisonTickTimer = e.poisonTickTimer - ticks * POISON_TICK
+		local poisonRamp = e.poisonRamp or 1
+		local poisonRampPerTick = e.poisonRampPerTick or 0
+		local poisonRampMax = e.poisonRampMax or 1
+		if poisonRampPerTick > 0 and poisonRamp < poisonRampMax then
+			poisonRamp = min(poisonRamp + poisonRampPerTick * ticks, poisonRampMax)
+			e.poisonRamp = poisonRamp
+		end
+
+		local missingFrac = e.maxHp and e.maxHp > 0 and max(0, (e.maxHp - e.hp) / e.maxHp) or 0
+		local damage = e.poisonDPS * e.poisonStacks * ((e.modifiers and e.modifiers.poison) or 1)
+			* poisonRamp * POISON_TICK * ticks * (1 + missingFrac * (e.poisonMissingHpMult or 0))
+		e.hp = e.hp - damage
+		EnemySupport.detachDead(e)
+
+		if e.poisonSource then
+			e.poisonSource.damageDealt = e.poisonSource.damageDealt + damage
+			e.lastHitTower = e.poisonSource
+		end
+		e.hitFlash = 0.03
+		e.hitSquash = HIT_SQUASH_DUR
+		e.hitSquashStrength = 0.55
+		State.addDamage("poison", damage, e.boss == true)
+		RunStats.recordDamage(e.poisonSource, "poison", damage)
+	end
+
+	if e.poisonTimer <= 0 then
+		e.poisonTimer, e.poisonDuration, e.poisonStacks, e.poisonDPS = 0, 0, 0, 0
+		e.poisonSource, e.poisonTickTimer, e.poisonMissingHpMult = nil, 0, 0
+		e.poisonRamp, e.poisonRampPerTick, e.poisonRampMax = 1, 0, 1
+	end
+end
+
+local function spreadInfection(e)
+	if not (e._infectSpread and not e._infectDidSpread and e.hp <= 0 and e.poisonStacks and e.poisonStacks > 0) then
+		return
+	end
+
+	e._infectDidSpread = true
+	local infect = e._infectSpread
+	local spreadStacks = floor(e.poisonStacks * infect.stackMult)
+	if spreadStacks > 0 then
+		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, infect.radius)
+		local radius2 = infect.radius * infect.radius
+		for i = 1, nearbyCount do
+			local other = nearby[i]
+			local dx, dy = other.x - e.x, other.y - e.y
+			if other ~= e and other.hp > 0 and dx * dx + dy * dy <= radius2 then
+				other.poisonStacks = (other.poisonStacks or 0) + spreadStacks
+				other.poisonDPS = max(other.poisonDPS or 0, e.poisonDPS or 0)
+				other.poisonTimer = max(other.poisonTimer or 0, e.poisonTimer or 0)
+				other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, e.poisonMissingHpMult or 0)
+				other.poisonRamp = max(other.poisonRamp or 1, e.poisonRamp or 1)
+				other.poisonRampPerTick = max(other.poisonRampPerTick or 0, e.poisonRampPerTick or 0)
+				other.poisonRampMax = max(other.poisonRampMax or 1, e.poisonRampMax or 1)
+				other.poisonSource = e.poisonSource
+
+				if infect.loop == true then
+					other._infectSpread = other._infectSpread or {}
+					other._infectSpread.radius = infect.radius
+					other._infectSpread.stackMult = infect.stackMult
+					other._infectSpread.loop = true
+					other._infectSpread.source = e.poisonSource
+					other._infectDidSpread = false
+				end
+			end
+		end
+	end
+	Effects.spawnPoisonSplash(e.x, e.y)
 end
 
 computeNudgeParams = function(e)
@@ -453,134 +549,15 @@ local function updateEnemies(dt)
 
 		e.alpha = min(alphaIn, alphaOut)
 
-		-- Poison ticks
-		if e.poisonStacks > 0 then
-			e.poisonTimer = e.poisonTimer - dt
-			e.poisonTickTimer = e.poisonTickTimer + dt
-
-			if e.poisonTickTimer >= POISON_TICK then
-				local ticks = floor(e.poisonTickTimer / POISON_TICK)
-				e.poisonTickTimer = e.poisonTickTimer - ticks * POISON_TICK
-				local poisonRamp = e.poisonRamp or 1
-				local poisonRampPerTick = e.poisonRampPerTick or 0
-				local poisonRampMax = e.poisonRampMax or 1
-
-				if poisonRampPerTick > 0 and poisonRamp < poisonRampMax then
-					poisonRamp = min(poisonRamp + poisonRampPerTick * ticks, poisonRampMax)
-					e.poisonRamp = poisonRamp
-				end
-
-				local poisonMult = (e.modifiers and e.modifiers.poison) or 1.0
-				local baseDmg = e.poisonDPS * e.poisonStacks * poisonMult * poisonRamp * POISON_TICK * ticks
-				local missingFrac = 0
-				if e.maxHp and e.maxHp > 0 then
-					missingFrac = max(0, (e.maxHp - e.hp) / e.maxHp)
-				end
-				local missingBonus = 1 + (missingFrac * (e.poisonMissingHpMult or 0))
-				local dmg = baseDmg * missingBonus
-
-				e.hp = e.hp - dmg
-				EnemySupport.detachDead(e)
-
-				if e.poisonSource then
-					e.poisonSource.damageDealt = e.poisonSource.damageDealt + dmg
-					e.lastHitTower = e.poisonSource
-				end
-
-				e.hitFlash = 0.03
-				e.hitSquash = HIT_SQUASH_DUR
-				e.hitSquashStrength = 0.55
-
-				State.addDamage("poison", dmg, e.boss == true)
-				RunStats.recordDamage(e.poisonSource, "poison", dmg)
-			end
-
-			if e.poisonTimer <= 0 then
-				e.poisonTimer = 0
-				e.poisonDuration = 0
-				e.poisonStacks = 0
-				e.poisonDPS = 0
-				e.poisonSource = nil
-				e.poisonTickTimer = 0
-				e.poisonMissingHpMult = 0
-				e.poisonRamp = 1
-				e.poisonRampPerTick = 0
-				e.poisonRampMax = 1
-			end
-		end
-
-		-- Infect: spread poison once on death
-		if e._infectSpread and not e._infectDidSpread and e.hp <= 0 and e.poisonStacks and e.poisonStacks > 0 then
-			e._infectDidSpread = true
-
-			local infect = e._infectSpread
-			local radius = infect.radius
-			local stackMult = infect.stackMult
-			local radius2 = radius * radius
-			local spreadStacks = floor(e.poisonStacks * stackMult)
-
-			if spreadStacks > 0 then
-				local ex, ey = e.x, e.y
-				local sourcePoisonDPS = e.poisonDPS or 0
-				local sourcePoisonTimer = e.poisonTimer or 0
-				local sourcePoisonMissingHpMult = e.poisonMissingHpMult or 0
-				local sourcePoisonRamp = e.poisonRamp or 1
-				local sourcePoisonRampPerTick = e.poisonRampPerTick or 0
-				local sourcePoisonRampMax = e.poisonRampMax or 1
-				local poisonSource = e.poisonSource
-				local nearby, nearbyCount = Spatial.queryCells(ex, ey, radius)
-
-				for i = 1, nearbyCount do
-					local other = nearby[i]
-
-					if other ~= e and other.hp > 0 then
-						local dx = other.x - ex
-						local dy = other.y - ey
-
-						if dx * dx + dy * dy <= radius2 then
-							-- transfer poison, NOT damage
-							other.poisonStacks = (other.poisonStacks or 0) + spreadStacks
-							other.poisonDPS = max(other.poisonDPS or 0, sourcePoisonDPS)
-							other.poisonTimer = max(other.poisonTimer or 0, sourcePoisonTimer)
-							other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, sourcePoisonMissingHpMult)
-							other.poisonRamp = max(other.poisonRamp or 1, sourcePoisonRamp)
-							other.poisonRampPerTick = max(other.poisonRampPerTick or 0, sourcePoisonRampPerTick)
-							other.poisonRampMax = max(other.poisonRampMax or 1, sourcePoisonRampMax)
-							other.poisonSource = poisonSource
-
-							if infect.loop == true then
-								local spread = other._infectSpread
-								if not spread then
-									spread = {}
-									other._infectSpread = spread
-								end
-
-								spread.radius = radius
-								spread.stackMult = stackMult
-								spread.loop = true
-								spread.source = poisonSource
-								other._infectDidSpread = false
-							end
-						end
-					end
-				end
-			end
-
-			Effects.spawnPoisonSplash(e.x, e.y)
-		end
+		updatePoison(e, dt)
+		spreadInfection(e)
 
 		-- Boss death hold (face shown, explosion delayed)
 		if isBoss and e.dying then
 			e.deathT = e.deathT - dt
 
 			if e.deathT <= 0 then
-				if e.lastHitTower then
-					local killer = e.lastHitTower
-					killer.kills = killer.kills + 1
-					killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
-					Achievements.increment(killer._killsStatName)
-					RunStats.recordKill(killer)
-				end
+				recordKiller(e)
 
 				handleEnemyKilled(e, i, isBoss)
 			end
@@ -608,13 +585,7 @@ local function updateEnemies(dt)
 				Achievements.unlock("LAST_SECOND")
 			end
 
-			if e.lastHitTower then
-				local killer = e.lastHitTower
-				killer.kills = killer.kills + 1
-				killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
-				Achievements.increment(killer._killsStatName)
-				RunStats.recordKill(killer)
-			end
+			recordKiller(e)
 
 			handleEnemyKilled(e, i, isBoss)
 
@@ -762,17 +733,7 @@ local function updateEnemies(dt)
 
 
 	if State.lives <= 0 then
-		State.lives = 0
-		State.gameOver = true
-		State.victory = false
-		Achievements.onGameOver()
-		State.mode = "game_over"
-		State.endT = 0
-		State.endReady = false
-		State.endTitle = L("game.gameOver")
-		State.endReason = L("game.outOfLives")
-		Sound.play("gameOver")
-		Sound.playMusic("gameOver")
+		beginGameOver(L("game.outOfLives"))
 	end
 end
 
