@@ -2,20 +2,18 @@ local Theme = require("core.theme")
 local Button = require("ui.button")
 local State = require("core.state")
 local Sound = require("systems.sound")
-local Difficulty = require("systems.difficulty")
 local Text = require("ui.text")
 local Fonts = require("core.fonts")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
-local Maps = require("world.map_defs")
 local L = require("core.localization")
 local Modules = require("systems.modules")
 local RunStats = require("systems.run_stats")
+local RunRecap = require("ui.run_recap")
 
 local lg = love.graphics
 
 local floor = math.floor
-local max = math.max
 
 local Screen = {}
 local selectedHeadline = nil
@@ -84,22 +82,8 @@ local function returnToMenu(playSound)
 	Sound.playMusic("menu")
 end
 
-local function getDifficultyLabel()
-	local key = Difficulty.key()
-	return L("difficulty." .. key)
-end
-
-local function getMapName()
-	local map = Maps[State.worldMapIndex]
-	if not map then
-		return "--"
-	end
-
-	return L(map.nameKey)
-end
-
 local function buildRunSummary()
-	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
+	local reachedWave = RunRecap.getReachedWave()
 	local score = State.score or 0
 
 	highlights = {
@@ -120,12 +104,11 @@ local function buildRunSummary()
 end
 
 local function selectGameOverMessage()
-	local reachedWave = State.inPrep and max(1, State.wave - 1) or State.wave
-	local totalWaves = 20 + (State.worldMapIndex or 1) * 2
-	local lateWave = reachedWave >= (totalWaves * 0.75)
+	local reachedWave = RunRecap.getReachedWave()
+	local lateWave = RunRecap.isLateWave(reachedWave)
 	local leaks = State.totalLeaks or 0
 	local lives = State.lives or 0
-	local diff = Difficulty.key()
+	local diff = RunRecap.getDifficultyKey()
 
 	if lateWave and (leaks <= 6 or lives <= 3) then
 		return L("gameOver.headline.lateWave"), L("gameOver.subheadline.lateWave")
@@ -291,9 +274,9 @@ function Screen.draw()
 	local contextLine = string.format(
 		"%s: %s  •  %s: %s",
 		L("gameOver.map"),
-		getMapName(),
+		RunRecap.getMapName(),
 		L("gameOver.difficultyLabel"),
-		getDifficultyLabel() or "--"
+		RunRecap.getDifficultyLabel() or "--"
 	)
 	Text.printfShadow(contextLine, boxX + paddingX, difficultyY, boxW - paddingX * 2, "center")
 	for i, line in ipairs(summaryLines) do
