@@ -107,7 +107,7 @@ local function activateIncomeMultiplier(effect, _x, _y, abilityId)
 	})
 end
 
-local function activateTowerArea(x, y, effect)
+local function activateTowerArea(effect, x, y)
 	local affected = {}
 	forEachTowerInRadius(x, y, effect.radius, function(tower)
 		buffTower(tower, effect)
@@ -125,7 +125,7 @@ local function activateTowerArea(x, y, effect)
 	})
 end
 
-local function activateGravityWell(x, y, effect)
+local function activateGravityWell(effect, x, y)
 	addTimedEffect(effect, {
 		x = x,
 		y = y,
@@ -147,21 +147,13 @@ local function activateSlowArea(effect, x, y)
 	end, true)
 end
 
-local function activateTowerAreaEffect(effect, x, y)
-	activateTowerArea(x, y, effect)
-end
-
-local function activateGravityWellEffect(effect, x, y)
-	activateGravityWell(x, y, effect)
-end
-
 local effectActivators = {
 	damage_area = activateDamageArea,
 	slow_area = activateSlowArea,
 	income_multiplier = activateIncomeMultiplier,
-	tower_haste_area = activateTowerAreaEffect,
-	last_stand = activateTowerAreaEffect,
-	gravity_well = activateGravityWellEffect,
+	tower_haste_area = activateTowerArea,
+	last_stand = activateTowerArea,
+	gravity_well = activateGravityWell,
 }
 
 local function playMeteorEffect(effect, x, y)
