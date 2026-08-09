@@ -19,12 +19,12 @@ return {
 	},
 
 	ability = {
-		meteor = {name = "Meteor", desc = "Blast enemies in a targeted area."},
-		frostNova = {name = "Frost Nova", desc = "Severely slow enemies in a targeted area."},
-		overdrive = {name = "Overdrive", desc = "Supercharge towers in an area for a short barrage."},
-		gravityWell = {name = "Gravity Well", desc = "Pull a formation backward, then burst for damage."},
-		goldRush = {name = "Gold Rush", desc = "Gain 50% more kill income for 8 seconds. Does not work on bosses."},
-		lastStand = {name = "Last Stand", desc = "Fortify towers to focus and volley at escaping enemies."},
+		meteor = {name = "Meteor", desc = "Deal 85 damage to all enemies in the targeted area (115 when enhanced)."},
+		frostNova = {name = "Frost Nova", desc = "Slow enemies in the targeted area to 35% speed for 5 seconds (28% for 6.5 seconds when enhanced)."},
+		overdrive = {name = "Overdrive", desc = "Make towers in the targeted area attack 70% faster for 7 seconds (85% faster for 8 seconds when enhanced)."},
+		gravityWell = {name = "Gravity Well", desc = "Pull enemies in the targeted area backward for 3 seconds, then deal 28 damage (42 when enhanced)."},
+		goldRush = {name = "Gold Rush", desc = "Earn 50% more income from non-boss kills for 8 seconds."},
+		lastStand = {name = "Last Stand", desc = "Make towers in the targeted area attack 45% faster for 6 seconds and fire a volley at the first escaping enemy (two volleys when enhanced)."},
 		cooldown = "%s  %ds",
 	},
 
