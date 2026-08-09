@@ -132,9 +132,6 @@ local function resetReusableState(p)
 	p._consumed = false
 	p.hit = nil
 
-	p.compiledHooks = nil
-	p._hookFns = nil
-	p._hookList = nil
 	p._hooks = nil
 	p._drawHandlers = nil
 	p._canHitPredicates = nil
@@ -265,47 +262,32 @@ local function initProjectile(p, source, opts)
 	return p
 end
 
-local function spawnEvent(evt)
-	local source = evt.source
-
+local function createProjectile(source, options)
 	if not source then
 		return nil
 	end
 
 	local p = acquire()
-
-	initProjectile(p, source, evt)
+	initProjectile(p, source, options)
 
 	PB.init(p)
-
 	Sound.play(source.kind)
-
 	projectiles[#projectiles + 1] = p
 
 	return p
 end
 
+local function spawnEvent(evt)
+	return createProjectile(evt.source, evt)
+end
+
 local function spawnDirect(source, target, context, speed, life)
-	if not source then
-		return nil
-	end
-
-	local p = acquire()
-
-	initProjectile(p, source, {
+	return createProjectile(source, {
 		target = target,
 		context = context,
 		speed = speed,
 		life = life,
 	})
-
-	PB.init(p)
-
-	Sound.play(source.kind)
-
-	projectiles[#projectiles + 1] = p
-
-	return p
 end
 
 local function resolveSpawnProjectile(parent, evt)
