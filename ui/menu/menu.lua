@@ -51,19 +51,31 @@ local function shouldTransition(from, to)
 	return Screens[from] ~= nil and Screens[to] ~= nil
 end
 
-local function finishTransition(transition)
-	local previousScreen = Screens[transition.from]
+-- Screen lifecycle changes must go through one path. Transitions used to carry
+-- a second copy of this leave/set/enter sequence, which made it very easy for
+-- immediate and animated navigation to drift apart as screens gained hooks.
+local function changeScreen(mode)
+	if State.mode == mode then
+		return false
+	end
+
+	local previousScreen = Screens[State.mode]
 	if previousScreen and previousScreen.leave then
 		previousScreen.leave()
 	end
 
-	State.mode = transition.to
+	State.mode = mode
 
-	local screen = Screens[transition.to]
+	local screen = Screens[mode]
 	if screen and screen.enter then
 		screen.enter()
 	end
 
+	return true
+end
+
+local function finishTransition(transition)
+	changeScreen(transition.to)
 	transition.switched = true
 end
 
@@ -147,17 +159,7 @@ function Menu.set(mode)
 	end
 
 	if not shouldTransition(from, mode) then
-		local previousScreen = Screens[State.mode]
-		if previousScreen and previousScreen.leave then
-			previousScreen.leave()
-		end
-
-		State.mode = mode
-
-		local screen = Screens[mode]
-		if screen and screen.enter then
-			screen.enter()
-		end
+		changeScreen(mode)
 		return
 	end
 
