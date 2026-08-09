@@ -3,7 +3,6 @@ local Theme = require("core.theme")
 local Waves = require("systems.waves")
 local Text = require("ui.text")
 local L = require("core.localization")
-local CampaignUnlocks = require("systems.campaign_unlocks")
 
 local lg = love.graphics
 local floor = math.floor
@@ -32,7 +31,6 @@ local previewCache = {
 	wave = nil,
 	mapIndex = nil,
 	endless = nil,
-	enhanced = nil,
 	title = "",
 	total = "",
 	entries = {},
@@ -41,11 +39,9 @@ local previewCache = {
 local WavePreview = {}
 
 local function refreshPreview()
-	local enhanced = CampaignUnlocks.hasEnhancedWavePreview()
 	if previewCache.wave == State.wave
 		and previewCache.mapIndex == State.mapIndex
-		and previewCache.endless == State.endless
-		and previewCache.enhanced == enhanced then
+		and previewCache.endless == State.endless then
 		return
 	end
 
@@ -53,7 +49,6 @@ local function refreshPreview()
 	previewCache.wave = State.wave
 	previewCache.mapIndex = State.mapIndex
 	previewCache.endless = State.endless
-	previewCache.enhanced = enhanced
 	previewCache.title = L("hud.upcomingWave", State.wave)
 	previewCache.total = L("hud.waveTotal", preview.count)
 
@@ -67,7 +62,7 @@ local function refreshPreview()
 		local threats = #group.tags > 0 and L("hud.threatTags", table.concat(group.tags, " • ")) or nil
 		local counter = #group.counterHints > 0 and L("hud.counterHint", table.concat(group.counterHints, " ")) or nil
 		entries[i] = {
-			name = enhanced and L("hud.compositionEntry", group.count, group.name) or L("hud.compositionUnknown", group.count),
+			name = L("hud.compositionEntry", group.count, group.name),
 			threats = threats,
 			counter = counter,
 		}
