@@ -15,6 +15,7 @@ Tooltip.lineHeight = 18
 Tooltip.maxWidth = 260
 Tooltip.corner = 6
 Tooltip.minLabelStatGap = 20
+Tooltip.safeInset = 6
 
 -- Colors
 local colorPanel = Theme.ui.panel
@@ -94,47 +95,81 @@ function Tooltip.draw()
 
 	local x = t.x + Tooltip.padding
 	local y = t.y + Tooltip.padding
+	local oldScissor = {lg.getScissor()}
+
+	-- A tooltip can be higher than the viewport. Keep its contents inside the
+	-- panel; the bottom is deliberately clipped instead of moving the panel to
+	-- a negative y coordinate.
+	lg.setScissor(t.x, t.y, t.w, t.h)
 
 	-- Title
 	if t.title then
 		lg.setColor(colorText)
-		Text.printShadow(t.title, x, y)
+		for _, line in ipairs(t.titleLines or {t.title}) do
+			Text.printShadow(line, x, y)
+			y = y + Tooltip.lineHeight
+		end
 
-		y = y + Tooltip.lineHeight + Tooltip.titleSpacing
+		y = y + Tooltip.titleSpacing
 	end
 
 	-- Row font
 	Fonts.set("tooltip")
 
 	-- Rows
-	for _, row in ipairs(t.rows) do
+	for index, row in ipairs(t.rows) do
+		local layout = t.rowLayouts and t.rowLayouts[index] or {}
 		local kind = row.kind or "kv"
 
 		if kind == "text" then
 			lg.setColor(row.color or colorMuted)
-			Text.printShadow(row.text or "", x, y)
+			for _, line in ipairs(layout.lines or {row.text or ""}) do
+				Text.printShadow(line, x, y)
+				y = y + Tooltip.lineHeight
+			end
 
-			y = y + Tooltip.lineHeight + (row.padAfter or 0)
+			y = y + (row.padAfter or 0)
 
 		else
 			local label = row.label or ""
 			local value = tostring(row.value or "")
 			local delta = row.delta
 
-			-- Label (left)
+			-- Label (left). On narrow screens stats are placed on the next line.
 			lg.setColor(row.color or colorText)
-			Text.printShadow(label, x, y)
+			for _, line in ipairs(layout.labelLines or {label}) do
+				Text.printShadow(line, x, y)
+				y = y + Tooltip.lineHeight
+			end
+			y = y - Tooltip.lineHeight
 
 			-- Stats block (right-anchored, left-aligned internally)
 			local statsRightX = t.x + t.w - Tooltip.padding
 			local statsX = statsRightX - (t.statsBlockW or 0)
 
+			if t.stackStats then
+				y = y + Tooltip.lineHeight
+				statsX = x
+			end
+
+			if layout.statsLines and #layout.statsLines > 1 then
+				lg.setColor(row.color or colorText)
+				for _, line in ipairs(layout.statsLines) do
+					Text.printShadow(line, statsX, y)
+					y = y + Tooltip.lineHeight
+				end
+				y = y - Tooltip.lineHeight
+				value = nil
+			end
+
 			-- Value
-			lg.setColor(row.color or colorText)
-			Text.printShadow(value, statsX, y)
+			if value then
+				lg.setColor(row.color or colorText)
+				Text.printShadow(value, statsX, y)
+			end
 
 			-- Delta
-			if delta then
+			if delta and value then
 				local dc = colorGood
 
 				if sub(delta, 1, 1) == "-" then
@@ -151,6 +186,12 @@ function Tooltip.draw()
 			y = y + Tooltip.lineHeight
 		end
 	end
+
+	if oldScissor[1] then
+		lg.setScissor(unpack(oldScissor))
+	else
+		lg.setScissor()
+	end
 end
 
 function Tooltip.recalculate()
@@ -162,6 +203,9 @@ function Tooltip.recalculate()
 
 	local font = getFont()
 	local titleFont = getTitleFont()
+	local sw = lg.getWidth()
+	local usableW = max(1, sw - Tooltip.safeInset * 2)
+	local contentLimit = max(1, math.min(Tooltip.maxWidth, usableW - Tooltip.padding * 2))
 
 	local w = 0
 	local h = Tooltip.padding * 2
@@ -169,20 +213,29 @@ function Tooltip.recalculate()
 	-- Track the widest label, and the widest "stats block" (value + delta)
 	local maxLabelW = 0
 	local maxStatsW = 0
+	t.rowLayouts = {}
 
 	if t.title then
-		w = max(w, titleFont:getWidth(t.title))
-		h = h + Tooltip.lineHeight + Tooltip.titleSpacing
+		local wrappedW, lines = titleFont:getWrap(t.title, contentLimit)
+		t.titleLines = lines
+		w = max(w, wrappedW)
+		h = h + #lines * Tooltip.lineHeight + Tooltip.titleSpacing
+	else
+		t.titleLines = nil
 	end
 
-	for _, row in ipairs(t.rows) do
+	for index, row in ipairs(t.rows) do
 		local kind = row.kind or "kv"
+		local layout = {}
+		t.rowLayouts[index] = layout
 
 		if kind == "text" then
 			local text = row.text or ""
+			local wrappedW, lines = font:getWrap(text, contentLimit)
 
-			w = max(w, font:getWidth(text))
-			h = h + Tooltip.lineHeight + (row.padAfter or 0)
+			layout.lines = lines
+			w = max(w, wrappedW)
+			h = h + #lines * Tooltip.lineHeight + (row.padAfter or 0)
 		else
 			local label = row.label or ""
 			local value = tostring(row.value or "")
@@ -212,11 +265,34 @@ function Tooltip.recalculate()
 
 	-- Key value width = label + gap + stats
 	local kvW = t.statsOffset + t.statsBlockW
+	t.stackStats = kvW > contentLimit
+	if t.stackStats then
+		kvW = 0
+		-- Wrap both halves independently and put stats below their labels.
+		for index, row in ipairs(t.rows) do
+			if (row.kind or "kv") ~= "text" then
+				local layout = t.rowLayouts[index]
+				local label = row.label or ""
+				local stats = tostring(row.value or "")
+				if row.delta then
+					stats = stats .. " (" .. tostring(row.delta) .. ")"
+				end
+				local labelW, labelLines = font:getWrap(label, contentLimit)
+				local statsW, statsLines = font:getWrap(stats, contentLimit)
+				layout.labelLines = labelLines
+				layout.statsLines = statsLines
+				kvW = max(kvW, labelW, statsW)
+				h = h + (#labelLines - 1 + #statsLines) * Tooltip.lineHeight
+			end
+		end
+	end
 
-	w = max(w, kvW)
+	w = math.min(contentLimit, max(w, kvW))
 
 	t.w = w + Tooltip.padding * 2
+	t.contentH = h
 	t.h = h
+	t.layoutScreenW = sw
 end
 
 function Tooltip.clampToScreen()
@@ -227,13 +303,22 @@ function Tooltip.clampToScreen()
 	end
 
 	local sw, sh = lg.getDimensions()
+	local inset = Tooltip.safeInset
+	local usableW = max(1, sw - inset * 2)
+	local usableH = max(1, sh - inset * 2)
 
-	if t.x + t.w > sw then
-		t.x = sw - t.w - 6
+	-- Screen dimensions can change while a tooltip remains active.
+	if t.layoutScreenW ~= sw or t.w > usableW then
+		Tooltip.recalculate()
 	end
+	t.w = math.min(t.w, usableW)
+	t.h = math.min(t.contentH or t.h, usableH)
+	t.x = math.max(inset, math.min(t.x, sw - inset - t.w))
 
-	if t.y + t.h > sh then
-		t.y = sh - t.h - 6
+	if (t.contentH or t.h) > usableH then
+		t.y = inset
+	else
+		t.y = math.max(inset, math.min(t.y, sh - inset - t.h))
 	end
 end
 
