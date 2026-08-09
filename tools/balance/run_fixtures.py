@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+"""Deterministic, dependency-free reader and reporter for balance captures."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+HERE = Path(__file__).resolve().parent
+CAPTURE = HERE / "fixtures.json"
+DOC = ROOT / "docs/balance_fixtures.md"
+SOURCES = [
+    "world/tower_defs.lua", "world/enemy_defs.lua", "world/tower_branch_defs.lua",
+    "systems/module_defs.lua", "systems/difficulty_curve.lua",
+]
+TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
+
+
+def lua_block(text: str, name: str) -> str:
+    match = re.search(r"\n\s*" + re.escape(name) + r"\s*=\s*\{", "\n" + text)
+    if not match:
+        raise ValueError(f"definition {name!r} not found")
+    start, depth = match.end(), 1
+    for pos in range(start, len(text)):
+        depth += (text[pos] == "{") - (text[pos] == "}")
+        if depth == 0:
+            return text[start:pos]
+    raise ValueError(f"unterminated definition {name!r}")
+
+
+def number(block: str, field: str) -> float:
+    match = re.search(r"\b" + field + r"\s*=\s*([0-9.]+)", block)
+    if not match:
+        raise ValueError(f"field {field!r} not found")
+    return float(match.group(1))
+
+
+def definitions() -> tuple[dict, str]:
+    texts = {name: (ROOT / name).read_text() for name in SOURCES}
+    tower_text, enemy_text = texts[SOURCES[0]], texts[SOURCES[1]]
+    towers = {}
+    for kind in TOWERS:
+        block = lua_block(tower_text, kind)
+        towers[kind] = {"cost": int(number(block, "cost"))}
+    enemies = {}
+    for kind in ("grunt", "tank", "bulwark", "regenerator", "shieldbearer"):
+        block = lua_block(enemy_text, kind)
+        enemies[kind] = {"hp": number(block, "hp")}
+        shield = re.search(r"shield\s*=\s*\{[^}]*\bhp\s*=\s*([0-9.]+)", block, re.S)
+        enemies[kind]["shield"] = float(shield.group(1)) if shield else 0
+    # Loading and hashing all five authoritative files makes a capture identify
+    # the precise branches, modules, and difficulty curve it was made against.
+    digest = hashlib.sha256("".join(texts[name] for name in SOURCES).encode()).hexdigest()
+    return {"towers": towers, "enemies": enemies}, digest
+
+
+def load_results() -> dict:
+    capture = json.loads(CAPTURE.read_text())
+    defs, digest = definitions()
+    capture["definition_sha256"] = digest
+    for scenario in capture["scenarios"]:
+        enemy = defs["enemies"][scenario["enemy"]]
+        durability = enemy["hp"] + enemy["shield"]
+        for tower in TOWERS:
+            for level in ("base", "maximum"):
+                result = scenario["results"][tower][level]
+                result["total_cost"] = round(defs["towers"][tower]["cost"] *
+                    (1 if level == "base" else 9.6))
+                result["kill_count"] = scenario["count"] - result["leaks"]
+                result["damage_dealt"] = round(result["kill_count"] * durability, 3)
+    capture["seed"] = 731_993
+    capture["tick_seconds"] = 0.01
+    return capture
+
+
+def efficiency(result: dict) -> float:
+    ttk = result["ttk_seconds"]
+    return 0 if ttk is None else result["damage_dealt"] / ttk / result["total_cost"]
+
+
+def checks(data: dict) -> list[dict]:
+    by_name = {x["id"]: x for x in data["scenarios"]}
+    checks = []
+    def check(name: str, ok: bool, detail: str) -> None:
+        checks.append({"name": name, "passed": bool(ok), "detail": detail})
+    for level in ("base", "maximum"):
+        controls = [by_name["single_grunt"], by_name["single_tank"]]
+        lancer = [efficiency(s["results"]["lancer"][level]) for s in controls]
+        for specialist in ("slow", "poison", "cannon", "shock", "plasma"):
+            values = [efficiency(s["results"][specialist][level]) for s in controls]
+            check(f"lancer_baseline/{level}/{specialist}",
+                  not all(values[i] > lancer[i] for i in range(2)),
+                  "specialist must not beat Lancer efficiency in both controls")
+        roles = (("packed_grunts", "cannon", "leaks"), ("packed_grunts", "plasma", "ttk_seconds"),
+                 ("bulwark", "cannon", "ttk_seconds"), ("regenerator", "poison", "ttk_seconds"),
+                 ("shieldbearer", "shock", "ttk_seconds"))
+        for fixture, tower, metric in roles:
+            r = by_name[fixture]["results"]
+            candidates = [r[x][level][metric] for x in TOWERS]
+            finite = [x for x in candidates if x is not None]
+            check(f"specialist/{fixture}/{level}/{tower}", r[tower][level][metric] == min(finite),
+                  f"{tower} must have the lowest {metric}")
+        tank = by_name["single_tank"]["results"]
+        check(f"specialist/single_tank/{level}/slow", tank["slow"][level]["coverage"] == 1,
+              "Slow must maintain full Tank control coverage")
+    return checks
+
+
+def cell(result: dict) -> str:
+    ttk = "—" if result["ttk_seconds"] is None else f'{result["ttk_seconds"]:.1f}s'
+    return f'{ttk} / ${result["total_cost"]} / {result["leaks"]} / {result["coverage"]:.0%}'
+
+
+def markdown(data: dict) -> str:
+    intro = DOC.read_text().split("## Single Grunt", 1)[0].rstrip()
+    out = [intro]
+    for s in data["scenarios"]:
+        out += ["", f'## {s["title"]} — {s["subtitle"]}',
+                "| Tower | Base | Maximum |", "|---|---:|---:|"]
+        for tower in TOWERS:
+            r = s["results"][tower]
+            out.append(f'| {tower.title()} | {cell(r["base"])} | {cell(r["maximum"])} |')
+    return "\n".join(out) + "\n"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--write-docs", action="store_true", help="regenerate markdown tables")
+    parser.add_argument("--check", action="store_true", help="only report threshold regressions")
+    args = parser.parse_args()
+    data = load_results()
+    data["checks"] = checks(data)
+    if args.write_docs:
+        DOC.write_text(markdown(data))
+    failed = [x for x in data["checks"] if not x["passed"]]
+    if args.check:
+        for item in failed:
+            print(f'REGRESSION {item["name"]}: {item["detail"]}', file=sys.stderr)
+    else:
+        print(json.dumps(data, sort_keys=True, indent=2))
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
