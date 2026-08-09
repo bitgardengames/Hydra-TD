@@ -322,7 +322,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	if e.boss then
 		State.activeBoss = e
 		State.activeBossKind = e.kind
-		Effects.trigger("boss_entrance", {intensity = 4, shake = 7, duration = 0.35, criticalTell = true})
+		Effects.trigger("boss_entrance", {intensity = 4, shake = 0, duration = 0.35, criticalTell = true})
 	end
 
 	return e
