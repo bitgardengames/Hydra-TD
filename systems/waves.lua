@@ -439,13 +439,26 @@ function Waves.startWave()
 	return true
 end
 
-local function applySpawnBackpressure(owner, timerKey, pending, spawnLoops, activeCap)
+-- Both spawn queues share the same frame and population budgets. Centralizing
+-- their scheduling keeps either queue from bypassing catch-up or cap protection.
+local function spawnWhileReady(owner, timerKey, pending, activeCap, spawnLoops, spawnOne)
+	while owner[timerKey] <= 0 and pending() > 0
+		and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
+		if spawnOne() == false then
+			return spawnLoops, false
+		end
+		spawnLoops = spawnLoops + 1
+	end
+
 	if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and owner[timerKey] <= 0 then
+		-- Drop catch-up debt once this frame has spent its spawn budget.
 		owner[timerKey] = 0
-	elseif #Enemies.enemies >= activeCap and pending > 0 then
-		-- Do not accumulate catch-up debt while the active-enemy cap is full.
+	elseif #Enemies.enemies >= activeCap and pending() > 0 then
+		-- Do not accumulate catch-up debt while the population cap is full.
 		owner[timerKey] = max(owner[timerKey], SPAWN_BACKPRESSURE_DELAY)
 	end
+
+	return spawnLoops, true
 end
 
 local function currentSpawnEntry()
@@ -489,25 +502,25 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 	end
 
 	spawner.timer = spawner.timer - dt
-	while spawner.active and spawner.timer <= 0 and spawner.remaining > 0
-		and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
+	local sequenceValid
+	spawnLoops, sequenceValid = spawnWhileReady(spawner, "timer", function()
+		return spawner.active and spawner.remaining or 0
+	end, activeCap, spawnLoops, function()
 		local group, kind, affixes = currentSpawnEntry()
 		if not kind then
 			spawner.remaining = 0
 			spawner.active = false
-			return spawnLoops, true
+			return false
 		end
 
 		Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
 			(group and group.spdMult) or spawner.spdMult, nil, nil, nil, {affixes = affixes})
 		spawner.compositionIndex = spawner.compositionIndex + 1
 		advanceSpawner(group)
-		spawnLoops = spawnLoops + 1
-	end
+	end)
 
-	applySpawnBackpressure(spawner, "timer", spawner.remaining, spawnLoops, activeCap)
 	spawner.active = spawner.remaining > 0
-	return spawnLoops, false
+	return spawnLoops, not sequenceValid
 end
 
 local function countNearbyBossAdds(boss)
@@ -551,17 +564,15 @@ local function updateBossAdds(dt, activeCap, spawnLoops)
 	bossAdds.queueTimer = bossAdds.queueTimer - dt
 	queueBossReinforcements(boss, activeCap)
 
-	-- Reinforcements have their own queue so they cannot disturb authored groups.
-	while bossAdds.queued > 0 and bossAdds.queueTimer <= 0
-		and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
+	-- Reinforcements keep their own queue, but consume the shared spawn budget.
+	spawnWhileReady(bossAdds, "queueTimer", function()
+		return bossAdds.queued
+	end, activeCap, spawnLoops, function()
 		Enemies.spawnEnemy(bossAdds.kind, bossAdds.hpMult, bossAdds.spdMult)
 		bossAdds.queued = bossAdds.queued - 1
 		bossAdds.totalSpawned = bossAdds.totalSpawned + 1
 		bossAdds.queueTimer = bossAdds.queueTimer + bossAdds.queueGap
-		spawnLoops = spawnLoops + 1
-	end
-
-	applySpawnBackpressure(bossAdds, "queueTimer", bossAdds.queued, spawnLoops, activeCap)
+	end)
 end
 
 -- Spawning update
