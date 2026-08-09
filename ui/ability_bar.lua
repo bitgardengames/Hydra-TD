@@ -19,16 +19,22 @@ local buttons = {}
 local abilityTooltips = {}
 
 local SIZE = 58
-local GAP = 10
-local RIGHT = 18
+-- Match the tower shop's vertical rhythm so the two groups feel like parts of
+-- the same HUD.
+local GAP = 18
+local PANEL_PAD = 12
+local PANEL_INSET = 16
 local MAX_ABILITIES = 6
 local IDLE_LIFT = 5
 
 local colorOutline = Theme.outline.color
+local colorBackdrop = Theme.ui.backdrop
 local outlineW = Theme.outline.width
 
 local outerRadius = 9 + outlineW * 0.5
 local innerRadius = 9 - outlineW * 0.25
+local panelRadius = 18 + outlineW * 0.5
+local panelInnerRadius = 18 - outlineW * 0.25
 
 local function drawMeteor(cx, cy, scale)
 	lg.setLineWidth(5 * scale)
@@ -178,12 +184,24 @@ function AbilityBar.draw(dt, mx, my)
 	local sw, sh = lg.getDimensions()
 	local totalH = count * SIZE + math.max(0, count - 1) * GAP
 	local startY = floor((sh - totalH) * 0.5)
+	local panelW = SIZE + PANEL_PAD * 2
+	local panelH = totalH + PANEL_PAD * 2
+	local panelX = sw - PANEL_INSET - panelW
+	local panelY = startY - PANEL_PAD
+
+	if count > 0 then
+		lg.setColor(colorOutline)
+		lg.rectangle("fill", panelX - outlineW, panelY - outlineW, panelW + outlineW * 2, panelH + outlineW * 2, panelRadius)
+
+		lg.setColor(colorBackdrop)
+		lg.rectangle("fill", panelX, panelY, panelW, panelH, panelInnerRadius)
+	end
 
 	for i = 1, count do
 		local abilityId = equipped[i]
 		local def = AbilityDefs[abilityId]
 		if def then
-			local x, y = sw - RIGHT - SIZE, startY + (i - 1) * (SIZE + GAP)
+			local x, y = panelX + PANEL_PAD, startY + (i - 1) * (SIZE + GAP)
 			local lockMessage = CampaignUnlocks.getAbilityLockMessage(abilityId, i)
 			local hovered = mx >= x and mx <= x + SIZE and my >= y and my <= y + SIZE
 			if hovered then
