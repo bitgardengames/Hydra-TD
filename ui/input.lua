@@ -243,7 +243,11 @@ local function pressWorld(x, y, button)
 
 	local wx, wy = Camera.screenToWorld(x, y)
 	if State.abilityTargeting then
-		Abilities.activate(wx, wy)
+		local ok, why = Abilities.activate(wx, wy)
+		if not ok then
+			Sound.play("uiError")
+			Floaters.add(wx, wy, L("floater.abilityInvalid." .. (why or "invalid")), colorBad[1], colorBad[2], colorBad[3])
+		end
 	else
 		selectWorldEntity(wx, wy)
 	end

@@ -10,6 +10,7 @@ local L = require("core.localization")
 local Button = require("ui.button")
 local Hotkeys = require("core.hotkeys")
 local AbilityIcons = require("ui.ability_icons")
+local Effects = require("world.effects")
 
 local lg = love.graphics
 local floor = math.floor
@@ -134,7 +135,8 @@ local function drawButton(button, def, activeTime)
 	AbilityIcons.draw(button.abilityId, fx + SIZE * 0.5, fy + SIZE * 0.5, available and 1 or 0.82, 1, iconState)
 
 	if activeTime then
-		lg.setColor(1, .78, .12, .95)
+		local activeAlpha = Effects.expirationPulse(activeTime, State.abilityClock or 0)
+		lg.setColor(1, .78, .12, .35 + .6 * activeAlpha)
 		lg.setLineWidth(3)
 		lg.rectangle("line", fx + 1, fy + 1, SIZE - 2, SIZE - 2, 8)
 		Text.printfShadow(string.format("%.1fs", activeTime), fx, fy + SIZE - 20, SIZE, "center")
