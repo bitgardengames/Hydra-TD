@@ -22,7 +22,6 @@ local DEFAULT_SETTINGS = {
 	difficulty = "normal",
 	screenShake = true,
 	showDamageNumbers = true,
-	reducedFlash = false,
 	fullscreen = true,
 	cameraMotion = true,
 	highDensityParticles = true,

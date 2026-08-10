@@ -40,8 +40,6 @@ return {
 		cameraMotionDesc = "Disables all impact-driven camera movement independently of flashes.",
 		damageNumbers = "Show damage numbers",
 		damageNumbersDesc = "Displays floating combat damage values.",
-		reducedFlash = "Reduced-flash mode",
-		reducedFlashDesc = "Replaces bright impact flashes with lower-contrast effects.",
 		highDensityParticles = "High-density particles",
 		highDensityParticlesDesc = "Uses the full particle count; turn off to reduce visual intensity and improve performance.",
 		tabAudio = "Audio",

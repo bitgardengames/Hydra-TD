@@ -268,22 +268,14 @@ function Medals.draw(x, y, earnedCount, r, g, animation)
 	local startX = x + BASE_RADIUS
 	local centerY = y + BASE_RADIUS
 	local step = BASE_RADIUS * 2 + BASE_GAP
-	local animationTime
-	local shineEnabled = true
-
-	if type(animation) == "number" then
-		animationTime = animation
-	elseif type(animation) == "table" then
-		animationTime = animation.time
-		shineEnabled = animation.shine ~= false
-	end
+	local animationTime = animation
 
 	for i = 1, 3 do
 		local mx = startX + (i - 1) * step
 		local earned = i <= baseCount
 
 		local shinePhase
-		if earned and shineEnabled and animationTime then
+		if earned and animationTime then
 			local elapsed = (animationTime - (i - 1) * SHINE_STAGGER) % SHINE_PERIOD
 			if elapsed < SHINE_DURATION then
 				shinePhase = elapsed / SHINE_DURATION
