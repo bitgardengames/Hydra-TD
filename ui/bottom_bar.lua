@@ -107,6 +107,10 @@ function BottomBar.getAbilityButtons()
 	return AbilityBar.getButtons()
 end
 
+function BottomBar.acknowledgeAbilityCast(abilityId)
+	AbilityBar.acknowledgeCast(abilityId)
+end
+
 function BottomBar.resize(w, h)
 	-- Child panels derive positions from the current dimensions every draw. This
 	-- hook makes that contract explicit and lets cached children opt in later.

@@ -174,6 +174,9 @@ function Sound.load()
 		uiConfirm = { file = "assets/sounds/uiConfirm.ogg" },
 		uiBack = { file = "assets/sounds/uiBack.ogg" },
 		uiError = { file = "assets/sounds/uiError.ogg" },
+		-- A quiet, throttled UI chime prevents simultaneous cooldowns from
+		-- stacking into an intrusive burst.
+		abilityReady = { file = "assets/sounds/uiConfirm.ogg", bias = 0.28, cooldown = 0.18 },
 		victory = { file = "assets/sounds/victory.ogg" },
 		gameOver = { file = "assets/sounds/gameOver.ogg" },
 		towerPlaced = { files = { "assets/sounds/towerPlaced1.ogg", "assets/sounds/towerPlaced2.ogg" }, jitter = true },

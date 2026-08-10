@@ -9,6 +9,7 @@ local Constants = require("core.constants")
 local Abilities = {}
 local active = {}
 local clock = 0
+local readyEvents = {}
 
 local function forEachEnemyInRadius(x, y, radius, callback, useRenderedPosition)
 	local radiusSquared = radius * radius
@@ -297,7 +298,13 @@ function Abilities.update(dt)
 	clock = clock + dt
 	State.abilityClock = clock
 	for id, cooldown in pairs(State.abilityCooldowns) do
-		State.abilityCooldowns[id] = math.max(0, cooldown - dt)
+		local nextCooldown = math.max(0, cooldown - dt)
+		State.abilityCooldowns[id] = nextCooldown
+		-- Only a live positive-to-zero transition is news. Cooldowns restored at
+		-- zero, UI hover passes, and pause frames therefore cannot retrigger it.
+		if cooldown > 0 and nextCooldown == 0 then
+			readyEvents[#readyEvents + 1] = id
+		end
 	end
 
 	for i = #active, 1, -1 do
@@ -314,6 +321,12 @@ function Abilities.update(dt)
 			table.remove(active, i)
 		end
 	end
+end
+
+function Abilities.consumeReadyEvents()
+	local events = readyEvents
+	readyEvents = {}
+	return events
 end
 
 function Abilities.getEntitiesInActiveArea(effect, entityKind)
@@ -346,6 +359,7 @@ end
 
 function Abilities.reset()
 	active = {}
+	readyEvents = {}
 	clock = 0
 	State.abilityClock = 0
 end

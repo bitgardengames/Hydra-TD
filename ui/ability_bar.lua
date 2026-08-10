@@ -11,6 +11,7 @@ local Button = require("ui.button")
 local Hotkeys = require("core.hotkeys")
 local AbilityIcons = require("ui.ability_icons")
 local Effects = require("world.effects")
+local Sound = require("systems.sound")
 
 local lg = love.graphics
 local floor = math.floor
@@ -29,6 +30,12 @@ local PANEL_PAD = 12
 local PANEL_INSET = 16
 local MAX_ABILITIES = 6
 local IDLE_LIFT = 5
+local READY_FX_DURATION = 0.65
+local CAST_FX_DURATION = 0.24
+
+local function formatSeconds(value)
+	return L("ability.seconds", value)
+end
 
 local colorOutline = Theme.outline.color
 local colorBackdrop = Theme.ui.backdrop
@@ -43,14 +50,28 @@ local function showTooltip(abilityId, def)
 	local title = L(def.nameKey)
 	local description = L(def.descKey)
 	local tooltip = abilityTooltips[abilityId]
+	local baseDuration = def.effect and def.effect.duration
+	local enhancedDuration = def.upgradedEffect and def.upgradedEffect.duration
+	local durationText = baseDuration and formatSeconds(baseDuration)
+	if durationText and enhancedDuration and enhancedDuration ~= baseDuration then
+		durationText = durationText .. "  " .. L("ability.enhancedValue", formatSeconds(enhancedDuration))
+	end
+	local signature = table.concat({title, description, tostring(def.cooldown), durationText or ""}, "\0")
 
 	-- Rebuild if localization changed, while keeping the rows table stable during
 	-- normal hovering so Tooltip does not recalculate its layout every frame.
-	if not tooltip or tooltip.title ~= title or tooltip.rows[1].text ~= description then
+	if not tooltip or tooltip.signature ~= signature then
 		tooltip = {
 			title = title,
-			rows = {{kind = "text", text = description}},
+			signature = signature,
+			rows = {
+				{kind = "text", text = description, padAfter = 4},
+				{label = L("ability.cooldownLabel"), value = formatSeconds(def.cooldown)},
+			},
 		}
+		if durationText then
+			tooltip.rows[#tooltip.rows + 1] = {label = L("ability.activeDurationLabel"), value = durationText}
+		end
 		abilityTooltips[abilityId] = tooltip
 	end
 
@@ -97,6 +118,8 @@ local function updateButton(button, hovered, dt)
 	end
 	Button.updateAnimation(anim, hovered, dt)
 	anim.errorT = max(0, anim.errorT - dt * 4)
+	anim.readyT = max(0, (anim.readyT or 0) - dt)
+	anim.castT = max(0, (anim.castT or 0) - dt)
 	return anim
 end
 
@@ -109,7 +132,9 @@ local function drawButton(button, def, activeTime)
 	local anim = button.anim or Button.newAnimation({errorT = 0})
 	local errorEase = anim.errorT * anim.errorT * (3 - 2 * anim.errorT)
 	local fx = x + math.sin(anim.errorT * math.pi * 8) * errorEase * 4
-	local fy = y - IDLE_LIFT * (1 - anim.pressT)
+	local castProgress = (anim.castT or 0) / CAST_FX_DURATION
+	local castCompress = math.sin(castProgress * math.pi) * 4
+	local fy = y - IDLE_LIFT * (1 - anim.pressT) + castCompress
 	local r, g, b = Button.getHoverColor(anim)
 
 	lg.setColor(colorOutline)
@@ -133,6 +158,18 @@ local function drawButton(button, def, activeTime)
 		iconState = "ready"
 	end
 	AbilityIcons.draw(button.abilityId, fx + SIZE * 0.5, fy + SIZE * 0.5, available and 1 or 0.82, 1, iconState)
+
+	if castProgress > 0 then
+		lg.setColor(1, 0.82, 0.3, 0.65 * castProgress)
+		lg.rectangle("fill", fx + 2, fy + 2, SIZE - 4, SIZE - 4, 7)
+	end
+	local readyProgress = (anim.readyT or 0) / READY_FX_DURATION
+	if readyProgress > 0 then
+		local inset = (1 - readyProgress) * SIZE * 0.42
+		lg.setColor(0.45, 1, 0.72, readyProgress)
+		lg.setLineWidth(2 + readyProgress * 2)
+		lg.rectangle("line", fx + inset, fy + inset, SIZE - inset * 2, SIZE - inset * 2, 8)
+	end
 
 	if activeTime then
 		local activeAlpha = Effects.expirationPulse(activeTime, State.abilityClock or 0)
@@ -166,6 +203,16 @@ local function drawButton(button, def, activeTime)
 end
 
 function AbilityBar.update(dt, mx, my)
+	for _, abilityId in ipairs(Abilities.consumeReadyEvents()) do
+		for _, button in ipairs(buttons) do
+			if button.abilityId == abilityId and button.lockMessage == nil then
+				button.anim = button.anim or Button.newAnimation({errorT = 0})
+				button.anim.readyT = READY_FX_DURATION
+				Sound.play("abilityReady")
+				break
+			end
+		end
+	end
 	mx, my = mx or love.mouse.getPosition()
 	local equipped = getDisplayedAbilities()
 	local count = min(#equipped, MAX_ABILITIES)
@@ -193,6 +240,16 @@ function AbilityBar.update(dt, mx, my)
 		end
 	end
 	for i = count + 1, #buttons do buttons[i] = nil end
+end
+
+function AbilityBar.acknowledgeCast(abilityId)
+	for _, button in ipairs(buttons) do
+		if button.abilityId == abilityId then
+			button.anim = button.anim or Button.newAnimation({errorT = 0})
+			button.anim.castT = CAST_FX_DURATION
+			return
+		end
+	end
 end
 
 function AbilityBar.draw()

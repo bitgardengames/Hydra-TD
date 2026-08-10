@@ -89,7 +89,12 @@ end
 
 local function releaseAbilityButton(b, x, y)
 	if b.enabled == true then
-		Abilities.beginTargeting(b.abilityId)
+		local started = Abilities.beginTargeting(b.abilityId)
+		-- Instant abilities cast during beginTargeting; targeted abilities wait
+		-- for the world click before acknowledging the slot.
+		if started and not State.abilityTargeting then
+			BottomBar.acknowledgeAbilityCast(b.abilityId)
+		end
 		return
 	end
 
@@ -121,8 +126,20 @@ local function activateAbilitySlot(slotIndex)
 		return
 	end
 
-	if not abilityId or not Abilities.beginTargeting(abilityId) then
+	local started = abilityId and Abilities.beginTargeting(abilityId)
+	if started and not State.abilityTargeting then
+		BottomBar.acknowledgeAbilityCast(abilityId)
+	elseif not started then
 		showAbilityError(abilityId)
+	end
+end
+
+local function shakeAbilityButton(abilityId)
+	for _, button in ipairs(BottomBar.getAbilityButtons()) do
+		if button.abilityId == abilityId and button.anim then
+			button.anim.errorT = 1
+			return
+		end
 	end
 end
 
@@ -243,9 +260,13 @@ local function pressWorld(x, y, button)
 
 	local wx, wy = Camera.screenToWorld(x, y)
 	if State.abilityTargeting then
+		local abilityId = State.abilityTargeting.abilityId
 		local ok, why = Abilities.activate(wx, wy)
-		if not ok then
+		if ok then
+			BottomBar.acknowledgeAbilityCast(abilityId)
+		else
 			Sound.play("uiError")
+			shakeAbilityButton(abilityId)
 			Floaters.add(wx, wy, L("floater.abilityInvalid." .. (why or "invalid")), colorBad[1], colorBad[2], colorBad[3])
 		end
 	else

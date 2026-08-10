@@ -26,6 +26,10 @@ return {
 		goldRush = {name = "Gold Rush", desc = "Earn 50% more income from non-boss kills for 8 seconds."},
 		lastStand = {name = "Last Stand", desc = "Make towers in the targeted area attack 45% faster for 6 seconds and fire a volley at the first escaping enemy (two volleys when enhanced)."},
 		cooldown = "%s  %ds",
+		cooldownLabel = "Cooldown",
+		activeDurationLabel = "Active duration",
+		seconds = "%gs",
+		enhancedValue = "(%s enhanced)",
 	},
 
 	settings = {
