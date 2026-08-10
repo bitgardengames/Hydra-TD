@@ -18,6 +18,7 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 local DrawEntities = require("render.draw_entities")
 local RunRecap = require("ui.run_recap")
 local ScrollView = require("ui.scroll_view")
+local AbilityIcons = require("ui.ability_icons")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -30,7 +31,6 @@ local max = math.max
 local format = string.format
 local sin = math.sin
 local random = love.math.random
-local cos = math.cos
 
 local Screen = {}
 
@@ -92,32 +92,6 @@ local function easeOutBack(x)
 	local c1 = 1.70158
 	local c3 = c1 + 1
 	return 1 + c3 * ((x - 1) ^ 3) + c1 * ((x - 1) ^ 2)
-end
-
-local function drawAbilityIcon(abilityId, cx, cy, scale, alpha)
-	if abilityId == "meteor" then
-		lg.setLineWidth(5 * scale)
-		lg.setColor(1, 0.48, 0.18, 0.9 * alpha)
-		lg.line(cx - 15 * scale, cy - 15 * scale, cx - 5 * scale, cy - 5 * scale)
-		lg.setColor(1, 0.76, 0.28, alpha)
-		lg.circle("fill", cx + 3 * scale, cy + 3 * scale, 12 * scale)
-		lg.setColor(1, 0.92, 0.55, alpha)
-		lg.circle("fill", cx, cy, 5 * scale)
-	elseif abilityId == "frost_nova" then
-		lg.setColor(0.55, 0.88, 1, alpha)
-		lg.setLineWidth(3 * scale)
-		for i = 0, 2 do
-			local angle = i * math.pi / 3
-			local dx, dy = cos(angle) * 17 * scale, math.sin(angle) * 17 * scale
-			lg.line(cx - dx, cy - dy, cx + dx, cy + dy)
-		end
-		lg.circle("fill", cx, cy, 4 * scale)
-	else
-		lg.setColor(Theme.ui.selected[1], Theme.ui.selected[2], Theme.ui.selected[3], alpha)
-		lg.circle("fill", cx, cy, 18 * scale)
-		lg.setColor(1, 1, 1, alpha)
-		Text.printfShadow("★", cx - 18 * scale, cy - 12 * scale, 36 * scale, "center")
-	end
 end
 
 local function buildRewardCards()
@@ -234,8 +208,8 @@ local function drawRewardUnlockCard(g)
 	if card.type == "tower" then
 		DrawEntities.drawTowerBase(card.id, iconX, iconY + 10, alpha)
 		DrawEntities.drawTowerCore(card.id, iconX, iconY + 10, -0.65, 0, alpha)
-	else
-		drawAbilityIcon(card.id, iconX, iconY, 1.45, alpha)
+	elseif card.type == "ability" then
+		AbilityIcons.draw(card.id, iconX, iconY, 1.45, alpha, "newly-unlocked")
 	end
 
 	Fonts.set("menu")
