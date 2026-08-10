@@ -30,6 +30,7 @@ local atan2 = math.atan2
 local min = math.min
 local max = math.max
 local floor = math.floor
+local format = string.format
 
 local colorGood = Theme.ui.good
 local colorWarn = Theme.ui.warn
@@ -189,11 +190,12 @@ local function recomputeTowerStats(t)
 	-- smoothly as levels are gained.
 	local scaledDamageMult = 1 + (dmgMult - 1) * progress
 	local scaledFireMult = 1 + (fireMult - 1) * progress
+	local moduleStats = Modules.getTowerStatModifiers(t)
 
-	t.damage = def.damage * scaledDamageMult
-	t.fireRate = def.fireRate * scaledFireMult
+	t.damage = def.damage * scaledDamageMult * moduleStats.damageMult
+	t.fireRate = def.fireRate * scaledFireMult * moduleStats.fireRateMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
-	t.range = def.range + rangeAdd * upgrades
+	t.range = def.range + rangeAdd * upgrades + moduleStats.rangeAdd
 	t.range2 = t.range * t.range
 	t._cache = t._cache or {}
 	t._cache.targetMode = {
@@ -405,20 +407,140 @@ local function upgradeTower(t, specializationId)
 	return true
 end
 
-local function getUpgradePreview(t)
+local function previewTowerStats(t, level)
+	local def = t.def
+	local upgrades = max(0, level - 1)
+	local progress = min(1, upgrades / MAX_BRANCH_UPGRADES)
+	local upgrade = def.upgrade or {}
+
+	local moduleStats = Modules.getTowerStatModifiers(t)
+	return {
+		damage = def.damage * (1 + ((upgrade.dmgMult or 1) - 1) * progress) * moduleStats.damageMult,
+		fireRate = def.fireRate * (1 + ((upgrade.fireMult or 1) - 1) * progress) * moduleStats.fireRateMult,
+		range = def.range + (upgrade.rangeAdd or 0) * upgrades + moduleStats.rangeAdd,
+	}
+end
+
+local function cloneForPreview(t, level, specializationId)
+	local clone = {}
+	for k, v in pairs(t) do
+		-- Module resolution only writes caches. Keeping them off the clone makes the
+		-- preview independent of, and unable to invalidate, the live tower.
+		if k ~= "_cache" and k ~= "branchSelections" then
+			clone[k] = v
+		end
+	end
+	clone.level = level
+	clone._cache = {}
+	clone.branchSelections = {}
+	for i = 1, #(t.branchSelections or {}) do
+		clone.branchSelections[i] = t.branchSelections[i]
+	end
+	if specializationId then
+		clone.branchSelections[#clone.branchSelections + 1] = specializationId
+		clone.specializationId = specializationId
+	end
+	return clone
+end
+
+local function behaviorMap(profile)
+	local out = {}
+	for i = 1, #(profile and profile.behaviors or {}) do
+		local behavior = profile.behaviors[i]
+		out[behavior.id] = behavior.data or {}
+	end
+	return out
+end
+
+local function effectiveDamage(stats, behaviors)
+	local mult = 1
+	if behaviors.hit_damage then mult = mult * (behaviors.hit_damage.mult or 1) end
+	if behaviors.cannon_damage_scale then mult = mult * (behaviors.cannon_damage_scale.mult or 1) end
+	return stats.damage * mult
+end
+
+local function numberText(value, decimals, suffix)
+	return format("%." .. decimals .. "f%s", value, suffix or "")
+end
+
+local function addPreviewRow(rows, key, current, nextValue, direction)
+	if current ~= nextValue then
+		rows[#rows + 1] = {
+			key = key,
+			labelKey = "upgradePreview." .. key,
+			current = current,
+			next = nextValue,
+			direction = direction,
+		}
+	end
+end
+
+local function addBehaviorRows(rows, before, after)
+	local scalar = {
+		{ "splash", "aoe_damage", "radius", function(v) return numberText(v, 0, " px") end },
+		{ "poisonStacks", "apply_poison", "maxStacks", function(v) return numberText(v, 0) end },
+		{ "poisonDuration", "apply_poison", "dur", function(v) return numberText(v, 1, "s") end },
+		{ "slowDuration", "apply_slow", "dur", function(v) return numberText(v, 1, "s") end },
+		{ "tickRate", "tick_damage", "rate", function(v) return numberText(v, 3, "s") end, true },
+	}
+	for i = 1, #scalar do
+		local item = scalar[i]
+		local a = before[item[2]] and before[item[2]][item[3]]
+		local b = after[item[2]] and after[item[2]][item[3]]
+		if a and b and a ~= b then
+			addPreviewRow(rows, item[1], item[4](a), item[4](b), item[5] and (b < a and "good" or "bad") or (b > a and "good" or "bad"))
+		elseif b and not a then
+			addPreviewRow(rows, item[1], "—", item[4](b), "good")
+		end
+	end
+
+	local descriptors = {
+		{ "chains", "hit_chain", "jumps", function(v) return format("%d", v) end },
+		{ "impactFragments", "split_on_hit", "count", function(v) return format("%d", v) end },
+		{ "pierce", "pierce", "maxHits", function(v) return format("%d", v) end },
+	}
+	for i = 1, #descriptors do
+		local item = descriptors[i]
+		local a = before[item[2]] and before[item[2]][item[3]]
+		local b = after[item[2]] and after[item[2]][item[3]]
+		if b and a ~= b then
+			addPreviewRow(rows, item[1], a and item[4](a) or "—", item[4](b), "good")
+		end
+	end
+end
+
+local function getUpgradePreview(t, specializationId)
 	if not t or not t.def then
 		return nil
 	end
+	local level = max(1, t.level or 1)
+	local nextLevel = level + 1
+	local currentClone = cloneForPreview(t, level)
+	local nextClone = cloneForPreview(t, nextLevel, specializationId)
+	local currentStats = previewTowerStats(currentClone, level)
+	local nextStats = previewTowerStats(nextClone, nextLevel)
+	local currentBehaviors = behaviorMap(Modules.getFireProfile(currentClone))
+	local nextBehaviors = behaviorMap(Modules.getFireProfile(nextClone))
+	local rows = {}
 
-	local preview = t._upgradePreview
-	if not preview then
-		preview = {}
-		t._upgradePreview = preview
-	end
-	preview.specializationId = t.specializationId
-	preview.nextLevel = t.level + 1
+	local currentDamage = effectiveDamage(currentStats, currentBehaviors)
+	local nextDamage = effectiveDamage(nextStats, nextBehaviors)
+	currentStats.directDamage = currentDamage
+	currentStats.mechanics = currentBehaviors
+	nextStats.directDamage = nextDamage
+	nextStats.mechanics = nextBehaviors
+	addPreviewRow(rows, "damage", numberText(currentDamage, 1), numberText(nextDamage, 1), nextDamage > currentDamage and "good" or "bad")
+	addPreviewRow(rows, "fireRate", numberText(currentStats.fireRate, 2, "/s"), numberText(nextStats.fireRate, 2, "/s"), nextStats.fireRate > currentStats.fireRate and "good" or "bad")
+	addPreviewRow(rows, "range", numberText(currentStats.range / Constants.TILE, 2), numberText(nextStats.range / Constants.TILE, 2), nextStats.range > currentStats.range and "good" or "bad")
+	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
 
-	return preview
+	return {
+		specializationId = specializationId,
+		nextLevel = nextLevel,
+		current = currentStats,
+		postUpgrade = nextStats,
+		rows = rows,
+	}
 end
 
 local function sellTower(t)

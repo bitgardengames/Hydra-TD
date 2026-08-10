@@ -238,6 +238,9 @@ function ModulePicker.openTowerUpgrade(tower)
 	if not cost or State.money < cost then
 		return false
 	end
+	for i = 1, #choices do
+		choices[i].preview = Towers.getUpgradePreview(tower, choices[i].moduleId)
+	end
 
 	return ModulePicker.open({
 		mode = "tower_upgrade",
@@ -430,6 +433,31 @@ function ModulePicker.draw()
 			Fonts.set("ui")
 			lg.setColor(1, 1, 1, choice.disabled and 0.46 * alpha or 0.84 * alpha)
 			lg.printf(getModuleDesc(mod), drawX + 18, bodyY + 56, drawW - 36, "left")
+
+			if picker.mode == "tower_upgrade" and choice.preview then
+				local rows = choice.preview.rows or {}
+				local rowY = bodyY + 112
+				Fonts.set("tooltip")
+				lg.setColor(1, 1, 1, 0.58 * alpha)
+				lg.print(L("modulePicker.changes"), drawX + 18, rowY)
+				rowY = rowY + 17
+				for rowIndex = 1, math.min(#rows, 7) do
+					local row = rows[rowIndex]
+					lg.setColor(1, 1, 1, 0.72 * alpha)
+					lg.print(L(row.labelKey), drawX + 18, rowY)
+					local currentText = row.current .. "  "
+					local nextText = "→ " .. row.next
+					local rightX = drawX + drawW - 18
+					local nextW = Fonts.get("tooltip"):getWidth(nextText)
+					local currentW = Fonts.get("tooltip"):getWidth(currentText)
+					lg.setColor(1, 1, 1, 0.72 * alpha)
+					lg.print(currentText, rightX - nextW - currentW, rowY)
+					local changedColor = row.direction == "bad" and Theme.ui.bad or Theme.ui.good
+					lg.setColor(changedColor[1], changedColor[2], changedColor[3], alpha)
+					lg.print(nextText, rightX - nextW, rowY)
+					rowY = rowY + 14
+				end
+			end
 
 			if choice.statusText then
 				lg.setColor(choice.disabled and 1 or towerColor[1], choice.disabled and 0.5 or towerColor[2], choice.disabled and 0.35 or towerColor[3], 0.86 * alpha)

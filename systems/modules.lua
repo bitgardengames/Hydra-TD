@@ -498,6 +498,22 @@ function Modules.getTargetMode(towerOrKind)
 	return mode
 end
 
+function Modules.getTowerStatModifiers(towerOrKind)
+	local modifiers = {damageMult = 1, fireRateMult = 1, rangeAdd = 0}
+	if not Modules.isEnabled() then
+		return modifiers
+	end
+	resolveModules(collectTowerModules(towerOrKind), function(mod)
+		local stats = mod.towerStats
+		if stats then
+			modifiers.damageMult = modifiers.damageMult * (stats.damageMult or 1)
+			modifiers.fireRateMult = modifiers.fireRateMult * (stats.fireRateMult or 1)
+			modifiers.rangeAdd = modifiers.rangeAdd + (stats.rangeAdd or 0)
+		end
+	end)
+	return modifiers
+end
+
 function Modules.rollTowerUpgradeChoices(tower)
 	if not tower or not tower.kind then
 		return {}

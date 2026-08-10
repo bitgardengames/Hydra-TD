@@ -602,7 +602,7 @@ local function behaviorRole(id)
 	return nil
 end
 
-local function addSpec(id, nameKey, descKey, behaviors, targetMode)
+local function addSpec(id, nameKey, descKey, behaviors, targetMode, towerStats)
 	local operations = {}
 
 	if targetMode then
@@ -630,6 +630,7 @@ local function addSpec(id, nameKey, descKey, behaviors, targetMode)
 		targetMode = targetMode,
 		behaviors = cloneBehaviors(behaviors),
 		branchOps = operations,
+		towerStats = towerStats,
 
 		apply = function(ctx)
 			for i = 1, #operations do
@@ -893,7 +894,7 @@ addSpec("cannon_rapid_mortar", "module.cannon_rapid_mortar", "moduleDesc.cannon_
 	{id = "aoe_damage", data = {radius = 40, falloff = 0.84}},
 	{id = "cannon_damage_scale", data = {mult = 0.78}},
 	{id = "draw_cannon"},
-})
+}, nil, {fireRateMult = 1.35})
 
 addSpec("cannon_cluster_payload", "module.cannon_cluster_payload", "moduleDesc.cannon_cluster_payload", {
 	{id = "move_homing"},
