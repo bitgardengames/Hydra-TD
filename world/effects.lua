@@ -40,16 +40,12 @@ function Effects.particleCount(base, intensity, criticalTell)
 	return math.max(intensity >= Theme.effects.intensity.strong and 1 or 0, math.floor(base + 0.5))
 end
 
--- Central trigger used by combat systems. Tags make effect priority explicit and
--- allow accessibility settings to scale spectacle without hiding enemy tells.
-function Effects.trigger(tag, opts)
+-- Central trigger used by combat systems to apply impact-driven camera shake.
+function Effects.trigger(opts)
 	opts = opts or {}
-	local intensity = opts.intensity or Theme.effects.intensity.normal
-	local criticalTell = opts.criticalTell == true
 	local s = settings()
 	local shakeScale = (s.screenShake == false or s.cameraMotion == false) and 0 or 1
-	Camera.shake((opts.shake or intensity * 0.8) * shakeScale, opts.duration or 0.14)
-	return { tag = tag, intensity = intensity, color = opts.color, criticalTell = criticalTell }
+	Camera.shake((opts.shake or 0.8) * shakeScale, opts.duration or 0.14)
 end
 
 Effects.splashes = {}

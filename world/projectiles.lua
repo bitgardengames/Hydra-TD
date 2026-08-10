@@ -362,7 +362,7 @@ local function resolveDamage(p, evt)
 	end
 	local highDamage = effectiveDamage >= math.max(40, (e.maxHp or 0) * 0.12)
 	if highDamage then
-		Effects.trigger("high_damage", {intensity = 3, shake = e.boss and 4 or 2.5})
+		Effects.trigger({shake = e.boss and 4 or 2.5})
 	end
 end
 
