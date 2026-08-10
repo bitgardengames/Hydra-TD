@@ -5,10 +5,14 @@ local Towers = require("world.towers")
 local Effects = require("world.effects")
 local State = require("core.state")
 local Constants = require("core.constants")
+local Sound = require("systems.sound")
 
 local Abilities = {}
 local active = {}
 local clock = 0
+local feedback = { ready = {}, cast = nil }
+local lastReadyCue = -math.huge
+local READY_CUE_GAP = 0.35
 
 local function forEachEnemyInRadius(x, y, radius, callback, useRenderedPosition)
 	local radiusSquared = radius * radius
@@ -236,6 +240,10 @@ function Abilities.activate(x, y)
 	-- creates a timed effect or resolves immediately.
 	activateEffect(effect, x, y, def.id)
 	playActivationEffect(effect, x, y)
+	feedback.cast = {
+		abilityId = def.id, x = x, y = y, started = clock,
+		expires = clock + 0.55,
+	}
 	State.abilityCooldowns[def.id] = def.cooldown
 	State.abilityTargeting = nil
 	return true
@@ -297,8 +305,18 @@ function Abilities.update(dt)
 	clock = clock + dt
 	State.abilityClock = clock
 	for id, cooldown in pairs(State.abilityCooldowns) do
-		State.abilityCooldowns[id] = math.max(0, cooldown - dt)
+		local nextCooldown = math.max(0, cooldown - dt)
+		State.abilityCooldowns[id] = nextCooldown
+		if cooldown > 0 and nextCooldown == 0 then
+			-- One restrained cue represents a cluster of abilities completing together.
+			if clock - lastReadyCue >= READY_CUE_GAP then
+				feedback.ready[id] = clock
+				Sound.play("uiMove", { pitch = 1.08 })
+				lastReadyCue = clock
+			end
+		end
 	end
+	if feedback.cast and clock >= feedback.cast.expires then feedback.cast = nil end
 
 	for i = #active, 1, -1 do
 		local effect = active[i]
@@ -329,6 +347,12 @@ function Abilities.getActive()
 	return active, clock
 end
 
+-- Transient presentation data is read-only to UI code; gameplay never depends
+-- on whether a pulse or cast connector was rendered.
+function Abilities.getFeedback()
+	return feedback, clock
+end
+
 function Abilities.getKillIncomeMultiplier(enemy)
 	local isBoss = enemy and (enemy.boss or (enemy.def and enemy.def.boss))
 	if isBoss then
@@ -348,6 +372,8 @@ function Abilities.reset()
 	active = {}
 	clock = 0
 	State.abilityClock = 0
+	feedback = { ready = {}, cast = nil }
+	lastReadyCue = -math.huge
 end
 
 return Abilities

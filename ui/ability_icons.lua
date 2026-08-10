@@ -93,6 +93,10 @@ local function drawAccent(kind, state, cx, cy, scale, alpha)
 	if kind == "ready" then
 		lg.setColor(0.42, 1, 0.62, 0.72 * alpha)
 		lg.arc("line", cx, cy, radius, -pi * 0.72, pi * 0.72)
+	elseif kind == "nearly_ready" or kind == "nearly-ready" then
+		local progress = type(state) == "table" and (state.progress or 0.85) or 0.85
+		lg.setColor(0.38, 0.86, 0.72, 0.9 * alpha)
+		lg.arc("line", cx, cy, radius, -pi / 2, -pi / 2 + pi * 2 * progress)
 	elseif kind == "cooldown" then
 		local progress = type(state) == "table" and (state.progress or state.ratio) or 0
 		progress = math.max(0, math.min(1, tonumber(progress) or 0))
@@ -100,10 +104,11 @@ local function drawAccent(kind, state, cx, cy, scale, alpha)
 		lg.circle("fill", cx, cy, 19 * scale)
 		lg.setColor(0.62, 0.68, 0.76, 0.85 * alpha)
 		if progress > 0 then lg.arc("line", cx, cy, radius, -pi / 2, -pi / 2 + pi * 2 * progress) end
-	elseif kind == "active" then
+	elseif kind == "active" or kind == "sustained" then
 		lg.setColor(1, 0.78, 0.12, 0.95 * alpha)
 		lg.circle("line", cx, cy, radius)
-		lg.circle("fill", cx + radius, cy, 2.5 * scale)
+		local ratio = type(state) == "table" and math.max(0, math.min(1, state.ratio or 1)) or 1
+		lg.arc("line", cx, cy, radius + 3 * scale, -pi / 2, -pi / 2 + pi * 2 * ratio)
 	elseif kind == "locked" then
 		lg.setColor(0.06, 0.07, 0.09, 0.58 * alpha)
 		lg.circle("fill", cx, cy, 20 * scale)

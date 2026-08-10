@@ -11,11 +11,13 @@ local Button = require("ui.button")
 local Hotkeys = require("core.hotkeys")
 local AbilityIcons = require("ui.ability_icons")
 local Effects = require("world.effects")
+local Camera = require("core.camera")
 
 local lg = love.graphics
 local floor = math.floor
 local min = math.min
 local max = math.max
+local pi = math.pi
 
 local AbilityBar = {}
 local buttons = {}
@@ -29,6 +31,7 @@ local PANEL_PAD = 12
 local PANEL_INSET = 16
 local MAX_ABILITIES = 6
 local IDLE_LIFT = 5
+local NEAR_READY_WINDOW = 3
 
 local colorOutline = Theme.outline.color
 local colorBackdrop = Theme.ui.backdrop
@@ -123,16 +126,38 @@ local function drawButton(button, def, activeTime)
 	lg.rectangle("fill", fx, fy, SIZE, SIZE, innerRadius)
 
 	local iconState
-	if activeTime or (State.abilityTargeting and State.abilityTargeting.abilityId == button.abilityId) then
+	if activeTime then
+		iconState = {kind = "sustained", ratio = min(1, activeTime / (def.effect.duration or activeTime))}
+	elseif State.abilityTargeting and State.abilityTargeting.abilityId == button.abilityId then
 		iconState = "active"
 	elseif not available then
 		iconState = "locked"
+	elseif not ready and cooldown <= NEAR_READY_WINDOW then
+		iconState = {kind = "nearly_ready", progress = 1 - min(1, cooldown / def.cooldown)}
 	elseif not ready then
 		iconState = {kind = "cooldown", progress = 1 - min(1, cooldown / def.cooldown)}
 	else
 		iconState = "ready"
 	end
 	AbilityIcons.draw(button.abilityId, fx + SIZE * 0.5, fy + SIZE * 0.5, available and 1 or 0.82, 1, iconState)
+
+	local feedback, feedbackClock = Abilities.getFeedback()
+	local readyAt = feedback.ready[button.abilityId]
+	local readyAge = readyAt and feedbackClock - readyAt
+	if readyAge and readyAge >= 0 and readyAge < .55 then
+		local t = readyAge / .55
+		local reducedFlash = Save.data and Save.data.settings and Save.data.settings.reducedFlash
+		local grow = reducedFlash and (2 + 3 * math.sin(t * math.pi)) or (2 + 8 * t)
+		lg.setLineWidth(reducedFlash and 2 or 3)
+		lg.setColor(.42, 1, .62, reducedFlash and (.8 * (1 - t)) or (.95 * (1 - t)))
+		lg.rectangle("line", fx - grow, fy - grow, SIZE + grow * 2, SIZE + grow * 2, 10 + grow)
+		-- Reduced-flash keeps only outline/scale motion; the standard treatment
+		-- adds a short radial sweep rather than flashing the whole slot.
+		if not reducedFlash then
+			lg.arc("line", fx + SIZE * .5, fy + SIZE * .5, SIZE * .47,
+				-pi / 2, -pi / 2 + pi * 2 * min(1, t * 2.5))
+		end
+	end
 
 	if activeTime then
 		local activeAlpha = Effects.expirationPulse(activeTime, State.abilityClock or 0)
@@ -220,6 +245,56 @@ function AbilityBar.draw()
 		local button = buttons[i]
 		local def = AbilityDefs[button.abilityId]
 		if def then drawButton(button, def, activeRemaining[button.abilityId]) end
+	end
+
+	local targeting = State.abilityTargeting
+	if targeting and targeting.x and targeting.y then
+		local preview = Abilities.getTargetPreview(targeting.x, targeting.y)
+		if preview then
+			local sx, sy = Camera.worldToScreen(targeting.x, targeting.y)
+			local status, color
+			if preview.reason == "outside" then status, color = "OUT OF BOUNDS", {1, .28, .28}
+			elseif preview.count == 0 then status, color = "EMPTY", {1, .68, .2}
+			else status, color = "VALID", (preview.def.target and preview.def.target.color) or {.4, 1, .6} end
+			lg.setColor(.02, .03, .05, .86)
+			lg.rectangle("fill", sx - 48, sy - 25, 96, 23, 6)
+			lg.setColor(color[1], color[2], color[3], 1)
+			Text.printfShadow(string.format("%d · %s", preview.count, status), sx - 48, sy - 22, 96, "center")
+		end
+	end
+
+	local feedback, clock = Abilities.getFeedback()
+	local cast = feedback.cast
+	if cast and cast.x and cast.y then
+		local age = clock - cast.started
+		local alpha = max(0, 1 - age / (cast.expires - cast.started))
+		local def = AbilityDefs[cast.abilityId]
+		local color = (def and def.target and def.target.color) or {1, .75, .2}
+		local sx, sy = Camera.worldToScreen(cast.x, cast.y)
+		for _, button in ipairs(buttons) do
+			if button.abilityId == cast.abilityId then
+				lg.setColor(color[1], color[2], color[3], .7 * alpha)
+				lg.setLineWidth(2)
+				lg.line(button.x, button.y + SIZE * .5, sx, sy)
+				AbilityIcons.draw(cast.abilityId, sx, sy, .48 + age * .15, alpha, "active")
+				break
+			end
+		end
+	end
+
+	-- Sustained targets repeat the slot's icon/color and carry a compact timer.
+	for _, effect in ipairs((select(1, Abilities.getActive()))) do
+		local def = effect.abilityId and AbilityDefs[effect.abilityId]
+		if def and def.sustained and def.sustained.entityMarker then
+			local entities = effect.towers or (def.target and def.target.entities == "enemies"
+				and Abilities.getEntitiesInActiveArea(effect, "enemies")) or {}
+			local remaining = max(0, effect.expires - clock)
+			for _, entity in ipairs(entities) do
+				local sx, sy = Camera.worldToScreen(entity.rx or entity.x, (entity.ry or entity.renderY or entity.y) - 27)
+				AbilityIcons.draw(effect.abilityId, sx - 13, sy, .28, .9, "sustained")
+				Text.printfShadow(string.format("%.1f", remaining), sx, sy - 7, 38, "left")
+			end
+		end
 	end
 end
 
