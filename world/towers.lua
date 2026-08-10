@@ -408,7 +408,7 @@ local function upgradeTower(t, specializationId)
 	local isFinalTier = TowerBranchDefs.getChoices(t.kind, t.level + 1) == nil
 	Emissions.emitUpgradeTransformation(t, transformationPreview, isFinalTier)
 	if isFinalTier then
-		Effects.trigger({shake = 6, duration = 0.3})
+		Effects.shake(6, 0.3)
 	end
 
 

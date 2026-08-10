@@ -371,7 +371,7 @@ local function beginSpawner(kind, count, gap, hpMult, spdMult, composition, grou
 end
 
 local function startBossWave(wave, map)
-	Effects.trigger({shake = 0, duration = 0.3})
+	Effects.shake(0, 0.3)
 	local bossIndex = math.max(1, math.floor(State.wave / 10))
 	local bossKind = getBossByArchetype(map, bossIndex)
 	local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)

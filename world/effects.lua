@@ -40,12 +40,11 @@ function Effects.particleCount(base, intensity, criticalTell)
 	return math.max(intensity >= Theme.effects.intensity.strong and 1 or 0, math.floor(base + 0.5))
 end
 
--- Central trigger used by combat systems to apply impact-driven camera shake.
-function Effects.trigger(opts)
-	opts = opts or {}
+-- Apply impact-driven camera shake while respecting motion settings.
+function Effects.shake(amount, duration)
 	local s = settings()
 	local shakeScale = (s.screenShake == false or s.cameraMotion == false) and 0 or 1
-	Camera.shake((opts.shake or 0.8) * shakeScale, opts.duration or 0.14)
+	Camera.shake((amount or 0.8) * shakeScale, duration or 0.14)
 end
 
 Effects.splashes = {}
