@@ -405,6 +405,7 @@ function Screen.load()
 				Sound.play("uiConfirm")
 				Backdrop.start()
 				Steam.setRichPresence(L("presence.menu"))
+				Save.flush()
 				State.mode = "menu"
 			end
 		},

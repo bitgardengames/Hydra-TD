@@ -128,7 +128,7 @@ local function cycleDifficulty(dir)
 
 	Save.data.settings.difficulty = nextDifficulty
 	Difficulty.set(nextDifficulty)
-	Save.flush()
+	Save.markDirty()
 	Sound.play("uiMove")
 end
 
@@ -435,6 +435,7 @@ function Screen.load()
 			h = btnH,
 			onClick = function()
 				hideMedalTooltip()
+				Save.flush()
 				State.mode = "menu"
 				Steam.setRichPresence(L("presence.menu"))
 				Sound.play("uiBack")
@@ -634,6 +635,7 @@ function Screen.keypressed(key)
 		cycleDifficulty(1)
 	elseif key == "escape" then
 		hideMedalTooltip()
+		Save.flush()
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
 		Sound.play("uiBack")

@@ -65,7 +65,7 @@ function Capture:commit(change)
 
 	bindingSection(change.row.bindingKind)[change.row.bindingId] = change.key
 	Hotkeys.refreshFromSave()
-	Save.flush()
+	Save.markDirty()
 end
 
 function Capture:setBinding(row, key, rows)
@@ -113,7 +113,7 @@ end
 function Capture:restoreDefaults()
 	Save.data.settings.keybinds = Hotkeys.getDefaultBindings()
 	Hotkeys.refreshFromSave()
-	Save.flush()
+	Save.markDirty()
 	self.conflictMessage = L("settings.controlsDefaultsRestored")
 	self.pendingChange = nil
 	Sound.play("uiConfirm")

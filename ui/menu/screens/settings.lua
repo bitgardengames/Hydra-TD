@@ -89,9 +89,6 @@ local activeTab = 1
 local tabAnim = {}
 local tabTime = 0
 local keybindCapture = KeybindCapture.new()
-local settingsDirty = false
-local settingsFlushTimer = nil
-local settingsFlushDelay = 0.35
 
 local keyboardControlsLayout = {
 	{kind = "action", id = "escape", label = "settings.controlPause"},
@@ -121,21 +118,11 @@ local function keybindText(row)
 end
 
 local function flushSettingsNow()
-	if settingsDirty then
-		Save.flush()
-		settingsDirty = false
-	end
-
-	settingsFlushTimer = nil
+	Save.flush()
 end
 
-local function settingsChanged(flushImmediately)
-	settingsDirty = true
-	settingsFlushTimer = settingsFlushDelay
-
-	if flushImmediately then
-		flushSettingsNow()
-	end
+local function settingsChanged()
+	Save.markDirty()
 end
 
 local function sliderRow(id, label, color, get, set)
@@ -366,8 +353,6 @@ function Screen.load()
 	rowsScroll:reset()
 	activeTab = 1
 	tabTime = 0
-	settingsDirty = false
-	settingsFlushTimer = nil
 
 	tabs = {
 		{
@@ -526,13 +511,6 @@ function Screen.update(dt)
 		end
 	end
 
-	if settingsFlushTimer then
-		settingsFlushTimer = settingsFlushTimer - dt
-
-		if settingsFlushTimer <= 0 then
-			flushSettingsNow()
-		end
-	end
 end
 
 function Screen.draw()
@@ -673,7 +651,7 @@ local rowPressHandlers = {
 	end,
 	toggle = function(row)
 		row.set(not row.get())
-		settingsChanged(row.id == "fullscreen")
+		settingsChanged()
 		Sound.play("uiConfirm")
 		return true
 	end,

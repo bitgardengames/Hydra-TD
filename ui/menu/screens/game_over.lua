@@ -10,6 +10,7 @@ local L = require("core.localization")
 local Modules = require("systems.modules")
 local RunStats = require("systems.run_stats")
 local RunRecap = require("ui.run_recap")
+local Save = require("core.save")
 
 local lg = love.graphics
 
@@ -78,6 +79,7 @@ local function returnToMenu(playSound)
 	end
 	Backdrop.start()
 	Steam.setRichPresence(L("presence.menu"))
+	Save.flush()
 	State.mode = "menu"
 	Sound.playMusic("menu")
 end
