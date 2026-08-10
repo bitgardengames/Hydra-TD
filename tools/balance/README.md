@@ -38,3 +38,18 @@ enemy count). It also emits every wave's total enemy count, spawn duration, and
 recovery gaps. `--check` compares each map's measured summary with the targets in
 `systems/campaign_wave_defs.lua`, exposing accidental count, duration, or density
 creep as a pacing regression.
+
+## Campaign economy
+
+The economy fixture parses every authored campaign group, enemy reward, and
+difficulty directly from Lua and models three representative (not prescriptive)
+play styles:
+
+```sh
+python3 tools/balance/economy_fixtures.py
+python3 tools/balance/economy_fixtures.py --check
+```
+
+Normal output is stable JSON with per-map, per-wave kill, flawless, early-call,
+and cumulative income plus affordability anchors and sell losses. `--check` is
+silent on success and compares only the broad bands in `economy_bands.json`.

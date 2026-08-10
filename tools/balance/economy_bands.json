@@ -1,0 +1,14 @@
+{
+  "format_version": 1,
+  "bands": {
+    "easy": {"wave_10_balanced_power": [1050, 3200], "wave_10_conservative_power": [850, 2500], "sell_loss_lancer": [8, 10]},
+    "normal": {"wave_10_balanced_power": [1050, 3000], "wave_10_conservative_power": [850, 2350], "sell_loss_lancer": [14, 16]},
+    "hard": {"wave_10_balanced_power": [1050, 2850], "wave_10_conservative_power": [850, 2250], "sell_loss_lancer": [23, 25]}
+  },
+  "shared": {
+    "normal_opening_entry_towers": [2, 2],
+    "easy_recovery_advantage_wave_10": [0, 350],
+    "hard_balanced_delay_wave_10": [75, 250],
+    "hard_wave_1_affordable_entries": [4, 6]
+  }
+}
