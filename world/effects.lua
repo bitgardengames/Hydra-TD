@@ -53,6 +53,7 @@ Effects.lancer = {}
 Effects.death = {}
 Effects.placePuffs = {}
 Effects.plasmaParticles = {}
+Effects.towerTransformations = {}
 
 local zapJitter = 4
 local halfJitter = zapJitter * 0.5
@@ -72,8 +73,34 @@ local lancerPool = {}
 local deathPool = {}
 local placePuffPool = {}
 local plasmaParticlePool = {}
+local towerTransformationPool = {}
+local acquire
 
-local function acquire(pool)
+function Effects.spawnTowerTransformation(x, y, opts)
+	opts = opts or {}
+	local e = acquire(towerTransformationPool)
+	e.x, e.y = x, y
+	e.t = 0
+	e.life = opts.finalTier and 0.62 or 0.42
+	e.color = opts.color or Theme.ui.good
+	e.range = opts.range
+	e.cadencePulse = opts.cadencePulse
+	e.finalTier = opts.finalTier
+	e.particles = {}
+
+	local count = Effects.particleCount(opts.finalTier and 14 or 8, Theme.effects.intensity.normal)
+	for i = 1, count do
+		local angle = random() * pi * 2
+		e.particles[i] = {
+			angle = angle,
+			speed = random(22, opts.finalTier and 58 or 42),
+			radius = random() * 5,
+		}
+	end
+	Effects.towerTransformations[#Effects.towerTransformations + 1] = e
+end
+
+acquire = function(pool)
 	local obj = pool[#pool]
 
 	if obj then
@@ -425,6 +452,16 @@ function Effects.spawnEnemyDeath(x, y, r)
 end
 
 function Effects.update(dt)
+	local transformations = Effects.towerTransformations
+	for i = #transformations, 1, -1 do
+		local e = transformations[i]
+		e.t = e.t + dt
+		if e.t >= e.life then
+			swapRemove(transformations, i)
+			release(towerTransformationPool, e)
+		end
+	end
+
 	local splashes = Effects.splashes
 
 	for i = #splashes, 1, -1 do
@@ -600,6 +637,46 @@ function Effects.update(dt)
 end
 
 function Effects.draw()
+	-- Short, low-opacity tower-local upgrade feedback, drawn beneath the louder
+	-- combat effects so enemies remain readable.
+	for i = 1, #Effects.towerTransformations do
+		local e = Effects.towerTransformations[i]
+		local u = min(1, e.t / e.life)
+		local fade = (1 - u) * (settings().reducedFlash and 0.48 or 0.78)
+		local c = e.color
+
+		lg.setLineWidth(1 + (1 - u) * 2)
+		lg.setColor(c[1], c[2], c[3], fade)
+		lg.circle("line", e.x, e.y, 13 + u * (e.finalTier and 31 or 19))
+
+		if e.range then
+			local rangeU = u * (2 - u)
+			lg.setLineWidth(1.5)
+			lg.setColor(c[1], c[2], c[3], fade * 0.42)
+			lg.circle("line", e.x, e.y, e.range * (0.86 + rangeU * 0.14))
+		end
+
+		for p = 1, #e.particles do
+			local particle = e.particles[p]
+			local distance = particle.radius + particle.speed * u
+			lg.setColor(c[1], c[2], c[3], fade * 0.72)
+			lg.circle("fill", e.x + cos(particle.angle) * distance,
+				e.y + sin(particle.angle) * distance, e.finalTier and 2 or 1.5)
+		end
+
+		if e.finalTier then
+			local spin = e.t * 8
+			lg.setLineWidth(2)
+			lg.setColor(c[1], c[2], c[3], fade * 0.8)
+			for arm = 0, 3 do
+				local a = spin + arm * pi * 0.5
+				lg.line(e.x + cos(a) * 17, e.y + sin(a) * 17,
+					e.x + cos(a) * (25 + 7 * u), e.y + sin(a) * (25 + 7 * u))
+			end
+		end
+	end
+	lg.setLineWidth(1)
+
 	-- Cannon splash rings
 	local splashes = Effects.splashes
 

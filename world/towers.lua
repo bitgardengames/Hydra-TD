@@ -349,6 +349,8 @@ local function getUpgradeCost(tower)
 	return floor(tower.def.cost * multiplier + 0.5)
 end
 
+local getUpgradePreview
+
 local function upgradeTower(t, specializationId)
 	if not t then
 		return false, "missing_tower"
@@ -373,6 +375,10 @@ local function upgradeTower(t, specializationId)
 	if specializationId and not TowerBranchDefs.isValidChoice(t.kind, nextLevel, specializationId) then
 		return false, "invalid_choice"
 	end
+
+	-- Capture the same derived data used by the UI before mutating the tower. This
+	-- keeps the cosmetic response tied to real authored stats and module effects.
+	local transformationPreview = getUpgradePreview and getUpgradePreview(t, specializationId)
 
 	State.money = State.money - cost
 
@@ -399,7 +405,9 @@ local function upgradeTower(t, specializationId)
 	Sound.play("towerUpgraded")
 
 	Achievements.increment("TOWER_UPGRADES")
-	if TowerBranchDefs.getChoices(t.kind, t.level + 1) == nil then
+	local isFinalTier = TowerBranchDefs.getChoices(t.kind, t.level + 1) == nil
+	Emissions.emitUpgradeTransformation(t, transformationPreview, isFinalTier)
+	if isFinalTier then
 		Effects.trigger("final_tier_upgrade", {intensity = 4, shake = 6, duration = 0.3})
 	end
 
@@ -478,6 +486,8 @@ end
 local function addBehaviorRows(rows, before, after)
 	local scalar = {
 		{ "splash", "aoe_damage", "radius", function(v) return numberText(v, 0, " px") end },
+		{ "slowStrength", "apply_slow", "factor", function(v) return numberText((1 - v) * 100, 0, "%") end, true },
+		{ "poisonStrength", "apply_poison", "dps", function(v) return numberText(v, 1, "/s") end },
 		{ "poisonStacks", "apply_poison", "maxStacks", function(v) return numberText(v, 0) end },
 		{ "poisonDuration", "apply_poison", "dur", function(v) return numberText(v, 1, "s") end },
 		{ "slowDuration", "apply_slow", "dur", function(v) return numberText(v, 1, "s") end },
@@ -509,7 +519,7 @@ local function addBehaviorRows(rows, before, after)
 	end
 end
 
-local function getUpgradePreview(t, specializationId)
+getUpgradePreview = function(t, specializationId)
 	if not t or not t.def then
 		return nil
 	end

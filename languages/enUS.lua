@@ -406,6 +406,8 @@ return {
 		fireRate = "Fire rate",
 		range = "Range",
 		splash = "Splash radius",
+		slowStrength = "Slow strength",
+		poisonStrength = "Poison strength",
 		poisonStacks = "Poison stacks",
 		poisonDuration = "Poison duration",
 		slowDuration = "Slow duration",

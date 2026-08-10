@@ -375,12 +375,14 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			if hovered and btn.id == "upgrade" and upgradeCost then
 				local preview = Towers.getUpgradePreview(t)
 				local rows = {}
-				for i = 1, #(preview and preview.rows or {}) do
+				-- Preview rows are already fully derived by Towers from tower, branch,
+				-- and module definitions; this layer only gives them a compact layout.
+				for i = 1, math.min(#(preview and preview.rows or {}), 7) do
 					local row = preview.rows[i]
 					rows[#rows + 1] = {
 						label = L(row.labelKey),
-						value = row.current,
-						delta = "→ " .. row.next,
+						value = row.current .. "  →",
+						delta = row.next,
 						deltaColor = row.direction == "bad" and colorBad or colorGood,
 					}
 				end
