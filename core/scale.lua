@@ -27,14 +27,7 @@ function Scale.getDimensions()
 end
 
 function Scale.suggestMSAA(w, h)
-	local Save = package.loaded["core.save"]
-	local quality = Save and Save.data and Save.data.settings and Save.data.settings.msaaQuality or "auto"
-	local explicit = {off = 0, low = 2, medium = 4, high = 8}
-	if explicit[quality] ~= nil then return explicit[quality] end
-	local pixels = (w or Scale.sw) * (h or Scale.sh)
-	if pixels <= 1280 * 800 then return 0 end
-	if pixels <= 1920 * 1080 then return 2 end
-	return 4
+	return 8
 end
 
 return Scale
