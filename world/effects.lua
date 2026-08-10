@@ -651,7 +651,7 @@ function Effects.draw()
 	for i = 1, #Effects.towerTransformations do
 		local e = Effects.towerTransformations[i]
 		local u = min(1, e.t / e.life)
-		local fade = (1 - u) * (settings().reducedFlash and 0.48 or 0.78)
+		local fade = (1 - u) * 0.78
 		local c = e.color
 
 		lg.setLineWidth(1 + (1 - u) * 2)
@@ -714,7 +714,7 @@ function Effects.draw()
 		lg.setColor(1.0, 0.9, 0.7, alpha * 0.2)
 		lg.circle("line", s.x, s.y, radius * 0.8)
 
-		if t < 0.1 and not settings().reducedFlash then
+		if t < 0.1 then
 			local flash = 1 - (t / 0.1)
 
 			lg.setColor(1, 1, 1, 0.9 * flash)

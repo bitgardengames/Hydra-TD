@@ -394,7 +394,6 @@ function Screen.load()
 			rows = {
 				toggleRow("camera_motion", L("settings.cameraMotion"), "cameraMotion"),
 				toggleRow("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers"),
-				toggleRow("reduced_flash", L("settings.reducedFlash"), "reducedFlash"),
 				toggleRow("dense_particles", L("settings.highDensityParticles"), "highDensityParticles"),
 				toggleRow("fullscreen", L("settings.fullscreen"), "fullscreen",
 					function(v)

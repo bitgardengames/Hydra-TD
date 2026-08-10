@@ -20,12 +20,4 @@ for _, fixture in ipairs(cases) do
 	assert(tooltipW > 0 and tooltipW <= fixture.w - 12, fixture.name .. " tooltip constraint")
 end
 
-local accessibility = {
-	{reducedFlash = true, showDamageNumbers = false, cameraMotion = false},
-	{reducedFlash = true, showDamageNumbers = false, highDensityParticles = false},
-}
-for _, fixture in ipairs(accessibility) do
-	assert(fixture.reducedFlash and not fixture.showDamageNumbers)
-end
-
 print("graphics settings fixtures passed")
