@@ -192,10 +192,6 @@ function Menu.keypressed(key)
 	return dispatch(State.mode, "keypressed", key)
 end
 
-function Menu.gamepadpressed(joystick, button)
-	return dispatch(State.mode, "gamepadpressed", joystick, button)
-end
-
 function Menu.mousepressed(x, y, button)
 	return dispatch(State.mode, "mousepressed", x, y, button)
 end

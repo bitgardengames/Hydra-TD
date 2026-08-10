@@ -470,12 +470,6 @@ function love.mousereleased(x, y, button)
 	Input.mousereleased(x, y, button)
 end
 
-function love.gamepadpressed(joystick, button)
-	if State.mode ~= "game" then
-		Menu.gamepadpressed(joystick, button)
-	end
-end
-
 function love.keypressed(key)
 	if key == "printscreen" then
 		local time = os.date("%Y-%m-%d_%H-%M-%S")
