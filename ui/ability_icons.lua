@@ -85,7 +85,7 @@ local function stateName(state)
 	return nil
 end
 
-local function drawAccent(kind, state, cx, cy, scale, alpha)
+local function drawAccent(kind, cx, cy, scale, alpha)
 	if not kind then return end
 	local radius = 22 * scale
 	lg.setLineWidth(2.5 * scale)
@@ -93,13 +93,6 @@ local function drawAccent(kind, state, cx, cy, scale, alpha)
 	if kind == "ready" then
 		lg.setColor(0.42, 1, 0.62, 0.72 * alpha)
 		lg.arc("line", cx, cy, radius, -pi * 0.72, pi * 0.72)
-	elseif kind == "cooldown" then
-		local progress = type(state) == "table" and (state.progress or state.ratio) or 0
-		progress = math.max(0, math.min(1, tonumber(progress) or 0))
-		lg.setColor(0.08, 0.1, 0.14, 0.48 * alpha)
-		lg.circle("fill", cx, cy, 19 * scale)
-		lg.setColor(0.62, 0.68, 0.76, 0.85 * alpha)
-		if progress > 0 then lg.arc("line", cx, cy, radius, -pi / 2, -pi / 2 + pi * 2 * progress) end
 	elseif kind == "active" then
 		lg.setColor(1, 0.78, 0.12, 0.95 * alpha)
 		lg.circle("line", cx, cy, radius)
@@ -123,7 +116,7 @@ local function drawAccent(kind, state, cx, cy, scale, alpha)
 end
 
 -- Stable public API: ID, center, scale, alpha, and optional visual state.
--- State may be a string or a table such as {kind="cooldown", progress=0.4}.
+-- State may be a string or a table with a `kind` field.
 function AbilityIcons.draw(abilityId, cx, cy, scale, alpha, state)
 	scale = math.max(0.01, tonumber(scale) or 1)
 	alpha = math.max(0, math.min(1, tonumber(alpha) or 1))
@@ -133,7 +126,7 @@ function AbilityIcons.draw(abilityId, cx, cy, scale, alpha, state)
 	local kind = stateName(state)
 	local drawer = type(abilityId) == "string" and drawers[abilityId] or nil
 	(drawer or unknown)(cx, cy, scale, (kind == "locked" or kind == "cooldown") and alpha * 0.58 or alpha)
-	drawAccent(kind, state, cx, cy, scale, alpha)
+	drawAccent(kind, cx, cy, scale, alpha)
 	lg.pop()
 
 	return drawer ~= nil

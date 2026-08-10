@@ -128,7 +128,7 @@ local function drawButton(button, def, activeTime)
 	elseif not available then
 		iconState = "locked"
 	elseif not ready then
-		iconState = {kind = "cooldown", progress = 1 - min(1, cooldown / def.cooldown)}
+		iconState = "cooldown"
 	else
 		iconState = "ready"
 	end
