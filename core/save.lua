@@ -24,8 +24,6 @@ local DEFAULT_SETTINGS = {
 	showDamageNumbers = true,
 	reducedFlash = false,
 	fullscreen = true,
-	uiScale = 1.0,
-	screenShakeIntensity = 1.0,
 	cameraMotion = true,
 	highDensityParticles = true,
 }
@@ -112,10 +110,6 @@ local function normalizeSettings(data)
 	for key, value in pairs(DEFAULT_SETTINGS) do
 		changed = defaultValue(settings, key, value) or changed
 	end
-	local uiScale = tonumber(settings.uiScale)
-	if not uiScale or uiScale < 0.75 or uiScale > 1.5 then settings.uiScale = 1; changed = true end
-	local shake = tonumber(settings.screenShakeIntensity)
-	if not shake or shake < 0 or shake > 1 then settings.screenShakeIntensity = 1; changed = true end
 	if settings.msaaQuality ~= nil then settings.msaaQuality = nil; changed = true end
 	return ensureKeybinds(settings) or changed
 end

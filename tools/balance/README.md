@@ -100,6 +100,6 @@ python3 tools/balance/polish_report.py --check
 
 The report covers preparation/recovery cadence, authored-wave pressure, event
 rates, ability uptime and overlaps, preview wrapping, HUD bounds, and upgrade
-timing. It explicitly exercises 1280×720 at 1.5 UI scale, six damage-meter
+timing. It explicitly exercises 1280×720 at the default font size, six damage-meter
 rows, six ability buttons, and the largest campaign preview. The check uses the
 broad alarm bands documented in `docs/polish_fixtures.md`.

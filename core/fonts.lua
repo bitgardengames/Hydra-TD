@@ -1,7 +1,6 @@
 local Fonts = {}
 
 local current = "ui"
-local uiScale = 1
 
 local FONT_MAP = {
 	--latin = "assets/fonts/PTSans.ttf",
@@ -24,24 +23,13 @@ end
 
 function Fonts.reload()
 	local f = FONT_MAP[Fonts.active]
-	local function size(value) return math.max(8, math.floor(value * uiScale + 0.5)) end
 
-	Fonts.version = love.graphics.newFont(f, size(12))
-	Fonts.tooltip = love.graphics.newFont(f, size(14))
-	Fonts.ui = love.graphics.newFont(f, size(16))
-	Fonts.floaters = love.graphics.newFont(f, size(24))
-	Fonts.menu = love.graphics.newFont(f, size(24))
-	Fonts.title = love.graphics.newFont(f, size(42))
-end
-
-function Fonts.setUIScale(value)
-	local nextScale = math.max(0.75, math.min(1.5, tonumber(value) or 1))
-	nextScale = math.floor(nextScale * 20 + 0.5) / 20
-	if nextScale ~= uiScale then
-		uiScale = nextScale
-		if Fonts.active then Fonts.reload() end
-	end
-	return uiScale
+	Fonts.version = love.graphics.newFont(f, 12)
+	Fonts.tooltip = love.graphics.newFont(f, 14)
+	Fonts.ui = love.graphics.newFont(f, 16)
+	Fonts.floaters = love.graphics.newFont(f, 24)
+	Fonts.menu = love.graphics.newFont(f, 24)
+	Fonts.title = love.graphics.newFont(f, 42)
 end
 
 function Fonts.set(kind)
