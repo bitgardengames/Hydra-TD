@@ -311,6 +311,7 @@ end
 
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
+	Save.update(dt)
 	Camera.update(dt)
 
 	local mode = State.mode
@@ -526,6 +527,7 @@ function love.visible(visible)
 end
 
 function love.quit()
-	Steam.shutdown()
 	Achievements.onGameOver()
+	Save.flush()
+	Steam.shutdown()
 end

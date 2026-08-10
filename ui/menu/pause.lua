@@ -9,6 +9,7 @@ local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local L = require("core.localization")
 local Difficulty = require("systems.difficulty")
+local Save = require("core.save")
 
 
 local floor = math.floor
@@ -126,6 +127,7 @@ function Page.load()
 			onClick = function()
 				State.paused = false
 				Achievements.onGameOver()
+				Save.flush()
 				Backdrop.start()
 				State.mode = "menu"
 				Steam.setRichPresence(L("presence.menu"))

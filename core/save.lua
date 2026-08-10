@@ -2,11 +2,16 @@ local Save = {}
 
 local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
+local BACKUP_FILE = SAVE_DIR .. "/save.bak.lua"
+local TEMP_FILE = SAVE_DIR .. "/save.tmp.lua"
 local SAVE_VERSION = 6 -- Persist the active-ability slot selections
+local DIRTY_DELAY = 0.35
 
 local Hotkeys = require("core.hotkeys")
 
 Save.data = nil
+Save.dirty = false
+Save.dirtyTimer = nil
 
 local format = string.format
 local rep = string.rep
@@ -205,35 +210,125 @@ local function createFreshData()
 	return data
 end
 
-function Save.load()
-	if love.filesystem.getInfo(SAVE_FILE) then
-		local chunk = love.filesystem.load(SAVE_FILE)
-		local ok, data = pcall(chunk)
+local function loadTable(path)
+	if not love.filesystem.getInfo(path) then return nil, "file does not exist" end
+	local loaded, chunk, loadError = pcall(love.filesystem.load, path)
+	if not loaded or type(chunk) ~= "function" then return nil, loadError or chunk or "could not load file" end
+	local ok, data = pcall(chunk)
+	if not ok or type(data) ~= "table" then return nil, ok and "save did not return a table" or data end
+	return data
+end
 
-		if ok and type(data) == "table" then
-			Save.data = data
-			if normalizeLoadedData(data) then Save.flush() end
-			return
-		end
+local function renameFile(from, to)
+	if love.filesystem.rename then return love.filesystem.rename(from, to) end
+	local root = love.filesystem.getSaveDirectory()
+	return os.rename(root .. "/" .. from, root .. "/" .. to)
+end
+
+local function removeFile(path)
+	if not love.filesystem.getInfo(path) then return true end
+	local ok, err = love.filesystem.remove(path)
+	if ok then return true end
+	return false, err or ("could not remove " .. path)
+end
+
+local function diagnosticName()
+	local stamp = os.date("!%Y%m%d-%H%M%S")
+	local path = SAVE_DIR .. "/save.corrupt-" .. stamp .. ".lua"
+	local suffix = 1
+	while love.filesystem.getInfo(path) do
+		path = SAVE_DIR .. "/save.corrupt-" .. stamp .. "-" .. suffix .. ".lua"
+		suffix = suffix + 1
+	end
+	return path
+end
+
+local function preserveCorruptPrimary()
+	if not love.filesystem.getInfo(SAVE_FILE) then return true end
+	return renameFile(SAVE_FILE, diagnosticName())
+end
+
+function Save.load()
+	local data = loadTable(SAVE_FILE)
+	if not data and love.filesystem.getInfo(SAVE_FILE) then
+		local ok, err = preserveCorruptPrimary()
+		if not ok then print("Could not preserve corrupt save: " .. tostring(err)) end
 	end
 
-	Save.data = createFreshData()
+	local recovered = false
+	if not data then
+		data = loadTable(BACKUP_FILE)
+		recovered = data ~= nil
+	end
+
+	Save.data = data or createFreshData()
+	local normalized = normalizeLoadedData(Save.data)
+	Save.dirty = false
+	Save.dirtyTimer = nil
+	if recovered or normalized then Save.flush() end
 end
 
 function Save.flush()
-	if not Save.data then
-		return
-	end
+	if not Save.data then return false, "no save data" end
 
 	Save.data.version = SAVE_VERSION
 
-	local serialized = "return " .. Save.serialize(Save.data)
+	local serializedOk, body = pcall(Save.serialize, Save.data)
+	if not serializedOk then return false, "could not serialize save: " .. tostring(body) end
+	local serialized = "return " .. body
 
 	if not love.filesystem.getInfo(SAVE_DIR) then
-		love.filesystem.createDirectory(SAVE_DIR)
+		local ok, err = love.filesystem.createDirectory(SAVE_DIR)
+		if not ok then return false, err or "could not create save directory" end
 	end
 
-	love.filesystem.write(SAVE_FILE, serialized)
+	local wrote, writeError = love.filesystem.write(TEMP_FILE, serialized)
+	if not wrote then return false, writeError or "could not write temporary save" end
+	local validated, validationError = loadTable(TEMP_FILE)
+	if not validated then
+		return false, "temporary save validation failed: " .. tostring(validationError)
+	end
+
+	-- Only a valid primary may become the last known-good backup.
+	if loadTable(SAVE_FILE) then
+		local removed, removeError = removeFile(BACKUP_FILE)
+		if not removed then return false, removeError end
+		local backedUp, backupError = renameFile(SAVE_FILE, BACKUP_FILE)
+		if not backedUp then return false, backupError or "could not replace backup" end
+	elseif love.filesystem.getInfo(SAVE_FILE) then
+		local preserved, preserveError = preserveCorruptPrimary()
+		if not preserved then return false, preserveError or "could not preserve corrupt save" end
+	end
+
+	local promoted, promoteError = renameFile(TEMP_FILE, SAVE_FILE)
+	if not promoted then
+		-- Best-effort restoration keeps a failed promotion from removing the primary.
+		if not love.filesystem.getInfo(SAVE_FILE) and love.filesystem.getInfo(BACKUP_FILE) then
+			local restored, restoreError = renameFile(BACKUP_FILE, SAVE_FILE)
+			if not restored then
+				return false, (promoteError or "could not promote temporary save")
+					.. "; backup restoration failed: " .. tostring(restoreError)
+			end
+		end
+		return false, promoteError or "could not promote temporary save"
+	end
+
+	Save.dirty = false
+	Save.dirtyTimer = nil
+	return true
+end
+
+function Save.markDirty()
+	if not Save.data then return false end
+	Save.dirty = true
+	Save.dirtyTimer = DIRTY_DELAY
+	return true
+end
+
+function Save.update(dt)
+	if not Save.dirty then return end
+	Save.dirtyTimer = (Save.dirtyTimer or DIRTY_DELAY) - math.max(0, tonumber(dt) or 0)
+	if Save.dirtyTimer <= 0 then Save.flush() end
 end
 
 function Save.setEquippedAbilities(abilityIds)
@@ -244,7 +339,7 @@ function Save.setEquippedAbilities(abilityIds)
 		if type(abilityId) == "string" then selections[slotIndex] = abilityId end
 	end
 	Save.data.equippedAbilities = selections
-	Save.flush()
+	Save.markDirty()
 	return true
 end
 
@@ -339,7 +434,7 @@ function Save.markEnemyEncountered(kind)
 
 	if not meta.encounteredEnemies[kind] then
 		meta.encounteredEnemies[kind] = true
-		Save.flush()
+		Save.markDirty()
 	end
 end
 
@@ -349,7 +444,7 @@ function Save.markAffixEncountered(id)
 	meta.encounteredAffixes = meta.encounteredAffixes or {}
 	if not meta.encounteredAffixes[id] then
 		meta.encounteredAffixes[id] = true
-		Save.flush()
+		Save.markDirty()
 	end
 end
 
@@ -367,6 +462,7 @@ function Save.recordEnemyResult(kind, result, killTime)
 	elseif result == "leak" then
 		history.leaks = (history.leaks or 0) + 1
 	end
+	Save.markDirty()
 end
 
 local function towerHistory(kind)
@@ -385,14 +481,14 @@ end
 function Save.recordTowerPlacement(kind)
 	local history = towerHistory(kind); if not history then return end
 	history.placements = (history.placements or 0) + 1
-	Save.flush()
+	Save.markDirty()
 end
 
 function Save.recordTowerUpgrade(kind, pathId)
 	local history = towerHistory(kind); if not history then return end
 	history.upgrades = (history.upgrades or 0) + 1
 	if pathId then history.discoveredPaths[pathId] = true end
-	Save.flush()
+	Save.markDirty()
 end
 
 function Save.recordTowerRun(kind, damage, kills)
@@ -401,12 +497,14 @@ function Save.recordTowerRun(kind, damage, kills)
 	history.damage = (history.damage or 0) + damage
 	history.kills = (history.kills or 0) + kills
 	history.bestRunDamage = math.max(history.bestRunDamage or 0, damage)
+	Save.markDirty()
 end
 
 function Save.discoverModule(moduleId)
 	if not Save.data or not moduleId then return end
 	Save.data.meta.discoveredModules = Save.data.meta.discoveredModules or {}
 	Save.data.meta.discoveredModules[moduleId] = true
+	Save.markDirty()
 end
 
 return Save
