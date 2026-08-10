@@ -6,6 +6,7 @@ local L = require("core.localization")
 
 local lg = love.graphics
 local abs = math.abs
+local exp = math.exp
 local floor = math.floor
 local format = string.format
 local tostring = tostring
@@ -34,7 +35,7 @@ local screenPad = 16
 local headerH = 30
 local headerGap = 10
 
-local speed = 0.2
+local RESPONSE = -60 * math.log(0.8)
 
 local meterCache = {
 	list = {},
@@ -65,7 +66,7 @@ local function buildEntryText(entry, name, pct)
 	return entry.text
 end
 
-function DamageMeter.draw()
+function DamageMeter.update(dt)
 	if not State.combatStats or not State.combatStats.showDamageMeter then
 		return
 	end
@@ -107,9 +108,6 @@ function DamageMeter.draw()
 		end
 	end
 
-	if #list == 0 then
-		return
-	end
 
 	-- update damage values and detect whether ordering can change
 	local needsSort = false
@@ -126,6 +124,29 @@ function DamageMeter.draw()
 	if needsSort then
 		tsort(list, sorter)
 	end
+
+	meterCache.headerText = isBossView and L("damage.boss") or L("damage.normal")
+	local factor = 1 - exp(-RESPONSE * dt)
+	for _, entry in ipairs(list) do
+		local pct = (total > 0) and (entry.dmg / total) or 0
+		entry.displayPct = entry.displayPct + (pct - entry.displayPct) * factor
+		if abs(pct - entry.displayPct) < 0.001 then entry.displayPct = pct end
+		local def = Towers.TowerDefs[entry.kind]
+		if def then
+			local name = L(def.nameKey)
+			nameCache[entry.kind] = name
+			buildEntryText(entry, name, pct)
+		end
+	end
+end
+
+function DamageMeter.draw()
+	if not State.combatStats or not State.combatStats.showDamageMeter then return end
+	local stats = State.combatStats
+	local isBossView = stats.damageView == 1
+	local total = isBossView and stats.bossTotalDamage or stats.totalDamage
+	local list = meterCache.list
+	if #list == 0 then return end
 
 	-- layout
 	local sw = lg.getWidth()
@@ -156,10 +177,6 @@ function DamageMeter.draw()
 
 	lg.setColor(colorText)
 
-	if not meterCache.headerText then
-		meterCache.headerText = isBossView and L("damage.boss") or L("damage.normal")
-	end
-
 	local textH = lg.getFont():getHeight()
 	local headerTextY = headerY + floor((headerH - textH) * 0.5 + 0.5)
 
@@ -172,22 +189,7 @@ function DamageMeter.draw()
 		local def = Towers.TowerDefs[entry.kind]
 
 		if def then
-			local name = nameCache[entry.kind]
-
-			if not name then
-				name = L(def.nameKey)
-				nameCache[entry.kind] = name
-			end
-
-			local pct = (total > 0) and (entry.dmg / total) or 0
-
-			entry.displayPct = entry.displayPct + (pct - entry.displayPct) * speed
-
-			if abs(pct - entry.displayPct) < 0.001 then
-				entry.displayPct = pct
-			end
-
-			local text = buildEntryText(entry, name, pct)
+			local text = entry.text or ""
 
 			lg.setColor(def.color[1], def.color[2], def.color[3], 0.25)
 			lg.rectangle("fill", x, y, maxBarW, barH, innerSmallRadius)
