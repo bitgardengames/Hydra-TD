@@ -161,12 +161,12 @@ local effectActivators = {
 
 local function playMeteorEffect(effect, x, y)
 	Effects.spawnCannonImpact(x, y, effect.radius)
-	Effects.trigger("ability_meteor", { intensity = 3, shake = 4 })
+	Effects.trigger({shake = 4})
 end
 
 local function playFrostEffect(_, x, y)
 	Effects.spawnFrostBurst(x, y)
-	Effects.trigger("ability_frost", { intensity = 2, shake = 1 })
+	Effects.trigger({shake = 1})
 end
 
 local activationEffects = {
@@ -179,7 +179,7 @@ local function playActivationEffect(effect, x, y)
 	if play then
 		play(effect, x, y)
 	else
-		Effects.trigger("ability_cast", { intensity = 2, shake = 1 })
+		Effects.trigger({shake = 1})
 	end
 end
 

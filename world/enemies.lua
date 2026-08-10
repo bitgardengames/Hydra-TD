@@ -322,7 +322,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	if e.boss then
 		State.activeBoss = e
 		State.activeBossKind = e.kind
-		Effects.trigger("boss_entrance", {intensity = 4, shake = 0, duration = 0.35, criticalTell = true})
+		Effects.trigger({shake = 0, duration = 0.35})
 	end
 
 	return e
@@ -334,7 +334,7 @@ local function handleEnemyKilled(e, i, isBoss)
 		State.activeBoss = nil
 		State.activeBossKind = nil
 		Effects.spawnBossDeathExplosion(e.x, e.y, e.radius)
-		Effects.trigger("boss_defeat", {intensity = 4, shake = 11, duration = 0.45})
+		Effects.trigger({shake = 11, duration = 0.45})
 	else
 		Effects.spawnEnemyDeath(e.x, e.y, e.radius)
 	end
@@ -393,7 +393,7 @@ end
 local function handleEnemyEscaped(e, i, isBoss)
 	Save.recordEnemyResult(e.kind, "leak")
 	RunStats.recordLeak(e.kind)
-	Effects.trigger("enemy_leak", {intensity = isBoss and 4 or 3, shake = isBoss and 12 or 5})
+	Effects.trigger({shake = isBoss and 12 or 5})
 	if isBoss then
 		State.activeBoss = nil
 		State.activeBossKind = nil
@@ -639,7 +639,7 @@ local function updateEnemies(dt)
 					child.nudgeTargetY = side * (summon.spacing or 0)
 					child.nudgeY = child.nudgeTargetY
 				end
-				Effects.trigger("enemy_summon", {intensity = 3, x = e.x, y = e.y})
+				Effects.trigger({shake = 2.4})
 			end
 		end
 
