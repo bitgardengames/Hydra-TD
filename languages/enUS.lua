@@ -398,6 +398,21 @@ return {
 		applyCta = "Click to Apply",
 		noSpec = "No specialization selected yet.",
 		currentSpec = "Current: %s",
+		changes = "CHANGES",
+	},
+
+	upgradePreview = {
+		damage = "Damage",
+		fireRate = "Fire rate",
+		range = "Range",
+		splash = "Splash radius",
+		poisonStacks = "Poison stacks",
+		poisonDuration = "Poison duration",
+		slowDuration = "Slow duration",
+		tickRate = "Damage tick",
+		chains = "Chains",
+		impactFragments = "Impact fragments",
+		pierce = "Pierce hits",
 	},
 
 	enemy = {

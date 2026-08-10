@@ -170,9 +170,9 @@ function Tooltip.draw()
 
 			-- Delta
 			if delta and value then
-				local dc = colorGood
+				local dc = row.deltaColor or colorGood
 
-				if sub(delta, 1, 1) == "-" then
+				if not row.deltaColor and sub(delta, 1, 1) == "-" then
 					dc = colorBad
 				end
 

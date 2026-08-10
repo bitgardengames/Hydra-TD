@@ -1,7 +1,6 @@
 local State = require("core.state")
 local Util = require("core.util")
 local Towers = require("world.towers")
-local Modules = require("systems.modules")
 local Sound = require("systems.sound")
 local ModulePicker = require("ui.module_picker")
 local Hotkeys = require("core.hotkeys")
@@ -374,19 +373,21 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			-- Upgrade tooltip
 			if hovered and btn.id == "upgrade" and upgradeCost then
-				local tooltipText = L(t.def.descKey)
-				local specName = nil
-				if State.isReplayMode() and t.specializationId then
-					local mod = Modules.getDef(t.specializationId)
-					specName = mod and L(mod.nameKey) or nil
-				end
-				if State.isReplayMode() then
-					tooltipText = specName and L("modulePicker.currentSpec", specName) or L("modulePicker.noSpec")
+				local preview = Towers.getUpgradePreview(t)
+				local rows = {}
+				for i = 1, #(preview and preview.rows or {}) do
+					local row = preview.rows[i]
+					rows[#rows + 1] = {
+						label = L(row.labelKey),
+						value = row.current,
+						delta = "→ " .. row.next,
+						deltaColor = row.direction == "bad" and colorBad or colorGood,
+					}
 				end
 
 				Tooltip.show({
 					title = L("inspect.upgradeTitle", t.level + 1),
-					text = tooltipText,
+					rows = rows,
 				})
 			end
 		end
