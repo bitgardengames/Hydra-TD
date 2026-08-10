@@ -441,6 +441,8 @@ function ModulePicker.draw()
 				lg.setColor(1, 1, 1, 0.58 * alpha)
 				lg.print(L("modulePicker.changes"), drawX + 18, rowY)
 				rowY = rowY + 17
+				-- Values are display-ready snapshots derived by Towers; cards do not
+				-- duplicate or reinterpret authored stats.
 				for rowIndex = 1, math.min(#rows, 7) do
 					local row = rows[rowIndex]
 					lg.setColor(1, 1, 1, 0.72 * alpha)
