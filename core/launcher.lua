@@ -11,22 +11,7 @@ local TOOL_MODES = {
 }
 
 local function configureWindow(settings)
-	local Scale = require("core.scale")
-	local width, height = 1280, 800
-	local fullscreen = settings.fullscreen == true
-
-	if fullscreen then
-		width, height = love.window.getDesktopDimensions()
-	end
-
-	local msaa = Scale.suggestMSAA(width, height) or 8
-	love.window.updateMode(fullscreen and 0 or width, fullscreen and 0 or height, {
-		fullscreen = fullscreen,
-		fullscreentype = fullscreen and "desktop" or nil,
-		resizable = not fullscreen,
-		vsync = 1,
-		msaa = msaa,
-	})
+	return require("core.window").apply(settings)
 end
 
 local function launchGame(onOverlayOpened)

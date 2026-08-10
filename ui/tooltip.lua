@@ -322,4 +322,9 @@ function Tooltip.clampToScreen()
 	end
 end
 
+function Tooltip.resize()
+	Tooltip.recalculate()
+	Tooltip.clampToScreen()
+end
+
 return Tooltip

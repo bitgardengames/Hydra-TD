@@ -204,6 +204,17 @@ function Menu.wheelmoved(x, y)
 	return dispatch(State.mode, "wheelmoved", x, y)
 end
 
+function Menu.resize(w, h)
+	transitionCanvas = nil
+	local resized = {}
+	for _, screen in pairs(Screens) do
+		if screen.resize and not resized[screen] then
+			screen.resize(w, h)
+			resized[screen] = true
+		end
+	end
+end
+
 -- Pause overlay (called from main loop)
 function Menu.updatePause(dt)
 	return dispatch("pause", "update", dt)
