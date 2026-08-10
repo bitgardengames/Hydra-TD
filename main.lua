@@ -508,6 +508,12 @@ function love.keypressed(key)
 	Input.keypressed(key)
 end
 
+function love.gamepadpressed(joystick, button)
+	if State.mode ~= "game" then
+		Menu.gamepadpressed(joystick, button)
+	end
+end
+
 function love.resize(w, h)
 	Scale.update()
 	Camera.resize()
