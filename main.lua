@@ -25,6 +25,7 @@ local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
 local Mushrooms = require("world.scatter_mushrooms")
 local DamageMeter = require("ui.damage_meter")
+local BottomBar = require("ui.bottom_bar")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
 local Achievements = require("systems.achievements")
@@ -322,6 +323,12 @@ function love.update(dt)
 
 	Steam.update()
 	Sound.update(dt)
+
+	if isWorldMode(mode) then
+		BottomBar.update(dt)
+		DamageMeter.update(dt)
+	end
+	ModulePicker.update(dt)
 
 	if mode == "pause" then
 		simulationAccumulator = 0

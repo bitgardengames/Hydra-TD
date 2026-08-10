@@ -99,14 +99,13 @@ local function updateButton(button, hovered, dt)
 	return anim
 end
 
-local function drawButton(button, def, activeTime, dt, hovered)
+local function drawButton(button, def, activeTime)
 	local x, y = button.x, button.y
 	local available = button.lockMessage == nil
 	local cooldown = State.abilityCooldowns[button.abilityId] or 0
 	local ready = available and cooldown <= 0
-	button.enabled = ready
 
-	local anim = updateButton(button, hovered, dt)
+	local anim = button.anim or Button.newAnimation({errorT = 0})
 	local errorEase = anim.errorT * anim.errorT * (3 - 2 * anim.errorT)
 	local fx = x + math.sin(anim.errorT * math.pi * 8) * errorEase * 4
 	local fy = y - IDLE_LIFT * (1 - anim.pressT)
@@ -164,13 +163,42 @@ local function drawButton(button, def, activeTime, dt, hovered)
 	end
 end
 
-function AbilityBar.draw(dt, mx, my)
+function AbilityBar.update(dt, mx, my)
+	mx, my = mx or love.mouse.getPosition()
 	local equipped = getDisplayedAbilities()
 	local count = min(#equipped, MAX_ABILITIES)
-	local activeRemaining = getActiveTimes()
 	local sw, sh = lg.getDimensions()
 	local totalH = count * SIZE + math.max(0, count - 1) * GAP
 	local startY = floor((sh - totalH) * 0.5)
+	local panelW = SIZE + PANEL_PAD * 2
+	local panelX = sw - PANEL_INSET - panelW
+
+	for i = 1, count do
+		local abilityId = equipped[i]
+		local def = AbilityDefs[abilityId]
+		if def then
+			local x, y = panelX + PANEL_PAD, startY + (i - 1) * (SIZE + GAP)
+			local hovered = mx >= x and mx <= x + SIZE and my >= y and my <= y + SIZE
+			local button = buttons[i] or {}
+			buttons[i] = button
+			button.x, button.y, button.w, button.h = x, y, SIZE, SIZE
+			button.abilityId = abilityId
+			button.slotIndex = i
+			button.lockMessage = CampaignUnlocks.getAbilityLockMessage(abilityId, i)
+			button.enabled = button.lockMessage == nil and (State.abilityCooldowns[abilityId] or 0) <= 0
+			updateButton(button, hovered, dt)
+			if hovered then showTooltip(abilityId, def) end
+		end
+	end
+	for i = count + 1, #buttons do buttons[i] = nil end
+end
+
+function AbilityBar.draw()
+	local count = #buttons
+	local activeRemaining = getActiveTimes()
+	local sw = lg.getWidth()
+	local totalH = count * SIZE + math.max(0, count - 1) * GAP
+	local startY = count > 0 and buttons[1].y or 0
 	local panelW = SIZE + PANEL_PAD * 2
 	local panelH = totalH + PANEL_PAD * 2
 	local panelX = sw - PANEL_INSET - panelW
@@ -179,32 +207,15 @@ function AbilityBar.draw(dt, mx, my)
 	if count > 0 then
 		lg.setColor(colorOutline)
 		lg.rectangle("fill", panelX - outlineW, panelY - outlineW, panelW + outlineW * 2, panelH + outlineW * 2, panelRadius)
-
 		lg.setColor(colorBackdrop)
 		lg.rectangle("fill", panelX, panelY, panelW, panelH, panelInnerRadius)
 	end
 
 	for i = 1, count do
-		local abilityId = equipped[i]
-		local def = AbilityDefs[abilityId]
-		if def then
-			local x, y = panelX + PANEL_PAD, startY + (i - 1) * (SIZE + GAP)
-			local lockMessage = CampaignUnlocks.getAbilityLockMessage(abilityId, i)
-			local hovered = mx >= x and mx <= x + SIZE and my >= y and my <= y + SIZE
-			if hovered then
-				showTooltip(abilityId, def)
-			end
-			local button = buttons[i] or {}
-			buttons[i] = button
-			button.x, button.y, button.w, button.h = x, y, SIZE, SIZE
-			button.abilityId = abilityId
-			button.slotIndex = i
-			button.lockMessage = lockMessage
-			drawButton(button, def, activeRemaining[abilityId], dt, hovered)
-		end
+		local button = buttons[i]
+		local def = AbilityDefs[button.abilityId]
+		if def then drawButton(button, def, activeRemaining[button.abilityId]) end
 	end
-
-	for i = count + 1, #buttons do buttons[i] = nil end
 end
 
 function AbilityBar.getButtons()

@@ -8,7 +8,6 @@ local AbilityBar = require("ui.ability_bar")
 
 local lg = love.graphics
 local getTime = love.timer.getTime
-local getDelta = love.timer.getDelta
 local floor = math.floor
 
 local colorPanel2 = Theme.ui.panel2
@@ -16,6 +15,7 @@ local colorBackdrop = Theme.ui.backdrop
 local colorOutline = Theme.outline.color
 
 local BottomBar = {}
+local frameDt = 0
 
 -- Layout
 local PAD = 12
@@ -41,12 +41,19 @@ local innerRadius = baseRadius - outlineW * 0.25
 local outerSmallRadius = 6 + outlineW * 0.5
 local innerSmallRadius = 6 - outlineW * 0.25
 
+function BottomBar.update(dt)
+	frameDt = dt
+	local mx, my = love.mouse.getPosition()
+	Hud.update(dt)
+	AbilityBar.update(dt, mx, my)
+end
+
 function BottomBar.draw()
 	local font = lg.getFont()
 	local textH = font:getHeight()
 	local _, sh = lg.getDimensions()
 
-	local dt = getDelta()
+	local dt = frameDt
 	local now = getTime()
 	local mx, my = love.mouse.getPosition()
 
@@ -71,7 +78,7 @@ function BottomBar.draw()
 	lg.setColor(colorPanel2) -- colorPanel2, colorBackdrop
 	lg.rectangle("fill", infoX, infoY, infoW, infoH, innerSmallRadius)
 
-	Hud.draw(infoX, infoY, infoW, infoH, dt)
+	Hud.draw(infoX, infoY, infoW, infoH)
 
 	-- Shop panel
 	local shopPanelX = outerX + OUTER_PAD
@@ -85,7 +92,7 @@ function BottomBar.draw()
 	local inspectW = INSPECT_W + PAD * 2
 
 	Inspect.draw(outerX + outerW + PANEL_GAP, outerY, inspectW, outerH, dt, textH, now, mx, my)
-	AbilityBar.draw(dt, mx, my)
+	AbilityBar.draw()
 end
 
 function BottomBar.getShopButtons()

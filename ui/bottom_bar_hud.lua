@@ -11,6 +11,7 @@ local L = require("core.localization")
 local lg = love.graphics
 local floor = math.floor
 local sin = math.sin
+local exp = math.exp
 local pi = math.pi
 
 local Hud = {}
@@ -44,13 +45,18 @@ local hudCache = {
 	speed = {value = nil, text = ""},
 }
 
-function Hud.draw(infoX, infoY, infoW, infoH, dt)
+local MONEY_RESPONSE = -60 * math.log(0.75)
+
+function Hud.update(dt)
+	local factor = 1 - exp(-MONEY_RESPONSE * dt)
+	State.moneyLerp = State.moneyLerp + (State.money - State.moneyLerp) * factor
+end
+
+function Hud.draw(infoX, infoY, infoW, infoH)
 	local font = lg.getFont()
 	local textH = font:getHeight()
 	local y = infoY + floor((infoH - textH) * 0.5 + 0.5)
 
-	-- Smooth money
-	State.moneyLerp = State.moneyLerp + (State.money - State.moneyLerp) * 0.25
 	local moneyRounded = floor(State.moneyLerp + 0.5)
 
 	local moneyCache = hudCache.money

@@ -309,6 +309,27 @@ local function pointInCard(mx, my, c)
 	return mx >= x and mx <= x + w and my >= y and my <= y + h
 end
 
+function ModulePicker.update(dt)
+	if not ModulePicker.isActive() then return end
+	ensureLayout()
+	local now = love.timer.getTime()
+	local mx, my = lm.getPosition()
+	local response = -60 * math.log(0.8)
+	local factor = 1 - math.exp(-response * dt)
+
+	for i, c in ipairs(cards) do
+		local alpha = Util.clamp((now - openedAt - c.delay) * 5.0, 0, 1)
+		local hovered = alpha > 0 and pointInCard(mx, my, c)
+		c.hover = lerp(c.hover or 0, hovered and 1 or 0, factor)
+		local intro = easeOutBack((now - openedAt - c.delay) * 6.0)
+		local baseY = c.y + (1 - smoothstep(alpha)) * 34 - c.hover * 4
+		c.drawW = c.w * lerp(0.95, 1.0, intro)
+		c.drawH = c.h * lerp(0.95, 1.0, intro)
+		c.drawX = c.x - (c.drawW - c.w) * 0.5
+		c.drawY = baseY - (c.drawH - c.h) * 0.5
+	end
+end
+
 function ModulePicker.mousepressed(x, y, button)
 	if not ModulePicker.isActive() or button ~= 1 then
 		return false
@@ -340,8 +361,6 @@ function ModulePicker.draw()
 	if not ModulePicker.isActive() then
 		return
 	end
-	ensureLayout()
-
 	local sw, sh = lg.getDimensions()
 	local text = Theme.ui.text
 	local dim = Theme.ui.screenDim
@@ -378,27 +397,13 @@ function ModulePicker.draw()
 		local c = cards[i]
 		local towerColor = choice.disabled and {0.45, 0.45, 0.45} or (Theme.tower[choice.target or (picker.tower and picker.tower.kind)] or text)
 
-		local intro = easeOutBack((now - openedAt - c.delay) * 6.0)
 		local alpha = Util.clamp((now - openedAt - c.delay) * 5.0, 0, 1)
 
 		if alpha > 0 then
 			local hovered = pointInCard(mx, my, c)
-
-			c.hover = lerp(c.hover or 0, hovered and 1 or 0, 0.2)
-			local hoverT = c.hover
-
-			local baseX = c.x
-			local baseY = c.y + (1 - smoothstep(alpha)) * 34 - hoverT * 4
-
-			local drawW = c.w * lerp(0.95, 1.0, intro)
-			local drawH = c.h * lerp(0.95, 1.0, intro)
-			local drawX = baseX - (drawW - c.w) * 0.5
-			local drawY = baseY - (drawH - c.h) * 0.5
-
-			c.drawX = drawX
-			c.drawY = drawY
-			c.drawW = drawW
-			c.drawH = drawH
+			local hoverT = c.hover or 0
+			local drawX, drawY = c.drawX, c.drawY
+			local drawW, drawH = c.drawW, c.drawH
 
 			local bodyY = drawY + 18
 
