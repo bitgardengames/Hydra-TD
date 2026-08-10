@@ -4,6 +4,15 @@ The runner is dependency-free and deterministic. It uses a fixed `0.01` second
 simulation tick and seed, reads the shipped Lua definitions, and emits stable
 JSON (including damage and kills) to stdout.
 
+The tick is read from `core/simulation_clock.lua`, the same source used by the
+runtime. The gate also drives a tick-authored encounter at 30, 60, and 144
+rendered FPS at 1x, 2x, and 4x speed. Kills, leaks, income, wave completion, and
+the completion tick must match exactly; cooldown completion may differ by at
+most one simulation tick (0.01 seconds). Runtime catch-up is capped at 16 ticks
+per rendered frame. Any accumulated time above that 0.16-second budget is
+discarded, not carried forward, so a long stall cannot lock the client into an
+unbounded backlog.
+
 Regenerate the documented tables:
 
 ```sh

@@ -18,6 +18,8 @@ function Sim.update(dt)
 
 	Spatial.beginFrame()
 	Abilities.update(dt)
+	-- Targeting caches use this identifier, so it advances once per simulation
+	-- tick rather than once per rendered frame.
 	State.frameId = (State.frameId or 0) + 1
 	Waves.updateSpawner(dt)
 	Enemies.updateEnemies(dt)
