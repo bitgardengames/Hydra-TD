@@ -43,6 +43,8 @@ local controlsLineH = 40
 local headerHeight = 36
 local headerSpacing = 30
 local footerSpacing = 22
+local helpSpacing = 14
+local helpHeight = 58
 local tabGap = 10
 local tabH = 36
 local tabW = 132
@@ -65,6 +67,7 @@ local maxPanelHeight = 0
 local rowsViewportY = 0
 local rowsViewportH = 0
 local rowsContentH = 0
+local helpY = 0
 local rowsScroll = ScrollView.new()
 
 local LABEL_W = 180
@@ -82,6 +85,8 @@ local sliderRects = {}
 local rowRects = {}
 local tabRects = {}
 local draggingSlider = nil
+local focusedRow = nil
+local rowPressHandlers
 
 local tabs = {}
 local activeTab = 1
@@ -124,23 +129,24 @@ local function settingsChanged()
 	Save.markDirty()
 end
 
-local function sliderRow(id, label, color, get, set)
-	return {id = id, label = label, type = "slider", color = color, get = get, set = set}
+local function sliderRow(id, label, color, get, set, description)
+	return {id = id, label = label, description = description, type = "slider", color = color, get = get, set = set}
 end
 
-local function toggleRow(id, label, setting, set)
+local function toggleRow(id, label, setting, set, description)
 	return {
 		id = id,
 		label = label,
+		description = description,
 		type = "toggle",
 		get = function() return Save.data.settings[setting] end,
 		set = set or function(value) Save.data.settings[setting] = value end,
 	}
 end
 
-local function choiceRow(id, label, setting, choices, valueLabels, apply)
+local function choiceRow(id, label, setting, choices, valueLabels, apply, description)
 	return {
-		id = id, label = label, type = "action",
+		id = id, label = label, description = description, type = "action",
 		valueLabel = function() return valueLabels[Save.data.settings[setting]] or tostring(Save.data.settings[setting]) end,
 		onClick = function()
 			local current = Save.data.settings[setting]
@@ -180,6 +186,7 @@ local function switchTab(nextTab)
 		end
 		draggingSlider = nil
 		keybindCapture:close()
+		focusedRow = nil
 		Sound.play("uiMove")
 	end
 end
@@ -366,6 +373,7 @@ function Screen.load()
 	Hotkeys.refreshFromSave()
 	keybindCapture:close()
 	rowsScroll:reset()
+	focusedRow = nil
 	activeTab = 1
 	tabTime = 0
 
@@ -392,9 +400,12 @@ function Screen.load()
 			id = "video",
 			label = L("settings.tabVideo"),
 			rows = {
-				toggleRow("camera_motion", L("settings.cameraMotion"), "cameraMotion"),
-				toggleRow("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers"),
-				toggleRow("dense_particles", L("settings.highDensityParticles"), "highDensityParticles"),
+				toggleRow("camera_motion", L("settings.cameraMotion"), "cameraMotion", nil,
+					L("settings.cameraMotionDesc")),
+				toggleRow("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers", nil,
+					L("settings.damageNumbersDesc")),
+				toggleRow("dense_particles", L("settings.highDensityParticles"), "highDensityParticles", nil,
+					L("settings.highDensityParticlesDesc")),
 				toggleRow("fullscreen", L("settings.fullscreen"), "fullscreen",
 					function(v)
 						Save.data.settings.fullscreen = v
@@ -454,7 +465,9 @@ function Screen.update(dt)
 	local minRowsBlockH = max((minRowsVisible - 1) * activeLineH + ROW_H, ROW_H)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
 
-	local staticContentH = headerHeight + headerSpacing + footerSpacing + btnBlockH
+	-- The help area is always reserved, even when the selected row has no
+	-- description, so changing focus never changes the panel's dimensions.
+	local staticContentH = headerHeight + headerSpacing + helpSpacing + helpHeight + footerSpacing + btnBlockH
 	local desiredContentH = staticContentH + max(minRowsBlockH, rowsContentH)
 	maxPanelHeight = floor(sh - paddingY * 2)
 	local maxContentH = max(ROW_H, maxPanelHeight - paddingY * 2)
@@ -471,6 +484,7 @@ function Screen.update(dt)
 	rowsViewportY = rowsStartY
 	rowsViewportH = rowsBlockH
 	rowsScroll:update(rowsContentH, rowsViewportH)
+	helpY = rowsViewportY + rowsViewportH + helpSpacing
 
 	-- Center the row block inside the panel width
 	local rowRectX = cx - (ROW_W * 0.5)
@@ -553,10 +567,22 @@ function Screen.draw()
 	for i, row in ipairs(rows) do
 		local rect = rowRects[i]
 		if rect then
-			drawRow(row, contains(rect, mouseX, mouseY), rect.x, rect.y, i)
+			drawRow(row, contains(rect, mouseX, mouseY) or focusedRow == i, rect.x, rect.y, i)
 		end
 	end
 	lg.setScissor()
+
+	local describedRow = focusedRow and rows[focusedRow] or nil
+	for i, rect in pairs(rowRects) do
+		if contains(rect, mouseX, mouseY) then
+			describedRow = rows[i]
+			break
+		end
+	end
+	if describedRow and describedRow.description then
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.78)
+		Text.printfShadow(describedRow.description, listX, helpY, ROW_W, "left")
+	end
 
 	if rowsScroll:canScroll() then
 		local trackX = boxX + boxW + scrollbarMargin
@@ -626,8 +652,41 @@ function Screen.keypressed(key)
 		return
 	end
 
+	if key == "up" or key == "down" then
+		if #rows > 0 then
+			local direction = key == "up" and -1 or 1
+			focusedRow = Util.clamp((focusedRow or (direction > 0 and 0 or #rows + 1)) + direction, 1, #rows)
+			local rowTop = (focusedRow - 1) * activeLineH
+			local rowBottom = rowTop + ROW_H
+			if rowTop < rowsScroll.offset then
+				rowsScroll:move(rowTop - rowsScroll.offset)
+			elseif rowBottom > rowsScroll.offset + rowsViewportH then
+				rowsScroll:move(rowBottom - rowsScroll.offset - rowsViewportH)
+			end
+			Sound.play("uiMove")
+		end
+		return
+	end
+
+	if (key == "return" or key == "space") and focusedRow then
+		local row = rows[focusedRow]
+		local handlePress = row and rowPressHandlers[row.type]
+		if handlePress then
+			handlePress(row, focusedRow, rowRects[focusedRow] and rowRects[focusedRow].x or listX)
+		end
+		return
+	end
+
 	if key == "escape" then
 		exitToMenu()
+	end
+end
+
+function Screen.gamepadpressed(_, button)
+	local mappedKey = ({dpup = "up", dpdown = "down", a = "return", b = "escape"})[button]
+	if mappedKey then
+		Screen.keypressed(mappedKey)
+		return true
 	end
 end
 
@@ -653,7 +712,7 @@ local function setSliderFromMouse(index, x)
 	return true
 end
 
-local rowPressHandlers = {
+rowPressHandlers = {
 	slider = function(row, index, x)
 		return setSliderFromMouse(index, x)
 	end,
