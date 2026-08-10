@@ -87,3 +87,19 @@ python3 tools/balance/economy_fixtures.py --check
 Normal output is stable JSON with per-map, per-wave kill, flawless, early-call,
 and cumulative income plus affordability anchors and sell losses. `--check` is
 silent on success and compares only the broad bands in `economy_bands.json`.
+
+## Non-rendered polish metrics
+
+Refinement budgets that can be calculated from authored data and declarative UI
+geometry have their own dependency-free report:
+
+```sh
+python3 tools/balance/polish_report.py
+python3 tools/balance/polish_report.py --check
+```
+
+The report covers preparation/recovery cadence, authored-wave pressure, event
+rates, ability uptime and overlaps, preview wrapping, HUD bounds, and upgrade
+timing. It explicitly exercises 1280×720 at 1.5 UI scale, six damage-meter
+rows, six ability buttons, and the largest campaign preview. The check uses the
+broad alarm bands documented in `docs/polish_fixtures.md`.
