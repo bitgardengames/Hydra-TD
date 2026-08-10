@@ -9,6 +9,7 @@ local Tooltip = require("ui.tooltip")
 local L = require("core.localization")
 local Button = require("ui.button")
 local Hotkeys = require("core.hotkeys")
+local AbilityIcons = require("ui.ability_icons")
 
 local lg = love.graphics
 local floor = math.floor
@@ -36,34 +37,6 @@ local outerRadius = 9 + outlineW * 0.5
 local innerRadius = 9 - outlineW * 0.25
 local panelRadius = 18 + outlineW * 0.5
 local panelInnerRadius = 18 - outlineW * 0.25
-
-local function drawMeteor(cx, cy, scale)
-	lg.setLineWidth(5 * scale)
-	lg.setColor(1, 0.48, 0.18, 0.9)
-	lg.line(cx - 15 * scale, cy - 15 * scale, cx - 5 * scale, cy - 5 * scale)
-	lg.setColor(1, 0.76, 0.28, 1)
-	lg.circle("fill", cx + 3 * scale, cy + 3 * scale, 12 * scale)
-	lg.setColor(1, 0.92, 0.55, 1)
-	lg.circle("fill", cx, cy, 5 * scale)
-end
-
-local function drawFrost(cx, cy, scale)
-	lg.setColor(0.55, 0.88, 1, 1)
-	lg.setLineWidth(3 * scale)
-	for i = 0, 2 do
-		local angle = i * math.pi / 3
-		local dx, dy = math.cos(angle) * 17 * scale, math.sin(angle) * 17 * scale
-		lg.line(cx - dx, cy - dy, cx + dx, cy + dy)
-	end
-	lg.circle("fill", cx, cy, 4 * scale)
-end
-
-
-local function drawOverdrive(cx,cy,s) lg.setColor(1,.75,.2,1); lg.setLineWidth(3*s); lg.circle("line",cx,cy,16*s); lg.line(cx,cy-15*s,cx+7*s,cy-3*s,cx+1*s,cy-3*s,cx+8*s,cy+14*s) end
-local function drawGravity(cx,cy,s) lg.setColor(.65,.35,1,1); lg.setLineWidth(3*s); for r=6,17,5 do lg.arc("line",cx,cy,r*s,r*.4,r*.4+4.7) end end
-local function drawGoldRush(cx,cy,s) lg.setColor(1,.78,.16,1); lg.circle("fill",cx,cy,17*s); lg.setColor(1,.94,.5,1); lg.circle("line",cx,cy,13*s); lg.setColor(.35,.2,.03,1); Text.printfShadow("$",cx-10*s,cy-13*s,20*s,"center") end
-local function drawLastStand(cx,cy,s) lg.setColor(1,.62,.2,1); lg.setLineWidth(3*s); lg.circle("line",cx,cy,16*s); lg.line(cx-20*s,cy,cx+20*s,cy); lg.line(cx,cy-20*s,cx,cy+20*s) end
-local iconDrawers = {meteor=drawMeteor, frost_nova=drawFrost, overdrive=drawOverdrive, gravity_well=drawGravity, gold_rush=drawGoldRush, last_stand=drawLastStand}
 
 local function showTooltip(abilityId, def)
 	local title = L(def.nameKey)
@@ -149,10 +122,17 @@ local function drawButton(button, def, activeTime, dt, hovered)
 	lg.setColor(r, g, b, available and 0.96 or 0.48)
 	lg.rectangle("fill", fx, fy, SIZE, SIZE, innerRadius)
 
-	local drawer = iconDrawers[button.abilityId]
-	if drawer then
-		drawer(fx + SIZE * 0.5, fy + SIZE * 0.5, available and 1 or 0.82)
+	local iconState
+	if activeTime or (State.abilityTargeting and State.abilityTargeting.abilityId == button.abilityId) then
+		iconState = "active"
+	elseif not available then
+		iconState = "locked"
+	elseif not ready then
+		iconState = {kind = "cooldown", progress = 1 - min(1, cooldown / def.cooldown)}
+	else
+		iconState = "ready"
 	end
+	AbilityIcons.draw(button.abilityId, fx + SIZE * 0.5, fy + SIZE * 0.5, available and 1 or 0.82, 1, iconState)
 
 	if activeTime then
 		lg.setColor(1, .78, .12, .95)
