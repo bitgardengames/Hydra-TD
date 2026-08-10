@@ -138,9 +138,10 @@ local function drawEnemy(e)
 	-- their colors: plates, shield arc, regeneration cross, and war banner/aura.
 	if e.support then
 		local pulse = (e.supportPulse or 0) / e.support.pulsePeriod
+		local supportRadius = e.portrait and (r + 8) or e.support.radius
 		lg.setColor(0.95, 0.62, 0.18, (0.18 + (1 - pulse) * 0.28) * enemyAlpha)
 		lg.setLineWidth(2)
-		lg.circle("line", ix, iy, e.support.radius * (0.86 + pulse * 0.14))
+		lg.circle("line", ix, iy, supportRadius * (0.86 + pulse * 0.14))
 		lg.setColor(outR, outG, outB, enemyAlpha)
 		lg.rectangle("fill", ix + r * 0.55, iy - r * 2.0, 3, r * 1.7)
 		lg.polygon("fill", ix + r * 0.7, iy - r * 1.9, ix + r * 1.65, iy - r * 1.55, ix + r * 0.7, iy - r * 1.2)
@@ -523,6 +524,63 @@ local function drawEnemies()
 	end
 
 	lg.setLineWidth(1)
+end
+
+-- Build the render-only enemy used by UI portraits. Keeping this here ensures
+-- cards use the same silhouette code as enemies in the world without registering
+-- a fake enemy with simulation, targeting, or spatial systems.
+local function newEnemyPortrait(kind)
+	local def = require("world.enemy_defs")[kind]
+	if not def then return nil end
+
+	return {
+		kind = kind,
+		radius = def.radius,
+		boss = def.boss or false,
+		alpha = 1,
+		rx = 0, ry = 0, prevRX = 0, prevRY = 0,
+		eyeDX = 0.8, eyeDY = 0,
+		rAnimT = 0,
+		hitSquash = 0,
+		hitFlash = 0,
+		shadow = false,
+		portrait = true,
+		support = def.support,
+		supportPulse = 0,
+		summon = def.summon,
+		summonTimer = def.summon and def.summon.period or 0,
+		shieldHp = def.shield and def.shield.hp or 0,
+		shieldMax = def.shield and def.shield.hp or 0,
+		shieldBreakFlash = 0,
+		shieldHitFlash = 0,
+		shieldCounterFlash = 0,
+		armorHitFlash = 0,
+		armorCounterFlash = 0,
+		regeneration = def.regeneration,
+		regenDelay = 1,
+		hp = def.hp,
+		maxHp = def.hp,
+		poisonStacks = 0,
+		slowTimer = 0,
+		supportBoost = 1,
+		face = "normal",
+		elite = false,
+		affixes = {},
+	}
+end
+
+local function drawEnemyPortrait(enemy, x, y, animT)
+	if not enemy then return end
+
+	enemy.rx, enemy.ry = x, y
+	enemy.rAnimT = animT or 0
+	if enemy.support then
+		enemy.supportPulse = (animT or 0) % enemy.support.pulsePeriod
+	end
+	if enemy.summon then
+		enemy.summonTimer = ((animT or 0) * 0.7) % enemy.summon.period
+	end
+	drawEnemy(enemy)
 end
 
 local function getBarrelTip(t, localTipX)
@@ -1137,6 +1195,8 @@ end
 
 return {
 	drawEnemy = drawEnemy,
+	newEnemyPortrait = newEnemyPortrait,
+	drawEnemyPortrait = drawEnemyPortrait,
 	drawEnemies = drawEnemies,
 	drawTowerBase = drawTowerBase,
 	drawTowerCore = drawTowerCore,

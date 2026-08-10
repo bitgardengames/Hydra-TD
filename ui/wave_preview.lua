@@ -1,6 +1,7 @@
 local State = require("core.state")
 local Theme = require("core.theme")
 local Waves = require("systems.waves")
+local DrawEntities = require("render.draw_entities")
 local Text = require("ui.text")
 local L = require("core.localization")
 
@@ -19,6 +20,9 @@ local PANEL_W = 440
 local HEADER_H = 30
 local HEADER_GAP = 8
 local ROW_GAP = 5
+local PORTRAIT_W = 46
+local PORTRAIT_H = 42
+local TEXT_GAP = 6
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -65,6 +69,7 @@ local function refreshPreview()
 			name = L("hud.compositionEntry", group.count, group.name),
 			threats = threats,
 			counter = counter,
+			portrait = DrawEntities.newEnemyPortrait(group.kind),
 		}
 	end
 end
@@ -78,17 +83,18 @@ function WavePreview.draw()
 
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local counterW = PANEL_W - PANEL_PAD * 2 - 8
+	local counterW = PANEL_W - PANEL_PAD * 2 - PORTRAIT_W - TEXT_GAP - 8
 	local bodyH = 0
 	for _, entry in ipairs(previewCache.entries) do
-		bodyH = bodyH + textH
-		if entry.threats then bodyH = bodyH + textH end
+		local textBlockH = textH
+		if entry.threats then textBlockH = textBlockH + textH end
 		if entry.counter then
 			local _, lines = font:getWrap(entry.counter, counterW)
 			entry.counterLineCount = math.max(1, #lines)
-			bodyH = bodyH + textH * entry.counterLineCount
+			textBlockH = textBlockH + textH * entry.counterLineCount
 		end
-		bodyH = bodyH + ROW_GAP
+		entry.rowH = math.max(PORTRAIT_H, textBlockH)
+		bodyH = bodyH + entry.rowH + ROW_GAP
 	end
 	bodyH = math.max(textH, bodyH - ROW_GAP)
 	local panelH = PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH
@@ -119,22 +125,27 @@ function WavePreview.draw()
 	Text.printShadow(previewCache.total, innerX + innerW - 8 - font:getWidth(previewCache.total), titleY)
 
 	local rowY = headerY + HEADER_H + HEADER_GAP
+	local animT = love.timer.getTime()
 	for i = 1, #previewCache.entries do
 		local entry = previewCache.entries[i]
+		local textX = innerX + PORTRAIT_W + TEXT_GAP
+		local textY = rowY + floor((entry.rowH - (textH
+			+ (entry.threats and textH or 0)
+			+ (entry.counter and textH * (entry.counterLineCount or 1) or 0))) * 0.5)
+		DrawEntities.drawEnemyPortrait(entry.portrait, innerX + PORTRAIT_W * 0.5, rowY + entry.rowH * 0.5, animT)
 		lg.setColor(colorText)
-		Text.printShadow(entry.name, innerX, rowY)
-		rowY = rowY + textH
+		Text.printShadow(entry.name, textX, textY)
+		textY = textY + textH
 		if entry.threats then
 			lg.setColor(Theme.ui.warn)
-			Text.printShadow(entry.threats, innerX + 8, rowY)
-			rowY = rowY + textH
+			Text.printShadow(entry.threats, textX + 8, textY)
+			textY = textY + textH
 		end
 		if entry.counter then
 			lg.setColor(Theme.ui.good)
-			Text.printfShadow(entry.counter, innerX + 8, rowY, innerW - 8, "left")
-			rowY = rowY + textH * (entry.counterLineCount or 1)
+			Text.printfShadow(entry.counter, textX + 8, textY, innerW - PORTRAIT_W - TEXT_GAP - 8, "left")
 		end
-		rowY = rowY + ROW_GAP
+		rowY = rowY + entry.rowH + ROW_GAP
 	end
 end
 
