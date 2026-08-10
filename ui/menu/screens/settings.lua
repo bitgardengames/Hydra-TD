@@ -407,11 +407,6 @@ function Screen.load()
 						Save.data.settings.uiScale = Fonts.setUIScale(0.75 + v * 0.75)
 						Tooltip.recalculate()
 					end),
-				choiceRow("msaa", L("settings.msaaQuality"), "msaaQuality",
-					{"auto", "off", "low", "medium", "high"}, {
-						auto = L("settings.msaaAuto"), off = L("settings.msaaOff"), low = L("settings.msaaLow"),
-						medium = L("settings.msaaMedium"), high = L("settings.msaaHigh"),
-					}, function() require("core.window").apply(Save.data.settings) end),
 				toggleRow("fullscreen", L("settings.fullscreen"), "fullscreen",
 					function(v)
 						Save.data.settings.fullscreen = v
