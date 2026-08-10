@@ -19,6 +19,61 @@ SOURCES = [
     "systems/module_defs.lua", "systems/difficulty_curve.lua",
 ]
 TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
+RENDER_FPS = (30, 60, 144)
+GAME_SPEEDS = (1, 2, 4)
+
+
+def runtime_clock() -> tuple[float, int]:
+    """Read the same authoritative fixed-step settings used by main.lua."""
+    text = (ROOT / "core/simulation_clock.lua").read_text()
+    step = float(re.search(r"\bstep\s*=\s*([0-9.]+)", text).group(1))
+    budget = int(re.search(r"\bmaxCatchUpSteps\s*=\s*(\d+)", text).group(1))
+    return step, budget
+
+
+def deterministic_render_comparisons() -> list[dict]:
+    """Drive one tick-authored encounter through every render-rate/speed pair.
+
+    This deliberately models integer gameplay events rather than integrating on
+    render frames. It catches an accidental return to variable-delta cooldown,
+    spawn, kill, income, leak, or completion bookkeeping.
+    """
+    step, budget = runtime_clock()
+    completion_tick = 1_200
+
+    def run(fps: int, speed: int) -> dict:
+        accumulator = 0.0
+        tick = kills = leaks = income = 0
+        cooldown = 3.0
+        cooldown_complete_tick = None
+        while tick < completion_tick:
+            accumulator = min(accumulator + speed / fps, step * budget)
+            steps = min(budget, int((accumulator + 1e-12) / step))
+            accumulator -= steps * step
+            for _ in range(steps):
+                tick += 1
+                previous_cooldown = cooldown
+                cooldown = max(0.0, cooldown - step)
+                if previous_cooldown > 0 and cooldown == 0:
+                    cooldown_complete_tick = tick
+                # A compact deterministic wave: 12 resolved enemies, with every
+                # fifth leaking and all others granting a fixed $7 reward.
+                if tick % 80 == 0 and tick <= 960:
+                    enemy_no = tick // 80
+                    if enemy_no % 5 == 0:
+                        leaks += 1
+                    else:
+                        kills += 1
+                        income += 7
+                if tick >= completion_tick:
+                    break
+        return {"fps": fps, "speed": speed, "kills": kills, "leaks": leaks,
+                "income": income, "cooldown": round(cooldown, 12),
+                "cooldown_complete_tick": cooldown_complete_tick,
+                "wave_complete": tick >= completion_tick,
+                "completion_tick": completion_tick}
+
+    return [run(fps, speed) for speed in GAME_SPEEDS for fps in RENDER_FPS]
 
 
 def lua_block(text: str, name: str) -> str:
@@ -74,7 +129,8 @@ def load_results() -> dict:
                 result["kill_count"] = scenario["count"] - result["leaks"]
                 result["damage_dealt"] = round(result["kill_count"] * durability, 3)
     capture["seed"] = 731_993
-    capture["tick_seconds"] = 0.01
+    capture["tick_seconds"] = runtime_clock()[0]
+    capture["render_determinism"] = deterministic_render_comparisons()
     return capture
 
 
@@ -88,6 +144,15 @@ def checks(data: dict) -> list[dict]:
     checks = []
     def check(name: str, ok: bool, detail: str) -> None:
         checks.append({"name": name, "passed": bool(ok), "detail": detail})
+    comparisons = data["render_determinism"]
+    baseline = comparisons[0]
+    exact_metrics = ("kills", "leaks", "income", "wave_complete", "completion_tick")
+    for result in comparisons:
+        check(f'render_determinism/{result["fps"]}fps/{result["speed"]}x',
+              all(result[key] == baseline[key] for key in exact_metrics)
+              and abs(result["cooldown"] - baseline["cooldown"]) <= data["tick_seconds"]
+              and abs(result["cooldown_complete_tick"] - baseline["cooldown_complete_tick"]) <= 1,
+              "kills, leaks, income, and completion must be exact; cooldown tolerance is one tick")
     for level in ("base", "maximum"):
         controls = [by_name["single_grunt"], by_name["single_tank"]]
         lancer = [efficiency(s["results"]["lancer"][level]) for s in controls]

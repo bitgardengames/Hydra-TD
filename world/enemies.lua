@@ -620,7 +620,7 @@ local function updateEnemies(dt)
 		if e.regenVisualPulse > 0 then e.regenVisualPulse = max(0, e.regenVisualPulse - dt) end
 
 		-- Summoned runners join at the caster's current path progress rather than at
-		-- the map entrance. One cast is resolved per frame, so a long frame cannot
+		-- the map entrance. One cast is resolved per simulation tick, so catch-up cannot
 		-- create an unbounded catch-up burst.
 		if e.summon then
 			e.summonTimer = e.summonTimer - dt

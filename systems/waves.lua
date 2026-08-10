@@ -439,7 +439,7 @@ function Waves.startWave()
 	return true
 end
 
--- Both spawn queues share the same frame and population budgets. Centralizing
+-- Both spawn queues share the same simulation-tick and population budgets. Centralizing
 -- their scheduling keeps either queue from bypassing catch-up or cap protection.
 local function spawnWhileReady(owner, timerKey, pending, activeCap, spawnLoops, spawnOne)
 	while owner[timerKey] <= 0 and pending() > 0

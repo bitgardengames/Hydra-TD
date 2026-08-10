@@ -445,8 +445,9 @@ function Effects.update(dt)
 			e.x = e.x + e.vx * dt
 			e.y = e.y + e.vy * dt
 
-			e.vx = e.vx * 0.96
-			e.vy = e.vy * 0.96
+			local drag = 0.96 ^ (dt * 60)
+			e.vx = e.vx * drag
+			e.vy = e.vy * drag
 		end
 
 		if e.t >= e.life then
@@ -491,8 +492,9 @@ function Effects.update(dt)
 		f.x = f.x + f.vx * dt
 		f.y = f.y + f.vy * dt
 
-		f.vx = f.vx * 0.96
-		f.vy = f.vy * 0.96
+		local drag = 0.96 ^ (dt * 60)
+		f.vx = f.vx * drag
+		f.vy = f.vy * drag
 
 		f.rot = f.rot + f.vr * dt
 
@@ -512,8 +514,9 @@ function Effects.update(dt)
 		p.x = p.x + p.vx * dt
 		p.y = p.y + p.vy * dt
 
-		p.vx = p.vx * (p.drag or 0.94)
-		p.vy = p.vy * (p.drag or 0.94)
+		local drag = (p.drag or 0.94) ^ (dt * 60)
+		p.vx = p.vx * drag
+		p.vy = p.vy * drag
 
 		if p.t >= p.life then
 			swapRemove(poison, i)
@@ -531,8 +534,9 @@ function Effects.update(dt)
 		l.x = l.x + l.vx * dt
 		l.y = l.y + l.vy * dt
 
-		l.vx = l.vx * 0.92
-		l.vy = l.vy * 0.92
+		local drag = 0.92 ^ (dt * 60)
+		l.vx = l.vx * drag
+		l.vy = l.vy * drag
 
 		if l.t >= l.life then
 			swapRemove(lancer, i)
@@ -569,8 +573,9 @@ function Effects.update(dt)
 		p.x = p.x + p.vx * dt
 		p.y = p.y + p.vy * dt
 
-		p.vx = p.vx * 0.92
-		p.vy = p.vy * 0.92
+		local drag = 0.92 ^ (dt * 60)
+		p.vx = p.vx * drag
+		p.vy = p.vy * drag
 
 		if p.t >= p.life then
 			swapRemove(placePuffs, i)

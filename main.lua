@@ -39,6 +39,7 @@ local RunStats = require("systems.run_stats")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local GameSpeed = require("core.game_speed")
+local SimulationClock = require("core.simulation_clock")
 
 local lg = love.graphics
 
@@ -50,6 +51,7 @@ local colorDim = Theme.ui.screenDim
 local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 
 local SCREENSHOT_DIR = "screenshots"
+local simulationAccumulator = 0
 
 -- Revisit this being a global
 function finalizeCurrentRun(completed)
@@ -74,6 +76,7 @@ function finalizeCurrentRun(completed)
 end
 
 function resetGame()
+	simulationAccumulator = 0
 	--State.worldMapIndex = 1 -- Map override
 
     -- Clear world state
@@ -190,8 +193,6 @@ function love.load(arg)
 	collectgarbage("collect")
 end
 
-local MAX_FRAME_DT = 1 / 15
-
 local function isWorldMode(mode)
 	return mode == "game" or mode == "pause" or mode == "settings_gameplay" or mode == "game_over" or mode == "victory"
 end
@@ -210,8 +211,7 @@ local function updateMetaScreens(dt, mode)
 end
 
 local function updateGamePresentation(dt)
-	State.renderAlpha = 1
-	State.renderStep = dt * State.speed
+	State.renderStep = dt
 
 	State.livesAnim = max(0, State.livesAnim - dt * 2)
 	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
@@ -224,6 +224,78 @@ local function updateGamePresentation(dt)
 
 	local p = State.placingFadeT
 	State.placingFade = p * p * (3 - 2 * p)
+end
+
+local function updateGameplayOutcome()
+	if State.mode ~= "game" then
+		return
+	end
+
+	-- These transitions are gameplay, not presentation: resolve them after each
+	-- simulation tick so their timing cannot depend on rendered FPS.
+	-- Loss condition
+	if State.lives <= 0 and not State.gameOver then
+		State.gameOver = true
+		State.victory = false
+
+		Achievements.onGameOver()
+		finalizeCurrentRun(false)
+		State.mode = "game_over"
+		Sound.play("gameOver")
+		return
+	end
+
+	-- If wave is finished, go to prep
+	if not State.inPrep and Waves.allEnemiesCleared() then
+		local campaignFinalWave = CampaignWaveDefs.getFinalWave(Maps[State.mapIndex])
+		if campaignFinalWave and State.wave == campaignFinalWave and not State.endless then
+			local previousFurthestIndex = Save.data.furthestIndex or 1
+			local nextMapIndex = State.worldMapIndex + 1
+			Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)
+			State.unlockedTowersThisVictory = CampaignUnlocks.getNewlyUnlockedTowers(previousFurthestIndex, Save.data.furthestIndex)
+			State.unlockedRewardsThisVictory = CampaignUnlocks.getNewRewards(previousFurthestIndex, Save.data.furthestIndex)
+			State.unlockedAbilitiesThisVictory = {}
+			for _, reward in ipairs(State.unlockedRewardsThisVictory) do
+				if reward.type == "ability" then
+					State.unlockedAbilitiesThisVictory[#State.unlockedAbilitiesThisVictory + 1] = reward.id
+				end
+			end
+
+			Achievements.onGameOver()
+			State.speed = 0.35
+			State.gameOver = true
+			State.victory = true
+			finalizeCurrentRun(true)
+
+			if State.totalLeaks == 0 then
+				local diff = Difficulty.key()
+				if diff == "hard" then
+					Achievements.unlock("NO_LEAKS_NORMAL")
+					Achievements.unlock("NO_LEAKS_HARD")
+				elseif diff == "normal" then
+					Achievements.unlock("NO_LEAKS_NORMAL")
+				end
+			end
+
+			Menu.set("victory")
+			Sound.play("victory")
+			Save.flush()
+			return
+		end
+
+		if State.waveLeaks == 0 then
+			local bonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
+			State.money = State.money + bonus
+			RunStats.recordIncome(bonus, "flawless")
+			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
+		end
+
+		State.activeBoss = nil
+		State.activeBossKind = nil
+		State.wave = State.wave + 1
+		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
+		State.inPrep = true
+	end
 end
 
 local function drawWorldAndUI()
@@ -239,7 +311,6 @@ end
 
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
-	dt = min(dt, MAX_FRAME_DT)
 	Camera.update(dt)
 
 	local mode = State.mode
@@ -251,12 +322,14 @@ function love.update(dt)
 	Sound.update(dt)
 
 	if mode == "pause" then
+		simulationAccumulator = 0
 		Menu.updatePause(dt)
 
 		return
 	end
 
 	if mode == "settings_gameplay" then
+		simulationAccumulator = 0
 		Menu.update(dt)
 
 		return
@@ -265,10 +338,23 @@ function love.update(dt)
 	local gameplayFrozen = ModulePicker.isActive()
 
 	if State.paused or gameplayFrozen then
+		simulationAccumulator = 0
 		return
 	end
 
-	Sim.update(dt * State.speed)
+	local step = SimulationClock.step
+	local catchUpBudget = step * SimulationClock.maxCatchUpSteps
+	-- Clamp before stepping: time beyond the catch-up budget is discarded. This
+	-- prevents a long OS stall from forcing an effectively unbounded update loop.
+	simulationAccumulator = min(simulationAccumulator + dt * State.speed, catchUpBudget)
+	local steps = 0
+	while simulationAccumulator + 1e-12 >= step and steps < SimulationClock.maxCatchUpSteps do
+		Sim.update(step)
+		updateGameplayOutcome()
+		simulationAccumulator = simulationAccumulator - step
+		steps = steps + 1
+	end
+	State.renderAlpha = max(0, min(1, simulationAccumulator / step))
 
 	if mode ~= "game" then
 		updateMetaScreens(dt, mode)
@@ -291,86 +377,6 @@ function love.update(dt)
 		return
 	end
 
-	-- Loss condition
-	if State.lives <= 0 and not State.gameOver then
-		State.gameOver = true
-		State.victory = false
-
-		Achievements.onGameOver()
-
-		finalizeCurrentRun(false)
-
-		--Menu.set("game_over") -- All of this logic should be migrated to GameOver.enter() now
-		State.mode = "game_over"
-
-		Sound.play("gameOver")
-
-		return
-	end
-
-	-- If wave is finished, go to prep
-	if not State.inPrep and Waves.allEnemiesCleared() then
-		-- Each campaign map ends after its own authored sequence.
-		local campaignFinalWave = CampaignWaveDefs.getFinalWave(Maps[State.mapIndex])
-		if campaignFinalWave and State.wave == campaignFinalWave and not State.endless then
-			-- Save
-			local previousFurthestIndex = Save.data.furthestIndex or 1
-			-- Preserve one post-campaign progress step so Twin Loop's clear reward is
-			-- earned only after the final map, just like every other clear reward.
-			local nextMapIndex = State.worldMapIndex + 1
-			Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)
-			State.unlockedTowersThisVictory = CampaignUnlocks.getNewlyUnlockedTowers(previousFurthestIndex, Save.data.furthestIndex)
-			State.unlockedRewardsThisVictory = CampaignUnlocks.getNewRewards(previousFurthestIndex, Save.data.furthestIndex)
-			State.unlockedAbilitiesThisVictory = {}
-			for _, reward in ipairs(State.unlockedRewardsThisVictory) do
-				if reward.type == "ability" then
-					State.unlockedAbilitiesThisVictory[#State.unlockedAbilitiesThisVictory + 1] = reward.id
-				end
-			end
-
-			Achievements.onGameOver()
-
-			State.speed = 0.35
-			State.gameOver = true
-			State.victory = true
-
-			finalizeCurrentRun(true)
-
-			-- No Leak Achievement
-			if State.totalLeaks == 0 then
-				local diff = Difficulty.key()
-
-				if diff == "hard" then
-					Achievements.unlock("NO_LEAKS_NORMAL")
-					Achievements.unlock("NO_LEAKS_HARD")
-				elseif diff == "normal" then
-					Achievements.unlock("NO_LEAKS_NORMAL")
-				end
-			end
-
-			Menu.set("victory") -- All of this logic should be migrated to Victory.enter() now
-			Sound.play("victory")
-
-			Save.flush()
-
-			return
-		end
-
-		if State.waveLeaks == 0 then
-			local bonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
-			State.money = State.money + bonus
-			RunStats.recordIncome(bonus, "flawless")
-
-			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
-		end
-
-		-- Otherwise continue as normal
-		State.activeBoss = nil
-		State.activeBossKind = nil
-		State.wave = State.wave + 1
-		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
-		State.inPrep = true
-	end
 end
 
 function love.draw()
