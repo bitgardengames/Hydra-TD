@@ -38,7 +38,7 @@ function Fonts.set(kind)
 end
 
 function Fonts.get(kind)
-	return Fonts[current]
+	return Fonts[kind or current]
 end
 
 return Fonts
