@@ -20,6 +20,31 @@ Run without flags to obtain the complete machine-readable capture. The
 `definition_sha256` field fingerprints the tower, enemy, branch, module, and
 difficulty sources used by the capture.
 
+## Aggregate gate
+
+Run every combat, campaign pacing, economy, ability, and interaction gate with
+one dependency-free command:
+
+```sh
+python3 tools/balance/check.py
+```
+
+`interaction_fixtures.json` records every active ability variant and branch
+mapping, representative module combat formations, targeting expectations, and
+the boss templates' dynamically summoned adds. It includes total damage,
+coverage, leaks, proc counts, and cost efficiency. Radius-boundary, cooldown,
+2x/4x speed, and overlapping-effect invariants use broad tuning tolerances.
+
+The capture fingerprints tower, enemy, branch, module, ability, difficulty,
+campaign-wave, runtime-wave, and targeting definitions. Any edit to those files
+fails the gate until the fixtures are generated and reviewed:
+
+```sh
+python3 tools/balance/interaction_fixtures.py --write
+git diff -- tools/balance/interaction_fixtures.json
+python3 tools/balance/check.py
+```
+
 ## Campaign pacing
 
 Campaign encounters have a separate, dependency-free schedule audit:

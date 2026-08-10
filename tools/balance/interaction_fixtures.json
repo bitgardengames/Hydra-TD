@@ -1,0 +1,1523 @@
+{
+  "abilities": [
+    {
+      "ability": "meteor",
+      "cooldown": 35.0,
+      "effect": {
+        "damage": 85.0,
+        "radius": 82.0
+      },
+      "kind": "damage_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 35.0,
+          "simulation_ticks": 3500,
+          "speed": 1,
+          "wall_seconds": 35.0
+        },
+        {
+          "simulation_seconds": 35.0,
+          "simulation_ticks": 1750,
+          "speed": 2,
+          "wall_seconds": 17.5
+        },
+        {
+          "simulation_seconds": 35.0,
+          "simulation_ticks": 875,
+          "speed": 4,
+          "wall_seconds": 8.75
+        }
+      ],
+      "variant": "base"
+    },
+    {
+      "ability": "meteor",
+      "cooldown": 35.0,
+      "effect": {
+        "damage": 115.0,
+        "radius": 96.0
+      },
+      "kind": "damage_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 35.0,
+          "simulation_ticks": 3500,
+          "speed": 1,
+          "wall_seconds": 35.0
+        },
+        {
+          "simulation_seconds": 35.0,
+          "simulation_ticks": 1750,
+          "speed": 2,
+          "wall_seconds": 17.5
+        },
+        {
+          "simulation_seconds": 35.0,
+          "simulation_ticks": 875,
+          "speed": 4,
+          "wall_seconds": 8.75
+        }
+      ],
+      "variant": "enhanced"
+    },
+    {
+      "ability": "frost_nova",
+      "cooldown": 28.0,
+      "effect": {
+        "duration": 5.0,
+        "radius": 105.0
+      },
+      "kind": "slow_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 28.0,
+          "simulation_ticks": 2800,
+          "speed": 1,
+          "wall_seconds": 28.0
+        },
+        {
+          "simulation_seconds": 28.0,
+          "simulation_ticks": 1400,
+          "speed": 2,
+          "wall_seconds": 14.0
+        },
+        {
+          "simulation_seconds": 28.0,
+          "simulation_ticks": 700,
+          "speed": 4,
+          "wall_seconds": 7.0
+        }
+      ],
+      "variant": "base"
+    },
+    {
+      "ability": "frost_nova",
+      "cooldown": 28.0,
+      "effect": {
+        "duration": 6.5,
+        "radius": 120.0
+      },
+      "kind": "slow_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 28.0,
+          "simulation_ticks": 2800,
+          "speed": 1,
+          "wall_seconds": 28.0
+        },
+        {
+          "simulation_seconds": 28.0,
+          "simulation_ticks": 1400,
+          "speed": 2,
+          "wall_seconds": 14.0
+        },
+        {
+          "simulation_seconds": 28.0,
+          "simulation_ticks": 700,
+          "speed": 4,
+          "wall_seconds": 7.0
+        }
+      ],
+      "variant": "enhanced"
+    },
+    {
+      "ability": "overdrive",
+      "cooldown": 38.0,
+      "effect": {
+        "attackSpeed": 1.7,
+        "duration": 7.0,
+        "radius": 110.0
+      },
+      "kind": "tower_haste_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 38.0,
+          "simulation_ticks": 3800,
+          "speed": 1,
+          "wall_seconds": 38.0
+        },
+        {
+          "simulation_seconds": 38.0,
+          "simulation_ticks": 1900,
+          "speed": 2,
+          "wall_seconds": 19.0
+        },
+        {
+          "simulation_seconds": 38.0,
+          "simulation_ticks": 950,
+          "speed": 4,
+          "wall_seconds": 9.5
+        }
+      ],
+      "variant": "base"
+    },
+    {
+      "ability": "overdrive",
+      "cooldown": 38.0,
+      "effect": {
+        "attackSpeed": 1.85,
+        "duration": 8.0,
+        "radius": 125.0
+      },
+      "kind": "tower_haste_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 38.0,
+          "simulation_ticks": 3800,
+          "speed": 1,
+          "wall_seconds": 38.0
+        },
+        {
+          "simulation_seconds": 38.0,
+          "simulation_ticks": 1900,
+          "speed": 2,
+          "wall_seconds": 19.0
+        },
+        {
+          "simulation_seconds": 38.0,
+          "simulation_ticks": 950,
+          "speed": 4,
+          "wall_seconds": 9.5
+        }
+      ],
+      "variant": "enhanced"
+    },
+    {
+      "ability": "gravity_well",
+      "cooldown": 40.0,
+      "effect": {
+        "damage": 28.0,
+        "duration": 3.0,
+        "pullSpeed": 36.0,
+        "radius": 95.0
+      },
+      "kind": "gravity_well",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 40.0,
+          "simulation_ticks": 4000,
+          "speed": 1,
+          "wall_seconds": 40.0
+        },
+        {
+          "simulation_seconds": 40.0,
+          "simulation_ticks": 2000,
+          "speed": 2,
+          "wall_seconds": 20.0
+        },
+        {
+          "simulation_seconds": 40.0,
+          "simulation_ticks": 1000,
+          "speed": 4,
+          "wall_seconds": 10.0
+        }
+      ],
+      "variant": "base"
+    },
+    {
+      "ability": "gravity_well",
+      "cooldown": 40.0,
+      "effect": {
+        "damage": 42.0,
+        "duration": 3.0,
+        "pullSpeed": 44.0,
+        "radius": 110.0
+      },
+      "kind": "gravity_well",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 40.0,
+          "simulation_ticks": 4000,
+          "speed": 1,
+          "wall_seconds": 40.0
+        },
+        {
+          "simulation_seconds": 40.0,
+          "simulation_ticks": 2000,
+          "speed": 2,
+          "wall_seconds": 20.0
+        },
+        {
+          "simulation_seconds": 40.0,
+          "simulation_ticks": 1000,
+          "speed": 4,
+          "wall_seconds": 10.0
+        }
+      ],
+      "variant": "enhanced"
+    },
+    {
+      "ability": "gold_rush",
+      "cooldown": 55.0,
+      "effect": {
+        "duration": 8.0,
+        "multiplier": 1.5
+      },
+      "kind": "income_multiplier",
+      "radius_samples_included": [],
+      "speed_runs": [
+        {
+          "simulation_seconds": 55.0,
+          "simulation_ticks": 5500,
+          "speed": 1,
+          "wall_seconds": 55.0
+        },
+        {
+          "simulation_seconds": 55.0,
+          "simulation_ticks": 2750,
+          "speed": 2,
+          "wall_seconds": 27.5
+        },
+        {
+          "simulation_seconds": 55.0,
+          "simulation_ticks": 1375,
+          "speed": 4,
+          "wall_seconds": 13.75
+        }
+      ],
+      "variant": "base"
+    },
+    {
+      "ability": "last_stand",
+      "cooldown": 45.0,
+      "effect": {
+        "attackSpeed": 1.45,
+        "duration": 6.0,
+        "radius": 110.0,
+        "volleys": 1.0
+      },
+      "kind": "last_stand",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 45.0,
+          "simulation_ticks": 4500,
+          "speed": 1,
+          "wall_seconds": 45.0
+        },
+        {
+          "simulation_seconds": 45.0,
+          "simulation_ticks": 2250,
+          "speed": 2,
+          "wall_seconds": 22.5
+        },
+        {
+          "simulation_seconds": 45.0,
+          "simulation_ticks": 1125,
+          "speed": 4,
+          "wall_seconds": 11.25
+        }
+      ],
+      "variant": "base"
+    },
+    {
+      "ability": "last_stand",
+      "cooldown": 45.0,
+      "effect": {
+        "attackSpeed": 1.45,
+        "duration": 6.0,
+        "radius": 125.0,
+        "volleyDelay": 1.5,
+        "volleys": 2.0
+      },
+      "kind": "last_stand",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "speed_runs": [
+        {
+          "simulation_seconds": 45.0,
+          "simulation_ticks": 4500,
+          "speed": 1,
+          "wall_seconds": 45.0
+        },
+        {
+          "simulation_seconds": 45.0,
+          "simulation_ticks": 2250,
+          "speed": 2,
+          "wall_seconds": 22.5
+        },
+        {
+          "simulation_seconds": 45.0,
+          "simulation_ticks": 1125,
+          "speed": 4,
+          "wall_seconds": 11.25
+        }
+      ],
+      "variant": "enhanced"
+    }
+  ],
+  "assumptions": {
+    "encounter_seconds": 60,
+    "radius_rule": "distance_squared <= radius_squared",
+    "tick_seconds": 0.01
+  },
+  "boss_add_encounters": [
+    {
+      "add_hp_multiplier": 0.95,
+      "add_kind": "runner",
+      "add_speed_multiplier": 1.15,
+      "burst_count": 9,
+      "peak_alive_cap": 14,
+      "runtime_seconds": 60,
+      "summoned_adds": 18,
+      "template": "boss_displacement"
+    },
+    {
+      "add_hp_multiplier": 1.2,
+      "add_kind": "tank",
+      "add_speed_multiplier": 0.9,
+      "burst_count": 8,
+      "peak_alive_cap": 8,
+      "runtime_seconds": 60,
+      "summoned_adds": 8,
+      "template": "boss_suppression"
+    },
+    {
+      "add_hp_multiplier": 0.9,
+      "add_kind": "grunt",
+      "add_speed_multiplier": 1.0,
+      "burst_count": 10,
+      "peak_alive_cap": 20,
+      "runtime_seconds": 60,
+      "summoned_adds": 34,
+      "template": "boss_summoner"
+    }
+  ],
+  "branches": [
+    {
+      "behavior_ids": [
+        "apply_slow",
+        "draw_slow",
+        "hit_damage",
+        "move_homing",
+        "shatter_bonus"
+      ],
+      "cost_efficiency": 0.2,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
+      "module": "slow_glacier_core",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 100,
+      "total_damage": 20,
+      "tower": "slow"
+    },
+    {
+      "behavior_ids": [
+        "apply_slow",
+        "draw_slow",
+        "hit_damage",
+        "move_homing",
+        "split_on_hit"
+      ],
+      "cost_efficiency": 0.24,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
+      "module": "slow_frost_shards",
+      "proc_count": 1,
+      "targets": 16,
+      "total_cost": 100,
+      "total_damage": 24,
+      "tower": "slow"
+    },
+    {
+      "behavior_ids": [
+        "apply_slow",
+        "draw_slow",
+        "hit_damage",
+        "move_homing",
+        "pierce",
+        "snowball_ramp"
+      ],
+      "cost_efficiency": 0.10477,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
+      "module": "slow_snowball",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 155,
+      "total_damage": 16.24,
+      "tower": "slow"
+    },
+    {
+      "behavior_ids": [
+        "apply_slow",
+        "draw_slow",
+        "hit_damage",
+        "move_homing",
+        "slow_aura"
+      ],
+      "cost_efficiency": 0.16103,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
+      "module": "slow_frost_aura",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 155,
+      "total_damage": 24.96,
+      "tower": "slow"
+    },
+    {
+      "behavior_ids": [
+        "apply_slow",
+        "draw_slow",
+        "hit_damage",
+        "move_homing",
+        "shatter_bonus"
+      ],
+      "cost_efficiency": 0.12,
+      "coverage": 0.167,
+      "formation": "shields",
+      "leaks": 5,
+      "module": "slow_lead_freeze",
+      "proc_count": 1,
+      "targets": 6,
+      "total_cost": 210,
+      "total_damage": 25.2,
+      "tower": "slow"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "apply_slow",
+        "draw_slow",
+        "hit_damage",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.15619,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
+      "module": "slow_wide_chill",
+      "proc_count": 1,
+      "targets": 12,
+      "total_cost": 210,
+      "total_damage": 32.8,
+      "tower": "slow"
+    },
+    {
+      "behavior_ids": [
+        "apply_slow",
+        "draw_slow",
+        "hit_damage",
+        "move_homing",
+        "pierce",
+        "shatter_bonus"
+      ],
+      "cost_efficiency": 0.11955,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
+      "module": "slow_absolute_zero",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 265,
+      "total_damage": 31.68,
+      "tower": "slow"
+    },
+    {
+      "behavior_ids": [
+        "apply_slow",
+        "draw_slow",
+        "hit_damage",
+        "move_homing",
+        "slow_burst_cleave"
+      ],
+      "cost_efficiency": 0.18113,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
+      "module": "slow_glacial_barrage",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 265,
+      "total_damage": 48,
+      "tower": "slow"
+    },
+    {
+      "behavior_ids": [
+        "draw_lancer",
+        "hit_circle",
+        "hit_damage",
+        "lancer_hit_fx",
+        "lancer_overdrive",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.0625,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
+      "module": "lancer_overdrive",
+      "proc_count": 1,
+      "targets": 16,
+      "total_cost": 320,
+      "total_damage": 20,
+      "tower": "lancer"
+    },
+    {
+      "behavior_ids": [
+        "draw_lancer",
+        "hit_damage",
+        "lancer_hit_fx",
+        "move_homing",
+        "split_on_hit"
+      ],
+      "cost_efficiency": 0.0435,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
+      "module": "lancer_volley",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 320,
+      "total_damage": 13.92,
+      "tower": "lancer"
+    },
+    {
+      "behavior_ids": [
+        "hit_circle",
+        "pierce"
+      ],
+      "cost_efficiency": 0.05824,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
+      "module": "pierce",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 375,
+      "total_damage": 21.84,
+      "tower": "lancer"
+    },
+    {
+      "behavior_ids": [
+        "lancer_ricochet"
+      ],
+      "cost_efficiency": 0.05973,
+      "coverage": 0.167,
+      "formation": "shields",
+      "leaks": 5,
+      "module": "lancer_ricochet",
+      "proc_count": 1,
+      "targets": 6,
+      "total_cost": 375,
+      "total_damage": 22.4,
+      "tower": "lancer"
+    },
+    {
+      "behavior_ids": [
+        "draw_lancer",
+        "hit_circle",
+        "hit_damage",
+        "lancer_hit_fx",
+        "lancer_sustained_barrage",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.82381,
+      "coverage": 1,
+      "formation": "fast_enemies",
+      "leaks": 3,
+      "module": "lancer_sustained_barrage",
+      "proc_count": 12,
+      "targets": 12,
+      "total_cost": 430,
+      "total_damage": 354.24,
+      "tower": "lancer"
+    },
+    {
+      "behavior_ids": [
+        "draw_lancer",
+        "hit_circle",
+        "hit_damage",
+        "lancer_hit_fx",
+        "lancer_opening_strike",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.06698,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
+      "module": "lancer_opening_strike",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 430,
+      "total_damage": 28.8,
+      "tower": "lancer"
+    },
+    {
+      "behavior_ids": [
+        "draw_rail_lance",
+        "hit_circle",
+        "hit_damage",
+        "lancer_hit_fx",
+        "lancer_rail_momentum",
+        "move_linear",
+        "pierce"
+      ],
+      "cost_efficiency": 0.09072,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
+      "module": "lancer_rail_lance",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 485,
+      "total_damage": 44,
+      "tower": "lancer"
+    },
+    {
+      "behavior_ids": [
+        "draw_lancer",
+        "hit_circle",
+        "hit_damage",
+        "lancer_focus_fire",
+        "lancer_hit_fx",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.09897,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
+      "module": "lancer_focus_fire",
+      "proc_count": 1,
+      "targets": 16,
+      "total_cost": 485,
+      "total_damage": 48,
+      "tower": "lancer"
+    },
+    {
+      "behavior_ids": [
+        "apply_poison",
+        "draw_poison",
+        "hit_circle",
+        "hit_damage",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.02148,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
+      "module": "poison_blight",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 540,
+      "total_damage": 11.6,
+      "tower": "poison"
+    },
+    {
+      "behavior_ids": [
+        "apply_poison",
+        "draw_poison",
+        "hit_circle",
+        "hit_damage",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.13867,
+      "coverage": 1,
+      "formation": "regeneration",
+      "leaks": 0,
+      "module": "poison_plague",
+      "proc_count": 4,
+      "targets": 4,
+      "total_cost": 540,
+      "total_damage": 74.88,
+      "tower": "poison"
+    },
+    {
+      "behavior_ids": [
+        "apply_poison",
+        "draw_poison",
+        "hit_circle",
+        "hit_damage",
+        "move_homing",
+        "poison_neurotoxin"
+      ],
+      "cost_efficiency": 0.03294,
+      "coverage": 0.167,
+      "formation": "shields",
+      "leaks": 5,
+      "module": "poison_neurotoxin",
+      "proc_count": 1,
+      "targets": 6,
+      "total_cost": 595,
+      "total_damage": 19.6,
+      "tower": "poison"
+    },
+    {
+      "behavior_ids": [
+        "infect_spread"
+      ],
+      "cost_efficiency": 0.0441,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
+      "module": "poison_venom_burst",
+      "proc_count": 1,
+      "targets": 12,
+      "total_cost": 595,
+      "total_damage": 26.24,
+      "tower": "poison"
+    },
+    {
+      "behavior_ids": [
+        "poison_cull_weak"
+      ],
+      "cost_efficiency": 0.03988,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
+      "module": "poison_cull_weak",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 650,
+      "total_damage": 25.92,
+      "tower": "poison"
+    },
+    {
+      "behavior_ids": [
+        "poison_corrupt_strong"
+      ],
+      "cost_efficiency": 0.06154,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
+      "module": "poison_corrupt_strong",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 650,
+      "total_damage": 40,
+      "tower": "poison"
+    },
+    {
+      "behavior_ids": [
+        "poison_hemotoxin"
+      ],
+      "cost_efficiency": 0.06241,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
+      "module": "poison_hemotoxin",
+      "proc_count": 1,
+      "targets": 16,
+      "total_cost": 705,
+      "total_damage": 44,
+      "tower": "poison"
+    },
+    {
+      "behavior_ids": [
+        "infect_spread"
+      ],
+      "cost_efficiency": 0.15796,
+      "coverage": 1,
+      "formation": "armor",
+      "leaks": 0,
+      "module": "poison_pandemic",
+      "proc_count": 4,
+      "targets": 4,
+      "total_cost": 705,
+      "total_damage": 111.36,
+      "tower": "poison"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "cannon_damage_scale",
+        "draw_cannon",
+        "hit_circle",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.02053,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
+      "module": "cannon_siege_shells",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 760,
+      "total_damage": 15.6,
+      "tower": "cannon"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "cannon_damage_scale",
+        "draw_cannon",
+        "hit_circle",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.02211,
+      "coverage": 0.167,
+      "formation": "shields",
+      "leaks": 5,
+      "module": "cannon_rapid_mortar",
+      "proc_count": 1,
+      "targets": 6,
+      "total_cost": 760,
+      "total_damage": 16.8,
+      "tower": "cannon"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "draw_cannon",
+        "hit_circle",
+        "move_homing",
+        "split_on_hit"
+      ],
+      "cost_efficiency": 0.33806,
+      "coverage": 1,
+      "formation": "fast_enemies",
+      "leaks": 3,
+      "module": "cannon_cluster_payload",
+      "proc_count": 12,
+      "targets": 12,
+      "total_cost": 815,
+      "total_damage": 275.52,
+      "tower": "cannon"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "cannon_damage_scale",
+        "cannon_shockwave",
+        "draw_cannon",
+        "hit_circle",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.02827,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
+      "module": "cannon_shockwave",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 815,
+      "total_damage": 23.04,
+      "tower": "cannon"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "cannon_damage_scale",
+        "cannon_long_fuse",
+        "draw_cannon",
+        "hit_circle",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.04138,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
+      "module": "cannon_long_fuse",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 870,
+      "total_damage": 36,
+      "tower": "cannon"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "draw_cannon",
+        "hit_circle",
+        "move_homing",
+        "split_on_hit"
+      ],
+      "cost_efficiency": 0.04598,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
+      "module": "cannon_frontline_burst",
+      "proc_count": 1,
+      "targets": 16,
+      "total_cost": 870,
+      "total_damage": 40,
+      "tower": "cannon"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "cannon_damage_scale",
+        "draw_cannon",
+        "hit_circle",
+        "move_homing",
+        "projectile_radius",
+        "projectile_visual_scale"
+      ],
+      "cost_efficiency": 0.02759,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
+      "module": "cannon_mega_shell",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 925,
+      "total_damage": 25.52,
+      "tower": "cannon"
+    },
+    {
+      "behavior_ids": [
+        "aoe_damage",
+        "cannon_carpet_fire",
+        "cannon_damage_scale",
+        "draw_cannon",
+        "hit_circle",
+        "move_homing"
+      ],
+      "cost_efficiency": 0.04048,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
+      "module": "cannon_carpet_fire",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 925,
+      "total_damage": 37.44,
+      "tower": "cannon"
+    },
+    {
+      "behavior_ids": [
+        "chain_zap_fx",
+        "emit_on_target",
+        "hit_chain"
+      ],
+      "cost_efficiency": 0.01429,
+      "coverage": 0.167,
+      "formation": "shields",
+      "leaks": 5,
+      "module": "shock_storm_coil",
+      "proc_count": 1,
+      "targets": 6,
+      "total_cost": 980,
+      "total_damage": 14.0,
+      "tower": "shock"
+    },
+    {
+      "behavior_ids": [
+        "chain_zap_fx",
+        "emit_on_target",
+        "hit_chain"
+      ],
+      "cost_efficiency": 0.02008,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
+      "module": "shock_overcharge",
+      "proc_count": 1,
+      "targets": 12,
+      "total_cost": 980,
+      "total_damage": 19.68,
+      "tower": "shock"
+    },
+    {
+      "behavior_ids": [
+        "chain_zap_fx",
+        "emit_on_target",
+        "fork_chain",
+        "hit_chain"
+      ],
+      "cost_efficiency": 0.01948,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
+      "module": "shock_forked_arc",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 1035,
+      "total_damage": 20.16,
+      "tower": "shock"
+    },
+    {
+      "behavior_ids": [
+        "chain_static_surge",
+        "chain_zap_fx",
+        "emit_on_target",
+        "hit_chain"
+      ],
+      "cost_efficiency": 0.03092,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
+      "module": "shock_static_surge",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 1035,
+      "total_damage": 32,
+      "tower": "shock"
+    },
+    {
+      "behavior_ids": [
+        "chain_zap_fx",
+        "emit_on_target",
+        "fork_chain",
+        "hit_chain"
+      ],
+      "cost_efficiency": 0.03303,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
+      "module": "shock_crowd_search",
+      "proc_count": 1,
+      "targets": 16,
+      "total_cost": 1090,
+      "total_damage": 36,
+      "tower": "shock"
+    },
+    {
+      "behavior_ids": [
+        "chain_endpoint_burst",
+        "chain_static_surge",
+        "chain_zap_fx",
+        "emit_on_target",
+        "hit_chain"
+      ],
+      "cost_efficiency": 0.02128,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
+      "module": "shock_boss_focus",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 1090,
+      "total_damage": 23.2,
+      "tower": "shock"
+    },
+    {
+      "behavior_ids": [
+        "chain_zap_fx",
+        "emit_on_target",
+        "fork_chain",
+        "hit_chain"
+      ],
+      "cost_efficiency": 0.02997,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
+      "module": "shock_thunderstorm",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 1145,
+      "total_damage": 34.32,
+      "tower": "shock"
+    },
+    {
+      "behavior_ids": [
+        "chain_endpoint_burst",
+        "chain_zap_fx",
+        "emit_on_target",
+        "hit_chain"
+      ],
+      "cost_efficiency": 0.02934,
+      "coverage": 0.167,
+      "formation": "shields",
+      "leaks": 5,
+      "module": "shock_meltdown",
+      "proc_count": 1,
+      "targets": 6,
+      "total_cost": 1145,
+      "total_damage": 33.6,
+      "tower": "shock"
+    },
+    {
+      "behavior_ids": [
+        "draw_plasma",
+        "move_linear",
+        "projectile_radius",
+        "projectile_visual_scale",
+        "tick_damage"
+      ],
+      "cost_efficiency": 0.01367,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
+      "module": "plasma_focused_core",
+      "proc_count": 1,
+      "targets": 12,
+      "total_cost": 1200,
+      "total_damage": 16.4,
+      "tower": "plasma"
+    },
+    {
+      "behavior_ids": [
+        "draw_plasma",
+        "move_linear",
+        "projectile_radius",
+        "projectile_visual_scale",
+        "tick_damage"
+      ],
+      "cost_efficiency": 0.0144,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
+      "module": "plasma_unstable_core",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 1200,
+      "total_damage": 17.28,
+      "tower": "plasma"
+    },
+    {
+      "behavior_ids": [
+        "draw_plasma",
+        "move_boomerang",
+        "tick_damage"
+      ],
+      "cost_efficiency": 0.02231,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
+      "module": "plasma_boomerang_shot",
+      "proc_count": 1,
+      "targets": 1,
+      "total_cost": 1255,
+      "total_damage": 28,
+      "tower": "plasma"
+    },
+    {
+      "behavior_ids": [
+        "draw_plasma",
+        "move_spiral",
+        "tick_damage"
+      ],
+      "cost_efficiency": 0.0255,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
+      "module": "plasma_spiral_drive",
+      "proc_count": 1,
+      "targets": 16,
+      "total_cost": 1255,
+      "total_damage": 32,
+      "tower": "plasma"
+    },
+    {
+      "behavior_ids": [
+        "draw_plasma",
+        "move_linear",
+        "projectile_radius",
+        "tick_damage"
+      ],
+      "cost_efficiency": 0.01594,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
+      "module": "plasma_thermal_tracking",
+      "proc_count": 1,
+      "targets": 4,
+      "total_cost": 1310,
+      "total_damage": 20.88,
+      "tower": "plasma"
+    },
+    {
+      "behavior_ids": [
+        "draw_plasma",
+        "move_linear",
+        "projectile_radius",
+        "tick_damage"
+      ],
+      "cost_efficiency": 0.09527,
+      "coverage": 1,
+      "formation": "regeneration",
+      "leaks": 0,
+      "module": "plasma_lane_sweep",
+      "proc_count": 4,
+      "targets": 4,
+      "total_cost": 1310,
+      "total_damage": 124.8,
+      "tower": "plasma"
+    },
+    {
+      "behavior_ids": [
+        "draw_plasma",
+        "move_linear",
+        "plasma_supernova_burst",
+        "tick_damage"
+      ],
+      "cost_efficiency": 0.02256,
+      "coverage": 0.167,
+      "formation": "shields",
+      "leaks": 5,
+      "module": "plasma_supernova",
+      "proc_count": 1,
+      "targets": 6,
+      "total_cost": 1365,
+      "total_damage": 30.8,
+      "tower": "plasma"
+    },
+    {
+      "behavior_ids": [
+        "draw_plasma",
+        "growing_projectile",
+        "move_linear",
+        "tick_damage"
+      ],
+      "cost_efficiency": 0.02884,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
+      "module": "plasma_growing_mass",
+      "proc_count": 1,
+      "targets": 12,
+      "total_cost": 1365,
+      "total_damage": 39.36,
+      "tower": "plasma"
+    }
+  ],
+  "definition_sha256": "af05a906a262b52d6a00d9431a1aad4101182b7c264d9dc1fb7e8720819c56d1",
+  "format_version": 1,
+  "overlap": {
+    "base_total_damage": 113,
+    "casts": [
+      "meteor",
+      "gravity_well"
+    ],
+    "coverage": 1.0,
+    "enhanced_total_damage": 157,
+    "expected_damage_stacks": true,
+    "independent_expiries": true,
+    "leaks": 0,
+    "proc_count": 2,
+    "speed_invariant": true
+  },
+  "targeting": [
+    {
+      "expected_target": "priority_mid",
+      "formation": [
+        {
+          "dist": 92,
+          "hp": 18,
+          "id": 1,
+          "name": "front_damaged",
+          "priority": 0,
+          "shield": 0,
+          "slow": 0
+        },
+        {
+          "dist": 54,
+          "hp": 180,
+          "id": 2,
+          "name": "rear_tank",
+          "priority": 0,
+          "shield": 20,
+          "slow": 0
+        },
+        {
+          "dist": 70,
+          "hp": 65,
+          "id": 3,
+          "name": "priority_mid",
+          "priority": 30,
+          "shield": 0,
+          "slow": 0
+        },
+        {
+          "dist": 96,
+          "hp": 45,
+          "id": 4,
+          "name": "slowed_front",
+          "priority": 0,
+          "shield": 0,
+          "slow": 1
+        }
+      ],
+      "mode": "progress"
+    },
+    {
+      "expected_target": "rear_tank",
+      "formation": [
+        {
+          "dist": 92,
+          "hp": 18,
+          "id": 1,
+          "name": "front_damaged",
+          "priority": 0,
+          "shield": 0,
+          "slow": 0
+        },
+        {
+          "dist": 54,
+          "hp": 180,
+          "id": 2,
+          "name": "rear_tank",
+          "priority": 0,
+          "shield": 20,
+          "slow": 0
+        },
+        {
+          "dist": 70,
+          "hp": 65,
+          "id": 3,
+          "name": "priority_mid",
+          "priority": 30,
+          "shield": 0,
+          "slow": 0
+        },
+        {
+          "dist": 96,
+          "hp": 45,
+          "id": 4,
+          "name": "slowed_front",
+          "priority": 0,
+          "shield": 0,
+          "slow": 1
+        }
+      ],
+      "mode": "high_hp"
+    },
+    {
+      "expected_target": "front_damaged",
+      "formation": [
+        {
+          "dist": 92,
+          "hp": 18,
+          "id": 1,
+          "name": "front_damaged",
+          "priority": 0,
+          "shield": 0,
+          "slow": 0
+        },
+        {
+          "dist": 54,
+          "hp": 180,
+          "id": 2,
+          "name": "rear_tank",
+          "priority": 0,
+          "shield": 20,
+          "slow": 0
+        },
+        {
+          "dist": 70,
+          "hp": 65,
+          "id": 3,
+          "name": "priority_mid",
+          "priority": 30,
+          "shield": 0,
+          "slow": 0
+        },
+        {
+          "dist": 96,
+          "hp": 45,
+          "id": 4,
+          "name": "slowed_front",
+          "priority": 0,
+          "shield": 0,
+          "slow": 1
+        }
+      ],
+      "mode": "low_hp"
+    },
+    {
+      "expected_target": "slowed_front",
+      "formation": [
+        {
+          "dist": 92,
+          "hp": 18,
+          "id": 1,
+          "name": "front_damaged",
+          "priority": 0,
+          "shield": 0,
+          "slow": 0
+        },
+        {
+          "dist": 54,
+          "hp": 180,
+          "id": 2,
+          "name": "rear_tank",
+          "priority": 0,
+          "shield": 20,
+          "slow": 0
+        },
+        {
+          "dist": 70,
+          "hp": 65,
+          "id": 3,
+          "name": "priority_mid",
+          "priority": 30,
+          "shield": 0,
+          "slow": 0
+        },
+        {
+          "dist": 96,
+          "hp": 45,
+          "id": 4,
+          "name": "slowed_front",
+          "priority": 0,
+          "shield": 0,
+          "slow": 1
+        }
+      ],
+      "mode": "farthest"
+    }
+  ]
+}
