@@ -61,6 +61,9 @@ local function beginTowerPlacement(kind)
 		return false, "locked"
 	end
 
+	-- Tower placement and ability targeting are mutually exclusive. Clear the
+	-- active target so its AoE preview does not linger behind the tower ghost.
+	Abilities.cancelTargeting()
 	State.placing = kind
 	State.selectedTower = nil
 
