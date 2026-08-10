@@ -166,7 +166,10 @@ local function drawButton(button, def, activeTime)
 end
 
 function AbilityBar.update(dt, mx, my)
-	mx, my = mx or love.mouse.getPosition()
+	if mx == nil or my == nil then
+		local mouseX, mouseY = love.mouse.getPosition()
+		mx, my = mx or mouseX, my or mouseY
+	end
 	local equipped = getDisplayedAbilities()
 	local count = min(#equipped, MAX_ABILITIES)
 	local sw, sh = lg.getDimensions()
