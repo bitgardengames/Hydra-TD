@@ -12,6 +12,7 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local KeybindCapture = require("ui.keybind_capture")
 local ScrollView = require("ui.scroll_view")
+local Tooltip = require("ui.tooltip")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -136,6 +137,21 @@ local function toggleRow(id, label, setting, set)
 		type = "toggle",
 		get = function() return Save.data.settings[setting] end,
 		set = set or function(value) Save.data.settings[setting] = value end,
+	}
+end
+
+local function choiceRow(id, label, setting, choices, valueLabels, apply)
+	return {
+		id = id, label = label, type = "action",
+		valueLabel = function() return valueLabels[Save.data.settings[setting]] or tostring(Save.data.settings[setting]) end,
+		onClick = function()
+			local current = Save.data.settings[setting]
+			local index = 1
+			for i, value in ipairs(choices) do if value == current then index = i break end end
+			Save.data.settings[setting] = choices[index % #choices + 1]
+			if apply then apply(Save.data.settings[setting]) end
+			Sound.play("uiConfirm")
+		end,
 	}
 end
 
@@ -279,7 +295,8 @@ local function drawActionRow(row, x, yTop)
 	Text.printShadow(row.label, x, rowTextY(yTop))
 
 	if row.valueLabel then
-		Text.printfShadow(row.valueLabel, x + LABEL_W - 16, rowTextY(yTop), 130, "right")
+		local valueLabel = type(row.valueLabel) == "function" and row.valueLabel() or row.valueLabel
+		Text.printfShadow(valueLabel, x + LABEL_W - 16, rowTextY(yTop), 130, "right")
 	end
 
 	if row.renderAsButton then
@@ -377,25 +394,28 @@ function Screen.load()
 			id = "video",
 			label = L("settings.tabVideo"),
 			rows = {
-				toggleRow("screen_shake", L("settings.screenShake"), "screenShake"),
+				sliderRow("screen_shake", L("settings.screenShakeIntensity"), Theme.tower.plasma,
+					function() return Save.data.settings.screenShakeIntensity end,
+					function(v) Save.data.settings.screenShakeIntensity = v end),
+				toggleRow("camera_motion", L("settings.cameraMotion"), "cameraMotion"),
 				toggleRow("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers"),
 				toggleRow("reduced_flash", L("settings.reducedFlash"), "reducedFlash"),
+				toggleRow("dense_particles", L("settings.highDensityParticles"), "highDensityParticles"),
+				sliderRow("ui_scale", L("settings.uiScale"), Theme.tower.slow,
+					function() return (Save.data.settings.uiScale - 0.75) / 0.75 end,
+					function(v)
+						Save.data.settings.uiScale = Fonts.setUIScale(0.75 + v * 0.75)
+						Tooltip.recalculate()
+					end),
+				choiceRow("msaa", L("settings.msaaQuality"), "msaaQuality",
+					{"auto", "off", "low", "medium", "high"}, {
+						auto = L("settings.msaaAuto"), off = L("settings.msaaOff"), low = L("settings.msaaLow"),
+						medium = L("settings.msaaMedium"), high = L("settings.msaaHigh"),
+					}, function() require("core.window").apply(Save.data.settings) end),
 				toggleRow("fullscreen", L("settings.fullscreen"), "fullscreen",
 					function(v)
-						if v then
-							local sw, sh = love.graphics.getDimensions()
-							local msaa = require("core.scale").suggestMSAA(sw, sh) or 8
-
-							love.window.updateMode(0, 0, {fullscreen = true, fullscreentype = "desktop", vsync = 1, msaa = msaa})
-						else
-							local msaa = require("core.scale").suggestMSAA(1280, 800) or 2
-							love.window.updateMode(1280, 800, {fullscreen = false, resizable = true, vsync = 1, msaa = msaa})
-						end
-
 						Save.data.settings.fullscreen = v
-
-						local sw, sh = love.graphics.getDimensions()
-						love.resize(sw, sh)
+						require("core.window").apply(Save.data.settings, v)
 					end),
 			},
 		},
@@ -429,6 +449,11 @@ end
 function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
+	Fonts.set("menu")
+	local widestLabel = 0
+	for _, row in ipairs(getActiveRows()) do widestLabel = max(widestLabel, lg.getFont():getWidth(row.label or "")) end
+	LABEL_W = min(280, max(180, widestLabel + 24))
+	ROW_W = LABEL_W + SLIDER_W + 40
 
 	if State.mode ~= "settings_gameplay" then
 		Backdrop.update(dt)

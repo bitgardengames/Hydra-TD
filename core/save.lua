@@ -24,6 +24,11 @@ local DEFAULT_SETTINGS = {
 	showDamageNumbers = true,
 	reducedFlash = false,
 	fullscreen = true,
+	uiScale = 1.0,
+	screenShakeIntensity = 1.0,
+	msaaQuality = "auto",
+	cameraMotion = true,
+	highDensityParticles = true,
 }
 
 local META_COUNTERS = {
@@ -107,6 +112,14 @@ local function normalizeSettings(data)
 	local settings = data.settings
 	for key, value in pairs(DEFAULT_SETTINGS) do
 		changed = defaultValue(settings, key, value) or changed
+	end
+	local uiScale = tonumber(settings.uiScale)
+	if not uiScale or uiScale < 0.75 or uiScale > 1.5 then settings.uiScale = 1; changed = true end
+	local shake = tonumber(settings.screenShakeIntensity)
+	if not shake or shake < 0 or shake > 1 then settings.screenShakeIntensity = 1; changed = true end
+	if not ({auto = true, off = true, low = true, medium = true, high = true})[settings.msaaQuality] then
+		settings.msaaQuality = "auto"
+		changed = true
 	end
 	return ensureKeybinds(settings) or changed
 end

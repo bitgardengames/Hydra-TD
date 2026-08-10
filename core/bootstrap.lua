@@ -17,6 +17,7 @@ function Bootstrap.initFull()
 	Difficulty.set(Save.data.settings.difficulty)
 	L.load(Save.data.settings.language or "enUS")
 	Fonts.load()
+	Fonts.setUIScale(Save.data.settings.uiScale)
 	Scale.update()
 	Camera.load()
 	Steam.load()
@@ -32,14 +33,9 @@ end
 
 function Bootstrap.initMinimal()
 	-- Not sure if you live here permanently
-	love.window.updateMode(0, 0, {
-		fullscreen = true,
-		fullscreentype = "desktop",
-		vsync = 1,
-		msaa = 8
-	})
-
-	require("core.save").load()
+	local Save = require("core.save")
+	Save.load()
+	require("core.window").apply(Save.data.settings)
 	require("core.localization").load("enUS")
 	require("systems.sound").load()
 	require("core.fonts").load()

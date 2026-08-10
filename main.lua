@@ -2,6 +2,7 @@
 
 local Constants = require("core.constants")
 local Camera = require("core.camera")
+local Scale = require("core.scale")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local State = require("core.state")
@@ -501,11 +502,14 @@ function love.keypressed(key)
 end
 
 function love.resize(w, h)
-	--Scale.update()
-	--Camera.resize()
+	Scale.update()
+	Camera.resize()
 	MapWorldCache.invalidate()
 	require("ui.title").invalidateCache()
-	require("ui.menu.screens.campaign").resize(w, h)
+	Tooltip.resize(w, h)
+	require("ui.bottom_bar").resize(w, h)
+	Overlay.resize(w, h)
+	Menu.resize(w, h)
 end
 
 function love.focus(focused)
