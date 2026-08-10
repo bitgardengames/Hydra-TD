@@ -21,6 +21,15 @@ end
 
 local Effects = {}
 
+-- All sustained abilities use the same final-second warning curve. Renderers
+-- can apply the returned alpha to an area, HUD badge, or entity marker.
+function Effects.expirationPulse(remaining, clock)
+	if not remaining or remaining > 1 then return 1 end
+	local fade = math.max(0, remaining)
+	local pulse = 0.45 + 0.55 * math.abs(math.sin((clock or 0) * math.pi * 6))
+	return fade * pulse
+end
+
 local function settings()
 	return Save.data and Save.data.settings or {}
 end

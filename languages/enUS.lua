@@ -498,6 +498,7 @@ return {
 		needMoney = "Need $",
 		maxLevel = "Max level",
 		abilityCoolingDown = "Ability cooling down",
+		abilityInvalid = { outside = "Target must be on the battlefield", no_enemies = "No enemies in target area", no_towers = "No towers in target area", invalid = "Invalid ability target" },
 		goldRushReward = "+$%d  GOLD RUSH x%g",
 	},
 

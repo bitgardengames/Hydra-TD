@@ -2,6 +2,9 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 local MapMod = require("world.map")
 local State = require("core.state")
+local AbilityDefs = require("systems.ability_defs")
+local Abilities = require("systems.abilities")
+local Effects = require("world.effects")
 local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
@@ -415,25 +418,59 @@ local function drawWorld()
 	drawScatter()
 end
 
+local function drawEntityMarker(entity, color, alpha, radius)
+	local x, y = entity.rx or entity.x, entity.ry or entity.renderY or entity.y
+	lg.setColor(color[1], color[2], color[3], .18 * alpha)
+	lg.circle("fill", x, y, radius)
+	lg.setColor(color[1], color[2], color[3], .95 * alpha)
+	lg.setLineWidth(2)
+	lg.circle("line", x, y, radius)
+end
+
 local function drawAbilityPreview()
-	local Abilities = require("systems.abilities")
 	local active, clock = Abilities.getActive()
-	for _, a in ipairs(active) do
-		-- Overdrive already highlights each buffed tower, so retaining its full
-		-- targeting area only adds visual clutter after the ability is cast.
-		if a.x and a.kind ~= "tower_haste_area" then
-			local alpha = math.min(.24, math.max(.04, (a.expires-clock)*.08))
-			local r,g,b = a.kind=="gravity_well" and .55 or 1, a.kind=="gravity_well" and .25 or .7, a.kind=="tower_haste_area" and 1 or .25
-			lg.setColor(r,g,b,alpha); lg.circle("fill",a.x,a.y,a.radius); lg.setColor(r,g,b,.75); lg.setLineWidth(2); lg.circle("line",a.x,a.y,a.radius)
+	for _, activeEffect in ipairs(active) do
+		local def = activeEffect.abilityId and AbilityDefs[activeEffect.abilityId]
+		local sustained = def and def.sustained
+		local remaining = activeEffect.expires - clock
+		local alpha = Effects.expirationPulse(remaining, clock)
+		local color = (def and def.target and def.target.color) or {1, .7, .25}
+		if sustained and sustained.area and activeEffect.x then
+			lg.setColor(color[1], color[2], color[3], .16 * alpha)
+			lg.circle("fill", activeEffect.x, activeEffect.y, activeEffect.radius)
+			lg.setColor(color[1], color[2], color[3], .8 * alpha)
+			lg.setLineWidth(2)
+			lg.circle("line", activeEffect.x, activeEffect.y, activeEffect.radius)
+		end
+		if sustained and sustained.entityMarker then
+			local entities = activeEffect.towers
+			if not entities and def.target and def.target.entities == "enemies" then
+				entities = Abilities.getEntitiesInActiveArea(activeEffect, "enemies")
+			end
+			for _, entity in ipairs(entities or {}) do drawEntityMarker(entity, color, alpha, 21) end
 		end
 	end
-	local targeting=State.abilityTargeting
-	if targeting and targeting.x then
-		local def=require("systems.ability_defs")[targeting.abilityId]; local effect=def and Abilities.getEffect(def)
-		if effect then
-			if effect.radius then lg.setColor(effect.kind=="gravity_well" and .55 or 1,.45,effect.kind=="tower_haste_area" and 1 or .3,.18); lg.circle("fill",targeting.x,targeting.y,effect.radius); lg.setColor(1,1,1,.8); lg.circle("line",targeting.x,targeting.y,effect.radius)
-			elseif targeting.firstTower then lg.setColor(.25,.9,1,.7); lg.circle("line",targeting.firstTower.x,targeting.firstTower.y,effect.maxDistance); lg.line(targeting.firstTower.x,targeting.firstTower.y,targeting.x,targeting.y) end
-		end
+
+	local targeting = State.abilityTargeting
+	if not (targeting and targeting.x) then return end
+	local preview = Abilities.getTargetPreview(targeting.x, targeting.y)
+	if not preview then return end
+	local effect, target = preview.effect, preview.def.target
+	local color = preview.valid and (target and target.color or {1,1,1}) or {1,.2,.2}
+	if effect.radius then
+		lg.setColor(color[1], color[2], color[3], .2)
+		lg.circle("fill", targeting.x, targeting.y, effect.radius)
+		lg.setColor(color[1], color[2], color[3], 1)
+		lg.setLineWidth(2)
+		lg.circle("line", targeting.x, targeting.y, effect.radius)
+	end
+	for _, entity in ipairs(preview.affected) do drawEntityMarker(entity, color, 1, 23) end
+	if target then
+		local label = preview.count == 1 and target.singular or target.plural
+		lg.setColor(0, 0, 0, .8); lg.rectangle("fill", targeting.x + 14, targeting.y + 14, 106, 38, 6)
+		lg.setColor(color[1], color[2], color[3], 1)
+		lg.print(string.format("%d %s", preview.count, label), targeting.x + 20, targeting.y + 17)
+		lg.setColor(1,1,1,.9); lg.print("RMB / Esc: cancel", targeting.x + 20, targeting.y + 33, 0, .7, .7)
 	end
 end
 

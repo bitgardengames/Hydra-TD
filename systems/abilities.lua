@@ -4,6 +4,7 @@ local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local Effects = require("world.effects")
 local State = require("core.state")
+local Constants = require("core.constants")
 
 local Abilities = {}
 local active = {}
@@ -107,7 +108,7 @@ local function activateIncomeMultiplier(effect, _x, _y, abilityId)
 	})
 end
 
-local function activateTowerArea(effect, x, y)
+local function activateTowerArea(effect, x, y, abilityId)
 	local affected = {}
 	forEachTowerInRadius(x, y, effect.radius, function(tower)
 		buffTower(tower, effect)
@@ -115,6 +116,7 @@ local function activateTowerArea(effect, x, y)
 	end)
 
 	addTimedEffect(effect, {
+		abilityId = abilityId,
 		x = x,
 		y = y,
 		radius = effect.radius,
@@ -125,8 +127,9 @@ local function activateTowerArea(effect, x, y)
 	})
 end
 
-local function activateGravityWell(effect, x, y)
+local function activateGravityWell(effect, x, y, abilityId)
 	addTimedEffect(effect, {
+		abilityId = abilityId,
 		x = x,
 		y = y,
 		radius = effect.radius,
@@ -180,6 +183,36 @@ local function playActivationEffect(effect, x, y)
 	end
 end
 
+local function collectAffected(def, effect, x, y)
+	local affected = {}
+	local target = def.target
+	if not target or not effect.radius or not x or not y then return affected end
+	local collect = function(entity) affected[#affected + 1] = entity end
+	if target.entities == "enemies" then
+		forEachEnemyInRadius(x, y, effect.radius, collect, true)
+	elseif target.entities == "towers" then
+		forEachTowerInRadius(x, y, effect.radius, collect)
+	end
+	return affected
+end
+
+function Abilities.getTargetPreview(x, y)
+	local target = State.abilityTargeting
+	local def = target and Abilities.getEquipped(target.abilityId)
+	if not def then return nil end
+	local effect = getEffect(def)
+	local affected = collectAffected(def, effect, x, y)
+	local valid, reason = true, nil
+	if def.targeting ~= "instant" and (not x or not y or x < 0 or y < 0
+		or x > Constants.GRID_W * Constants.TILE or y > Constants.GRID_H * Constants.TILE) then
+		valid, reason = false, "outside"
+	elseif def.target and def.target.requireAffected and #affected == 0 then
+		valid = false
+		reason = def.target.entities == "towers" and "no_towers" or "no_enemies"
+	end
+	return {def=def, effect=effect, affected=affected, count=#affected, valid=valid, reason=reason}
+end
+
 function Abilities.activate(x, y)
 	local target = State.abilityTargeting
 	local def = target and Abilities.getEquipped(target.abilityId)
@@ -188,6 +221,12 @@ function Abilities.activate(x, y)
 	end
 
 	local effect = getEffect(def)
+	if def.targeting ~= "instant" then
+		local preview = Abilities.getTargetPreview(x, y)
+		if not preview or not preview.valid then
+			return false, preview and preview.reason or "invalid"
+		end
+	end
 	local activateEffect = effectActivators[effect.kind]
 	if not activateEffect then
 		return false
@@ -275,6 +314,15 @@ function Abilities.update(dt)
 			table.remove(active, i)
 		end
 	end
+end
+
+function Abilities.getEntitiesInActiveArea(effect, entityKind)
+	local entities = {}
+	if not effect or not effect.x or not effect.radius then return entities end
+	local collect = function(entity) entities[#entities + 1] = entity end
+	if entityKind == "enemies" then forEachEnemyInRadius(effect.x, effect.y, effect.radius, collect, true)
+	elseif entityKind == "towers" then forEachTowerInRadius(effect.x, effect.y, effect.radius, collect) end
+	return entities
 end
 
 function Abilities.getActive()
