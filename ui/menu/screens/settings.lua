@@ -1,5 +1,4 @@
 local Sound = require("systems.sound")
-local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
 local Util = require("core.util")
@@ -12,7 +11,6 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local KeybindCapture = require("ui.keybind_capture")
 local ScrollView = require("ui.scroll_view")
-local Tooltip = require("ui.tooltip")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -394,19 +392,10 @@ function Screen.load()
 			id = "video",
 			label = L("settings.tabVideo"),
 			rows = {
-				sliderRow("screen_shake", L("settings.screenShakeIntensity"), Theme.tower.plasma,
-					function() return Save.data.settings.screenShakeIntensity end,
-					function(v) Save.data.settings.screenShakeIntensity = v end),
 				toggleRow("camera_motion", L("settings.cameraMotion"), "cameraMotion"),
 				toggleRow("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers"),
 				toggleRow("reduced_flash", L("settings.reducedFlash"), "reducedFlash"),
 				toggleRow("dense_particles", L("settings.highDensityParticles"), "highDensityParticles"),
-				sliderRow("ui_scale", L("settings.uiScale"), Theme.tower.slow,
-					function() return (Save.data.settings.uiScale - 0.75) / 0.75 end,
-					function(v)
-						Save.data.settings.uiScale = Fonts.setUIScale(0.75 + v * 0.75)
-						Tooltip.recalculate()
-					end),
 				toggleRow("fullscreen", L("settings.fullscreen"), "fullscreen",
 					function(v)
 						Save.data.settings.fullscreen = v

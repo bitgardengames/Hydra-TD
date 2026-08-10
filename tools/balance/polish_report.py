@@ -12,7 +12,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 SUPPORTED_DISPLAYS = ((1280, 720), (1280, 800), (1920, 1080), (2560, 1440))
-UI_SCALES = (0.75, 1.0, 1.5)
 
 # Layout constants are deliberately mirrored from the tiny, declarative UI
 # modules.  Source assertions below make drift noisy instead of silently making
@@ -126,23 +125,23 @@ def preview_metrics() -> dict:
     traits = {"boss": 2, "tank": 1, "runner": 1, "bulwark": 1, "regenerator": 1,
               "shieldbearer": 1, "warcaller": 1}
     rows = []
-    # At 1.5 UI scale the 408px counter column fits about 25 average English
-    # glyphs.  The trait hint lengths below conservatively model getWrap without
-    # loading LÖVE or rendering a font.
+    # The 408px counter column fits about 38 average English glyphs at the
+    # default font size. The trait hint lengths below conservatively model
+    # getWrap without loading LÖVE or rendering a font.
     hint_chars = {"boss": 82, "tank": 66, "runner": 60, "bulwark": 72,
                   "regenerator": 70, "shieldbearer": 76, "warcaller": 62, "grunt": 0}
     for map_id, waves in maps.items():
         for wave_no, groups in enumerate(waves, 1):
             kinds = list(dict.fromkeys(group["kind"] for group in groups))
-            wrapped = sum(max(1, math.ceil(hint_chars.get(kind, 64) / 25))
+            wrapped = sum(max(1, math.ceil(hint_chars.get(kind, 64) / 38))
                           for kind in kinds if kind in traits)
             rows.append({"map": map_id, "wave": wave_no, "rows": len(kinds),
-                         "wrapped_counter_lines_at_1_5x": wrapped})
-    largest = max(rows, key=lambda row: (row["rows"], row["wrapped_counter_lines_at_1_5x"]))
-    return {"assumption": "English average-glyph conservative wrap at maximum 1.5 UI scale",
+                         "wrapped_counter_lines": wrapped})
+    largest = max(rows, key=lambda row: (row["rows"], row["wrapped_counter_lines"]))
+    return {"assumption": "English average-glyph conservative wrap at the default font size",
             "largest_authored_preview": largest,
             "maximum_rows": max(x["rows"] for x in rows),
-            "maximum_wrapped_counter_lines": max(x["wrapped_counter_lines_at_1_5x"] for x in rows)}
+            "maximum_wrapped_counter_lines": max(x["wrapped_counter_lines"] for x in rows)}
 
 
 def hud_metrics() -> dict:
@@ -151,20 +150,19 @@ def hud_metrics() -> dict:
     ability_h = 6*c["ability_size"] + 5*c["ability_gap"] + 2*c["ability_pad"]
     damage_h = 2*c["damage_pad"] + c["damage_header"] + c["damage_header_gap"] + 6*c["damage_bar_h"] + 5*c["damage_row_gap"]
     for w, h in SUPPORTED_DISPLAYS:
-        for ui in UI_SCALES:
-            panels = {
-                "bottom_shop": [16, h-c["bottom_h"]-16, c["bottom_w"], c["bottom_h"]],
-                "bottom_inspect": [16+c["bottom_w"]+16, h-c["bottom_h"]-16, c["inspect_w"], c["bottom_h"]],
-                "damage_meter_six_rows": [w-210-24-16, 16, 234, damage_h],
-                "wave_preview": [16, 16, 440, 0],
-                "ability_bar_six": [w-16-82, math.floor((h-ability_h)/2), 82, ability_h],
-            }
-            overflow = max([0] + [max(0, -x, -y, x+pw-w, y+ph-h)
-                                  for x, y, pw, ph in panels.values() if ph])
-            rows.append({"resolution": f"{w}x{h}", "ui_scale": ui,
-                         "panels": panels, "overflow_pixels": overflow})
-    return {"note": "UI scale changes font metrics, not these authored panel rectangles.",
-            "representative_minimum_maximum_scale": next(x for x in rows if x["resolution"] == "1280x720" and x["ui_scale"] == 1.5),
+        panels = {
+            "bottom_shop": [16, h-c["bottom_h"]-16, c["bottom_w"], c["bottom_h"]],
+            "bottom_inspect": [16+c["bottom_w"]+16, h-c["bottom_h"]-16, c["inspect_w"], c["bottom_h"]],
+            "damage_meter_six_rows": [w-210-24-16, 16, 234, damage_h],
+            "wave_preview": [16, 16, 440, 0],
+            "ability_bar_six": [w-16-82, math.floor((h-ability_h)/2), 82, ability_h],
+        }
+        overflow = max([0] + [max(0, -x, -y, x+pw-w, y+ph-h)
+                              for x, y, pw, ph in panels.values() if ph])
+        rows.append({"resolution": f"{w}x{h}", "panels": panels,
+                     "overflow_pixels": overflow})
+    return {"note": "Panel bounds at the default font size.",
+            "representative_minimum": next(x for x in rows if x["resolution"] == "1280x720"),
             "configurations": rows}
 
 

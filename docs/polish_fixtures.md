@@ -39,15 +39,14 @@ effects while allowing intentional burst combinations.
 
 The preview report scans every campaign wave and records distinct composition
 rows. Counter-hint wrapping uses a conservative dependency-free English
-average-glyph model at the maximum 1.5 UI scale. The alarms allow **1–6 rows**
+average-glyph model at the default font size. The alarms allow **1–6 rows**
 and **1–20 wrapped counter lines**. This deliberately includes the largest
 authored preview rather than a hand-built small example.
 
-HUD rectangles are checked at 1280×720, 1280×800, 1920×1080, and 2560×1440 and
-at UI scales 0.75, 1.0, and 1.5. The representative stress case is the minimum
-1280×720 resolution at maximum scale with six damage-meter rows and all six
-ability slots. Authored panel bounds must have **zero overflow pixels**. UI scale
-changes font metrics and wrapping but not these panel rectangles.
+HUD rectangles are checked at 1280×720, 1280×800, 1920×1080, and 2560×1440.
+The representative stress case is the minimum 1280×720 resolution with six
+damage-meter rows and all six ability slots. Authored panel bounds must have
+**zero overflow pixels**.
 
 ## Upgrade timing
 
