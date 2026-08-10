@@ -9,6 +9,7 @@ local Floaters = require("ui.floaters")
 local Text = require("ui.text")
 local Button = require("ui.button")
 local Theme = require("core.theme")
+local Fonts = require("core.fonts")
 local L = require("core.localization")
 
 local Inspect = {}
@@ -145,7 +146,7 @@ local BAR_W = 120
 local BAR_H = 12
 local STATUS_GAP = 12
 
-local function drawStatusBar(r, g, b, timer, duration, x, y, now)
+local function drawStatusBar(r, g, b, timer, duration, label, x, y)
 	if not timer or timer <= 0 then
 		return 0
 	end
@@ -182,6 +183,14 @@ local function drawStatusBar(r, g, b, timer, duration, x, y, now)
 		lg.setColor(r, g, b, alphaScale)
 		lg.rectangle("fill", x, y, visibleW, BAR_H, radius, radius)
 	end
+
+	-- Effect name stays inside the bar so its meaning is clear even as the fill
+	-- runs down. The compact font keeps localized labels within the short bar.
+	local previousFont = lg.getFont()
+	lg.setFont(Fonts.get("version"))
+	lg.setColor(ct1, ct2, ct3, 1)
+	Text.printShadow(label, x + 4, y - 1)
+	lg.setFont(previousFont)
 
 	-- Timer (right of bar)
 	lg.setColor(ct1, ct2, ct3, 1)
@@ -411,14 +420,15 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		local slowTimer = e.slowTimer or 0
 		local slowDuration = e.slowDuration or 0
 		if slowTimer > 0 and slowDuration > 0 then
-			statusY = statusY + drawStatusBar(cs1, cs2, cs3, slowTimer, slowDuration, bodyX, statusY, now)
+			statusY = statusY + drawStatusBar(cs1, cs2, cs3, slowTimer, slowDuration, L("status.slow"), bodyX, statusY)
 		end
 
 		-- Poison
 		local poisonTimer = e.poisonTimer or 0
 		local poisonDuration = e.poisonDuration or 0
 		if poisonTimer > 0 and poisonDuration > 0 then
-			statusY = statusY + drawStatusBar(cp1, cp2, cp3, poisonTimer, poisonDuration, bodyX, statusY, now)
+			local poisonLabel = format("%s x%d", L("status.poison"), e.poisonStacks or 0)
+			statusY = statusY + drawStatusBar(cp1, cp2, cp3, poisonTimer, poisonDuration, poisonLabel, bodyX, statusY)
 		end
     end
 end
