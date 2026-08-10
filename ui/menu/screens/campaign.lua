@@ -628,7 +628,9 @@ function Screen.keypressed(key)
 		navigateMaps(-1)
 	elseif key == "right" then
 		navigateMaps(1)
-	elseif key == "up" or key == "down" then
+	elseif key == "up" then
+		cycleDifficulty(-1)
+	elseif key == "down" then
 		cycleDifficulty(1)
 	elseif key == "escape" then
 		hideMedalTooltip()
@@ -636,6 +638,14 @@ function Screen.keypressed(key)
 		State.mode = "menu"
 		Steam.setRichPresence(L("presence.menu"))
 		Sound.play("uiBack")
+	end
+end
+
+function Screen.gamepadpressed(_, button)
+	local mappedKey = ({dpup = "up", dpdown = "down"})[button]
+	if mappedKey then
+		Screen.keypressed(mappedKey)
+		return true
 	end
 end
 
