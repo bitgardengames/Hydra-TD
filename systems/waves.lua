@@ -11,6 +11,7 @@ local EnemyTraits = require("world.enemy_traits")
 local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Spatial = require("world.spatial_grid")
 local Effects = require("world.effects")
+local DevelopmentCounters = require("core.development_counters")
 
 local Waves = {}
 
@@ -457,9 +458,11 @@ local function spawnWhileReady(owner, timerKey, pending, activeCap, spawnLoops, 
 	end
 
 	if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and owner[timerKey] <= 0 then
+		DevelopmentCounters.add("spawnBackpressureEvents")
 		-- Drop catch-up debt once this frame has spent its spawn budget.
 		owner[timerKey] = 0
 	elseif #Enemies.enemies >= activeCap and pending() > 0 then
+		DevelopmentCounters.add("spawnBackpressureEvents")
 		-- Do not accumulate catch-up debt while the population cap is full.
 		owner[timerKey] = max(owner[timerKey], SPAWN_BACKPRESSURE_DELAY)
 	end

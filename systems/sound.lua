@@ -1,5 +1,5 @@
-local State = require("core.state")
 local Save = require("core.save")
+local GameSpeed = require("core.game_speed")
 
 local Sound = {
 	masterVolume = 0.16,
@@ -21,6 +21,12 @@ local lmr = love.math.random
 local max = math.max
 local min = math.min
 
+local pitchJitterByCategory = {
+	ui = 0,
+	important = 0.035,
+	repetitive = 0.08,
+}
+
 local function scaleVolume(v)
 	return v * Sound.masterVolume
 end
@@ -30,12 +36,16 @@ local function buildSfxEntry(def)
 		jitter = def.jitter,
 		bias = def.bias,
 		cooldown = def.cooldown,
+		category = def.category or "important",
 	}
 
-	if def.files then
+	if def.files or def.pool then
 		entry.sources = {}
+		local files = def.files or {def.file}
+		local poolSize = def.pool or #files
 
-		for i, file in ipairs(def.files) do
+		for i = 1, poolSize do
+			local file = files[((i - 1) % #files) + 1]
 			entry.sources[i] = la.newSource(file, "static")
 		end
 	else
@@ -69,9 +79,7 @@ function Sound.play(name, opts)
 		local now = love.timer.getTime()
 		local last = lastPlayTime[name] or 0
 
-		-- Scale with game speed
-		--local speedMult = (State and State.speed == 4) and 1.6 or 1.0
-		local speedMult = (State and State.speed == 4) and 1.0 or 0.5
+		local speedMult = GameSpeed.getSoundCooldownScale(entry.category)
 
 		if now - last < entry.cooldown * speedMult then
 			return
@@ -83,7 +91,17 @@ function Sound.play(name, opts)
 	local sound
 
 	if entry.sources then
-		sound = entry.sources[lmr(#entry.sources)]
+		-- Prefer an idle voice so an overlapping impact is never swallowed or
+		-- restarted. If the small pool is saturated, preserve existing cues.
+		local start = lmr(#entry.sources)
+		for offset = 0, #entry.sources - 1 do
+			local candidate = entry.sources[((start + offset - 1) % #entry.sources) + 1]
+			if not candidate:isPlaying() then
+				sound = candidate
+				break
+			end
+		end
+		if not sound then return end
 	else
 		sound = entry.source
 	end
@@ -93,7 +111,9 @@ function Sound.play(name, opts)
 	end
 
 	if entry.jitter then
-		sound:setPitch((opts.pitch or 1) + lmr(-8, 8) * 0.02)
+		local basePitch = opts.pitch or 1
+		local range = pitchJitterByCategory[entry.category] or 0
+		sound:setPitch(max(0.5, min(2.0, basePitch + (lmr() * 2 - 1) * range)))
 	else
 		sound:setPitch(opts.pitch or 1)
 	end
@@ -181,11 +201,11 @@ function Sound.load()
 	local music = Sound.music
 
 	local sfxDefs = {
-		uiMove = { file = "assets/sounds/uiMove.ogg" },
-		uiConfirm = { file = "assets/sounds/uiConfirm.ogg" },
-		uiBack = { file = "assets/sounds/uiBack.ogg" },
-		uiError = { file = "assets/sounds/uiError.ogg" },
-		abilityReady = { file = "assets/sounds/uiConfirm.ogg", cooldown = 0.35, bias = 0.7 },
+		uiMove = { file = "assets/sounds/uiMove.ogg", category = "ui" },
+		uiConfirm = { file = "assets/sounds/uiConfirm.ogg", category = "ui" },
+		uiBack = { file = "assets/sounds/uiBack.ogg", category = "ui" },
+		uiError = { file = "assets/sounds/uiError.ogg", category = "ui" },
+		abilityReady = { file = "assets/sounds/uiConfirm.ogg", cooldown = 0.35, bias = 0.7, category = "ui", pool = 2 },
 		victory = { file = "assets/sounds/victory.ogg" },
 		gameOver = { file = "assets/sounds/gameOver.ogg" },
 		towerPlaced = { files = { "assets/sounds/towerPlaced1.ogg", "assets/sounds/towerPlaced2.ogg" }, jitter = true },
@@ -193,12 +213,12 @@ function Sound.load()
 		message = { file = "assets/sounds/message.ogg", jitter = true, bias = 0.8 },
 		medal = { file = "assets/sounds/medal.mp3", jitter = true, bias = 0.9 },
 		towerSold = { files = { "assets/sounds/towerSold1.ogg", "assets/sounds/towerSold2.ogg", "assets/sounds/towerSold3.ogg" } },
-		lancer = { file = "assets/sounds/lancer.ogg", jitter = true, bias = 0.7 },
-		slow = { file = "assets/sounds/slow.ogg", jitter = true, bias = 0.2 },
-		cannon = { file = "assets/sounds/cannon.ogg", jitter = true, bias = 0.82 },
-		poison = { files = { "assets/sounds/poison1.ogg", "assets/sounds/poison2.ogg" }, jitter = true, bias = 0.7 },
-		shock = { files = { "assets/sounds/shock1.ogg", "assets/sounds/shock2.ogg", "assets/sounds/shock3.ogg" }, jitter = true, bias = 0.9 },
-		plasma = { file = "assets/sounds/plasma2.ogg", jitter = true, bias = 0.82 },
+		lancer = { file = "assets/sounds/lancer.ogg", jitter = true, bias = 0.7, cooldown = 0.06, category = "repetitive", pool = 3 },
+		slow = { file = "assets/sounds/slow.ogg", jitter = true, bias = 0.2, cooldown = 0.08, category = "repetitive", pool = 2 },
+		cannon = { file = "assets/sounds/cannon.ogg", jitter = true, bias = 0.82, cooldown = 0.06, category = "repetitive", pool = 3 },
+		poison = { files = { "assets/sounds/poison1.ogg", "assets/sounds/poison2.ogg" }, jitter = true, bias = 0.7, cooldown = 0.07, category = "repetitive", pool = 4 },
+		shock = { files = { "assets/sounds/shock1.ogg", "assets/sounds/shock2.ogg", "assets/sounds/shock3.ogg" }, jitter = true, bias = 0.9, cooldown = 0.05, category = "important", pool = 4 },
+		plasma = { file = "assets/sounds/plasma2.ogg", jitter = true, bias = 0.82, cooldown = 0.05, category = "repetitive", pool = 3 },
 	}
 
 	for name, def in pairs(sfxDefs) do
