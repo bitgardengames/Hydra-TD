@@ -25,6 +25,7 @@ local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
 local Mushrooms = require("world.scatter_mushrooms")
 local DamageMeter = require("ui.damage_meter")
+local BossHealthBar = require("ui.boss_hp")
 local BottomBar = require("ui.bottom_bar")
 local Input = require("ui.input")
 local Difficulty = require("systems.difficulty")
@@ -327,6 +328,7 @@ function love.update(dt)
 	if isWorldMode(mode) then
 		BottomBar.update(dt)
 		DamageMeter.update(dt)
+		BossHealthBar.update(dt)
 	end
 	ModulePicker.update(dt)
 

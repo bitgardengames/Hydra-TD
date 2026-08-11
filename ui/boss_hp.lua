@@ -1,5 +1,6 @@
 local Theme = require("core.theme")
 local State = require("core.state")
+local Save = require("core.save")
 local Text = require("ui.text")
 local Enemies = require("world.enemies")
 
@@ -7,114 +8,199 @@ local lg = love.graphics
 local floor = math.floor
 local ceil = math.ceil
 local max = math.max
+local min = math.min
 local format = string.format
 
 local colorText = Theme.ui.text
 local colorHealth = Theme.ui.bossHealth
 local colorOutline = Theme.outline.color
 local colorBase = Theme.ui.button
+local colorTrail = Theme.ui.warn
 
 local colorHealthR, colorHealthG, colorHealthB = colorHealth[1] * 0.4, colorHealth[2] * 0.4, colorHealth[3] * 0.4
 
 local y = 24
 local barW = 354
 local barH = 26
-
 local outlineW = Theme.outline.width
 local outerRadius = 6 + outlineW * 0.5
 local innerRadius = 6 - outlineW * 0.25
-
 local idleLift = 6
 
-local hpCache = {
+local TRAIL_DELAY = 0.10
+local TRAIL_CATCHUP = 7
+local ENTRANCE_DURATION = 0.24
+local HIT_FLASH_DURATION = 0.16
+local MAJOR_DAMAGE_FRACTION = 0.08
+
+local cache = {
+	identity = nil,
+	maxHp = nil,
+	displayHp = nil,
+	trailHp = nil,
+	trailDelay = 0,
+	hitFlash = 0,
+	entrance = 0,
 	hpValue = nil,
 	maxText = nil,
 	text = nil,
 	textW = 0,
+	thresholds = nil,
 }
 
 local BossHP = {}
 
 local function formatNum(n)
-    return tostring(floor(n + 0.5)):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
+	return tostring(floor(n + 0.5)):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 end
 
-function BossHP.draw()
+local function resolveBoss()
 	local boss = State.activeBoss
-
 	if type(boss) == "string" then
-		local enemies = Enemies.enemies
-
-		for i = 1, #enemies do
-			local enemy = enemies[i]
-
+		for i = 1, #Enemies.enemies do
+			local enemy = Enemies.enemies[i]
 			if enemy.boss == true and enemy.kind == boss and enemy.hp and enemy.hp > 0 then
-				boss = enemy
-				break
+				return enemy
 			end
 		end
+		return nil
 	end
+	return boss
+end
 
-	local hp = boss and boss.hp or nil
-	local maxHp = boss and boss.maxHp or nil
+local function meaningfulThresholds(boss, maxHp)
+	-- Boss definitions may opt in with ratios (0..1) or authored HP values.
+	local source = boss.healthThresholds or boss.phaseThresholds or boss.thresholds
+	if type(source) ~= "table" then return nil end
+	local result = {}
+	for _, value in ipairs(source) do
+		if type(value) == "table" then value = value.hpFraction or value.fraction or value.hp end
+		if type(value) == "number" then
+			local fraction = value <= 1 and value or value / maxHp
+			if fraction > 0 and fraction < 1 then result[#result + 1] = fraction end
+		end
+	end
+	return #result > 0 and result or nil
+end
 
+local function reset(boss, hp, maxHp)
+	cache.identity = boss
+	cache.maxHp = maxHp
+	cache.displayHp = hp
+	cache.trailHp = hp
+	cache.trailDelay = 0
+	cache.hitFlash = 0
+	cache.entrance = ENTRANCE_DURATION
+	cache.hpValue = nil
+	cache.maxText = formatNum(maxHp)
+	cache.text = nil
+	cache.thresholds = meaningfulThresholds(boss, maxHp)
+end
+
+local function clear()
+	cache.identity, cache.maxHp = nil, nil
+	cache.displayHp, cache.trailHp = nil, nil
+	cache.hpValue, cache.maxText, cache.text = nil, nil, nil
+	cache.thresholds = nil
+	cache.hitFlash, cache.entrance = 0, 0
+end
+
+local function motionEnabled()
+	local settings = Save.data and Save.data.settings or {}
+	return settings.screenShake ~= false and settings.cameraMotion ~= false
+end
+
+function BossHP.update(dt)
+	local boss = resolveBoss()
+	local hp = boss and boss.hp
+	local maxHp = boss and boss.maxHp
 	if type(hp) ~= "number" or type(maxHp) ~= "number" or maxHp <= 0 or hp <= 0 then
-		hpCache.hpValue = nil
-		hpCache.maxText = nil
-		hpCache.text = nil
-
+		clear()
 		return
 	end
 
-	if hpCache.maxText == nil then
-		hpCache.maxText = formatNum(maxHp)
+	if cache.identity ~= boss or cache.maxHp ~= maxHp then reset(boss, hp, maxHp) end
+	dt = max(0, dt or 0)
+	local oldDisplay = cache.displayHp
+
+	if hp < oldDisplay then
+		local loss = oldDisplay - hp
+		cache.displayHp = hp -- Damage is always immediately legible in the main fill.
+		cache.trailHp = max(cache.trailHp, oldDisplay)
+		cache.trailDelay = TRAIL_DELAY
+		cache.hitFlash = HIT_FLASH_DURATION
+		if loss / maxHp >= MAJOR_DAMAGE_FRACTION then cache.hitFlash = HIT_FLASH_DURATION * 1.5 end
+	elseif hp > oldDisplay then
+		-- Healing is smoothed, while never allowing the damage trail below the fill.
+		cache.displayHp = min(hp, oldDisplay + maxHp * dt * 2.5)
+		cache.trailHp = max(cache.trailHp, cache.displayHp)
 	end
 
-	local sw, _ = lg.getDimensions()
+	cache.trailDelay = max(0, cache.trailDelay - dt)
+	if cache.trailDelay == 0 then
+		cache.trailHp = max(cache.displayHp, cache.trailHp + (cache.displayHp - cache.trailHp) * min(1, dt * TRAIL_CATCHUP))
+	end
+	cache.hitFlash = max(0, cache.hitFlash - dt)
+	cache.entrance = max(0, cache.entrance - dt)
+end
+
+function BossHP.draw()
+	local boss = resolveBoss()
+	local hp = boss and boss.hp
+	local maxHp = boss and boss.maxHp
+	if type(hp) ~= "number" or type(maxHp) ~= "number" or maxHp <= 0 or hp <= 0 then return end
+	-- Keep draw robust for callers which have not run an update tick yet.
+	if cache.identity ~= boss or cache.maxHp ~= maxHp then reset(boss, hp, maxHp) end
+
+	local motion = motionEnabled()
+	local entranceProgress = 1 - cache.entrance / ENTRANCE_DURATION
+	if not motion then entranceProgress = 1 end
+	local sw = lg.getWidth()
 	local x = floor((sw - barW) * 0.5)
-	local lift = idleLift
+	local fy = y - idleLift
+	local alpha = 0.45 + entranceProgress * 0.55
+	local r, g, b, a = colorBase[1], colorBase[2], colorBase[3], (colorBase[4] or 1) * alpha
 
-	local r, g, b, a = colorBase[1], colorBase[2], colorBase[3], colorBase[4] or 1
-
-	-- Base
-	lg.setColor(colorOutline)
+	-- Only the face grows into place; the HUD's position remains stable.
+	local shownW = motion and floor(barW * (0.92 + entranceProgress * 0.08)) or barW
+	local shownX = x + floor((barW - shownW) * 0.5)
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
 	lg.rectangle("fill", x - outlineW, y - outlineW, barW + outlineW * 2, barH + outlineW * 2, outerRadius)
-
 	lg.setColor(r * 0.4, g * 0.4, b * 0.4, a)
 	lg.rectangle("fill", x, y, barW, barH, innerRadius)
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
+	lg.rectangle("fill", shownX - outlineW, fy - outlineW, shownW + outlineW * 2, barH + outlineW * 2, outerRadius)
+	lg.setColor(colorHealthR, colorHealthG, colorHealthB, alpha)
+	lg.rectangle("fill", shownX, fy, shownW, barH, innerRadius)
 
-	-- Face
-	local fy = y - lift
+	local trailW = floor(shownW * max(0, min(1, cache.trailHp / maxHp)))
+	local fillW = floor(shownW * max(0, min(1, cache.displayHp / maxHp)))
+	if trailW > fillW then
+		lg.setColor(colorTrail[1], colorTrail[2], colorTrail[3], 0.82 * alpha)
+		lg.rectangle("fill", shownX, fy, trailW, barH, innerRadius)
+	end
+	local flash = cache.hitFlash / HIT_FLASH_DURATION
+	local pulse = motion and min(1, flash) * 2 or 0
+	lg.setColor(min(1, colorHealth[1] + flash * 0.22), min(1, colorHealth[2] + flash * 0.18), min(1, colorHealth[3] + flash * 0.08), alpha)
+	lg.rectangle("fill", shownX, fy - pulse, fillW, barH + pulse * 2, innerRadius)
 
-	lg.setColor(colorOutline)
-	lg.rectangle("fill", x - outlineW, fy - outlineW, barW + outlineW * 2, barH + outlineW * 2, outerRadius)
-
-	lg.setColor(colorHealthR, colorHealthG, colorHealthB, 1)
-	lg.rectangle("fill", x, fy, barW, barH, innerRadius)
-
-	-- Fill
-	local hpFrac = max(0, hp / maxHp)
-	local fillW = floor(barW * hpFrac)
-
-	lg.setColor(colorHealth)
-	lg.rectangle("fill", x, fy, fillW, barH, innerRadius)
-
-	-- Text
-	local hpInt = ceil(hp)
-
-	if hpCache.hpValue ~= hpInt then
-		hpCache.hpValue = hpInt
-
-		local hpText = format("%s / %s", formatNum(hpInt), hpCache.maxText)
-
-		hpCache.text = hpText
-		hpCache.textW = lg.getFont():getWidth(hpText)
+	if cache.thresholds then
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
+		for _, fraction in ipairs(cache.thresholds) do
+			local tx = shownX + floor(shownW * fraction)
+			lg.rectangle("fill", tx - 1, fy + 3, 2, barH - 6)
+		end
 	end
 
+	local hpInt = ceil(cache.displayHp)
+	if cache.hpValue ~= hpInt then
+		cache.hpValue = hpInt
+		cache.text = format("%s / %s", formatNum(hpInt), cache.maxText)
+		cache.textW = lg.getFont():getWidth(cache.text)
+	end
 	local textH = lg.getFont():getHeight()
-
-	lg.setColor(colorText)
-	Text.printShadow(hpCache.text, x + (barW - hpCache.textW) * 0.5, fy + (barH - textH) * 0.5)
+	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	Text.printShadow(cache.text, x + (barW - cache.textW) * 0.5, fy + (barH - textH) * 0.5)
 end
 
 return BossHP
