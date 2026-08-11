@@ -1,6 +1,7 @@
 local State = require("core.state")
 local Util = require("core.util")
 local Towers = require("world.towers")
+local Enemies = require("world.enemies")
 local Sound = require("systems.sound")
 local ModulePicker = require("ui.module_picker")
 local Hotkeys = require("core.hotkeys")
@@ -9,7 +10,6 @@ local Floaters = require("ui.floaters")
 local Text = require("ui.text")
 local Button = require("ui.button")
 local Theme = require("core.theme")
-local Fonts = require("core.fonts")
 local L = require("core.localization")
 
 local Inspect = {}
@@ -19,7 +19,6 @@ local min = math.min
 local max = math.max
 local abs = math.abs
 local floor = math.floor
-local format = string.format
 
 local formatInt = Util.formatInt
 
@@ -34,12 +33,8 @@ local colorText = Theme.ui.text
 local colorGood = Theme.ui.good
 local colorBad = Theme.ui.bad
 local colorDisabled = Theme.ui.buttonDisabled
-local colorSlow = Theme.tower.slow
-local colorPoison = Theme.tower.poison
 
 local ct1, ct2, ct3 = colorText[1], colorText[2], colorText[3]
-local cs1, cs2, cs3 = colorSlow[1], colorSlow[2], colorSlow[3]
-local cp1, cp2, cp3 = colorPoison[1], colorPoison[2], colorPoison[3]
 local cd1, cd2, cd3 = colorDisabled[1], colorDisabled[2], colorDisabled[3]
 
 
@@ -141,62 +136,29 @@ function Inspect.getButtons()
 	return inspectButtons
 end
 
--- Status effects
-local BAR_W = 120
-local BAR_H = 12
-local STATUS_GAP = 12
+-- Compact status rows. The caller controls the available row count, preventing
+-- elaborate elite/boss combinations from entering the bottom action region.
+local STATUS_ROW_H = 18
+local STATUS_BAR_W = 54
 
-local function drawStatusBar(r, g, b, timer, duration, label, x, y)
-	if not timer or timer <= 0 then
-		return 0
+local function drawStatusRow(status, x, y, w)
+	local color = status.color or colorText
+	lg.setColor(color)
+	local label = status.icon .. " " .. status.label
+	if status.stacks then label = label .. " x" .. status.stacks end
+	Text.printShadow(label, x, y)
+	if status.value then
+		lg.setColor(ct1, ct2, ct3, 1)
+		Text.printfShadow(status.value, x, y, w, "right")
 	end
-
-	if not duration or duration <= 0 then
-		return 0
+	if status.remainingFraction then
+		local bx = x + w - STATUS_BAR_W
+		local by = y + 13
+		lg.setColor(0, 0, 0, 0.35)
+		lg.rectangle("fill", bx, by, STATUS_BAR_W, 3, 2, 2)
+		lg.setColor(color)
+		lg.rectangle("fill", bx, by, STATUS_BAR_W * status.remainingFraction, 3, 2, 2)
 	end
-
-	local pct = timer / duration
-
-	if pct < 0 then pct = 0 end
-	if pct > 1 then pct = 1 end
-
-	-- Background
-	lg.setColor(0, 0, 0, 0.35)
-	lg.rectangle("fill", x, y, BAR_W, BAR_H, 4, 4)
-
-	-- Fill width
-	local fillW = BAR_W * pct
-
-	if fillW > 0 then
-		local minW = 4
-		local visibleW = max(fillW, minW)
-
-		-- Fade near zero instead of collapsing
-		local alphaScale = 1
-
-		if pct < 0.10 then
-			alphaScale = pct / 0.10
-		end
-
-		local radius = min(4, visibleW * 0.5, BAR_H * 0.5)
-
-		lg.setColor(r, g, b, alphaScale)
-		lg.rectangle("fill", x, y, visibleW, BAR_H, radius, radius)
-	end
-
-	-- Effect name stays inside the bar so its meaning is clear even as the fill
-	-- runs down. The compact font keeps localized labels within the short bar.
-	local previousFont = lg.getFont()
-	lg.setFont(Fonts.get("version"))
-	lg.setColor(ct1, ct2, ct3, 1)
-	Text.printShadow(label, x + 4, y - 1)
-	lg.setFont(previousFont)
-
-	-- Timer (right of bar)
-	lg.setColor(ct1, ct2, ct3, 1)
-	Text.printShadow(L("ui.seconds", timer), x + BAR_W + 8, y - 2)
-
-	return BAR_H + STATUS_GAP
 end
 
 local forceShow = true
@@ -409,26 +371,42 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
         Text.printShadow(L("inspect.hp", formatInt(e.hp), formatInt(e.maxHp)), bodyX, bodyY)
 
+		local rows = {}
+		local statuses = Enemies.getDisplayStatuses(e)
+		if #statuses > 0 then
+			rows[#rows + 1] = {header = L("inspect.temporaryStatuses")}
+			for _, status in ipairs(statuses) do rows[#rows + 1] = {status = status} end
+		end
+		local traits = (e.def and e.def.traits) or {}
+		if #traits > 0 or #(e.affixes or {}) > 0 then
+			rows[#rows + 1] = {header = L("inspect.permanentTraits")}
+			for _, traitId in ipairs(traits) do
+				rows[#rows + 1] = {trait = "• " .. L("enemyTrait." .. traitId .. ".tag")}
+			end
+			for _, affix in ipairs(e.affixes or {}) do
+				rows[#rows + 1] = {trait = affix.icon .. " " .. L(affix.nameKey), color = affix.color}
+			end
+		end
+
 		local statusY = bodyY + 24
-		for _, affix in ipairs(e.affixes or {}) do
-			lg.setColor(affix.color)
-			Text.printShadow(affix.icon .. " " .. L(affix.nameKey) .. " — " .. L(affix.descriptionKey), bodyX, statusY)
-			statusY = statusY + 18
+		local availableH = max(0, panelY + h - OUTER_PAD - statusY)
+		local visibleRows = min(#rows, floor(availableH / STATUS_ROW_H))
+		for i = 1, visibleRows do
+			local row = rows[i]
+			if row.header then
+				lg.setColor(colorDisabled)
+				Text.printShadow(row.header, bodyX, statusY)
+			elseif row.status then
+				drawStatusRow(row.status, bodyX, statusY, infoW)
+			else
+				lg.setColor(row.color or colorText)
+				Text.printShadow(row.trait, bodyX + 4, statusY)
+			end
+			statusY = statusY + STATUS_ROW_H
 		end
-
-		-- Slow
-		local slowTimer = e.slowTimer or 0
-		local slowDuration = e.slowDuration or 0
-		if slowTimer > 0 and slowDuration > 0 then
-			statusY = statusY + drawStatusBar(cs1, cs2, cs3, slowTimer, slowDuration, L("status.slow"), bodyX, statusY)
-		end
-
-		-- Poison
-		local poisonTimer = e.poisonTimer or 0
-		local poisonDuration = e.poisonDuration or 0
-		if poisonTimer > 0 and poisonDuration > 0 then
-			local poisonLabel = format("%s x%d", L("status.poison"), e.poisonStacks or 0)
-			statusY = statusY + drawStatusBar(cp1, cp2, cp3, poisonTimer, poisonDuration, poisonLabel, bodyX, statusY)
+		if visibleRows < #rows and visibleRows > 0 then
+			lg.setColor(colorDisabled)
+			Text.printfShadow(L("inspect.moreStatuses", #rows - visibleRows), bodyX, statusY - STATUS_ROW_H, infoW, "right")
 		end
     end
 end
