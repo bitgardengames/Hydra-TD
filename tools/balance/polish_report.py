@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 SUPPORTED_DISPLAYS = ((1280, 720), (1280, 800), (1920, 1080), (2560, 1440))
+TIP_TEST_WIDTHS = (1024, 1280)
 
 # Layout constants are deliberately mirrored from the tiny, declarative UI
 # modules.  Source assertions below make drift noisy instead of silently making
@@ -166,6 +167,49 @@ def hud_metrics() -> dict:
             "configurations": rows}
 
 
+def message_tip_metrics() -> dict:
+    """Exercise the tip's declarative geometry without requiring LÖVE."""
+    source = (ROOT / "ui/messages.lua").read_text()
+    expected = {"margin": 24, "pad_x": 12, "pad_y": 8, "gap": 10,
+                "dismiss_pad_x": 10, "dismiss_pad_y": 4,
+                "max_width": 760, "min_message_width": 240}
+    names = {"margin": "TIP_MARGIN", "pad_x": "TIP_PADDING_X",
+             "pad_y": "TIP_PADDING_Y", "gap": "TIP_GAP",
+             "dismiss_pad_x": "TIP_DISMISS_PADDING_X",
+             "dismiss_pad_y": "TIP_DISMISS_PADDING_Y",
+             "max_width": "TIP_MAX_WIDTH",
+             "min_message_width": "TIP_MIN_MESSAGE_WIDTH"}
+    for key, name in names.items():
+        match = re.search(r"local\s+" + name + r"\s*=\s*(\d+)", source)
+        if not match or int(match.group(1)) != expected[key]:
+            raise ValueError(f"message tip fixture drift: {name}")
+
+    # PTSans 16 is conservatively represented by 9px average glyphs and a
+    # 19px line. Long message/action copies stand in for expanded localization.
+    cases = (("long_message", 220, 12), ("long_message_and_action", 300, 34))
+    rows = []
+    for screen_w in TIP_TEST_WIDTHS:
+        for label, message_chars, dismiss_chars in cases:
+            dismiss_w = dismiss_chars * 9 + 2 * expected["dismiss_pad_x"]
+            max_w = min(expected["max_width"], screen_w - 2 * expected["margin"])
+            inner_w = max_w - 2 * expected["pad_x"]
+            inline = inner_w - expected["gap"] - dismiss_w >= expected["min_message_width"]
+            text_w = inner_w - expected["gap"] - dismiss_w if inline else inner_w
+            lines = max(1, math.ceil(message_chars * 9 / text_w))
+            message_h, dismiss_h = lines * 19, 19 + 2 * expected["dismiss_pad_y"]
+            content_h = max(message_h, dismiss_h) if inline else message_h + expected["gap"] + dismiss_h
+            tip_h = content_h + 2 * expected["pad_y"]
+            rows.append({"screen_width": screen_w, "case": label,
+                         "message_lines": lines, "dismiss_row": 1 if inline else 2,
+                         "text_width": text_w, "tip_width": max_w, "tip_height": tip_h,
+                         "overflow_pixels": max(0, max_w - screen_w),
+                         "unreadable_inline": inline and text_w < expected["min_message_width"]})
+    return {"assumption": "PTSans 16 conservative 9px average glyph and 19px line",
+            "configurations": rows,
+            "layout_failures": sum(row["overflow_pixels"] > 0 or row["unreadable_inline"]
+                                   for row in rows)}
+
+
 def affordability_metrics() -> dict:
     sys.path.insert(0, str(HERE))
     import economy_fixtures
@@ -195,7 +239,8 @@ def affordability_metrics() -> dict:
 def build() -> dict:
     return {"format_version": 1, "waves": wave_metrics(), "event_rates": event_rates(),
             "abilities": ability_metrics(), "wave_preview": preview_metrics(),
-            "hud_bounds": hud_metrics(), "upgrade_affordability": affordability_metrics()}
+            "hud_bounds": hud_metrics(), "message_tips": message_tip_metrics(),
+            "upgrade_affordability": affordability_metrics()}
 
 
 def checks(data: dict) -> list[tuple[str, bool, str]]:
@@ -215,6 +260,7 @@ def checks(data: dict) -> list[tuple[str, bool, str]]:
     alarm("preview/rows", data["wave_preview"]["maximum_rows"], b["wave_preview_rows"])
     alarm("preview/wrap", data["wave_preview"]["maximum_wrapped_counter_lines"], b["wave_preview_wrapped_lines"])
     alarm("hud/overflow", max(x["overflow_pixels"] for x in data["hud_bounds"]["configurations"]), b["hud_overflow_pixels"])
+    alarm("hud/message_tips", data["message_tips"]["layout_failures"], b["hud_overflow_pixels"])
     normal = data["upgrade_affordability"]["difficulties"]["normal"]
     for kind, row in normal.items():
         alarm("upgrade/first/"+kind, row["affordable_wave_range"]["first_upgrade"][1], b["balanced_first_upgrade_wave"])

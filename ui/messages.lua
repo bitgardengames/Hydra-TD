@@ -23,6 +23,8 @@ local TIP_PADDING_Y = 8
 local TIP_GAP = 10
 local TIP_DISMISS_PADDING_X = 10
 local TIP_DISMISS_PADDING_Y = 4
+local TIP_MAX_WIDTH = 760
+local TIP_MIN_MESSAGE_WIDTH = 240
 
 local list = {}
 local activeTip = nil
@@ -30,6 +32,7 @@ local tipRect = nil
 local tipDismissRect = nil
 local tipDismissPressed = false
 local tipDismissHovered = false
+local tipLayoutKey = nil
 
 local function getBaseY()
 	local _, sh = lg.getDimensions()
@@ -51,6 +54,46 @@ local function clearTipState()
 	tipDismissRect = nil
 	tipDismissPressed = false
 	tipDismissHovered = false
+	tipLayoutKey = nil
+end
+
+local function updateTipLayout(font)
+	local sw = lg.getWidth()
+	local message = activeTip.text
+	local dismissText = activeTip.dismissText
+	local dismissW = font:getWidth(dismissText) + TIP_DISMISS_PADDING_X * 2
+	local dismissH = font:getHeight() + TIP_DISMISS_PADDING_Y * 2
+	local maxW = math.min(TIP_MAX_WIDTH, sw - TIP_MARGIN * 2)
+	local innerW = maxW - TIP_PADDING_X * 2
+	local inline = innerW - TIP_GAP - dismissW >= TIP_MIN_MESSAGE_WIDTH
+	local textAreaW = inline and (innerW - TIP_GAP - dismissW) or innerW
+	local wrappedW, lines = font:getWrap(message, textAreaW)
+	-- Keep the measured wrapping width when copy wraps; shrinking to the widest
+	-- returned line could change the wrap after the rectangle was constructed.
+	local messageW = #lines > 1 and textAreaW or math.min(textAreaW, wrappedW)
+	local messageH = math.max(1, #lines) * font:getHeight()
+	local contentW
+	local contentH
+
+	if inline then
+		contentW = messageW + TIP_GAP + dismissW
+		contentH = math.max(messageH, dismissH)
+	else
+		contentW = math.max(messageW, dismissW)
+		contentH = messageH + TIP_GAP + dismissH
+	end
+
+	local w = math.min(maxW, contentW + TIP_PADDING_X * 2)
+	local h = contentH + TIP_PADDING_Y * 2
+	local x = (sw - w) * 0.5
+	local y = 24
+	textAreaW = inline and (w - TIP_PADDING_X * 2 - TIP_GAP - dismissW) or (w - TIP_PADDING_X * 2)
+	local dismissX = inline and (x + w - TIP_PADDING_X - dismissW) or (x + TIP_PADDING_X)
+	local dismissY = inline and (y + TIP_PADDING_Y + (contentH - dismissH) * 0.5)
+		or (y + TIP_PADDING_Y + messageH + TIP_GAP)
+
+	tipRect = {x = x, y = y, w = w, h = h, textW = textAreaW}
+	tipDismissRect = {x = dismissX, y = dismissY, w = dismissW, h = dismissH}
 end
 
 local function removeAt(index)
@@ -95,6 +138,7 @@ function Messages.showTip(id, text, dismissText, onDismiss)
 	end
 
 	activeTip = {id = id, text = text, dismissText = dismissText, onDismiss = onDismiss}
+	tipLayoutKey = nil
 	return true
 end
 
@@ -175,18 +219,14 @@ function Messages.draw()
 		local sw = lg.getWidth()
 		local message = activeTip.text
 		local dismissText = activeTip.dismissText
-		local messageW = font:getWidth(message)
-		local dismissW = font:getWidth(dismissText) + TIP_DISMISS_PADDING_X * 2
-		local textAreaW = math.min(messageW, sw - TIP_MARGIN * 2 - TIP_PADDING_X * 2 - TIP_GAP - dismissW)
-		local w = math.min(sw - TIP_MARGIN * 2, textAreaW + TIP_GAP + dismissW + TIP_PADDING_X * 2)
-		local h = font:getHeight() + TIP_PADDING_Y * 2
-		local x = (sw - w) * 0.5
-		local y = 24
-		local dismissH = font:getHeight() + TIP_DISMISS_PADDING_Y * 2
-		local dismissX = x + w - TIP_PADDING_X - dismissW
-		local dismissY = y + (h - dismissH) * 0.5
-		tipRect = {x = x, y = y, w = w, h = h}
-		tipDismissRect = {x = dismissX, y = dismissY, w = dismissW, h = dismissH}
+		local layoutKey = table.concat({sw, lg.getHeight(), tostring(font), message, dismissText}, "\0")
+		if layoutKey ~= tipLayoutKey then
+			updateTipLayout(font)
+			tipLayoutKey = layoutKey
+		end
+		local x, y, w, h = tipRect.x, tipRect.y, tipRect.w, tipRect.h
+		local dismissX, dismissY = tipDismissRect.x, tipDismissRect.y
+		local dismissW, dismissH = tipDismissRect.w, tipDismissRect.h
 
 		local mx, my = love.mouse.getPosition()
 		local dismissHovered = pointInRect(mx, my, tipDismissRect)
@@ -208,7 +248,7 @@ function Messages.draw()
 		lg.rectangle("line", dismissX, chipY, dismissW, dismissH, 6)
 
 		setColor(Theme.ui.text, 1)
-		Text.printfShadow(message, x + TIP_PADDING_X, y + TIP_PADDING_Y, textAreaW, "left")
+		Text.printfShadow(message, x + TIP_PADDING_X, y + TIP_PADDING_Y, tipRect.textW, "left")
 		Text.printfShadow(dismissText, dismissX, chipY + TIP_DISMISS_PADDING_Y, dismissW, "center")
 	end
 end
