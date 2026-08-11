@@ -18,6 +18,7 @@ TIP_TEST_WIDTHS = (1024, 1280)
 # modules.  Source assertions below make drift noisy instead of silently making
 # this model stale.
 LAYOUT = {"screen_pad": 16, "wave_w": 440, "damage_inner_w": 210,
+          "combat_x": 16, "combat_y": 16, "combat_w": 244, "combat_h": 48,
           "damage_pad": 12, "damage_header": 30, "damage_header_gap": 10,
           "damage_bar_h": 22, "damage_row_gap": 6,
           "ability_size": 58, "ability_gap": 18, "ability_pad": 12,
@@ -147,11 +148,18 @@ def preview_metrics() -> dict:
 
 def hud_metrics() -> dict:
     c = LAYOUT
+    preview_source = (ROOT / "ui/wave_preview.lua").read_text()
+    for name, key in (("COMBAT_X", "combat_x"), ("COMBAT_Y", "combat_y"),
+                      ("COMBAT_W", "combat_w"), ("COMBAT_H", "combat_h")):
+        match = re.search(r"local\s+" + name + r"\s*=\s*(\d+)", preview_source)
+        if not match or int(match.group(1)) != c[key]:
+            raise ValueError(f"compact wave fixture drift: {name}")
     rows = []
     ability_h = 6*c["ability_size"] + 5*c["ability_gap"] + 2*c["ability_pad"]
     damage_h = 2*c["damage_pad"] + c["damage_header"] + c["damage_header_gap"] + 6*c["damage_bar_h"] + 5*c["damage_row_gap"]
     for w, h in SUPPORTED_DISPLAYS:
         panels = {
+            "compact_wave_progress": [c["combat_x"], c["combat_y"], c["combat_w"], c["combat_h"]],
             "bottom_shop": [16, h-c["bottom_h"]-16, c["bottom_w"], c["bottom_h"]],
             "bottom_inspect": [16+c["bottom_w"]+16, h-c["bottom_h"]-16, c["inspect_w"], c["bottom_h"]],
             "damage_meter_six_rows": [w-210-24-16, 16, 234, damage_h],
@@ -160,11 +168,23 @@ def hud_metrics() -> dict:
         }
         overflow = max([0] + [max(0, -x, -y, x+pw-w, y+ph-h)
                               for x, y, pw, ph in panels.values() if ph])
+        compact = panels["compact_wave_progress"]
+        protected = {
+            "boss_health": [math.floor((w-354)/2), 16, 354, 34],
+            "damage_meter": panels["damage_meter_six_rows"],
+            "contextual_tip_max": [math.floor((w-min(760, w-48))/2), 24, min(760, w-48), 100],
+        }
+        def overlaps(a, b):
+            return a[0] < b[0]+b[2] and a[0]+a[2] > b[0] and a[1] < b[1]+b[3] and a[1]+a[3] > b[1]
+        collisions = [name for name, bounds in protected.items() if overlaps(compact, bounds)]
         rows.append({"resolution": f"{w}x{h}", "panels": panels,
+                     "compact_protected_collisions": collisions,
                      "overflow_pixels": overflow})
     return {"note": "Panel bounds at the default font size.",
             "representative_minimum": next(x for x in rows if x["resolution"] == "1280x720"),
-            "configurations": rows}
+            "configurations": rows,
+            "compact_layout_failures": sum(bool(row["compact_protected_collisions"])
+                                           for row in rows)}
 
 
 def message_tip_metrics() -> dict:
@@ -260,6 +280,7 @@ def checks(data: dict) -> list[tuple[str, bool, str]]:
     alarm("preview/rows", data["wave_preview"]["maximum_rows"], b["wave_preview_rows"])
     alarm("preview/wrap", data["wave_preview"]["maximum_wrapped_counter_lines"], b["wave_preview_wrapped_lines"])
     alarm("hud/overflow", max(x["overflow_pixels"] for x in data["hud_bounds"]["configurations"]), b["hud_overflow_pixels"])
+    alarm("hud/compact", data["hud_bounds"]["compact_layout_failures"], b["hud_overflow_pixels"])
     alarm("hud/message_tips", data["message_tips"]["layout_failures"], b["hud_overflow_pixels"])
     normal = data["upgrade_affordability"]["difficulties"]["normal"]
     for kind, row in normal.items():

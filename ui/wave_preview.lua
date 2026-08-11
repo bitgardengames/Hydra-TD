@@ -14,6 +14,13 @@ local colorPanel = Theme.ui.panel2
 local colorBackdrop = Theme.ui.backdrop
 local colorOutline = Theme.outline.color
 
+local COMBAT_X = 16
+local COMBAT_Y = 16
+local COMBAT_W = 244
+local COMBAT_H = 48
+local COMBAT_PAD = 8
+local COMBAT_BAR_H = 8
+
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
 local PANEL_W = 440
@@ -41,6 +48,42 @@ local previewCache = {
 }
 
 local WavePreview = {}
+
+local function drawCombatProgress()
+	local progress = Waves.getProgress()
+	local total = progress.totalScheduled
+	if total <= 0 then return end
+
+	local x, y = COMBAT_X, COMBAT_Y
+	local innerW = COMBAT_W - COMBAT_PAD * 2
+	local font = lg.getFont()
+	local cleared = math.min(total, progress.clearedCount)
+	local spawnedFrac = math.min(1, progress.spawnedCount / total)
+	local clearedFrac = cleared / total
+	local title = L("hud.combatWave", State.wave)
+	local count = progress.waitingOnGroupDelay and L("hud.incomingGroup")
+		or L("hud.waveProgress", progress.spawnedCount, cleared)
+
+	lg.setColor(colorOutline)
+	lg.rectangle("fill", x - outlineW, y - outlineW, COMBAT_W + outlineW * 2,
+		COMBAT_H + outlineW * 2, outerSmallRadius)
+	lg.setColor(colorBackdrop)
+	lg.rectangle("fill", x, y, COMBAT_W, COMBAT_H, innerSmallRadius)
+
+	lg.setColor(colorWave)
+	Text.printShadow(title, x + COMBAT_PAD, y + COMBAT_PAD)
+	lg.setColor(colorText)
+	Text.printShadow(count, x + COMBAT_W - COMBAT_PAD - font:getWidth(count), y + COMBAT_PAD)
+
+	local barY = y + COMBAT_H - COMBAT_PAD - COMBAT_BAR_H
+	lg.setColor(colorPanel)
+	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW, COMBAT_BAR_H, 4)
+	lg.setColor(Theme.ui.warn)
+	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * spawnedFrac, COMBAT_BAR_H, 4)
+	lg.setColor(Theme.ui.good)
+	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * clearedFrac, COMBAT_BAR_H, 4)
+
+end
 
 local function refreshPreview()
 	if previewCache.wave == State.wave
@@ -76,6 +119,7 @@ end
 
 function WavePreview.draw()
 	if not State.inPrep then
+		drawCombatProgress()
 		return
 	end
 
