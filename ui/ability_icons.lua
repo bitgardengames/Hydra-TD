@@ -90,10 +90,7 @@ local function drawAccent(kind, cx, cy, scale, alpha)
 	local radius = 22 * scale
 	lg.setLineWidth(2.5 * scale)
 
-	if kind == "ready" then
-		lg.setColor(0.42, 1, 0.62, 0.72 * alpha)
-		lg.arc("line", cx, cy, radius, -pi * 0.72, pi * 0.72)
-	elseif kind == "active" then
+	if kind == "active" then
 		lg.setColor(1, 0.78, 0.12, 0.95 * alpha)
 		lg.circle("line", cx, cy, radius)
 		lg.circle("fill", cx + radius, cy, 2.5 * scale)
