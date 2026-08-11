@@ -1,10 +1,7 @@
 local State = require("core.state")
 local Theme = require("core.theme")
 local Util = require("core.util")
-local Enemies = require("world.enemies")
-local Waves = require("systems.waves")
 local WaveBuilder = require("systems.wave_builder")
-local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local L = require("core.localization")
 
@@ -20,28 +17,23 @@ local Hud = {}
 local colorText = Theme.ui.text
 local colorMoney = Theme.ui.money
 local colorLives = Theme.ui.lives
-local colorGood = Theme.ui.good
 
 local ct1, ct2, ct3 = colorText[1], colorText[2], colorText[3]
 local cm1, cm2, cm3 = colorMoney[1], colorMoney[2], colorMoney[3]
 local cl1, cl2, cl3 = colorLives[1], colorLives[2], colorLives[3]
-local cg1, cg2, cg3 = colorGood[1], colorGood[2], colorGood[3]
 
 local formatInt = Util.formatInt
 
 local MONEY_X = 12
 local LIVES_X = 90
 local WAVE_X = 170
-local STATUS_X = 260
-local SPEED_X = 235
+local SPEED_PAD = 12
 
 -- Text caches (no per-frame string rebuilding)
 local hudCache = {
 	money = {value = nil, text = ""},
 	lives = {value = nil, text = ""},
 	wave = {value = nil, text = ""},
-	prep = {value = nil, text = "", action = nil},
-	spawn = {remaining = nil, count = nil, text = ""},
 	speed = {value = nil, text = ""},
 }
 
@@ -111,35 +103,7 @@ function Hud.draw(infoX, infoY, infoW, infoH)
 		speedCache.value = State.speed
 		speedCache.text = L("hud.speed", State.speed)
 	end
-	Text.printShadow(speedCache.text, infoX + (intensityTier > 0 and 340 or SPEED_X), y)
-
-	-- Prep / spawning block
-	if State.inPrep then
-		local prepCache = hudCache.prep
-		local skipKey = Hotkeys.getDisplay("skipPrep")
-
-		if prepCache.action ~= skipKey then
-			prepCache.action = skipKey
-			prepCache.text = L("hud.prep", skipKey)
-		end
-
-		lg.setColor(cg1, cg2, cg3, 1)
-		Text.printShadow(prepCache.text, infoX + (intensityTier > 0 and 365 or STATUS_X), y)
-	else
-		local spawner = Waves.getSpawner()
-		local spawnCache = hudCache.spawn
-		local remaining = spawner.remaining
-		local count = #Enemies.enemies
-
-		if spawnCache.remaining ~= remaining or spawnCache.count ~= count then
-			spawnCache.remaining = remaining
-			spawnCache.count = count
-			spawnCache.text = L("hud.spawning", remaining, count)
-		end
-
-		lg.setColor(0.85, 0.85, 0.85, 0.85)
-		Text.printShadow(spawnCache.text, infoX + (intensityTier > 0 and 365 or STATUS_X), y)
-	end
+	Text.printShadow(speedCache.text, infoX + infoW - SPEED_PAD - font:getWidth(speedCache.text), y)
 
 end
 
