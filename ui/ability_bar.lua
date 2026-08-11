@@ -23,9 +23,9 @@ local buttons = {}
 local abilityTooltips = {}
 local lastAbilityClock = nil
 
-local SIZE = 58
--- Match the tower shop's vertical rhythm so the two groups feel like parts of
--- the same HUD.
+local SIZE = 52
+-- Match the tower shop's rhythm so the two groups feel like parts of the same
+-- HUD.
 local GAP = 18
 local PANEL_PAD = 12
 local PANEL_INSET = 16
@@ -181,7 +181,7 @@ local function drawButton(button, def, activeTime)
 	local binding = Hotkeys.getDisplay("abilitySlot" .. button.slotIndex)
 	if binding then
 		lg.setColor(1, 1, 1, available and 0.95 or 0.6)
-		Text.printfShadow(binding, fx + 4, fy + 2, SIZE - 8, "right")
+		Text.printfShadow(binding, fx + 4, fy + 2, SIZE - 8, "left")
 	end
 end
 
@@ -193,10 +193,11 @@ function AbilityBar.update(dt, mx, my)
 	local equipped = getDisplayedAbilities()
 	local count = min(#equipped, MAX_ABILITIES)
 	local sw, sh = lg.getDimensions()
-	local totalH = count * SIZE + math.max(0, count - 1) * GAP
-	local startY = floor((sh - totalH) * 0.5)
-	local panelW = SIZE + PANEL_PAD * 2
-	local panelX = sw - PANEL_INSET - panelW
+	local totalW = count * SIZE + math.max(0, count - 1) * GAP
+	local panelW = totalW + PANEL_PAD * 2
+	local panelH = SIZE + PANEL_PAD * 2
+	local panelX = floor((sw - panelW) * 0.5)
+	local panelY = sh - PANEL_INSET - panelH
 	local clock = State.abilityClock or 0
 	local runReset = lastAbilityClock ~= nil and clock < lastAbilityClock
 	lastAbilityClock = clock
@@ -205,7 +206,7 @@ function AbilityBar.update(dt, mx, my)
 		local abilityId = equipped[i]
 		local def = AbilityDefs[abilityId]
 		if def then
-			local x, y = panelX + PANEL_PAD, startY + (i - 1) * (SIZE + GAP)
+			local x, y = panelX + PANEL_PAD + (i - 1) * (SIZE + GAP), panelY + PANEL_PAD
 			local hovered = mx >= x and mx <= x + SIZE and my >= y and my <= y + SIZE
 			local button = buttons[i] or {}
 			buttons[i] = button
@@ -238,13 +239,12 @@ end
 function AbilityBar.draw()
 	local count = #buttons
 	local activeRemaining = getActiveTimes()
-	local sw = lg.getWidth()
-	local totalH = count * SIZE + math.max(0, count - 1) * GAP
-	local startY = count > 0 and buttons[1].y or 0
-	local panelW = SIZE + PANEL_PAD * 2
-	local panelH = totalH + PANEL_PAD * 2
-	local panelX = sw - PANEL_INSET - panelW
-	local panelY = startY - PANEL_PAD
+	local sw, sh = lg.getDimensions()
+	local totalW = count * SIZE + math.max(0, count - 1) * GAP
+	local panelW = totalW + PANEL_PAD * 2
+	local panelH = SIZE + PANEL_PAD * 2
+	local panelX = floor((sw - panelW) * 0.5)
+	local panelY = sh - PANEL_INSET - panelH
 
 	if count > 0 then
 		lg.setColor(colorOutline)

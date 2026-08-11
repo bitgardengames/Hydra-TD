@@ -21,7 +21,7 @@ LAYOUT = {"screen_pad": 16, "wave_w": 440, "damage_inner_w": 210,
           "combat_x": 16, "combat_y": 16, "combat_w": 244, "combat_h": 48,
           "damage_pad": 12, "damage_header": 30, "damage_header_gap": 10,
           "damage_bar_h": 22, "damage_row_gap": 6,
-          "ability_size": 58, "ability_gap": 18, "ability_pad": 12,
+          "ability_size": 52, "ability_gap": 18, "ability_pad": 12,
           "ability_inset": 16, "bottom_w": 432, "bottom_h": 264,
           "bottom_inset": 16, "bottom_lift": 16, "inspect_w": 284,
           "panel_gap": 16}
@@ -155,7 +155,8 @@ def hud_metrics() -> dict:
         if not match or int(match.group(1)) != c[key]:
             raise ValueError(f"compact wave fixture drift: {name}")
     rows = []
-    ability_h = 6*c["ability_size"] + 5*c["ability_gap"] + 2*c["ability_pad"]
+    ability_w = 6*c["ability_size"] + 5*c["ability_gap"] + 2*c["ability_pad"]
+    ability_h = c["ability_size"] + 2*c["ability_pad"]
     damage_h = 2*c["damage_pad"] + c["damage_header"] + c["damage_header_gap"] + 6*c["damage_bar_h"] + 5*c["damage_row_gap"]
     for w, h in SUPPORTED_DISPLAYS:
         panels = {
@@ -164,7 +165,7 @@ def hud_metrics() -> dict:
             "bottom_inspect": [16+c["bottom_w"]+16, h-c["bottom_h"]-16, c["inspect_w"], c["bottom_h"]],
             "damage_meter_six_rows": [w-210-24-16, 16, 234, damage_h],
             "wave_preview": [16, 16, 400, 0],
-            "ability_bar_six": [w-16-82, math.floor((h-ability_h)/2), 82, ability_h],
+            "ability_bar_six": [math.floor((w-ability_w)/2), h-16-ability_h, ability_w, ability_h],
         }
         overflow = max([0] + [max(0, -x, -y, x+pw-w, y+ph-h)
                               for x, y, pw, ph in panels.values() if ph])
