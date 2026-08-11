@@ -250,6 +250,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.prevNudgeY = 0
 
 	e.boss = def.boss or false
+	-- Optional authored health landmarks are consumed by the boss HUD. Keeping
+	-- this opt-in avoids presenting arbitrary ticks as encounter phases.
+	e.healthThresholds = def.healthThresholds or def.phaseThresholds
 	e.hpScale = hpScale
 	e.spdScale = spdScale
 	e.hp = (def.hp * hpScale * hpAffixMult) or 0
