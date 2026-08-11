@@ -148,8 +148,15 @@ return {
 	},
 
 	status = {
-		slow = "Slow",
-		poison = "Poison",
+		slow = "Slowed",
+		poison = "Poisoned",
+		barrier = "Barrier",
+		supportAura = "Speed aura active",
+		supportBoost = "Aura accelerated",
+		regenerationSuppressed = "Regeneration suppressed",
+		summonPreparing = "Summoning charge",
+		value = "%s / %s",
+		multiplier = "x%.2f",
 	},
 
 	damage = {
@@ -467,6 +474,9 @@ return {
 		kills = "Kills: %d",
 		hp = "HP: %s / %s",
 		modifiers = "Modifiers:",
+		temporaryStatuses = "TEMPORARY STATUS",
+		permanentTraits = "TRAITS & AFFIXES",
+		moreStatuses = "+%d more",
 	},
 
 	stats = {

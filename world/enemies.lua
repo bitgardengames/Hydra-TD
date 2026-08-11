@@ -829,6 +829,73 @@ local function setPathDistance(e, distance)
 	Spatial.updateEnemy(e)
 end
 
+-- Produces the player-facing, render-agnostic description of every currently
+-- active enemy state.  Identity (traits and elite affixes) deliberately does not
+-- belong here: callers can therefore present expiring state separately from the
+-- mechanics that define an enemy.
+local function getDisplayStatuses(e)
+	local result = {}
+	if not e then return result end
+
+	local function add(labelKey, icon, color, options)
+		options = options or {}
+		result[#result + 1] = {
+			id = options.id,
+			label = L(labelKey),
+			icon = icon,
+			color = color,
+			stacks = options.stacks,
+			value = options.value,
+			remainingFraction = options.remainingFraction,
+		}
+	end
+
+	local function fraction(remaining, duration)
+		if not remaining or not duration or duration <= 0 then return nil end
+		return max(0, min(1, remaining / duration))
+	end
+
+	if (e.slowTimer or 0) > 0 then
+		add("status.slow", "▼", Theme.tower.slow, {
+			id = "slow", remainingFraction = fraction(e.slowTimer, e.slowDuration),
+		})
+	end
+	if (e.poisonTimer or 0) > 0 and (e.poisonStacks or 0) > 0 then
+		add("status.poison", "●", Theme.tower.poison, {
+			id = "poison", stacks = e.poisonStacks,
+			remainingFraction = fraction(e.poisonTimer, e.poisonDuration),
+		})
+	end
+	if (e.shieldHp or 0) > 0 and (e.shieldMax or 0) > 0 then
+		add("status.barrier", "◈", Theme.tower.shock, {
+			id = "barrier", value = L("status.value", Util.formatInt(e.shieldHp), Util.formatInt(e.shieldMax)),
+			remainingFraction = min(1, e.shieldHp / e.shieldMax),
+		})
+	end
+	if e.support then
+		add("status.supportAura", "◉", Theme.ui.good, {id = "support_aura"})
+	end
+	if (e.supportBoost or 1) > 1 then
+		add("status.supportBoost", "▲", Theme.ui.good, {
+			id = "support_boost", value = L("status.multiplier", e.supportBoost),
+		})
+	end
+	if e.regeneration and (e.regenDelay or 0) > 0 then
+		add("status.regenerationSuppressed", "⊘", Theme.ui.bad, {
+			id = "regeneration_suppressed",
+			remainingFraction = fraction(e.regenDelay, e.regeneration.delay),
+		})
+	end
+	if e.summon and (e.summonTimer or 0) > 0 then
+		add("status.summonPreparing", "✦", Theme.ui.money, {
+			id = "summon_preparing",
+			remainingFraction = fraction(e.summonTimer, e.summon.period),
+		})
+	end
+
+	return result
+end
+
 local function applySlow(e, factor, duration)
 	if not e or e.hp <= 0 then return false end
 	for _, affix in ipairs(e.affixes or {}) do
@@ -850,6 +917,7 @@ return {
 	applyHitImpulse = applyHitImpulse,
 	applyDamage = applyDamage,
 	applySlow = applySlow,
+	getDisplayStatuses = getDisplayStatuses,
 	setPathDistance = setPathDistance,
 	clear = clear,
 }
