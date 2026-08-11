@@ -442,7 +442,7 @@ return {
 		speed = "%gx",
 		prep = "Press %s to start",
 		spawning = "Spawning %d - Alive %d",
-		upcomingWave = "Wave %d Preview",
+		upcomingWave = "Wave %d",
 		waveTotal = "%d total",
 		combatWave = "Wave %d",
 		waveProgress = "%d/%d",
