@@ -19,6 +19,7 @@ local DrawEntities = require("render.draw_entities")
 local RunRecap = require("ui.run_recap")
 local ScrollView = require("ui.scroll_view")
 local AbilityIcons = require("ui.ability_icons")
+local Tooltip = require("ui.tooltip")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -82,6 +83,8 @@ local difficultyOffset = 22
 -- Medal visuals
 local medalR = 16
 local medalGap = 14
+local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
+local MEDAL_NAMES = {"bronze", "silver", "gold"}
 local confettiColors = {
 	Theme.ui.good,
 	Theme.ui.wave,
@@ -95,6 +98,54 @@ local function easeOutBack(x)
 	local c1 = 1.70158
 	local c3 = c1 + 1
 	return 1 + c3 * ((x - 1) ^ 3) + c1 * ((x - 1) ^ 2)
+end
+
+local function hideMedalTooltip()
+	Tooltip.hide()
+end
+
+local function updateMedalTooltip()
+	if #rewardCards > 0 or not layout then
+		hideMedalTooltip()
+		return
+	end
+
+	local map = Maps[State.mapIndex]
+	local mapStats = map and Save.data.mapStats and Save.data.mapStats[map.id]
+	local earnedCount = mapStats and mapStats.completedDifficulty
+		and Medals.getCount(mapStats.completedDifficulty) or 0
+	local clusterW = Medals.getClusterSize(medalR, medalGap)
+	local medalX = layout.cx - clusterW * 0.5
+	local medalY = layout.recapY - recapScroll.offset + layout.medalY
+	local mx, my = love.mouse.getPosition()
+	local step = medalR * 2 + medalGap
+
+	-- Match the campaign medal hit areas, while respecting the recap's clip.
+	if my < layout.recapY or my > layout.recapY + layout.recapH then
+		hideMedalTooltip()
+		return
+	end
+
+	for tier = 1, earnedCount do
+		local x = medalX + (tier - 1) * step
+		if mx >= x and mx <= x + medalR * 2
+			and my >= medalY and my <= medalY + medalR * 2 then
+			local difficultyKey = DIFFICULTY_ORDER[tier]
+			local timestamp = mapStats.medalEarnedAt and mapStats.medalEarnedAt[difficultyKey]
+			local earnedDate = L("campaign.medalDateUnavailable")
+			if type(timestamp) == "number" then
+				earnedDate = os.date(L("campaign.medalDateFormat"), timestamp)
+			end
+
+			Tooltip.show({
+				title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[tier]), L("difficulty." .. difficultyKey)),
+				rows = {{label = L("campaign.medalEarnedOn"), value = earnedDate}},
+			})
+			return
+		end
+	end
+
+	hideMedalTooltip()
 end
 
 local function buildRewardCards()
@@ -457,6 +508,7 @@ function Screen.load()
 end
 
 function Screen.enter()
+	hideMedalTooltip()
 	t = 0
 	panelT = 0
 	rewardCardT = 0
@@ -531,6 +583,7 @@ function Screen.update(dt)
 	end
 
 	Button.updateList(buttons, dt)
+	updateMedalTooltip()
 end
 
 function Screen.draw()
@@ -618,7 +671,8 @@ function Screen.draw()
 	lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.75 * alpha)
 	lg.rectangle("fill", medalX - 16, medalY - 12, clusterW + 32, clusterH + 24, 14, 14)
 
-	Medals.drawReveal(medalX, medalY, medalR, medalGap)
+	-- Continue the campaign screen's staggered shine once reveal animations settle.
+	Medals.drawReveal(medalX, medalY, medalR, medalGap, t)
 
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
@@ -631,6 +685,11 @@ function Screen.draw()
 	lg.pop()
 
 	drawRewardUnlockCard(g)
+	Tooltip.draw()
+end
+
+function Screen.leave()
+	hideMedalTooltip()
 end
 
 function Screen.wheelmoved(_, y)

@@ -286,7 +286,7 @@ function Medals.draw(x, y, earnedCount, r, g, animation)
 	end
 end
 
-function Medals.drawReveal(x, y, r, g)
+function Medals.drawReveal(x, y, r, g, animation)
 	BASE_RADIUS = r or BASE_RADIUS
 	BASE_GAP = g or BASE_GAP
 
@@ -299,8 +299,15 @@ function Medals.drawReveal(x, y, r, g)
 	for i = 1, 3 do
 		local mx = startX + (i - 1) * step
 		local earned = i <= staticCount
+		local shinePhase
+		if earned and animation then
+			local elapsed = (animation - (i - 1) * SHINE_STAGGER) % SHINE_PERIOD
+			if elapsed < SHINE_DURATION then
+				shinePhase = elapsed / SHINE_DURATION
+			end
+		end
 
-		drawMedal(mx, centerY, i, earned, BASE_RADIUS)
+		drawMedal(mx, centerY, i, earned, BASE_RADIUS, nil, shinePhase)
 	end
 
 	for i = 1, #active do
