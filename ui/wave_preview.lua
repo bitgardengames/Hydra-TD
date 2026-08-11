@@ -118,9 +118,9 @@ local function drawCombatProgress()
 	Text.printShadow(count, x + COMBAT_W - COMBAT_PAD - font:getWidth(count), y + COMBAT_PAD)
 
 	local barY = y + COMBAT_H - COMBAT_PAD - COMBAT_BAR_H
+	lg.setColor(colorPanel)
+	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW, COMBAT_BAR_H, 4)
 	if combatProgress.fraction > 0 then
-		lg.setColor(colorPanel)
-		lg.rectangle("fill", x + COMBAT_PAD, barY, innerW, COMBAT_BAR_H, 4)
 		lg.setColor(Theme.ui.good)
 		lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * combatProgress.fraction, COMBAT_BAR_H, 4)
 	end
