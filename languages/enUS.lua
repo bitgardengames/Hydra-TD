@@ -444,7 +444,6 @@ return {
 		spawning = "Spawning %d - Alive %d",
 		upcomingWave = "Wave %d",
 		waveTotal = "%d total",
-		combatWave = "Wave %d",
 		waveProgress = "%d/%d",
 		incomingGroup = "INCOMING",
 		compositionEntry = "%d %s",
