@@ -24,7 +24,7 @@ local COMBAT_BAR_FILL_DURATION = 0.25
 
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
-local PANEL_W = 440
+local PANEL_W = 400
 local HEADER_H = 30
 local HEADER_GAP = 8
 local ROW_GAP = 5

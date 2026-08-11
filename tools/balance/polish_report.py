@@ -163,7 +163,7 @@ def hud_metrics() -> dict:
             "bottom_shop": [16, h-c["bottom_h"]-16, c["bottom_w"], c["bottom_h"]],
             "bottom_inspect": [16+c["bottom_w"]+16, h-c["bottom_h"]-16, c["inspect_w"], c["bottom_h"]],
             "damage_meter_six_rows": [w-210-24-16, 16, 234, damage_h],
-            "wave_preview": [16, 16, 440, 0],
+            "wave_preview": [16, 16, 400, 0],
             "ability_bar_six": [w-16-82, math.floor((h-ability_h)/2), 82, ability_h],
         }
         overflow = max([0] + [max(0, -x, -y, x+pw-w, y+ph-h)
