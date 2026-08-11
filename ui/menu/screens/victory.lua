@@ -45,7 +45,9 @@ local recapScroll = ScrollView.new()
 local layout = nil
 local rewardCardT = 0
 local rewardCards = {}
+local rewardCardIndex = 1
 local rewardClosePressed = false
+local rewardActionPressed = nil
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -68,9 +70,10 @@ local btnW = 240
 local btnH = 42
 local panelW = 560
 local rewardCardW = 420
-local rewardCardH = 176
-local rewardInputDelay = 1.25
+local rewardCardH = 220
+local rewardInputDelay = 0.3
 local rewardCloseSize = 32
+local rewardActionH = 34
 
 local statsGap = 12
 local statH = 44
@@ -103,7 +106,7 @@ local function buildRewardCards()
 			type = "tower",
 			id = kind,
 			name = L((def and def.nameKey) or ("tower." .. kind)),
-			description = L((def and def.descKey) or ("towerDesc." .. kind)),
+			description = L("victory.rewardDescriptions.tower"),
 			color = (def and def.color) or Theme.ui.good,
 		}
 	end
@@ -114,7 +117,7 @@ local function buildRewardCards()
 			type = "ability",
 			id = abilityId,
 			name = L((def and def.nameKey) or ("ability." .. abilityId .. ".name")),
-			description = L((def and def.descKey) or ("ability." .. abilityId .. ".desc")),
+			description = L("victory.rewardDescriptions.ability"),
 			color = Theme.ui.selected,
 		}
 	end
@@ -130,6 +133,7 @@ local function buildRewardCards()
 			}
 		end
 	end
+	rewardCardIndex = 1
 end
 
 local function rewardCardBlockingInput()
@@ -154,15 +158,63 @@ local function pointInRewardClose(x, y)
 end
 
 local function closeRewardCard()
-	rewardCards = {}
+	table.remove(rewardCards, rewardCardIndex)
+	rewardCardIndex = min(rewardCardIndex, max(1, #rewardCards))
+	rewardCardT = 0
 	rewardClosePressed = false
+	rewardActionPressed = nil
 	Sound.play("uiBack")
+end
+
+local function finishRewardCards()
+	rewardCards = {}
+	rewardCardIndex = 1
+	rewardCardT = 0
+	rewardClosePressed = false
+	rewardActionPressed = nil
+	Sound.play("uiConfirm")
+end
+
+local function getRewardActionBounds(g, action)
+	local x, y, w, h = getRewardCardBounds(g)
+	local buttonW = 112
+	local buttonY = y + h - rewardActionH - 12
+	if action == "previous" then return x + 18, buttonY, buttonW, rewardActionH end
+	return x + w - buttonW - 18, buttonY, buttonW, rewardActionH
+end
+
+local function pointInRewardAction(x, y)
+	if #rewardCards <= 0 or not layout then return nil end
+	if rewardCardIndex > 1 then
+		local bx, by, bw, bh = getRewardActionBounds(layout, "previous")
+		if x >= bx and x <= bx + bw and y >= by and y <= by + bh then return "previous" end
+	end
+	local bx, by, bw, bh = getRewardActionBounds(layout, "next")
+	if x >= bx and x <= bx + bw and y >= by and y <= by + bh then return "next" end
+	return nil
+end
+
+local function activateRewardAction(action)
+	if action == "previous" and rewardCardIndex > 1 then
+		rewardCardIndex = rewardCardIndex - 1
+	elseif action == "next" then
+		if rewardCardIndex < #rewardCards then
+			rewardCardIndex = rewardCardIndex + 1
+		else
+			finishRewardCards()
+			return
+		end
+	else
+		return
+	end
+	rewardCardT = 0
+	Sound.play("uiConfirm")
 end
 
 local function drawRewardUnlockCard(g)
 	if #rewardCards <= 0 then return end
 
-	local index = min(#rewardCards, math.floor(rewardCardT / 2.8) + 1)
+	local index = rewardCardIndex
 	local card = rewardCards[index]
 	local intro = min(1, rewardCardT * 2.2)
 	local scale = 0.78 + 0.22 * easeOutBack(intro)
@@ -202,7 +254,7 @@ local function drawRewardUnlockCard(g)
 	lg.line(closeX + 10, closeY + 10, closeX + 22, closeY + 22)
 	lg.line(closeX + 22, closeY + 10, closeX + 10, closeY + 22)
 
-	local iconX, iconY = x + 74, y + 96
+	local iconX, iconY = x + 74, y + 105
 	lg.setColor(0.04, 0.05, 0.07, 0.8 * alpha)
 	lg.circle("fill", iconX, iconY, 43)
 	if card.type == "tower" then
@@ -214,15 +266,30 @@ local function drawRewardUnlockCard(g)
 
 	Fonts.set("menu")
 	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-	Text.printfShadow(card.name, x + 132, y + 58, w - 154, "left")
+	Text.printfShadow(card.name, x + 132, y + 64, w - 154, "left")
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.82 * alpha)
-	Text.printfShadow(card.description, x + 132, y + 94, w - 154, "left")
+	Text.printfShadow(card.description, x + 132, y + 100, w - 154, "left")
 
 	if #rewardCards > 1 then
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.55 * alpha)
-		Text.printfShadow(('%d / %d'):format(index, #rewardCards), x + 18, y + h - 28, w - 36, "right")
+		Text.printfShadow(('%d / %d'):format(index, #rewardCards), x + 18, y + h - 36, w - 36, "center")
 	end
+
+	local function drawAction(action, label)
+		local bx, by, bw, bh = getRewardActionBounds(g, action)
+		local hovered = pointInRewardAction(love.mouse.getPosition()) == action
+		local fill = hovered and Theme.ui.buttonHover or Theme.ui.button
+		lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
+		lg.rectangle("fill", bx - 2, by - 2, bw + 4, bh + 4, 8, 8)
+		lg.setColor(fill[1], fill[2], fill[3], alpha)
+		lg.rectangle("fill", bx, by, bw, bh, 6, 6)
+		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+		Text.printfShadow(label, bx, by + 7, bw, "center")
+	end
+	if index > 1 then drawAction("previous", L("victory.rewardPrevious")) end
+	local finalLabel = #rewardCards == 1 and L("victory.rewardClose") or L("victory.rewardContinue")
+	drawAction("next", index < #rewardCards and L("victory.rewardNext") or finalLabel)
 
 	lg.pop()
 end
@@ -393,7 +460,9 @@ function Screen.enter()
 	t = 0
 	panelT = 0
 	rewardCardT = 0
+	rewardCardIndex = 1
 	rewardClosePressed = false
+	rewardActionPressed = nil
 	recapScroll:reset()
 	buildStats()
 	buildRewardCards()
@@ -571,8 +640,12 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if rewardCardBlockingInput() then return true end
-	if button == 1 and pointInRewardClose(x, y) then
-		rewardClosePressed = true
+	if #rewardCards > 0 then
+		if button == 1 and pointInRewardClose(x, y) then
+			rewardClosePressed = true
+		else
+			rewardActionPressed = button == 1 and pointInRewardAction(x, y) or nil
+		end
 		return true
 	end
 
@@ -581,10 +654,16 @@ end
 
 function Screen.mousereleased(x, y, button)
 	if rewardCardBlockingInput() then return true end
-	if button == 1 and rewardClosePressed then
-		local shouldClose = pointInRewardClose(x, y)
+	if #rewardCards > 0 then
+		local closePressed = rewardClosePressed
+		local actionPressed = rewardActionPressed
 		rewardClosePressed = false
-		if shouldClose then closeRewardCard() end
+		rewardActionPressed = nil
+		if button == 1 and closePressed and pointInRewardClose(x, y) then
+			closeRewardCard()
+		elseif button == 1 and actionPressed and actionPressed == pointInRewardAction(x, y) then
+			activateRewardAction(actionPressed)
+		end
 		return true
 	end
 
@@ -593,6 +672,16 @@ end
 
 function Screen.keypressed(key)
 	if rewardCardBlockingInput() then return true end
+	if #rewardCards > 0 then
+		if key == "left" then
+			activateRewardAction("previous")
+		elseif key == "right" or key == "return" or key == "kpenter" then
+			activateRewardAction("next")
+		elseif key == "escape" then
+			closeRewardCard()
+		end
+		return true
+	end
 
 	if key == "escape" then
 		for _, btn in ipairs(buttons) do
