@@ -445,7 +445,7 @@ return {
 		upcomingWave = "Wave %d Preview",
 		waveTotal = "%d total",
 		combatWave = "Wave %d",
-		waveProgress = "%d spawned • %d cleared",
+		waveProgress = "%d/%d",
 		incomingGroup = "INCOMING",
 		compositionEntry = "%d %s",
 		threatTags = "Threats: %s",

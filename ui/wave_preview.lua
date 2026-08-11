@@ -58,11 +58,9 @@ local function drawCombatProgress()
 	local innerW = COMBAT_W - COMBAT_PAD * 2
 	local font = lg.getFont()
 	local cleared = math.min(total, progress.clearedCount)
-	local spawnedFrac = math.min(1, progress.spawnedCount / total)
 	local clearedFrac = cleared / total
 	local title = L("hud.combatWave", State.wave)
-	local count = progress.waitingOnGroupDelay and L("hud.incomingGroup")
-		or L("hud.waveProgress", progress.spawnedCount, cleared)
+	local count = L("hud.waveProgress", cleared, total)
 
 	lg.setColor(colorOutline)
 	lg.rectangle("fill", x - outlineW, y - outlineW, COMBAT_W + outlineW * 2,
@@ -78,8 +76,6 @@ local function drawCombatProgress()
 	local barY = y + COMBAT_H - COMBAT_PAD - COMBAT_BAR_H
 	lg.setColor(colorPanel)
 	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW, COMBAT_BAR_H, 4)
-	lg.setColor(Theme.ui.warn)
-	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * spawnedFrac, COMBAT_BAR_H, 4)
 	lg.setColor(Theme.ui.good)
 	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * clearedFrac, COMBAT_BAR_H, 4)
 
