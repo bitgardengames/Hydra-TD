@@ -103,7 +103,7 @@ local function drawCombatProgress()
 			combatProgress.fillStartedAt = nil
 		end
 	end
-	local title = L("hud.combatWave", State.wave)
+	local title = L("hud.upcomingWave", State.wave)
 	local count = L("hud.waveProgress", cleared, total)
 
 	lg.setColor(colorOutline)
