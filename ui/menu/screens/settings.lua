@@ -1,4 +1,5 @@
 local Sound = require("systems.sound")
+local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
 local Util = require("core.util")
