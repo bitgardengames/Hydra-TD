@@ -26,12 +26,16 @@ return {
 		goldRush = {name = "Gold Rush", desc = "Earn 50% more income from non-boss kills for 8 seconds."},
 		lastStand = {name = "Last Stand", desc = "Make towers in the targeted area attack 45% faster for 6 seconds and fire a volley at the first escaping enemy (two volleys when enhanced)."},
 		cooldown = "%s  %ds",
+		cooldownLabel = "Cooldown",
+		durationLabel = "Active duration",
 	},
 
 	settings = {
 		title = "Settings",
 		music = "Music Volume",
 		sfx = "SFX Volume",
+		abilityReadySound = "Ability-ready sound",
+		abilityReadySoundDesc = "Plays a short, throttled cue when an equipped ability finishes cooling down.",
 		difficulty = "Difficulty",
 		fullscreen = "Fullscreen",
 		screenShake = "Screen shake",

@@ -101,6 +101,17 @@ function Sound.play(name, opts)
 	sound:play()
 end
 
+-- Readiness cues have their own entry and throttle so simultaneous cooldowns
+-- cannot turn into a burst of UI sounds. Callers may also suppress a cue for
+-- contextual transitions such as restoring a run.
+function Sound.playAbilityReady(opts)
+	opts = opts or {}
+	if opts.suppress or (Save.data and Save.data.settings.abilityReadySound == false) then
+		return
+	end
+	Sound.play("abilityReady", opts)
+end
+
 function Sound.setSFXVolume(v)
 	local baseVol = scaleVolume(v)
 
@@ -174,6 +185,7 @@ function Sound.load()
 		uiConfirm = { file = "assets/sounds/uiConfirm.ogg" },
 		uiBack = { file = "assets/sounds/uiBack.ogg" },
 		uiError = { file = "assets/sounds/uiError.ogg" },
+		abilityReady = { file = "assets/sounds/uiConfirm.ogg", cooldown = 0.35, bias = 0.7 },
 		victory = { file = "assets/sounds/victory.ogg" },
 		gameOver = { file = "assets/sounds/gameOver.ogg" },
 		towerPlaced = { files = { "assets/sounds/towerPlaced1.ogg", "assets/sounds/towerPlaced2.ogg" }, jitter = true },
