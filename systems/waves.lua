@@ -221,6 +221,9 @@ local spawnerDefaults = {
 	groups = nil,
 	groupIndex = 1,
 	groupRemaining = 0,
+	totalScheduled = 0,
+	spawned = 0,
+	waitingGroupDelay = false,
 }
 
 local bossAddsDefaults = {
@@ -365,6 +368,9 @@ local function beginSpawner(kind, count, gap, hpMult, spdMult, composition, grou
 		groups = groups,
 		groupIndex = 1,
 		groupRemaining = firstGroup and firstGroup.count or 0,
+		totalScheduled = count or 0,
+		spawned = 0,
+		waitingGroupDelay = firstGroup ~= nil and (firstGroup.delay or 0) > 0,
 	})
 
 	State.inPrep = false
@@ -473,6 +479,7 @@ end
 
 local function advanceSpawner(group)
 	spawner.remaining = spawner.remaining - 1
+	spawner.spawned = spawner.spawned + 1
 	if not group then
 		spawner.timer = spawner.timer + spawner.gap
 		return
@@ -489,6 +496,7 @@ local function advanceSpawner(group)
 	if nextGroup then
 		spawner.groupRemaining = nextGroup.count
 		spawner.timer = spawner.timer + (nextGroup.delay or 0)
+		spawner.waitingGroupDelay = (nextGroup.delay or 0) > 0
 	else
 		-- Groups are authoritative; never fill a mismatched count with fallback enemies.
 		spawner.remaining = 0
@@ -506,6 +514,7 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 	spawnLoops, sequenceValid = spawnWhileReady(spawner, "timer", function()
 		return spawner.active and spawner.remaining or 0
 	end, activeCap, spawnLoops, function()
+		spawner.waitingGroupDelay = false
 		local group, kind, affixes = currentSpawnEntry()
 		if not kind then
 			spawner.remaining = 0
@@ -513,8 +522,9 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 			return false
 		end
 
-		Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
+		local enemy = Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
 			(group and group.spdMult) or spawner.spdMult, nil, nil, nil, {affixes = affixes})
+		enemy.scheduledWaveEnemy = true
 		spawner.compositionIndex = spawner.compositionIndex + 1
 		advanceSpawner(group)
 	end)
@@ -612,6 +622,41 @@ end
 
 function Waves.getSpawner()
 	return spawner
+end
+
+-- Return a snapshot rather than the mutable spawner table. Presentation and
+-- diagnostics can observe combat pacing without being able to alter it.
+function Waves.getProgress()
+	local group = spawner.groups and spawner.groups[spawner.groupIndex] or nil
+	local living = #Enemies.enemies
+	local scheduledLiving = 0
+	for i = 1, living do
+		if Enemies.enemies[i].scheduledWaveEnemy then
+			scheduledLiving = scheduledLiving + 1
+		end
+	end
+	local queued = spawner.remaining
+	local currentGroup = nil
+	if group then
+		currentGroup = {
+			index = spawner.groupIndex,
+			total = #spawner.groups,
+			kind = group.kind,
+			remaining = spawner.groupRemaining,
+		}
+	end
+
+	return {
+		totalScheduled = spawner.totalScheduled,
+		spawnedCount = spawner.spawned,
+		livingCount = living,
+		clearedCount = max(0, spawner.spawned - scheduledLiving),
+		remainingQueuedCount = queued,
+		currentAuthoredGroup = currentGroup,
+		waitingOnGroupDelay = spawner.active and spawner.waitingGroupDelay and spawner.timer > 0,
+		waitingOnPopulationBackpressure = spawner.active and queued > 0
+			and living >= getActiveEnemyCap(State.wave),
+	}
 end
 
 function Waves.getActiveEnemyCap()
