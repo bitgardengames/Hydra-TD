@@ -2,10 +2,12 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local Text = require("ui.text")
+local Layout = require("ui.message_layout")
 
 local Messages = {}
 
 local lg = love.graphics
+local max = math.max
 local min = math.min
 
 local MAX = 5
@@ -60,9 +62,23 @@ local function removeAt(index)
 	list[#list] = nil
 end
 
-function Messages.add(text, r, g, b)
-	local h = lg.getFont():getHeight()
+local function updateMessageLayouts()
+	local font = lg.getFont()
+	local sw = lg.getWidth()
+	local heights = {}
 
+	for i = 1, #list do
+		local m = list[i]
+		m.layout = Layout.notification(font, m.text, sw, X, PADDING_X, PADDING_Y)
+		heights[i] = m.layout.h
+	end
+	local offsets = Layout.stackOffsets(heights, GAP)
+	for i = 1, #list do
+		list[i].targetOffset = offsets[i]
+	end
+end
+
+function Messages.add(text, r, g, b)
 	list[#list + 1] = {
 		text = text,
 		t = 0,
@@ -74,15 +90,10 @@ function Messages.add(text, r, g, b)
 		scale = 0.96, -- subtle pop start
 	}
 
-	-- Push older messages
-	for i = 1, #list - 1 do
-		local m = list[i]
-		m.targetOffset = m.targetOffset + (h + GAP)
-	end
-
 	if #list > MAX then
 		removeAt(1)
 	end
+	updateMessageLayouts()
 
 	Sound.play("message")
 end
@@ -109,6 +120,7 @@ function Messages.hasTip()
 end
 
 function Messages.update(dt)
+	updateMessageLayouts()
 	for i = #list, 1, -1 do
 		local m = list[i]
 
@@ -133,8 +145,24 @@ end
 
 function Messages.draw()
 	local font = lg.getFont()
-	local h = font:getHeight()
-	local baseY = getBaseY()
+	local sw, sh = lg.getDimensions()
+	updateMessageLayouts()
+	local newest = list[#list]
+	local newestH = newest and newest.layout.h or 0
+	local bottom = max(0, sh - Constants.UI_H)
+	local baseY = min(getBaseY(), bottom - newestH + PADDING_Y)
+	if list[1] then
+		baseY = min(bottom - newestH + PADDING_Y, max(baseY, list[1].targetOffset + PADDING_Y))
+	end
+	local drawOffsets = {}
+	local occupiedOffset = 0
+	local occupiedHeight = 0
+	for i = #list, 1, -1 do
+		local minimumOffset = i == #list and 0 or occupiedOffset + occupiedHeight + GAP
+		drawOffsets[i] = max(list[i].yOffset, minimumOffset)
+		occupiedOffset = drawOffsets[i]
+		occupiedHeight = list[i].layout.h
+	end
 
 	for i = 1, #list do
 		local m = list[i]
@@ -148,14 +176,15 @@ function Messages.draw()
 
 		local ageFactor = (i - 1) / MAX
 		local dim = 1 - ageFactor * 0.25
-		local yy = baseY - m.yOffset
+		local layout = m.layout
+		-- Never let an item pass through the newer item below it while offsets
+		-- settle (especially when a tall, wrapped notification is inserted).
+		local drawOffset = drawOffsets[i]
+		local yy = baseY - drawOffset
+		yy = max(PADDING_Y, min(yy, bottom - layout.h + PADDING_Y))
 
-		local textW = font:getWidth(m.text)
-		local w = textW + PADDING_X * 2
-		local boxH = h + PADDING_Y * 2
-
-		local cx = X + textW * 0.5
-		local cy = yy + h * 0.5
+		local cx = X + layout.textW * 0.5
+		local cy = yy + layout.textH * 0.5
 
 		lg.push()
 		lg.translate(cx, cy)
@@ -163,30 +192,25 @@ function Messages.draw()
 		lg.translate(-cx, -cy)
 
 		lg.setColor(0.125, 0.125, 0.125, 0.75 * alpha * dim)
-		lg.rectangle("fill", X - PADDING_X, yy - PADDING_Y, w, boxH, 6)
+		lg.rectangle("fill", X - PADDING_X, yy - PADDING_Y, layout.w, layout.h, 6)
 
 		lg.setColor(m.r * dim, m.g * dim, m.b * dim, alpha)
-		Text.printShadow(m.text, X, yy)
+		Text.printfShadow(m.text, X, yy, layout.textW, "left")
 
 		lg.pop()
 	end
 
 	if activeTip then
-		local sw = lg.getWidth()
 		local message = activeTip.text
 		local dismissText = activeTip.dismissText
-		local messageW = font:getWidth(message)
-		local dismissW = font:getWidth(dismissText) + TIP_DISMISS_PADDING_X * 2
-		local textAreaW = math.min(messageW, sw - TIP_MARGIN * 2 - TIP_PADDING_X * 2 - TIP_GAP - dismissW)
-		local w = math.min(sw - TIP_MARGIN * 2, textAreaW + TIP_GAP + dismissW + TIP_PADDING_X * 2)
-		local h = font:getHeight() + TIP_PADDING_Y * 2
-		local x = (sw - w) * 0.5
-		local y = 24
-		local dismissH = font:getHeight() + TIP_DISMISS_PADDING_Y * 2
-		local dismissX = x + w - TIP_PADDING_X - dismissW
-		local dismissY = y + (h - dismissH) * 0.5
-		tipRect = {x = x, y = y, w = w, h = h}
-		tipDismissRect = {x = dismissX, y = dismissY, w = dismissW, h = dismissH}
+		local layout = Layout.tip(font, message, dismissText, sw, TIP_MARGIN, TIP_PADDING_X,
+			TIP_PADDING_Y, TIP_GAP, TIP_DISMISS_PADDING_X, TIP_DISMISS_PADDING_Y)
+		local x = max(0, min((sw - layout.w) * 0.5, sw - layout.w))
+		local y = max(0, min(24, sh - Constants.UI_H - layout.h))
+		local dismissX = x + layout.w - TIP_PADDING_X - layout.dismissW
+		local dismissY = y + (layout.h - layout.dismissH) * 0.5
+		tipRect = {x = x, y = y, w = layout.w, h = layout.h}
+		tipDismissRect = {x = dismissX, y = dismissY, w = layout.dismissW, h = layout.dismissH}
 
 		local mx, my = love.mouse.getPosition()
 		local dismissHovered = pointInRect(mx, my, tipDismissRect)
@@ -196,20 +220,20 @@ function Messages.draw()
 		tipDismissHovered = dismissHovered
 
 		lg.setColor(0.10, 0.11, 0.15, 0.94)
-		lg.rectangle("fill", x, y, w, h, 8)
+		lg.rectangle("fill", x, y, layout.w, layout.h, 8)
 		setColor(Theme.outline.color, 0.85)
-		lg.rectangle("line", x, y, w, h, 8)
+		lg.rectangle("line", x, y, layout.w, layout.h, 8)
 
 		local lift = (tipDismissHovered and not tipDismissPressed) and 2 or 0
 		local chipY = dismissY - lift
 		setColor(tipDismissHovered and Theme.ui.buttonHover or Theme.ui.button, 1)
-		lg.rectangle("fill", dismissX, chipY, dismissW, dismissH, 6)
+		lg.rectangle("fill", dismissX, chipY, layout.dismissW, layout.dismissH, 6)
 		setColor(tipDismissHovered and Theme.ui.selected or Theme.outline.color, 1)
-		lg.rectangle("line", dismissX, chipY, dismissW, dismissH, 6)
+		lg.rectangle("line", dismissX, chipY, layout.dismissW, layout.dismissH, 6)
 
 		setColor(Theme.ui.text, 1)
-		Text.printfShadow(message, x + TIP_PADDING_X, y + TIP_PADDING_Y, textAreaW, "left")
-		Text.printfShadow(dismissText, dismissX, chipY + TIP_DISMISS_PADDING_Y, dismissW, "center")
+		Text.printfShadow(message, x + TIP_PADDING_X, y + TIP_PADDING_Y, layout.messageW, "left")
+		Text.printfShadow(dismissText, dismissX, chipY + TIP_DISMISS_PADDING_Y, layout.dismissW, "center")
 	end
 end
 
