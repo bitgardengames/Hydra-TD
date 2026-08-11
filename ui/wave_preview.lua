@@ -10,7 +10,6 @@ local lg = love.graphics
 local floor = math.floor
 
 local colorText = Theme.ui.text
-local colorWave = Theme.ui.wave
 local colorPanel = Theme.ui.panel2
 local colorBackdrop = Theme.ui.backdrop
 local colorOutline = Theme.outline.color
@@ -21,6 +20,7 @@ local COMBAT_W = 244
 local COMBAT_H = 48
 local COMBAT_PAD = 8
 local COMBAT_BAR_H = 8
+local COMBAT_BAR_SMOOTHING = 10
 
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
@@ -50,6 +50,13 @@ local previewCache = {
 	startPrompt = "",
 }
 
+local combatProgress = {
+	wave = nil,
+	total = nil,
+	fraction = 0,
+	updatedAt = nil,
+}
+
 local WavePreview = {}
 
 local function drawCombatProgress()
@@ -62,6 +69,21 @@ local function drawCombatProgress()
 	local font = lg.getFont()
 	local cleared = math.min(total, progress.clearedCount)
 	local clearedFrac = cleared / total
+	local now = love.timer.getTime()
+	if combatProgress.wave ~= State.wave or combatProgress.total ~= total then
+		combatProgress.wave = State.wave
+		combatProgress.total = total
+		combatProgress.fraction = clearedFrac
+	else
+		local dt = math.min(now - (combatProgress.updatedAt or now), 0.1)
+		local blend = 1 - math.exp(-COMBAT_BAR_SMOOTHING * dt)
+		combatProgress.fraction = combatProgress.fraction
+			+ (clearedFrac - combatProgress.fraction) * blend
+		if math.abs(clearedFrac - combatProgress.fraction) < 0.001 then
+			combatProgress.fraction = clearedFrac
+		end
+	end
+	combatProgress.updatedAt = now
 	local title = L("hud.combatWave", State.wave)
 	local count = L("hud.waveProgress", cleared, total)
 
@@ -71,7 +93,7 @@ local function drawCombatProgress()
 	lg.setColor(colorBackdrop)
 	lg.rectangle("fill", x, y, COMBAT_W, COMBAT_H, innerSmallRadius)
 
-	lg.setColor(colorWave)
+	lg.setColor(colorText)
 	Text.printShadow(title, x + COMBAT_PAD, y + COMBAT_PAD)
 	lg.setColor(colorText)
 	Text.printShadow(count, x + COMBAT_W - COMBAT_PAD - font:getWidth(count), y + COMBAT_PAD)
@@ -80,7 +102,7 @@ local function drawCombatProgress()
 	lg.setColor(colorPanel)
 	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW, COMBAT_BAR_H, 4)
 	lg.setColor(Theme.ui.good)
-	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * clearedFrac, COMBAT_BAR_H, 4)
+	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * combatProgress.fraction, COMBAT_BAR_H, 4)
 
 end
 
@@ -161,7 +183,7 @@ function WavePreview.draw()
 	lg.rectangle("fill", innerX, headerY, innerW, HEADER_H, innerSmallRadius)
 
 	local titleY = headerY + floor((HEADER_H - textH) * 0.5 + 0.5)
-	lg.setColor(colorWave)
+	lg.setColor(colorText)
 	Text.printShadow(previewCache.title, innerX + 8, titleY)
 
 	lg.setColor(colorText)
