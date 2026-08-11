@@ -79,7 +79,7 @@ Theme.ui = {
 	damageMeterTab = {
 		idle = {0.13, 0.14, 0.16, 1},
 		hovered = {0.25, 0.27, 0.31, 1},
-		selected = {0.34, 0.48, 0.64, 1},
+		selected = {0.25, 0.27, 0.31, 1},
 		selectedText = {1, 1, 1, 1},
 	},
 

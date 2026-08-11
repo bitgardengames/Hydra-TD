@@ -41,18 +41,13 @@ local RESPONSE = -60 * math.log(0.8)
 local meterCache = {
 	list = {},
 	index = {},
-	isBoss = false,
-	headerText = nil
+	isBoss = false
 }
 
 local nameCache = {}
 
 local DamageMeter = {}
 local pressedView = nil
-
-local function bossViewRelevant(stats)
-	return (stats.bossTotalDamage or 0) > 0
-end
 
 local function getHeaderLayout()
 	local panelX = lg.getWidth() - panelW - panelPad * 2 - screenPad
@@ -61,18 +56,14 @@ end
 
 local function viewAt(x, y)
 	local stats = State.combatStats
-	if not stats or not stats.showDamageMeter or not stats.damageByTower or #meterCache.list == 0 then return nil end
+	if not stats or not stats.showDamageMeter or not stats.damageByTower then return nil end
 
 	local headerX, headerY = getHeaderLayout()
 	if x < headerX or x > headerX + panelW or y < headerY or y > headerY + headerH then
 		return nil
 	end
 
-	if bossViewRelevant(stats) then
-		return x < headerX + panelW * 0.5 and 0 or 1
-	end
-
-	return 0
+	return x < headerX + panelW * 0.5 and 0 or 1
 end
 
 
@@ -104,6 +95,9 @@ local function formatNum(n)
 end
 
 local function sorter(a, b)
+	if a.dmg == b.dmg then
+		return a.kind < b.kind
+	end
 	return a.dmg > b.dmg
 end
 
@@ -138,7 +132,6 @@ function DamageMeter.update(dt)
 	-- rebuild only when switching views
 	if meterCache.isBoss ~= isBossView then
 		meterCache.isBoss = isBossView
-		meterCache.headerText = nil
 
 		for i = #list, 1, -1 do
 			list[i] = nil
@@ -149,6 +142,10 @@ function DamageMeter.update(dt)
 		end
 	end
 
+	-- New entries also need to be sorted. Previously, sorting only happened after
+	-- an existing entry changed, so the initial meter reflected pairs() order.
+	local needsSort = false
+
 	-- ensure entries exist (cheap)
 	for kind, dmg in pairs(dmgTable) do
 		if dmg > 0 and not index[kind] then
@@ -156,13 +153,12 @@ function DamageMeter.update(dt)
 
 			list[#list + 1] = entry
 			index[kind] = entry
+			needsSort = true
 		end
 	end
 
 
 	-- update damage values and detect whether ordering can change
-	local needsSort = false
-
 	for _, entry in ipairs(list) do
 		local newDmg = dmgTable[entry.kind] or 0
 
@@ -176,7 +172,6 @@ function DamageMeter.update(dt)
 		tsort(list, sorter)
 	end
 
-	meterCache.headerText = isBossView and L("damage.boss") or L("damage.normal")
 	local factor = 1 - exp(-RESPONSE * dt)
 	for _, entry in ipairs(list) do
 		local pct = (total > 0) and (entry.dmg / total) or 0
@@ -197,7 +192,7 @@ function DamageMeter.draw()
 	local isBossView = stats.damageView == 1
 	local total = isBossView and stats.bossTotalDamage or stats.totalDamage
 	local list = meterCache.list
-	if #list == 0 then return end
+	if #list == 0 and not isBossView then return end
 
 	-- layout
 	local sw = lg.getWidth()
@@ -205,7 +200,7 @@ function DamageMeter.draw()
 	local panelX = sw - panelW - panelPad * 2 - screenPad
 	local panelY = screenPad
 
-	local barsH = (#list * barH) + ((#list - 1) * rowGap)
+	local barsH = #list > 0 and ((#list * barH) + ((#list - 1) * rowGap)) or barH
 	local panelH = panelPad * 2 + headerH + headerGap + barsH
 
 	local maxBarW = panelW
@@ -225,8 +220,7 @@ function DamageMeter.draw()
 
 	local textH = lg.getFont():getHeight()
 	local headerTextY = headerY + floor((headerH - textH) * 0.5 + 0.5)
-	local hasBossView = bossViewRelevant(stats)
-	local tabCount = hasBossView and 2 or 1
+	local tabCount = 2
 	local tabW = panelW / tabCount
 	local mx, my = love.mouse.getPosition()
 	for view = 0, tabCount - 1 do
@@ -280,7 +274,6 @@ function DamageMeter.reset()
 	end
 
 	meterCache.isBoss = false
-	meterCache.headerText = nil
 	pressedView = nil
 end
 
