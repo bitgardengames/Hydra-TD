@@ -25,6 +25,7 @@ local DEFAULT_SETTINGS = {
 	fullscreen = true,
 	cameraMotion = true,
 	highDensityParticles = true,
+	abilityReadySound = true,
 }
 
 local META_COUNTERS = {

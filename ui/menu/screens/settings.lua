@@ -394,6 +394,8 @@ function Screen.load()
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
 					end),
+				toggleRow("ability_ready_sound", L("settings.abilityReadySound"), "abilityReadySound", nil,
+					L("settings.abilityReadySoundDesc")),
 			},
 		},
 		{

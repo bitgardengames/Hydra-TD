@@ -11,6 +11,7 @@ local Button = require("ui.button")
 local Hotkeys = require("core.hotkeys")
 local AbilityIcons = require("ui.ability_icons")
 local Effects = require("world.effects")
+local Sound = require("systems.sound")
 
 local lg = love.graphics
 local floor = math.floor
@@ -20,6 +21,7 @@ local max = math.max
 local AbilityBar = {}
 local buttons = {}
 local abilityTooltips = {}
+local lastAbilityClock = nil
 
 local SIZE = 58
 -- Match the tower shop's vertical rhythm so the two groups feel like parts of
@@ -47,9 +49,16 @@ local function showTooltip(abilityId, def)
 	-- Rebuild if localization changed, while keeping the rows table stable during
 	-- normal hovering so Tooltip does not recalculate its layout every frame.
 	if not tooltip or tooltip.title ~= title or tooltip.rows[1].text ~= description then
+		local rows = {
+			{kind = "text", text = description, padAfter = 4},
+			{label = L("ability.cooldownLabel"), value = string.format("%gs", def.cooldown)},
+		}
+		if def.effect and def.effect.duration then
+			rows[#rows + 1] = {label = L("ability.durationLabel"), value = string.format("%gs", def.effect.duration)}
+		end
 		tooltip = {
 			title = title,
-			rows = {{kind = "text", text = description}},
+			rows = rows,
 		}
 		abilityTooltips[abilityId] = tooltip
 	end
@@ -110,6 +119,8 @@ local function drawButton(button, def, activeTime)
 	local errorEase = anim.errorT * anim.errorT * (3 - 2 * anim.errorT)
 	local fx = x + math.sin(anim.errorT * math.pi * 8) * errorEase * 4
 	local fy = y - IDLE_LIFT * (1 - anim.pressT)
+	local readyT = button.readyT or 0
+	local readyEase = readyT * readyT * (3 - 2 * readyT)
 	local r, g, b = Button.getHoverColor(anim)
 
 	lg.setColor(colorOutline)
@@ -132,7 +143,16 @@ local function drawButton(button, def, activeTime)
 	else
 		iconState = "ready"
 	end
-	AbilityIcons.draw(button.abilityId, fx + SIZE * 0.5, fy + SIZE * 0.5, available and 1 or 0.82, 1, iconState)
+	AbilityIcons.draw(button.abilityId, fx + SIZE * 0.5, fy + SIZE * 0.5, (available and 1 or 0.82) + readyEase * 0.1, 1, iconState)
+
+	-- A high-contrast border remains visible even with motion/particle options
+	-- disabled; the moving sweep is merely an additional short accent.
+	if readyT > 0 and ready then
+		lg.setColor(1, 0.9, 0.3, 0.45 + readyEase * 0.55)
+		lg.setLineWidth(2 + readyEase * 2)
+		lg.rectangle("line", fx - readyEase * 2, fy - readyEase * 2,
+			SIZE + readyEase * 4, SIZE + readyEase * 4, 9)
+	end
 
 	if activeTime then
 		local activeAlpha = Effects.expirationPulse(activeTime, State.abilityClock or 0)
@@ -177,6 +197,9 @@ function AbilityBar.update(dt, mx, my)
 	local startY = floor((sh - totalH) * 0.5)
 	local panelW = SIZE + PANEL_PAD * 2
 	local panelX = sw - PANEL_INSET - panelW
+	local clock = State.abilityClock or 0
+	local runReset = lastAbilityClock ~= nil and clock < lastAbilityClock
+	lastAbilityClock = clock
 
 	for i = 1, count do
 		local abilityId = equipped[i]
@@ -186,11 +209,25 @@ function AbilityBar.update(dt, mx, my)
 			local hovered = mx >= x and mx <= x + SIZE and my >= y and my <= y + SIZE
 			local button = buttons[i] or {}
 			buttons[i] = button
+			local cooldown = State.abilityCooldowns[abilityId] or 0
+			local lockMessage = CampaignUnlocks.getAbilityLockMessage(abilityId, i)
+			local available = lockMessage == nil
+			local sameDisplay = button.abilityId == abilityId and button.wasAvailable == available
+			if sameDisplay and not runReset and button.previousCooldown and
+				button.previousCooldown > 0 and cooldown <= 0 and available then
+				button.readyT = 1
+				Sound.playAbilityReady()
+			elseif not sameDisplay or runReset then
+				button.readyT = 0
+			end
 			button.x, button.y, button.w, button.h = x, y, SIZE, SIZE
 			button.abilityId = abilityId
 			button.slotIndex = i
-			button.lockMessage = CampaignUnlocks.getAbilityLockMessage(abilityId, i)
-			button.enabled = button.lockMessage == nil and (State.abilityCooldowns[abilityId] or 0) <= 0
+			button.lockMessage = lockMessage
+			button.enabled = available and cooldown <= 0
+			button.previousCooldown = cooldown
+			button.wasAvailable = available
+			button.readyT = max(0, (button.readyT or 0) - dt * 2.8)
 			updateButton(button, hovered, dt)
 			if hovered then showTooltip(abilityId, def) end
 		end
