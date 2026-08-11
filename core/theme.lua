@@ -76,6 +76,12 @@ Theme.ui = {
 	buttonHover = {0.40, 0.42, 0.46},
 	buttonSelected = {0.34, 0.48, 0.64, 1},
 	buttonDisabled = {0.16, 0.17, 0.19, 1},
+	damageMeterTab = {
+		idle = {0.13, 0.14, 0.16, 1},
+		hovered = {0.25, 0.27, 0.31, 1},
+		selected = {0.34, 0.48, 0.64, 1},
+		selectedText = {1, 1, 1, 1},
+	},
 
 	backdrop = {0.20, 0.21, 0.23, 1},
 	screenDim = {0.03, 0.04, 0.05, 0.4},
