@@ -3,6 +3,7 @@ local State = require("core.state")
 local Text = require("ui.text")
 local Towers = require("world.towers")
 local L = require("core.localization")
+local Sound = require("systems.sound")
 
 local lg = love.graphics
 local abs = math.abs
@@ -13,9 +14,9 @@ local tostring = tostring
 local tsort = table.sort
 
 local colorText = Theme.ui.text
-local colorPanel = Theme.ui.panel2
 local colorBackdrop = Theme.ui.backdrop
 local colorOutline = Theme.outline.color
+local tabTheme = Theme.ui.damageMeterTab
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -47,6 +48,56 @@ local meterCache = {
 local nameCache = {}
 
 local DamageMeter = {}
+local pressedView = nil
+
+local function bossViewRelevant(stats)
+	return (stats.bossTotalDamage or 0) > 0
+end
+
+local function getHeaderLayout()
+	local panelX = lg.getWidth() - panelW - panelPad * 2 - screenPad
+	return panelX + panelPad, screenPad + panelPad
+end
+
+local function viewAt(x, y)
+	local stats = State.combatStats
+	if not stats or not stats.showDamageMeter or not stats.damageByTower or #meterCache.list == 0 then return nil end
+
+	local headerX, headerY = getHeaderLayout()
+	if x < headerX or x > headerX + panelW or y < headerY or y > headerY + headerH then
+		return nil
+	end
+
+	if bossViewRelevant(stats) then
+		return x < headerX + panelW * 0.5 and 0 or 1
+	end
+
+	return 0
+end
+
+
+function DamageMeter.mousepressed(x, y, button)
+	if button ~= 1 then return false end
+	pressedView = viewAt(x, y)
+	if pressedView ~= nil then
+		Sound.play("uiMove")
+		return true
+	end
+	return false
+end
+
+function DamageMeter.mousereleased(x, y, button)
+	if button ~= 1 then return false end
+	local releasedView = viewAt(x, y)
+	local activated = pressedView ~= nil and releasedView == pressedView
+	pressedView = nil
+	if activated then
+		State.combatStats.damageView = releasedView
+		Sound.play("uiConfirm")
+		return true
+	end
+	return false
+end
 
 local function formatNum(n)
 	return tostring(floor(n + 0.5)):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
@@ -172,15 +223,21 @@ function DamageMeter.draw()
 	lg.setColor(colorOutline)
 	lg.rectangle("fill", headerX - outlineW, headerY - outlineW, panelW + outlineW * 2, headerH + outlineW * 2, outerSmallRadius)
 
-	lg.setColor(colorPanel)
-	lg.rectangle("fill", headerX, headerY, panelW, headerH, innerSmallRadius)
-
-	lg.setColor(colorText)
-
 	local textH = lg.getFont():getHeight()
 	local headerTextY = headerY + floor((headerH - textH) * 0.5 + 0.5)
-
-	Text.printShadow(meterCache.headerText, headerX + padX, headerTextY)
+	local hasBossView = bossViewRelevant(stats)
+	local tabCount = hasBossView and 2 or 1
+	local tabW = panelW / tabCount
+	local mx, my = love.mouse.getPosition()
+	for view = 0, tabCount - 1 do
+		local tabX = headerX + view * tabW
+		local hovered = mx >= tabX and mx <= tabX + tabW and my >= headerY and my <= headerY + headerH
+		local selected = stats.damageView == view
+		lg.setColor(selected and tabTheme.selected or (hovered and tabTheme.hovered or tabTheme.idle))
+		lg.rectangle("fill", tabX, headerY, tabW, headerH, innerSmallRadius)
+		lg.setColor(selected and tabTheme.selectedText or colorText)
+		Text.printfShadow(view == 0 and L("damage.normal") or L("damage.boss"), tabX, headerTextY, tabW, "center")
+	end
 
 	local x = panelX + panelPad
 	local y = headerY + headerH + headerGap
@@ -224,6 +281,7 @@ function DamageMeter.reset()
 
 	meterCache.isBoss = false
 	meterCache.headerText = nil
+	pressedView = nil
 end
 
 return DamageMeter

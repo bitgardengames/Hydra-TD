@@ -17,6 +17,7 @@ local ModulePicker = require("ui.module_picker")
 local Abilities = require("systems.abilities")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local GameSpeed = require("core.game_speed")
+local DamageMeter = require("ui.damage_meter")
 
 local floor = math.floor
 local min = math.min
@@ -271,6 +272,9 @@ local function mousepressed(x, y, button)
 	end
 
 	if button == 1 and State.mode == "game" then
+		if DamageMeter.mousepressed(x, y, button) then
+			return
+		end
 		if pressBottomBar(x, y) then
 			return
 		end
@@ -285,6 +289,9 @@ local function mousereleased(x, y, button)
 	end
 
 	if button ~= 1 or State.mode ~= "game" then
+		return
+	end
+	if DamageMeter.mousereleased(x, y, button) then
 		return
 	end
 
@@ -316,11 +323,6 @@ local gameplayActions = {
 	end,
 	toggleMeter = function()
 		State.combatStats.showDamageMeter = not State.combatStats.showDamageMeter
-	end,
-	toggleMeterInfo = function()
-		if State.combatStats.showDamageMeter then
-			State.combatStats.damageView = (State.combatStats.damageView + 1) % 2
-		end
 	end,
 }
 
