@@ -1,6 +1,7 @@
 local State = require("core.state")
 local Theme = require("core.theme")
 local Waves = require("systems.waves")
+local Hotkeys = require("core.hotkeys")
 local DrawEntities = require("render.draw_entities")
 local Text = require("ui.text")
 local L = require("core.localization")
@@ -45,6 +46,8 @@ local previewCache = {
 	title = "",
 	total = "",
 	entries = {},
+	startKey = nil,
+	startPrompt = "",
 }
 
 local WavePreview = {}
@@ -137,7 +140,7 @@ function WavePreview.draw()
 		bodyH = bodyH + entry.rowH + ROW_GAP
 	end
 	bodyH = math.max(textH, bodyH - ROW_GAP)
-	local panelH = PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH
+	local panelH = PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH + HEADER_GAP + textH
 	local x = SCREEN_PAD
 	local y = SCREEN_PAD
 
@@ -187,6 +190,16 @@ function WavePreview.draw()
 		end
 		rowY = rowY + entry.rowH + ROW_GAP
 	end
+
+	local startKey = Hotkeys.getDisplay("skipPrep")
+	if previewCache.startKey ~= startKey then
+		previewCache.startKey = startKey
+		previewCache.startPrompt = L("hud.prep", startKey)
+	end
+	lg.setColor(Theme.ui.good)
+	Text.printShadow(previewCache.startPrompt,
+		innerX + floor((innerW - font:getWidth(previewCache.startPrompt)) * 0.5 + 0.5),
+		rowY + HEADER_GAP - ROW_GAP)
 end
 
 return WavePreview
