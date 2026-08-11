@@ -148,12 +148,8 @@ local function refreshPreview()
 
 	for i = 1, #preview.composition do
 		local group = preview.composition[i]
-		local threats = #group.tags > 0 and L("hud.threatTags", table.concat(group.tags, " • ")) or nil
-		local counter = #group.counterHints > 0 and L("hud.counterHint", table.concat(group.counterHints, " ")) or nil
 		entries[i] = {
 			name = L("hud.compositionEntry", group.count, group.name),
-			threats = threats,
-			counter = counter,
 			portrait = DrawEntities.newEnemyPortrait(group.kind),
 		}
 	end
@@ -169,17 +165,9 @@ function WavePreview.draw()
 
 	local font = lg.getFont()
 	local textH = font:getHeight()
-	local counterW = PANEL_W - PANEL_PAD * 2 - PORTRAIT_W - TEXT_GAP - 8
 	local bodyH = 0
 	for _, entry in ipairs(previewCache.entries) do
-		local textBlockH = textH
-		if entry.threats then textBlockH = textBlockH + textH end
-		if entry.counter then
-			local _, lines = font:getWrap(entry.counter, counterW)
-			entry.counterLineCount = math.max(1, #lines)
-			textBlockH = textBlockH + textH * entry.counterLineCount
-		end
-		entry.rowH = math.max(PORTRAIT_H, textBlockH)
+		entry.rowH = math.max(PORTRAIT_H, textH)
 		bodyH = bodyH + entry.rowH + ROW_GAP
 	end
 	bodyH = math.max(textH, bodyH - ROW_GAP)
@@ -215,22 +203,10 @@ function WavePreview.draw()
 	for i = 1, #previewCache.entries do
 		local entry = previewCache.entries[i]
 		local textX = innerX + PORTRAIT_W + TEXT_GAP
-		local textY = rowY + floor((entry.rowH - (textH
-			+ (entry.threats and textH or 0)
-			+ (entry.counter and textH * (entry.counterLineCount or 1) or 0))) * 0.5)
+		local textY = rowY + floor((entry.rowH - textH) * 0.5)
 		DrawEntities.drawEnemyPortrait(entry.portrait, innerX + PORTRAIT_W * 0.5, rowY + entry.rowH * 0.5, animT)
 		lg.setColor(colorText)
 		Text.printShadow(entry.name, textX, textY)
-		textY = textY + textH
-		if entry.threats then
-			lg.setColor(Theme.ui.warn)
-			Text.printShadow(entry.threats, textX + 8, textY)
-			textY = textY + textH
-		end
-		if entry.counter then
-			lg.setColor(Theme.ui.good)
-			Text.printfShadow(entry.counter, textX + 8, textY, innerW - PORTRAIT_W - TEXT_GAP - 8, "left")
-		end
 		rowY = rowY + entry.rowH + ROW_GAP
 	end
 
