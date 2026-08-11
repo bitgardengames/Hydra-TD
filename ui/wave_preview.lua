@@ -20,7 +20,7 @@ local COMBAT_W = 244
 local COMBAT_H = 48
 local COMBAT_PAD = 8
 local COMBAT_BAR_H = 8
-local COMBAT_BAR_SMOOTHING = 10
+local COMBAT_BAR_FILL_DURATION = 0.25
 
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
@@ -54,7 +54,9 @@ local combatProgress = {
 	wave = nil,
 	total = nil,
 	fraction = 0,
-	updatedAt = nil,
+	targetFraction = 0,
+	startFraction = 0,
+	fillStartedAt = nil,
 }
 
 local WavePreview = {}
@@ -74,16 +76,33 @@ local function drawCombatProgress()
 		combatProgress.wave = State.wave
 		combatProgress.total = total
 		combatProgress.fraction = clearedFrac
-	else
-		local dt = math.min(now - (combatProgress.updatedAt or now), 0.1)
-		local blend = 1 - math.exp(-COMBAT_BAR_SMOOTHING * dt)
-		combatProgress.fraction = combatProgress.fraction
-			+ (clearedFrac - combatProgress.fraction) * blend
-		if math.abs(clearedFrac - combatProgress.fraction) < 0.001 then
-			combatProgress.fraction = clearedFrac
+		combatProgress.targetFraction = clearedFrac
+		combatProgress.startFraction = clearedFrac
+		combatProgress.fillStartedAt = nil
+	elseif clearedFrac < combatProgress.targetFraction then
+		-- Progress should only fill during a wave. Snap backward if the wave state is
+		-- corrected rather than playing the fill animation in reverse.
+		combatProgress.fraction = clearedFrac
+		combatProgress.targetFraction = clearedFrac
+		combatProgress.startFraction = clearedFrac
+		combatProgress.fillStartedAt = nil
+	elseif clearedFrac > combatProgress.targetFraction then
+		combatProgress.startFraction = combatProgress.fraction
+		combatProgress.targetFraction = clearedFrac
+		combatProgress.fillStartedAt = now
+	end
+
+	if combatProgress.fillStartedAt then
+		local elapsed = now - combatProgress.fillStartedAt
+		local fillT = math.min(1, elapsed / COMBAT_BAR_FILL_DURATION)
+		local easedT = 1 - (1 - fillT) ^ 3
+		combatProgress.fraction = combatProgress.startFraction
+			+ (combatProgress.targetFraction - combatProgress.startFraction) * easedT
+		if fillT == 1 then
+			combatProgress.fraction = combatProgress.targetFraction
+			combatProgress.fillStartedAt = nil
 		end
 	end
-	combatProgress.updatedAt = now
 	local title = L("hud.combatWave", State.wave)
 	local count = L("hud.waveProgress", cleared, total)
 
