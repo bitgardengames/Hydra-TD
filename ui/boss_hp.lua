@@ -30,8 +30,7 @@ local idleLift = 6
 local TRAIL_DELAY = 0.10
 local TRAIL_CATCHUP = 7
 local ENTRANCE_DURATION = 0.24
-local HIT_FLASH_DURATION = 0.16
-local MAJOR_DAMAGE_FRACTION = 0.08
+local EXIT_DURATION = 0.18
 
 local cache = {
 	identity = nil,
@@ -39,8 +38,7 @@ local cache = {
 	displayHp = nil,
 	trailHp = nil,
 	trailDelay = 0,
-	hitFlash = 0,
-	entrance = 0,
+	visibility = 0,
 	hpValue = nil,
 	maxText = nil,
 	text = nil,
@@ -89,8 +87,7 @@ local function reset(boss, hp, maxHp)
 	cache.displayHp = hp
 	cache.trailHp = hp
 	cache.trailDelay = 0
-	cache.hitFlash = 0
-	cache.entrance = ENTRANCE_DURATION
+	cache.visibility = 0
 	cache.hpValue = nil
 	cache.maxText = formatNum(maxHp)
 	cache.text = nil
@@ -102,7 +99,7 @@ local function clear()
 	cache.displayHp, cache.trailHp = nil, nil
 	cache.hpValue, cache.maxText, cache.text = nil, nil, nil
 	cache.thresholds = nil
-	cache.hitFlash, cache.entrance = 0, 0
+	cache.visibility = 0
 end
 
 local function motionEnabled()
@@ -115,21 +112,25 @@ function BossHP.update(dt)
 	local hp = boss and boss.hp
 	local maxHp = boss and boss.maxHp
 	if type(hp) ~= "number" or type(maxHp) ~= "number" or maxHp <= 0 or hp <= 0 then
-		clear()
+		if cache.identity == nil or not motionEnabled() then
+			clear()
+			return
+		end
+		dt = max(0, dt or 0)
+		cache.visibility = max(0, cache.visibility - dt / EXIT_DURATION)
+		if cache.visibility == 0 then clear() end
 		return
 	end
 
 	if cache.identity ~= boss or cache.maxHp ~= maxHp then reset(boss, hp, maxHp) end
 	dt = max(0, dt or 0)
+	cache.visibility = motionEnabled() and min(1, cache.visibility + dt / ENTRANCE_DURATION) or 1
 	local oldDisplay = cache.displayHp
 
 	if hp < oldDisplay then
-		local loss = oldDisplay - hp
 		cache.displayHp = hp -- Damage is always immediately legible in the main fill.
 		cache.trailHp = max(cache.trailHp, oldDisplay)
 		cache.trailDelay = TRAIL_DELAY
-		cache.hitFlash = HIT_FLASH_DURATION
-		if loss / maxHp >= MAJOR_DAMAGE_FRACTION then cache.hitFlash = HIT_FLASH_DURATION * 1.5 end
 	elseif hp > oldDisplay then
 		-- Healing is smoothed, while never allowing the damage trail below the fill.
 		cache.displayHp = min(hp, oldDisplay + maxHp * dt * 2.5)
@@ -140,34 +141,39 @@ function BossHP.update(dt)
 	if cache.trailDelay == 0 then
 		cache.trailHp = max(cache.displayHp, cache.trailHp + (cache.displayHp - cache.trailHp) * min(1, dt * TRAIL_CATCHUP))
 	end
-	cache.hitFlash = max(0, cache.hitFlash - dt)
-	cache.entrance = max(0, cache.entrance - dt)
 end
 
 function BossHP.draw()
 	local boss = resolveBoss()
 	local hp = boss and boss.hp
 	local maxHp = boss and boss.maxHp
-	if type(hp) ~= "number" or type(maxHp) ~= "number" or maxHp <= 0 or hp <= 0 then return end
+	local bossIsActive = type(hp) == "number" and type(maxHp) == "number" and maxHp > 0 and hp > 0
 	-- Keep draw robust for callers which have not run an update tick yet.
-	if cache.identity ~= boss or cache.maxHp ~= maxHp then reset(boss, hp, maxHp) end
+	if bossIsActive and (cache.identity ~= boss or cache.maxHp ~= maxHp) then
+		reset(boss, hp, maxHp)
+		cache.visibility = motionEnabled() and 0 or 1
+	end
+	if cache.identity == nil or cache.visibility <= 0 then return end
+	maxHp = cache.maxHp
 
 	local motion = motionEnabled()
-	local entranceProgress = 1 - cache.entrance / ENTRANCE_DURATION
-	if not motion then entranceProgress = 1 end
+	local visibility = motion and cache.visibility or 1
+	-- A smooth, centered unfurl gives the bar some personality without moving its
+	-- anchor or adding spring/recoil motion when the boss takes damage.
+	local reveal = visibility * visibility * (3 - 2 * visibility)
 	local sw = lg.getWidth()
 	local x = floor((sw - barW) * 0.5)
 	local fy = y - idleLift
-	local alpha = 0.45 + entranceProgress * 0.55
+	local alpha = reveal
 	local r, g, b, a = colorBase[1], colorBase[2], colorBase[3], (colorBase[4] or 1) * alpha
 
-	-- Only the face grows into place; the HUD's position remains stable.
-	local shownW = motion and floor(barW * (0.92 + entranceProgress * 0.08)) or barW
+	-- Both layers unfold together so the raised cutaway remains intact throughout.
+	local shownW = max(1, floor(barW * reveal))
 	local shownX = x + floor((barW - shownW) * 0.5)
 	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
-	lg.rectangle("fill", x - outlineW, y - outlineW, barW + outlineW * 2, barH + outlineW * 2, outerRadius)
+	lg.rectangle("fill", shownX - outlineW, y - outlineW, shownW + outlineW * 2, barH + outlineW * 2, outerRadius)
 	lg.setColor(r * 0.4, g * 0.4, b * 0.4, a)
-	lg.rectangle("fill", x, y, barW, barH, innerRadius)
+	lg.rectangle("fill", shownX, y, shownW, barH, innerRadius)
 	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
 	lg.rectangle("fill", shownX - outlineW, fy - outlineW, shownW + outlineW * 2, barH + outlineW * 2, outerRadius)
 	lg.setColor(colorHealthR, colorHealthG, colorHealthB, alpha)
@@ -179,10 +185,8 @@ function BossHP.draw()
 		lg.setColor(colorTrail[1], colorTrail[2], colorTrail[3], 0.82 * alpha)
 		lg.rectangle("fill", shownX, fy, trailW, barH, innerRadius)
 	end
-	local flash = cache.hitFlash / HIT_FLASH_DURATION
-	local pulse = motion and min(1, flash) * 2 or 0
-	lg.setColor(min(1, colorHealth[1] + flash * 0.22), min(1, colorHealth[2] + flash * 0.18), min(1, colorHealth[3] + flash * 0.08), alpha)
-	lg.rectangle("fill", shownX, fy - pulse, fillW, barH + pulse * 2, innerRadius)
+	lg.setColor(colorHealth[1], colorHealth[2], colorHealth[3], alpha)
+	lg.rectangle("fill", shownX, fy, fillW, barH, innerRadius)
 
 	if cache.thresholds then
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
@@ -199,7 +203,10 @@ function BossHP.draw()
 		cache.textW = lg.getFont():getWidth(cache.text)
 	end
 	local textH = lg.getFont():getHeight()
-	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	-- Let the face open before introducing the label; this avoids squeezed text
+	-- during the short unfurl animation.
+	local textAlpha = max(0, min(1, (reveal - 0.55) / 0.45)) * alpha
+	lg.setColor(colorText[1], colorText[2], colorText[3], textAlpha)
 	Text.printShadow(cache.text, x + (barW - cache.textW) * 0.5, fy + (barH - textH) * 0.5)
 end
 
