@@ -27,7 +27,7 @@ local PREVIEW_ENTER_DURATION = 0.14
 
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
-local PANEL_W = 400
+local PANEL_W = 320
 local HEADER_H = 30
 local HEADER_GAP = 8
 local ROW_GAP = 5
