@@ -39,6 +39,53 @@ one dependency-free command:
 python3 tools/balance/check.py
 ```
 
+## Reviewed tuning proposals
+
+`recommend.py` is a deterministic, standard-library-only constrained optimizer.
+It reads the report returned by `challenge_fixtures.build_report()` and scores
+every map and difficulty against a **named authored target** in
+`target_profiles.json`. Targets are design intent and are deliberately not
+inferred from today's fixtures. The only values it can propose are the explicit
+entries in `tuning_parameters.json`; each entry names its Lua source/table/key,
+range, step, and per-pass change cap.
+
+Generate and inspect a proposal (the JSON is stable for the same checkout):
+
+```sh
+python3 tools/balance/recommend.py --recommend \
+  --profile intended_challenge --output balance-recommendation.json
+git diff --no-index /dev/null balance-recommendation.json
+```
+
+The report includes old/new values, reasons, affected objective metrics, and a
+confidence label. It starts with `"reviewed": false`. A human must inspect the
+gameplay intent and source locator, then deliberately change that field to
+`true`. Source and manifest hashes prevent a stale approval from being reused.
+Preview the exact edit without touching the checkout:
+
+```sh
+python3 tools/balance/recommend.py --patch balance-recommendation.json
+```
+
+Only after review, apply the artifact:
+
+```sh
+python3 tools/balance/recommend.py --apply balance-recommendation.json
+```
+
+Apply validates the reviewed values against the allow-list, changes only those
+keys, and runs `python3 tools/balance/check.py`. On any failed combat, pacing,
+economy, challenge, interaction, or polish gate it restores every touched file
+and exits unsuccessfully. Candidate search also rejects the combat-role hard
+constraints: control, baseline single-target, burst, and chain specialists may
+not collapse into interchangeable raw-DPS choices.
+
+These recommendations are **proposals, not proof of fun or fairness**. Static
+threat windows, affordability, role coverage, leak allowance, and curve growth
+are useful review evidence, but cannot represent path placement, player
+learning, accessibility, or enjoyment. Playtesting and human review remain
+required even when every numerical gate passes.
+
 The aggregate command also runs the campaign challenge gate. It parses shipped
 tower output, enemy durability/mechanics, fixed campaign compositions, and both
 difficulty sources, then audits every map/wave/difficulty in integer fixed-point
