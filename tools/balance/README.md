@@ -53,10 +53,14 @@ The generated `docs/challenge_fixtures.md` first verifies each enemy's whole-num
 reward against its mechanic-weighted durability. Its wave table then records enemy
 count and type, effective and peak five-second durability, income, threat per
 income dollar, income-funded damage, pre-wave purchasing power, the money reserved
-for composition counters, an integer-optimized affordable loadout, and the
-required/affordable DPS ratio. Difficulty- and wave-specific ratio envelopes in
+for composition counters, an integer-optimized affordable loadout, the
+required/affordable DPS ratio, and the share of required damage funded by that
+wave's income. Difficulty- and wave-specific ratio envelopes in
 `challenge_bands.json` retain room for specialist introductions while giving the
-shipped range only about ten percent integer headroom. This makes tower output,
+shipped range only about ten percent integer headroom. An independent
+income-coverage envelope couples each wave's payout to its peak damage requirement,
+rather than allowing cumulative starting money to hide a reward or composition
+drift. This makes tower output,
 enemy count and composition, kill income, and difficulty economy move as one
 curve without turning the fixture into a prescribed player build.
 
