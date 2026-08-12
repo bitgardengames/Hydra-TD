@@ -123,7 +123,7 @@ return {
 
 	boss_suppression = {
 		nameKey = "enemy.bossSuppression",
-		hp = 360,
+		hp = 720,
 		speed = 40,
 		reward = 140,
 		score = 500,
