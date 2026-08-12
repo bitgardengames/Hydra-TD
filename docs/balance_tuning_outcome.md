@@ -23,7 +23,7 @@ median first-upgrade purchase moves from wave 2 to wave 3.
 ### Enemies, income, and waves
 
 Tank, Bulwark, Regenerator, Shieldbearer, Warcaller, and Summoner base HP are now
-**41, 55, 37, 36, 37, and 50**. Boss HP is now **330 / 290 / 330 / 360** for the
+**41, 55, 37, 35, 37, and 50**. Boss HP is now **330 / 290 / 330 / 360** for the
 base, summoner, displacement, and suppression encounters. Rewards remain tied to
 the established durability bands, avoiding income inflation from the HP pass.
 
@@ -42,24 +42,24 @@ duration, recovery, and peak-density identity.
 
 | Metric | Previous baseline | Tuned baseline | Authored target |
 |:--|--:|--:|:--|
-| Required / affordable DPS | 6,412 bp | 6,478 bp | 4,200–9,000 bp |
-| Wave-income coverage | 4,532 bp | 4,481 bp | 3,500–8,000 bp |
+| Required / affordable DPS | 6,412 bp | 6,455 bp | 4,200–9,000 bp |
+| Wave-income coverage | 4,532 bp | 4,500 bp | 3,500–8,000 bp |
 | Threat per reward dollar | 5 | 5 | 3–5 |
 | Specialist role performance | 10,000 bp | 10,000 bp | 9,000–10,000 bp |
-| Leak allowance | 2,467 bp | 2,489 bp | 500–2,200 bp |
+| Leak allowance | 2,467 bp | 2,444 bp | 500–2,200 bp |
 | First-upgrade timing | wave 2 | wave 3 | waves 2–5 |
-| Wave-to-wave growth | 12,000 bp | 12,018 bp | 10,100–13,500 bp |
+| Wave-to-wave growth | 12,000 bp | 12,025 bp | 10,100–13,500 bp |
 
 Leak allowance remains outside the aspirational target. Follow-up optimizer
-passes reduced Bulwark, Regenerator, and Shieldbearer HP by one point each,
-improving affordable-DPS and income-coverage margins without
-changing their armored, attrition, and shield-counter identities or reward bands.
-The optimizer proposed raising the Shieldbearer reward next, but the aggregate gate
-rejected that candidate because it exceeded six wave-10 economy purchasing bands.
-The residual leak-allowance gap therefore remains an explicit playtest focus rather
-than being hidden by loosening fixture bands or shipping a failed economy
-candidate. All hard campaign, affordability, role, economy,
-interaction, pacing, and polish constraints pass with the applied values.
+passes reduced Bulwark and Regenerator HP by one point each and Shieldbearer HP by
+two points, improving affordable-DPS and income-coverage margins without changing
+their armored, attrition, and shield-counter identities or reward bands. The final
+Shieldbearer point was the optimizer's highest-confidence legal move, reducing the
+leak metric by 45 basis points while preserving Shock's specialist win in both base
+and maximum-upgrade simulations. The residual leak-allowance gap therefore remains
+an explicit playtest focus rather than being hidden by loosening fixture bands or
+shipping a failed economy candidate. All hard campaign, affordability, role,
+economy, interaction, pacing, and polish constraints pass with the applied values.
 
 ## Reproduction
 

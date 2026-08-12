@@ -1,6 +1,9 @@
 local Constants = require("core.constants")
 local Theme = require("core.theme")
 
+-- Costs, output, and upgrade curves below are the checked-in simulated baseline.
+-- Keep role tradeoffs intact and regenerate the balance fixtures after tuning.
+
 return {
 	-- Role: control and runner/boss support. Low damage and modest scaling keep
 	-- it from replacing damage towers, while long reach and growing slow uptime
