@@ -41,7 +41,7 @@ return {
 		descKey = "towerDesc.lancer",
 		cost = 60,
 		range = 3.75 * Constants.TILE,
-		fireRate = 2.15, -- shots/sec
+		fireRate = 2.2, -- shots/sec
 		damage = 9,
 		recoilStrength = Constants.TILE * 0.08,
 		recoilDecay = 18,
