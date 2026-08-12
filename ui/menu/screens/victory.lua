@@ -50,6 +50,7 @@ local rewardCardIndex = 1
 local rewardClosePressed = false
 local rewardActionPressed = nil
 local hoveredMedalTier = nil
+local medalHoverScales = {1, 1, 1}
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -84,6 +85,8 @@ local difficultyOffset = 22
 -- Medal visuals
 local medalR = 16
 local medalGap = 14
+local medalHoverScale = 1.08
+local medalHoverSpeed = 14
 local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
 local MEDAL_NAMES = {"bronze", "silver", "gold"}
 local confettiColors = {
@@ -512,6 +515,7 @@ end
 
 function Screen.enter()
 	hideMedalTooltip()
+	medalHoverScales = {1, 1, 1}
 	t = 0
 	panelT = 0
 	rewardCardT = 0
@@ -587,6 +591,15 @@ function Screen.update(dt)
 
 	Button.updateList(buttons, dt)
 	updateMedalTooltip()
+
+	-- Ease each medal independently so entering and leaving hover both feel
+	-- responsive without the abrupt white outline previously used here.
+	local blend = 1 - math.exp(-medalHoverSpeed * dt)
+	for tier = 1, 3 do
+		local target = tier == hoveredMedalTier and medalHoverScale or 1
+		medalHoverScales[tier] = medalHoverScales[tier]
+			+ (target - medalHoverScales[tier]) * blend
+	end
 end
 
 function Screen.draw()
@@ -675,7 +688,7 @@ function Screen.draw()
 	lg.rectangle("fill", medalX - 16, medalY - 12, clusterW + 32, clusterH + 24, 14, 14)
 
 	-- Continue the campaign screen's staggered shine once reveal animations settle.
-	Medals.drawReveal(medalX, medalY, medalR, medalGap, t, hoveredMedalTier)
+	Medals.drawReveal(medalX, medalY, medalR, medalGap, t, medalHoverScales)
 
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
