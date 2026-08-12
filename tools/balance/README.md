@@ -49,11 +49,12 @@ python3 tools/balance/challenge_fixtures.py --check
 python3 tools/balance/challenge_fixtures.py --write-docs
 ```
 
-The generated `docs/challenge_fixtures.md` table records effective and peak
-five-second durability, income and pre-wave purchasing power, affordable
-sustained damage and specialist coverage, and the required/affordable DPS ratio.
-Broad per-wave ratio envelopes are intended to catch challenge spikes without
-turning the fixture into a prescribed tower build.
+The generated `docs/challenge_fixtures.md` table records enemy count and type,
+effective and peak five-second durability, income, threat per income dollar,
+income-funded damage, pre-wave purchasing power, affordable sustained damage,
+specialist coverage, and the required/affordable DPS ratio. Curriculum-phase
+ratio envelopes retain room for specialist introductions while tightly guarding
+practice and exam waves without turning the fixture into a prescribed build.
 
 `interaction_fixtures.json` records every active ability variant and branch
 mapping, representative module combat formations, targeting expectations, and
