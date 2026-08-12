@@ -3,7 +3,7 @@
   "scenario_geometry": {
     "lane_tiles": 12,
     "tower_tile": "best_legal_central",
-    "difficulty": "normal",
+    "difficulty": "hard",
     "wave": 1,
     "modules": []
   },

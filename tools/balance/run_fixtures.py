@@ -16,9 +16,10 @@ CAPTURE = HERE / "fixtures.json"
 DOC = ROOT / "docs/balance_fixtures.md"
 SOURCES = [
     "world/tower_defs.lua", "world/enemy_defs.lua", "world/tower_branch_defs.lua",
-    "systems/module_defs.lua", "systems/difficulty_curve.lua",
+    "systems/module_defs.lua", "systems/difficulty.lua", "systems/difficulty_curve.lua",
 ]
 TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
+TARGET_DIFFICULTY = "hard"
 RENDER_FPS = (30, 60, 144)
 GAME_SPEEDS = (1, 2, 4)
 
@@ -108,19 +109,27 @@ def definitions() -> tuple[dict, str]:
         enemies[kind] = {"hp": number(block, "hp")}
         shield = re.search(r"shield\s*=\s*\{[^}]*\bhp\s*=\s*([0-9.]+)", block, re.S)
         enemies[kind]["shield"] = float(shield.group(1)) if shield else 0
-    # Loading and hashing all five authoritative files makes a capture identify
+    difficulty_text = texts["systems/difficulty.lua"]
+    difficulty = lua_block(lua_block(difficulty_text, "Difficulty.defs"), TARGET_DIFFICULTY)
+    hp_bias = number(difficulty, "enemyHpBias")
+    # Loading and hashing all authoritative files makes a capture identify
     # the precise branches, modules, and difficulty curve it was made against.
     digest = hashlib.sha256("".join(texts[name] for name in SOURCES).encode()).hexdigest()
-    return {"towers": towers, "enemies": enemies}, digest
+    return {"towers": towers, "enemies": enemies, "enemy_hp_bias": hp_bias}, digest
 
 
 def load_results() -> dict:
     capture = json.loads(CAPTURE.read_text())
     defs, digest = definitions()
+    if capture["scenario_geometry"].get("difficulty") != TARGET_DIFFICULTY:
+        raise ValueError(
+            f"combat capture is for {capture['scenario_geometry'].get('difficulty')!r}; "
+            f"expected {TARGET_DIFFICULTY!r}"
+        )
     capture["definition_sha256"] = digest
     for scenario in capture["scenarios"]:
         enemy = defs["enemies"][scenario["enemy"]]
-        durability = enemy["hp"] + enemy["shield"]
+        durability = (enemy["hp"] + enemy["shield"]) * defs["enemy_hp_bias"]
         for tower in TOWERS:
             for level in ("base", "maximum"):
                 result = scenario["results"][tower][level]

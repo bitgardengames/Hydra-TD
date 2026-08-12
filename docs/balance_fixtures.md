@@ -1,7 +1,7 @@
 # Core balance fixtures
 
 These deterministic reference captures use a straight 12-tile lane, one tower in
-its best legal central tile, Normal difficulty, no modules, and wave-one enemy
+its best legal central tile, Hard difficulty, no modules, and wave-one enemy
 HP. `TTK` is seconds from first shot until the last kill (`—` means the fixture
 ended first); `cost` is purchase plus upgrades; `leaks` is enemy count; and
 `coverage` is the percentage of spawned targets damaged by that tower. Maximum

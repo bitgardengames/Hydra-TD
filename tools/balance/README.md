@@ -2,7 +2,8 @@
 
 The runner is dependency-free and deterministic. It uses a fixed `0.01` second
 simulation tick and seed, reads the shipped Lua definitions, and emits stable
-JSON (including damage and kills) to stdout.
+JSON (including damage and kills) to stdout. Combat role and upgrade-timing
+acceptance is anchored to Hard difficulty, where the intended challenge lives.
 
 The tick is read from `core/simulation_clock.lua`, the same source used by the
 runtime. The gate also drives a tick-authored encounter at 30, 60, and 144
