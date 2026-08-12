@@ -18,8 +18,8 @@ TIP_TEST_WIDTHS = (1024, 1280)
 # Layout constants are deliberately mirrored from the tiny, declarative UI
 # modules.  Source assertions below make drift noisy instead of silently making
 # this model stale.
-LAYOUT = {"screen_pad": 16, "wave_w": 440, "damage_inner_w": 210,
-          "combat_x": 16, "combat_y": 16, "combat_w": 244, "combat_h": 48,
+LAYOUT = {"screen_pad": 16, "wave_w": 320, "damage_inner_w": 210,
+          "combat_x": 16, "combat_y": 16, "combat_w": 320, "combat_h": 70,
           "damage_pad": 12, "damage_header": 30, "damage_header_gap": 10,
           "damage_bar_h": 22, "damage_row_gap": 6,
           "ability_size": 52, "ability_gap": 18, "ability_pad": 12,
@@ -150,8 +150,10 @@ def preview_metrics() -> dict:
 def hud_metrics() -> dict:
     c = LAYOUT
     preview_source = (ROOT / "ui/wave_preview.lua").read_text()
-    for name, key in (("COMBAT_X", "combat_x"), ("COMBAT_Y", "combat_y"),
-                      ("COMBAT_W", "combat_w"), ("COMBAT_H", "combat_h")):
+    # Progress and preview now share the same panel origin and width; only the
+    # compact combat height differs from the roster's content-driven height.
+    for name, key in (("SCREEN_PAD", "combat_x"), ("PANEL_W", "combat_w"),
+                      ("COMBAT_H", "combat_h")):
         match = re.search(r"local\s+" + name + r"\s*=\s*(\d+)", preview_source)
         if not match or int(match.group(1)) != c[key]:
             raise ValueError(f"compact wave fixture drift: {name}")
@@ -165,7 +167,7 @@ def hud_metrics() -> dict:
             "bottom_shop": [16, h-c["bottom_h"]-16, c["bottom_w"], c["bottom_h"]],
             "bottom_inspect": [16+c["bottom_w"]+16, h-c["bottom_h"]-16, c["inspect_w"], c["bottom_h"]],
             "damage_meter_six_rows": [w-210-24-16, 16, 234, damage_h],
-            "wave_preview": [16, 16, 400, 0],
+            "wave_preview": [c["screen_pad"], c["screen_pad"], c["wave_w"], 0],
             "ability_bar_six": [math.floor((w-ability_w)/2), h-16-ability_h, ability_w, ability_h],
         }
         overflow = max([0] + [max(0, -x, -y, x+pw-w, y+ph-h)
