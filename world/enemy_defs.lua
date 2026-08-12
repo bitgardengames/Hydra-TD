@@ -17,7 +17,7 @@ return {
 
 	tank = {
 		nameKey = "enemy.tank",
-		hp = 40,
+		hp = 41,
 		speed = 45,
 		reward = 8,
 		score = 22,
@@ -37,7 +37,7 @@ return {
 	bulwark = {
 		nameKey = "enemy.bulwark",
 		descriptionKey = "enemy.bulwarkDescription",
-		hp = 54, speed = 40, reward = 14, score = 30, radius = 14,
+		hp = 56, speed = 40, reward = 14, score = 30, radius = 14,
 		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
 		traits = {"armored"},
 	},
@@ -45,7 +45,7 @@ return {
 	regenerator = {
 		nameKey = "enemy.regenerator",
 		descriptionKey = "enemy.regeneratorDescription",
-		hp = 37, speed = 53, reward = 10, score = 28, radius = 12,
+		hp = 38, speed = 53, reward = 10, score = 28, radius = 12,
 		regeneration = { hpPerSecond = 2.5, delay = 1.25 },
 		modifiers = { poison = 1.25 },
 		traits = {"regenerates"},
@@ -54,7 +54,7 @@ return {
 	shieldbearer = {
 		nameKey = "enemy.shieldbearer",
 		descriptionKey = "enemy.shieldbearerDescription",
-		hp = 36, speed = 50, reward = 13, score = 32, radius = 13,
+		hp = 37, speed = 50, reward = 13, score = 32, radius = 13,
 		-- Chain amplification rewards Shock against the barrier without raising its
 		-- raw damage against isolated, unshielded targets such as bosses.
 		shield = { hp = 16, burstThreshold = 12, burstMultiplier = 1.6, chainMultiplier = 2.4 },
@@ -64,7 +64,7 @@ return {
 	warcaller = {
 		nameKey = "enemy.warcaller",
 		descriptionKey = "enemy.warcallerDescription",
-		hp = 36, speed = 48, reward = 10, score = 38, radius = 13,
+		hp = 37, speed = 48, reward = 10, score = 38, radius = 13,
 		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
 		targetPriority = 34,
 		traits = {"support"},
@@ -73,7 +73,7 @@ return {
 	summoner = {
 		nameKey = "enemy.summoner",
 		descriptionKey = "enemy.summonerDescription",
-		hp = 48, speed = 42, reward = 12, score = 44, radius = 14,
+		hp = 50, speed = 42, reward = 12, score = 44, radius = 14,
 		summon = { kind = "runner", count = 2, period = 6.0, initialDelay = 2.5, spacing = 9 },
 		targetPriority = 38,
 		traits = {"summons"},
@@ -81,7 +81,7 @@ return {
 
 	boss = {
 		nameKey = "enemy.boss",
-		hp = 320,
+		hp = 330,
 		speed = 45,
 		reward = 64,
 		score = 300,
@@ -97,7 +97,7 @@ return {
 
 	boss_summoner = {
 		nameKey = "enemy.bossSummoner",
-		hp = 280,
+		hp = 290,
 		speed = 42,
 		reward = 110,
 		score = 380,
@@ -110,7 +110,7 @@ return {
 
 	boss_displacement = {
 		nameKey = "enemy.bossDisplacement",
-		hp = 320,
+		hp = 330,
 		speed = 48,
 		reward = 125,
 		score = 430,
@@ -123,7 +123,7 @@ return {
 
 	boss_suppression = {
 		nameKey = "enemy.bossSuppression",
-		hp = 350,
+		hp = 360,
 		speed = 40,
 		reward = 140,
 		score = 500,

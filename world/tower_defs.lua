@@ -10,7 +10,7 @@ return {
 		descKey = "towerDesc.slow",
 		cost = 50,
 		range = 4.25 * Constants.TILE,
-		fireRate = 1.15,
+		fireRate = 1.2,
 		damage = 3,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 10,
@@ -71,7 +71,7 @@ return {
 		descKey = "towerDesc.poison",
 		cost = 70,
 		range = 3.55 * Constants.TILE,
-		fireRate = 1.35,
+		fireRate = 1.4,
 		damage = 2,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 16,
@@ -105,7 +105,7 @@ return {
 		descKey = "towerDesc.cannon",
 		cost = 90,
 		range = 3.05 * Constants.TILE,
-		fireRate = 0.68,
+		fireRate = 0.7,
 		-- At three targets, splash already gives this about twice the Lancer's
 		-- total damage per second. Keep the shell to two Lancer hits so
 		-- Cannon pays for that crowd damage with weaker single-target efficiency.
@@ -139,7 +139,7 @@ return {
 		descKey = "towerDesc.shock",
 		cost = 95,
 		range = 3.7 * Constants.TILE,
-		fireRate = 1.05,
+		fireRate = 1.1,
 		damage = 6,
 		recoilStrength = Constants.TILE * 0.03,
 		recoilDecay = 5, -- Dramatic because the recoil is so small
@@ -166,7 +166,7 @@ return {
 		descKey = "towerDesc.plasma",
 		cost = 120,
 		range = 3.4 * Constants.TILE,
-		fireRate = 0.72,
+		fireRate = 0.75,
 		damage = 5,
 		recoilStrength = Constants.TILE * 0.14,
 		recoilDecay = 18,
