@@ -54,7 +54,7 @@ return {
 	shieldbearer = {
 		nameKey = "enemy.shieldbearer",
 		descriptionKey = "enemy.shieldbearerDescription",
-		hp = 36, speed = 50, reward = 12, score = 32, radius = 13,
+		hp = 36, speed = 50, reward = 13, score = 32, radius = 13,
 		-- Chain amplification rewards Shock against the barrier without raising its
 		-- raw damage against isolated, unshielded targets such as bosses.
 		shield = { hp = 16, burstThreshold = 12, burstMultiplier = 1.6, chainMultiplier = 2.4 },
@@ -64,7 +64,7 @@ return {
 	warcaller = {
 		nameKey = "enemy.warcaller",
 		descriptionKey = "enemy.warcallerDescription",
-		hp = 36, speed = 48, reward = 9, score = 38, radius = 13,
+		hp = 36, speed = 48, reward = 10, score = 38, radius = 13,
 		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
 		targetPriority = 34,
 		traits = {"support"},
