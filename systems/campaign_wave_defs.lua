@@ -27,11 +27,11 @@ local pacingIdentityByMapId = {
 }
 
 local pacingTargetsByMapId = {
-	riverbend = { openingPressure = 16, peakSimultaneous = 20, totalWaveDuration = { 6.30, 11.24 }, downtimeBetweenGroups = { 0.08, 1.40 } },
-	switchback = { openingPressure = 17, peakSimultaneous = 20, totalWaveDuration = { 7.81, 11.98 }, downtimeBetweenGroups = { 0.10, 1.75 } },
+	riverbend = { openingPressure = 16, peakSimultaneous = 19, totalWaveDuration = { 6.30, 11.56 }, downtimeBetweenGroups = { 0.08, 1.40 } },
+	switchback = { openingPressure = 17, peakSimultaneous = 18, totalWaveDuration = { 7.81, 11.98 }, downtimeBetweenGroups = { 0.10, 1.75 } },
 	highpass = { openingPressure = 14, peakSimultaneous = 17, totalWaveDuration = { 9.27, 14.47 }, downtimeBetweenGroups = { 0.08, 1.47 } },
-	roundabout = { openingPressure = 20, peakSimultaneous = 21, totalWaveDuration = { 6.86, 10.45 }, downtimeBetweenGroups = { 0.08, 0.69 } },
-	gauntlet = { openingPressure = 20, peakSimultaneous = 21, totalWaveDuration = { 5.95, 11.35 }, downtimeBetweenGroups = { 0.52, 2.94 } },
+	roundabout = { openingPressure = 18, peakSimultaneous = 19, totalWaveDuration = { 7.14, 10.45 }, downtimeBetweenGroups = { 0.08, 0.69 } },
+	gauntlet = { openingPressure = 17, peakSimultaneous = 17, totalWaveDuration = { 5.95, 12.51 }, downtimeBetweenGroups = { 0.52, 2.94 } },
 	snaketrail = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 7.18, 15.80 }, downtimeBetweenGroups = { 0.25, 2.50 } },
 	backtrack = { openingPressure = 15, peakSimultaneous = 15, totalWaveDuration = { 6.39, 18.14 }, downtimeBetweenGroups = { 0.15, 1.72 } },
 	lowvalley = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 6.72, 27.17 }, downtimeBetweenGroups = { 0.29, 3.62 } },
@@ -68,11 +68,11 @@ local wavesByMapId = {
 		-- mixed check: two packs compress the recovery window
 		[7] = { g("grunt", 14, 0.40, 0.0), g("grunt", 14, 0.34, 0.30) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 13, 0.38, 0.0), g("grunt", 9, 0.32, 0.15), g("grunt", 8, 0.28, 0.12) },
+		[8] = { g("grunt", 13, 0.38, 0.0), g("grunt", 9, 0.32, 0.15), g("grunt", 8, 0.30, 0.12) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 13, 0.34, 0.0), g("grunt", 10, 0.29, 0.08), g("grunt", 9, 0.25, 0.08) },
+		[9] = { g("grunt", 13, 0.34, 0.0), g("grunt", 10, 0.30, 0.08), g("grunt", 9, 0.30, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 12, 0.36, 1.0), g("grunt", 13, 0.30, 0.35), g("grunt", 9, 0.26, 0.25) },
+		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 12, 0.36, 1.0), g("grunt", 13, 0.30, 0.35), g("grunt", 9, 0.30, 0.25) },
 	},
 	switchback = {
 		-- orientation
@@ -90,11 +90,11 @@ local wavesByMapId = {
 		-- mixed check: two packs compress the recovery window
 		[7] = { g("grunt", 13, 0.39, 0.00), g("grunt", 14, 0.34, 0.38) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 13, 0.37, 0.00), g("grunt", 8, 0.32, 0.19), g("grunt", 7, 0.29, 0.15) },
+		[8] = { g("grunt", 13, 0.37, 0.00), g("grunt", 8, 0.32, 0.19), g("grunt", 7, 0.30, 0.15) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 12, 0.33, 0.00), g("grunt", 10, 0.29, 0.10), g("grunt", 9, 0.26, 0.10) },
+		[9] = { g("grunt", 12, 0.33, 0.00), g("grunt", 10, 0.30, 0.10), g("grunt", 9, 0.30, 0.10) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.37, 1.25), g("grunt", 12, 0.31, 0.44), g("grunt", 9, 0.28, 0.31) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.37, 1.25), g("grunt", 12, 0.31, 0.44), g("grunt", 9, 0.30, 0.31) },
 	},
 	highpass = {
 		-- orientation
@@ -134,11 +134,11 @@ local wavesByMapId = {
 		-- mixed check: two packs compress the recovery window
 		[7] = { g("grunt", 12, 0.35, 0.00), g("grunt", 13, 0.31, 0.09) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 12, 0.33, 0.00), g("grunt", 8, 0.29, 0.08), g("grunt", 7, 0.26, 0.08) },
+		[8] = { g("grunt", 12, 0.33, 0.00), g("grunt", 8, 0.30, 0.08), g("grunt", 7, 0.30, 0.08) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 10, 0.30, 0.00), g("grunt", 9, 0.26, 0.08), g("grunt", 9, 0.24, 0.08) },
+		[9] = { g("grunt", 10, 0.30, 0.00), g("grunt", 9, 0.30, 0.08), g("grunt", 9, 0.30, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.33, 0.47), g("grunt", 11, 0.28, 0.11), g("grunt", 8, 0.25, 0.08) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.33, 0.47), g("grunt", 11, 0.30, 0.11), g("grunt", 8, 0.30, 0.08) },
 	},
 	gauntlet = {
 		-- orientation
@@ -154,13 +154,13 @@ local wavesByMapId = {
 		-- practice: a sustained stream hands off to a trailing pack
 		[6] = { g("grunt", 15, 0.32, 0.00), g("grunt", 9, 0.30, 1.37) },
 		-- mixed check: two packs compress the recovery window
-		[7] = { g("grunt", 12, 0.29, 0.00), g("grunt", 13, 0.25, 0.98) },
+		[7] = { g("grunt", 12, 0.30, 0.00), g("grunt", 13, 0.30, 0.98) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 12, 0.27, 0.00), g("grunt", 8, 0.24, 0.67), g("grunt", 6, 0.22, 0.60) },
+		[8] = { g("grunt", 12, 0.30, 0.00), g("grunt", 8, 0.30, 0.67), g("grunt", 6, 0.30, 0.60) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 10, 0.24, 0.00), g("grunt", 9, 0.22, 0.52), g("grunt", 8, 0.19, 0.52) },
+		[9] = { g("grunt", 10, 0.30, 0.00), g("grunt", 9, 0.30, 0.52), g("grunt", 8, 0.30, 0.52) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 10, 0.27, 2.45), g("grunt", 11, 0.23, 1.08), g("grunt", 9, 0.21, 0.88) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 10, 0.30, 2.45), g("grunt", 11, 0.30, 1.08), g("grunt", 9, 0.30, 0.88) },
 	},
 	snaketrail = {
 		-- orientation
