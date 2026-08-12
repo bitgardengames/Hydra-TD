@@ -49,12 +49,14 @@ python3 tools/balance/challenge_fixtures.py --check
 python3 tools/balance/challenge_fixtures.py --write-docs
 ```
 
-The generated `docs/challenge_fixtures.md` table records enemy count and type,
-effective and peak five-second durability, income, threat per income dollar,
-income-funded damage, pre-wave purchasing power, affordable sustained damage,
-specialist coverage, and the required/affordable DPS ratio. Curriculum-phase
-ratio envelopes retain room for specialist introductions while tightly guarding
-practice and exam waves without turning the fixture into a prescribed build.
+The generated `docs/challenge_fixtures.md` first verifies each enemy's whole-number
+reward against its mechanic-weighted durability. Its wave table then records enemy
+count and type, effective and peak five-second durability, income, threat per
+income dollar, income-funded damage, pre-wave purchasing power, the money reserved
+for composition counters, an integer-optimized affordable loadout, and the
+required/affordable DPS ratio. Curriculum-phase ratio envelopes retain room for
+specialist introductions while tightly guarding practice and exam waves without
+turning the fixture into a prescribed player build.
 
 `interaction_fixtures.json` records every active ability variant and branch
 mapping, representative module combat formations, targeting expectations, and
