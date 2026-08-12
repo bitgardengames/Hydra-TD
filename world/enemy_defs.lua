@@ -37,7 +37,7 @@ return {
 	bulwark = {
 		nameKey = "enemy.bulwark",
 		descriptionKey = "enemy.bulwarkDescription",
-		hp = 56, speed = 40, reward = 14, score = 30, radius = 14,
+		hp = 55, speed = 40, reward = 14, score = 30, radius = 14,
 		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
 		traits = {"armored"},
 	},
@@ -45,7 +45,7 @@ return {
 	regenerator = {
 		nameKey = "enemy.regenerator",
 		descriptionKey = "enemy.regeneratorDescription",
-		hp = 38, speed = 53, reward = 10, score = 28, radius = 12,
+		hp = 37, speed = 53, reward = 10, score = 28, radius = 12,
 		regeneration = { hpPerSecond = 2.5, delay = 1.25 },
 		modifiers = { poison = 1.25 },
 		traits = {"regenerates"},
