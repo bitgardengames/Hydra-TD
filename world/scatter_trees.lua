@@ -22,8 +22,8 @@ local TILE = Constants.TILE
 local GRID_W = Constants.GRID_W
 local GRID_H = Constants.GRID_H
 
-local EVERGREEN_SWAY_SPEED = 1.35
-local EVERGREEN_SWAY_ANGLE = 0.025
+local TREE_SWAY_SPEED = 1.35
+local TREE_SWAY_ANGLE = 0.025
 
 local rng = love.math.newRandomGenerator()
 
@@ -196,8 +196,9 @@ function Trees.draw(mode)
 		while index < #trees do
 			index = index + 1
 			local tree = trees[index]
-			local matchesMode = (mode ~= "static" or tree.shape ~= "evergreen")
-				and (mode ~= "evergreen" or tree.shape == "evergreen")
+			local isAnimated = tree.shape == "evergreen" or tree.shape == "square"
+			local matchesMode = (mode ~= "static" or not isAnimated)
+				and (mode ~= "animated" or isAnimated)
 
 			if matchesMode then
 				return index, tree
@@ -259,6 +260,13 @@ function Trees.draw(mode)
 		elseif t.shape == "square" then
 			local outerRadius = 8 * s + outlineW * 0.5
 			local innerRadius = outerRadius - outlineW
+			local sway = math.sin(swayTime * TREE_SWAY_SPEED + (t.swayPhase or 0)) * TREE_SWAY_ANGLE
+
+			-- Keep the trunk rooted while the rounded canopy gives gently in the breeze.
+			lg.push()
+			lg.translate(x, trunkY)
+			lg.rotate(sway)
+			lg.translate(-x, -trunkY)
 
 			-- Outline
 			lg.setColor(style.outline)
@@ -277,10 +285,12 @@ function Trees.draw(mode)
 
 			lg.setColor(style.fill)
 			lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
+
+			lg.pop()
 		elseif t.shape == "evergreen" then
 			local layers = 3
 			local baseSize = TILE * 0.34 * s
-			local sway = math.sin(swayTime * EVERGREEN_SWAY_SPEED + (t.swayPhase or 0)) * EVERGREEN_SWAY_ANGLE
+			local sway = math.sin(swayTime * TREE_SWAY_SPEED + (t.swayPhase or 0)) * TREE_SWAY_ANGLE
 
 			-- Pivot the canopy at its base so the three layers move as one in the breeze.
 			lg.push()

@@ -249,7 +249,7 @@ local function drawAnimatedScatter()
 	local trees = biome and biome.scatter and biome.scatter.trees
 
 	if trees and trees.enabled then
-		Trees.draw("evergreen")
+		Trees.draw("animated")
 	end
 end
 
