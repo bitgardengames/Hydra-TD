@@ -39,6 +39,22 @@ one dependency-free command:
 python3 tools/balance/check.py
 ```
 
+The aggregate command also runs the campaign challenge gate. It parses shipped
+tower output, enemy durability/mechanics, fixed campaign compositions, and both
+difficulty sources, then audits every map/wave/difficulty in integer fixed-point
+units:
+
+```sh
+python3 tools/balance/challenge_fixtures.py --check
+python3 tools/balance/challenge_fixtures.py --write-docs
+```
+
+The generated `docs/challenge_fixtures.md` table records effective and peak
+five-second durability, income and pre-wave purchasing power, affordable
+sustained damage and specialist coverage, and the required/affordable DPS ratio.
+Broad per-wave ratio envelopes are intended to catch challenge spikes without
+turning the fixture into a prescribed tower build.
+
 `interaction_fixtures.json` records every active ability variant and branch
 mapping, representative module combat formations, targeting expectations, and
 the boss templates' dynamically summoned adds. It includes total damage,
