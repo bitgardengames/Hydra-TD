@@ -2,7 +2,8 @@
 -- are applied once, at spawn time; literal values keep encounter budgets and
 -- balance fixtures auditable without a hidden global multiplier. HP, shields,
 -- and kill rewards use whole numbers so an authored count has a legible threat
--- and income budget in tools/balance/challenge_fixtures.py.
+-- and income budget in tools/balance/challenge_fixtures.py. Standard archetypes
+-- pay $1 per three to five base effective durability, after mechanic weighting.
 
 return {
 	grunt = {
@@ -18,7 +19,7 @@ return {
 		nameKey = "enemy.tank",
 		hp = 40,
 		speed = 45,
-		reward = 9,
+		reward = 8,
 		score = 22,
 		radius = 12,
 	},
@@ -27,7 +28,7 @@ return {
 		nameKey = "enemy.runner",
 		hp = 12,
 		speed = 95,
-		reward = 5,
+		reward = 4,
 		score = 12,
 		radius = 9,
 		traits = {"fast"},
@@ -36,7 +37,7 @@ return {
 	bulwark = {
 		nameKey = "enemy.bulwark",
 		descriptionKey = "enemy.bulwarkDescription",
-		hp = 54, speed = 40, reward = 11, score = 30, radius = 14,
+		hp = 54, speed = 40, reward = 14, score = 30, radius = 14,
 		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
 		traits = {"armored"},
 	},
@@ -63,7 +64,7 @@ return {
 	warcaller = {
 		nameKey = "enemy.warcaller",
 		descriptionKey = "enemy.warcallerDescription",
-		hp = 36, speed = 48, reward = 13, score = 38, radius = 13,
+		hp = 36, speed = 48, reward = 9, score = 38, radius = 13,
 		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
 		targetPriority = 34,
 		traits = {"support"},
@@ -72,7 +73,7 @@ return {
 	summoner = {
 		nameKey = "enemy.summoner",
 		descriptionKey = "enemy.summonerDescription",
-		hp = 48, speed = 42, reward = 15, score = 44, radius = 14,
+		hp = 48, speed = 42, reward = 12, score = 44, radius = 14,
 		summon = { kind = "runner", count = 2, period = 6.0, initialDelay = 2.5, spacing = 9 },
 		targetPriority = 38,
 		traits = {"summons"},
@@ -82,7 +83,7 @@ return {
 		nameKey = "enemy.boss",
 		hp = 320,
 		speed = 45,
-		reward = 60,
+		reward = 64,
 		score = 300,
 		radius = 18,
 		boss = true,
