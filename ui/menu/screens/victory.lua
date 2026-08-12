@@ -49,6 +49,7 @@ local rewardCards = {}
 local rewardCardIndex = 1
 local rewardClosePressed = false
 local rewardActionPressed = nil
+local hoveredMedalTier = nil
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -101,6 +102,7 @@ local function easeOutBack(x)
 end
 
 local function hideMedalTooltip()
+	hoveredMedalTier = nil
 	Tooltip.hide()
 end
 
@@ -130,6 +132,7 @@ local function updateMedalTooltip()
 		local x = medalX + (tier - 1) * step
 		if mx >= x and mx <= x + medalR * 2
 			and my >= medalY and my <= medalY + medalR * 2 then
+			hoveredMedalTier = tier
 			local difficultyKey = DIFFICULTY_ORDER[tier]
 			local timestamp = mapStats.medalEarnedAt and mapStats.medalEarnedAt[difficultyKey]
 			local earnedDate = L("campaign.medalDateUnavailable")
@@ -672,7 +675,7 @@ function Screen.draw()
 	lg.rectangle("fill", medalX - 16, medalY - 12, clusterW + 32, clusterH + 24, 14, 14)
 
 	-- Continue the campaign screen's staggered shine once reveal animations settle.
-	Medals.drawReveal(medalX, medalY, medalR, medalGap, t)
+	Medals.drawReveal(medalX, medalY, medalR, medalGap, t, hoveredMedalTier)
 
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)

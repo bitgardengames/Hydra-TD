@@ -259,6 +259,21 @@ local function drawMedal(x, y, tier, earned, r, scale, glint, yOffset)
 	lg.pop()
 end
 
+local function drawHoverOutline(x, y, radius, animation)
+	local oldLineWidth = lg.getLineWidth()
+	local pulse = animation and (0.72 + sin(animation * 5) * 0.08) or 0.8
+
+	-- A soft outer ring and crisp inner ring make the medal feel interactive
+	-- without obscuring its tier color or shine animation.
+	lg.setLineWidth(4)
+	lg.setColor(1, 1, 1, pulse * 0.24)
+	lg.circle("line", x, y, radius + outlineW + 3)
+	lg.setLineWidth(2)
+	lg.setColor(1, 1, 1, pulse)
+	lg.circle("line", x, y, radius + outlineW + 1)
+	lg.setLineWidth(oldLineWidth)
+end
+
 function Medals.draw(x, y, earnedCount, r, g, animation)
 	BASE_RADIUS = r or BASE_RADIUS
 	BASE_GAP = g or BASE_GAP
@@ -286,7 +301,7 @@ function Medals.draw(x, y, earnedCount, r, g, animation)
 	end
 end
 
-function Medals.drawReveal(x, y, r, g, animation)
+function Medals.drawReveal(x, y, r, g, animation, hoveredTier)
 	BASE_RADIUS = r or BASE_RADIUS
 	BASE_GAP = g or BASE_GAP
 
@@ -315,6 +330,11 @@ function Medals.drawReveal(x, y, r, g, animation)
 		local mx = startX + (m.tier - 1) * step
 
 		drawMedal(mx, centerY, m.tier, true, BASE_RADIUS, m.scale, m.glint, m.yOffset)
+	end
+
+	if hoveredTier and hoveredTier >= 1 and hoveredTier <= 3 then
+		local mx = startX + (hoveredTier - 1) * step
+		drawHoverOutline(mx, centerY, BASE_RADIUS, animation)
 	end
 end
 
