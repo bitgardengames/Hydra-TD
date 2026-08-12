@@ -252,7 +252,7 @@ local wavesByMapId = {
 	},
 	outerloop = {
 		-- orientation
-		[1] = { g("grunt", 18, 0.89, 0.00) },
+		[1] = { g("grunt", 17, 0.89, 0.00) },
 		-- demonstration
 		[2] = { g("regenerator", 9, 0.94, 0.00) },
 		-- demonstration
@@ -274,7 +274,7 @@ local wavesByMapId = {
 	},
 	terrace = {
 		-- orientation
-		[1] = { g("grunt", 18, 0.61, 0.00) },
+		[1] = { g("grunt", 17, 0.61, 0.00) },
 		-- demonstration
 		[2] = { g("warcaller", 9, 0.67, 0.00) },
 		-- demonstration
@@ -296,7 +296,7 @@ local wavesByMapId = {
 	},
 	highridge = {
 		-- orientation
-		[1] = { g("grunt", 18, 0.78, 0.00) },
+		[1] = { g("grunt", 17, 0.78, 0.00) },
 		-- demonstration
 		[2] = { g("shieldbearer", 10, 0.87, 0.00) },
 		-- demonstration

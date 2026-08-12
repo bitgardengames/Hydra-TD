@@ -14,7 +14,8 @@ Difficulty.defs = {
 
 		-- Economy
 		rewardBias = 1.05,
-		perfectWaveBonus = 1.25,
+		-- A clean clear rounds to $2 before milestone and boss modifiers.
+		perfectWaveBonus = 1.5,
 
 		-- Player affordances
 		startMoney = 120,
@@ -30,8 +31,9 @@ Difficulty.defs = {
 		bossHpBias = 1.05,
 
 		rewardBias = 1.0,
-		-- Ten flawless non-boss waves yield only $10; kills remain the income floor.
-		perfectWaveBonus = 1.0,
+		-- A visible $2 clean-clear reward cushions imperfect purchasing without
+		-- replacing kills as the income floor.
+		perfectWaveBonus = 1.5,
 
 		-- Supports either two entry towers or one premium opening investment.
 		startMoney = 120,
@@ -47,7 +49,7 @@ Difficulty.defs = {
 		bossHpBias = 1.2,
 
 		rewardBias = 0.95,
-		perfectWaveBonus = 0.75,
+		perfectWaveBonus = 1.25,
 
 		startMoney = 120,
 		startLives = 15,
