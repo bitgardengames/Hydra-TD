@@ -196,7 +196,9 @@ function Trees.draw(mode)
 		while index < #trees do
 			index = index + 1
 			local tree = trees[index]
-			local isAnimated = tree.shape == "evergreen" or tree.shape == "square"
+			local isAnimated = tree.shape == "round"
+				or tree.shape == "evergreen"
+				or tree.shape == "square"
 			local matchesMode = (mode ~= "static" or not isAnimated)
 				and (mode ~= "animated" or isAnimated)
 
@@ -242,6 +244,14 @@ function Trees.draw(mode)
 		lg.rectangle("fill", x - tw * 0.5, trunkY + outlineW, tw, th, 2 * s)
 
 		if t.shape == "round" then
+			local sway = math.sin(swayTime * TREE_SWAY_SPEED + (t.swayPhase or 0)) * TREE_SWAY_ANGLE
+
+			-- Pivot the canopy at its base so the crown sways without shifting the trunk.
+			lg.push()
+			lg.translate(x, trunkY)
+			lg.rotate(sway)
+			lg.translate(-x, -trunkY)
+
 			-- Outline
 			lg.setColor(style.outline)
 			lg.circle("fill", x, canopyY, rOuter)
@@ -257,6 +267,8 @@ function Trees.draw(mode)
 
 			lg.setColor(style.fill)
 			lg.circle("fill", hx, hy, hr)
+
+			lg.pop()
 		elseif t.shape == "square" then
 			local outerRadius = 8 * s + outlineW * 0.5
 			local innerRadius = outerRadius - outlineW
