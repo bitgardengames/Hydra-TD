@@ -1,9 +1,9 @@
 {
   "format_version": 1,
   "bands": {
-    "easy": {"wave_10_balanced_power": [1100, 2550], "wave_10_conservative_power": [900, 2000], "sell_loss_lancer": [8, 10]},
-    "normal": {"wave_10_balanced_power": [1100, 2400], "wave_10_conservative_power": [900, 1900], "sell_loss_lancer": [14, 16]},
-    "hard": {"wave_10_balanced_power": [1100, 2300], "wave_10_conservative_power": [900, 1850], "sell_loss_lancer": [23, 25]}
+    "easy": {"wave_10_balanced_power": [1100, 2650], "wave_10_conservative_power": [900, 2100], "sell_loss_lancer": [8, 10]},
+    "normal": {"wave_10_balanced_power": [1100, 2500], "wave_10_conservative_power": [900, 1950], "sell_loss_lancer": [14, 16]},
+    "hard": {"wave_10_balanced_power": [1100, 2400], "wave_10_conservative_power": [900, 1900], "sell_loss_lancer": [23, 25]}
   },
   "shared": {
     "hard_opening_entry_towers": [2, 2],

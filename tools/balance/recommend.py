@@ -116,7 +116,7 @@ def metrics(report: dict, texts: dict[str, str], manifest: list[dict]) -> dict[s
     tower_costs = [current_value(p, texts) for p in manifest if p["id"].startswith("tower.") and p["lua_key"] == "cost"]
     multiplier = current_value(next(p for p in manifest if p["id"] == "upgrade_cost_multiplier.1"), texts)
     purchase_waves = []
-    target = sorted(tower_costs)[len(tower_costs) // 2] * multiplier
+    target = sorted(tower_costs)[len(tower_costs) // 2] * (1 + multiplier)
     for maps in report["difficulties"].values():
         for waves in maps.values():
             purchase_waves.append(next((r["wave"] for r in waves if r["purchasing_power_before_wave"] >= target), 10))
