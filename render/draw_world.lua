@@ -465,8 +465,6 @@ local function drawAbilityPreview()
 		lg.circle("line", targeting.x, targeting.y, effect.radius)
 	end
 	for _, entity in ipairs(preview.affected) do drawEntityMarker(entity, color, 1, 23) end
-	lg.setColor(0, 0, 0, .8); lg.rectangle("fill", targeting.x + 14, targeting.y + 14, 106, 22, 6)
-	lg.setColor(1,1,1,.9); lg.print("RMB / Esc: cancel", targeting.x + 20, targeting.y + 17, 0, .7, .7)
 end
 
 local function drawGrid()
