@@ -18,7 +18,7 @@ Each non-special boss archetype targets three to five base effective durability 
 | grunt | 15 | 5 | 3 |
 | regenerator | 44 | 10 | 4 |
 | runner | 13 | 4 | 3 |
-| shieldbearer | 61 | 13 | 5 |
+| shieldbearer | 60 | 13 | 5 |
 | summoner | 60 | 12 | 5 |
 | tank | 41 | 8 | 5 |
 | warcaller | 43 | 10 | 4 |
@@ -265,45 +265,45 @@ Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 an
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 17 | grunt×17 | 374 | 154 | 85 | 4 | 28 | 9032 | 120 | 0 | lancer×2 | 40 | 31 | 7750 |
-| 2 | 10 | shieldbearer×10 | 920 | 552 | 140 | 7 | 47 | 4273 | 205 | 95 | lancer×1, shock×1, slow×1 | 31 | 110 | 35484 |
-| 3 | 17 | grunt×13, shieldbearer×4 | 700 | 412 | 121 | 6 | 40 | 4878 | 345 | 95 | lancer×4, shock×1 | 87 | 82 | 9425 |
-| 4 | 23 | shieldbearer×10, grunt×13 | 1345 | 816 | 205 | 7 | 68 | 4172 | 466 | 95 | lancer×6, shock×1 | 127 | 163 | 12835 |
-| 5 | 17 | warcaller×10, shieldbearer×7 | 1516 | 832 | 208 | 7 | 69 | 4157 | 671 | 155 | lancer×9, shock×1 | 187 | 166 | 8877 |
-| 6 | 33 | shieldbearer×10, warcaller×10, regenerator×13 | 3009 | 1140 | 393 | 8 | 131 | 5746 | 879 | 225 | lancer×11, poison×1, shock×1, slow×1 | 238 | 228 | 9580 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3018 | 1062 | 358 | 8 | 119 | 5613 | 1272 | 315 | cannon×1, lancer×16, poison×1, shock×1, slow×1 | 351 | 212 | 6040 |
-| 8 | 35 | warcaller×8, shieldbearer×8, grunt×9, tank×10 | 2892 | 1294 | 325 | 9 | 108 | 4170 | 1630 | 155 | lancer×25, shock×1 | 507 | 259 | 5108 |
-| 9 | 42 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×8, runner×10 | 4090 | 1422 | 445 | 9 | 148 | 5211 | 1955 | 365 | cannon×1, lancer×27, poison×1, shock×1, slow×1 | 571 | 284 | 4974 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 4517 | 1697 | 450 | 10 | 150 | 4425 | 2400 | 315 | cannon×1, lancer×35, poison×1, shock×1 | 727 | 339 | 4663 |
+| 2 | 10 | shieldbearer×10 | 900 | 540 | 140 | 6 | 47 | 4352 | 205 | 95 | lancer×1, shock×1, slow×1 | 31 | 108 | 34839 |
+| 3 | 17 | grunt×13, shieldbearer×4 | 688 | 400 | 121 | 6 | 40 | 5000 | 345 | 95 | lancer×4, shock×1 | 87 | 80 | 9195 |
+| 4 | 23 | shieldbearer×10, grunt×13 | 1325 | 800 | 205 | 6 | 68 | 4250 | 466 | 95 | lancer×6, shock×1 | 127 | 160 | 12598 |
+| 5 | 17 | warcaller×10, shieldbearer×7 | 1502 | 818 | 208 | 7 | 69 | 4207 | 671 | 155 | lancer×9, shock×1 | 187 | 164 | 8770 |
+| 6 | 33 | shieldbearer×10, warcaller×10, regenerator×13 | 2999 | 1130 | 393 | 8 | 131 | 5796 | 879 | 225 | lancer×11, poison×1, shock×1, slow×1 | 238 | 226 | 9496 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3000 | 1044 | 358 | 8 | 119 | 5694 | 1272 | 315 | cannon×1, lancer×16, poison×1, shock×1, slow×1 | 351 | 209 | 5954 |
+| 8 | 35 | warcaller×8, shieldbearer×8, grunt×9, tank×10 | 2868 | 1270 | 325 | 9 | 108 | 4252 | 1630 | 155 | lancer×25, shock×1 | 507 | 254 | 5010 |
+| 9 | 42 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×8, runner×10 | 4062 | 1394 | 445 | 9 | 148 | 5305 | 1955 | 365 | cannon×1, lancer×27, poison×1, shock×1, slow×1 | 571 | 279 | 4886 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 4496 | 1676 | 450 | 10 | 150 | 4478 | 2400 | 315 | cannon×1, lancer×35, poison×1, shock×1 | 727 | 335 | 4608 |
 
 ### crossflow
 
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 19 | grunt×19 | 418 | 198 | 95 | 4 | 32 | 8000 | 120 | 0 | lancer×2 | 40 | 40 | 10000 |
-| 2 | 10 | shieldbearer×10 | 940 | 752 | 140 | 7 | 47 | 3133 | 215 | 95 | lancer×2, shock×1 | 47 | 150 | 31915 |
-| 3 | 18 | grunt×14, shieldbearer×4 | 750 | 525 | 126 | 6 | 42 | 4000 | 355 | 95 | lancer×4, shock×1 | 87 | 105 | 12069 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1504 | 1086 | 219 | 7 | 73 | 3364 | 481 | 95 | lancer×6, shock×1 | 127 | 217 | 17087 |
-| 5 | 18 | warcaller×11, shieldbearer×7 | 1642 | 1096 | 219 | 7 | 73 | 3333 | 700 | 155 | lancer×10, shock×1 | 207 | 219 | 10580 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3246 | 1464 | 407 | 8 | 136 | 4642 | 919 | 225 | lancer×12, poison×1, shock×1 | 254 | 293 | 11535 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3124 | 1450 | 358 | 9 | 119 | 4103 | 1326 | 315 | cannon×1, lancer×17, poison×1, shock×1, slow×1 | 371 | 290 | 7817 |
-| 8 | 35 | shieldbearer×8, grunt×8, tank×9, runner×10 | 2391 | 1287 | 264 | 9 | 88 | 3424 | 1684 | 145 | lancer×25, shock×1, slow×1 | 511 | 257 | 5029 |
-| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 3867 | 1832 | 405 | 10 | 135 | 3689 | 1948 | 365 | cannon×1, lancer×27, poison×1, shock×1, slow×1 | 571 | 366 | 6410 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 4668 | 2164 | 450 | 10 | 150 | 3464 | 2353 | 315 | cannon×1, lancer×34, poison×1, shock×1, slow×1 | 711 | 433 | 6090 |
+| 2 | 10 | shieldbearer×10 | 930 | 744 | 140 | 7 | 47 | 3154 | 215 | 95 | lancer×2, shock×1 | 47 | 149 | 31702 |
+| 3 | 18 | grunt×14, shieldbearer×4 | 742 | 517 | 126 | 6 | 42 | 4078 | 355 | 95 | lancer×4, shock×1 | 87 | 103 | 11839 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1482 | 1066 | 219 | 7 | 73 | 3427 | 481 | 95 | lancer×6, shock×1 | 127 | 213 | 16772 |
+| 5 | 18 | warcaller×11, shieldbearer×7 | 1621 | 1075 | 219 | 7 | 73 | 3395 | 700 | 155 | lancer×10, shock×1 | 207 | 215 | 10386 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3224 | 1442 | 407 | 8 | 136 | 4722 | 919 | 225 | lancer×12, poison×1, shock×1 | 254 | 288 | 11339 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3112 | 1438 | 358 | 9 | 119 | 4132 | 1326 | 315 | cannon×1, lancer×17, poison×1, shock×1, slow×1 | 371 | 288 | 7763 |
+| 8 | 35 | shieldbearer×8, grunt×8, tank×9, runner×10 | 2375 | 1271 | 264 | 9 | 88 | 3465 | 1684 | 145 | lancer×25, shock×1, slow×1 | 511 | 254 | 4971 |
+| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 3849 | 1814 | 405 | 10 | 135 | 3719 | 1948 | 365 | cannon×1, lancer×27, poison×1, shock×1, slow×1 | 571 | 363 | 6357 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 4654 | 2150 | 450 | 10 | 150 | 3488 | 2353 | 315 | cannon×1, lancer×34, poison×1, shock×1, slow×1 | 711 | 430 | 6048 |
 
 ### steppingstones
 
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 20 | grunt×20 | 460 | 161 | 100 | 5 | 33 | 10313 | 120 | 0 | lancer×2 | 40 | 32 | 8000 |
-| 2 | 10 | shieldbearer×10 | 980 | 588 | 140 | 7 | 47 | 3983 | 220 | 95 | lancer×2, shock×1 | 47 | 118 | 25106 |
-| 3 | 18 | grunt×14, shieldbearer×4 | 766 | 416 | 126 | 6 | 42 | 5060 | 360 | 95 | lancer×4, shock×1 | 87 | 83 | 9540 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1550 | 763 | 219 | 7 | 73 | 4771 | 486 | 95 | lancer×6, shock×1 | 127 | 153 | 12047 |
-| 5 | 19 | warcaller×11, shieldbearer×8 | 1811 | 920 | 233 | 8 | 78 | 4239 | 705 | 155 | lancer×10, shock×1 | 207 | 184 | 8889 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3349 | 1098 | 407 | 8 | 136 | 6182 | 938 | 225 | lancer×12, poison×1, shock×1, slow×1 | 258 | 220 | 8527 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3230 | 1044 | 358 | 9 | 119 | 5694 | 1345 | 315 | cannon×1, lancer×18, poison×1, shock×1 | 387 | 209 | 5401 |
+| 2 | 10 | shieldbearer×10 | 950 | 570 | 140 | 7 | 47 | 4123 | 220 | 95 | lancer×2, shock×1 | 47 | 114 | 24255 |
+| 3 | 18 | grunt×14, shieldbearer×4 | 754 | 404 | 126 | 6 | 42 | 5185 | 360 | 95 | lancer×4, shock×1 | 87 | 81 | 9310 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1528 | 749 | 219 | 7 | 73 | 4867 | 486 | 95 | lancer×6, shock×1 | 127 | 150 | 11811 |
+| 5 | 19 | warcaller×11, shieldbearer×8 | 1795 | 904 | 233 | 8 | 78 | 4309 | 705 | 155 | lancer×10, shock×1 | 207 | 181 | 8744 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3327 | 1080 | 407 | 8 | 136 | 6296 | 938 | 225 | lancer×12, poison×1, shock×1, slow×1 | 258 | 216 | 8372 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3218 | 1032 | 358 | 9 | 119 | 5777 | 1345 | 315 | cannon×1, lancer×18, poison×1, shock×1 | 387 | 206 | 5323 |
 | 8 | 35 | grunt×8, tank×8, runner×9, bulwark×10 | 2800 | 1232 | 290 | 10 | 97 | 3943 | 1703 | 140 | cannon×1, lancer×26, slow×1 | 537 | 246 | 4581 |
-| 9 | 43 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×9, runner×10 | 4534 | 1419 | 460 | 10 | 153 | 5387 | 1993 | 365 | cannon×1, lancer×28, poison×1, shock×1, slow×1 | 591 | 284 | 4805 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 4843 | 1211 | 450 | 11 | 150 | 6198 | 2453 | 315 | cannon×1, lancer×36, poison×1, shock×1 | 747 | 242 | 3240 |
+| 9 | 43 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×9, runner×10 | 4506 | 1391 | 460 | 10 | 153 | 5504 | 1993 | 365 | cannon×1, lancer×28, poison×1, shock×1, slow×1 | 591 | 278 | 4704 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 4822 | 1211 | 450 | 11 | 150 | 6198 | 2453 | 315 | cannon×1, lancer×36, poison×1, shock×1 | 747 | 242 | 3240 |
 
 ### twinloop
 
@@ -312,13 +312,13 @@ Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 an
 | 1 | 20 | grunt×20 | 480 | 240 | 100 | 5 | 33 | 6875 | 120 | 0 | lancer×2 | 40 | 48 | 12000 |
 | 2 | 3 | summoner×3 | 300 | 300 | 39 | 8 | 13 | 2167 | 220 | 90 | cannon×1, lancer×2 | 53 | 60 | 11321 |
 | 3 | 12 | grunt×10, summoner×2 | 468 | 390 | 76 | 6 | 25 | 3205 | 259 | 90 | cannon×1, lancer×2 | 53 | 78 | 14717 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1607 | 1243 | 219 | 7 | 73 | 2932 | 335 | 95 | lancer×4, shock×1 | 87 | 249 | 28621 |
-| 5 | 18 | warcaller×11, shieldbearer×7 | 1739 | 1158 | 219 | 8 | 73 | 3147 | 554 | 155 | lancer×7, shock×1 | 147 | 232 | 15782 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3450 | 1571 | 407 | 8 | 136 | 4331 | 773 | 225 | lancer×10, poison×1, shock×1 | 214 | 314 | 14673 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3328 | 1546 | 358 | 9 | 119 | 3851 | 1180 | 315 | cannon×1, lancer×15, poison×1, shock×1 | 327 | 309 | 9450 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1574 | 1210 | 219 | 7 | 73 | 3017 | 335 | 95 | lancer×4, shock×1 | 87 | 242 | 27816 |
+| 5 | 18 | warcaller×11, shieldbearer×7 | 1725 | 1144 | 219 | 8 | 73 | 3188 | 554 | 155 | lancer×7, shock×1 | 147 | 229 | 15578 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3406 | 1527 | 407 | 8 | 136 | 4459 | 773 | 225 | lancer×10, poison×1, shock×1 | 214 | 305 | 14252 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3316 | 1534 | 358 | 9 | 119 | 3876 | 1180 | 315 | cannon×1, lancer×15, poison×1, shock×1 | 327 | 307 | 9388 |
 | 8 | 33 | tank×8, runner×7, bulwark×8, regenerator×10 | 3265 | 1684 | 322 | 10 | 107 | 3175 | 1538 | 210 | cannon×1, lancer×22, poison×1, slow×1 | 464 | 337 | 7263 |
-| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 4106 | 1952 | 405 | 10 | 135 | 3462 | 1860 | 365 | cannon×1, lancer×25, poison×1, shock×1, slow×2 | 535 | 390 | 7290 |
-| 10 | 30 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×7 | 4793 | 2090 | 435 | 11 | 145 | 3469 | 2265 | 315 | cannon×1, lancer×33, poison×1, shock×1 | 687 | 418 | 6084 |
+| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 4082 | 1928 | 405 | 10 | 135 | 3497 | 1860 | 365 | cannon×1, lancer×25, poison×1, shock×1, slow×2 | 535 | 386 | 7215 |
+| 10 | 30 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×7 | 4765 | 2062 | 435 | 11 | 145 | 3519 | 2265 | 315 | cannon×1, lancer×33, poison×1, shock×1 | 687 | 412 | 5997 |
 
 ## Normal
 
@@ -492,45 +492,45 @@ Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 an
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 17 | grunt×17 | 408 | 168 | 85 | 5 | 28 | 8235 | 120 | 0 | lancer×2 | 40 | 34 | 8500 |
-| 2 | 10 | shieldbearer×10 | 1010 | 606 | 130 | 8 | 43 | 3554 | 205 | 95 | lancer×1, shock×1, slow×1 | 31 | 121 | 39032 |
-| 3 | 17 | grunt×13, shieldbearer×4 | 762 | 450 | 117 | 7 | 39 | 4333 | 335 | 95 | lancer×4, shock×1 | 87 | 90 | 10345 |
-| 4 | 23 | shieldbearer×10, grunt×13 | 1484 | 896 | 195 | 8 | 65 | 3631 | 452 | 95 | lancer×5, shock×1, slow×1 | 111 | 179 | 16126 |
-| 5 | 17 | warcaller×10, shieldbearer×7 | 1656 | 909 | 191 | 9 | 64 | 3516 | 647 | 155 | lancer×9, shock×1 | 187 | 182 | 9733 |
-| 6 | 33 | shieldbearer×10, warcaller×10, regenerator×13 | 3303 | 1250 | 360 | 9 | 120 | 4800 | 838 | 225 | lancer×11, poison×1, shock×1 | 234 | 250 | 10684 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3328 | 1170 | 330 | 10 | 110 | 4701 | 1198 | 315 | cannon×1, lancer×15, poison×1, shock×1 | 327 | 234 | 7156 |
-| 8 | 35 | warcaller×8, shieldbearer×8, grunt×9, tank×10 | 3169 | 1414 | 309 | 10 | 103 | 3640 | 1528 | 155 | lancer×23, shock×1, slow×1 | 471 | 283 | 6008 |
-| 9 | 42 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×8, runner×10 | 4484 | 1556 | 413 | 11 | 138 | 4437 | 1837 | 365 | cannon×1, lancer×25, poison×1, shock×1, slow×1 | 531 | 311 | 5857 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 4994 | 1895 | 417 | 12 | 139 | 3668 | 2250 | 315 | cannon×1, lancer×33, poison×1, shock×1 | 687 | 379 | 5517 |
+| 2 | 10 | shieldbearer×10 | 990 | 594 | 130 | 8 | 43 | 3613 | 205 | 95 | lancer×1, shock×1, slow×1 | 31 | 119 | 38387 |
+| 3 | 17 | grunt×13, shieldbearer×4 | 754 | 442 | 117 | 6 | 39 | 4432 | 335 | 95 | lancer×4, shock×1 | 87 | 88 | 10115 |
+| 4 | 23 | shieldbearer×10, grunt×13 | 1464 | 880 | 195 | 8 | 65 | 3693 | 452 | 95 | lancer×5, shock×1, slow×1 | 111 | 176 | 15856 |
+| 5 | 17 | warcaller×10, shieldbearer×7 | 1642 | 895 | 191 | 9 | 64 | 3575 | 647 | 155 | lancer×9, shock×1 | 187 | 179 | 9572 |
+| 6 | 33 | shieldbearer×10, warcaller×10, regenerator×13 | 3283 | 1230 | 360 | 9 | 120 | 4878 | 838 | 225 | lancer×11, poison×1, shock×1 | 234 | 246 | 10513 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3316 | 1158 | 330 | 10 | 110 | 4741 | 1198 | 315 | cannon×1, lancer×15, poison×1, shock×1 | 327 | 232 | 7095 |
+| 8 | 35 | warcaller×8, shieldbearer×8, grunt×9, tank×10 | 3153 | 1398 | 309 | 10 | 103 | 3679 | 1528 | 155 | lancer×23, shock×1, slow×1 | 471 | 280 | 5945 |
+| 9 | 42 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×8, runner×10 | 4470 | 1542 | 413 | 11 | 138 | 4481 | 1837 | 365 | cannon×1, lancer×25, poison×1, shock×1, slow×1 | 531 | 308 | 5800 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 4980 | 1881 | 417 | 12 | 139 | 3697 | 2250 | 315 | cannon×1, lancer×33, poison×1, shock×1 | 687 | 376 | 5473 |
 
 ### crossflow
 
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 19 | grunt×19 | 475 | 225 | 95 | 5 | 32 | 7111 | 120 | 0 | lancer×2 | 40 | 45 | 11250 |
-| 2 | 10 | shieldbearer×10 | 1050 | 840 | 130 | 8 | 43 | 2560 | 215 | 95 | lancer×2, shock×1 | 47 | 168 | 35745 |
-| 3 | 18 | grunt×14, shieldbearer×4 | 814 | 571 | 122 | 7 | 41 | 3596 | 345 | 95 | lancer×4, shock×1 | 87 | 114 | 13103 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1653 | 1189 | 208 | 8 | 69 | 2899 | 467 | 95 | lancer×6, shock×1 | 127 | 238 | 18740 |
-| 5 | 18 | warcaller×11, shieldbearer×7 | 1796 | 1201 | 201 | 9 | 67 | 2792 | 675 | 155 | lancer×9, shock×1 | 187 | 240 | 12834 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3575 | 1612 | 373 | 10 | 124 | 3851 | 876 | 225 | lancer×11, poison×1, shock×1, slow×1 | 238 | 322 | 13529 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3433 | 1593 | 330 | 10 | 110 | 3448 | 1249 | 315 | cannon×1, lancer×16, poison×1, shock×1 | 347 | 319 | 9193 |
-| 8 | 35 | shieldbearer×8, grunt×8, tank×9, runner×10 | 2638 | 1420 | 256 | 10 | 85 | 2993 | 1579 | 145 | lancer×23, shock×1, slow×2 | 475 | 284 | 5979 |
-| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 4249 | 2009 | 376 | 11 | 125 | 3109 | 1835 | 365 | cannon×1, lancer×25, poison×1, shock×1, slow×1 | 531 | 402 | 7571 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 5163 | 2416 | 417 | 12 | 139 | 2878 | 2211 | 315 | cannon×1, lancer×32, poison×1, shock×1 | 667 | 483 | 7241 |
+| 2 | 10 | shieldbearer×10 | 1020 | 816 | 130 | 8 | 43 | 2638 | 215 | 95 | lancer×2, shock×1 | 47 | 163 | 34681 |
+| 3 | 18 | grunt×14, shieldbearer×4 | 810 | 567 | 122 | 7 | 41 | 3628 | 345 | 95 | lancer×4, shock×1 | 87 | 113 | 12989 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1631 | 1169 | 208 | 8 | 69 | 2949 | 467 | 95 | lancer×6, shock×1 | 127 | 234 | 18425 |
+| 5 | 18 | warcaller×11, shieldbearer×7 | 1782 | 1187 | 201 | 9 | 67 | 2827 | 675 | 155 | lancer×9, shock×1 | 187 | 237 | 12674 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3553 | 1590 | 373 | 10 | 124 | 3899 | 876 | 225 | lancer×11, poison×1, shock×1, slow×1 | 238 | 318 | 13361 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3415 | 1575 | 330 | 10 | 110 | 3492 | 1249 | 315 | cannon×1, lancer×16, poison×1, shock×1 | 347 | 315 | 9078 |
+| 8 | 35 | shieldbearer×8, grunt×8, tank×9, runner×10 | 2614 | 1396 | 256 | 10 | 85 | 3047 | 1579 | 145 | lancer×23, shock×1, slow×2 | 475 | 279 | 5874 |
+| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 4231 | 1991 | 376 | 11 | 125 | 3141 | 1835 | 365 | cannon×1, lancer×25, poison×1, shock×1, slow×1 | 531 | 398 | 7495 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 5142 | 2395 | 417 | 12 | 139 | 2902 | 2211 | 315 | cannon×1, lancer×32, poison×1, shock×1 | 667 | 479 | 7181 |
 
 ### steppingstones
 
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 20 | grunt×20 | 500 | 175 | 100 | 5 | 33 | 9429 | 120 | 0 | lancer×2 | 40 | 35 | 8750 |
-| 2 | 10 | shieldbearer×10 | 1070 | 642 | 130 | 8 | 43 | 3359 | 220 | 95 | lancer×2, shock×1 | 47 | 128 | 27234 |
-| 3 | 18 | grunt×14, shieldbearer×4 | 844 | 452 | 122 | 7 | 41 | 4556 | 350 | 95 | lancer×4, shock×1 | 87 | 90 | 10345 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1697 | 840 | 208 | 8 | 69 | 4107 | 472 | 95 | lancer×6, shock×1 | 127 | 168 | 13228 |
-| 5 | 19 | warcaller×11, shieldbearer×8 | 1995 | 1016 | 214 | 9 | 71 | 3498 | 680 | 155 | lancer×9, shock×1 | 187 | 203 | 10856 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3676 | 1215 | 373 | 10 | 124 | 5103 | 894 | 225 | lancer×12, poison×1, shock×1 | 254 | 243 | 9567 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3540 | 1143 | 330 | 11 | 110 | 4803 | 1267 | 315 | cannon×1, lancer×16, poison×1, shock×1, slow×1 | 351 | 229 | 6524 |
+| 2 | 10 | shieldbearer×10 | 1060 | 636 | 130 | 8 | 43 | 3386 | 220 | 95 | lancer×2, shock×1 | 47 | 127 | 27021 |
+| 3 | 18 | grunt×14, shieldbearer×4 | 840 | 448 | 122 | 7 | 41 | 4556 | 350 | 95 | lancer×4, shock×1 | 87 | 90 | 10345 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1664 | 819 | 208 | 8 | 69 | 4207 | 472 | 95 | lancer×6, shock×1 | 127 | 164 | 12913 |
+| 5 | 19 | warcaller×11, shieldbearer×8 | 1971 | 992 | 214 | 9 | 71 | 3586 | 680 | 155 | lancer×9, shock×1 | 187 | 198 | 10588 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3632 | 1179 | 373 | 10 | 124 | 5254 | 894 | 225 | lancer×12, poison×1, shock×1 | 254 | 236 | 9291 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3528 | 1131 | 330 | 11 | 110 | 4867 | 1267 | 315 | cannon×1, lancer×16, poison×1, shock×1, slow×1 | 351 | 226 | 6439 |
 | 8 | 35 | grunt×8, tank×8, runner×9, bulwark×10 | 3092 | 1360 | 280 | 11 | 93 | 3419 | 1597 | 140 | cannon×1, lancer×24, slow×1 | 497 | 272 | 5473 |
-| 9 | 43 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×9, runner×10 | 4969 | 1553 | 427 | 12 | 142 | 4566 | 1877 | 365 | cannon×1, lancer×26, poison×1, shock×1, slow×1 | 551 | 311 | 5644 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 5340 | 1361 | 417 | 13 | 139 | 5110 | 2304 | 315 | cannon×1, lancer×34, poison×1, shock×1 | 707 | 272 | 3847 |
+| 9 | 43 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×9, runner×10 | 4941 | 1525 | 427 | 12 | 142 | 4656 | 1877 | 365 | cannon×1, lancer×26, poison×1, shock×1, slow×1 | 551 | 305 | 5535 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 5312 | 1349 | 417 | 13 | 139 | 5148 | 2304 | 315 | cannon×1, lancer×34, poison×1, shock×1 | 707 | 270 | 3819 |
 
 ### twinloop
 
@@ -539,13 +539,13 @@ Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 an
 | 1 | 20 | grunt×20 | 520 | 260 | 100 | 5 | 33 | 6346 | 120 | 0 | lancer×2 | 40 | 52 | 13000 |
 | 2 | 3 | summoner×3 | 327 | 327 | 36 | 9 | 12 | 1846 | 220 | 90 | cannon×1, lancer×2 | 53 | 65 | 12264 |
 | 3 | 12 | grunt×10, summoner×2 | 520 | 433 | 74 | 7 | 25 | 2874 | 256 | 90 | cannon×1, lancer×2 | 53 | 87 | 16415 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1743 | 1353 | 208 | 8 | 69 | 2546 | 330 | 95 | lancer×3, shock×1, slow×1 | 71 | 271 | 38169 |
-| 5 | 18 | warcaller×11, shieldbearer×7 | 1918 | 1281 | 201 | 10 | 67 | 2617 | 538 | 155 | lancer×7, shock×1 | 147 | 256 | 17415 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3801 | 1712 | 373 | 10 | 124 | 3626 | 739 | 225 | lancer×9, poison×1, shock×1 | 194 | 342 | 17629 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3659 | 1697 | 330 | 11 | 110 | 3245 | 1112 | 315 | cannon×1, lancer×14, poison×1, shock×1 | 307 | 339 | 11042 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1721 | 1331 | 208 | 8 | 69 | 2594 | 330 | 95 | lancer×3, shock×1, slow×1 | 71 | 266 | 37465 |
+| 5 | 18 | warcaller×11, shieldbearer×7 | 1897 | 1260 | 201 | 9 | 67 | 2659 | 538 | 155 | lancer×7, shock×1 | 147 | 252 | 17143 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3779 | 1690 | 373 | 10 | 124 | 3669 | 739 | 225 | lancer×9, poison×1, shock×1 | 194 | 338 | 17423 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3647 | 1685 | 330 | 11 | 110 | 3264 | 1112 | 315 | cannon×1, lancer×14, poison×1, shock×1 | 307 | 337 | 10977 |
 | 8 | 33 | tank×8, runner×7, bulwark×8, regenerator×10 | 3593 | 1852 | 304 | 12 | 101 | 2730 | 1442 | 210 | cannon×1, lancer×20, poison×1, slow×1 | 424 | 370 | 8726 |
-| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 4514 | 2133 | 376 | 12 | 125 | 2927 | 1746 | 365 | cannon×1, lancer×24, poison×1, shock×1, slow×1 | 511 | 427 | 8356 |
-| 10 | 30 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×7 | 5315 | 2337 | 403 | 13 | 134 | 2869 | 2122 | 315 | cannon×1, lancer×31, poison×1, shock×1 | 647 | 467 | 7218 |
+| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 4502 | 2121 | 376 | 12 | 125 | 2948 | 1746 | 365 | cannon×1, lancer×24, poison×1, shock×1, slow×1 | 511 | 424 | 8297 |
+| 10 | 30 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×7 | 5287 | 2309 | 403 | 13 | 134 | 2900 | 2122 | 315 | cannon×1, lancer×31, poison×1, shock×1 | 647 | 462 | 7141 |
 
 ## Hard
 
@@ -719,45 +719,45 @@ Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 an
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 17 | grunt×17 | 459 | 189 | 85 | 5 | 28 | 7368 | 120 | 0 | lancer×2 | 40 | 38 | 9500 |
-| 2 | 10 | shieldbearer×10 | 1130 | 678 | 120 | 9 | 40 | 2941 | 205 | 95 | lancer×1, shock×1, slow×1 | 31 | 136 | 43871 |
-| 3 | 17 | grunt×13, shieldbearer×4 | 849 | 501 | 113 | 8 | 38 | 3800 | 325 | 95 | lancer×3, shock×1, slow×1 | 71 | 100 | 14085 |
-| 4 | 23 | shieldbearer×10, grunt×13 | 1653 | 1000 | 185 | 9 | 62 | 3100 | 438 | 95 | lancer×5, shock×1 | 107 | 200 | 18692 |
-| 5 | 17 | warcaller×10, shieldbearer×7 | 1861 | 1024 | 184 | 10 | 61 | 2976 | 623 | 155 | lancer×8, shock×1 | 167 | 205 | 12275 |
-| 6 | 33 | shieldbearer×10, warcaller×10, regenerator×13 | 3706 | 1400 | 350 | 11 | 117 | 4179 | 807 | 225 | lancer×10, poison×1, shock×1 | 214 | 280 | 13084 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3728 | 1316 | 316 | 12 | 105 | 3992 | 1157 | 315 | cannon×1, lancer×15, poison×1, shock×1 | 327 | 263 | 8043 |
-| 8 | 35 | warcaller×8, shieldbearer×8, grunt×9, tank×10 | 3555 | 1594 | 301 | 12 | 100 | 3135 | 1473 | 155 | lancer×22, shock×1, slow×1 | 451 | 319 | 7073 |
-| 9 | 42 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×8, runner×10 | 5040 | 1749 | 398 | 13 | 133 | 3800 | 1774 | 365 | cannon×1, lancer×24, poison×1, shock×1, slow×1 | 511 | 350 | 6849 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 5737 | 2260 | 399 | 14 | 133 | 2942 | 2172 | 315 | cannon×1, lancer×31, poison×1, shock×1, slow×1 | 651 | 452 | 6943 |
+| 2 | 10 | shieldbearer×10 | 1100 | 660 | 120 | 9 | 40 | 3030 | 205 | 95 | lancer×1, shock×1, slow×1 | 31 | 132 | 42581 |
+| 3 | 17 | grunt×13, shieldbearer×4 | 841 | 493 | 113 | 7 | 38 | 3838 | 325 | 95 | lancer×3, shock×1, slow×1 | 71 | 99 | 13944 |
+| 4 | 23 | shieldbearer×10, grunt×13 | 1633 | 984 | 185 | 9 | 62 | 3147 | 438 | 95 | lancer×5, shock×1 | 107 | 197 | 18411 |
+| 5 | 17 | warcaller×10, shieldbearer×7 | 1840 | 1003 | 184 | 10 | 61 | 3035 | 623 | 155 | lancer×8, shock×1 | 167 | 201 | 12036 |
+| 6 | 33 | shieldbearer×10, warcaller×10, regenerator×13 | 3686 | 1380 | 350 | 11 | 117 | 4239 | 807 | 225 | lancer×10, poison×1, shock×1 | 214 | 276 | 12897 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3704 | 1292 | 316 | 12 | 105 | 4070 | 1157 | 315 | cannon×1, lancer×15, poison×1, shock×1 | 327 | 258 | 7890 |
+| 8 | 35 | warcaller×8, shieldbearer×8, grunt×9, tank×10 | 3523 | 1562 | 301 | 12 | 100 | 3205 | 1473 | 155 | lancer×22, shock×1, slow×1 | 451 | 312 | 6918 |
+| 9 | 42 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×8, runner×10 | 5012 | 1721 | 398 | 13 | 133 | 3866 | 1774 | 365 | cannon×1, lancer×24, poison×1, shock×1, slow×1 | 511 | 344 | 6732 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 5716 | 2239 | 399 | 14 | 133 | 2969 | 2172 | 315 | cannon×1, lancer×31, poison×1, shock×1, slow×1 | 651 | 448 | 6882 |
 
 ### crossflow
 
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 19 | grunt×19 | 532 | 252 | 95 | 6 | 32 | 6400 | 120 | 0 | lancer×2 | 40 | 50 | 12500 |
-| 2 | 10 | shieldbearer×10 | 1160 | 928 | 120 | 10 | 40 | 2151 | 215 | 95 | lancer×2, shock×1 | 47 | 186 | 39574 |
-| 3 | 18 | grunt×14, shieldbearer×4 | 912 | 642 | 118 | 8 | 39 | 3047 | 335 | 95 | lancer×4, shock×1 | 87 | 128 | 14713 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1846 | 1332 | 197 | 9 | 66 | 2481 | 453 | 95 | lancer×5, shock×1, slow×1 | 111 | 266 | 23964 |
-| 5 | 18 | warcaller×11, shieldbearer×7 | 2004 | 1339 | 194 | 10 | 65 | 2425 | 650 | 155 | lancer×9, shock×1 | 187 | 268 | 14332 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3994 | 1808 | 362 | 11 | 121 | 3343 | 844 | 225 | lancer×11, poison×1, shock×1 | 234 | 362 | 15470 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3863 | 1793 | 316 | 12 | 105 | 2925 | 1206 | 315 | cannon×1, lancer×15, poison×1, shock×1, slow×1 | 331 | 359 | 10846 |
-| 8 | 35 | shieldbearer×8, grunt×8, tank×9, runner×10 | 2954 | 1584 | 248 | 12 | 83 | 2618 | 1522 | 145 | lancer×22, shock×1, slow×2 | 455 | 317 | 6967 |
-| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 4769 | 2263 | 362 | 13 | 121 | 2671 | 1770 | 365 | cannon×1, lancer×24, poison×1, shock×1, slow×1 | 511 | 453 | 8865 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 5921 | 2844 | 399 | 15 | 133 | 2337 | 2132 | 315 | cannon×1, lancer×31, poison×1, shock×1 | 647 | 569 | 8794 |
+| 2 | 10 | shieldbearer×10 | 1140 | 912 | 120 | 10 | 40 | 2198 | 215 | 95 | lancer×2, shock×1 | 47 | 182 | 38723 |
+| 3 | 18 | grunt×14, shieldbearer×4 | 904 | 634 | 118 | 8 | 39 | 3071 | 335 | 95 | lancer×4, shock×1 | 87 | 127 | 14598 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1824 | 1312 | 197 | 9 | 66 | 2519 | 453 | 95 | lancer×5, shock×1, slow×1 | 111 | 262 | 23604 |
+| 5 | 18 | warcaller×11, shieldbearer×7 | 1990 | 1325 | 194 | 10 | 65 | 2453 | 650 | 155 | lancer×9, shock×1 | 187 | 265 | 14171 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 3961 | 1775 | 362 | 11 | 121 | 3408 | 844 | 225 | lancer×11, poison×1, shock×1 | 234 | 355 | 15171 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3845 | 1775 | 316 | 12 | 105 | 2958 | 1206 | 315 | cannon×1, lancer×15, poison×1, shock×1, slow×1 | 331 | 355 | 10725 |
+| 8 | 35 | shieldbearer×8, grunt×8, tank×9, runner×10 | 2930 | 1560 | 248 | 12 | 83 | 2660 | 1522 | 145 | lancer×22, shock×1, slow×2 | 455 | 312 | 6857 |
+| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 4745 | 2239 | 362 | 13 | 121 | 2701 | 1770 | 365 | cannon×1, lancer×24, poison×1, shock×1, slow×1 | 511 | 448 | 8767 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 5893 | 2816 | 399 | 15 | 133 | 2362 | 2132 | 315 | cannon×1, lancer×31, poison×1, shock×1 | 647 | 563 | 8702 |
 
 ### steppingstones
 
 | Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |
 |---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|
 | 1 | 20 | grunt×20 | 580 | 203 | 100 | 6 | 33 | 8049 | 120 | 0 | lancer×2 | 40 | 41 | 10250 |
-| 2 | 10 | shieldbearer×10 | 1210 | 726 | 120 | 10 | 40 | 2759 | 220 | 95 | lancer×2, shock×1 | 47 | 145 | 30851 |
-| 3 | 18 | grunt×14, shieldbearer×4 | 942 | 508 | 118 | 8 | 39 | 3824 | 340 | 95 | lancer×4, shock×1 | 87 | 102 | 11724 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1914 | 945 | 197 | 10 | 66 | 3492 | 458 | 95 | lancer×6, shock×1 | 127 | 189 | 14882 |
-| 5 | 19 | warcaller×11, shieldbearer×8 | 2217 | 1128 | 206 | 11 | 69 | 3053 | 655 | 155 | lancer×9, shock×1 | 187 | 226 | 12086 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 4128 | 1359 | 362 | 11 | 121 | 4449 | 861 | 225 | lancer×11, poison×1, shock×1 | 234 | 272 | 11624 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3990 | 1290 | 316 | 13 | 105 | 4070 | 1223 | 315 | cannon×1, lancer×16, poison×1, shock×1 | 347 | 258 | 7435 |
+| 2 | 10 | shieldbearer×10 | 1180 | 708 | 120 | 10 | 40 | 2817 | 220 | 95 | lancer×2, shock×1 | 47 | 142 | 30213 |
+| 3 | 18 | grunt×14, shieldbearer×4 | 930 | 496 | 118 | 8 | 39 | 3939 | 340 | 95 | lancer×4, shock×1 | 87 | 99 | 11379 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1870 | 917 | 197 | 9 | 66 | 3607 | 458 | 95 | lancer×6, shock×1 | 127 | 183 | 14409 |
+| 5 | 19 | warcaller×11, shieldbearer×8 | 2201 | 1112 | 206 | 11 | 69 | 3108 | 655 | 155 | lancer×9, shock×1 | 187 | 222 | 11872 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 4084 | 1323 | 362 | 11 | 121 | 4566 | 861 | 225 | lancer×11, poison×1, shock×1 | 234 | 265 | 11325 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 3972 | 1272 | 316 | 13 | 105 | 4134 | 1223 | 315 | cannon×1, lancer×16, poison×1, shock×1 | 347 | 254 | 7320 |
 | 8 | 35 | grunt×8, tank×8, runner×9, bulwark×10 | 3447 | 1520 | 270 | 13 | 90 | 2961 | 1539 | 140 | cannon×1, lancer×23, slow×1 | 477 | 304 | 6373 |
-| 9 | 43 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×9, runner×10 | 5578 | 1742 | 411 | 14 | 137 | 3937 | 1809 | 365 | cannon×1, lancer×25, poison×1, shock×1, slow×1 | 531 | 348 | 6554 |
-| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 6107 | 1658 | 399 | 15 | 133 | 4006 | 2220 | 315 | cannon×1, lancer×32, poison×1, shock×1 | 667 | 332 | 4978 |
+| 9 | 43 | shieldbearer×7, warcaller×8, regenerator×9, bulwark×9, runner×10 | 5557 | 1721 | 411 | 14 | 137 | 3983 | 1809 | 365 | cannon×1, lancer×25, poison×1, shock×1, slow×1 | 531 | 344 | 6478 |
+| 10 | 31 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×8 | 6086 | 1649 | 399 | 15 | 133 | 4030 | 2220 | 315 | cannon×1, lancer×32, poison×1, shock×1 | 667 | 330 | 4948 |
 
 ### twinloop
 
@@ -766,10 +766,10 @@ Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 an
 | 1 | 20 | grunt×20 | 580 | 290 | 100 | 6 | 33 | 5690 | 120 | 0 | lancer×2 | 40 | 58 | 14500 |
 | 2 | 3 | summoner×3 | 366 | 366 | 33 | 11 | 11 | 1507 | 220 | 90 | cannon×1, lancer×2 | 53 | 73 | 13774 |
 | 3 | 12 | grunt×10, summoner×2 | 576 | 480 | 72 | 8 | 24 | 2500 | 253 | 90 | cannon×1, lancer×2 | 53 | 96 | 18113 |
-| 4 | 24 | shieldbearer×11, grunt×13 | 1960 | 1518 | 197 | 10 | 66 | 2171 | 325 | 95 | lancer×3, shock×1, slow×1 | 71 | 304 | 42817 |
-| 5 | 18 | warcaller×11, shieldbearer×7 | 2144 | 1430 | 194 | 11 | 65 | 2273 | 522 | 155 | lancer×7, shock×1 | 147 | 286 | 19456 |
-| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 4254 | 1921 | 362 | 12 | 121 | 3151 | 716 | 225 | lancer×9, poison×1, shock×1 | 194 | 384 | 19794 |
-| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 4109 | 1909 | 316 | 13 | 105 | 2749 | 1078 | 315 | cannon×1, lancer×13, poison×1, shock×1 | 287 | 382 | 13310 |
+| 4 | 24 | shieldbearer×11, grunt×13 | 1938 | 1496 | 197 | 10 | 66 | 2207 | 325 | 95 | lancer×3, shock×1, slow×1 | 71 | 299 | 42113 |
+| 5 | 18 | warcaller×11, shieldbearer×7 | 2130 | 1416 | 194 | 11 | 65 | 2297 | 522 | 155 | lancer×7, shock×1 | 147 | 283 | 19252 |
+| 6 | 34 | shieldbearer×11, warcaller×10, regenerator×13 | 4221 | 1888 | 362 | 12 | 121 | 3201 | 716 | 225 | lancer×9, poison×1, shock×1 | 194 | 378 | 19485 |
+| 7 | 28 | shieldbearer×6, warcaller×7, regenerator×7, bulwark×8 | 4091 | 1891 | 316 | 13 | 105 | 2778 | 1078 | 315 | cannon×1, lancer×13, poison×1, shock×1 | 287 | 378 | 13171 |
 | 8 | 33 | tank×8, runner×7, bulwark×8, regenerator×10 | 4016 | 2072 | 296 | 14 | 99 | 2391 | 1394 | 210 | cannon×1, lancer×19, poison×1, slow×1 | 404 | 414 | 10248 |
-| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 5048 | 2393 | 362 | 14 | 121 | 2526 | 1690 | 365 | cannon×1, lancer×23, poison×1, shock×1, slow×1 | 491 | 479 | 9756 |
-| 10 | 30 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×7 | 6081 | 2753 | 386 | 16 | 129 | 2341 | 2052 | 315 | cannon×1, lancer×29, poison×1, shock×1, slow×1 | 611 | 551 | 9018 |
+| 9 | 38 | shieldbearer×6, warcaller×7, regenerator×8, bulwark×8, runner×9 | 5024 | 2369 | 362 | 14 | 121 | 2553 | 1690 | 365 | cannon×1, lancer×23, poison×1, shock×1, slow×1 | 491 | 474 | 9654 |
+| 10 | 30 | boss×1, shieldbearer×7, warcaller×7, regenerator×8, bulwark×7 | 6060 | 2732 | 386 | 16 | 129 | 2363 | 2052 | 315 | cannon×1, lancer×29, poison×1, shock×1, slow×1 | 611 | 546 | 8936 |
