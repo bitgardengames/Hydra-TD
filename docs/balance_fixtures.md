@@ -5,7 +5,7 @@ its best legal central tile, Hard difficulty, no modules, and wave-one enemy
 HP. `TTK` is seconds from first shot until the last kill (`—` means the fixture
 ended first); `cost` is purchase plus upgrades; `leaks` is enemy count; and
 `coverage` is the percentage of spawned targets damaged by that tower. Maximum
-means level 5. Upgrade costs are the shipped 1.25/1.75/2.4/3.2 purchase-cost
+means level 5. Upgrade costs are the shipped 1.3/1.7/2.2/2.8 purchase-cost
 multipliers. Re-run captures after changing combat behavior, range, costs, enemy
 traits, or the difficulty curve.
 
