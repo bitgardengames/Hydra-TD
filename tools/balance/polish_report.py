@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 SUPPORTED_DISPLAYS = ((1280, 720), (1280, 800), (1920, 1080), (2560, 1440))
+TARGET_DIFFICULTY = "hard"
 TIP_TEST_WIDTHS = (1024, 1280)
 
 # Layout constants are deliberately mirrored from the tiny, declarative UI
@@ -283,8 +284,8 @@ def checks(data: dict) -> list[tuple[str, bool, str]]:
     alarm("hud/overflow", max(x["overflow_pixels"] for x in data["hud_bounds"]["configurations"]), b["hud_overflow_pixels"])
     alarm("hud/compact", data["hud_bounds"]["compact_layout_failures"], b["hud_overflow_pixels"])
     alarm("hud/message_tips", data["message_tips"]["layout_failures"], b["hud_overflow_pixels"])
-    normal = data["upgrade_affordability"]["difficulties"]["normal"]
-    for kind, row in normal.items():
+    target = data["upgrade_affordability"]["difficulties"][TARGET_DIFFICULTY]
+    for kind, row in target.items():
         alarm("upgrade/first/"+kind, row["affordable_wave_range"]["first_upgrade"][1], b["balanced_first_upgrade_wave"])
         alarm("upgrade/final/"+kind, row["affordable_wave_range"]["final_tier_total"][1], b["balanced_final_tier_wave"])
     return out

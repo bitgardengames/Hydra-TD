@@ -54,7 +54,7 @@ The report reuses the balanced economy curve and runtime upgrade multipliers.
 For every tower and difficulty it reports the earliest/latest map wave where
 unspent purchasing power can afford the first upgrade or the complete final
 tier. These are independent affordability probes, never a prescribed build.
-On Normal, first upgrades alarm outside waves **0–2** and final tiers outside
+On Hard, first upgrades alarm outside waves **0–2** and final tiers outside
 waves **5–10**. This protects useful upgrade feedback cadence without pinning
 income to an exact dollar snapshot.
 

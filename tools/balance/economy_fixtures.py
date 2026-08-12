@@ -21,6 +21,7 @@ CURVES = {
 }
 TIER_ANCHORS = {"entry_pair": 110, "lancer_t2": 135,
                 "cannon_t3": 360, "plasma_t5": 1152}
+TARGET_DIFFICULTY = "hard"
 
 
 def lua_block(text: str, name: str) -> str:
@@ -105,7 +106,9 @@ def build_report() -> dict:
             curves[curve_name] = map_rows
         loss = {name: cost - math.floor(cost * diff["sellRefund"])
                 for name, cost in {"slow": 50, "lancer": 60, "plasma": 120}.items()}
-        report["difficulties"][diff_name] = {"sell_loss": loss, "curves": curves}
+        report["difficulties"][diff_name] = {
+            "start_money": int(diff["startMoney"]), "sell_loss": loss, "curves": curves,
+        }
     return report
 
 
@@ -128,8 +131,13 @@ def checks(report: dict) -> list[tuple[str, bool, str]]:
         band = bands["sell_loss_lancer"]
         out.append((f"{difficulty}/sell_loss", band[0] <= loss <= band[1], f"${loss}, accepted ${band[0]}..${band[1]}"))
     shared = accepted["shared"]
-    normal_entries = int(120 // 50)
-    out.append(("normal/two_entry_opening", shared["normal_opening_entry_towers"][0] <= normal_entries <= shared["normal_opening_entry_towers"][1], f"{normal_entries} cheapest entry towers"))
+    # Read the opening budget from the authored target difficulty rather than
+    # embedding Normal's historical $120.
+    target_opening_money = report["difficulties"][TARGET_DIFFICULTY]["start_money"]
+    opening_entries = int(target_opening_money // 50)
+    band = shared["hard_opening_entry_towers"]
+    out.append(("hard/two_entry_opening", band[0] <= opening_entries <= band[1],
+                f"{opening_entries} cheapest entry towers"))
     easy = range_at(report, "easy", "balanced", 10)[0]
     normal = range_at(report, "normal", "balanced", 10)[0]
     advantage = easy - normal
