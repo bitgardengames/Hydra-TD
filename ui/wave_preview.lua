@@ -14,17 +14,6 @@ local colorPanel = Theme.ui.panel2
 local colorBackdrop = Theme.ui.backdrop
 local colorOutline = Theme.outline.color
 
-local COMBAT_X = 16
-local COMBAT_Y = 16
-local COMBAT_W = 244
-local COMBAT_H = 48
-local COMBAT_PAD = 8
-local COMBAT_BAR_H = 8
-local COMBAT_BAR_FILL_DURATION = 0.25
-local COMPLETE_PULSE_DURATION = 0.12
-local COMPLETE_EXIT_DURATION = 0.10
-local PREVIEW_ENTER_DURATION = 0.14
-
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
 local PANEL_W = 320
@@ -34,6 +23,11 @@ local ROW_GAP = 5
 local PORTRAIT_W = 46
 local PORTRAIT_H = 42
 local TEXT_GAP = 6
+local COMBAT_BAR_H = 8
+local COMBAT_H = 70
+local RESIZE_DURATION = 0.22
+local COMBAT_BAR_FILL_DURATION = 0.25
+local COMPLETE_PULSE_DURATION = 0.18
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -64,111 +58,16 @@ local combatProgress = {
 	count = "",
 }
 
-local transition = {
-	wasInPrep = nil,
-	startedAt = nil,
+local panel = {
+	mode = nil,
+	height = nil,
+	startHeight = nil,
+	targetHeight = nil,
+	resizeStartedAt = nil,
+	completedAt = nil,
 }
 
 local WavePreview = {}
-
-local function drawCombatProgress(offsetX, scale, celebrating, completed)
-	local progress = Waves.getProgress()
-	local total = completed and completed.total or progress.totalScheduled
-	if total <= 0 then return end
-
-	local x, y = COMBAT_X + (offsetX or 0), COMBAT_Y
-	local innerW = COMBAT_W - COMBAT_PAD * 2
-	local font = lg.getFont()
-	local cleared = completed and total or math.min(total, progress.clearedCount)
-	local clearedFrac = cleared / total
-	local now = love.timer.getTime()
-	if completed then
-		combatProgress.fraction = 1
-	elseif combatProgress.wave ~= State.wave or combatProgress.total ~= total then
-		combatProgress.wave = State.wave
-		combatProgress.total = total
-		combatProgress.fraction = clearedFrac
-		combatProgress.targetFraction = clearedFrac
-		combatProgress.startFraction = clearedFrac
-		combatProgress.fillStartedAt = nil
-	elseif clearedFrac < combatProgress.targetFraction then
-		-- Progress should only fill during a wave. Snap backward if the wave state is
-		-- corrected rather than playing the fill animation in reverse.
-		combatProgress.fraction = clearedFrac
-		combatProgress.targetFraction = clearedFrac
-		combatProgress.startFraction = clearedFrac
-		combatProgress.fillStartedAt = nil
-	elseif clearedFrac > combatProgress.targetFraction then
-		combatProgress.startFraction = combatProgress.fraction
-		combatProgress.targetFraction = clearedFrac
-		combatProgress.fillStartedAt = now
-	end
-
-	if not completed and combatProgress.fillStartedAt then
-		local elapsed = now - combatProgress.fillStartedAt
-		local fillT = math.min(1, elapsed / COMBAT_BAR_FILL_DURATION)
-		local easedT = 1 - (1 - fillT) ^ 3
-		combatProgress.fraction = combatProgress.startFraction
-			+ (combatProgress.targetFraction - combatProgress.startFraction) * easedT
-		if fillT == 1 then
-			combatProgress.fraction = combatProgress.targetFraction
-			combatProgress.fillStartedAt = nil
-		end
-	end
-	local title = completed and completed.title or L("hud.upcomingWave", State.wave)
-	local count = completed and completed.count or L("hud.waveProgress", cleared, total)
-	if not completed then
-		combatProgress.title = title
-		combatProgress.count = count
-	end
-
-	if scale then
-		lg.push()
-		lg.translate(x + COMBAT_W * 0.5, y + COMBAT_H * 0.5)
-		lg.scale(scale, scale)
-		lg.translate(-(x + COMBAT_W * 0.5), -(y + COMBAT_H * 0.5))
-	end
-
-	lg.setColor(colorOutline)
-	lg.rectangle("fill", x - outlineW, y - outlineW, COMBAT_W + outlineW * 2,
-		COMBAT_H + outlineW * 2, outerSmallRadius)
-	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", x, y, COMBAT_W, COMBAT_H, innerSmallRadius)
-
-	lg.setColor(colorText)
-	Text.printShadow(title, x + COMBAT_PAD, y + COMBAT_PAD)
-	lg.setColor(colorText)
-	Text.printShadow(count, x + COMBAT_W - COMBAT_PAD - font:getWidth(count), y + COMBAT_PAD)
-
-	local barY = y + COMBAT_H - COMBAT_PAD - COMBAT_BAR_H
-	lg.setColor(colorPanel)
-	lg.rectangle("fill", x + COMBAT_PAD, barY, innerW, COMBAT_BAR_H, 4)
-	if combatProgress.fraction > 0 then
-		lg.setColor(Theme.ui.good)
-		lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * combatProgress.fraction, COMBAT_BAR_H, 4)
-	end
-	if celebrating then
-		lg.setColor(Theme.ui.good)
-		lg.rectangle("line", x - outlineW * 2, y - outlineW * 2,
-			COMBAT_W + outlineW * 4, COMBAT_H + outlineW * 4, outerSmallRadius)
-	end
-
-	if scale then lg.pop() end
-end
-
-local function drawCompletedCombatCard(elapsed)
-	local pulseT = math.min(1, elapsed / COMPLETE_PULSE_DURATION)
-	local scale = 1 + math.sin(pulseT * math.pi) * 0.055
-	local exitT = math.max(0, math.min(1,
-		(elapsed - COMPLETE_PULSE_DURATION) / COMPLETE_EXIT_DURATION))
-	local easedExit = exitT * exitT
-	-- Keep the completed wave visible even though gameplay has already advanced State.wave.
-	drawCombatProgress(-easedExit * (COMBAT_W + SCREEN_PAD * 2), scale, exitT == 0, {
-		total = combatProgress.total,
-		title = combatProgress.title,
-		count = L("hud.waveProgress", combatProgress.total, combatProgress.total),
-	})
-end
 
 local function refreshPreview()
 	if previewCache.wave == State.wave
@@ -185,10 +84,7 @@ local function refreshPreview()
 	previewCache.total = L("hud.waveTotal", preview.count)
 
 	local entries = previewCache.entries
-	for i = #entries, 1, -1 do
-		entries[i] = nil
-	end
-
+	for i = #entries, 1, -1 do entries[i] = nil end
 	for i = 1, #preview.composition do
 		local group = preview.composition[i]
 		entries[i] = {
@@ -198,54 +94,118 @@ local function refreshPreview()
 	end
 end
 
-local function drawPreview(offsetX)
-	lg.push()
-	lg.translate(offsetX or 0, 0)
-
+local function getPreviewHeight()
 	refreshPreview()
-
-	local font = lg.getFont()
-	local textH = font:getHeight()
+	local textH = lg.getFont():getHeight()
 	local bodyH = 0
 	for _, entry in ipairs(previewCache.entries) do
 		entry.rowH = math.max(PORTRAIT_H, textH)
 		bodyH = bodyH + entry.rowH + ROW_GAP
 	end
 	bodyH = math.max(textH, bodyH - ROW_GAP)
-	local panelH = PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH + HEADER_GAP + textH
-	local x = SCREEN_PAD
-	local y = SCREEN_PAD
+	return PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH + HEADER_GAP + textH
+end
 
+local function updateCombatProgress(now)
+	local progress = Waves.getProgress()
+	local total = progress.totalScheduled
+	if total <= 0 then return nil end
+	local cleared = math.min(total, progress.clearedCount)
+	local clearedFrac = cleared / total
+
+	if combatProgress.wave ~= State.wave or combatProgress.total ~= total then
+		combatProgress.wave = State.wave
+		combatProgress.total = total
+		combatProgress.fraction = clearedFrac
+		combatProgress.targetFraction = clearedFrac
+		combatProgress.startFraction = clearedFrac
+		combatProgress.fillStartedAt = nil
+	elseif clearedFrac < combatProgress.targetFraction then
+		combatProgress.fraction = clearedFrac
+		combatProgress.targetFraction = clearedFrac
+		combatProgress.startFraction = clearedFrac
+		combatProgress.fillStartedAt = nil
+	elseif clearedFrac > combatProgress.targetFraction then
+		combatProgress.startFraction = combatProgress.fraction
+		combatProgress.targetFraction = clearedFrac
+		combatProgress.fillStartedAt = now
+	end
+
+	if combatProgress.fillStartedAt then
+		local fillT = math.min(1, (now - combatProgress.fillStartedAt) / COMBAT_BAR_FILL_DURATION)
+		local easedT = 1 - (1 - fillT) ^ 3
+		combatProgress.fraction = combatProgress.startFraction
+			+ (combatProgress.targetFraction - combatProgress.startFraction) * easedT
+		if fillT == 1 then
+			combatProgress.fraction = combatProgress.targetFraction
+			combatProgress.fillStartedAt = nil
+		end
+	end
+
+	combatProgress.title = L("hud.upcomingWave", State.wave)
+	combatProgress.count = L("hud.waveProgress", cleared, total)
+	return combatProgress
+end
+
+local function drawPanel(height, pulse)
+	local x, y = SCREEN_PAD, SCREEN_PAD
 	lg.setColor(colorOutline)
-	lg.rectangle("fill", x - outlineW, y - outlineW, PANEL_W + outlineW * 2, panelH + outlineW * 2, outerRadius)
-
+	lg.rectangle("fill", x - outlineW, y - outlineW, PANEL_W + outlineW * 2,
+		height + outlineW * 2, outerRadius)
 	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", x, y, PANEL_W, panelH, innerRadius)
+	lg.rectangle("fill", x, y, PANEL_W, height, innerRadius)
+	if pulse > 0 then
+		lg.setColor(Theme.ui.good)
+		lg.rectangle("line", x - outlineW * (1 + pulse), y - outlineW * (1 + pulse),
+			PANEL_W + outlineW * (2 + pulse * 2), height + outlineW * (2 + pulse * 2), outerRadius)
+	end
+end
 
-	local innerX = x + PANEL_PAD
+local function drawHeader(title, count)
+	local innerX = SCREEN_PAD + PANEL_PAD
 	local innerW = PANEL_W - PANEL_PAD * 2
-	local headerY = y + PANEL_PAD
+	local headerY = SCREEN_PAD + PANEL_PAD
+	local font = lg.getFont()
+	local textH = font:getHeight()
 
 	lg.setColor(colorOutline)
-	lg.rectangle("fill", innerX - outlineW, headerY - outlineW, innerW + outlineW * 2, HEADER_H + outlineW * 2, outerSmallRadius)
-
+	lg.rectangle("fill", innerX - outlineW, headerY - outlineW,
+		innerW + outlineW * 2, HEADER_H + outlineW * 2, outerSmallRadius)
 	lg.setColor(colorPanel)
 	lg.rectangle("fill", innerX, headerY, innerW, HEADER_H, innerSmallRadius)
 
 	local titleY = headerY + floor((HEADER_H - textH) * 0.5 + 0.5)
 	lg.setColor(colorText)
-	Text.printShadow(previewCache.title, innerX + 8, titleY)
+	Text.printShadow(title, innerX + 8, titleY)
+	Text.printShadow(count, innerX + innerW - 8 - font:getWidth(count), titleY)
+	return innerX, innerW, headerY
+end
 
-	lg.setColor(colorText)
-	Text.printShadow(previewCache.total, innerX + innerW - 8 - font:getWidth(previewCache.total), titleY)
+local function drawCombat(now)
+	local progress = updateCombatProgress(now)
+	if not progress then return end
+	local innerX, innerW, headerY = drawHeader(progress.title, progress.count)
+	local barY = headerY + HEADER_H + HEADER_GAP
+	lg.setColor(colorPanel)
+	lg.rectangle("fill", innerX, barY, innerW, COMBAT_BAR_H, 4)
+	if progress.fraction > 0 then
+		lg.setColor(Theme.ui.good)
+		lg.rectangle("fill", innerX, barY, innerW * progress.fraction, COMBAT_BAR_H, 4)
+	end
+end
 
+local function drawPreview()
+	local innerX, innerW, headerY = drawHeader(previewCache.title, previewCache.total)
+	local font = lg.getFont()
+	local textH = font:getHeight()
 	local rowY = headerY + HEADER_H + HEADER_GAP
 	local animT = love.timer.getTime()
 	for i = 1, #previewCache.entries do
 		local entry = previewCache.entries[i]
 		local textX = innerX + PORTRAIT_W + TEXT_GAP
 		local textY = rowY + floor((entry.rowH - textH) * 0.5)
-		DrawEntities.drawEnemyPortrait(entry.portrait, innerX + PORTRAIT_W * 0.5, rowY + entry.rowH * 0.5, animT)
+		DrawEntities.drawEnemyPortrait(entry.portrait,
+			innerX + PORTRAIT_W * 0.5, rowY + entry.rowH * 0.5, animT)
 		lg.setColor(colorText)
 		Text.printShadow(entry.name, textX, textY)
 		rowY = rowY + entry.rowH + ROW_GAP
@@ -260,44 +220,49 @@ local function drawPreview(offsetX)
 	Text.printShadow(previewCache.startPrompt,
 		innerX + floor((innerW - font:getWidth(previewCache.startPrompt)) * 0.5 + 0.5),
 		rowY + HEADER_GAP - ROW_GAP)
-	lg.pop()
 end
 
 function WavePreview.draw()
 	local now = love.timer.getTime()
-	if transition.wasInPrep == nil then transition.wasInPrep = State.inPrep end
+	local mode = State.inPrep and "preview" or "combat"
+	local targetHeight = mode == "preview" and getPreviewHeight() or COMBAT_H
 
-	if not State.inPrep then
-		-- Starting the next wave always wins over presentation, even midway through
-		-- the completion flourish.
-		transition.wasInPrep = false
-		transition.startedAt = nil
-		drawCombatProgress()
-		return
+	if not panel.mode then
+		panel.mode = mode
+		panel.height = targetHeight
+		panel.targetHeight = targetHeight
+	elseif panel.mode ~= mode or panel.targetHeight ~= targetHeight then
+		if panel.mode == "combat" and mode == "preview" then panel.completedAt = now end
+		panel.mode = mode
+		panel.startHeight = panel.height
+		panel.targetHeight = targetHeight
+		panel.resizeStartedAt = now
 	end
 
-	if transition.wasInPrep == false then
-		transition.startedAt = now
-	end
-	transition.wasInPrep = true
-
-	if transition.startedAt then
-		local elapsed = now - transition.startedAt
-		local exitEnd = COMPLETE_PULSE_DURATION + COMPLETE_EXIT_DURATION
-		if elapsed < exitEnd then
-			drawCompletedCombatCard(elapsed)
-			return
+	if panel.resizeStartedAt then
+		local resizeT = math.min(1, (now - panel.resizeStartedAt) / RESIZE_DURATION)
+		local easedT = 1 - (1 - resizeT) ^ 3
+		panel.height = panel.startHeight + (panel.targetHeight - panel.startHeight) * easedT
+		if resizeT == 1 then
+			panel.height = panel.targetHeight
+			panel.resizeStartedAt = nil
 		end
-		local enterT = math.min(1, (elapsed - exitEnd) / PREVIEW_ENTER_DURATION)
-		if enterT < 1 then
-			local eased = 1 - (1 - enterT) ^ 3
-			drawPreview((1 - eased) * (PANEL_W + SCREEN_PAD))
-			return
-		end
-		transition.startedAt = nil
 	end
 
-	drawPreview()
+	local pulse = 0
+	if panel.completedAt then
+		local pulseT = (now - panel.completedAt) / COMPLETE_PULSE_DURATION
+		if pulseT < 1 then pulse = math.sin(pulseT * math.pi) else panel.completedAt = nil end
+	end
+	drawPanel(panel.height, pulse)
+
+	-- Clip the changing information to the single resizing card, so transitioning
+	-- between the compact progress view and the taller roster never spawns a
+	-- second panel or lets its contents escape the animated bounds.
+	local sx, sy, sw, sh = lg.getScissor()
+	lg.setScissor(SCREEN_PAD, SCREEN_PAD, PANEL_W, panel.height)
+	if mode == "preview" then drawPreview() else drawCombat(now) end
+	if sx then lg.setScissor(sx, sy, sw, sh) else lg.setScissor() end
 end
 
 return WavePreview
