@@ -28,13 +28,7 @@ COUNTERS = {"fast": "slow", "armored": "cannon", "regenerates": "poison",
 # points.  A little latitude preserves meaningful cheap and premium archetypes
 # while preventing enemy type from silently becoming an economy multiplier.
 ENEMY_THREAT_PER_DOLLAR = (3, 5)
-# Curriculum-phase envelopes, expressed as required/affordable DPS basis points.
-# Introduction waves (2 and 4) allow the intended specialist spike; practice and
-# exam waves tighten as the player's accumulated income smooths composition.
-RATIO_BANDS = [(3_500, 16_000), (4_500, 50_000), (4_000, 20_000),
-               (3_000, 48_000), (2_500, 24_000), (2_500, 24_000),
-               (2_500, 16_000), (2_500, 12_000), (2_500, 11_000),
-               (3_000, 10_000)]
+BANDS_FILE = ROOT / "tools/balance/challenge_bands.json"
 
 
 def half_up(numerator: int, denominator: int) -> int:
@@ -198,12 +192,13 @@ def build_report() -> dict:
         reward = half_up(enemy["reward"], BP)
         archetypes[kind] = {"base_effective_durability": threat, "reward": reward,
                             "threat_per_dollar": half_up(threat, max(1, reward))}
-    report = {"format_version": 3, "units": {"durability": "threat points",
+    ratio_bands = json.loads(BANDS_FILE.read_text())["required_to_affordable_bp"]
+    report = {"format_version": 4, "units": {"durability": "threat points",
               "damage": "damage points per second", "money": "dollars",
               "multipliers_and_ratios": "basis points"}, "engagement_window_seconds": 5,
               "enemy_threat_per_dollar_band": list(ENEMY_THREAT_PER_DOLLAR),
               "enemy_archetypes": archetypes,
-              "ratio_bands_bp": [list(x) for x in RATIO_BANDS], "difficulties": {}}
+              "ratio_bands_bp": ratio_bands, "difficulties": {}}
     for diff_name, diff in diffs.items():
         diff_maps = {}
         for map_index, (map_id, waves) in enumerate(maps.items(), 1):
@@ -275,9 +270,16 @@ def checks(report: dict) -> list[str]:
         value = row["threat_per_dollar"]
         if not low_threat <= value <= high_threat:
             failures.append(f"enemy/{kind}: {value} threat/$ outside {low_threat}..{high_threat}")
+    configured = report["ratio_bands_bp"]
+    if set(configured) != set(report["difficulties"]):
+        failures.append("challenge bands must define exactly the shipped difficulties")
     for difficulty, maps in report["difficulties"].items():
+        bands = configured.get(difficulty, [])
+        if len(bands) != 10:
+            failures.append(f"bands/{difficulty}: expected 10 wave bands, got {len(bands)}")
+            continue
         for map_id, waves in maps.items():
-            for row, (low, high) in zip(waves, RATIO_BANDS):
+            for row, (low, high) in zip(waves, bands):
                 ratio = row["required_to_affordable_bp"]
                 if not low <= ratio <= high:
                     failures.append(f"{difficulty}/{map_id}/wave_{row['wave']}: {ratio}bp outside {low}..{high}")
@@ -295,9 +297,11 @@ def write_docs(report: dict) -> None:
               for kind, row in sorted(report["enemy_archetypes"].items())]
     lines += ["",
              "## Acceptance bands", "",
-             "The phase-specific envelopes allow specialist-purchase spikes on waves 2 and 4, then tighten through practice and the final exam as income funds a broader loadout. A ratio of 10,000 bp means required and affordable DPS are equal.", "",
-             "| Wave | Minimum ratio (bp) | Maximum ratio (bp) |", "|---:|---:|---:|"]
-    lines += [f"| {wave} | {low} | {high} |" for wave, (low, high) in enumerate(RATIO_BANDS, 1)]
+             "Difficulty-specific envelopes allow specialist-purchase spikes on waves 2 and 4, then tighten through practice and the final exam as kill income funds a broader loadout. Each range is tuned to the shipped maps with approximately ten percent integer headroom, so a change to tower output, count, composition, reward, or difficulty economy must remain part of the same challenge curve. A ratio of 10,000 bp means required and affordable DPS are equal.", "",
+             "| Difficulty | Wave | Minimum ratio (bp) | Maximum ratio (bp) |", "|:---|---:|---:|---:|"]
+    for difficulty, bands in report["ratio_bands_bp"].items():
+        lines += [f"| {difficulty} | {wave} | {low} | {high} |"
+                  for wave, (low, high) in enumerate(bands, 1)]
     lines.append("")
     for difficulty, maps in report["difficulties"].items():
         lines += [f"## {difficulty.title()}", ""]

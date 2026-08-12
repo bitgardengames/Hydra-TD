@@ -54,9 +54,11 @@ reward against its mechanic-weighted durability. Its wave table then records ene
 count and type, effective and peak five-second durability, income, threat per
 income dollar, income-funded damage, pre-wave purchasing power, the money reserved
 for composition counters, an integer-optimized affordable loadout, and the
-required/affordable DPS ratio. Curriculum-phase ratio envelopes retain room for
-specialist introductions while tightly guarding practice and exam waves without
-turning the fixture into a prescribed player build.
+required/affordable DPS ratio. Difficulty- and wave-specific ratio envelopes in
+`challenge_bands.json` retain room for specialist introductions while giving the
+shipped range only about ten percent integer headroom. This makes tower output,
+enemy count and composition, kill income, and difficulty economy move as one
+curve without turning the fixture into a prescribed player build.
 
 `interaction_fixtures.json` records every active ability variant and branch
 mapping, representative module combat formations, targeting expectations, and

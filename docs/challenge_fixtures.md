@@ -25,20 +25,40 @@ Each non-special boss archetype targets three to five base effective durability 
 
 ## Acceptance bands
 
-The phase-specific envelopes allow specialist-purchase spikes on waves 2 and 4, then tighten through practice and the final exam as income funds a broader loadout. A ratio of 10,000 bp means required and affordable DPS are equal.
+Difficulty-specific envelopes allow specialist-purchase spikes on waves 2 and 4, then tighten through practice and the final exam as kill income funds a broader loadout. Each range is tuned to the shipped maps with approximately ten percent integer headroom, so a change to tower output, count, composition, reward, or difficulty economy must remain part of the same challenge curve. A ratio of 10,000 bp means required and affordable DPS are equal.
 
-| Wave | Minimum ratio (bp) | Maximum ratio (bp) |
-|---:|---:|---:|
-| 1 | 3500 | 16000 |
-| 2 | 4500 | 50000 |
-| 3 | 4000 | 20000 |
-| 4 | 3000 | 48000 |
-| 5 | 2500 | 24000 |
-| 6 | 2500 | 24000 |
-| 7 | 2500 | 16000 |
-| 8 | 2500 | 12000 |
-| 9 | 2500 | 11000 |
-| 10 | 3000 | 10000 |
+| Difficulty | Wave | Minimum ratio (bp) | Maximum ratio (bp) |
+|:---|---:|---:|---:|
+| easy | 1 | 3500 | 13900 |
+| easy | 2 | 4100 | 42500 |
+| easy | 3 | 4000 | 17000 |
+| easy | 4 | 2900 | 32500 |
+| easy | 5 | 2500 | 18000 |
+| easy | 6 | 2300 | 18300 |
+| easy | 7 | 2400 | 11600 |
+| easy | 8 | 2500 | 9300 |
+| easy | 9 | 2400 | 8800 |
+| easy | 10 | 3100 | 7400 |
+| normal | 1 | 4000 | 15100 |
+| normal | 2 | 4300 | 46800 |
+| normal | 3 | 4300 | 18700 |
+| normal | 4 | 3200 | 44400 |
+| normal | 5 | 2700 | 19800 |
+| normal | 6 | 2500 | 20200 |
+| normal | 7 | 2700 | 13600 |
+| normal | 8 | 2800 | 10700 |
+| normal | 9 | 2600 | 10500 |
+| normal | 10 | 3700 | 8700 |
+| hard | 1 | 4500 | 16800 |
+| hard | 2 | 5000 | 51900 |
+| hard | 3 | 4700 | 21200 |
+| hard | 4 | 3700 | 49900 |
+| hard | 5 | 3100 | 25200 |
+| hard | 6 | 2700 | 25200 |
+| hard | 7 | 2900 | 16200 |
+| hard | 8 | 3100 | 12700 |
+| hard | 9 | 3100 | 11800 |
+| hard | 10 | 4700 | 10700 |
 
 ## Easy
 
