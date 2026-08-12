@@ -21,6 +21,9 @@ local COMBAT_H = 48
 local COMBAT_PAD = 8
 local COMBAT_BAR_H = 8
 local COMBAT_BAR_FILL_DURATION = 0.25
+local COMPLETE_PULSE_DURATION = 0.12
+local COMPLETE_EXIT_DURATION = 0.10
+local PREVIEW_ENTER_DURATION = 0.14
 
 local SCREEN_PAD = 16
 local PANEL_PAD = 12
@@ -57,22 +60,31 @@ local combatProgress = {
 	targetFraction = 0,
 	startFraction = 0,
 	fillStartedAt = nil,
+	title = "",
+	count = "",
+}
+
+local transition = {
+	wasInPrep = nil,
+	startedAt = nil,
 }
 
 local WavePreview = {}
 
-local function drawCombatProgress()
+local function drawCombatProgress(offsetX, scale, celebrating, completed)
 	local progress = Waves.getProgress()
-	local total = progress.totalScheduled
+	local total = completed and completed.total or progress.totalScheduled
 	if total <= 0 then return end
 
-	local x, y = COMBAT_X, COMBAT_Y
+	local x, y = COMBAT_X + (offsetX or 0), COMBAT_Y
 	local innerW = COMBAT_W - COMBAT_PAD * 2
 	local font = lg.getFont()
-	local cleared = math.min(total, progress.clearedCount)
+	local cleared = completed and total or math.min(total, progress.clearedCount)
 	local clearedFrac = cleared / total
 	local now = love.timer.getTime()
-	if combatProgress.wave ~= State.wave or combatProgress.total ~= total then
+	if completed then
+		combatProgress.fraction = 1
+	elseif combatProgress.wave ~= State.wave or combatProgress.total ~= total then
 		combatProgress.wave = State.wave
 		combatProgress.total = total
 		combatProgress.fraction = clearedFrac
@@ -92,7 +104,7 @@ local function drawCombatProgress()
 		combatProgress.fillStartedAt = now
 	end
 
-	if combatProgress.fillStartedAt then
+	if not completed and combatProgress.fillStartedAt then
 		local elapsed = now - combatProgress.fillStartedAt
 		local fillT = math.min(1, elapsed / COMBAT_BAR_FILL_DURATION)
 		local easedT = 1 - (1 - fillT) ^ 3
@@ -103,8 +115,19 @@ local function drawCombatProgress()
 			combatProgress.fillStartedAt = nil
 		end
 	end
-	local title = L("hud.upcomingWave", State.wave)
-	local count = L("hud.waveProgress", cleared, total)
+	local title = completed and completed.title or L("hud.upcomingWave", State.wave)
+	local count = completed and completed.count or L("hud.waveProgress", cleared, total)
+	if not completed then
+		combatProgress.title = title
+		combatProgress.count = count
+	end
+
+	if scale then
+		lg.push()
+		lg.translate(x + COMBAT_W * 0.5, y + COMBAT_H * 0.5)
+		lg.scale(scale, scale)
+		lg.translate(-(x + COMBAT_W * 0.5), -(y + COMBAT_H * 0.5))
+	end
 
 	lg.setColor(colorOutline)
 	lg.rectangle("fill", x - outlineW, y - outlineW, COMBAT_W + outlineW * 2,
@@ -124,7 +147,27 @@ local function drawCombatProgress()
 		lg.setColor(Theme.ui.good)
 		lg.rectangle("fill", x + COMBAT_PAD, barY, innerW * combatProgress.fraction, COMBAT_BAR_H, 4)
 	end
+	if celebrating then
+		lg.setColor(Theme.ui.good)
+		lg.rectangle("line", x - outlineW * 2, y - outlineW * 2,
+			COMBAT_W + outlineW * 4, COMBAT_H + outlineW * 4, outerSmallRadius)
+	end
 
+	if scale then lg.pop() end
+end
+
+local function drawCompletedCombatCard(elapsed)
+	local pulseT = math.min(1, elapsed / COMPLETE_PULSE_DURATION)
+	local scale = 1 + math.sin(pulseT * math.pi) * 0.055
+	local exitT = math.max(0, math.min(1,
+		(elapsed - COMPLETE_PULSE_DURATION) / COMPLETE_EXIT_DURATION))
+	local easedExit = exitT * exitT
+	-- Keep the completed wave visible even though gameplay has already advanced State.wave.
+	drawCombatProgress(-easedExit * (COMBAT_W + SCREEN_PAD * 2), scale, exitT == 0, {
+		total = combatProgress.total,
+		title = combatProgress.title,
+		count = L("hud.waveProgress", combatProgress.total, combatProgress.total),
+	})
 end
 
 local function refreshPreview()
@@ -155,11 +198,9 @@ local function refreshPreview()
 	end
 end
 
-function WavePreview.draw()
-	if not State.inPrep then
-		drawCombatProgress()
-		return
-	end
+local function drawPreview(offsetX)
+	lg.push()
+	lg.translate(offsetX or 0, 0)
 
 	refreshPreview()
 
@@ -219,6 +260,44 @@ function WavePreview.draw()
 	Text.printShadow(previewCache.startPrompt,
 		innerX + floor((innerW - font:getWidth(previewCache.startPrompt)) * 0.5 + 0.5),
 		rowY + HEADER_GAP - ROW_GAP)
+	lg.pop()
+end
+
+function WavePreview.draw()
+	local now = love.timer.getTime()
+	if transition.wasInPrep == nil then transition.wasInPrep = State.inPrep end
+
+	if not State.inPrep then
+		-- Starting the next wave always wins over presentation, even midway through
+		-- the completion flourish.
+		transition.wasInPrep = false
+		transition.startedAt = nil
+		drawCombatProgress()
+		return
+	end
+
+	if transition.wasInPrep == false then
+		transition.startedAt = now
+	end
+	transition.wasInPrep = true
+
+	if transition.startedAt then
+		local elapsed = now - transition.startedAt
+		local exitEnd = COMPLETE_PULSE_DURATION + COMPLETE_EXIT_DURATION
+		if elapsed < exitEnd then
+			drawCompletedCombatCard(elapsed)
+			return
+		end
+		local enterT = math.min(1, (elapsed - exitEnd) / PREVIEW_ENTER_DURATION)
+		if enterT < 1 then
+			local eased = 1 - (1 - enterT) ^ 3
+			drawPreview((1 - eased) * (PANEL_W + SCREEN_PAD))
+			return
+		end
+		transition.startedAt = nil
+	end
+
+	drawPreview()
 end
 
 return WavePreview
