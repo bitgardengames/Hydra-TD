@@ -293,12 +293,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.armor = def.armor
 	e.regeneration = def.regeneration
 	e.regenDelay = 0
-	e.shieldDef = def.shield
-	e.shieldMax = def.shield and def.shield.hp * hpScale or 0
-	e.shieldHp = e.shieldMax
-	e.shieldBreakFlash = 0
-	e.shieldHitFlash = 0
-	e.shieldCounterFlash = 0
 	e.regenVisualPulse = 0
 	e.support = def.support
 	e.summon = def.summon
@@ -613,9 +607,6 @@ local function updateEnemies(dt)
 			e.hp = min(e.maxHp, e.hp + e.regeneration.hpPerSecond * e.hpScale * dt)
 			e.regenVisualPulse = 0.28
 		end
-		if e.shieldBreakFlash > 0 then e.shieldBreakFlash = max(0, e.shieldBreakFlash - dt) end
-		if e.shieldHitFlash > 0 then e.shieldHitFlash = max(0, e.shieldHitFlash - dt) end
-		if e.shieldCounterFlash > 0 then e.shieldCounterFlash = max(0, e.shieldCounterFlash - dt) end
 		if e.regenVisualPulse > 0 then e.regenVisualPulse = max(0, e.regenVisualPulse - dt) end
 
 		-- Summoned runners join at the caster's current path progress rather than at
@@ -770,8 +761,7 @@ local function applyHitImpulse(e, dx, dy, strength)
 	end
 end
 
--- Single damage gateway for traits. Returns health and shield damage separately
--- so callers can report useful barrier damage without counting mitigation.
+-- Single damage gateway for traits. The second return value reports mitigation.
 local function applyDamage(e, amount, context)
 	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
 	context = context or {}
@@ -785,30 +775,14 @@ local function applyDamage(e, amount, context)
 		if heavy then amount = amount * (e.armor.heavyMultiplier or 1)
 		else amount = max(1, amount - (e.armor.flatReduction or 0)) end
 	end
-	local absorbed = 0
-	if e.shieldHp and e.shieldHp > 0 then
-		local shieldDamage = amount
-		if context.chain then shieldDamage = shieldDamage * (e.shieldDef.chainMultiplier or 1) end
-		if raw >= (e.shieldDef.burstThreshold or math.huge) then
-			shieldDamage = shieldDamage * (e.shieldDef.burstMultiplier or 1)
-		end
-		absorbed = min(e.shieldHp, shieldDamage)
-		e.shieldHitFlash = 0.18
-		if context.chain or raw >= (e.shieldDef.burstThreshold or math.huge) then
-			e.shieldCounterFlash = 0.26
-		end
-		e.shieldHp = e.shieldHp - shieldDamage
-		if e.shieldHp <= 0 then e.shieldHp = 0; e.shieldBreakFlash = 0.35 end
-		amount = max(0, amount - absorbed)
-	end
 	e.hp = e.hp - amount
 	EnemySupport.detachDead(e)
-	if amount > 0 or absorbed > 0 then
+	if amount > 0 then
 		e.hitSquash = HIT_SQUASH_DUR
 		e.hitSquashStrength = 1
 	end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
-	return amount, absorbed
+	return amount, 0
 end
 
 local function setPathDistance(e, distance)
@@ -860,12 +834,6 @@ local function getDisplayStatuses(e)
 		add("status.poison", "●", Theme.tower.poison, {
 			id = "poison", stacks = e.poisonStacks,
 			remainingFraction = fraction(e.poisonTimer, e.poisonDuration),
-		})
-	end
-	if (e.shieldHp or 0) > 0 and (e.shieldMax or 0) > 0 then
-		add("status.barrier", "◈", Theme.tower.shock, {
-			id = "barrier", value = L("status.value", Util.formatInt(e.shieldHp), Util.formatInt(e.shieldMax)),
-			remainingFraction = min(1, e.shieldHp / e.shieldMax),
 		})
 	end
 	if e.support then

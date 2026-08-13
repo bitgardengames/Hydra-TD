@@ -536,15 +536,15 @@
         "move_homing",
         "shatter_bonus"
       ],
-      "cost_efficiency": 0.12,
-      "coverage": 0.167,
-      "formation": "shields",
-      "leaks": 5,
+      "cost_efficiency": 0.14057,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
       "module": "slow_lead_freeze",
       "proc_count": 1,
-      "targets": 6,
+      "targets": 12,
       "total_cost": 210,
-      "total_damage": 25.2,
+      "total_damage": 29.52,
       "tower": "slow"
     },
     {
@@ -555,15 +555,15 @@
         "hit_damage",
         "move_homing"
       ],
-      "cost_efficiency": 0.15619,
-      "coverage": 0.083,
-      "formation": "fast_enemies",
-      "leaks": 12,
+      "cost_efficiency": 0.13714,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
       "module": "slow_wide_chill",
       "proc_count": 1,
-      "targets": 12,
+      "targets": 1,
       "total_cost": 210,
-      "total_damage": 32.8,
+      "total_damage": 28.8,
       "tower": "slow"
     },
     {
@@ -575,15 +575,15 @@
         "pierce",
         "shatter_bonus"
       ],
-      "cost_efficiency": 0.11955,
+      "cost_efficiency": 0.16604,
       "coverage": 1,
-      "formation": "boss_targets",
+      "formation": "single_target",
       "leaks": 0,
       "module": "slow_absolute_zero",
       "proc_count": 1,
       "targets": 1,
       "total_cost": 265,
-      "total_damage": 31.68,
+      "total_damage": 44,
       "tower": "slow"
     },
     {
@@ -594,15 +594,15 @@
         "move_homing",
         "slow_burst_cleave"
       ],
-      "cost_efficiency": 0.18113,
+      "cost_efficiency": 2.89811,
       "coverage": 1,
-      "formation": "single_target",
+      "formation": "packed_targets",
       "leaks": 0,
       "module": "slow_glacial_barrage",
-      "proc_count": 1,
-      "targets": 1,
+      "proc_count": 16,
+      "targets": 16,
       "total_cost": 265,
-      "total_damage": 48,
+      "total_damage": 768,
       "tower": "slow"
     },
     {
@@ -614,15 +614,15 @@
         "lancer_overdrive",
         "move_homing"
       ],
-      "cost_efficiency": 0.0625,
-      "coverage": 0.062,
-      "formation": "packed_targets",
-      "leaks": 15,
+      "cost_efficiency": 0.03625,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
       "module": "lancer_overdrive",
       "proc_count": 1,
-      "targets": 16,
+      "targets": 4,
       "total_cost": 320,
-      "total_damage": 20,
+      "total_damage": 11.6,
       "tower": "lancer"
     },
     {
@@ -633,15 +633,15 @@
         "move_homing",
         "split_on_hit"
       ],
-      "cost_efficiency": 0.0435,
+      "cost_efficiency": 0.0585,
       "coverage": 0.25,
-      "formation": "armor",
+      "formation": "regeneration",
       "leaks": 3,
       "module": "lancer_volley",
       "proc_count": 1,
       "targets": 4,
       "total_cost": 320,
-      "total_damage": 13.92,
+      "total_damage": 18.72,
       "tower": "lancer"
     },
     {
@@ -649,30 +649,30 @@
         "hit_circle",
         "pierce"
       ],
-      "cost_efficiency": 0.05824,
-      "coverage": 0.25,
-      "formation": "regeneration",
-      "leaks": 3,
+      "cost_efficiency": 0.06123,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
       "module": "pierce",
       "proc_count": 1,
-      "targets": 4,
+      "targets": 12,
       "total_cost": 375,
-      "total_damage": 21.84,
+      "total_damage": 22.96,
       "tower": "lancer"
     },
     {
       "behavior_ids": [
         "lancer_ricochet"
       ],
-      "cost_efficiency": 0.05973,
-      "coverage": 0.167,
-      "formation": "shields",
-      "leaks": 5,
+      "cost_efficiency": 0.06144,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
       "module": "lancer_ricochet",
       "proc_count": 1,
-      "targets": 6,
+      "targets": 1,
       "total_cost": 375,
-      "total_damage": 22.4,
+      "total_damage": 23.04,
       "tower": "lancer"
     },
     {
@@ -684,15 +684,15 @@
         "lancer_sustained_barrage",
         "move_homing"
       ],
-      "cost_efficiency": 0.82381,
+      "cost_efficiency": 0.08372,
       "coverage": 1,
-      "formation": "fast_enemies",
-      "leaks": 3,
+      "formation": "single_target",
+      "leaks": 0,
       "module": "lancer_sustained_barrage",
-      "proc_count": 12,
-      "targets": 12,
+      "proc_count": 1,
+      "targets": 1,
       "total_cost": 430,
-      "total_damage": 354.24,
+      "total_damage": 36,
       "tower": "lancer"
     },
     {
@@ -704,15 +704,15 @@
         "lancer_opening_strike",
         "move_homing"
       ],
-      "cost_efficiency": 0.06698,
-      "coverage": 1,
-      "formation": "boss_targets",
-      "leaks": 0,
+      "cost_efficiency": 0.09302,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
       "module": "lancer_opening_strike",
       "proc_count": 1,
-      "targets": 1,
+      "targets": 16,
       "total_cost": 430,
-      "total_damage": 28.8,
+      "total_damage": 40,
       "tower": "lancer"
     },
     {
@@ -725,15 +725,15 @@
         "move_linear",
         "pierce"
       ],
-      "cost_efficiency": 0.09072,
-      "coverage": 1,
-      "formation": "single_target",
-      "leaks": 0,
+      "cost_efficiency": 0.05262,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
       "module": "lancer_rail_lance",
       "proc_count": 1,
-      "targets": 1,
+      "targets": 4,
       "total_cost": 485,
-      "total_damage": 44,
+      "total_damage": 25.52,
       "tower": "lancer"
     },
     {
@@ -745,15 +745,15 @@
         "lancer_hit_fx",
         "move_homing"
       ],
-      "cost_efficiency": 0.09897,
-      "coverage": 0.062,
-      "formation": "packed_targets",
-      "leaks": 15,
+      "cost_efficiency": 0.0772,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
       "module": "lancer_focus_fire",
       "proc_count": 1,
-      "targets": 16,
+      "targets": 4,
       "total_cost": 485,
-      "total_damage": 48,
+      "total_damage": 37.44,
       "tower": "lancer"
     },
     {
@@ -764,15 +764,15 @@
         "hit_damage",
         "move_homing"
       ],
-      "cost_efficiency": 0.02148,
-      "coverage": 0.25,
-      "formation": "armor",
-      "leaks": 3,
+      "cost_efficiency": 0.03037,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
       "module": "poison_blight",
       "proc_count": 1,
-      "targets": 4,
+      "targets": 12,
       "total_cost": 540,
-      "total_damage": 11.6,
+      "total_damage": 16.4,
       "tower": "poison"
     },
     {
@@ -783,15 +783,15 @@
         "hit_damage",
         "move_homing"
       ],
-      "cost_efficiency": 0.13867,
+      "cost_efficiency": 0.032,
       "coverage": 1,
-      "formation": "regeneration",
+      "formation": "boss_targets",
       "leaks": 0,
       "module": "poison_plague",
-      "proc_count": 4,
-      "targets": 4,
+      "proc_count": 1,
+      "targets": 1,
       "total_cost": 540,
-      "total_damage": 74.88,
+      "total_damage": 17.28,
       "tower": "poison"
     },
     {
@@ -803,90 +803,90 @@
         "move_homing",
         "poison_neurotoxin"
       ],
-      "cost_efficiency": 0.03294,
-      "coverage": 0.167,
-      "formation": "shields",
-      "leaks": 5,
+      "cost_efficiency": 0.04706,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
       "module": "poison_neurotoxin",
       "proc_count": 1,
-      "targets": 6,
+      "targets": 1,
       "total_cost": 595,
-      "total_damage": 19.6,
+      "total_damage": 28,
       "tower": "poison"
     },
     {
       "behavior_ids": [
         "infect_spread"
       ],
-      "cost_efficiency": 0.0441,
-      "coverage": 0.083,
-      "formation": "fast_enemies",
-      "leaks": 12,
+      "cost_efficiency": 0.05378,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
       "module": "poison_venom_burst",
       "proc_count": 1,
-      "targets": 12,
+      "targets": 16,
       "total_cost": 595,
-      "total_damage": 26.24,
+      "total_damage": 32,
       "tower": "poison"
     },
     {
       "behavior_ids": [
         "poison_cull_weak"
       ],
-      "cost_efficiency": 0.03988,
-      "coverage": 1,
-      "formation": "boss_targets",
-      "leaks": 0,
+      "cost_efficiency": 0.03212,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
       "module": "poison_cull_weak",
       "proc_count": 1,
-      "targets": 1,
+      "targets": 4,
       "total_cost": 650,
-      "total_damage": 25.92,
+      "total_damage": 20.88,
       "tower": "poison"
     },
     {
       "behavior_ids": [
         "poison_corrupt_strong"
       ],
-      "cost_efficiency": 0.06154,
-      "coverage": 1,
-      "formation": "single_target",
-      "leaks": 0,
+      "cost_efficiency": 0.048,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
       "module": "poison_corrupt_strong",
       "proc_count": 1,
-      "targets": 1,
+      "targets": 4,
       "total_cost": 650,
-      "total_damage": 40,
+      "total_damage": 31.2,
       "tower": "poison"
     },
     {
       "behavior_ids": [
         "poison_hemotoxin"
       ],
-      "cost_efficiency": 0.06241,
-      "coverage": 0.062,
-      "formation": "packed_targets",
-      "leaks": 15,
+      "cost_efficiency": 0.05118,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
       "module": "poison_hemotoxin",
       "proc_count": 1,
-      "targets": 16,
+      "targets": 12,
       "total_cost": 705,
-      "total_damage": 44,
+      "total_damage": 36.08,
       "tower": "poison"
     },
     {
       "behavior_ids": [
         "infect_spread"
       ],
-      "cost_efficiency": 0.15796,
+      "cost_efficiency": 0.04902,
       "coverage": 1,
-      "formation": "armor",
+      "formation": "boss_targets",
       "leaks": 0,
       "module": "poison_pandemic",
-      "proc_count": 4,
-      "targets": 4,
+      "proc_count": 1,
+      "targets": 1,
       "total_cost": 705,
-      "total_damage": 111.36,
+      "total_damage": 34.56,
       "tower": "poison"
     },
     {
@@ -897,15 +897,15 @@
         "hit_circle",
         "move_homing"
       ],
-      "cost_efficiency": 0.02053,
-      "coverage": 0.25,
-      "formation": "regeneration",
-      "leaks": 3,
+      "cost_efficiency": 0.02632,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
       "module": "cannon_siege_shells",
       "proc_count": 1,
-      "targets": 4,
+      "targets": 1,
       "total_cost": 760,
-      "total_damage": 15.6,
+      "total_damage": 20,
       "tower": "cannon"
     },
     {
@@ -916,15 +916,15 @@
         "hit_circle",
         "move_homing"
       ],
-      "cost_efficiency": 0.02211,
-      "coverage": 0.167,
-      "formation": "shields",
-      "leaks": 5,
+      "cost_efficiency": 0.03158,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
       "module": "cannon_rapid_mortar",
       "proc_count": 1,
-      "targets": 6,
+      "targets": 16,
       "total_cost": 760,
-      "total_damage": 16.8,
+      "total_damage": 24,
       "tower": "cannon"
     },
     {
@@ -935,15 +935,15 @@
         "move_homing",
         "split_on_hit"
       ],
-      "cost_efficiency": 0.33806,
+      "cost_efficiency": 0.07971,
       "coverage": 1,
-      "formation": "fast_enemies",
-      "leaks": 3,
+      "formation": "armor",
+      "leaks": 0,
       "module": "cannon_cluster_payload",
-      "proc_count": 12,
-      "targets": 12,
+      "proc_count": 4,
+      "targets": 4,
       "total_cost": 815,
-      "total_damage": 275.52,
+      "total_damage": 64.96,
       "tower": "cannon"
     },
     {
@@ -955,15 +955,15 @@
         "hit_circle",
         "move_homing"
       ],
-      "cost_efficiency": 0.02827,
-      "coverage": 1,
-      "formation": "boss_targets",
-      "leaks": 0,
+      "cost_efficiency": 0.03063,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
       "module": "cannon_shockwave",
       "proc_count": 1,
-      "targets": 1,
+      "targets": 4,
       "total_cost": 815,
-      "total_damage": 23.04,
+      "total_damage": 24.96,
       "tower": "cannon"
     },
     {
@@ -975,15 +975,15 @@
         "hit_circle",
         "move_homing"
       ],
-      "cost_efficiency": 0.04138,
-      "coverage": 1,
-      "formation": "single_target",
-      "leaks": 0,
+      "cost_efficiency": 0.03393,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
       "module": "cannon_long_fuse",
       "proc_count": 1,
-      "targets": 1,
+      "targets": 12,
       "total_cost": 870,
-      "total_damage": 36,
+      "total_damage": 29.52,
       "tower": "cannon"
     },
     {
@@ -994,15 +994,15 @@
         "move_homing",
         "split_on_hit"
       ],
-      "cost_efficiency": 0.04598,
-      "coverage": 0.062,
-      "formation": "packed_targets",
-      "leaks": 15,
+      "cost_efficiency": 0.0331,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
       "module": "cannon_frontline_burst",
       "proc_count": 1,
-      "targets": 16,
+      "targets": 1,
       "total_cost": 870,
-      "total_damage": 40,
+      "total_damage": 28.8,
       "tower": "cannon"
     },
     {
@@ -1015,15 +1015,15 @@
         "projectile_radius",
         "projectile_visual_scale"
       ],
-      "cost_efficiency": 0.02759,
-      "coverage": 0.25,
-      "formation": "armor",
-      "leaks": 3,
+      "cost_efficiency": 0.04757,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
       "module": "cannon_mega_shell",
       "proc_count": 1,
-      "targets": 4,
+      "targets": 1,
       "total_cost": 925,
-      "total_damage": 25.52,
+      "total_damage": 44,
       "tower": "cannon"
     },
     {
@@ -1035,15 +1035,15 @@
         "hit_circle",
         "move_homing"
       ],
-      "cost_efficiency": 0.04048,
-      "coverage": 0.25,
-      "formation": "regeneration",
-      "leaks": 3,
+      "cost_efficiency": 0.05189,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
       "module": "cannon_carpet_fire",
       "proc_count": 1,
-      "targets": 4,
+      "targets": 16,
       "total_cost": 925,
-      "total_damage": 37.44,
+      "total_damage": 48,
       "tower": "cannon"
     },
     {
@@ -1052,15 +1052,15 @@
         "emit_on_target",
         "hit_chain"
       ],
-      "cost_efficiency": 0.01429,
-      "coverage": 0.167,
-      "formation": "shields",
-      "leaks": 5,
+      "cost_efficiency": 0.01184,
+      "coverage": 0.25,
+      "formation": "armor",
+      "leaks": 3,
       "module": "shock_storm_coil",
       "proc_count": 1,
-      "targets": 6,
+      "targets": 4,
       "total_cost": 980,
-      "total_damage": 14.0,
+      "total_damage": 11.6,
       "tower": "shock"
     },
     {
@@ -1069,15 +1069,15 @@
         "emit_on_target",
         "hit_chain"
       ],
-      "cost_efficiency": 0.02008,
-      "coverage": 0.083,
-      "formation": "fast_enemies",
-      "leaks": 12,
+      "cost_efficiency": 0.0191,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
       "module": "shock_overcharge",
       "proc_count": 1,
-      "targets": 12,
+      "targets": 4,
       "total_cost": 980,
-      "total_damage": 19.68,
+      "total_damage": 18.72,
       "tower": "shock"
     },
     {
@@ -1087,15 +1087,15 @@
         "fork_chain",
         "hit_chain"
       ],
-      "cost_efficiency": 0.01948,
+      "cost_efficiency": 0.2662,
       "coverage": 1,
-      "formation": "boss_targets",
-      "leaks": 0,
+      "formation": "fast_enemies",
+      "leaks": 3,
       "module": "shock_forked_arc",
-      "proc_count": 1,
-      "targets": 1,
+      "proc_count": 12,
+      "targets": 12,
       "total_cost": 1035,
-      "total_damage": 20.16,
+      "total_damage": 275.52,
       "tower": "shock"
     },
     {
@@ -1105,15 +1105,15 @@
         "emit_on_target",
         "hit_chain"
       ],
-      "cost_efficiency": 0.03092,
+      "cost_efficiency": 0.02226,
       "coverage": 1,
-      "formation": "single_target",
+      "formation": "boss_targets",
       "leaks": 0,
       "module": "shock_static_surge",
       "proc_count": 1,
       "targets": 1,
       "total_cost": 1035,
-      "total_damage": 32,
+      "total_damage": 23.04,
       "tower": "shock"
     },
     {
@@ -1124,12 +1124,12 @@
         "hit_chain"
       ],
       "cost_efficiency": 0.03303,
-      "coverage": 0.062,
-      "formation": "packed_targets",
-      "leaks": 15,
+      "coverage": 1,
+      "formation": "single_target",
+      "leaks": 0,
       "module": "shock_crowd_search",
       "proc_count": 1,
-      "targets": 16,
+      "targets": 1,
       "total_cost": 1090,
       "total_damage": 36,
       "tower": "shock"
@@ -1142,15 +1142,15 @@
         "emit_on_target",
         "hit_chain"
       ],
-      "cost_efficiency": 0.02128,
-      "coverage": 0.25,
-      "formation": "armor",
-      "leaks": 3,
+      "cost_efficiency": 0.0367,
+      "coverage": 0.062,
+      "formation": "packed_targets",
+      "leaks": 15,
       "module": "shock_boss_focus",
       "proc_count": 1,
-      "targets": 4,
+      "targets": 16,
       "total_cost": 1090,
-      "total_damage": 23.2,
+      "total_damage": 40,
       "tower": "shock"
     },
     {
@@ -1160,15 +1160,15 @@
         "fork_chain",
         "hit_chain"
       ],
-      "cost_efficiency": 0.02997,
+      "cost_efficiency": 0.02229,
       "coverage": 0.25,
-      "formation": "regeneration",
+      "formation": "armor",
       "leaks": 3,
       "module": "shock_thunderstorm",
       "proc_count": 1,
       "targets": 4,
       "total_cost": 1145,
-      "total_damage": 34.32,
+      "total_damage": 25.52,
       "tower": "shock"
     },
     {
@@ -1178,15 +1178,15 @@
         "emit_on_target",
         "hit_chain"
       ],
-      "cost_efficiency": 0.02934,
-      "coverage": 0.167,
-      "formation": "shields",
-      "leaks": 5,
+      "cost_efficiency": 0.0327,
+      "coverage": 0.25,
+      "formation": "regeneration",
+      "leaks": 3,
       "module": "shock_meltdown",
       "proc_count": 1,
-      "targets": 6,
+      "targets": 4,
       "total_cost": 1145,
-      "total_damage": 33.6,
+      "total_damage": 37.44,
       "tower": "shock"
     },
     {
@@ -1304,15 +1304,15 @@
         "plasma_supernova_burst",
         "tick_damage"
       ],
-      "cost_efficiency": 0.02256,
-      "coverage": 0.167,
-      "formation": "shields",
-      "leaks": 5,
+      "cost_efficiency": 0.02643,
+      "coverage": 0.083,
+      "formation": "fast_enemies",
+      "leaks": 12,
       "module": "plasma_supernova",
       "proc_count": 1,
-      "targets": 6,
+      "targets": 12,
       "total_cost": 1365,
-      "total_damage": 30.8,
+      "total_damage": 36.08,
       "tower": "plasma"
     },
     {
@@ -1322,19 +1322,19 @@
         "move_linear",
         "tick_damage"
       ],
-      "cost_efficiency": 0.02884,
-      "coverage": 0.083,
-      "formation": "fast_enemies",
-      "leaks": 12,
+      "cost_efficiency": 0.02532,
+      "coverage": 1,
+      "formation": "boss_targets",
+      "leaks": 0,
       "module": "plasma_growing_mass",
       "proc_count": 1,
-      "targets": 12,
+      "targets": 1,
       "total_cost": 1365,
-      "total_damage": 39.36,
+      "total_damage": 34.56,
       "tower": "plasma"
     }
   ],
-  "definition_sha256": "466651d8065a961e3bdd3d3a0321cbc3b5b80e2bb6d3f2342ecbab2ca8453b92",
+  "definition_sha256": "3a0f9b66d51325ff01846fb44859f329f59d46f965dba54714dc1306f8160a60",
   "format_version": 1,
   "overlap": {
     "base_total_damage": 113,
@@ -1360,7 +1360,6 @@
           "id": 1,
           "name": "front_damaged",
           "priority": 0,
-          "shield": 0,
           "slow": 0
         },
         {
@@ -1369,7 +1368,6 @@
           "id": 2,
           "name": "rear_tank",
           "priority": 0,
-          "shield": 20,
           "slow": 0
         },
         {
@@ -1378,7 +1376,6 @@
           "id": 3,
           "name": "priority_mid",
           "priority": 30,
-          "shield": 0,
           "slow": 0
         },
         {
@@ -1387,7 +1384,6 @@
           "id": 4,
           "name": "slowed_front",
           "priority": 0,
-          "shield": 0,
           "slow": 1
         }
       ],
@@ -1402,7 +1398,6 @@
           "id": 1,
           "name": "front_damaged",
           "priority": 0,
-          "shield": 0,
           "slow": 0
         },
         {
@@ -1411,7 +1406,6 @@
           "id": 2,
           "name": "rear_tank",
           "priority": 0,
-          "shield": 20,
           "slow": 0
         },
         {
@@ -1420,7 +1414,6 @@
           "id": 3,
           "name": "priority_mid",
           "priority": 30,
-          "shield": 0,
           "slow": 0
         },
         {
@@ -1429,7 +1422,6 @@
           "id": 4,
           "name": "slowed_front",
           "priority": 0,
-          "shield": 0,
           "slow": 1
         }
       ],
@@ -1444,7 +1436,6 @@
           "id": 1,
           "name": "front_damaged",
           "priority": 0,
-          "shield": 0,
           "slow": 0
         },
         {
@@ -1453,7 +1444,6 @@
           "id": 2,
           "name": "rear_tank",
           "priority": 0,
-          "shield": 20,
           "slow": 0
         },
         {
@@ -1462,7 +1452,6 @@
           "id": 3,
           "name": "priority_mid",
           "priority": 30,
-          "shield": 0,
           "slow": 0
         },
         {
@@ -1471,7 +1460,6 @@
           "id": 4,
           "name": "slowed_front",
           "priority": 0,
-          "shield": 0,
           "slow": 1
         }
       ],
@@ -1486,7 +1474,6 @@
           "id": 1,
           "name": "front_damaged",
           "priority": 0,
-          "shield": 0,
           "slow": 0
         },
         {
@@ -1495,7 +1482,6 @@
           "id": 2,
           "name": "rear_tank",
           "priority": 0,
-          "shield": 20,
           "slow": 0
         },
         {
@@ -1504,7 +1490,6 @@
           "id": 3,
           "name": "priority_mid",
           "priority": 30,
-          "shield": 0,
           "slow": 0
         },
         {
@@ -1513,7 +1498,6 @@
           "id": 4,
           "name": "slowed_front",
           "priority": 0,
-          "shield": 0,
           "slow": 1
         }
       ],

@@ -154,14 +154,13 @@ local function emitDamage(p, e, dmg)
 	local evt = emitEvent(p, "damage")
 	evt.target = e
 	evt.amount = dmg
-	-- Shock arcs and explicit chain graphs are the shield-break counterplay.
+	-- Shock arcs use explicit chain graphs so each jump resolves once.
 	evt.chain = p.sourceKind == "shock" or p._chain ~= nil
 	-- Presentation metadata survives the pooled event path and is resolved after
 	-- authoritative damage, so spectacular attacks never alter combat outcomes.
 	evt.effectIntensity = dmg >= 100 and "strong" or "normal"
 	-- Damage resolution uses these semantic hints to make successful counters
 	-- visibly distinct from ordinary hits without coupling visuals to a tower.
-	evt.counterHint = (e and e.shieldHp and e.shieldHp > 0 and evt.chain and "shield_chain")
 		or (e and e.armor and (p.sourceKind == "cannon" or p.sourceKind == "lancer") and "armor_heavy")
 end
 

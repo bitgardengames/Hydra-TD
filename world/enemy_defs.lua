@@ -1,7 +1,7 @@
 -- These are the actual wave-zero hit-point values. Wave and difficulty scaling
 -- are applied once, at spawn time; literal values keep encounter budgets and
--- balance fixtures auditable without a hidden global multiplier. HP, shields,
--- and kill rewards use whole numbers so an authored count has a legible threat
+-- balance fixtures auditable without a hidden global multiplier. HP and kill
+-- rewards use whole numbers so an authored count has a legible threat
 -- and income budget in tools/balance/challenge_fixtures.py. Standard archetypes
 -- pay $1 per three to five base effective durability, after mechanic weighting.
 
@@ -49,16 +49,6 @@ return {
 		regeneration = { hpPerSecond = 2.5, delay = 1.25 },
 		modifiers = { poison = 1.25 },
 		traits = {"regenerates"},
-	},
-
-	shieldbearer = {
-		nameKey = "enemy.shieldbearer",
-		descriptionKey = "enemy.shieldbearerDescription",
-		hp = 35, speed = 50, reward = 13, score = 32, radius = 13,
-		-- Chain amplification rewards Shock against the barrier without raising its
-		-- raw damage against isolated, unshielded targets such as bosses.
-		shield = { hp = 16, burstThreshold = 12, burstMultiplier = 1.6, chainMultiplier = 2.4 },
-		traits = {"shielded"},
 	},
 
 	warcaller = {

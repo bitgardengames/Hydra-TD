@@ -137,7 +137,7 @@ local function drawEnemy(e)
 	lg.translate(-ix, -iy)
 
 	-- Mechanical silhouettes are deliberately geometric and remain legible without
-	-- their colors: plates, shield arc, regeneration cross, and war banner.
+	-- their colors: armor plates, regeneration cross, and war banner.
 	if e.support then
 		-- The banner trails opposite the Warcaller's horizontal facing. Mirror the
 		-- whole standard so both its pole and cloth keep a consistent silhouette.
@@ -192,10 +192,6 @@ local function drawEnemy(e)
 			lg.push(); lg.translate(px, py); lg.rotate(ang)
 			lg.rectangle("fill", -r * 0.35, -r * 0.55, r * 0.7, r * 1.1, 2, 2); lg.pop()
 		end
-	elseif e.kind == "shieldbearer" and e.shieldHp > 0 then
-		lg.setColor(0.65, 0.9, 1, 0.85 * enemyAlpha)
-		lg.setLineWidth(4)
-		lg.arc("line", "open", ix, iy, r + 6, -pi * 0.9, pi * 0.9)
 	elseif e.kind == "regenerator" then
 		lg.setColor(outR, outG, outB, enemyAlpha)
 		lg.rectangle("fill", ix - 2, iy - r * 1.65, 4, r * 0.75)
@@ -276,28 +272,8 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
-	-- Trait status glyphs provide state, not just identity. Broken shields flash an
-	-- X; regenerators show chevrons only while actually recovering; boosted units
-	-- carry speed streaks pointing backward along the path.
-	if e.shieldBreakFlash > 0 then
-		local a = e.shieldBreakFlash / 0.35
-		lg.setColor(1, 1, 1, a * enemyAlpha); lg.setLineWidth(3)
-		lg.line(ix - r, iy - r, ix + r, iy + r); lg.line(ix + r, iy - r, ix - r, iy + r)
-	end
-	if e.shieldHitFlash > 0 and e.shieldHp > 0 then
-		local a = e.shieldHitFlash / 0.18
-		lg.setColor(0.55, 0.9, 1, a * enemyAlpha); lg.setLineWidth(5)
-		lg.circle("line", ix, iy, r + 7 + (1 - a) * 5)
-	end
-	if e.shieldCounterFlash > 0 then
-		local a = e.shieldCounterFlash / 0.26
-		lg.setColor(1, 0.95, 0.45, a * enemyAlpha); lg.setLineWidth(4)
-		for n = 0, 3 do
-			local angle = n * HALF_PI + animT
-			lg.line(ix + cos(angle) * (r + 4), iy + sin(angle) * (r + 4),
-				ix + cos(angle) * (r + 12), iy + sin(angle) * (r + 12))
-		end
-	end
+	-- Trait status glyphs provide state, not just identity. Regenerators show
+	-- chevrons only while recovering; boosted units carry backward speed streaks.
 	if e.regeneration and e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0 then
 		lg.setColor(0.55, 1, 0.55, enemyAlpha); lg.setLineWidth(2)
 		lg.line(ix - 6, iy + r + 5, ix, iy + r + 1, ix + 6, iy + r + 5)
@@ -434,14 +410,6 @@ local function drawEnemyHealth(e)
 	local by = iy - e.radius - (e.boss and 18 or 12)
 
 	local t = max(0, e.hp / e.maxHp)
-	if e.shieldMax and e.shieldMax > 0 and e.shieldHp > 0 then
-		local shieldT = min(1, e.shieldHp / e.shieldMax)
-		lg.setColor(0.08, 0.12, 0.18, 0.8)
-		lg.rectangle("fill", bx, by - 4, w, 2)
-		lg.setColor(0.65, 0.9, 1, 0.95)
-		lg.rectangle("fill", bx, by - 4, w * shieldT, 2)
-	end
-
 	-- Muted health color
 	local r, g, b
 
@@ -546,11 +514,6 @@ local function newEnemyPortrait(kind)
 		supportPulse = 0,
 		summon = def.summon,
 		summonTimer = def.summon and def.summon.period or 0,
-		shieldHp = def.shield and def.shield.hp or 0,
-		shieldMax = def.shield and def.shield.hp or 0,
-		shieldBreakFlash = 0,
-		shieldHitFlash = 0,
-		shieldCounterFlash = 0,
 		regeneration = def.regeneration,
 		regenDelay = 1,
 		hp = def.hp,

@@ -104,11 +104,9 @@ def definitions() -> tuple[dict, str]:
         block = lua_block(tower_text, kind)
         towers[kind] = {"cost": int(number(block, "cost"))}
     enemies = {}
-    for kind in ("grunt", "tank", "bulwark", "regenerator", "shieldbearer"):
+    for kind in ("grunt", "tank", "bulwark", "regenerator"):
         block = lua_block(enemy_text, kind)
         enemies[kind] = {"hp": number(block, "hp")}
-        shield = re.search(r"shield\s*=\s*\{[^}]*\bhp\s*=\s*([0-9.]+)", block, re.S)
-        enemies[kind]["shield"] = float(shield.group(1)) if shield else 0
     difficulty_text = texts["systems/difficulty.lua"]
     difficulty = lua_block(lua_block(difficulty_text, "Difficulty.defs"), TARGET_DIFFICULTY)
     hp_bias = number(difficulty, "enemyHpBias")
@@ -129,7 +127,7 @@ def load_results() -> dict:
     capture["definition_sha256"] = digest
     for scenario in capture["scenarios"]:
         enemy = defs["enemies"][scenario["enemy"]]
-        durability = (enemy["hp"] + enemy["shield"]) * defs["enemy_hp_bias"]
+        durability = enemy["hp"] * defs["enemy_hp_bias"]
         for tower in TOWERS:
             for level in ("base", "maximum"):
                 result = scenario["results"][tower][level]
@@ -171,8 +169,7 @@ def checks(data: dict) -> list[dict]:
                   not all(values[i] > lancer[i] for i in range(2)),
                   "specialist must not beat Lancer efficiency in both controls")
         roles = (("packed_grunts", "cannon", "leaks"), ("packed_grunts", "plasma", "ttk_seconds"),
-                 ("bulwark", "cannon", "ttk_seconds"), ("regenerator", "poison", "ttk_seconds"),
-                 ("shieldbearer", "shock", "ttk_seconds"))
+                 ("bulwark", "cannon", "ttk_seconds"), ("regenerator", "poison", "ttk_seconds"))
         for fixture, tower, metric in roles:
             r = by_name[fixture]["results"]
             candidates = [r[x][level][metric] for x in TOWERS]

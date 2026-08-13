@@ -126,13 +126,13 @@ def preview_metrics() -> dict:
     from campaign_pacing_report import parse_waves
     maps = parse_waves((ROOT / "systems/campaign_wave_defs.lua").read_text())
     traits = {"boss": 2, "tank": 1, "runner": 1, "bulwark": 1, "regenerator": 1,
-              "shieldbearer": 1, "warcaller": 1}
+              "warcaller": 1}
     rows = []
     # The 408px counter column fits about 38 average English glyphs at the
     # default font size. The trait hint lengths below conservatively model
     # getWrap without loading LÖVE or rendering a font.
     hint_chars = {"boss": 82, "tank": 66, "runner": 60, "bulwark": 72,
-                  "regenerator": 70, "shieldbearer": 76, "warcaller": 62, "grunt": 0}
+                  "regenerator": 70, "warcaller": 62, "grunt": 0}
     for map_id, waves in maps.items():
         for wave_no, groups in enumerate(waves, 1):
             kinds = list(dict.fromkeys(group["kind"] for group in groups))

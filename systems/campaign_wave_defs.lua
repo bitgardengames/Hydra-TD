@@ -20,7 +20,7 @@ local pacingIdentityByMapId = {
 	circuit = "relay: regenerators hand pressure from group to group",
 	outerloop = "long rotation: broad formations with generous recovery",
 	terrace = "escalation: warcaller pulses inside steady escorts",
-	highridge = "attrition: shielded columns with narrow overlaps",
+	highridge = "mixed timing: durable fronts followed by runner leak pressure",
 	crossflow = "crossing lanes: paired groups meet in the engagement window",
 	steppingstones = "islands: discrete platoons with pronounced safe gaps",
 	twinloop = "final exam: two dense cycles orbit summoner pressure",
@@ -38,10 +38,10 @@ local pacingTargetsByMapId = {
 	circuit = { openingPressure = 14, peakSimultaneous = 14, totalWaveDuration = { 5.92, 18.86 }, downtimeBetweenGroups = { 0.13, 1.62 } },
 	outerloop = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.52, 31.23 }, downtimeBetweenGroups = { 0.34, 4.25 } },
 	terrace = { openingPressure = 15, peakSimultaneous = 15, totalWaveDuration = { 5.36, 17.12 }, downtimeBetweenGroups = { 0.14, 1.80 } },
-	highridge = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 7.83, 25.62 }, downtimeBetweenGroups = { 0.24, 3.00 } },
-	crossflow = { openingPressure = 16, peakSimultaneous = 16, totalWaveDuration = { 5.76, 15.78 }, downtimeBetweenGroups = { 0.08, 1.04 } },
-	steppingstones = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 8.28, 34.88 }, downtimeBetweenGroups = { 0.75, 5.35 } },
-	twinloop = { openingPressure = 16, peakSimultaneous = 16, totalWaveDuration = { 2.00, 15.55 }, downtimeBetweenGroups = { 0.12, 1.55 } },
+	highridge = { openingPressure = 13, peakSimultaneous = 13, totalWaveDuration = { 8.15, 27.81 }, downtimeBetweenGroups = { 0.24, 3.00 } },
+	crossflow = { openingPressure = 17, peakSimultaneous = 17, totalWaveDuration = { 6.05, 16.01 }, downtimeBetweenGroups = { 0.08, 1.04 } },
+	steppingstones = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 8.60, 38.83 }, downtimeBetweenGroups = { 0.30, 5.35 } },
+	twinloop = { openingPressure = 17, peakSimultaneous = 17, totalWaveDuration = { 2.00, 16.76 }, downtimeBetweenGroups = { 0.12, 1.55 } },
 }
 
 local function g(kind, count, spacing, delay)
@@ -298,67 +298,67 @@ local wavesByMapId = {
 		-- orientation
 		[1] = { g("grunt", 17, 0.78, 0.00) },
 		-- demonstration
-		[2] = { g("shieldbearer", 10, 0.87, 0.00) },
+		[2] = { g("bulwark", 6, 0.87, 0.00), g("runner", 6, 0.70, 0.30) },
 		-- demonstration
-		[3] = { g("grunt", 13, 0.72, 0.00), g("shieldbearer", 4, 0.86, 1.80) },
+		[3] = { g("grunt", 13, 0.72, 0.00), g("bulwark", 2, 0.86, 1.80), g("runner", 2, 0.69, 2.10) },
 		-- practice
-		[4] = { g("shieldbearer", 10, 0.69, 0.00), g("grunt", 13, 0.59, 0.96) },
+		[4] = { g("bulwark", 6, 0.69, 0.00), g("runner", 6, 0.55, 0.30), g("grunt", 13, 0.59, 0.96) },
 		-- practice
-		[5] = { g("warcaller", 10, 0.74, 0.00), g("shieldbearer", 7, 0.66, 0.84) },
+		[5] = { g("warcaller", 10, 0.74, 0.00), g("bulwark", 4, 0.66, 0.84), g("runner", 4, 0.53, 1.14) },
 		-- practice
-		[6] = { g("shieldbearer", 10, 0.55, 0.00), g("warcaller", 10, 0.66, 0.60), g("regenerator", 13, 0.77, 1.20) },
+		[6] = { g("bulwark", 6, 0.55, 0.00), g("runner", 6, 0.44, 0.30), g("warcaller", 10, 0.66, 0.60), g("regenerator", 13, 0.77, 1.20) },
 		-- mixed check
-		[7] = { g("shieldbearer", 6, 0.51, 0.00), g("warcaller", 7, 0.58, 0.36), g("regenerator", 7, 0.66, 0.84), g("bulwark", 8, 0.74, 1.20) },
+		[7] = { g("bulwark", 3, 0.51, 0.00), g("runner", 4, 0.41, 0.30), g("warcaller", 7, 0.58, 0.36), g("regenerator", 7, 0.66, 0.84), g("bulwark", 8, 0.74, 1.20) },
 		-- mixed check
-		[8] = { g("warcaller", 8, 0.46, 0.00), g("shieldbearer", 8, 0.52, 0.36), g("grunt", 9, 0.58, 0.72), g("tank", 10, 0.64, 1.08) },
+		[8] = { g("warcaller", 8, 0.46, 0.00), g("bulwark", 4, 0.52, 0.36), g("runner", 5, 0.42, 0.66), g("grunt", 9, 0.58, 0.72), g("tank", 10, 0.64, 1.08) },
 		-- mixed check
-		[9] = { g("shieldbearer", 7, 0.42, 0.00), g("warcaller", 8, 0.48, 0.24), g("regenerator", 9, 0.54, 0.60), g("bulwark", 8, 0.61, 0.96), g("runner", 10, 0.68, 1.20) },
+		[9] = { g("bulwark", 4, 0.42, 0.00), g("runner", 4, 0.34, 0.30), g("warcaller", 8, 0.48, 0.24), g("regenerator", 9, 0.54, 0.60), g("bulwark", 8, 0.61, 0.96), g("runner", 10, 0.68, 1.20) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("shieldbearer", 7, 0.47, 2.16), g("warcaller", 7, 0.54, 2.40), g("regenerator", 8, 0.62, 2.76), g("bulwark", 8, 0.70, 3.00) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.47, 2.16), g("runner", 4, 0.38, 2.46), g("warcaller", 7, 0.54, 2.40), g("regenerator", 8, 0.62, 2.76), g("bulwark", 8, 0.70, 3.00) },
 	},
 	crossflow = {
 		-- orientation
 		[1] = { g("grunt", 19, 0.56, 0.00) },
 		-- demonstration
-		[2] = { g("shieldbearer", 10, 0.64, 0.00) },
+		[2] = { g("bulwark", 6, 0.64, 0.00), g("runner", 6, 0.51, 0.30) },
 		-- demonstration
-		[3] = { g("grunt", 14, 0.53, 0.00), g("shieldbearer", 4, 0.63, 0.60) },
+		[3] = { g("grunt", 14, 0.53, 0.00), g("bulwark", 2, 0.63, 0.60), g("runner", 2, 0.50, 0.90) },
 		-- practice
-		[4] = { g("shieldbearer", 11, 0.51, 0.00), g("grunt", 13, 0.44, 0.28) },
+		[4] = { g("bulwark", 6, 0.51, 0.00), g("runner", 7, 0.41, 0.30), g("grunt", 13, 0.44, 0.28) },
 		-- practice
-		[5] = { g("warcaller", 11, 0.55, 0.00), g("shieldbearer", 7, 0.48, 0.23) },
+		[5] = { g("warcaller", 11, 0.55, 0.00), g("bulwark", 4, 0.48, 0.23), g("runner", 4, 0.38, 0.53) },
 		-- practice
-		[6] = { g("shieldbearer", 11, 0.41, 0.00), g("warcaller", 10, 0.48, 0.15), g("regenerator", 13, 0.57, 0.37) },
+		[6] = { g("bulwark", 6, 0.41, 0.00), g("runner", 7, 0.33, 0.30), g("warcaller", 10, 0.48, 0.15), g("regenerator", 13, 0.57, 0.37) },
 		-- mixed check
-		[7] = { g("shieldbearer", 6, 0.37, 0.00), g("warcaller", 7, 0.43, 0.08), g("regenerator", 7, 0.48, 0.23), g("bulwark", 8, 0.54, 0.37) },
+		[7] = { g("bulwark", 3, 0.37, 0.00), g("runner", 4, 0.30, 0.30), g("warcaller", 7, 0.43, 0.08), g("regenerator", 7, 0.48, 0.23), g("bulwark", 8, 0.54, 0.37) },
 		-- mixed check
-		[8] = { g("shieldbearer", 8, 0.34, 0.00), g("grunt", 8, 0.38, 0.08), g("tank", 9, 0.43, 0.19), g("runner", 10, 0.47, 0.33) },
+		[8] = { g("bulwark", 4, 0.34, 0.00), g("runner", 5, 0.27, 0.30), g("grunt", 8, 0.38, 0.08), g("tank", 9, 0.43, 0.19), g("runner", 10, 0.47, 0.33) },
 		-- mixed check
-		[9] = { g("shieldbearer", 6, 0.31, 0.00), g("warcaller", 7, 0.36, 0.08), g("regenerator", 8, 0.40, 0.15), g("bulwark", 8, 0.45, 0.28), g("runner", 9, 0.50, 0.37) },
+		[9] = { g("bulwark", 3, 0.31, 0.00), g("runner", 4, 0.25, 0.30), g("warcaller", 7, 0.36, 0.08), g("regenerator", 8, 0.40, 0.15), g("bulwark", 8, 0.45, 0.28), g("runner", 9, 0.50, 0.37) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("shieldbearer", 7, 0.35, 0.73), g("warcaller", 7, 0.40, 0.82), g("regenerator", 8, 0.46, 0.95), g("bulwark", 8, 0.52, 1.04) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.35, 0.73), g("runner", 4, 0.28, 1.03), g("warcaller", 7, 0.40, 0.82), g("regenerator", 8, 0.46, 0.95), g("bulwark", 8, 0.52, 1.04) },
 	},
 	steppingstones = {
 		-- orientation
 		[1] = { g("grunt", 20, 0.80, 0.00) },
 		-- demonstration
-		[2] = { g("shieldbearer", 10, 0.92, 0.00) },
+		[2] = { g("bulwark", 6, 0.92, 0.00), g("runner", 6, 0.74, 0.30) },
 		-- demonstration
-		[3] = { g("grunt", 14, 0.76, 0.00), g("shieldbearer", 4, 0.90, 3.00) },
+		[3] = { g("grunt", 14, 0.76, 0.00), g("bulwark", 2, 0.90, 3.00), g("runner", 2, 0.72, 3.30) },
 		-- practice
-		[4] = { g("shieldbearer", 11, 0.73, 0.00), g("grunt", 13, 0.63, 1.60) },
+		[4] = { g("bulwark", 6, 0.73, 0.00), g("runner", 7, 0.58, 0.30), g("grunt", 13, 0.63, 1.60) },
 		-- practice
-		[5] = { g("warcaller", 11, 0.78, 0.00), g("shieldbearer", 8, 0.70, 1.40) },
+		[5] = { g("warcaller", 11, 0.78, 0.00), g("bulwark", 4, 0.70, 1.40), g("runner", 5, 0.56, 1.70) },
 		-- practice
-		[6] = { g("shieldbearer", 11, 0.58, 0.00), g("warcaller", 10, 0.70, 1.00), g("regenerator", 13, 0.81, 2.00) },
+		[6] = { g("bulwark", 6, 0.58, 0.00), g("runner", 7, 0.46, 0.30), g("warcaller", 10, 0.70, 1.00), g("regenerator", 13, 0.81, 2.00) },
 		-- mixed check
-		[7] = { g("shieldbearer", 6, 0.54, 0.00), g("warcaller", 7, 0.61, 0.95), g("regenerator", 7, 0.70, 1.75), g("bulwark", 8, 0.78, 2.35) },
+		[7] = { g("bulwark", 3, 0.54, 0.00), g("runner", 4, 0.43, 0.30), g("warcaller", 7, 0.61, 0.95), g("regenerator", 7, 0.70, 1.75), g("bulwark", 8, 0.78, 2.35) },
 		-- mixed check
 		[8] = { g("grunt", 8, 0.48, 0.00), g("tank", 8, 0.54, 0.95), g("runner", 9, 0.61, 1.55), g("bulwark", 10, 0.68, 2.15) },
 		-- mixed check
-		[9] = { g("shieldbearer", 7, 0.45, 0.00), g("warcaller", 8, 0.51, 0.75), g("regenerator", 9, 0.58, 1.35), g("bulwark", 9, 0.64, 1.95), g("runner", 10, 0.72, 2.35) },
+		[9] = { g("bulwark", 4, 0.45, 0.00), g("runner", 4, 0.36, 0.30), g("warcaller", 8, 0.51, 0.75), g("regenerator", 9, 0.58, 1.35), g("bulwark", 9, 0.64, 1.95), g("runner", 10, 0.72, 2.35) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("shieldbearer", 7, 0.50, 3.95), g("warcaller", 7, 0.58, 4.35), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 3.95), g("runner", 4, 0.40, 4.25), g("warcaller", 7, 0.58, 4.35), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
 	},
 	twinloop = {
 		-- orientation
@@ -368,19 +368,19 @@ local wavesByMapId = {
 		-- demonstration
 		[3] = { g("grunt", 10, 0.50, 0.00), g("summoner", 2, 0.84, 0.93) },
 		-- practice
-		[4] = { g("shieldbearer", 11, 0.48, 0.00), g("grunt", 13, 0.41, 0.50) },
+		[4] = { g("bulwark", 6, 0.48, 0.00), g("runner", 7, 0.38, 0.30), g("grunt", 13, 0.41, 0.50) },
 		-- practice
-		[5] = { g("warcaller", 11, 0.52, 0.00), g("shieldbearer", 7, 0.46, 0.43) },
+		[5] = { g("warcaller", 11, 0.52, 0.00), g("bulwark", 4, 0.46, 0.43), g("runner", 4, 0.37, 0.73) },
 		-- practice
-		[6] = { g("shieldbearer", 11, 0.38, 0.00), g("warcaller", 10, 0.46, 0.31), g("regenerator", 13, 0.54, 0.62) },
+		[6] = { g("bulwark", 6, 0.38, 0.00), g("runner", 7, 0.30, 0.30), g("warcaller", 10, 0.46, 0.31), g("regenerator", 13, 0.54, 0.62) },
 		-- mixed check
-		[7] = { g("shieldbearer", 6, 0.36, 0.00), g("warcaller", 7, 0.41, 0.19), g("regenerator", 7, 0.46, 0.43), g("bulwark", 8, 0.52, 0.62) },
+		[7] = { g("bulwark", 3, 0.36, 0.00), g("runner", 4, 0.29, 0.30), g("warcaller", 7, 0.41, 0.19), g("regenerator", 7, 0.46, 0.43), g("bulwark", 8, 0.52, 0.62) },
 		-- mixed check
 		[8] = { g("tank", 8, 0.32, 0.00), g("runner", 7, 0.36, 0.19), g("bulwark", 8, 0.40, 0.37), g("regenerator", 10, 0.45, 0.56) },
 		-- mixed check
-		[9] = { g("shieldbearer", 6, 0.30, 0.00), g("warcaller", 7, 0.34, 0.12), g("regenerator", 8, 0.38, 0.31), g("bulwark", 8, 0.43, 0.50), g("runner", 9, 0.47, 0.62) },
+		[9] = { g("bulwark", 3, 0.30, 0.00), g("runner", 4, 0.24, 0.30), g("warcaller", 7, 0.34, 0.12), g("regenerator", 8, 0.38, 0.31), g("bulwark", 8, 0.43, 0.50), g("runner", 9, 0.47, 0.62) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("shieldbearer", 7, 0.33, 1.12), g("warcaller", 7, 0.38, 1.24), g("regenerator", 8, 0.43, 1.43), g("bulwark", 7, 0.49, 1.55) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.33, 1.12), g("runner", 4, 0.26, 1.42), g("warcaller", 7, 0.38, 1.24), g("regenerator", 8, 0.43, 1.43), g("bulwark", 7, 0.49, 1.55) },
 	},
 }
 

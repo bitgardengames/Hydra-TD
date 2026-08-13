@@ -54,11 +54,11 @@ local function scoreProgress(e)
 end
 
 local function scoreLowHp(e)
-	return -(e.hp + (e.shieldHp or 0))
+	return -e.hp
 end
 
 local function scoreHighHp(e)
-	return e.hp + (e.shieldHp or 0)
+	return e.hp
 end
 
 local function scoreFarthest(_, _, d2)
