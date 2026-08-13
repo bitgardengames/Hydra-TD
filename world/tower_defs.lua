@@ -37,7 +37,7 @@ return {
 
 	-- Role: cheap single-target baseline. Medium range and highly reliable shots
 	-- make it the efficient default for focused damage, while strong damage
-	-- scaling rewards upgrades. It lacks crowd control, armor/shield utility,
+	-- scaling rewards upgrades. It lacks crowd control and armor utility,
 	-- and splash.
 	lancer = {
 		nameKey = "tower.lancer",
@@ -134,9 +134,8 @@ return {
 		}
 	},
 
-	-- Role: chain damage and shield counter. Multi-target jumps spread medium
-	-- damage across shielded packs, with shield-specific amplification supplying
-	-- its payoff. Low raw damage keeps it inefficient against isolated threats.
+	-- Role: chain damage. Multi-target jumps spread medium damage across packed
+	-- waves. Low raw damage keeps it inefficient against isolated threats.
 	shock = {
 		nameKey = "tower.shock",
 		descKey = "towerDesc.shock",

@@ -12,7 +12,7 @@ traits, or the difficulty curve.
 The acceptance rule is intentional: Lancer is the best general-purpose damage
 per dollar on the single Grunt and Tank controls. Slow wins control-heavy Tank,
 Cannon wins armor and packed bodies, Poison wins regeneration, Shock wins
-shields, and Plasma wins sustained packed-lane coverage. A specialist must not
+chain-friendly packs, and Plasma wins sustained packed-lane coverage. A specialist must not
 beat Lancer's cost efficiency in both control fixtures.
 
 Values are formatted `TTK / cost / leaks / coverage`.
@@ -66,13 +66,3 @@ Values are formatted `TTK / cost / leaks / coverage`.
 | Cannon | — / $90 / 1 / 100% | 6.9s / $864 / 0 / 100% |
 | Shock | — / $95 / 2 / 75% | 9.1s / $912 / 0 / 100% |
 | Plasma | — / $120 / 1 / 100% | 6.6s / $1152 / 0 / 100% |
-
-## Shieldbearer — shield/chain (6 Shieldbearers, 0.55s spacing)
-| Tower | Base | Maximum |
-|---|---:|---:|
-| Slow | — / $50 / 5 / 50% | — / $480 / 2 / 83% |
-| Lancer | — / $60 / 4 / 67% | 9.0s / $576 / 0 / 100% |
-| Poison | — / $70 / 4 / 67% | 9.7s / $672 / 0 / 100% |
-| Cannon | — / $90 / 2 / 83% | 7.2s / $864 / 0 / 100% |
-| Shock | 8.8s / $95 / 0 / 100% | 5.3s / $912 / 0 / 100% |
-| Plasma | — / $120 / 2 / 83% | 7.5s / $1152 / 0 / 100% |

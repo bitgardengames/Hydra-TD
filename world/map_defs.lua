@@ -249,8 +249,9 @@ local maps = {
 		id = "highridge",
 		campaignStage = 3,
 		nameKey = "map.highridge",
-		-- High Ridge is the campaign's first Shieldbearer encounter.
-		introducesEnemies = {"shieldbearer"},
+		-- High Ridge teaches staggered mixed-wave timing: durable fronts create
+		-- openings for faster enemies to pressure the exit.
+		introducesEnemies = {},
 		biome = "default",
 		path = {
 			{5, 5}, {12, 5},

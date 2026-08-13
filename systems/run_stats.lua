@@ -166,8 +166,6 @@ function RunStats.summarize(currentMoney, score)
 	local observation
 	if (currentMoney or 0) >= 500 and (currentMoney or 0) >= data.moneySpent * 0.35 then
 		observation = "High reserve: spend more than $500 before the final waves."
-	elseif (data.leaksByEnemy.shieldbearer or 0) > 0 and ((data.damageByType.cannon or 0) + (data.damageByType.shock or 0)) < math.max(1, damage) * 0.2 then
-		observation = "Shieldbearer leak: add burst or chain damage."
 	elseif (data.leaksByEnemy.warcaller or 0) >= 2 and not (table.concat(data.modules, ","):find("target", 1, true)) then
 		observation = "Warcaller leaks: choose a priority-targeting branch."
 	elseif leakCount > 0 then

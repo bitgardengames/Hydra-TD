@@ -9,7 +9,7 @@ Each map teaches one clear thing.
 
 “This map teaches fast enemies.”
 
-“This map teaches shields.”
+“This map teaches mixed-wave timing.”
 
 “This map tests everything.”
 
@@ -33,7 +33,7 @@ Cannon handles packs and armor.
 
 Poison handles sustained damage and regeneration.
 
-Shock handles chains and shields.
+Shock handles chained groups.
 
 Plasma handles expensive zone/priority damage.
 

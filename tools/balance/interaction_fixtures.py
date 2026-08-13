@@ -16,8 +16,7 @@ SOURCES = ("world/tower_defs.lua", "world/enemy_defs.lua", "world/tower_branch_d
            "systems/waves.lua", "world/targeting.lua")
 FORMATIONS = {"single_target": (1, 1, 0), "packed_targets": (16, 1, 0),
               "armor": (4, .58, 0), "regeneration": (4, .78, 0),
-              "shields": (6, .7, 0), "fast_enemies": (12, .82, 3),
-              "boss_targets": (1, .72, 0)}
+              "fast_enemies": (12, .82, 3), "boss_targets": (1, .72, 0)}
 
 
 def table(text, name):
@@ -104,13 +103,13 @@ def branches(branch_text, module_text):
 
 
 def targeting():
-    formation = [{"id": 1, "name": "front_damaged", "dist": 92, "hp": 18, "shield": 0, "priority": 0, "slow": 0},
-                 {"id": 2, "name": "rear_tank", "dist": 54, "hp": 180, "shield": 20, "priority": 0, "slow": 0},
-                 {"id": 3, "name": "priority_mid", "dist": 70, "hp": 65, "shield": 0, "priority": 30, "slow": 0},
-                 {"id": 4, "name": "slowed_front", "dist": 96, "hp": 45, "shield": 0, "priority": 0, "slow": 1}]
+    formation = [{"id": 1, "name": "front_damaged", "dist": 92, "hp": 18, "priority": 0, "slow": 0},
+                 {"id": 2, "name": "rear_tank", "dist": 54, "hp": 180, "priority": 0, "slow": 0},
+                 {"id": 3, "name": "priority_mid", "dist": 70, "hp": 65, "priority": 30, "slow": 0},
+                 {"id": 4, "name": "slowed_front", "dist": 96, "hp": 45, "priority": 0, "slow": 1}]
     scores = {"progress": lambda e: e["dist"]-(5 if e["slow"] else 0)+e["priority"],
-              "high_hp": lambda e: e["hp"]+e["shield"],
-              "low_hp": lambda e: -(e["hp"]+e["shield"]),
+              "high_hp": lambda e: e["hp"],
+              "low_hp": lambda e: -e["hp"],
               "farthest": lambda e: e["dist"]**2}
     return [{"mode": mode, "expected_target": max(formation, key=lambda e: (fn(e), -e["id"]))["name"],
              "formation": formation} for mode, fn in scores.items()]

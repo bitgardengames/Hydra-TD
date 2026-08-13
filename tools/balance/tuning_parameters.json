@@ -355,28 +355,6 @@
       "maximum_percentage_change": 15
     },
     {
-      "id": "enemy.shieldbearer.hp",
-      "source_file": "world/enemy_defs.lua",
-      "lua_table": "return",
-      "lua_key": "hp",
-      "entry": "shieldbearer",
-      "minimum": 18,
-      "maximum": 65,
-      "step": 1,
-      "maximum_percentage_change": 15
-    },
-    {
-      "id": "enemy.shieldbearer.reward",
-      "source_file": "world/enemy_defs.lua",
-      "lua_table": "return",
-      "lua_key": "reward",
-      "entry": "shieldbearer",
-      "minimum": 6,
-      "maximum": 22,
-      "step": 1,
-      "maximum_percentage_change": 15
-    },
-    {
       "id": "enemy.warcaller.hp",
       "source_file": "world/enemy_defs.lua",
       "lua_table": "return",

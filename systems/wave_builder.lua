@@ -29,7 +29,6 @@ end
 local unlocks = {
 	{ wave = 4, kind = "bulwark", every = 7 },
 	{ wave = 6, kind = "regenerator", every = 6 },
-	{ wave = 8, kind = "shieldbearer", every = 7 },
 	{ wave = 9, kind = "warcaller", every = 10 },
 	{ wave = 11, kind = "summoner", every = 13 },
 }

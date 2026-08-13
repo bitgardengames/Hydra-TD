@@ -67,7 +67,7 @@ a comeback opportunity.
 - **Why it feels powerful:** The ability responds directly to the frightening
   moment when enemies break through, without granting lives or automatically
   deleting the wave. The player's existing towers still deliver the save.
-- **Best moment:** Runners or shielded survivors escape the main kill zone.
+- **Best moment:** Runners or other survivors escape the main kill zone.
 - **Readability:** Tint the selected ground area amber, mark the leading enemy
   with a bold reticle, and briefly flash affected towers white when the emergency
   volley triggers.

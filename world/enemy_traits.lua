@@ -16,13 +16,6 @@ local Traits = {
 		counter = "Maintain focus fire or damage over time so healing cannot catch up.",
 		answers = {"Lancer / Focus Fire", "Poison specializations"},
 	},
-	shielded = {
-		tag = "Shielded",
-		mechanic = "A separate shield absorbs damage and takes extra damage from burst and chain hits.",
-		tell = "A bright ring surrounds it until the shield breaks.",
-		counter = "Break the shield with burst volleys or chain attacks.",
-		answers = {"Lancer / Volley", "Shock chain specializations"},
-	},
 	support = {
 		tag = "Support",
 		mechanic = "Accelerates nearby enemies while it remains alive.",
