@@ -34,8 +34,6 @@ return {
 		title = "Settings",
 		music = "Music Volume",
 		sfx = "SFX Volume",
-		abilityReadySound = "Ability-ready sound",
-		abilityReadySoundDesc = "Plays a short, throttled cue when an equipped ability finishes cooling down.",
 		difficulty = "Difficulty",
 		fullscreen = "Fullscreen",
 		screenShake = "Screen shake",

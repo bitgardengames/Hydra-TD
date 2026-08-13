@@ -25,7 +25,6 @@ local DEFAULT_SETTINGS = {
 	fullscreen = true,
 	cameraMotion = true,
 	highDensityParticles = true,
-	abilityReadySound = true,
 }
 
 local META_COUNTERS = {
@@ -111,6 +110,7 @@ local function normalizeSettings(data)
 		changed = defaultValue(settings, key, value) or changed
 	end
 	if settings.msaaQuality ~= nil then settings.msaaQuality = nil; changed = true end
+	if settings.abilityReadySound ~= nil then settings.abilityReadySound = nil; changed = true end
 	return ensureKeybinds(settings) or changed
 end
 
