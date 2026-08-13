@@ -226,11 +226,11 @@ function AbilityBar.update(dt, mx, my)
 			button.slotIndex = i
 			button.lockMessage = lockMessage
 			button.enabled = available and cooldown <= 0
+			button.hovered = hovered
 			button.previousCooldown = cooldown
 			button.wasAvailable = available
 			button.readyT = max(0, (button.readyT or 0) - dt * 2.8)
 			updateButton(button, hovered, dt)
-			if hovered then showTooltip(abilityId, def) end
 		end
 	end
 	for i = count + 1, #buttons do buttons[i] = nil end
@@ -256,7 +256,10 @@ function AbilityBar.draw()
 	for i = 1, count do
 		local button = buttons[i]
 		local def = AbilityDefs[button.abilityId]
-		if def then drawButton(button, def, activeRemaining[button.abilityId]) end
+		if def then
+			drawButton(button, def, activeRemaining[button.abilityId])
+			if button.hovered then showTooltip(button.abilityId, def) end
+		end
 	end
 end
 
