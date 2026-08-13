@@ -4,6 +4,7 @@ local State = require("core.state")
 local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
+local Save = require("core.save")
 
 local random = love.math.random
 local lg = love.graphics
@@ -52,6 +53,7 @@ local towerDefs = Towers.TowerDefs
 local EYE_SMOOTH = 0.35
 local EYE_DEADZONE = 0.03
 local HIT_SQUASH_DUR = 0.12
+local UPGRADE_FLASH_DURATION = 0.3
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
@@ -1099,6 +1101,32 @@ local function drawTowerInstance(t, cx, renderY)
 	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
 end
 
+local function drawTowerUpgradeFlash(t, cx, renderY)
+	local remaining = t.upgradeFlash or 0
+	if remaining <= 0 then return end
+
+	local elapsed = UPGRADE_FLASH_DURATION - remaining
+	-- Reach full brightness in the first few frames, then leave a clean short tail.
+	local peak = min(1, elapsed / 0.045)
+	local fade = max(0, remaining / (UPGRADE_FLASH_DURATION - 0.045))
+	local alpha = peak * fade
+	local color = t.color or (t.def and t.def.color) or colorGood
+	local dense = not (Save.data and Save.data.settings
+		and Save.data.settings.highDensityParticles == false)
+	local oldBlend, oldAlphaMode = lg.getBlendMode()
+
+	lg.setBlendMode("add", "alphamultiply")
+	-- In reduced-particle mode omit the core pass. The base glow still hugs the
+	-- tower silhouette and communicates the upgrade with much less overdraw.
+	drawTowerBase(t.kind, cx, renderY, alpha * (dense and 0.32 or 0.18),
+		color[1], color[2], color[3])
+	if dense then
+		drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, alpha * 0.38,
+			color[1], color[2], color[3], 0)
+	end
+	lg.setBlendMode(oldBlend, oldAlphaMode)
+end
+
 -- Draw tower placement ghost
 local function drawTowerGhost()
 	if not State.placing or not State.hoverGX or not State.hoverGY then
@@ -1177,6 +1205,7 @@ local function drawTowers()
 
 		-- Top
 		drawTowerInstance(t, cx, renderY)
+		drawTowerUpgradeFlash(t, cx, renderY)
 		if (t.abilityAttackSpeed or 1) > 1 then
 			local pulse = .55 + .3 * sin((State.abilityClock or 0) * 7 + i)
 			lg.setColor(1, .7, 1, pulse)
