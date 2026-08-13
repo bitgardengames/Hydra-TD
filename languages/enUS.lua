@@ -545,7 +545,6 @@ return {
 			ability_upgrade = "Applied automatically when enhanced abilities are used.",
 			campaign_complete = "Available from Challenge and Endless mode selection.",
 		},
-		newTowerReward = "New tower unlocked",
 		shortcuts = "Press N for next map • Esc for main menu",
 	},
 
