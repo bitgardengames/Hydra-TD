@@ -38,7 +38,6 @@ local Screen = {}
 local buttons = nil
 local previousMedalCount = 0
 local currentMedalCount = 0
-local stats = {}
 local confetti = {}
 local t = 0
 local panelT = 0
@@ -58,7 +57,6 @@ local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorDim = Theme.ui.screenDim
 local colorOutline = Theme.outline.color
-local colorButton = Theme.ui.button
 
 -- Layout
 local outlineW = Theme.outline.width
@@ -78,8 +76,6 @@ local rewardInputDelay = 0.3
 local rewardCloseSize = 32
 local rewardActionH = 34
 
-local statsGap = 12
-local statH = 44
 local difficultyOffset = 22
 
 -- Medal visuals
@@ -377,23 +373,7 @@ local function calculateLayout()
 	local buttonsHeight = #buttons * buttonHeight + max(0, #buttons - 1) * buttonGap
 	local titleHeight = compact and 34 or 50
 	local sectionGap = compact and 8 or 18
-	local cardW = boxW - padX * 2
-	local valueFont = compact and Fonts.ui or Fonts.menu
-	local labelFont = Fonts.ui
-	local rowGap = compact and 6 or statsGap
-	local rows = {}
-	local contentY = 0
-
-	for i, item in ipairs(stats) do
-		local _, wrapped = valueFont:getWrap(item.value, max(1, cardW - 24))
-		local valueLines = max(1, #wrapped)
-		local rowH = max(statH, 8 + labelFont:getHeight() + 4 + valueLines * valueFont:getHeight() + 8)
-		if compact then rowH = max(40, rowH - 4) end
-		rows[i] = { y = contentY, h = rowH, lines = valueLines }
-		contentY = contentY + rowH + (i < #stats and rowGap or 0)
-	end
-
-	local difficultyY = contentY + (compact and 12 or difficultyOffset)
+	local difficultyY = compact and 12 or difficultyOffset
 	local _, clusterH = Medals.getClusterSize(medalR, medalGap)
 	local medalY = difficultyY + (compact and 30 or 38)
 	local recapContentH = medalY + clusterH + 14
@@ -409,9 +389,9 @@ local function calculateLayout()
 	return {
 		sw = sw, sh = sh, cx = cx, compact = compact,
 		boxX = boxX, boxY = boxY, boxW = boxW, boxH = boxH,
-		padX = padX, padY = padY, cardW = cardW,
+		padX = padX, padY = padY,
 		titleY = boxY + padY, recapY = recapY, recapH = viewportH,
-		rows = rows, difficultyY = difficultyY, medalY = medalY,
+		difficultyY = difficultyY, medalY = medalY,
 		recapContentH = recapContentH, buttonsStartY = buttonsStartY,
 		buttonGap = buttonGap, buttonHeight = buttonHeight,
 	}
@@ -424,19 +404,6 @@ local function layoutButtons()
 		btn.h = layout.buttonHeight
 		btn.x = layout.cx - btn.w * 0.5
 		btn.y = layout.buttonsStartY + (i - 1) * (layout.buttonHeight + layout.buttonGap)
-	end
-end
-
-local function buildStats()
-	local rewardNames = {}
-	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
-		rewardNames[#rewardNames + 1] = L("tower." .. kind)
-	end
-
-	stats = {}
-
-	if #rewardNames > 0 then
-		stats[#stats + 1] = { label = L("victory.newTowerReward"), value = table.concat(rewardNames, "  •  ") }
 	end
 end
 
@@ -509,7 +476,6 @@ function Screen.load()
 		},
 	}
 
-	buildStats()
 	layoutButtons()
 end
 
@@ -523,7 +489,6 @@ function Screen.enter()
 	rewardClosePressed = false
 	rewardActionPressed = nil
 	recapScroll:reset()
-	buildStats()
 	buildRewardCards()
 	resetConfetti()
 	Medals.resetAnimations()
@@ -557,7 +522,6 @@ function Screen.update(dt)
 	local pt = min(1, t * speed)
 	panelT = pt * pt * (3 - 2 * pt)
 
-	buildStats()
 	layoutButtons()
 
 	if #rewardCards > 0 then
@@ -650,28 +614,10 @@ function Screen.draw()
 
 	-- The recap may scroll, but the heading and action buttons remain outside its clip.
 	lg.setScissor(g.boxX, g.recapY, g.boxW, g.recapH)
-	local statsY = g.recapY - recapScroll.offset
-	local cardW = g.cardW
-	for i, item in ipairs(stats) do
-		local row = g.rows[i]
-		local x = boxX + g.padX
-		local y = statsY + row.y
-
-		lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.6 * alpha)
-		lg.rectangle("fill", x, y, cardW, row.h, 10, 10)
-
-		Fonts.set("ui")
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.74 * alpha)
-		Text.printfShadow(item.label, x + 12, y + 8, cardW - 24, "left")
-
-		Fonts.set(g.compact and "ui" or "menu")
-		lg.setColor(colorButton[1], colorButton[2], colorButton[3], alpha)
-		Text.printfShadow(item.value, x + 12, y + 8 + Fonts.ui:getHeight() + 4, cardW - 24, "left")
-	end
-
+	local recapContentY = g.recapY - recapScroll.offset
 	-- Difficulty
 	local difficultyLabel = RunRecap.getDifficultyLabel()
-	local difficultyY = statsY + g.difficultyY
+	local difficultyY = recapContentY + g.difficultyY
 
 	if difficultyLabel then
 		Fonts.set("ui")
@@ -682,7 +628,7 @@ function Screen.draw()
 	-- Medals
 	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
 	local medalX = cx - clusterW * 0.5
-	local medalY = statsY + g.medalY
+	local medalY = recapContentY + g.medalY
 
 	lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.75 * alpha)
 	lg.rectangle("fill", medalX - 16, medalY - 12, clusterW + 32, clusterH + 24, 14, 14)
