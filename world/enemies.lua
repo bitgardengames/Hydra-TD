@@ -299,8 +299,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.shieldBreakFlash = 0
 	e.shieldHitFlash = 0
 	e.shieldCounterFlash = 0
-	e.armorHitFlash = 0
-	e.armorCounterFlash = 0
 	e.regenVisualPulse = 0
 	e.support = def.support
 	e.summon = def.summon
@@ -618,8 +616,6 @@ local function updateEnemies(dt)
 		if e.shieldBreakFlash > 0 then e.shieldBreakFlash = max(0, e.shieldBreakFlash - dt) end
 		if e.shieldHitFlash > 0 then e.shieldHitFlash = max(0, e.shieldHitFlash - dt) end
 		if e.shieldCounterFlash > 0 then e.shieldCounterFlash = max(0, e.shieldCounterFlash - dt) end
-		if e.armorHitFlash > 0 then e.armorHitFlash = max(0, e.armorHitFlash - dt) end
-		if e.armorCounterFlash > 0 then e.armorCounterFlash = max(0, e.armorCounterFlash - dt) end
 		if e.regenVisualPulse > 0 then e.regenVisualPulse = max(0, e.regenVisualPulse - dt) end
 
 		-- Summoned runners join at the caster's current path progress rather than at
@@ -786,8 +782,8 @@ local function applyDamage(e, amount, context)
 	if e.armor then
 		local heavy = context.sourceKind == "cannon" or context.sourceKind == "lancer"
 			or raw >= (e.armor.heavyThreshold or math.huge)
-		if heavy then amount = amount * (e.armor.heavyMultiplier or 1); e.armorCounterFlash = 0.22
-		else amount = max(1, amount - (e.armor.flatReduction or 0)); e.armorHitFlash = 0.22 end
+		if heavy then amount = amount * (e.armor.heavyMultiplier or 1)
+		else amount = max(1, amount - (e.armor.flatReduction or 0)) end
 	end
 	local absorbed = 0
 	if e.shieldHp and e.shieldHp > 0 then
