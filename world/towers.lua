@@ -386,6 +386,8 @@ local function upgradeTower(t, specializationId)
 	t.prevHeight = t.height
 	t.height = (t.level - 1) * 4
 	t.levelUpAnim = 1
+	-- Render-only confirmation that follows the tower body while its new tier rises.
+	t.upgradeFlash = 0.3
 	if State.isReplayMode() then
 		t.specializationId = specializationId
 		t.branchSelections = t.branchSelections or {}
@@ -602,6 +604,7 @@ local function updateTowerVisuals(t, dt)
 	t.fireAnim = max(0, t.fireAnim - dt * 8)
 	t.spawnAnim = max(0, (t.spawnAnim or 0) - dt * 5)
 	t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)
+	t.upgradeFlash = max(0, (t.upgradeFlash or 0) - dt)
 
 	local riseAnim = t.levelUpAnim or 0
 	local animatedHeight
