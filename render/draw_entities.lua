@@ -137,16 +137,17 @@ local function drawEnemy(e)
 	lg.translate(-ix, -iy)
 
 	-- Mechanical silhouettes are deliberately geometric and remain legible without
-	-- their colors: plates, shield arc, regeneration cross, and war banner/aura.
+	-- their colors: plates, shield arc, regeneration cross, and war banner.
 	if e.support then
-		local pulse = (e.supportPulse or 0) / e.support.pulsePeriod
-		local supportRadius = e.portrait and (r + 8) or e.support.radius
-		lg.setColor(0.95, 0.62, 0.18, (0.18 + (1 - pulse) * 0.28) * enemyAlpha)
-		lg.setLineWidth(2)
-		lg.circle("line", ix, iy, supportRadius * (0.86 + pulse * 0.14))
+		-- The banner trails opposite the Warcaller's horizontal facing. Mirror the
+		-- whole standard so both its pole and cloth keep a consistent silhouette.
+		local flagDirection = (e.eyeDX or 0) < 0 and 1 or -1
+		local poleX = ix + flagDirection * r * 0.55
 		lg.setColor(outR, outG, outB, enemyAlpha)
-		lg.rectangle("fill", ix + r * 0.55, iy - r * 2.0, 3, r * 1.7)
-		lg.polygon("fill", ix + r * 0.7, iy - r * 1.9, ix + r * 1.65, iy - r * 1.55, ix + r * 0.7, iy - r * 1.2)
+		lg.rectangle("fill", poleX - (flagDirection < 0 and 3 or 0), iy - r * 2.0, 3, r * 1.7)
+		lg.polygon("fill", ix + flagDirection * r * 0.7, iy - r * 1.9,
+			ix + flagDirection * r * 1.65, iy - r * 1.55,
+			ix + flagDirection * r * 0.7, iy - r * 1.2)
 	end
 	if e.summon then
 		local readiness = 1 - min(1, max(0, (e.summonTimer or 0) / e.summon.period))
