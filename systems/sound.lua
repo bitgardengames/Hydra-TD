@@ -126,7 +126,7 @@ end
 -- contextual transitions such as restoring a run.
 function Sound.playAbilityReady(opts)
 	opts = opts or {}
-	if opts.suppress or (Save.data and Save.data.settings.abilityReadySound == false) then
+	if opts.suppress then
 		return
 	end
 	Sound.play("abilityReady", opts)
