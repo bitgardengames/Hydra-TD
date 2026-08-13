@@ -298,12 +298,8 @@ local function drawEnemy(e)
 				ix + cos(angle) * (r + 12), iy + sin(angle) * (r + 12))
 		end
 	end
-	if e.armorHitFlash > 0 or e.armorCounterFlash > 0 then
-		local countered = e.armorCounterFlash > 0
-		local a = (countered and e.armorCounterFlash / 0.22 or e.armorHitFlash / 0.22)
-		lg.setColor(countered and 1 or 0.55, countered and 0.82 or 0.58, countered and 0.25 or 0.62, a * enemyAlpha)
-		lg.setLineWidth(countered and 4 or 2); lg.circle("line", ix, iy, r + 5)
-	end
+	-- Armor is communicated by the Bulwark's plated silhouette; avoid adding a
+	-- colored ring on every hit, which becomes noisy when several are under fire.
 	if e.regeneration and e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0 then
 		lg.setColor(0.55, 1, 0.55, enemyAlpha); lg.setLineWidth(2)
 		lg.line(ix - 6, iy + r + 5, ix, iy + r + 1, ix + 6, iy + r + 5)
