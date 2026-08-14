@@ -22,10 +22,13 @@ local TITLE_GAP = 8
 local TITLE_H = 22
 local POOL_GAP = 8
 local POOL_LABEL_H = 22
+local FEEDBACK_DURATION = 2.5
 
 local buttons = {}
 local equipped = {}
 local selectedSlot
+local feedbackText
+local feedbackTimer = 0
 
 local function unlockedAbilities()
 	local result = {}
@@ -37,11 +40,22 @@ local function unlockedAbilities()
 	return result
 end
 
+local function slotContaining(list, value)
+	for slot, item in ipairs(list) do
+		if item == value then return slot end
+	end
+end
+
 local function contains(list, value)
 	for _, item in ipairs(list) do
 		if item == value then return true end
 	end
 	return false
+end
+
+local function showDuplicateFeedback(slot)
+	feedbackText = L("campaign.abilityAlreadyEquipped", slot)
+	feedbackTimer = FEEDBACK_DURATION
 end
 
 local function saveSelection()
@@ -66,7 +80,9 @@ local function selectAbility(abilityId)
 		return
 	end
 
-	if contains(equipped, abilityId) then
+	local equippedSlot = slotContaining(equipped, abilityId)
+	if equippedSlot then
+		showDuplicateFeedback(equippedSlot)
 		Sound.play("uiError")
 		return
 	end
@@ -85,9 +101,12 @@ rebuildButtons = function()
 	end
 	if selectedSlot then
 		for _, abilityId in ipairs(unlockedAbilities()) do
+			local equippedSlot = slotContaining(equipped, abilityId)
 			buttons[#buttons + 1] = {
 				kind = "ability",
 				abilityId = abilityId,
+				equippedSlot = equippedSlot,
+				equippedElsewhere = equippedSlot and equippedSlot ~= selectedSlot or false,
 				anim = Button.newAnimation(),
 			}
 		end
@@ -111,6 +130,8 @@ function Loadout.refresh()
 	end
 
 	selectedSlot = nil
+	feedbackText = nil
+	feedbackTimer = 0
 	saveSelection()
 	rebuildButtons()
 end
@@ -146,12 +167,14 @@ end
 function Loadout.update(dt)
 	layout()
 	Button.updateList(buttons, dt)
+	feedbackTimer = math.max(0, feedbackTimer - dt)
+	if feedbackTimer == 0 then feedbackText = nil end
 end
 
-local function drawIconButton(button, abilityId, selected)
+local function drawIconButton(button, abilityId, selected, disabled)
 	local x, y = button.x, button.y
-	local hovered = button.anim and button.anim.hovered
-	local face = selected and Theme.ui.buttonHover or Theme.ui.button
+	local hovered = not disabled and button.anim and button.anim.hovered
+	local face = disabled and Theme.ui.buttonDisabled or selected and Theme.ui.buttonHover or Theme.ui.button
 	lg.setColor(face[1], face[2], face[3], face[4] or 1)
 	lg.rectangle("fill", x, y, ICON_SIZE, ICON_SIZE, 6)
 	lg.setColor(Theme.outline.color)
@@ -160,7 +183,12 @@ local function drawIconButton(button, abilityId, selected)
 	lg.setLineWidth(1)
 	if abilityId then
 		AbilityIcons.draw(abilityId, x + ICON_SIZE / 2, y + ICON_SIZE / 2,
-			hovered and 0.92 or 0.84, 1)
+			hovered and 0.92 or 0.84, disabled and 0.38 or 1)
+		if disabled then
+			Fonts.set("ui")
+			lg.setColor(Theme.ui.warn)
+			Text.printfShadow(tostring(button.equippedSlot), x, y + ICON_SIZE - 17, ICON_SIZE - 4, "right")
+		end
 	else
 		Fonts.set("menu")
 		lg.setColor(Theme.ui.text)
@@ -183,18 +211,39 @@ function Loadout.draw()
 		if button.kind == "slot" then
 			drawIconButton(button, equipped[button.slot], selectedSlot == button.slot)
 		else
-			drawIconButton(button, button.abilityId, equipped[selectedSlot] == button.abilityId)
+			drawIconButton(button, button.abilityId, equipped[selectedSlot] == button.abilityId,
+				button.equippedElsewhere)
 			if button.anim.hovered then
 				Fonts.set("ui")
-				lg.setColor(Theme.ui.text)
-				local label = L(AbilityDefs[button.abilityId].nameKey)
+				lg.setColor(button.equippedElsewhere and Theme.ui.warn or Theme.ui.text)
+				local label = button.equippedElsewhere
+					and L("campaign.abilityEquippedInSlot", button.equippedSlot)
+					or L(AbilityDefs[button.abilityId].nameKey)
 				Text.printfShadow(label, x + PAD, poolY - POOL_LABEL_H, panelW - PAD * 2, "left")
 			end
 		end
 	end
+
+	if feedbackText then
+		Fonts.set("ui")
+		lg.setColor(Theme.ui.bad)
+		Text.printfShadow(feedbackText, x + PAD, poolY - POOL_LABEL_H, panelW - PAD * 2, "left")
+	end
 end
 
 function Loadout.mousepressed(x, y, mouseButton)
+	if mouseButton == 1 then
+		for _, button in ipairs(buttons) do
+			if button.equippedElsewhere and x >= button.x and x <= button.x + button.w
+				and y >= button.y and y <= button.y + button.h then
+				-- Do not arm the normal pressed animation for an unavailable choice.
+				-- Route through the common guard so every duplicate-selection path
+				-- produces the same audible and visible explanation.
+				selectAbility(button.abilityId)
+				return true
+			end
+		end
+	end
 	return Button.mousepressedList(buttons, x, y, mouseButton)
 end
 

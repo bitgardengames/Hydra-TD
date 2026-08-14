@@ -81,6 +81,8 @@ return {
 
 	campaign = {
 		abilityLoadout = "Active Abilities",
+		abilityEquippedInSlot = "Equipped in slot %d",
+		abilityAlreadyEquipped = "Already equipped in slot %d.",
 		ability = "Ability: %s",
 		abilities = "Abilities: %s",
 		locked = "LOCKED",
