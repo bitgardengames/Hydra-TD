@@ -671,11 +671,5 @@ return {
 
 		wishlistSteam = "Wishlist on Steam",
 		closeButton = "Close",
-
-		reviewTitle = "Hydra TD Complete!",
-		reviewText = "Thank you for playing Hydra TD!\n\nIf you enjoyed the game, a Steam review\nhelps indie developers more than you might think.",
-
-		reviewButton = "Write a Steam Review",
-		continue = "Continue",
 	},
 }
