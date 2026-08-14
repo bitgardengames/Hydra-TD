@@ -201,12 +201,11 @@ local function drawSlotLabel(button)
 	local binding = Hotkeys.getDisplay("abilitySlot" .. button.slot)
 	if not binding then return end
 
-	local label = L("campaign.abilitySlotBinding", button.slot, binding)
 	Fonts.set("version")
 	lg.setColor(Theme.ui.backdrop)
 	lg.rectangle("fill", button.x + 2, button.y + ICON_SIZE - 15, ICON_SIZE - 4, 13, 3)
 	lg.setColor(Theme.ui.text)
-	Text.printfShadow(label, button.x + 2, button.y + ICON_SIZE - 16, ICON_SIZE - 4, "center")
+	Text.printfShadow(binding, button.x + 2, button.y + ICON_SIZE - 16, ICON_SIZE - 4, "center")
 end
 
 function Loadout.draw()
