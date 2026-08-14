@@ -119,8 +119,19 @@ local function getProgressIndex()
 	return normalizeProgressIndex(Save.data and Save.data.furthestIndex)
 end
 
+local function isRewardMapCompleted(requiredMap)
+	local rewardMap = Maps[requiredMap - 1]
+	local mapStats = Save.data and Save.data.mapStats
+	local stats = rewardMap and type(mapStats) == "table" and mapStats[rewardMap.id]
+	return type(stats) == "table" and stats.completedDifficulty ~= nil
+end
+
 local function isFeatureUnlocked(featureType, id)
-	return getProgressIndex() >= (requiredMapByFeature[featureKey(featureType, id)] or UNKNOWN_REQUIRED_MAP)
+	local requiredMap = requiredMapByFeature[featureKey(featureType, id)] or UNKNOWN_REQUIRED_MAP
+	-- Completion records are the durable proof that a reward was earned. Older
+	-- profiles can have complete map stats but a missing/stale furthestIndex, so
+	-- relying only on route progression makes every ability appear locked.
+	return getProgressIndex() >= requiredMap or isRewardMapCompleted(requiredMap)
 end
 
 local function isRewardUnlocked(rewardType, rewardId)
