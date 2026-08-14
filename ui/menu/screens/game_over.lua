@@ -11,6 +11,7 @@ local Modules = require("systems.modules")
 local RunStats = require("systems.run_stats")
 local RunRecap = require("ui.run_recap")
 local Save = require("core.save")
+local Hotkeys = require("core.hotkeys")
 
 local lg = love.graphics
 
@@ -19,6 +20,7 @@ local floor = math.floor
 local Screen = {}
 local selectedHeadline = nil
 local selectedSubheadline = nil
+local shortcutsText = nil
 
 -- animation
 local t = 0
@@ -64,6 +66,14 @@ local panelW = 560
 local panelX = 0
 local highlights = {}
 local summaryLines = {}
+
+local function buildShortcutsText()
+	local unbound = L("settings.controlUnbound")
+	local restartKey = Hotkeys.getDisplay("restartRun") or unbound
+	local menuKey = Hotkeys.getDisplay("returnToMenu") or unbound
+
+	shortcutsText = L("gameOver.shortcuts", restartKey, menuKey)
+end
 
 local function restartRun()
 	Sound.play("uiConfirm")
@@ -126,11 +136,13 @@ end
 function Screen.enter()
 	t = 0
 	panelT = 0
+	buildShortcutsText()
 	buildRunSummary()
 	selectedHeadline, selectedSubheadline = selectGameOverMessage()
 end
 
 function Screen.load()
+	buildShortcutsText()
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 	local startY = floor(sh * 0.5 + 40)
@@ -286,7 +298,7 @@ function Screen.draw()
 	end
 
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.6 * alpha)
-	Text.printfShadow(L("gameOver.shortcuts"), boxX + paddingX, tipY, boxW - paddingX * 2, "center")
+	Text.printfShadow(shortcutsText, boxX + paddingX, tipY, boxW - paddingX * 2, "center")
 
 	-- Buttons
 	for _, btn in ipairs(buttons) do
@@ -309,10 +321,10 @@ function Screen.keypressed(key)
 	if key == "c" and State.runSummary then
 		love.system.setClipboardText(State.runSummary.code)
 		return true
-	elseif key == "escape" then
+	elseif key == Hotkeys.getActionKey("returnToMenu") then
 		returnToMenu(false)
 		Sound.play("uiBack")
-	elseif key == "r" then
+	elseif key == Hotkeys.getActionKey("restartRun") then
 		restartRun()
 	end
 end
