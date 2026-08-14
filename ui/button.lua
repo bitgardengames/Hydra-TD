@@ -100,7 +100,7 @@ function Button.update(btn, mx, my, dt)
 	end
 
 	local anim = ensureAnim(btn)
-	local hovered = pointInRect(mx, my, btn.x, btn.y, btn.w, btn.h)
+	local hovered = btn.focused == true or pointInRect(mx, my, btn.x, btn.y, btn.w, btn.h)
 
 	Button.updateAnimation(anim, hovered, dt)
 	btn.hovered = hovered

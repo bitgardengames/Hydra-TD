@@ -10,6 +10,7 @@ local Backdrop = require("scenes.backdrop")
 local L = require("core.localization")
 local Save = require("core.save")
 local Difficulty = require("systems.difficulty")
+local ConfirmationDialog = require("ui.confirmation_dialog")
 
 local Screen = {}
 
@@ -30,6 +31,18 @@ local innerRadius = baseRadius - outlineW * 0.25
 
 local buttons = nil
 local storeButton = nil
+local confirmation = ConfirmationDialog.new()
+
+local function confirmQuit(origin)
+	confirmation:show({
+		title = L("confirmation.quitTitle"),
+		description = L("confirmation.quitDescription"),
+		confirmLabel = L("confirmation.confirm"),
+		cancelLabel = L("confirmation.cancel"),
+		onConfirm = function() love.event.quit() end,
+		origin = origin,
+	})
+end
 
 local lancerIdle = {
 	angle = -math.pi / 6,
@@ -86,7 +99,7 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				love.event.quit()
+				confirmQuit(buttons[3])
 			end
 		},
 	}
@@ -160,7 +173,7 @@ function Screen.update(dt)
 		end
 	end
 
-	Button.updateList(buttons, dt)
+	if confirmation:isOpen() then confirmation:update(dt) else Button.updateList(buttons, dt) end
 
 	if storeButton then
 		storeButton.x = 24
@@ -208,9 +221,12 @@ function Screen.draw()
 	if storeButton then
 		Button.draw(storeButton)
 	end
+
+	confirmation:draw()
 end
 
 function Screen.mousepressed(x, y, button)
+	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
 	if Button.mousepressedList(buttons, x, y, button) then
 		return true
 	end
@@ -221,6 +237,7 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
+	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
 	if Button.mousereleasedList(buttons, x, y, button) then
 		return true
 	end
@@ -231,8 +248,9 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.keypressed(key)
+	if confirmation:isOpen() then return confirmation:keypressed(key) end
 	if key == "escape" then
-		love.event.quit()
+		confirmQuit(buttons[3])
 	end
 end
 

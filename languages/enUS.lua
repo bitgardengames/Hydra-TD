@@ -18,6 +18,17 @@ return {
 		paused = "Paused",
 	},
 
+	confirmation = {
+		confirm = "Confirm",
+		cancel = "Cancel",
+		restartTitle = "Restart this run?",
+		restartDescription = "Your current run will end and restart from the beginning.",
+		mainMenuTitle = "Return to the main menu?",
+		mainMenuDescription = "Your current run will end and unsaved run progress will be lost.",
+		quitTitle = "Quit the game?",
+		quitDescription = "The game will close and any unsaved progress will be lost.",
+	},
+
 	ability = {
 		meteor = {name = "Meteor", desc = "Deal 85 damage to all enemies in the targeted area (115 when enhanced)."},
 		frostNova = {name = "Frost Nova", desc = "Slow enemies in the targeted area to 35% speed for 5 seconds (28% for 6.5 seconds when enhanced)."},
