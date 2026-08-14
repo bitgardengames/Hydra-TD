@@ -339,6 +339,7 @@ function Save.setEquippedAbilities(abilityIds)
 
 	local selections = {}
 	for slotIndex, abilityId in ipairs(abilityIds) do
+		if slotIndex > 2 then break end
 		if type(abilityId) == "string" then selections[slotIndex] = abilityId end
 	end
 	Save.data.equippedAbilities = selections
