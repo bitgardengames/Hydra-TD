@@ -3,6 +3,7 @@ local AbilityIcons = require("ui.ability_icons")
 local Button = require("ui.button")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local Fonts = require("core.fonts")
+local Hotkeys = require("core.hotkeys")
 local L = require("core.localization")
 local Save = require("core.save")
 local Sound = require("systems.sound")
@@ -196,6 +197,18 @@ local function drawIconButton(button, abilityId, selected, disabled)
 	end
 end
 
+local function drawSlotLabel(button)
+	local binding = Hotkeys.getDisplay("abilitySlot" .. button.slot)
+	if not binding then return end
+
+	local label = L("campaign.abilitySlotBinding", button.slot, binding)
+	Fonts.set("version")
+	lg.setColor(Theme.ui.backdrop)
+	lg.rectangle("fill", button.x + 2, button.y + ICON_SIZE - 15, ICON_SIZE - 4, 13, 3)
+	lg.setColor(Theme.ui.text)
+	Text.printfShadow(label, button.x + 2, button.y + ICON_SIZE - 16, ICON_SIZE - 4, "center")
+end
+
 function Loadout.draw()
 	local x, y, panelW, panelH, titleY, poolY = layout()
 	lg.setColor(Theme.outline.color)
@@ -209,7 +222,9 @@ function Loadout.draw()
 
 	for _, button in ipairs(buttons) do
 		if button.kind == "slot" then
-			drawIconButton(button, equipped[button.slot], selectedSlot == button.slot)
+			local abilityId = equipped[button.slot]
+			drawIconButton(button, abilityId, selectedSlot == button.slot)
+			if abilityId then drawSlotLabel(button) end
 		else
 			drawIconButton(button, button.abilityId, equipped[selectedSlot] == button.abilityId,
 				button.equippedElsewhere)
