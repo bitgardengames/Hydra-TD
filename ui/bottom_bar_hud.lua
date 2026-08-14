@@ -1,7 +1,6 @@
 local State = require("core.state")
 local Theme = require("core.theme")
 local Util = require("core.util")
-local WaveBuilder = require("systems.wave_builder")
 local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local L = require("core.localization")
@@ -27,7 +26,6 @@ local formatInt = Util.formatInt
 
 local MONEY_X = 12
 local LIVES_X = 90
-local WAVE_X = 150
 local CONTROL_PAD = 8
 local CONTROL_GAP = 8
 
@@ -35,7 +33,6 @@ local CONTROL_GAP = 8
 local hudCache = {
 	money = {value = nil, text = ""},
 	lives = {value = nil, text = ""},
-	wave = {value = nil, text = ""},
 	speed = {value = nil, text = ""},
 }
 
@@ -87,17 +84,6 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 	else
 		Text.printShadow(livesCache.text, infoX + LIVES_X, y)
 	end
-
-	local waveCache = hudCache.wave
-	local intensityTier = WaveBuilder.getIntensityTier(State.wave)
-
-	if waveCache.value ~= State.wave then
-		waveCache.value = State.wave
-		waveCache.text = intensityTier > 0 and L("hud.endlessTier", State.wave, intensityTier) or L("hud.wave", State.wave)
-	end
-
-	lg.setColor(ct1, ct2, ct3, 1)
-	Text.printShadow(waveCache.text, infoX + WAVE_X, y)
 
 	-- Always expose the active simulation multiplier, including during prep.
 	local speedCache = hudCache.speed
