@@ -104,12 +104,11 @@ local function buildRunSummary()
 		{ label = L("gameOver.score"), value = tostring(score) },
 	}
 	RunStats.captureLoadout(Modules.active, State.selectedContracts or State.contracts)
-	local summary = RunStats.summarize(State.money, State.score)
-	State.runSummary = summary
+	local summary = RunStats.summarize(State.money)
 	summaryLines = {
 		string.format("MVP %s  •  Leak %s (%d)  •  Damage %s", summary.mvp, summary.leak, summary.leakCount, summary.damageType),
 		"Build: " .. (summary.build ~= "" and summary.build or "none") .. (summary.paths ~= "" and "  •  " .. summary.paths or ""),
-		summary.observation .. "  •  [C] Copy build code",
+		summary.observation,
 	}
 	if State.isReplayMode() and (summary.modules ~= "" or summary.contracts ~= "") then
 		table.insert(summaryLines, 3, "Modules: " .. (summary.modules ~= "" and summary.modules or "none") .. "  •  Contracts: " .. (summary.contracts ~= "" and summary.contracts or "none"))
@@ -321,10 +320,7 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.keypressed(key)
-	if key == "c" and State.runSummary then
-		love.system.setClipboardText(State.runSummary.code)
-		return true
-	elseif key == Hotkeys.getActionKey("returnToMenu") then
+	if key == Hotkeys.getActionKey("returnToMenu") then
 		returnToMenu(false)
 		Sound.play("uiBack")
 	elseif key == Hotkeys.getActionKey("restartRun") then
