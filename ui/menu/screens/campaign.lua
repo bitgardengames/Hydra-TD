@@ -637,6 +637,13 @@ function Screen.keypressed(key)
 		cycleDifficulty(-1)
 	elseif key == "down" then
 		cycleDifficulty(1)
+	elseif key == "return" or key == "kpenter" or key == "space" then
+		for _, btn in ipairs(campaignButtons) do
+			if btn.id == "play" and btn.enabled ~= false and btn.onClick then
+				btn.onClick()
+				return true
+			end
+		end
 	elseif key == "escape" then
 		hideMedalTooltip()
 		Save.flush()

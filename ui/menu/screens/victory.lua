@@ -35,6 +35,7 @@ local random = love.math.random
 local Screen = {}
 
 local buttons = nil
+local buttonFocus = Button.newFocus()
 local previousMedalCount = 0
 local currentMedalCount = 0
 local confetti = {}
@@ -476,6 +477,7 @@ function Screen.load()
 	}
 
 	layoutButtons()
+	Button.resetFocus(buttons, buttonFocus)
 end
 
 function Screen.enter()
@@ -492,6 +494,7 @@ function Screen.enter()
 	resetConfetti()
 	Medals.resetAnimations()
 	recordFirstClear()
+	Button.resetFocus(buttons, buttonFocus)
 
 	previousMedalCount = Medals.getCount(State.previousCompletionDifficulty)
 	currentMedalCount = Medals.getCount(Difficulty.key())
@@ -661,7 +664,7 @@ function Screen.mousepressed(x, y, button)
 		return true
 	end
 
-	return Button.mousepressedList(buttons, x, y, button)
+	return Button.mousepressedList(buttons, x, y, button, buttonFocus)
 end
 
 function Screen.mousereleased(x, y, button)
@@ -703,13 +706,8 @@ function Screen.keypressed(key)
 				return true
 			end
 		end
-	elseif key == "return" or key == "kpenter" then
-		for _, btn in ipairs(buttons) do
-			if btn.enabled ~= false and btn.onClick then
-				btn.onClick()
-				return true
-			end
-		end
+	else
+		return Button.keypressedList(buttons, buttonFocus, key)
 	end
 end
 
