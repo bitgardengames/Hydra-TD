@@ -121,7 +121,7 @@ function resetGame()
 	MapWorldCache.invalidate()
 
 	local diff = Difficulty.get()
-	RunStats.reset({difficulty = Difficulty.key()})
+	RunStats.reset()
 
     -- Core game state
 	State.money = diff.startMoney

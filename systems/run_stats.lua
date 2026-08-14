@@ -15,8 +15,7 @@ local function addCount(counts, key, amount)
 	end
 end
 
-function RunStats.reset(options)
-	options = options or {}
+function RunStats.reset()
 	RunStats.data = {
 		moneyEarned = 0, moneySpent = 0,
 		earlyCallBonuses = 0, flawlessBonuses = 0,
@@ -24,7 +23,7 @@ function RunStats.reset(options)
 		damageByTower = {}, damageByType = {},
 		killsByTower = {},
 		finalTierWave = {}, towerKinds = {}, towerBranches = {}, soldTowers = {},
-		modules = {}, contracts = {}, difficulty = options.difficulty or "normal",
+		modules = {}, contracts = {},
 	}
 	RunStats.nextTowerId = 0
 end
@@ -141,7 +140,7 @@ local function greatest(t)
 	return best, math.max(0, value)
 end
 
-function RunStats.summarize(currentMoney, score)
+function RunStats.summarize(currentMoney)
 	local data = getData()
 	local mvpId, mvpDamage = greatest(data.damageByTower)
 	local mvpKind = data.towerKinds[mvpId] or mvpId or "none"
@@ -174,15 +173,6 @@ function RunStats.summarize(currentMoney, score)
 		observation = "No leaks: preserve this coverage while spending earlier."
 	end
 
-	local code = table.concat({
-		"HTD1",
-		table.concat(builds, ","),
-		table.concat(paths, ","),
-		table.concat(data.modules, ","),
-		table.concat(data.contracts, ","),
-		data.difficulty,
-		tostring(score or 0),
-	}, "|")
 	return {
 		mvp = mvpKind,
 		mvpDamage = mvpDamage,
@@ -195,7 +185,6 @@ function RunStats.summarize(currentMoney, score)
 		modules = table.concat(data.modules, ", "),
 		contracts = table.concat(data.contracts, ", "),
 		observation = observation,
-		code = code,
 	}
 end
 
