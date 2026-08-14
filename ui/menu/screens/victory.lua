@@ -23,7 +23,6 @@ local Tooltip = require("ui.tooltip")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
-local ReviewPrompt = require("ui.overlays.review_prompt")
 
 local lg = love.graphics
 local min = math.min
@@ -505,14 +504,6 @@ function Screen.enter()
 
 	if Constants.IS_DEMO then
 		Overlay.show(DemoComplete)
-	else
-		local lastMap = (#Maps == State.worldMapIndex)
-
-		if lastMap and not Save.data.reviewPromptShown then
-			Overlay.show(ReviewPrompt)
-			Save.data.reviewPromptShown = true
-			Save.flush()
-		end
 	end
 end
 
