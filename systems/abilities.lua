@@ -138,10 +138,18 @@ local function activateGravityWell(effect, x, y, abilityId)
 	})
 end
 
-local function activateDamageArea(effect, x, y)
-	forEachEnemyInRadius(x, y, effect.radius, function(enemy)
-		Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
-	end, true)
+local function activateDamageArea(effect, x, y, abilityId)
+	local travelTime = effect.travelTime or 0
+	addActive({
+		kind = "meteor_incoming",
+		abilityId = abilityId,
+		x = x,
+		y = y,
+		radius = effect.radius,
+		damage = effect.damage,
+		started = clock,
+		expires = clock + travelTime,
+	})
 end
 
 local function activateSlowArea(effect, x, y)
@@ -159,18 +167,12 @@ local effectActivators = {
 	gravity_well = activateGravityWell,
 }
 
-local function playMeteorEffect(effect, x, y)
-	Effects.spawnCannonImpact(x, y, effect.radius)
-	Effects.shake(4)
-end
-
 local function playFrostEffect(_, x, y)
 	Effects.spawnFrostBurst(x, y)
 	Effects.shake(1)
 end
 
 local activationEffects = {
-	damage_area = playMeteorEffect,
 	slow_area = playFrostEffect,
 }
 
@@ -286,9 +288,18 @@ local function expireGravityWell(effect)
 	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius)
 end
 
+local function expireMeteor(effect)
+	forEachEnemyInRadius(effect.x, effect.y, effect.radius, function(enemy)
+		Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
+	end, true)
+	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius)
+	Effects.shake(4)
+end
+
 -- Timed-effect behavior lives in one registry so adding a lifecycle does not
 -- require keeping separate kind-to-callback tables in sync.
 local timedEffectHandlers = {
+	meteor_incoming = { expire = expireMeteor },
 	gravity_well = { update = updateGravityWell, expire = expireGravityWell },
 	last_stand = { update = updateLastStand },
 }

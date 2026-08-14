@@ -427,9 +427,45 @@ local function drawEntityMarker(entity, color, alpha, radius)
 	lg.circle("line", x, y, radius)
 end
 
+local function drawIncomingMeteor(effect, clock)
+	local duration = effect.expires - effect.started
+	local progress = duration > 0 and math.min(1, (clock - effect.started) / duration) or 1
+	-- Begin above the battlefield so the strike has an observable approach rather
+	-- than appearing at the cursor. The slight horizontal sweep keeps the body
+	-- and its trail readable even when the target is near an edge of the map.
+	local direction = effect.x < gridW * tile * .5 and -1 or 1
+	local startX = effect.x + direction * 270
+	local startY = -110
+	local meteorX = startX + (effect.x - startX) * progress
+	local meteorY = startY + (effect.y - startY) * progress
+	local trailX = meteorX - (effect.x - startX) * .15
+	local trailY = meteorY - (effect.y - startY) * .15
+	local pulse = .8 + .2 * sin(clock * 18)
+
+	lg.setColor(1, .22, .04, .22)
+	lg.setLineWidth(18)
+	lg.line(trailX, trailY, meteorX, meteorY)
+	lg.setColor(1, .62, .12, .7)
+	lg.setLineWidth(7)
+	lg.line(trailX, trailY, meteorX, meteorY)
+	lg.setColor(1, .9, .48, .95)
+	lg.circle("fill", meteorX, meteorY, 13 * pulse)
+	lg.setColor(.24, .12, .1, 1)
+	lg.circle("fill", meteorX, meteorY, 8)
+
+	lg.setColor(1, .28, .08, .14 + progress * .14)
+	lg.circle("fill", effect.x, effect.y, effect.radius * (.84 + .08 * pulse))
+	lg.setColor(1, .5, .12, .72)
+	lg.setLineWidth(2)
+	lg.circle("line", effect.x, effect.y, effect.radius)
+end
+
 local function drawAbilityPreview()
 	local active, clock = Abilities.getActive()
 	for _, activeEffect in ipairs(active) do
+		if activeEffect.kind == "meteor_incoming" then
+			drawIncomingMeteor(activeEffect, clock)
+		end
 		local def = activeEffect.abilityId and AbilityDefs[activeEffect.abilityId]
 		local sustained = def and def.sustained
 		local remaining = activeEffect.expires - clock

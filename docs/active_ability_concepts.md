@@ -3,7 +3,7 @@
 Active abilities should be **panic buttons with a target**, not passive stat
 upgrades. The player should get a short aiming beat, an unmistakable payoff,
 and a visible window in which they feel stronger. These concepts complement
-Meteor's immediate damage and Frost Nova's enemy control without replacing
+Meteor's delayed burst damage and Frost Nova's enemy control without replacing
 either role.
 
 ## Recommended first addition: Overdrive
