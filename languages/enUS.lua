@@ -76,8 +76,6 @@ return {
 		controlDamageMeter = "Toggle Damage Meter",
 		controlAbilitySlot1 = "Ability Slot 1",
 		controlAbilitySlot2 = "Ability Slot 2",
-		controlAbilitySlot3 = "Ability Slot 3",
-		controlAbilitySlot4 = "Ability Slot 4",
 		controlScreenshot = "Screenshot",
 		controlListening = "Press any key...",
 		controlListeningHint = "Press a key… Backspace to unbind, Esc to cancel.",
