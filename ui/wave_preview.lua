@@ -1,9 +1,11 @@
 local State = require("core.state")
 local Theme = require("core.theme")
 local Waves = require("systems.waves")
+local EnemyDefs = require("world.enemy_defs")
 local Hotkeys = require("core.hotkeys")
 local DrawEntities = require("render.draw_entities")
 local Text = require("ui.text")
+local Tooltip = require("ui.tooltip")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -69,6 +71,28 @@ local panel = {
 
 local WavePreview = {}
 
+local function buildEnemyTooltip(group)
+	local rows = {}
+	local def = EnemyDefs[group.kind]
+	if def and def.descriptionKey then
+		rows[#rows + 1] = {kind = "text", text = L(def.descriptionKey), padAfter = 4}
+	end
+	if #group.tags > 0 then
+		rows[#rows + 1] = {kind = "text", text = L("hud.threatTags", table.concat(group.tags, ", "))}
+	end
+	for _, hint in ipairs(group.counterHints) do
+		rows[#rows + 1] = {kind = "text", text = L("hud.counterHint", hint), padAfter = 4}
+	end
+	for i, description in ipairs(group.affixDescriptions) do
+		rows[#rows + 1] = {
+			kind = "text",
+			text = group.affixNames[i] .. ": " .. description,
+			padAfter = 4,
+		}
+	end
+	return {title = group.name, rows = rows}
+end
+
 local function refreshPreview()
 	if previewCache.wave == State.wave
 		and previewCache.mapIndex == State.mapIndex
@@ -90,6 +114,7 @@ local function refreshPreview()
 		entries[i] = {
 			name = L("hud.compositionEntry", group.count, group.name),
 			portrait = DrawEntities.newEnemyPortrait(group.kind),
+			tooltip = buildEnemyTooltip(group),
 		}
 	end
 end
@@ -200,6 +225,7 @@ local function drawPreview()
 	local textH = font:getHeight()
 	local rowY = headerY + HEADER_H + HEADER_GAP
 	local animT = love.timer.getTime()
+	local mouseX, mouseY = love.mouse.getPosition()
 	for i = 1, #previewCache.entries do
 		local entry = previewCache.entries[i]
 		local textX = innerX + PORTRAIT_W + TEXT_GAP
@@ -208,6 +234,10 @@ local function drawPreview()
 			innerX + PORTRAIT_W * 0.5, rowY + entry.rowH * 0.5, animT)
 		lg.setColor(colorText)
 		Text.printShadow(entry.name, textX, textY)
+		if mouseX >= innerX and mouseX <= innerX + innerW
+			and mouseY >= rowY and mouseY <= rowY + entry.rowH then
+			Tooltip.show(entry.tooltip)
+		end
 		rowY = rowY + entry.rowH + ROW_GAP
 	end
 
