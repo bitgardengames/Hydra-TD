@@ -10,6 +10,7 @@ local Fonts = require("core.fonts")
 local L = require("core.localization")
 local Difficulty = require("systems.difficulty")
 local Save = require("core.save")
+local ConfirmationDialog = require("ui.confirmation_dialog")
 
 
 local floor = math.floor
@@ -25,6 +26,15 @@ local innerRadius = baseRadius - outlineW * 0.25
 
 local Page = {}
 local buttons = nil
+local confirmation = ConfirmationDialog.new()
+
+local function confirmAction(origin, titleKey, descriptionKey, action)
+	confirmation:show({
+		title = L(titleKey), description = L(descriptionKey),
+		confirmLabel = L("confirmation.confirm"), cancelLabel = L("confirmation.cancel"),
+		onConfirm = action, origin = origin,
+	})
+end
 
 local btnW = 220
 local btnH = 42
@@ -99,12 +109,14 @@ function Page.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				State.paused = false
-				Achievements.onGameOver()
-				State.mode = "game"
-				resetGame()
-				Sound.exitPause()
-				Sound.play("uiConfirm")
+				confirmAction(buttons[2], "confirmation.restartTitle", "confirmation.restartDescription", function()
+					State.paused = false
+					Achievements.onGameOver()
+					State.mode = "game"
+					resetGame()
+					Sound.exitPause()
+					Sound.play("uiConfirm")
+				end)
 			end
 		},
 
@@ -125,15 +137,17 @@ function Page.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				State.paused = false
-				Achievements.onGameOver()
-				Save.flush()
-				Backdrop.start()
-				State.mode = "menu"
-				Steam.setRichPresence(L("presence.menu"))
-				Sound.exitPause()
-				Sound.play("uiConfirm")
-				Sound.playMusic("menu")
+				confirmAction(buttons[4], "confirmation.mainMenuTitle", "confirmation.mainMenuDescription", function()
+					State.paused = false
+					Achievements.onGameOver()
+					Save.flush()
+					Backdrop.start()
+					State.mode = "menu"
+					Steam.setRichPresence(L("presence.menu"))
+					Sound.exitPause()
+					Sound.play("uiConfirm")
+					Sound.playMusic("menu")
+				end)
 			end
 		},
 	}
@@ -149,7 +163,7 @@ function Page.update(dt)
 		btn.y = startY + (i - 1) * gap
 	end
 
-	Button.updateList(buttons, dt)
+	if confirmation:isOpen() then confirmation:update(dt) else Button.updateList(buttons, dt) end
 end
 
 function Page.draw()
@@ -192,17 +206,21 @@ function Page.draw()
 
 	-- Draw buttons
 	Button.drawList(buttons)
+	confirmation:draw()
 end
 
 function Page.mousepressed(x, y, button)
+	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
 	return Button.mousepressedList(buttons, x, y, button)
 end
 
 function Page.mousereleased(x, y, button)
+	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
 	return Button.mousereleasedList(buttons, x, y, button)
 end
 
 function Page.keypressed(key)
+	if confirmation:isOpen() then return confirmation:keypressed(key) end
 	if key == Hotkeys.getActionKey("escape") then
 		State.mode = "game"
 		Sound.exitPause()
