@@ -45,4 +45,13 @@ assert(damageCalls == 1, "meteor did not damage enemies when it landed")
 assert(impacts == 1, "meteor landing did not create an impact effect")
 assert(#Abilities.getActive() == 0, "landed meteor was not removed")
 
+State.abilityCooldowns.meteor = 0
+assert(Abilities.beginTargeting("meteor"), "meteor targeting did not restart")
+local emptyPreview = Abilities.getTargetPreview(250, 250)
+assert(emptyPreview.valid and emptyPreview.count == 0, "meteor required an enemy at its target")
+assert(Abilities.activate(250, 250), "meteor did not activate on empty ground")
+Abilities.update(.86)
+assert(damageCalls == 1, "meteor damaged an enemy outside its landing area")
+assert(impacts == 2, "meteor did not create an impact effect on empty ground")
+
 print("meteor ability fixtures passed")
