@@ -78,7 +78,7 @@ function BottomBar.draw()
 	lg.setColor(colorPanel2) -- colorPanel2, colorBackdrop
 	lg.rectangle("fill", infoX, infoY, infoW, infoH, innerSmallRadius)
 
-	Hud.draw(infoX, infoY, infoW, infoH)
+	Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 
 	-- Shop panel
 	local shopPanelX = outerX + OUTER_PAD
@@ -97,6 +97,14 @@ end
 
 function BottomBar.getShopButtons()
 	return Shop.getButtons()
+end
+
+function BottomBar.getSpeedButtons()
+	return Hud.getSpeedButtons()
+end
+
+function BottomBar.getStartButtons()
+	return Hud.getStartButtons()
 end
 
 function BottomBar.getInspectButtons()
