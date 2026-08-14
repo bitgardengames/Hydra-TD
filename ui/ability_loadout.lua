@@ -202,10 +202,8 @@ local function drawSlotLabel(button)
 	if not binding then return end
 
 	Fonts.set("version")
-	lg.setColor(Theme.ui.backdrop)
-	lg.rectangle("fill", button.x + 2, button.y + ICON_SIZE - 15, ICON_SIZE - 4, 13, 3)
 	lg.setColor(Theme.ui.text)
-	Text.printfShadow(binding, button.x + 2, button.y + ICON_SIZE - 16, ICON_SIZE - 4, "center")
+	Text.printfShadow(binding, button.x + 4, button.y + 2, ICON_SIZE - 8, "left")
 end
 
 function Loadout.draw()
