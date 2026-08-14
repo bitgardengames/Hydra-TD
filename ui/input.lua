@@ -158,10 +158,18 @@ local function releaseInspectButton(b)
 	end
 end
 
+local function releaseHudButton(b)
+	if b.enabled ~= false and b.onClick then
+		b.onClick()
+	end
+end
+
 -- The bottom bar is visually split into panels, but all of its buttons obey
 -- the same press/release contract. Keeping that routing in one ordered table
 -- makes adding a panel a data change instead of another pair of input branches.
 local bottomBarGroups = {
+	{ buttons = BottomBar.getSpeedButtons, release = releaseHudButton },
+	{ buttons = BottomBar.getStartButtons, release = releaseHudButton },
 	{ buttons = BottomBar.getAbilityButtons, release = releaseAbilityButton },
 	{ buttons = BottomBar.getShopButtons, release = releaseShopButton },
 	{ buttons = BottomBar.getInspectButtons, release = releaseInspectButton },

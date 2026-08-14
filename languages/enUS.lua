@@ -452,6 +452,7 @@ return {
 		wave = "Wave %d",
 		endlessTier = "Wave %d • Endless Tier %d",
 		speed = "%gx",
+		startWaveButton = "Start",
 		prep = "Press %s to start",
 		spawning = "Spawning %d - Alive %d",
 		upcomingWave = "Wave %d",
