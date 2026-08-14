@@ -45,6 +45,7 @@ return {
 		title = "Settings",
 		music = "Music Volume",
 		sfx = "SFX Volume",
+		sliderKeyboardDesc = "Use Left / Right to make small adjustments.",
 		difficulty = "Difficulty",
 		fullscreen = "Fullscreen",
 		screenShake = "Screen shake",

@@ -76,6 +76,7 @@ local SLIDER_W = 160
 local SLIDER_H = 10
 local ROW_H = 32
 local THUMB_R = 7
+local SLIDER_KEY_STEP = 0.05
 
 local ROW_W = LABEL_W + SLIDER_W + 40
 
@@ -182,6 +183,9 @@ local function switchTab(nextTab)
 	local clamped = Util.clamp(nextTab, 1, #tabs)
 
 	if clamped ~= activeTab then
+		if draggingSlider then
+			flushSettingsNow()
+		end
 		activeTab = clamped
 		local tabId = tabs[activeTab] and tabs[activeTab].id
 		if tabId == "controls_keyboard" then
@@ -277,6 +281,13 @@ local function drawSliderRow(row, x, yTop, hovered, index)
 	local thumbX = sliderX + SLIDER_W * t
 	local thumbY = sliderY + 5
 	local grow = (hovered or draggingSlider == index) and 2 or 0
+
+	if focusedRow == index then
+		lg.setColor(row.color[1], row.color[2], row.color[3], 0.8)
+		lg.setLineWidth(2)
+		lg.rectangle("line", sliderX - 5, sliderY - 7, SLIDER_W + 10, SLIDER_H + 14, 7, 7)
+		lg.setLineWidth(1)
+	end
 
 	lg.setColor(row.color[1], row.color[2], row.color[3], 0.25)
 	lg.circle("fill", thumbX, thumbY, THUMB_R + grow + 3)
@@ -390,13 +401,13 @@ function Screen.load()
 					function(v)
 						Save.data.settings.musicVolume = v
 						Sound.setMusicVolume(v)
-					end),
+					end, L("settings.sliderKeyboardDesc")),
 				sliderRow("sfx", L("settings.sfx"), Theme.tower.cannon,
 					function() return Save.data.settings.sfxVolume end,
 					function(v)
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
-					end),
+					end, L("settings.sliderKeyboardDesc")),
 			},
 		},
 		{
@@ -671,8 +682,30 @@ function Screen.keypressed(key)
 		return
 	end
 
+	if (key == "left" or key == "right") and focusedRow then
+		local row = rows[focusedRow]
+		if row and row.type == "slider" then
+			local direction = key == "left" and -1 or 1
+			local previous = row.get()
+			local adjusted = Util.clamp(previous + direction * SLIDER_KEY_STEP, 0, 1)
+			if adjusted ~= previous then
+				row.set(adjusted)
+				settingsChanged()
+				Sound.play("uiMove")
+				-- A keyboard press is a discrete adjustment, unlike a mouse drag.
+				flushSettingsNow()
+			end
+		end
+		return
+	end
+
 	if (key == "return" or key == "space") and focusedRow then
 		local row = rows[focusedRow]
+		-- Sliders are adjusted exclusively with Left/Right. In particular, do
+		-- not route keyboard activation through mouse-coordinate handling.
+		if row and row.type == "slider" then
+			return
+		end
 		local handlePress = row and rowPressHandlers[row.type]
 		if handlePress then
 			handlePress(row, focusedRow, rowRects[focusedRow] and rowRects[focusedRow].x or listX)
@@ -685,8 +718,21 @@ function Screen.keypressed(key)
 	end
 end
 
+function Screen.leave()
+	draggingSlider = nil
+	flushSettingsNow()
+	keybindCapture:close()
+end
+
 function Screen.gamepadpressed(_, button)
-	local mappedKey = ({dpup = "up", dpdown = "down", a = "return", b = "escape"})[button]
+	local mappedKey = ({
+		dpup = "up",
+		dpdown = "down",
+		dpleft = "left",
+		dpright = "right",
+		a = "return",
+		b = "escape",
+	})[button]
 	if mappedKey then
 		Screen.keypressed(mappedKey)
 		return true
