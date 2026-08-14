@@ -1,0 +1,48 @@
+package.path = "./?.lua;./?/init.lua;" .. package.path
+
+local damageCalls = 0
+local impacts = 0
+
+package.loaded["systems.campaign_unlocks"] = {
+	isAbilityUnlocked = function() return true end,
+	isAbilitySlotUnlocked = function() return true end,
+	isAbilityUpgradeUnlocked = function() return false end,
+}
+package.loaded["world.enemies"] = {
+	enemies = {{x = 100, y = 100, rx = 100, ry = 100, hp = 100}},
+	applyDamage = function(enemy, damage)
+		damageCalls = damageCalls + 1
+		enemy.hp = enemy.hp - damage
+	end,
+}
+package.loaded["world.towers"] = {towers = {}}
+package.loaded["world.effects"] = {
+	shake = function() end,
+	spawnCannonImpact = function() impacts = impacts + 1 end,
+}
+
+local State = require("core.state")
+local Abilities = require("systems.abilities")
+
+State.mode = "game"
+State.modulePicker.active = false
+State.equippedAbilities = {"meteor"}
+State.abilityCooldowns = {}
+Abilities.reset()
+
+assert(Abilities.beginTargeting("meteor"), "meteor targeting did not begin")
+assert(Abilities.activate(100, 100), "meteor did not activate on a valid target")
+assert(damageCalls == 0, "meteor damaged its target before travelling")
+
+local active = Abilities.getActive()
+assert(#active == 1 and active[1].kind == "meteor_incoming", "incoming meteor was not exposed for rendering")
+assert(active[1].expires > active[1].started, "meteor has no travel time")
+
+Abilities.update(.84)
+assert(damageCalls == 0 and impacts == 0, "meteor landed before its travel time elapsed")
+Abilities.update(.02)
+assert(damageCalls == 1, "meteor did not damage enemies when it landed")
+assert(impacts == 1, "meteor landing did not create an impact effect")
+assert(#Abilities.getActive() == 0, "landed meteor was not removed")
+
+print("meteor ability fixtures passed")
