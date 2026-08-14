@@ -2,6 +2,7 @@ package.path = "./?.lua;./?/init.lua;" .. package.path
 
 local damageCalls = 0
 local impacts = 0
+local shakeStrength = 0
 
 package.loaded["systems.campaign_unlocks"] = {
 	isAbilityUnlocked = function() return true end,
@@ -17,7 +18,7 @@ package.loaded["world.enemies"] = {
 }
 package.loaded["world.towers"] = {towers = {}}
 package.loaded["world.effects"] = {
-	shake = function() end,
+	shake = function(strength) shakeStrength = strength end,
 	spawnCannonImpact = function() impacts = impacts + 1 end,
 }
 
@@ -43,6 +44,7 @@ assert(damageCalls == 0 and impacts == 0, "meteor landed before its travel time 
 Abilities.update(.02)
 assert(damageCalls == 1, "meteor did not damage enemies when it landed")
 assert(impacts == 1, "meteor landing did not create an impact effect")
+assert(shakeStrength == 5, "meteor landing did not use the stronger impact shake")
 assert(#Abilities.getActive() == 0, "landed meteor was not removed")
 
 State.abilityCooldowns.meteor = 0
