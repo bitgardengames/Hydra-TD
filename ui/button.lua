@@ -1,5 +1,6 @@
 local Theme = require("core.theme")
 local Text = require("ui.text")
+local Sound = require("systems.sound")
 
 local Button = {}
 
@@ -171,6 +172,82 @@ function Button.drawList(buttons)
 	end
 end
 
+-- Keyboard focus for the common case of an ordered list of buttons. The state
+-- is deliberately separate from the list so screens can rebuild/layout their
+-- buttons without losing the current selection.
+function Button.newFocus()
+	return { index = nil }
+end
+
+local function focusAt(buttons, focus, index)
+	for i, btn in ipairs(buttons or {}) do
+		btn.focused = i == index and btn.enabled ~= false
+	end
+	focus.index = index
+end
+
+function Button.resetFocus(buttons, focus, preferredIndex)
+	focus = focus or Button.newFocus()
+	local count = #(buttons or {})
+	if count == 0 then
+		focus.index = nil
+		return focus
+	end
+
+	local start = math.min(math.max(preferredIndex or 1, 1), count)
+	for offset = 0, count - 1 do
+		local index = (start + offset - 1) % count + 1
+		if buttons[index].enabled ~= false then
+			focusAt(buttons, focus, index)
+			return focus
+		end
+	end
+
+	focusAt(buttons, focus, nil)
+	return focus
+end
+
+function Button.focusButton(buttons, focus, button)
+	for i, candidate in ipairs(buttons or {}) do
+		if candidate == button and candidate.enabled ~= false then
+			focusAt(buttons, focus, i)
+			return true
+		end
+	end
+	return false
+end
+
+local function moveFocus(buttons, focus, direction)
+	local count = #(buttons or {})
+	if count == 0 then return false end
+	local index = focus.index or (direction > 0 and 0 or 1)
+
+	for _ = 1, count do
+		index = (index + direction - 1) % count + 1
+		if buttons[index].enabled ~= false and index ~= focus.index then
+			focusAt(buttons, focus, index)
+			Sound.play("uiMove")
+			return true
+		end
+	end
+	return false
+end
+
+function Button.keypressedList(buttons, focus, key)
+	if key == "up" or key == "left" then
+		return moveFocus(buttons, focus, -1)
+	elseif key == "down" or key == "right" or key == "tab" then
+		return moveFocus(buttons, focus, 1)
+	elseif key == "return" or key == "kpenter" or key == "space" then
+		local btn = focus.index and buttons[focus.index]
+		if btn and btn.enabled ~= false and btn.onClick then
+			btn.onClick()
+			return true
+		end
+	end
+	return false
+end
+
 function Button.mousepressed(btn, x, y, button)
 	if button ~= 1 or btn.enabled == false then
 		return
@@ -211,9 +288,10 @@ function Button.mousereleased(btn, x, y, button)
 	end
 end
 
-function Button.mousepressedList(buttons, x, y, button)
+function Button.mousepressedList(buttons, x, y, button, focus)
 	for _, btn in ipairs(buttons or {}) do
 		if Button.mousepressed(btn, x, y, button) then
+			if focus then Button.focusButton(buttons, focus, btn) end
 			return true
 		end
 	end
