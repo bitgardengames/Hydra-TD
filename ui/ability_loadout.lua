@@ -45,6 +45,14 @@ local function saveSelection()
 end
 
 local function selectAbility(abilityId)
+	-- Re-check progression at the point of mutation. The campaign can refresh its
+	-- progress while this screen is open, so the button's cached state is not a
+	-- sufficient authorization check on its own.
+	if not CampaignUnlocks.isAbilityUnlocked(abilityId) then
+		Sound.play("uiError")
+		return
+	end
+
 	if contains(equipped, abilityId) then
 		Sound.play("uiError")
 		return
@@ -61,8 +69,13 @@ local function rebuildButtons()
 	for slot = 1, SLOT_COUNT do
 		buttons[#buttons + 1] = {kind = "slot", slot = slot, anim = Button.newAnimation()}
 	end
-	for _, abilityId in ipairs(unlockedAbilities()) do
-		buttons[#buttons + 1] = {kind = "ability", abilityId = abilityId, anim = Button.newAnimation()}
+	for _, abilityId in ipairs(AbilityDefs.order) do
+		buttons[#buttons + 1] = {
+			kind = "ability",
+			abilityId = abilityId,
+			unlocked = CampaignUnlocks.isAbilityUnlocked(abilityId),
+			anim = Button.newAnimation(),
+		}
 	end
 end
 
@@ -99,7 +112,7 @@ local function layout()
 			local index = 1
 			for i, abilityId in ipairs(AbilityDefs.order) do
 				if abilityId == button.abilityId then break end
-				if CampaignUnlocks.isAbilityUnlocked(abilityId) then index = index + 1 end
+				index = index + 1
 			end
 			button.x = x + PAD + (index - 1) * (ICON_SIZE + GAP)
 			button.y = poolY
@@ -117,14 +130,17 @@ end
 local function drawIconButton(button, abilityId, selected)
 	local x, y = button.x, button.y
 	local hovered = button.anim and button.anim.hovered
-	lg.setColor(selected and Theme.ui.buttonHover or Theme.ui.button)
+	local unlocked = button.unlocked ~= false
+	local face = selected and Theme.ui.buttonHover or Theme.ui.button
+	lg.setColor(face[1], face[2], face[3], unlocked and (face[4] or 1) or 0.45)
 	lg.rectangle("fill", x, y, ICON_SIZE, ICON_SIZE, 6)
-	lg.setColor(Theme.outline.color)
+	lg.setColor(Theme.outline.color[1], Theme.outline.color[2], Theme.outline.color[3], unlocked and 1 or 0.6)
 	lg.setLineWidth(selected and 3 or 2)
 	lg.rectangle("line", x, y, ICON_SIZE, ICON_SIZE, 6)
 	lg.setLineWidth(1)
 	if abilityId then
-		AbilityIcons.draw(abilityId, x + ICON_SIZE / 2, y + ICON_SIZE / 2, hovered and 0.92 or 0.84, 1)
+		AbilityIcons.draw(abilityId, x + ICON_SIZE / 2, y + ICON_SIZE / 2,
+			hovered and 0.92 or 0.84, 1, unlocked and nil or "locked")
 	else
 		Fonts.set("menu")
 		lg.setColor(Theme.ui.text)
@@ -151,7 +167,11 @@ function Loadout.draw()
 			if button.anim.hovered then
 				Fonts.set("ui")
 				lg.setColor(Theme.ui.text)
-				Text.printfShadow(L(AbilityDefs[button.abilityId].nameKey), x + 126, y + 48, PANEL_W - 140, "left")
+				local label = L(AbilityDefs[button.abilityId].nameKey)
+				if not button.unlocked then
+					label = label .. "  •  " .. CampaignUnlocks.getAbilityLockMessage(button.abilityId)
+				end
+				Text.printfShadow(label, x + 126, y + 48, PANEL_W - 140, "left")
 			end
 		end
 	end
