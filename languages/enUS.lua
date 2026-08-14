@@ -80,7 +80,7 @@ return {
 	},
 
 	campaign = {
-		abilityLoadout = "Active Abilities  •  Pick 2",
+		abilityLoadout = "Active Abilities",
 		ability = "Ability: %s",
 		abilities = "Abilities: %s",
 		locked = "LOCKED",
