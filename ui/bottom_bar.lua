@@ -99,14 +99,6 @@ function BottomBar.getShopButtons()
 	return Shop.getButtons()
 end
 
-function BottomBar.getSpeedButtons()
-	return Hud.getSpeedButtons()
-end
-
-function BottomBar.getStartButtons()
-	return Hud.getStartButtons()
-end
-
 function BottomBar.getInspectButtons()
 	return Inspect.getButtons()
 end

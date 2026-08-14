@@ -2,11 +2,8 @@ local State = require("core.state")
 local Theme = require("core.theme")
 local Util = require("core.util")
 local WaveBuilder = require("systems.wave_builder")
-local Waves = require("systems.waves")
-local GameSpeed = require("core.game_speed")
 local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
-local Button = require("ui.button")
 local L = require("core.localization")
 
 local lg = love.graphics
@@ -33,22 +30,6 @@ local LIVES_X = 90
 local WAVE_X = 150
 local CONTROL_PAD = 8
 local CONTROL_GAP = 8
-local SPEED_BUTTON_W = 76
-local START_BUTTON_W = 112
-local CONTROL_H = 20
-
-local speedButtons = {{anim = Button.newAnimation()}}
-local startButtons = {{anim = Button.newAnimation()}}
-
-speedButtons[1].onClick = function()
-	GameSpeed.cycle()
-end
-
-startButtons[1].onClick = function()
-	if State.inPrep then
-		Waves.startWave()
-	end
-end
 
 -- Text caches (no per-frame string rebuilding)
 local hudCache = {
@@ -118,22 +99,6 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 	lg.setColor(ct1, ct2, ct3, 1)
 	Text.printShadow(waveCache.text, infoX + WAVE_X, y)
 
-	-- Keep both actions as explicit rectangles so their mouse targets and visual
-	-- states follow the same shared animation contract as the other HUD buttons.
-	local startButton = startButtons[1]
-	startButton.x = infoX + infoW - CONTROL_PAD - START_BUTTON_W
-	startButton.y = infoY + floor((infoH - CONTROL_H) * 0.5 + 0.5)
-	startButton.w = START_BUTTON_W
-	startButton.h = CONTROL_H
-	startButton.enabled = State.inPrep == true
-
-	local speedButton = speedButtons[1]
-	speedButton.x = startButton.x - CONTROL_GAP - SPEED_BUTTON_W
-	speedButton.y = startButton.y
-	speedButton.w = SPEED_BUTTON_W
-	speedButton.h = CONTROL_H
-	speedButton.enabled = true
-
 	-- Always expose the active simulation multiplier, including during prep.
 	local speedCache = hudCache.speed
 	if speedCache.value ~= State.speed then
@@ -141,25 +106,20 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 		speedCache.text = L("hud.speed", State.speed)
 	end
 	local speedKey = Hotkeys.getDisplay("fastForward")
-	speedButton.label = speedKey and (speedCache.text .. " [" .. speedKey .. "]") or speedCache.text
+	local speedLabel = speedKey and (speedCache.text .. " [" .. speedKey .. "]") or speedCache.text
 
 	local startLabel = L("hud.startWaveButton")
 	local startKey = Hotkeys.getDisplay("skipPrep")
-	startButton.label = startKey and (startLabel .. " [" .. startKey .. "]") or startLabel
+	startLabel = startKey and (startLabel .. " [" .. startKey .. "]") or startLabel
 
-	Button.updateList(speedButtons, dt, mx, my)
-	Button.updateList(startButtons, dt, mx, my)
-	Button.drawList(speedButtons)
-	Button.drawList(startButtons)
-
-end
-
-function Hud.getSpeedButtons()
-	return speedButtons
-end
-
-function Hud.getStartButtons()
-	return startButtons
+	-- These controls remain available through their hotkeys, but are presented as
+	-- simple status/action labels rather than clickable HUD buttons.
+	local right = infoX + infoW - CONTROL_PAD
+	lg.setColor(ct1, ct2, ct3, State.inPrep and 1 or 0.45)
+	Text.printShadow(startLabel, right - font:getWidth(startLabel), y)
+	right = right - font:getWidth(startLabel) - CONTROL_GAP
+	lg.setColor(ct1, ct2, ct3, 1)
+	Text.printShadow(speedLabel, right - font:getWidth(speedLabel), y)
 end
 
 return Hud
