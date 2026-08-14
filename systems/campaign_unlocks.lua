@@ -17,21 +17,18 @@ local rewardsByMapId = {
 	highpass = {
 		{type = "tower", id = "poison", label = "Poison tower"},
 		{type = "ability", id = "overdrive", label = "Overdrive active ability"},
-		{type = "ability_slot", id = "ability_slot_3", slots = 3, label = "Third ability slot"},
 	},
 	roundabout = {{type = "targeting", id = "high_hp", labelKey = "campaign.rewards.strongest"}},
 	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
 	gauntlet = {
 		{type = "tower", id = "shock", label = "Shock tower"},
 		{type = "ability", id = "gravity_well", label = "Gravity Well active ability"},
-		{type = "ability_slot", id = "ability_slot_4", slots = 4, label = "Fourth ability slot"},
 	},
 	-- Frost Nova is earned before the map that introduces runners.
 	snaketrail = {{type = "ability", id = "frost_nova", label = "Frost Nova active ability"}},
 	backtrack = {
 		{type = "targeting", id = "low_hp", labelKey = "campaign.rewards.weakest"},
 		{type = "ability", id = "gold_rush", label = "Gold Rush active ability"},
-		{type = "ability_slot", id = "ability_slot_5", slots = 5, label = "Fifth ability slot"},
 	},
 	-- Low Valley intentionally has no unlock reward; its campaign preview and
 	-- victory presentation already omit reward messaging for an empty list.
@@ -39,9 +36,8 @@ local rewardsByMapId = {
 	circuit = {
 		{type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
 		{type = "ability", id = "last_stand", label = "Last Stand active ability"},
-		{type = "ability_slot", id = "ability_slot_6", slots = 6, label = "Sixth ability slot"},
 	},
-	outerloop = {{type = "ability_slot", id = "ability_slot_2", slots = 2, labelKey = "campaign.rewards.secondAbilitySlot"}},
+	outerloop = {},
 	-- Clearing High Ridge earns the shared enhancement through the same reward
 	-- lookup used by every other campaign unlock.
 	highridge = {{type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"}},
@@ -177,14 +173,7 @@ function CampaignUnlocks.isAbilityUpgradeUnlocked(upgradeId)
 end
 
 function CampaignUnlocks.getUnlockedAbilitySlots()
-	local slots = 1
-	local progress = getProgressIndex()
-	for slot, requiredMap in pairs(requiredMapByAbilitySlot) do
-		if progress >= requiredMap then
-			slots = math.max(slots, slot)
-		end
-	end
-	return slots
+	return 2
 end
 
 

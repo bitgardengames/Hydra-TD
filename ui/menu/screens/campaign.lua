@@ -16,6 +16,7 @@ local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local Towers = require("world.towers")
 local EnemyDefs = require("world.enemy_defs")
+local AbilityLoadout = require("ui.ability_loadout")
 
 local lg = love.graphics
 local floor = math.floor
@@ -392,6 +393,7 @@ end
 
 -- Load
 function Screen.load()
+	AbilityLoadout.refresh()
 	campaignButtons = {
 		{
 			id = "difficulty",
@@ -469,6 +471,7 @@ function Screen.update(dt)
 	for i, btn in ipairs(campaignButtons) do
 		Button.update(btn, mx, my, dt)
 	end
+	AbilityLoadout.update(dt)
 end
 
 function Screen.draw()
@@ -621,6 +624,8 @@ function Screen.draw()
 	for i, btn in ipairs(campaignButtons) do
 		Button.draw(btn)
 	end
+
+	AbilityLoadout.draw()
 end
 
 function Screen.keypressed(key)
@@ -650,6 +655,7 @@ function Screen.gamepadpressed(_, button)
 end
 
 function Screen.mousepressed(x, y, button)
+	if AbilityLoadout.mousepressed(x, y, button) then return true end
 	if button == 1 then
 		local index = State.mapIndex
 		local map = Maps[index]
@@ -683,6 +689,7 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
+	if AbilityLoadout.mousereleased(x, y, button) then return true end
 	for _, btn in ipairs(campaignButtons) do
 		if Button.mousereleased(btn, x, y, button) then
 			return true
@@ -698,6 +705,7 @@ end
 
 function Screen.enter()
 	hideMedalTooltip()
+	AbilityLoadout.refresh()
 end
 
 function Screen.leave()
