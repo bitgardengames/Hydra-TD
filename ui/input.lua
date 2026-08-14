@@ -28,12 +28,6 @@ local findEnemyAt = Enemies.findEnemyAt
 
 local colorBad = Theme.ui.bad
 
-local placementErrorMessages = {
-	path = "floater.cannotPlace",
-	occupied = "floater.cannotPlace",
-	money = "floater.needMoney",
-}
-
 local function worldToGrid(wx, wy)
 	if wx < 0 or wy < 0 then
 		return nil, nil
@@ -81,6 +75,10 @@ end
 local function showFloaterAtScreen(x, y, message)
 	local wx, wy = Camera.screenToWorld(x, y)
 	Floaters.add(wx, wy, message, colorBad[1], colorBad[2], colorBad[3])
+end
+
+local function affordabilityMessage(cost)
+	return L("floater.placement.insufficientFunds", cost, State.money, math.max(0, cost - State.money))
 end
 
 local function rejectAbilityActivation(b, x, y)
@@ -139,7 +137,7 @@ local function releaseShopButton(b, x, y)
 
 	if b.canAfford ~= true then
 		Sound.play("uiBack")
-		showFloaterAtScreen(x, y, L("floater.needMoney"))
+		showFloaterAtScreen(x, y, affordabilityMessage(b.cost))
 		return
 	end
 
@@ -194,10 +192,22 @@ local function releaseBottomBar(x, y)
 end
 
 local function showPlacementError(why, kind, wx, wy)
-	local messageKey = placementErrorMessages[why]
-	local message = messageKey and L(messageKey)
-	if why == "locked" then
-		message = CampaignUnlocks.getLockMessage(kind) or L("floater.cannotPlace")
+	local failure = Towers.PLACEMENT_FAILURE
+	local message
+	if why == failure.INSUFFICIENT_FUNDS then
+		local def = Towers.TowerDefs[kind]
+		local cost = def and def.cost or 0
+		message = affordabilityMessage(cost)
+	elseif why == failure.ENEMY_PATH then
+		message = L("floater.placement.enemyPath")
+	elseif why == failure.OCCUPIED_TILE then
+		message = L("floater.placement.occupiedTile")
+	elseif why == failure.INVALID_TILE then
+		message = L("floater.placement.invalidTile")
+	elseif why == failure.UNKNOWN_TOWER then
+		message = L("floater.placement.unknownTower")
+	elseif why == failure.TOWER_LOCKED then
+		message = CampaignUnlocks.getLockMessage(kind) or L("floater.placement.towerLocked")
 	end
 	if message then
 		Floaters.add(wx, wy, message, colorBad[1], colorBad[2], colorBad[3])
@@ -402,7 +412,12 @@ local function handleGameplayHotkey(key)
 		return false
 	end
 
-	if beginTowerPlacement(bindingId) then
+	local def = Towers.TowerDefs[bindingId]
+	if def and State.money < def.cost then
+		Sound.play("uiBack")
+		local mx, my = love.mouse.getPosition()
+		showFloaterAtScreen(mx, my, affordabilityMessage(def.cost))
+	elseif beginTowerPlacement(bindingId) then
 		deselect()
 	end
 	return true
