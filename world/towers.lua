@@ -43,7 +43,6 @@ local enemies = Enemies.enemies
 local findTarget = Targeting.findTarget
 local isSemanticallyValidTarget = Targeting.isSemanticallyValidTarget
 local sampleFast = MapMod.sampleFast
-local getTargetMode = Modules.getTargetMode
 
 local FIRE_ANGLE_EPS = math.rad(6)
 local AIM_RECOMPUTE_POS_EPS2 = 1
@@ -197,33 +196,6 @@ local function recomputeTowerStats(t)
 	t.fireInterval = 1 / max(0.001, t.fireRate)
 	t.range = def.range + rangeAdd * upgrades + moduleStats.rangeAdd
 	t.range2 = t.range * t.range
-	t._cache = t._cache or {}
-	t._cache.targetMode = {
-		value = Modules.getTargetMode(t) or Targeting.MODES.PROGRESS,
-		modulesVersion = Modules.version,
-		cacheVersion = t._cacheVersion or 0,
-	}
-	t.targetMode = t._cache.targetMode.value
-	t._targetModeVersion = t._cache.targetMode.modulesVersion
-end
-
-local function refreshTargetModeCache(t)
-	local modulesVersion = Modules.version
-	local cacheVersion = t._cacheVersion or 0
-	t._cache = t._cache or {}
-	local cached = t._cache.targetMode
-
-	if not cached or cached.modulesVersion ~= modulesVersion or cached.cacheVersion ~= cacheVersion then
-		cached = {
-			value = getTargetMode(t) or Targeting.MODES.PROGRESS,
-			modulesVersion = modulesVersion,
-			cacheVersion = cacheVersion,
-		}
-		t._cache.targetMode = cached
-	end
-
-	t.targetMode = cached.value
-	t._targetModeVersion = cached.modulesVersion
 end
 
 local function addTower(kind, gx, gy)
@@ -282,8 +254,6 @@ local function addTower(kind, gx, gy)
 		lastTargetY = nil,
 		lastAimDiff = nil,
 		aimStaleFrames = 0,
-		targetMode = nil,
-		_targetModeVersion = nil,
 		_cacheVersion = 0,
 		_cache = {},
 		retargetT = 0,
@@ -643,13 +613,13 @@ local function updateTowers(dt)
 	for i = 1, #towers do
 		local t = towers[i]
 
-		local attackSpeed, rangeMult, lastStand = 1, 1, false
+		local attackSpeed, rangeMult = 1, 1
 		local buffs = t.abilityBuffs
 		if buffs then
 			for bi = #buffs, 1, -1 do
 				local buff = buffs[bi]
 				if (buff.expires or 0) <= (State.abilityClock or 0) then table.remove(buffs, bi)
-				else attackSpeed = min(2.5, attackSpeed * (buff.attackSpeed or 1)); rangeMult = max(rangeMult, buff.range or 1); lastStand = lastStand or buff.kind == "last_stand" end
+				else attackSpeed = min(2.5, attackSpeed * (buff.attackSpeed or 1)); rangeMult = max(rangeMult, buff.range or 1) end
 			end
 		end
 		t.abilityAttackSpeed, t.abilityRangeMultiplier = attackSpeed, rangeMult
@@ -669,9 +639,6 @@ local function updateTowers(dt)
 			goto continue_tower_update
 		end
 
-		refreshTargetModeCache(t)
-		if lastStand then t.targetMode = Targeting.MODES.PROGRESS end
-
 		local target = t.target
 
 		-- Keep existing target if still valid
@@ -684,7 +651,7 @@ local function updateTowers(dt)
 		-- Only search when we need a new target
 		local canRetarget = t.retargetT <= 0
 		if not target and canRetarget then
-			target = findTarget(t, t.targetMode)
+			target = findTarget(t)
 			t.retargetT = nextRetargetInterval(t)
 		end
 

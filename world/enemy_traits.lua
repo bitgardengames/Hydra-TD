@@ -20,15 +20,15 @@ local Traits = {
 		tag = "Support",
 		mechanic = "Accelerates nearby enemies while it remains alive.",
 		tell = "A pulsing aura links it to nearby allies.",
-		counter = "Use priority targeting or concentrated fire to remove it first.",
-		answers = {"Strongest/priority targeting", "Lancer / Focus Fire"},
+		counter = "Use concentrated fire or area damage to remove it quickly.",
+		answers = {"Lancer / Focus Fire", "Cannon area specializations"},
 	},
 	summons = {
 		tag = "Summoner",
 		mechanic = "Periodically creates two runners at its current position on the path.",
 		tell = "Orbiting runes contract as its next pair of runners approaches.",
 		counter = "Focus it early or use area damage to clear each runner pair.",
-		answers = {"Priority targeting", "Cannon area specializations"},
+		answers = {"Lancer / Focus Fire", "Cannon area specializations"},
 	},
 	fast = {
 		tag = "Fast",

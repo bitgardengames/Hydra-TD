@@ -110,10 +110,6 @@ function Context:replaceBehaviorByRole(role, replacement)
 	return false
 end
 
-function Context:setTargetMode(mode)
-	self.targetMode = mode
-end
-
 function Context:getBehaviorRole(id)
 	return getRole(id)
 end

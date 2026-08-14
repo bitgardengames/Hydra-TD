@@ -1334,7 +1334,7 @@
       "tower": "plasma"
     }
   ],
-  "definition_sha256": "3a0f9b66d51325ff01846fb44859f329f59d46f965dba54714dc1306f8160a60",
+  "definition_sha256": "145169b2e23144b9d032b3be5bc4984f1517cc152c911afaae9cd6b1d2f26325",
   "format_version": 1,
   "overlap": {
     "base_total_damage": 113,
@@ -1350,158 +1350,41 @@
     "proc_count": 2,
     "speed_invariant": true
   },
-  "targeting": [
-    {
-      "expected_target": "priority_mid",
-      "formation": [
-        {
-          "dist": 92,
-          "hp": 18,
-          "id": 1,
-          "name": "front_damaged",
-          "priority": 0,
-          "slow": 0
-        },
-        {
-          "dist": 54,
-          "hp": 180,
-          "id": 2,
-          "name": "rear_tank",
-          "priority": 0,
-          "slow": 0
-        },
-        {
-          "dist": 70,
-          "hp": 65,
-          "id": 3,
-          "name": "priority_mid",
-          "priority": 30,
-          "slow": 0
-        },
-        {
-          "dist": 96,
-          "hp": 45,
-          "id": 4,
-          "name": "slowed_front",
-          "priority": 0,
-          "slow": 1
-        }
-      ],
-      "mode": "progress"
-    },
-    {
-      "expected_target": "rear_tank",
-      "formation": [
-        {
-          "dist": 92,
-          "hp": 18,
-          "id": 1,
-          "name": "front_damaged",
-          "priority": 0,
-          "slow": 0
-        },
-        {
-          "dist": 54,
-          "hp": 180,
-          "id": 2,
-          "name": "rear_tank",
-          "priority": 0,
-          "slow": 0
-        },
-        {
-          "dist": 70,
-          "hp": 65,
-          "id": 3,
-          "name": "priority_mid",
-          "priority": 30,
-          "slow": 0
-        },
-        {
-          "dist": 96,
-          "hp": 45,
-          "id": 4,
-          "name": "slowed_front",
-          "priority": 0,
-          "slow": 1
-        }
-      ],
-      "mode": "high_hp"
-    },
-    {
-      "expected_target": "front_damaged",
-      "formation": [
-        {
-          "dist": 92,
-          "hp": 18,
-          "id": 1,
-          "name": "front_damaged",
-          "priority": 0,
-          "slow": 0
-        },
-        {
-          "dist": 54,
-          "hp": 180,
-          "id": 2,
-          "name": "rear_tank",
-          "priority": 0,
-          "slow": 0
-        },
-        {
-          "dist": 70,
-          "hp": 65,
-          "id": 3,
-          "name": "priority_mid",
-          "priority": 30,
-          "slow": 0
-        },
-        {
-          "dist": 96,
-          "hp": 45,
-          "id": 4,
-          "name": "slowed_front",
-          "priority": 0,
-          "slow": 1
-        }
-      ],
-      "mode": "low_hp"
-    },
-    {
-      "expected_target": "slowed_front",
-      "formation": [
-        {
-          "dist": 92,
-          "hp": 18,
-          "id": 1,
-          "name": "front_damaged",
-          "priority": 0,
-          "slow": 0
-        },
-        {
-          "dist": 54,
-          "hp": 180,
-          "id": 2,
-          "name": "rear_tank",
-          "priority": 0,
-          "slow": 0
-        },
-        {
-          "dist": 70,
-          "hp": 65,
-          "id": 3,
-          "name": "priority_mid",
-          "priority": 30,
-          "slow": 0
-        },
-        {
-          "dist": 96,
-          "hp": 45,
-          "id": 4,
-          "name": "slowed_front",
-          "priority": 0,
-          "slow": 1
-        }
-      ],
-      "mode": "farthest"
-    }
-  ]
+  "targeting": {
+    "expected_target": "slowed_front",
+    "formation": [
+      {
+        "dist": 92,
+        "hp": 18,
+        "id": 1,
+        "name": "front_damaged",
+        "priority": 0,
+        "slow": 0
+      },
+      {
+        "dist": 54,
+        "hp": 180,
+        "id": 2,
+        "name": "rear_tank",
+        "priority": 0,
+        "slow": 0
+      },
+      {
+        "dist": 70,
+        "hp": 65,
+        "id": 3,
+        "name": "priority_mid",
+        "priority": 30,
+        "slow": 0
+      },
+      {
+        "dist": 96,
+        "hp": 45,
+        "id": 4,
+        "name": "slowed_front",
+        "priority": 0,
+        "slow": 1
+      }
+    ]
+  }
 }
