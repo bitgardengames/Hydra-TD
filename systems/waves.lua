@@ -12,6 +12,8 @@ local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Spatial = require("world.spatial_grid")
 local Effects = require("world.effects")
 local DevelopmentCounters = require("core.development_counters")
+local Floaters = require("ui.floaters")
+local Sound = require("systems.sound")
 
 local Waves = {}
 
@@ -561,6 +563,9 @@ local function queueBossReinforcements(boss, activeCap)
 	local toSpawn = max(0, min(bossAdds.burst, available, totalRemaining))
 	bossAdds.queued = bossAdds.queued + toSpawn
 	bossAdds.timer = bossAdds.interval
+	boss.mechanicWarning = 0
+	boss.bossCastProgress = nil
+	boss._mechanicWarningIssued = false
 end
 
 local function updateBossAdds(dt, activeCap, spawnLoops)
@@ -575,6 +580,31 @@ local function updateBossAdds(dt, activeCap, spawnLoops)
 
 	bossAdds.timer = bossAdds.timer - dt
 	bossAdds.queueTimer = bossAdds.queueTimer - dt
+	-- Displacement and suppression packages resolve as flanking waves. Telegraph
+	-- their incoming direction before the queue activates, not after adds appear.
+	local package = boss.def and boss.def.mechanicPackage
+	if package == "summoner" then
+		boss.bossCastProgress = 1 - min(1, max(0, bossAdds.timer / bossAdds.interval))
+		if bossAdds.timer > 0 and bossAdds.timer <= 1.15 and not boss._mechanicWarningIssued then
+			boss._mechanicWarningIssued = true
+			Floaters.addMechanic(boss.x, boss.y - boss.radius - 12,
+				"boss_summon", "✦ REINFORCEMENTS", 0.78, 0.48, 1)
+			Sound.play("mechanicSummon")
+		end
+	end
+	if (package == "displacement" or package == "suppression_aura")
+		and bossAdds.timer > 0 and bossAdds.timer <= 1.15 then
+		boss.mechanicWarning = bossAdds.timer
+		local dx, dy = (boss.x or 0) - (boss.prevX or boss.x or 0),
+			(boss.y or 0) - (boss.prevY or boss.y or 0)
+		boss.mechanicWarningAngle = math.atan2(dy, dx) + math.pi
+		if not boss._mechanicWarningIssued then
+			boss._mechanicWarningIssued = true
+			local label = package == "displacement" and "➤ DISPLACEMENT" or "⊘ SUPPRESSION"
+			Floaters.addMechanic(boss.x, boss.y - boss.radius - 12, package, label, 1, 0.3, 0.25)
+			Sound.play("mechanicWarning")
+		end
+	end
 	queueBossReinforcements(boss, activeCap)
 
 	-- Reinforcements keep their own queue, but consume the shared spawn budget.
