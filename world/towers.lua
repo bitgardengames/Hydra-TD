@@ -59,6 +59,23 @@ local RETARGET_JITTER = 0.10
 local RETARGET_MIN_FACTOR = 0.5
 local RETARGET_MAX_FACTOR = 1.5
 
+-- These identifiers are part of addTower's public contract. Keep placement
+-- failures distinct so callers can present the correct explanation without
+-- inspecting map state or tower definitions themselves.
+local PLACEMENT_FAILURE = {
+	UNKNOWN_TOWER = "unknown_tower",
+	TOWER_LOCKED = "tower_locked",
+	INSUFFICIENT_FUNDS = "insufficient_funds",
+	INVALID_TILE = "invalid_tile",
+	ENEMY_PATH = "enemy_path",
+	OCCUPIED_TILE = "occupied_tile",
+}
+
+local mapPlacementFailures = {
+	path = PLACEMENT_FAILURE.ENEMY_PATH,
+	occupied = PLACEMENT_FAILURE.OCCUPIED_TILE,
+}
+
 local function normalizeAngle(a)
 	-- Performance-sensitive path: avoid `%` for the common small-diff case.
 	if a > pi then
@@ -200,20 +217,27 @@ end
 
 local function addTower(kind, gx, gy)
 	local def = TowerDefs[kind]
-	if not def then return false, "unknown_tower" end
+	if not def then return false, PLACEMENT_FAILURE.UNKNOWN_TOWER end
 
 	if not CampaignUnlocks.isTowerUnlocked(kind) then
-		return false, "locked"
+		return false, PLACEMENT_FAILURE.TOWER_LOCKED
 	end
 
 	if State.money < def.cost then
-		return false, "money"
+		return false, PLACEMENT_FAILURE.INSUFFICIENT_FUNDS
+	end
+
+	if type(gx) ~= "number" or type(gy) ~= "number"
+		or gx % 1 ~= 0 or gy % 1 ~= 0
+		or gx < 1 or gx > Constants.GRID_W
+		or gy < 1 or gy > Constants.GRID_H then
+		return false, PLACEMENT_FAILURE.INVALID_TILE
 	end
 
 	local ok, why = MapMod.canPlaceAt(gx, gy)
 
 	if not ok then
-		return false, why
+		return false, mapPlacementFailures[why] or PLACEMENT_FAILURE.INVALID_TILE
 	end
 
 	local x, y = MapMod.gridToCenter(gx, gy)
@@ -791,6 +815,7 @@ end
 return {
 	towers = towers,
 	TowerDefs = TowerDefs,
+	PLACEMENT_FAILURE = PLACEMENT_FAILURE,
 	towersByCell = towersByCell,
 	addTower = addTower,
 	getUpgradeCost = getUpgradeCost,
