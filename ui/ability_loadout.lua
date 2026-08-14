@@ -17,8 +17,11 @@ local ICON_SIZE = 46
 local GAP = 8
 local PAD = 14
 local COLLAPSED_W = PAD * 2 + ICON_SIZE * SLOT_COUNT + GAP
-local COLLAPSED_H = 88
-local EXPANDED_H = 142
+local SLOT_BOTTOM_INSET = 15
+local TITLE_GAP = 8
+local TITLE_H = 22
+local POOL_GAP = 8
+local POOL_LABEL_H = 22
 
 local buttons = {}
 local equipped = {}
@@ -116,14 +119,20 @@ local function layout()
 	local _, sh = lg.getDimensions()
 	local abilityCount = selectedSlot and #unlockedAbilities() or 0
 	local panelW = math.max(COLLAPSED_W, PAD * 2 + ICON_SIZE * abilityCount + GAP * math.max(0, abilityCount - 1))
-	local panelH = selectedSlot and EXPANDED_H or COLLAPSED_H
-	local x, y = 22, sh - panelH - 22
-	local poolY = y + 82
+	local panelBottom = sh - 22
+	-- Anchor the slots to the bottom of the screen so opening the picker does not
+	-- make the controls jump. The picker grows upward above the title and slots.
+	local slotY = panelBottom - SLOT_BOTTOM_INSET - ICON_SIZE
+	local titleY = slotY - TITLE_GAP - TITLE_H
+	local poolY = titleY - POOL_GAP - ICON_SIZE
+	local panelTop = selectedSlot and poolY - POOL_LABEL_H - PAD or titleY - PAD
+	local panelH = panelBottom - panelTop
+	local x, y = 22, panelTop
 	local abilityIndex = 0
 	for _, button in ipairs(buttons) do
 		if button.kind == "slot" then
 			button.x = x + PAD + (button.slot - 1) * (ICON_SIZE + GAP)
-			button.y = y + 27
+			button.y = slotY
 		else
 			abilityIndex = abilityIndex + 1
 			button.x = x + PAD + (abilityIndex - 1) * (ICON_SIZE + GAP)
@@ -131,7 +140,7 @@ local function layout()
 		end
 		button.w, button.h = ICON_SIZE, ICON_SIZE
 	end
-	return x, y, panelW, panelH
+	return x, y, panelW, panelH, titleY, poolY
 end
 
 function Loadout.update(dt)
@@ -160,7 +169,7 @@ local function drawIconButton(button, abilityId, selected)
 end
 
 function Loadout.draw()
-	local x, y, panelW, panelH = layout()
+	local x, y, panelW, panelH, titleY, poolY = layout()
 	lg.setColor(Theme.outline.color)
 	lg.rectangle("fill", x - 2, y - 2, panelW + 4, panelH + 4, 9)
 	lg.setColor(Theme.ui.backdrop)
@@ -168,7 +177,7 @@ function Loadout.draw()
 
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text)
-	Text.printfShadow(L("campaign.abilityLoadout"), x + PAD, y + 7, panelW - PAD * 2, "left")
+	Text.printfShadow(L("campaign.abilityLoadout"), x + PAD, titleY, panelW - PAD * 2, "left")
 
 	for _, button in ipairs(buttons) do
 		if button.kind == "slot" then
@@ -179,7 +188,7 @@ function Loadout.draw()
 				Fonts.set("ui")
 				lg.setColor(Theme.ui.text)
 				local label = L(AbilityDefs[button.abilityId].nameKey)
-				Text.printfShadow(label, x + PAD, y + 62, panelW - PAD * 2, "left")
+				Text.printfShadow(label, x + PAD, poolY - POOL_LABEL_H, panelW - PAD * 2, "left")
 			end
 		end
 	end
