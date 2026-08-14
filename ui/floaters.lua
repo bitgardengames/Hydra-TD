@@ -3,6 +3,7 @@ local Text = require("ui.text")
 
 local floaters = {}
 local pool = {}
+local mechanicCalloutCounts = {}
 
 local floor = math.floor
 local max = math.max
@@ -54,6 +55,16 @@ local function add(x, y, text, r, g, b, drift)
 	f.b = b or 1
 
 	floaters[#floaters + 1] = f
+end
+
+-- Teach each critical tell a few times, then let its persistent shape language
+-- carry the information without adding repeated combat-text noise.
+local function addMechanic(x, y, id, text, r, g, b)
+	local count = mechanicCalloutCounts[id] or 0
+	if count >= 3 then return false end
+	mechanicCalloutCounts[id] = count + 1
+	add(x, y, text, r, g, b, false)
+	return true
 end
 
 local function update(dt)
@@ -119,11 +130,13 @@ function clear()
 		pool[#pool + 1] = floaters[i]
 		floaters[i] = nil
 	end
+	for id in pairs(mechanicCalloutCounts) do mechanicCalloutCounts[id] = nil end
 end
 
 return {
 	floaters = floaters,
 	add = add,
+	addMechanic = addMechanic,
 	update = update,
 	draw = draw,
 	clear = clear,

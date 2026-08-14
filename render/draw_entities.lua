@@ -59,6 +59,48 @@ local function lerp(a, b, t)
 	return a + (b - a) * t
 end
 
+-- These are gameplay telegraphs rather than decorative particles. They remain
+-- present at reduced particle density and use outlines so no biome can hide them.
+local function drawEnemyTelegraphs(e, x, y, alpha)
+	local r = e.radius
+	if e.support then
+		local phase = (e.supportPulse or 0) / e.support.pulsePeriod
+		lg.setLineWidth(2)
+		lg.setColor(1, 0.72, 0.2, (0.55 + 0.25 * sin(phase * pi * 2)) * alpha)
+		lg.circle("line", x, y, e.support.radius)
+	end
+	if e.summon then
+		local fill = 1 - min(1, max(0, (e.summonTimer or 0) / e.summon.period))
+		lg.setLineWidth(4)
+		lg.setColor(0.76, 0.43, 1, 0.9 * alpha)
+		lg.circle("line", x, y, r + 10)
+		if fill > 0 then lg.arc("line", "open", x, y, r + 10, -HALF_PI, -HALF_PI + fill * pi * 2) end
+	end
+	if e.bossCastProgress then
+		lg.setLineWidth(5); lg.setColor(0.76, 0.43, 1, 0.9 * alpha)
+		lg.circle("line", x, y, r + 13)
+		lg.arc("line", "open", x, y, r + 13, -HALF_PI,
+			-HALF_PI + min(1, e.bossCastProgress) * pi * 2)
+	end
+	if e.regeneration and (e.regenDelay or 0) > 0 and e.hp < e.maxHp then
+		local countdown = min(1, e.regenDelay / e.regeneration.delay)
+		lg.setLineWidth(3); lg.setColor(0.55, 1, 0.55, 0.9 * alpha)
+		lg.arc("line", "open", x, y, r + 7, -HALF_PI,
+			-HALF_PI + countdown * pi * 2)
+	end
+	if (e.mechanicWarning or 0) > 0 then
+		local angle = e.mechanicWarningAngle or 0
+		local pulse = 0.55 + 0.45 * sin((e.combatAge or 0) * 18)
+		local distance = r + 18
+		local ax, ay = x + cos(angle) * distance, y + sin(angle) * distance
+		local px, py = -sin(angle), cos(angle)
+		lg.setColor(1, 0.22, 0.18, pulse * alpha)
+		lg.polygon("fill", ax + cos(angle) * 10, ay + sin(angle) * 10,
+			ax + px * 7, ay + py * 7, ax - px * 7, ay - py * 7)
+		lg.setLineWidth(3); lg.arc("line", "open", x, y, r + 13, angle - 0.7, angle + 0.7)
+	end
+end
+
 local function prepareEnemyRenderData()
 	local enemies = Enemies.enemies
 	local a = max(0, min(1, State.renderAlpha or 0))
@@ -116,6 +158,7 @@ local function drawEnemy(e)
 	e.drawX = ix
 	e.drawY = iy
 	local r = e.radius
+	drawEnemyTelegraphs(e, ix, iy, enemyAlpha)
 	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
 	squash = squash * (e.hitSquashStrength or 1)
 
@@ -243,6 +286,12 @@ local function drawEnemy(e)
         lg.setColor(0.92, 0.96, 1.0, a * 0.55)
         lg.circle("fill", ix, iy, e.radius)
     end
+	if (e.armorFlash or 0) > 0 then
+		local a = e.armorFlash / 0.22
+		lg.setColor(0.65, 0.85, 1, a * enemyAlpha)
+		lg.setLineWidth(4)
+		lg.arc("line", "open", ix, iy, r + 5 + (1 - a) * 5, -pi * 0.85, pi * 0.85)
+	end
 
 	-- Slow (frost shell + shards)
 	if e.slowTimer > 0 then
@@ -301,7 +350,11 @@ local function drawEnemy(e)
 		lg.setColor(outR, outG, outB, enemyAlpha)
 		lg.circle("fill", ix, markerY, 7)
 		lg.setColor(c[1], c[2], c[3], enemyAlpha)
-		lg.polygon("fill", ix, markerY - 5, ix + 5, markerY, ix, markerY + 5, ix - 5, markerY)
+		if affix.id == "relentless" then
+			lg.polygon("fill", ix, markerY - 5, ix + 5, markerY + 5, ix - 5, markerY + 5)
+		else
+			lg.polygon("fill", ix, markerY - 5, ix + 5, markerY, ix, markerY + 5, ix - 5, markerY)
+		end
 	end
 
 	lg.setColor(efR, efG, efB, enemyAlpha)

@@ -265,6 +265,11 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.score = def.score or 0
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius
+	for _, affix in ipairs(e.affixes) do
+		local c = affix.color
+		Floaters.addMechanic(e.x, e.y - e.radius - 8, "affix_" .. affix.id,
+			affix.icon .. " " .. upper(affix.id), c[1], c[2], c[3])
+	end
 	e.hitFlash = 0
 	e.hitSquash = 0
 	e.hitSquashStrength = 1
@@ -294,6 +299,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.regeneration = def.regeneration
 	e.regenDelay = 0
 	e.regenVisualPulse = 0
+	e.regenWasActive = false
 	e.support = def.support
 	e.summon = def.summon
 	e.summonTimer = def.summon and (def.summon.initialDelay or def.summon.period) or 0
@@ -301,6 +307,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.supportContributions = e.supportContributions or {}
 	e.supportPulse = 0
 	e.combatAge = 0
+	e.armorFlash = 0
 
 	computeNudgeParams(e)
 
@@ -604,10 +611,18 @@ local function updateEnemies(dt)
 		if e.regenDelay and e.regenDelay > 0 then
 			e.regenDelay = max(0, e.regenDelay - dt)
 		elseif e.regeneration and e.poisonStacks <= 0 and e.hp < e.maxHp then
+			if not e.regenWasActive then
+				e.regenWasActive = true
+				Floaters.addMechanic(e.x, e.y - e.radius - 8, "regeneration",
+					"+ REGENERATING", 0.55, 1, 0.55)
+				Sound.play("mechanicHeal")
+			end
 			e.hp = min(e.maxHp, e.hp + e.regeneration.hpPerSecond * e.hpScale * dt)
 			e.regenVisualPulse = 0.28
 		end
+		if e.regenDelay > 0 or e.poisonStacks > 0 or e.hp >= e.maxHp then e.regenWasActive = false end
 		if e.regenVisualPulse > 0 then e.regenVisualPulse = max(0, e.regenVisualPulse - dt) end
+		e.armorFlash = max(0, (e.armorFlash or 0) - dt)
 
 		-- Summoned runners join at the caster's current path progress rather than at
 		-- the map entrance. One cast is resolved per simulation tick, so catch-up cannot
@@ -617,6 +632,9 @@ local function updateEnemies(dt)
 			if e.summonTimer <= 0 then
 				local summon = e.summon
 				e.summonTimer = summon.period
+				Floaters.addMechanic(e.x, e.y - e.radius - 8, "summon",
+					"✦ SUMMON", 0.78, 0.48, 1)
+				Sound.play("mechanicSummon")
 				local availableSlots = max(0, MAX_ACTIVE_ENEMIES - #enemies)
 				for n = 1, min(summon.count, availableSlots) do
 					local child = spawnEnemy(summon.kind, e.hpScale, e.spdScale, e.x, e.y, e.pathSeg, {
@@ -765,6 +783,7 @@ end
 local function applyDamage(e, amount, context)
 	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
 	context = context or {}
+	local incoming = amount
 	for _, affix in ipairs(e.affixes or {}) do
 		amount = amount * ((affix.behavior and affix.behavior.damageTakenMultiplier) or 1)
 	end
@@ -775,6 +794,13 @@ local function applyDamage(e, amount, context)
 		if heavy then amount = amount * (e.armor.heavyMultiplier or 1)
 		else amount = max(1, amount - (e.armor.flatReduction or 0)) end
 	end
+	local mitigated = max(0, incoming - amount)
+	if mitigated > 0 then
+		e.armorFlash = 0.22
+		Floaters.addMechanic(e.x, e.y - e.radius - 8, "armor", "◆ BLOCKED",
+			0.7, 0.85, 1)
+		Sound.play("mechanicShield")
+	end
 	e.hp = e.hp - amount
 	EnemySupport.detachDead(e)
 	if amount > 0 then
@@ -782,7 +808,7 @@ local function applyDamage(e, amount, context)
 		e.hitSquashStrength = 1
 	end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
-	return amount, 0
+	return amount, mitigated
 end
 
 local function setPathDistance(e, distance)

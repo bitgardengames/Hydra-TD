@@ -1,4 +1,6 @@
 local Spatial = require("world.spatial_grid")
+local Floaters = require("ui.floaters")
+local Sound = require("systems.sound")
 
 local Support = {}
 
@@ -87,7 +89,8 @@ local function refreshSource(source)
 	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius)
 	for i = 1, count do
 		local target = nearby[i]
-		if target ~= source and target.hp > 0 then
+		local dx, dy = target.x - source.x, target.y - source.y
+		if target ~= source and target.hp > 0 and dx * dx + dy * dy <= aura.radius * aura.radius then
 			affected[target] = true
 			local contributions = target.supportContributions
 			if not contributions then
@@ -98,6 +101,9 @@ local function refreshSource(source)
 			if not contribution then
 				contribution = {source = source}
 				contributions[source.id] = contribution
+				Floaters.addMechanic(source.x, source.y - source.radius - 8,
+					"support", "◉ HASTE AURA", 1, 0.78, 0.25)
+				Sound.play("mechanicSupport")
 			end
 			contribution.multiplier = aura.speedMultiplier
 			recomputeBoost(target)

@@ -206,6 +206,12 @@ function Sound.load()
 		uiBack = { file = "assets/sounds/uiBack.ogg", category = "ui" },
 		uiError = { file = "assets/sounds/uiError.ogg", category = "ui" },
 		abilityReady = { file = "assets/sounds/uiConfirm.ogg", cooldown = 0.35, bias = 0.7, category = "ui", pool = 2 },
+		-- Critical mechanic cues use timbres distinct from their surrounding attacks.
+		mechanicSummon = { file = "assets/sounds/shock1.ogg", cooldown = 0.35, bias = 0.72, category = "important", pool = 2 },
+		mechanicHeal = { file = "assets/sounds/poison2.ogg", cooldown = 0.65, bias = 0.45, category = "important", pool = 2 },
+		mechanicShield = { file = "assets/sounds/cannon.ogg", cooldown = 0.22, bias = 0.42, category = "important", pool = 2 },
+		mechanicWarning = { file = "assets/sounds/uiError.ogg", cooldown = 0.8, bias = 0.8, category = "important", pool = 2 },
+		mechanicSupport = { file = "assets/sounds/slow2.ogg", cooldown = 0.7, bias = 0.38, category = "important", pool = 2 },
 		victory = { file = "assets/sounds/victory.ogg" },
 		gameOver = { file = "assets/sounds/gameOver.ogg" },
 		towerPlaced = { files = { "assets/sounds/towerPlaced1.ogg", "assets/sounds/towerPlaced2.ogg" }, jitter = true },
