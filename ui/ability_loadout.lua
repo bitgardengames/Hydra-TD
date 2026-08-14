@@ -253,10 +253,9 @@ function Loadout.mousereleased(x, y, mouseButton)
 		if Button.mousereleased(button, x, y, mouseButton) then return true end
 		if wasPressed and x >= button.x and x <= button.x + button.w and y >= button.y and y <= button.y + button.h then
 			if button.kind == "slot" then
-				-- The slots control the picker as a single panel: clicking either slot
-				-- closes an open picker, while clicking a slot when closed opens it for
-				-- that slot.
-				selectedSlot = selectedSlot and nil or button.slot
+				-- Clicking the active slot closes the picker. Clicking another slot keeps
+				-- it open and moves the selection (and its outline) to that slot.
+				selectedSlot = selectedSlot == button.slot and nil or button.slot
 				rebuildButtons()
 				Sound.play("uiMove")
 			else
