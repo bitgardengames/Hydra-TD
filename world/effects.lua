@@ -78,6 +78,7 @@ local deathPool = {}
 local placePuffPool = {}
 local plasmaParticlePool = {}
 local towerTransformationPool = {}
+local poisonDragMultipliers = {}
 local acquire
 
 function Effects.spawnTowerTransformation(x, y, opts)
@@ -478,6 +479,16 @@ function Effects.spawnEnemyDeath(x, y, r)
 end
 
 function Effects.update(dt)
+	local frameExponent = dt * 60
+	local drag96 = 0.96 ^ frameExponent
+	local drag92 = 0.92 ^ frameExponent
+
+	-- Poison particles may use different drag bases. Reuse this table so the
+	-- update only evaluates each distinct base once without allocating per frame.
+	for drag in pairs(poisonDragMultipliers) do
+		poisonDragMultipliers[drag] = nil
+	end
+
 	local transformations = Effects.towerTransformations
 	for i = #transformations, 1, -1 do
 		local e = transformations[i]
@@ -510,9 +521,8 @@ function Effects.update(dt)
 			e.x = e.x + e.vx * dt
 			e.y = e.y + e.vy * dt
 
-			local drag = 0.96 ^ (dt * 60)
-			e.vx = e.vx * drag
-			e.vy = e.vy * drag
+			e.vx = e.vx * drag96
+			e.vy = e.vy * drag96
 		end
 
 		if e.t >= e.life then
@@ -557,9 +567,8 @@ function Effects.update(dt)
 		f.x = f.x + f.vx * dt
 		f.y = f.y + f.vy * dt
 
-		local drag = 0.96 ^ (dt * 60)
-		f.vx = f.vx * drag
-		f.vy = f.vy * drag
+		f.vx = f.vx * drag96
+		f.vy = f.vy * drag96
 
 		f.rot = f.rot + f.vr * dt
 
@@ -579,7 +588,12 @@ function Effects.update(dt)
 		p.x = p.x + p.vx * dt
 		p.y = p.y + p.vy * dt
 
-		local drag = (p.drag or 0.94) ^ (dt * 60)
+		local dragBase = p.drag or 0.94
+		local drag = poisonDragMultipliers[dragBase]
+		if not drag then
+			drag = dragBase ^ frameExponent
+			poisonDragMultipliers[dragBase] = drag
+		end
 		p.vx = p.vx * drag
 		p.vy = p.vy * drag
 
@@ -599,9 +613,8 @@ function Effects.update(dt)
 		l.x = l.x + l.vx * dt
 		l.y = l.y + l.vy * dt
 
-		local drag = 0.92 ^ (dt * 60)
-		l.vx = l.vx * drag
-		l.vy = l.vy * drag
+		l.vx = l.vx * drag92
+		l.vy = l.vy * drag92
 
 		if l.t >= l.life then
 			swapRemove(lancer, i)
@@ -638,9 +651,8 @@ function Effects.update(dt)
 		p.x = p.x + p.vx * dt
 		p.y = p.y + p.vy * dt
 
-		local drag = 0.92 ^ (dt * 60)
-		p.vx = p.vx * drag
-		p.vy = p.vy * drag
+		p.vx = p.vx * drag92
+		p.vy = p.vy * drag92
 
 		if p.t >= p.life then
 			swapRemove(placePuffs, i)
