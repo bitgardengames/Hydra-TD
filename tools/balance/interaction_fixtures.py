@@ -107,12 +107,8 @@ def targeting():
                  {"id": 2, "name": "rear_tank", "dist": 54, "hp": 180, "priority": 0, "slow": 0},
                  {"id": 3, "name": "priority_mid", "dist": 70, "hp": 65, "priority": 30, "slow": 0},
                  {"id": 4, "name": "slowed_front", "dist": 96, "hp": 45, "priority": 0, "slow": 1}]
-    scores = {"progress": lambda e: e["dist"]-(5 if e["slow"] else 0)+e["priority"],
-              "high_hp": lambda e: e["hp"],
-              "low_hp": lambda e: -e["hp"],
-              "farthest": lambda e: e["dist"]**2}
-    return [{"mode": mode, "expected_target": max(formation, key=lambda e: (fn(e), -e["id"]))["name"],
-             "formation": formation} for mode, fn in scores.items()]
+    target = max(formation, key=lambda e: (e["dist"], -e["id"]))
+    return {"expected_target": target["name"], "formation": formation}
 
 
 def bosses(text):
@@ -155,8 +151,8 @@ def validate(data):
             errors.append(row["ability"]+": cooldown depends on speed")
     if set(row["formation"] for row in data["branches"]) != set(FORMATIONS):
         errors.append("branch formations incomplete")
-    if set(row["mode"] for row in data["targeting"]) != {"progress", "high_hp", "low_hp", "farthest"}:
-        errors.append("targeting modes incomplete")
+    if data["targeting"]["expected_target"] != "slowed_front":
+        errors.append("furthest-progress targeting changed")
     if len(data["boss_add_encounters"]) != 3:
         errors.append("boss-add templates incomplete")
     return errors

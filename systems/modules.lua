@@ -82,9 +82,8 @@ local function collectModuleIds(out, moduleIds)
 	end
 end
 
--- Keep module precedence in one place. Both behavior construction and targeting
--- consume this list, so they cannot drift into subtly different interpretations
--- of global, tower, applied, branch, and legacy modules.
+-- Keep module precedence in one place so global, tower, applied, branch, and
+-- legacy modules cannot drift into subtly different interpretations.
 local function collectTowerModules(towerOrKind)
 	local tower = type(towerOrKind) == "table" and towerOrKind or nil
 	local towerKind = tower and tower.kind or towerOrKind
@@ -339,7 +338,6 @@ function Modules.invalidateTower(tower)
 
 	cache.moduleContext = nil
 	cache.fireProfile = nil
-	cache.targetMode = nil
 	tower._fireProfileLocalVersion = (tower._fireProfileLocalVersion or 0) + 1
 end
 
@@ -481,21 +479,6 @@ end
 
 function Modules.getActive()
 	return Modules.active
-end
-
-function Modules.getTargetMode(towerOrKind)
-	if not Modules.isEnabled() then
-		return nil
-	end
-
-	local mode = nil
-	resolveModules(collectTowerModules(towerOrKind), function(mod)
-		if mod.targetMode and CampaignUnlocks.isTargetingUnlocked(mod.targetMode) then
-			mode = mod.targetMode
-		end
-	end)
-
-	return mode
 end
 
 function Modules.getTowerStatModifiers(towerOrKind)

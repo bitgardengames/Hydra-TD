@@ -18,7 +18,7 @@ local rewardsByMapId = {
 		{type = "tower", id = "poison", label = "Poison tower"},
 		{type = "ability", id = "overdrive", label = "Overdrive active ability"},
 	},
-	roundabout = {{type = "targeting", id = "high_hp", labelKey = "campaign.rewards.strongest"}},
+	roundabout = {},
 	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
 	gauntlet = {
 		{type = "tower", id = "shock", label = "Shock tower"},
@@ -27,7 +27,6 @@ local rewardsByMapId = {
 	-- Frost Nova is earned before the map that introduces runners.
 	snaketrail = {{type = "ability", id = "frost_nova", label = "Frost Nova active ability"}},
 	backtrack = {
-		{type = "targeting", id = "low_hp", labelKey = "campaign.rewards.weakest"},
 		{type = "ability", id = "gold_rush", label = "Gold Rush active ability"},
 	},
 	-- Low Valley intentionally has no unlock reward; its campaign preview and
@@ -58,8 +57,7 @@ end
 
 local function validateRewards()
 	local AbilityDefs = require("systems.ability_defs")
-	local Targeting = require("world.targeting")
-	local knownMaps, knownTowers, knownAbilities, knownUpgrades, knownTargeting = {}, {}, {}, {}, {}
+	local knownMaps, knownTowers, knownAbilities, knownUpgrades = {}, {}, {}, {}
 	for _, map in ipairs(Maps) do knownMaps[map.id] = true end
 	for _, towerId in ipairs(Constants.TOWER_LIST) do knownTowers[towerId] = true end
 	for abilityId, def in pairs(AbilityDefs) do
@@ -68,8 +66,6 @@ local function validateRewards()
 			if def.upgradeId then knownUpgrades[def.upgradeId] = true end
 		end
 	end
-	for _, targetingId in pairs(Targeting.MODES) do knownTargeting[targetingId] = true end
-
 	for mapId, rewards in pairs(rewardsByMapId) do
 		assert(knownMaps[mapId], "campaign reward uses unknown map ID: " .. tostring(mapId))
 		for _, reward in ipairs(rewards) do
@@ -79,8 +75,6 @@ local function validateRewards()
 				assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id))
 			elseif reward.type == "ability_upgrade" then
 				assert(knownUpgrades[reward.id], "campaign reward uses unknown ability upgrade ID: " .. tostring(reward.id))
-			elseif reward.type == "targeting" then
-				assert(knownTargeting[reward.id], "campaign reward uses unknown targeting ID: " .. tostring(reward.id))
 			elseif reward.type == "map" then
 				assert(knownMaps[reward.id], "campaign reward uses unknown map ID: " .. tostring(reward.id))
 			end
@@ -204,10 +198,6 @@ function CampaignUnlocks.getEquippedAbilities()
 	end
 
 	return equipped
-end
-
-function CampaignUnlocks.isTargetingUnlocked(mode)
-	return mode == "progress" or mode == "farthest" or isFeatureUnlocked("targeting", mode)
 end
 
 function CampaignUnlocks.isModuleCategoryUnlocked(category)

@@ -1,5 +1,4 @@
 local ModuleDefs = {}
-local Targeting = require("world.targeting")
 
 --[[
 	Module authoring hook contract (projectile behavior trigger model):
@@ -68,10 +67,6 @@ local function normalizeMetadata(id, def)
 		def.conflictsWith = def.conflictsWith or { "movement_conversion" }
 		appendUnique(def.tags, "beam")
 		appendUnique(def.tags, "output")
-	elseif def.targetMode then
-		def.slot = "targeting"
-		def.exclusiveGroup = def.exclusiveGroup or "target_mode"
-		appendUnique(def.tags, "targeting")
 	elseif def.behaviors then
 		def.slot = "identity"
 		def.exclusiveGroup = def.exclusiveGroup or "tower_identity"
@@ -602,12 +597,8 @@ local function behaviorRole(id)
 	return nil
 end
 
-local function addSpec(id, nameKey, descKey, behaviors, targetMode, towerStats)
+local function addSpec(id, nameKey, descKey, behaviors, towerStats)
 	local operations = {}
-
-	if targetMode then
-		operations[#operations + 1] = {op = "setTargetMode", mode = targetMode}
-	end
 
 	for i = 1, #behaviors do
 		local behavior = cloneBehavior(behaviors[i])
@@ -622,12 +613,11 @@ local function addSpec(id, nameKey, descKey, behaviors, targetMode, towerStats)
 		nameKey = nameKey,
 		descKey = descKey,
 		category = "special",
-		slot = targetMode and "targeting" or "identity",
-		tags = targetMode and { "targeting", "tower_identity" } or { "tower_identity" },
-		exclusiveGroup = targetMode and "target_mode" or "tower_identity",
+		slot = "identity",
+		tags = { "tower_identity" },
+		exclusiveGroup = "tower_identity",
 		stackLimit = 1,
 		requiresTowerKind = inferTowerKind(id),
-		targetMode = targetMode,
 		behaviors = cloneBehaviors(behaviors),
 		branchOps = operations,
 		towerStats = towerStats,
@@ -636,9 +626,7 @@ local function addSpec(id, nameKey, descKey, behaviors, targetMode, towerStats)
 			for i = 1, #operations do
 				local op = operations[i]
 
-				if op.op == "setTargetMode" then
-					ctx:setTargetMode(op.mode)
-				elseif op.op == "add" then
+				if op.op == "add" then
 					ctx:addBehavior(cloneBehavior(op.behavior))
 				elseif op.op == "modify" then
 					ctx:modifyBehavior(op.id or op.behavior.id, function(data, behavior)
@@ -894,7 +882,7 @@ addSpec("cannon_rapid_mortar", "module.cannon_rapid_mortar", "moduleDesc.cannon_
 	{id = "aoe_damage", data = {radius = 40, falloff = 0.84}},
 	{id = "cannon_damage_scale", data = {mult = 0.78}},
 	{id = "draw_cannon"},
-}, nil, {fireRateMult = 1.35})
+}, {fireRateMult = 1.35})
 
 addSpec("cannon_cluster_payload", "module.cannon_cluster_payload", "moduleDesc.cannon_cluster_payload", {
 	{id = "move_homing"},
@@ -954,7 +942,6 @@ add("cannon_seige", {
 	nameKey = "module.cannon_seige",
 	descKey = "moduleDesc.cannon_seige",
 	category = "special",
-	targetMode = Targeting.MODES.FARTHEST,
 	apply = function(ctx)
 		ModuleDefs.cannon_siege_shells.apply(ctx)
 	end
