@@ -3,6 +3,8 @@ package.path = "./?.lua;./?/init.lua;" .. package.path
 local damageCalls = 0
 local impacts = 0
 local shakeStrength = 0
+local shakeDuration = 0
+local dustBursts = 0
 
 package.loaded["systems.campaign_unlocks"] = {
 	isAbilityUnlocked = function() return true end,
@@ -18,8 +20,11 @@ package.loaded["world.enemies"] = {
 }
 package.loaded["world.towers"] = {towers = {}}
 package.loaded["world.effects"] = {
-	shake = function(strength) shakeStrength = strength end,
+	shake = function(strength, duration)
+		shakeStrength, shakeDuration = strength, duration
+	end,
 	spawnCannonImpact = function() impacts = impacts + 1 end,
+	spawnMeteorDust = function() dustBursts = dustBursts + 1 end,
 }
 
 local State = require("core.state")
@@ -44,7 +49,8 @@ assert(damageCalls == 0 and impacts == 0, "meteor landed before its travel time 
 Abilities.update(.02)
 assert(damageCalls == 1, "meteor did not damage enemies when it landed")
 assert(impacts == 1, "meteor landing did not create an impact effect")
-assert(shakeStrength == 5, "meteor landing did not use the stronger impact shake")
+assert(dustBursts == 1, "meteor landing did not create a dust burst")
+assert(shakeStrength == 7 and shakeDuration == .28, "meteor landing did not use the stronger impact shake")
 assert(#Abilities.getActive() == 0, "landed meteor was not removed")
 
 State.abilityCooldowns.meteor = 0
@@ -55,5 +61,6 @@ assert(Abilities.activate(250, 250), "meteor did not activate on empty ground")
 Abilities.update(.86)
 assert(damageCalls == 1, "meteor damaged an enemy outside its landing area")
 assert(impacts == 2, "meteor did not create an impact effect on empty ground")
+assert(dustBursts == 2, "meteor did not create dust on empty ground")
 
 print("meteor ability fixtures passed")

@@ -443,6 +443,28 @@ function Effects.spawnPlacePuff(x, y)
 	end
 end
 
+-- A meteor throws a wider, heavier cloud than tower placement while sharing
+-- the same subdued dust rendering so the impact does not obscure enemies.
+function Effects.spawnMeteorDust(x, y, radius)
+	local scale = max(1, (radius or 82) / 82)
+	for i = 1, Effects.particleCount(24, Theme.effects.intensity.strong) do
+		local a = random() * pi * 2
+		local sp = (135 + random() * 150) * scale
+		local spawnR = (8 + random() * 16) * scale
+		local p = acquire(placePuffPool)
+
+		p.x = x + cos(a) * spawnR
+		p.y = y + sin(a) * spawnR
+		p.vx = cos(a) * sp
+		p.vy = sin(a) * sp * 0.72 - 18
+		p.r = random(5, 9) * scale
+		p.t = 0
+		p.life = 0.65 + random() * 0.35
+
+		Effects.placePuffs[#Effects.placePuffs + 1] = p
+	end
+end
+
 function Effects.spawnEnemyDeath(x, y, r)
 	local d = acquire(deathPool)
 
