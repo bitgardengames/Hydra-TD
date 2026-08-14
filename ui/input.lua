@@ -319,8 +319,6 @@ end
 local gameplayActions = {
 	abilitySlot1 = function() activateAbilitySlot(1) end,
 	abilitySlot2 = function() activateAbilitySlot(2) end,
-	abilitySlot3 = function() activateAbilitySlot(3) end,
-	abilitySlot4 = function() activateAbilitySlot(4) end,
 	fastForward = function()
 		GameSpeed.cycle()
 	end,
