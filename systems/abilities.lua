@@ -336,9 +336,9 @@ local function expireMeteor(effect)
 	forEachEnemyInRadius(effect.x, effect.y, effect.radius, function(enemy)
 		Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
 	end, true)
-	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius)
+	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius * 1.2)
 	Effects.spawnMeteorDust(effect.x, effect.y, effect.radius)
-	Effects.shake(7, .28)
+	Effects.shake(8.5, .34)
 end
 
 -- Timed-effect behavior lives in one registry so adding a lifecycle does not
