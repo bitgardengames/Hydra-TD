@@ -159,6 +159,7 @@ local function activateDamageArea(effect, x, y, abilityId)
 		y = y,
 		radius = effect.radius,
 		damage = effect.damage,
+		approachDirection = love.math.random(0, 1) == 0 and -1 or 1,
 		started = clock,
 		expires = clock + travelTime,
 	})
@@ -338,7 +339,7 @@ local function expireMeteor(effect)
 	end, true)
 	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius * 1.2)
 	Effects.spawnMeteorDust(effect.x, effect.y, effect.radius)
-	Effects.shake(8.5, .34)
+	Effects.shake(10, .4)
 end
 
 -- Timed-effect behavior lives in one registry so adding a lifecycle does not
