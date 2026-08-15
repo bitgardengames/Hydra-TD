@@ -47,6 +47,8 @@ assert(damageCalls == 0, "meteor damaged its target before travelling")
 local active = Abilities.getActive()
 assert(#active == 1 and active[1].kind == "meteor_incoming", "incoming meteor was not exposed for rendering")
 assert(active[1].expires > active[1].started, "meteor has no travel time")
+assert(active[1].approachDirection == -1 or active[1].approachDirection == 1,
+	"meteor did not choose a left or right approach")
 
 Abilities.update(.84)
 assert(damageCalls == 0 and impacts == 0, "meteor landed before its travel time elapsed")
@@ -55,7 +57,7 @@ assert(damageCalls == 1, "meteor did not damage enemies when it landed")
 assert(impacts == 1, "meteor landing did not create an impact effect")
 assert(impactRadius == active[1].radius * 1.2, "meteor impact effect was not scaled up")
 assert(dustBursts == 1, "meteor landing did not create a dust burst")
-assert(shakeStrength == 8.5 and shakeDuration == .34, "meteor landing did not use the stronger impact shake")
+assert(shakeStrength == 10 and shakeDuration == .4, "meteor landing did not use the stronger impact shake")
 assert(#Abilities.getActive() == 0, "landed meteor was not removed")
 
 State.abilityCooldowns.meteor = 0

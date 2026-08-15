@@ -434,9 +434,9 @@ local function drawIncomingMeteor(effect, clock)
 	local duration = effect.expires - effect.started
 	local progress = duration > 0 and math.min(1, (clock - effect.started) / duration) or 1
 	-- Begin above the battlefield so the strike has an observable approach rather
-	-- than appearing at the cursor. The slight horizontal sweep keeps the body
-	-- and its trail readable even when the target is near an edge of the map.
-	local direction = effect.x < gridW * tile * .5 and -1 or 1
+	-- than appearing at the cursor. The side is chosen once when the meteor is
+	-- launched, keeping its angle consistent while allowing either approach.
+	local direction = effect.approachDirection or -1
 	local startX = effect.x + direction * 270
 	local startY = -110
 	local meteorX = startX + (effect.x - startX) * progress
@@ -444,6 +444,10 @@ local function drawIncomingMeteor(effect, clock)
 	local trailX = meteorX - (effect.x - startX) * .15
 	local trailY = meteorY - (effect.y - startY) * .15
 	local pulse = .8 + .2 * sin(clock * 18)
+	local flightX, flightY = effect.x - startX, effect.y - startY
+	local flightLength = sqrt(flightX * flightX + flightY * flightY)
+	local unitX, unitY = flightX / flightLength, flightY / flightLength
+	local perpendicularX, perpendicularY = -unitY, unitX
 
 	lg.setColor(1, .22, .04, .22)
 	lg.setLineWidth(41)
@@ -451,6 +455,19 @@ local function drawIncomingMeteor(effect, clock)
 	lg.setColor(1, .62, .12, .7)
 	lg.setLineWidth(17)
 	lg.line(trailX, trailY, meteorX, meteorY)
+	-- Loose embers make the trail feel like burning debris rather than a static
+	-- beam. Hash noise gives each ember its own stable sideways drift.
+	for i = 1, 9 do
+		local distance = 24 + i * 10 + (clock * 75 + i * 7) % 12
+		local drift = (hashNoise(i, effect.started, 17) * 2 - 1) * (5 + i * .7)
+		local emberX = meteorX - unitX * distance + perpendicularX * drift
+		local emberY = meteorY - unitY * distance + perpendicularY * drift
+		local emberRadius = 2 + hashNoise(i, effect.started, 29) * 3
+		lg.setColor(1, .25, .03, .45)
+		lg.circle("fill", emberX, emberY, emberRadius * 1.8)
+		lg.setColor(1, .78, .18, .9)
+		lg.circle("fill", emberX, emberY, emberRadius)
+	end
 	lg.setColor(1, .9, .48, .95)
 	lg.circle("fill", meteorX, meteorY, 30 * pulse)
 	lg.setColor(.24, .12, .1, 1)

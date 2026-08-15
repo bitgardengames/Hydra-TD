@@ -448,7 +448,7 @@ end
 -- the same subdued dust rendering so the impact does not obscure enemies.
 function Effects.spawnMeteorDust(x, y, radius)
 	local scale = max(1, (radius or 82) / 82)
-	for i = 1, Effects.particleCount(30, Theme.effects.intensity.strong) do
+	for i = 1, Effects.particleCount(42, Theme.effects.intensity.strong) do
 		local a = random() * pi * 2
 		local sp = (135 + random() * 150) * scale
 		local spawnR = (8 + random() * 16) * scale
