@@ -1,5 +1,6 @@
 local AbilityDefs = require("systems.ability_defs")
 local AbilityIcons = require("ui.ability_icons")
+local AbilityTooltip = require("ui.ability_tooltip")
 local Button = require("ui.button")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local Fonts = require("core.fonts")
@@ -222,10 +223,12 @@ function Loadout.draw()
 			local abilityId = equipped[button.slot]
 			drawIconButton(button, abilityId, selectedSlot == button.slot)
 			if abilityId then drawSlotLabel(button) end
+			if abilityId and button.anim.hovered then AbilityTooltip.show(abilityId) end
 		else
 			drawIconButton(button, button.abilityId, equipped[selectedSlot] == button.abilityId,
 				button.equippedElsewhere)
 			if button.anim.hovered then
+				AbilityTooltip.show(button.abilityId)
 				Fonts.set("ui")
 				lg.setColor(button.equippedElsewhere and Theme.ui.warn or Theme.ui.text)
 				local label = button.equippedElsewhere

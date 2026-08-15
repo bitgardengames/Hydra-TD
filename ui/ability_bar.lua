@@ -5,11 +5,10 @@ local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local Abilities = require("systems.abilities")
 local Text = require("ui.text")
-local Tooltip = require("ui.tooltip")
-local L = require("core.localization")
 local Button = require("ui.button")
 local Hotkeys = require("core.hotkeys")
 local AbilityIcons = require("ui.ability_icons")
+local AbilityTooltip = require("ui.ability_tooltip")
 local Effects = require("world.effects")
 local Sound = require("systems.sound")
 
@@ -20,7 +19,6 @@ local max = math.max
 
 local AbilityBar = {}
 local buttons = {}
-local abilityTooltips = {}
 local lastAbilityClock = nil
 
 local SIZE = 52
@@ -40,31 +38,6 @@ local outerRadius = 9 + outlineW * 0.5
 local innerRadius = 9 - outlineW * 0.25
 local panelRadius = 18 + outlineW * 0.5
 local panelInnerRadius = 18 - outlineW * 0.25
-
-local function showTooltip(abilityId, def)
-	local title = L(def.nameKey)
-	local description = L(def.descKey)
-	local tooltip = abilityTooltips[abilityId]
-
-	-- Rebuild if localization changed, while keeping the rows table stable during
-	-- normal hovering so Tooltip does not recalculate its layout every frame.
-	if not tooltip or tooltip.title ~= title or tooltip.rows[1].text ~= description then
-		local rows = {
-			{kind = "text", text = description, padAfter = 4},
-			{label = L("ability.cooldownLabel"), value = string.format("%gs", def.cooldown)},
-		}
-		if def.effect and def.effect.duration then
-			rows[#rows + 1] = {label = L("ability.durationLabel"), value = string.format("%gs", def.effect.duration)}
-		end
-		tooltip = {
-			title = title,
-			rows = rows,
-		}
-		abilityTooltips[abilityId] = tooltip
-	end
-
-	Tooltip.show(tooltip)
-end
 
 local function getDisplayedAbilities()
 	local displayed = {}
@@ -258,7 +231,7 @@ function AbilityBar.draw()
 		local def = AbilityDefs[button.abilityId]
 		if def then
 			drawButton(button, def, activeRemaining[button.abilityId])
-			if button.hovered then showTooltip(button.abilityId, def) end
+			if button.hovered then AbilityTooltip.show(button.abilityId) end
 		end
 	end
 end
