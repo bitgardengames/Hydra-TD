@@ -335,16 +335,25 @@ function Save.update(dt)
 end
 
 function Save.setEquippedAbilities(abilityIds)
-	if not Save.data or type(abilityIds) ~= "table" then return false end
+	if not Save.data or type(abilityIds) ~= "table" then return false, false end
 
 	local selections = {}
 	for slotIndex, abilityId in ipairs(abilityIds) do
 		if slotIndex > 2 then break end
 		if type(abilityId) == "string" then selections[slotIndex] = abilityId end
 	end
+
+	local equipped = Save.data.equippedAbilities
+	if type(equipped) == "table"
+		and equipped[1] == selections[1]
+		and equipped[2] == selections[2]
+	then
+		return true, false
+	end
+
 	Save.data.equippedAbilities = selections
 	Save.markDirty()
-	return true
+	return true, true
 end
 
 function Save.isMapUnlocked(i, mapId)
