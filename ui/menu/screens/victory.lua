@@ -427,15 +427,18 @@ local function resetConfetti()
 end
 
 function Screen.load()
-	buttons = {
-		{
+	local hasNextMap = State.worldMapIndex < #Maps
+	buttons = {}
+
+	if hasNextMap then
+		buttons[#buttons + 1] = {
 			id = "next",
 			label = L("menu.nextMap"),
 			w = btnW,
 			h = btnH,
 			onClick = function()
 				Sound.play("uiConfirm")
-				State.worldMapIndex = min(State.worldMapIndex + 1, #Maps)
+				State.worldMapIndex = State.worldMapIndex + 1
 				State.mapIndex = State.resolveMapIndex(State.worldMapIndex)
 				State.gameOver = false
 				State.victory = false
@@ -443,37 +446,37 @@ function Screen.load()
 				resetGame()
 			end,
 			enabled = not Constants.IS_DEMO,
-		},
+		}
+	end
 
-		{
-			id = "endless",
-			label = L("menu.endless"),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				Sound.play("uiConfirm")
-				State.speed = 1
-				State.endless = true
-				State.gameOver = false
-				State.victory = false
-				State.mode = "game"
-			end,
-			enabled = not Constants.IS_DEMO and CampaignUnlocks.isEndlessUnlocked(),
-		},
+	buttons[#buttons + 1] = {
+		id = "endless",
+		label = L("menu.endless"),
+		w = btnW,
+		h = btnH,
+		onClick = function()
+			Sound.play("uiConfirm")
+			State.speed = 1
+			State.endless = true
+			State.gameOver = false
+			State.victory = false
+			State.mode = "game"
+		end,
+		enabled = not Constants.IS_DEMO and CampaignUnlocks.isEndlessUnlocked(),
+	}
 
-		{
-			id = "menu",
-			label = L("menu.mainMenu"),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				Sound.play("uiConfirm")
-				Backdrop.start()
-				Steam.setRichPresence(L("presence.menu"))
-				Save.flush()
-				State.mode = "menu"
-			end
-		},
+	buttons[#buttons + 1] = {
+		id = "menu",
+		label = L("menu.mainMenu"),
+		w = btnW,
+		h = btnH,
+		onClick = function()
+			Sound.play("uiConfirm")
+			Backdrop.start()
+			Steam.setRichPresence(L("presence.menu"))
+			Save.flush()
+			State.mode = "menu"
+		end
 	}
 
 	layoutButtons()
