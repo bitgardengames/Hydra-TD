@@ -73,12 +73,14 @@ local rowsScroll = ScrollView.new()
 
 local LABEL_W = 180
 local SLIDER_W = 160
+local SLIDER_VALUE_GAP = 16
+local SLIDER_VALUE_W = 56
 local SLIDER_H = 10
 local ROW_H = 32
 local THUMB_R = 7
 local SLIDER_KEY_STEP = 0.05
 
-local ROW_W = LABEL_W + SLIDER_W + 40
+local ROW_W = LABEL_W + SLIDER_W + SLIDER_VALUE_GAP + SLIDER_VALUE_W
 
 local rows = {}
 local buttons = {}
@@ -131,8 +133,21 @@ local function settingsChanged()
 	Save.markDirty()
 end
 
-local function sliderRow(id, label, color, get, set, description)
-	return {id = id, label = label, description = description, type = "slider", color = color, get = get, set = set}
+local function sliderRow(id, label, color, get, set, description, valueFormatter)
+	return {
+		id = id,
+		label = label,
+		description = description,
+		type = "slider",
+		color = color,
+		get = get,
+		set = set,
+		valueFormatter = valueFormatter,
+	}
+end
+
+local function formatPercent(value)
+	return L("settings.percentValue", floor(Util.clamp(value, 0, 1) * 100 + 0.5))
 end
 
 local function toggleRow(id, label, setting, set, description)
@@ -292,6 +307,12 @@ local function drawSliderRow(row, x, yTop, hovered, index)
 
 	lg.setColor(1, 1, 1, 1)
 	lg.circle("fill", thumbX, thumbY, THUMB_R + grow)
+
+	if row.valueFormatter then
+		lg.setColor(colorText)
+		Text.printfShadow(row.valueFormatter(t), sliderX + SLIDER_W + SLIDER_VALUE_GAP,
+			rowTextY(yTop), SLIDER_VALUE_W, "right")
+	end
 end
 
 local function drawToggleRow(row, x, yTop)
@@ -399,13 +420,13 @@ function Screen.load()
 					function(v)
 						Save.data.settings.musicVolume = v
 						Sound.setMusicVolume(v)
-					end, L("settings.sliderKeyboardDesc")),
+					end, L("settings.sliderKeyboardDesc"), formatPercent),
 				sliderRow("sfx", L("settings.sfx"), Theme.tower.cannon,
 					function() return Save.data.settings.sfxVolume end,
 					function(v)
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
-					end, L("settings.sliderKeyboardDesc")),
+					end, L("settings.sliderKeyboardDesc"), formatPercent),
 			},
 		},
 		{
@@ -459,7 +480,7 @@ function Screen.update(dt)
 	local widestLabel = 0
 	for _, row in ipairs(getActiveRows()) do widestLabel = max(widestLabel, lg.getFont():getWidth(row.label or "")) end
 	LABEL_W = min(280, max(180, widestLabel + 24))
-	ROW_W = LABEL_W + SLIDER_W + 40
+	ROW_W = LABEL_W + SLIDER_W + SLIDER_VALUE_GAP + SLIDER_VALUE_W
 
 	if State.mode ~= "settings_gameplay" then
 		Backdrop.update(dt)
