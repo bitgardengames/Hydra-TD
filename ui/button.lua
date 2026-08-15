@@ -94,6 +94,7 @@ end
 
 function Button.update(btn, mx, my, dt)
 	if btn.enabled == false then
+		btn.pointerHovered = false
 		btn.hovered = false
 		btn.anim = nil
 
@@ -101,9 +102,11 @@ function Button.update(btn, mx, my, dt)
 	end
 
 	local anim = ensureAnim(btn)
-	local hovered = btn.focused == true or pointInRect(mx, my, btn.x, btn.y, btn.w, btn.h)
+	local pointerHovered = pointInRect(mx, my, btn.x, btn.y, btn.w, btn.h)
+	local hovered = btn.focused == true or pointerHovered
 
 	Button.updateAnimation(anim, hovered, dt)
+	btn.pointerHovered = pointerHovered
 	btn.hovered = hovered
 end
 
@@ -143,6 +146,25 @@ function Button.draw(btn)
 
 	lg.setColor(r, g, b, a)
 	lg.rectangle("fill", x, fy, w, h, innerRadius)
+
+	-- Keyboard focus is intentionally rendered independently of pointer hover.
+	-- A dark halo keeps the light ring readable over both bright and dark menu
+	-- backdrops without competing with the face's hover color or press depth.
+	if btn.focused == true and btn.enabled ~= false then
+		local ringInset = outlineW + 3
+		local ringRadius = outerRadius + 2
+		local previousLineWidth = lg.getLineWidth()
+		lg.setColor(0, 0, 0, 0.9)
+		lg.setLineWidth(5)
+		lg.rectangle("line", x - ringInset, fy - ringInset,
+			w + ringInset * 2, h + ringInset * 2, ringRadius)
+
+		lg.setColor(colorText)
+		lg.setLineWidth(2)
+		lg.rectangle("line", x - ringInset, fy - ringInset,
+			w + ringInset * 2, h + ringInset * 2, ringRadius)
+		lg.setLineWidth(previousLineWidth)
+	end
 
 	-- Label
 	local ty = fy + (h - lg.getFont():getHeight()) * 0.5
