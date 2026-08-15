@@ -2,6 +2,7 @@ package.path = "./?.lua;./?/init.lua;" .. package.path
 
 local damageCalls = 0
 local impacts = 0
+local impactRadius = 0
 local shakeStrength = 0
 local shakeDuration = 0
 local dustBursts = 0
@@ -23,7 +24,10 @@ package.loaded["world.effects"] = {
 	shake = function(strength, duration)
 		shakeStrength, shakeDuration = strength, duration
 	end,
-	spawnCannonImpact = function() impacts = impacts + 1 end,
+	spawnCannonImpact = function(_, _, radius)
+		impacts = impacts + 1
+		impactRadius = radius
+	end,
 	spawnMeteorDust = function() dustBursts = dustBursts + 1 end,
 }
 
@@ -49,8 +53,9 @@ assert(damageCalls == 0 and impacts == 0, "meteor landed before its travel time 
 Abilities.update(.02)
 assert(damageCalls == 1, "meteor did not damage enemies when it landed")
 assert(impacts == 1, "meteor landing did not create an impact effect")
+assert(impactRadius == active[1].radius * 1.2, "meteor impact effect was not scaled up")
 assert(dustBursts == 1, "meteor landing did not create a dust burst")
-assert(shakeStrength == 7 and shakeDuration == .28, "meteor landing did not use the stronger impact shake")
+assert(shakeStrength == 8.5 and shakeDuration == .34, "meteor landing did not use the stronger impact shake")
 assert(#Abilities.getActive() == 0, "landed meteor was not removed")
 
 State.abilityCooldowns.meteor = 0
