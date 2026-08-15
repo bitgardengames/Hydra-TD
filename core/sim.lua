@@ -7,6 +7,7 @@ local State = require("core.state")
 local Effects = require("world.effects")
 local Spatial = require("world.spatial_grid")
 local Abilities = require("systems.abilities")
+local EnemySupport = require("world.enemy_support")
 
 local Sim = {}
 
@@ -23,6 +24,9 @@ function Sim.update(dt)
 	State.frameId = (State.frameId or 0) + 1
 	Waves.updateSpawner(dt)
 	Enemies.updateEnemies(dt)
+	-- Enemy movement queues aura membership changes. Resolve them only after all
+	-- spatial positions are final, but before targeting and combat consume boosts.
+	EnemySupport.flushDirtySources()
 	Towers.updateTowers(dt)
 	Projectiles.update(dt)
 	Effects.update(dt)

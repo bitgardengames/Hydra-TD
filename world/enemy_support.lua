@@ -4,6 +4,24 @@ local Support = {}
 
 local max = math.max
 local sources = {}
+local dirtySources = {}
+local dirtySourceSet = {}
+local changedTargets = {}
+local changedTargetSet = {}
+
+local function markDirty(source)
+	if source and source.supportSourceIndex and not dirtySourceSet[source] then
+		dirtySourceSet[source] = true
+		dirtySources[#dirtySources + 1] = source
+	end
+end
+
+local function markTargetChanged(target)
+	if not changedTargetSet[target] then
+		changedTargetSet[target] = true
+		changedTargets[#changedTargets + 1] = target
+	end
+end
 
 local function removeContribution(source, target)
 	local contributions = target.supportContributions
@@ -98,17 +116,26 @@ local function refreshSource(source)
 			if not contribution then
 				contribution = {source = source}
 				contributions[source.id] = contribution
+				markTargetChanged(target)
+			elseif contribution.multiplier ~= aura.speedMultiplier then
+				markTargetChanged(target)
 			end
 			contribution.multiplier = aura.speedMultiplier
-			recomputeBoost(target)
 		end
 	end
 
 	for target, present in pairs(affected) do
 		if not present then
 			removeContribution(source, target)
-			recomputeBoost(target)
+			markTargetChanged(target)
 		end
+	end
+
+	for i = 1, #changedTargets do
+		local target = changedTargets[i]
+		recomputeBoost(target)
+		changedTargetSet[target] = nil
+		changedTargets[i] = nil
 	end
 
 	source._supportAura = aura
@@ -123,9 +150,6 @@ local function syncDefinition(source)
 	end
 	if source.hp <= 0 then
 		Support.detachDead(source)
-	elseif aura ~= source._supportAura or (aura and (aura.radius ~= source._supportRadius
-		or aura.speedMultiplier ~= source._supportMultiplier)) then
-		refreshSource(source)
 	end
 end
 
@@ -135,24 +159,22 @@ local function touchesCell(source, cx, cy)
 		and Spatial.queryIncludesCell(source.x, source.y, aura.radius, cx, cy)
 end
 
+function Support.markSourceDirty(source)
+	markDirty(source)
+end
+
 function Support.onEnemyCellChanged(enemy, oldCX, oldCY, newCX, newCY)
 	if enemy.supportSourceIndex then
-		syncDefinition(enemy)
-	end
-	if enemy.supportSourceIndex then
-		refreshSource(enemy)
+		-- A source can move within an unchanged cell neighborhood while its aura
+		-- membership changes, so its own movement always invalidates it.
+		markDirty(enemy)
 	end
 
-	local i = 1
-	while i <= #sources do
+	for i = 1, #sources do
 		local source = sources[i]
-		syncDefinition(source)
 		if source.supportSourceIndex and source ~= enemy
 			and (touchesCell(source, oldCX, oldCY) or touchesCell(source, newCX, newCY)) then
-			refreshSource(source)
-		end
-		if sources[i] == source then
-			i = i + 1
+			markDirty(source)
 		end
 	end
 end
@@ -162,15 +184,10 @@ function Support.onEnemyRemoved(enemy, oldCX, oldCY)
 		Support.remove(enemy)
 	end
 
-	local i = 1
-	while i <= #sources do
+	for i = 1, #sources do
 		local source = sources[i]
-		syncDefinition(source)
 		if source.supportSourceIndex and touchesCell(source, oldCX, oldCY) then
-			refreshSource(source)
-		end
-		if sources[i] == source then
-			i = i + 1
+			markDirty(source)
 		end
 	end
 
@@ -196,19 +213,48 @@ function Support.register(source)
 	source._supportRemoved = false
 	sources[#sources + 1] = source
 	source.supportSourceIndex = #sources
+	markDirty(source)
 end
 
 function Support.update(dt)
 	local i = 1
 	while i <= #sources do
 		local source = sources[i]
-		syncDefinition(source)
-		local aura = source.support
+		local aura = source.def.support
+		local definitionChanged = aura ~= source.support or aura ~= source._supportAura
+		if aura ~= source.support then
+			source.support = aura
+		end
+		if source.hp <= 0 then
+			Support.detachDead(source)
+		end
+		if source.supportSourceIndex and source.hp > 0
+			and (definitionChanged or (aura and (aura.radius ~= source._supportRadius
+			or aura.speedMultiplier ~= source._supportMultiplier))) then
+			markDirty(source)
+		end
 		if aura and source.hp > 0 then
 			source.supportPulse = ((source.supportPulse or 0) + dt) % aura.pulsePeriod
 		end
 		if sources[i] == source then
 			i = i + 1
+		end
+	end
+end
+
+-- Called after all enemy Spatial.updateEnemy calls for the tick. Lifecycle
+-- hooks only enqueue work, allowing any number of crossings to collapse into a
+-- single definition sync and membership refresh per source.
+function Support.flushDirtySources()
+	for i = 1, #dirtySources do
+		local source = dirtySources[i]
+		dirtySourceSet[source] = nil
+		dirtySources[i] = nil
+		if source.supportSourceIndex then
+			syncDefinition(source)
+			if source.supportSourceIndex then
+				refreshSource(source)
+			end
 		end
 	end
 end
@@ -219,6 +265,10 @@ function Support.clear()
 		clearSource(source, true)
 		source.supportSourceIndex = nil
 		sources[i] = nil
+	end
+	for i = #dirtySources, 1, -1 do
+		dirtySourceSet[dirtySources[i]] = nil
+		dirtySources[i] = nil
 	end
 end
 

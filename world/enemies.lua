@@ -693,6 +693,11 @@ local function updateEnemies(dt)
 
 		-- gameplay queries use path position only
 		if moved then
+			-- Spatial only emits a lifecycle hook when the cell changes. Aura
+			-- membership can also change while its source stays within one cell.
+			if e.supportSourceIndex then
+				EnemySupport.markSourceDirty(e)
+			end
 			Spatial.updateEnemy(e)
 		end
 
@@ -720,7 +725,8 @@ local function updateEnemies(dt)
 		::continue::
 	end
 
-
+	-- Spatial lifecycle hooks have now seen every movement/removal for this tick.
+	-- Sim flushes their deduplicated support-source work before tower targeting.
 
 	if State.lives <= 0 then
 		beginGameOver(L("game.outOfLives"))
