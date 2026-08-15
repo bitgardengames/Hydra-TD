@@ -4,7 +4,7 @@ local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local BACKUP_FILE = SAVE_DIR .. "/save.bak.lua"
 local TEMP_FILE = SAVE_DIR .. "/save.tmp.lua"
-local SAVE_VERSION = 6 -- Persist the active-ability slot selections
+local SAVE_VERSION = 7 -- Remove unneeded per-map run statistics
 local DIRTY_DELAY = 0.35
 
 local Hotkeys = require("core.hotkeys")
@@ -90,14 +90,24 @@ end
 
 local function normalizeMapStats(mapStats)
 	local changed = false
-	for _, stats in pairs(mapStats) do
-		if type(stats) == "table" then
-			changed = defaultValue(stats, "bestEndlessWave", 0) or changed
+	for mapId, stats in pairs(mapStats) do
+		if type(stats) == "table" and (stats.completedDifficulty == "easy"
+			or stats.completedDifficulty == "normal" or stats.completedDifficulty == "hard")
+		then
 			if type(stats.medalEarnedAt) ~= "table" then
 				-- Older medals intentionally remain undated.
 				stats.medalEarnedAt = {}
 				changed = true
 			end
+			for key in pairs(stats) do
+				if key ~= "completedDifficulty" and key ~= "medalEarnedAt" then
+					stats[key] = nil
+					changed = true
+				end
+			end
+		else
+			mapStats[mapId] = nil
+			changed = true
 		end
 	end
 	return changed
@@ -128,14 +138,6 @@ end
 
 local function migrateVersion(data)
 	if (data.version or 0) >= SAVE_VERSION then return false end
-	if type(data.mapStats) == "table" then
-		for _, stats in pairs(data.mapStats) do
-			if type(stats) == "table" and (tonumber(stats.bestWave) or 0) > 20 then
-				stats.bestEndlessWave = math.max(stats.bestEndlessWave or 0, stats.bestWave)
-				stats.bestWave = stats.completedDifficulty and 20 or 0
-			end
-		end
-	end
 	data.version = SAVE_VERSION
 	return true
 end
@@ -364,38 +366,27 @@ function Save.isMapUnlocked(i, mapId)
 	return Save.data.unlockedMaps[mapId] == true
 end
 
-function Save.recordMapResult(mapId, wave, difficulty, completed, endless)
+function Save.recordMapResult(mapId, difficulty, completed)
+	local rank = {easy = 1, normal = 2, hard = 3}
+	if not completed or not rank[difficulty] then return end
+
 	local stats = Save.data.mapStats
-	local safeWave = math.max(0, tonumber(wave) or 0)
-
 	local s = stats[mapId]
-
 	if not s then
-		s = {bestWave = 0, bestEndlessWave = 0, completedDifficulty = nil, medalEarnedAt = {}}
+		s = {completedDifficulty = nil, medalEarnedAt = {}}
 		stats[mapId] = s
 	end
 	s.medalEarnedAt = type(s.medalEarnedAt) == "table" and s.medalEarnedAt or {}
 
-	if endless then
-		if safeWave > (s.bestEndlessWave or 0) then s.bestEndlessWave = safeWave end
-	elseif safeWave > (s.bestWave or 0) then
-		s.bestWave = safeWave
-	end
+	local completedRank = rank[difficulty]
+	local previousRank = rank[s.completedDifficulty] or 0
+	if completedRank > previousRank then
+		s.completedDifficulty = difficulty
 
-	if completed then
-		local rank = {easy = 1, normal = 2, hard = 3}
-		local prev = s.completedDifficulty
-		local completedRank = rank[difficulty]
-		local previousRank = rank[prev] or 0
-
-		if completedRank and completedRank > previousRank then
-			s.completedDifficulty = difficulty
-
-			local earnedAt = os.time()
-			for tier, tierRank in pairs(rank) do
-				if tierRank <= completedRank and s.medalEarnedAt[tier] == nil then
-					s.medalEarnedAt[tier] = earnedAt
-				end
+		local earnedAt = os.time()
+		for tier, tierRank in pairs(rank) do
+			if tierRank <= completedRank and s.medalEarnedAt[tier] == nil then
+				s.medalEarnedAt[tier] = earnedAt
 			end
 		end
 	end
