@@ -32,7 +32,11 @@ local tipRect = nil
 local tipDismissRect = nil
 local tipDismissPressed = false
 local tipDismissHovered = false
-local tipLayoutKey = nil
+local tipLayoutScreenW = nil
+local tipLayoutScreenH = nil
+local tipLayoutFont = nil
+local tipLayoutMessage = nil
+local tipLayoutDismissText = nil
 
 local function getBaseY()
 	local _, sh = lg.getDimensions()
@@ -48,13 +52,21 @@ local function setColor(color, alpha)
 	lg.setColor(color[1], color[2], color[3], alpha or color[4] or 1)
 end
 
+local function clearTipLayoutState()
+	tipLayoutScreenW = nil
+	tipLayoutScreenH = nil
+	tipLayoutFont = nil
+	tipLayoutMessage = nil
+	tipLayoutDismissText = nil
+end
+
 local function clearTipState()
 	activeTip = nil
 	tipRect = nil
 	tipDismissRect = nil
 	tipDismissPressed = false
 	tipDismissHovered = false
-	tipLayoutKey = nil
+	clearTipLayoutState()
 end
 
 local function updateTipLayout(font)
@@ -138,7 +150,7 @@ function Messages.showTip(id, text, dismissText, onDismiss)
 	end
 
 	activeTip = {id = id, text = text, dismissText = dismissText, onDismiss = onDismiss}
-	tipLayoutKey = nil
+	clearTipLayoutState()
 	return true
 end
 
@@ -217,12 +229,21 @@ function Messages.draw()
 
 	if activeTip then
 		local sw = lg.getWidth()
+		local sh = lg.getHeight()
 		local message = activeTip.text
 		local dismissText = activeTip.dismissText
-		local layoutKey = table.concat({sw, lg.getHeight(), tostring(font), message, dismissText}, "\0")
-		if layoutKey ~= tipLayoutKey then
+		if sw ~= tipLayoutScreenW
+			or sh ~= tipLayoutScreenH
+			or font ~= tipLayoutFont
+			or message ~= tipLayoutMessage
+			or dismissText ~= tipLayoutDismissText
+		then
 			updateTipLayout(font)
-			tipLayoutKey = layoutKey
+			tipLayoutScreenW = sw
+			tipLayoutScreenH = sh
+			tipLayoutFont = font
+			tipLayoutMessage = message
+			tipLayoutDismissText = dismissText
 		end
 		local x, y, w, h = tipRect.x, tipRect.y, tipRect.w, tipRect.h
 		local dismissX, dismissY = tipDismissRect.x, tipDismissRect.y
