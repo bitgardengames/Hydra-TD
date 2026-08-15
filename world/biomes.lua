@@ -151,7 +151,7 @@ Biomes.defs = {
 
 	autumn = {
 		terrain = {
-			grass = {0.56, 0.46, 0.24},
+			grass = {0.72, 0.58, 0.20},
 			path = {0.68, 0.56, 0.38},
 			pathOutline = {0.42, 0.30, 0.20},
 			water = {0.36, 0.56, 0.48},
