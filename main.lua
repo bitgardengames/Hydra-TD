@@ -76,7 +76,7 @@ function finalizeCurrentRun(completed)
 
 	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
 
-	Save.recordMapResult(mapId, State.wave or 0, Difficulty.key(), completed == true, State.endless == true)
+	Save.recordMapResult(mapId, Difficulty.key(), completed == true)
 end
 
 function resetGame()

@@ -52,12 +52,12 @@ for path in pairs(files) do
 	if path:match("^saves/save%.corrupt%-%d%d%d%d%d%d%d%d%-%d%d%d%d%d%d") then diagnostic = path end
 end
 check(diagnostic and files[diagnostic], "malformed primary was not preserved")
-check(Save.data.version == 6, "malformed save did not produce fresh data")
+check(Save.data.version == 7, "malformed save did not produce fresh data")
 
 -- Older saves migrate while retaining fields this version does not know about.
 reset({["saves/save.lua"] = "return { version = 1, unknownFutureField = { enabled = true } }"})
 Save.load()
-check(Save.data.version == 6, "old version was not migrated")
+check(Save.data.version == 7, "old version was not migrated")
 check(Save.data.unknownFutureField.enabled, "unknown field was discarded")
 check(files["saves/save.bak.lua"], "pre-migration save was not backed up")
 
@@ -105,5 +105,29 @@ check(Save.dirty, "replaced ability selection did not mark the save dirty")
 
 accepted, changed = Save.setEquippedAbilities("meteor")
 check(not accepted and not changed, "invalid ability selection was not rejected")
+
+-- Map history retains only completion difficulty and the time each medal was earned.
+reset({["saves/save.lua"] = [[return {
+	version = 6,
+	mapStats = {riverbend = {
+		bestWave = 19, bestEndlessWave = 42, wins = 3, losses = 4,
+		completedDifficulty = "normal", medalEarnedAt = {easy = 100, normal = 200},
+	}, failed_map = {bestWave = 12, losses = 2}},
+}]]})
+Save.load()
+local mapStats = Save.data.mapStats.riverbend
+check(mapStats.completedDifficulty == "normal", "map completion difficulty was discarded")
+check(mapStats.medalEarnedAt.easy == 100 and mapStats.medalEarnedAt.normal == 200,
+	"map completion timestamps were discarded")
+check(mapStats.bestWave == nil and mapStats.bestEndlessWave == nil
+	and mapStats.wins == nil and mapStats.losses == nil, "excess map statistics survived migration")
+check(Save.data.mapStats.failed_map == nil, "an uncleared map record survived migration")
+
+Save.recordMapResult("switchback", "hard", false)
+check(Save.data.mapStats.switchback == nil, "a failed run created map statistics")
+Save.recordMapResult("switchback", "hard", true)
+check(Save.data.mapStats.switchback.completedDifficulty == "hard", "a map clear was not recorded")
+check(type(Save.data.mapStats.switchback.medalEarnedAt.hard) == "number",
+	"a map clear timestamp was not recorded")
 
 print("save fixtures passed")
