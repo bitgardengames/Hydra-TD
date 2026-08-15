@@ -13,6 +13,18 @@ local function check(value, message)
 	assert(value, message)
 end
 
+-- Every campaign clear must advance the player's available options. Keeping
+-- this invariant here prevents future reward reshuffles from reintroducing a
+-- dead map with no unlock preview or victory card.
+for _, map in ipairs(Maps) do
+	check(#CampaignUnlocks.getRewardsForMap(map) > 0, map.id .. " has no campaign reward")
+end
+
+-- The reward cadence is one unlock per clear, rather than several unlocks on
+-- one map followed by an unrewarded gap.
+local progressRewards = CampaignUnlocks.getNewRewards(1, #Maps + 1)
+check(#progressRewards == #Maps, "campaign rewards are not paced one per map")
+
 -- A stale route index must not relock rewards already proven by completion
 -- records, as can happen to profiles created before furthestIndex was saved.
 for _, map in ipairs(Maps) do

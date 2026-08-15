@@ -559,6 +559,7 @@ return {
 			ability = "Available to equip in the active ability loadout.",
 			ability_slot = "Available in the active ability loadout for future runs.",
 			ability_upgrade = "Applied automatically when enhanced abilities are used.",
+			map = "Available as the next campaign map.",
 			campaign_complete = "Available from Challenge and Endless mode selection.",
 		},
 		shortcuts = "Press N for next map • Esc for main menu",

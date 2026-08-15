@@ -16,30 +16,30 @@ local rewardsByMapId = {
 	switchback = {{type = "ability", id = "meteor", labelKey = "campaign.rewards.meteor"}},
 	highpass = {
 		{type = "tower", id = "poison", label = "Poison tower"},
-		{type = "ability", id = "overdrive", label = "Overdrive active ability"},
 	},
-	roundabout = {},
+	roundabout = {{type = "ability", id = "overdrive", label = "Overdrive active ability"}},
 	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
 	gauntlet = {
 		{type = "tower", id = "shock", label = "Shock tower"},
-		{type = "ability", id = "gravity_well", label = "Gravity Well active ability"},
 	},
-	-- Frost Nova is earned before the map that introduces runners.
-	snaketrail = {{type = "ability", id = "frost_nova", label = "Frost Nova active ability"}},
-	backtrack = {
-		{type = "ability", id = "gold_rush", label = "Gold Rush active ability"},
-	},
-	-- Low Valley intentionally has no unlock reward; its campaign preview and
-	-- victory presentation already omit reward messaging for an empty list.
-	lowvalley = {},
+	-- Snake Trail's formation-control reward prepares players for denser mixed waves.
+	snaketrail = {{type = "ability", id = "gravity_well", label = "Gravity Well active ability"}},
+	-- Frost Nova is earned before Backtrack introduces runners.
+	backtrack = {{type = "ability", id = "frost_nova", label = "Frost Nova active ability"}},
+	lowvalley = {{type = "ability", id = "gold_rush", label = "Gold Rush active ability"}},
 	circuit = {
 		{type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
-		{type = "ability", id = "last_stand", label = "Last Stand active ability"},
 	},
-	outerloop = {},
+	outerloop = {{type = "ability", id = "last_stand", label = "Last Stand active ability"}},
+	-- The late campaign has exhausted the tower and ability pool. Its route
+	-- rewards make the next tactical test explicit rather than leaving a clear
+	-- with no unlock presentation.
+	terrace = {{type = "map", id = "highridge", label = "High Ridge campaign map"}},
 	-- Clearing High Ridge earns the shared enhancement through the same reward
 	-- lookup used by every other campaign unlock.
 	highridge = {{type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"}},
+	crossflow = {{type = "map", id = "steppingstones", label = "Stepping Stones campaign map"}},
+	steppingstones = {{type = "map", id = "twinloop", label = "Twin Loop campaign map"}},
 	twinloop = {{type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"}},
 }
 
