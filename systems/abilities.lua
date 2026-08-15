@@ -3,16 +3,28 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local Effects = require("world.effects")
+local Spatial = require("world.spatial_grid")
 local State = require("core.state")
 local Constants = require("core.constants")
 
 local Abilities = {}
 local active = {}
 local clock = 0
+local previewAffected = {}
+local previewAffectedCount = 0
+local preview = {affected = previewAffected}
+
+local function clearBuffer(buffer, count)
+	for i = 1, count do
+		buffer[i] = nil
+	end
+end
 
 local function forEachEnemyInRadius(x, y, radius, callback, useRenderedPosition)
 	local radiusSquared = radius * radius
-	for _, enemy in ipairs(Enemies.enemies) do
+	local candidates, candidateCount = Spatial.queryCells(x, y, radius, true)
+	for i = 1, candidateCount do
+		local enemy = candidates[i]
 		local enemyX = useRenderedPosition and (enemy.rx or enemy.x) or enemy.x
 		local enemyY = useRenderedPosition and (enemy.ry or enemy.y) or enemy.y
 		local dx, dy = enemyX - x, enemyY - y
@@ -185,17 +197,33 @@ local function playActivationEffect(effect, x, y)
 	end
 end
 
-local function collectAffected(def, effect, x, y)
-	local affected = {}
-	local target = def.target
-	if not target or not effect.radius or not x or not y then return affected end
-	local collect = function(entity) affected[#affected + 1] = entity end
-	if target.entities == "enemies" then
-		forEachEnemyInRadius(x, y, effect.radius, collect, true)
-	elseif target.entities == "towers" then
-		forEachTowerInRadius(x, y, effect.radius, collect)
+local function collectAffected(entityKind, effect, x, y, affected, occupied)
+	clearBuffer(affected, occupied)
+	if not entityKind or not effect.radius or not x or not y then return 0 end
+	local count = 0
+	if entityKind == "enemies" then
+		local radiusSquared = effect.radius * effect.radius
+		local candidates, candidateCount = Spatial.queryCells(x, y, effect.radius, true)
+		for i = 1, candidateCount do
+			local enemy = candidates[i]
+			local dx = (enemy.rx or enemy.x) - x
+			local dy = (enemy.ry or enemy.y) - y
+			if enemy.hp > 0 and dx * dx + dy * dy <= radiusSquared then
+				count = count + 1
+				affected[count] = enemy
+			end
+		end
+	elseif entityKind == "towers" then
+		local radiusSquared = effect.radius * effect.radius
+		for _, tower in ipairs(Towers.towers) do
+			local dx, dy = tower.x - x, tower.y - y
+			if dx * dx + dy * dy <= radiusSquared then
+				count = count + 1
+				affected[count] = tower
+			end
+		end
 	end
-	return affected
+	return count
 end
 
 function Abilities.getTargetPreview(x, y)
@@ -203,16 +231,19 @@ function Abilities.getTargetPreview(x, y)
 	local def = target and Abilities.getEquipped(target.abilityId)
 	if not def then return nil end
 	local effect = getEffect(def)
-	local affected = collectAffected(def, effect, x, y)
+	previewAffectedCount = collectAffected(def.target and def.target.entities, effect,
+		x, y, previewAffected, previewAffectedCount)
 	local valid, reason = true, nil
 	if def.targeting ~= "instant" and (not x or not y or x < 0 or y < 0
 		or x > Constants.GRID_W * Constants.TILE or y > Constants.GRID_H * Constants.TILE) then
 		valid, reason = false, "outside"
-	elseif def.target and def.target.requireAffected and #affected == 0 then
+	elseif def.target and def.target.requireAffected and previewAffectedCount == 0 then
 		valid = false
 		reason = def.target.entities == "towers" and "no_towers" or "no_enemies"
 	end
-	return {def=def, effect=effect, affected=affected, count=#affected, valid=valid, reason=reason}
+	preview.def, preview.effect = def, effect
+	preview.count, preview.valid, preview.reason = previewAffectedCount, valid, reason
+	return preview
 end
 
 function Abilities.activate(x, y)
@@ -271,7 +302,20 @@ local function updateLastStand(effect)
 	end
 
 	local radiusSquared = effect.radius * effect.radius
-	for _, enemy in ipairs(Enemies.enemies) do
+	local candidates, candidateCount = Spatial.queryCells(effect.x, effect.y, effect.radius, true)
+	for enemy, wasInside in pairs(effect.inside) do
+		if wasInside then
+			local dx, dy = enemy.x - effect.x, enemy.y - effect.y
+			if dx * dx + dy * dy > radiusSquared then
+				if clock - effect.lastVolley >= 1.5 then
+					triggerVolley(effect, enemy)
+				end
+				effect.inside[enemy] = false
+			end
+		end
+	end
+	for i = 1, candidateCount do
+		local enemy = candidates[i]
 		local dx, dy = enemy.x - effect.x, enemy.y - effect.y
 		local inside = dx * dx + dy * dy <= radiusSquared
 		if effect.inside[enemy] and not inside and clock - effect.lastVolley >= 1.5 then
@@ -329,12 +373,26 @@ function Abilities.update(dt)
 end
 
 function Abilities.getEntitiesInActiveArea(effect, entityKind)
-	local entities = {}
-	if not effect or not effect.x or not effect.radius then return entities end
-	local collect = function(entity) entities[#entities + 1] = entity end
-	if entityKind == "enemies" then forEachEnemyInRadius(effect.x, effect.y, effect.radius, collect, true)
-	elseif entityKind == "towers" then forEachTowerInRadius(effect.x, effect.y, effect.radius, collect) end
-	return entities
+	if not effect then return nil, 0 end
+	effect._affectedCaches = effect._affectedCaches or {}
+	local cache = effect._affectedCaches[entityKind]
+	if not cache then
+		cache = {entities = {}, count = 0}
+		effect._affectedCaches[entityKind] = cache
+	end
+	if not effect.x or not effect.radius then
+		clearBuffer(cache.entities, cache.count)
+		cache.count = 0
+		return cache.entities, 0
+	end
+
+	-- `clock` advances once per simulation tick. Each active effect owns its
+	-- buffer, so rendering another simultaneous effect cannot invalidate it.
+	if cache.tick ~= clock or cache.x ~= effect.x or cache.y ~= effect.y or cache.radius ~= effect.radius then
+		cache.count = collectAffected(entityKind, effect, effect.x, effect.y, cache.entities, cache.count)
+		cache.tick, cache.x, cache.y, cache.radius = clock, effect.x, effect.y, effect.radius
+	end
+	return cache.entities, cache.count
 end
 
 function Abilities.getActive()
@@ -359,6 +417,8 @@ end
 function Abilities.reset()
 	active = {}
 	clock = 0
+	clearBuffer(previewAffected, previewAffectedCount)
+	previewAffectedCount = 0
 	State.abilityClock = 0
 end
 

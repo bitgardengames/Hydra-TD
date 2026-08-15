@@ -23,6 +23,9 @@ local gridH = Constants.GRID_H
 
 local colorGrid = Theme.grid
 local outlineW = Theme.outline.width
+local COLOR_ACTIVE_FALLBACK = {1, .7, .25}
+local COLOR_PREVIEW_FALLBACK = {1, 1, 1}
+local COLOR_PREVIEW_INVALID = {1, .2, .2}
 
 local gridToCenter = MapMod.gridToCenter
 
@@ -470,7 +473,7 @@ local function drawAbilityPreview()
 		local sustained = def and def.sustained
 		local remaining = activeEffect.expires - clock
 		local alpha = Effects.expirationPulse(remaining, clock)
-		local color = (def and def.target and def.target.color) or {1, .7, .25}
+		local color = (def and def.target and def.target.color) or COLOR_ACTIVE_FALLBACK
 		if sustained and sustained.area and activeEffect.x then
 			lg.setColor(color[1], color[2], color[3], .16 * alpha)
 			lg.circle("fill", activeEffect.x, activeEffect.y, activeEffect.radius)
@@ -479,11 +482,11 @@ local function drawAbilityPreview()
 			lg.circle("line", activeEffect.x, activeEffect.y, activeEffect.radius)
 		end
 		if sustained and sustained.entityMarker then
-			local entities = activeEffect.towers
+			local entities, entityCount = activeEffect.towers, activeEffect.towers and #activeEffect.towers or 0
 			if not entities and def.target and def.target.entities == "enemies" then
-				entities = Abilities.getEntitiesInActiveArea(activeEffect, "enemies")
+				entities, entityCount = Abilities.getEntitiesInActiveArea(activeEffect, "enemies")
 			end
-			for _, entity in ipairs(entities or {}) do drawEntityMarker(entity, color, alpha, 21) end
+			for i = 1, entityCount do drawEntityMarker(entities[i], color, alpha, 21) end
 		end
 	end
 
@@ -492,7 +495,7 @@ local function drawAbilityPreview()
 	local preview = Abilities.getTargetPreview(targeting.x, targeting.y)
 	if not preview then return end
 	local effect, target = preview.effect, preview.def.target
-	local color = preview.valid and (target and target.color or {1,1,1}) or {1,.2,.2}
+	local color = preview.valid and (target and target.color or COLOR_PREVIEW_FALLBACK) or COLOR_PREVIEW_INVALID
 	if effect.radius then
 		lg.setColor(color[1], color[2], color[3], .2)
 		lg.circle("fill", targeting.x, targeting.y, effect.radius)
@@ -500,7 +503,7 @@ local function drawAbilityPreview()
 		lg.setLineWidth(2)
 		lg.circle("line", targeting.x, targeting.y, effect.radius)
 	end
-	for _, entity in ipairs(preview.affected) do drawEntityMarker(entity, color, 1, 23) end
+	for i = 1, preview.count do drawEntityMarker(preview.affected[i], color, 1, 23) end
 end
 
 local function drawGrid()
