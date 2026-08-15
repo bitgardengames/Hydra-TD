@@ -15,7 +15,8 @@ local Loadout = {}
 local lg = love.graphics
 
 local SLOT_COUNT = 2
-local ICON_SIZE = 46
+-- Match the in-game ability bar so loadout choices are just as easy to scan.
+local ICON_SIZE = 52
 local GAP = 8
 local PAD = 14
 local COLLAPSED_W = PAD * 2 + ICON_SIZE * SLOT_COUNT + GAP
@@ -185,7 +186,7 @@ local function drawIconButton(button, abilityId, selected, disabled)
 	lg.setLineWidth(1)
 	if abilityId then
 		AbilityIcons.draw(abilityId, x + ICON_SIZE / 2, y + ICON_SIZE / 2,
-			hovered and 0.92 or 0.84, disabled and 0.38 or 1)
+			hovered and 1.08 or 1, disabled and 0.38 or 1)
 		if disabled then
 			Fonts.set("ui")
 			lg.setColor(Theme.ui.warn)
