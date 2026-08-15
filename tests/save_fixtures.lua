@@ -87,4 +87,23 @@ check(assert(love.filesystem.load("saves/save.lua"))().sentinel == "backup", "di
 Save.update(0.3)
 check(assert(love.filesystem.load("saves/save.lua"))().sentinel == "coalesced", "dirty save did not flush")
 
+-- Ability selections only dirty the save when the normalized two-slot loadout changes.
+Save.data.equippedAbilities = {"meteor", "frost_nova"}
+Save.dirty, Save.dirtyTimer = false, nil
+local accepted, changed = Save.setEquippedAbilities({"meteor", "frost_nova", "ignored_third_slot"})
+check(accepted and not changed, "unchanged ability selection was not reported as a no-op")
+check(not Save.dirty and Save.dirtyTimer == nil, "unchanged ability selection marked the save dirty")
+
+accepted, changed = Save.setEquippedAbilities({"frost_nova", "meteor"})
+check(accepted and changed, "reordered ability selection was not reported as changed")
+check(Save.dirty, "reordered ability selection did not mark the save dirty")
+
+Save.dirty, Save.dirtyTimer = false, nil
+accepted, changed = Save.setEquippedAbilities({"frost_nova", "lightning"})
+check(accepted and changed, "replaced ability selection was not reported as changed")
+check(Save.dirty, "replaced ability selection did not mark the save dirty")
+
+accepted, changed = Save.setEquippedAbilities("meteor")
+check(not accepted and not changed, "invalid ability selection was not rejected")
+
 print("save fixtures passed")
