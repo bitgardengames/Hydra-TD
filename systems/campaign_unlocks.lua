@@ -31,16 +31,11 @@ local rewardsByMapId = {
 		{type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
 	},
 	outerloop = {{type = "ability", id = "last_stand", label = "Last Stand active ability"}},
-	-- The late campaign has exhausted the tower and ability pool. Its route
-	-- rewards make the next tactical test explicit rather than leaving a clear
-	-- with no unlock presentation.
-	terrace = {{type = "map", id = "highridge", label = "High Ridge campaign map"}},
-	-- Clearing High Ridge earns the shared enhancement through the same reward
-	-- lookup used by every other campaign unlock.
-	highridge = {{type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"}},
-	crossflow = {{type = "map", id = "steppingstones", label = "Stepping Stones campaign map"}},
-	steppingstones = {{type = "map", id = "twinloop", label = "Twin Loop campaign map"}},
-	twinloop = {{type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"}},
+	-- There are fewer meaningful unlocks than campaign maps. Keep the real
+	-- rewards contiguous at the front rather than using route progression as a
+	-- placeholder reward or leaving gaps between unlocks.
+	terrace = {{type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"}},
+	highridge = {{type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"}},
 }
 
 local requiredMapByTower = {
