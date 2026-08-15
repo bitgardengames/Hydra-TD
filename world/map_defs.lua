@@ -109,7 +109,7 @@ local maps = {
 		-- Snake Trail introduces Tanks; authored waves on all earlier maps contain
 		-- Grunts only. Backtrack introduces Runners next.
 		introducesEnemies = {"tank"},
-		biome = "default",
+		biome = "mushroom",
 		path = {
 			{5, 9}, {16, 9},
 			{16, 6}, {10, 6},
@@ -180,7 +180,7 @@ local maps = {
 		nameKey = "map.circuit",
 		-- Circuit is the campaign's first Regenerator encounter.
 		introducesEnemies = {"regenerator"},
-		biome = "default",
+		biome = "mushroom",
 		path = {
 			{5, 6}, {11, 6},
 			{11, 10}, {23, 10},
