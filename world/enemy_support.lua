@@ -8,6 +8,7 @@ local dirtySources = {}
 local dirtySourceSet = {}
 -- Sparse reverse index: coveredCells[cx][cy][source] = true.
 local coveredCells = {}
+local collectContext = Spatial.createCollectContext()
 
 local function markDirty(source)
 	if source and source.supportSourceIndex and not dirtySourceSet[source] then
@@ -144,7 +145,7 @@ local function refreshSource(source, minX, minY, maxX, maxY)
 		return
 	end
 	for target in pairs(source.supportAffected) do source.supportAffected[target] = false end
-	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius)
+	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius, false, collectContext)
 	for i = 1, count do evaluateTarget(source, nearby[i]) end
 	for target, present in pairs(source.supportAffected) do
 		if present == false then setMembership(source, target, false) end
@@ -163,7 +164,7 @@ local function refreshMovingBoundary(source, oldX, oldY)
 	local inner = max(0, aura.radius - movement)
 	local outer = aura.radius + movement
 	local inner2, outer2 = inner * inner, outer * outer
-	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius)
+	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius, false, collectContext)
 	for i = 1, count do
 		local target = nearby[i]
 		local dx, dy = target.x - oldX, target.y - oldY

@@ -24,6 +24,7 @@ local random = math.random
 local abs = math.abs
 
 local ProjectileBehaviors = {}
+local areaCollectContext = Spatial.createCollectContext()
 
 local B = {}
 
@@ -425,7 +426,7 @@ B.retarget_on_spawn = {
 		local best = nil
 		local bestDist = r2
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, false, areaCollectContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]
@@ -882,7 +883,7 @@ B.aoe_damage = {
 		local radius = baseRadius * scale
 
 		local r2 = radius * radius
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, false, areaCollectContext)
 
 		for i = 1, nearbyCount do
 			local other = nearby[i]
@@ -915,7 +916,7 @@ B.cannon_shockwave = {
 		local minFalloff = data.minFalloff or 0.35
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, false, areaCollectContext)
 
 		for i = 1, nearbyCount do
 			local other = nearby[i]
@@ -1019,7 +1020,7 @@ B.cannon_delayed_blast = {
 		local ringInner2 = ringInner * ringInner
 		local ringOuter2 = ringOuter * ringOuter
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, false, areaCollectContext)
 
 		for i = 1, nearbyCount do
 			local other = nearby[i]
@@ -1130,7 +1131,7 @@ B.hit_circle = {
 			radius = p.hitRadius or p.r or 10
 		end
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, false, areaCollectContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]
@@ -1238,7 +1239,7 @@ B.hit_chain = {
 			local nextTarget = nil
 			local bestDist = radius * radius
 
-			local nearby, nearbyCount = Spatial.queryCells(current.x, current.y, radius)
+			local nearby, nearbyCount = Spatial.queryCells(current.x, current.y, radius, false, areaCollectContext)
 
 			for j = 1, nearbyCount do
 				local other = nearby[j]
@@ -1314,7 +1315,7 @@ B.fork_chain = {
 			local link = p._chain[i]
 
 			if link.to and link.to.hp > 0 then
-				local nearby, nearbyCount = Spatial.queryCells(link.to.x, link.to.y, radius)
+				local nearby, nearbyCount = Spatial.queryCells(link.to.x, link.to.y, radius, false, areaCollectContext)
 
 				local forksAdded = 0
 
@@ -1439,7 +1440,7 @@ B.chain_endpoint_burst = {
 			if target and target.hp > 0 and not hasOutgoing[target] and not endpoints[target] then
 				endpoints[target] = true
 
-				local nearby, nearbyCount = Spatial.queryCells(target.x, target.y, radius)
+				local nearby, nearbyCount = Spatial.queryCells(target.x, target.y, radius, false, areaCollectContext)
 
 				for j = 1, nearbyCount do
 					local other = nearby[j]
@@ -1631,7 +1632,7 @@ B.lancer_ricochet = {
 		local radius = data.radius or 90
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius, false, areaCollectContext)
 
 		local best = nil
 		local bestDist = r2
@@ -1856,7 +1857,7 @@ B.tick_zap = {
 		local radius = z.radius
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, false, areaCollectContext)
 
 		local best = nil
 		local bestDist = r2
@@ -1938,7 +1939,7 @@ B.slow_pop = {
 
 		if e.slowTimer and e.slowTimer > 0 then
 			local radius = 28
-			local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius)
+			local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius, false, areaCollectContext)
 
 			for i = 1, nearbyCount do
 				local other = nearby[i]
@@ -2215,7 +2216,7 @@ B.poison_corrupt_strong = {
 			return
 		end
 
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, data.radius or 64)
+		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, data.radius or 64, false, areaCollectContext)
 		local maxTargets = 2
 		local hits = 0
 		local spreadStacks = max(1, floor(data.spreadStacks or 2))
@@ -2253,7 +2254,7 @@ B.poison_burst_on_death = {
 		local spread = e._infectSpread
 		if not spread then return end
 
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, spread.radius)
+		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, spread.radius, false, areaCollectContext)
 		local radius = spread.radius
 		local r2 = radius * radius
 
@@ -2361,7 +2362,7 @@ B.plasma_supernova_burst = {
 		local radius = data.radius or 36
 		local dmg = (p.damage or 0) * (data.dmgMult or 2.0)
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, false, areaCollectContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]
@@ -2456,7 +2457,7 @@ B.beam = {
 			local sy = y1 + vy * dist
 
 			if b.timer <= 0 then
-				local nearby, nearbyCount = Spatial.queryCells(sx, sy)
+				local nearby, nearbyCount = Spatial.queryCells(sx, sy, nil, false, areaCollectContext)
 
 				for i = 1, nearbyCount do
 					local e2 = nearby[i]
@@ -2587,7 +2588,7 @@ B.slow_aura = {
 		local slowFactor = min(data.factor or 0.22, 0.9)
 		local newFactor = 1 - slowFactor
 
-		local nearby, nearbyCount = Spatial.queryCells(cx, cy, radius)
+		local nearby, nearbyCount = Spatial.queryCells(cx, cy, radius, false, areaCollectContext)
 		for i = 1, nearbyCount do
 			local e = nearby[i]
 			if e and e.hp > 0 then
@@ -2711,7 +2712,7 @@ B.tick_damage = {
 		end
 
 		local radius = data.radius or t.radius or p.hitRadius or 12
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, false, areaCollectContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]

@@ -3,6 +3,7 @@ package.path = "./?.lua;./?/init.lua;" .. package.path
 local occupants = {}
 local queryCount = 0
 package.loaded["world.spatial_grid"] = {
+	createCollectContext = function() return {} end,
 	queryCells = function()
 		queryCount = queryCount + 1
 		return occupants, #occupants

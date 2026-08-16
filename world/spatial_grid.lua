@@ -46,6 +46,20 @@ local nestedCollectContext = {
 	stamp = 0,
 }
 
+-- Collect contexts own their result storage and deduplication stamps. Modules
+-- which retain or iterate query results across calls should keep one of these
+-- instead of borrowing the compatibility buffers below.
+function Spatial.createCollectContext(results, filter)
+	return {
+		results = results or {},
+		count = 0,
+		dedupeById = false,
+		seen = {},
+		stamp = 0,
+		filter = filter,
+	}
+end
+
 local frameStats = {
 	localQueryCount = 0,
 	localCandidateTotal = 0,
@@ -120,6 +134,7 @@ end
 
 local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById, radiusPolicy)
 	local ctx = collectContext
+	local previousCount = ctx.count
 	ctx.count = 0
 	ctx.dedupeById = dedupeById == true
 	local useDedupe = ctx.dedupeById
@@ -132,6 +147,7 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 	local cellRadius = (radiusPolicy or queryCellRadius)(radius)
 	local results = ctx.results
 	local count = 0
+	local filter = ctx.filter
 	if useDedupe then
 		local seen = ctx.seen
 		local stamp = ctx.stamp
@@ -150,8 +166,10 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 							if id then
 								seen[id] = stamp
 							end
-							count = count + 1
-							results[count] = enemy
+							if not filter or filter(enemy) then
+								count = count + 1
+								results[count] = enemy
+							end
 							::continue_enemy::
 						end
 					end
@@ -166,13 +184,19 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 					local cell = col[cy + dy]
 					if cell then
 						for i = 1, #cell do
-							count = count + 1
-							results[count] = cell[i]
+							local enemy = cell[i]
+							if not filter or filter(enemy) then
+								count = count + 1
+								results[count] = enemy
+							end
 						end
 					end
 				end
 			end
 		end
+	end
+	for i = count + 1, previousCount do
+		results[i] = nil
 	end
 	ctx.count = count
 	return results, count
@@ -289,13 +313,22 @@ function Spatial.beginFrame()
 	frameStats.localCandidateTotal = 0
 end
 
-function Spatial.queryCells(x, y, radius, dedupeById)
-	return traverseQueryCellsCollect(x, y, radius, outerCollectContext, dedupeById, queryCellRadius)
+local function resolveCollectArguments(dedupeById, collectContext, fallback)
+	if type(dedupeById) == "table" then
+		return false, dedupeById
+	end
+	return dedupeById, collectContext or fallback
 end
 
-function Spatial.queryCellsLocal(x, y, radius, dedupeById)
+function Spatial.queryCells(x, y, radius, dedupeById, collectContext)
+	dedupeById, collectContext = resolveCollectArguments(dedupeById, collectContext, outerCollectContext)
+	return traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById, queryCellRadius)
+end
+
+function Spatial.queryCellsLocal(x, y, radius, dedupeById, collectContext)
+	dedupeById, collectContext = resolveCollectArguments(dedupeById, collectContext, nestedCollectContext)
 	local results, count =
-		traverseQueryCellsCollect(x, y, radius, nestedCollectContext, dedupeById, queryCellRadiusLocal)
+		traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById, queryCellRadiusLocal)
 	frameStats.localQueryCount = frameStats.localQueryCount + 1
 	frameStats.localCandidateTotal = frameStats.localCandidateTotal + count
 	return results, count

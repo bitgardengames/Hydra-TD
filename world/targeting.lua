@@ -9,6 +9,9 @@ local pointToCell = Spatial.pointToCell
 local queryCellsLocal = Spatial.queryCellsLocal
 local localQueryFootprintKey = Spatial.localQueryFootprintKey
 local simpleCtx = {}
+local function collectLiving(e)
+	return e.hp > 0 and not e.dying
+end
 -- Frame cache uses nested integer-keyed tables to reduce temporary string
 -- allocations and GC spikes from composed cache keys.
 local frameCache = {
@@ -70,31 +73,19 @@ local function getCandidatesForTower(tower)
 	end
 
 	if not entry then
+		local list = {}
 		entry = {
-			list = {},
+			list = list,
+			collectContext = Spatial.createCollectContext(list, collectLiving),
 			count = 0,
 			frameId = -1,
 		}
 		entriesByFootprint[footprintKey] = entry
 	end
 
-	local previousCount = entry.count
-	entry.count = 0
 	entry.frameId = frameId
 
-	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, false)
-	local list = entry.list
-	local count = 0
-	for i = 1, candidateCount do
-		local e = candidates[i]
-		if e and e.hp > 0 and not e.dying then
-			count = count + 1
-			list[count] = e
-		end
-	end
-	for i = count + 1, previousCount do
-		list[i] = nil
-	end
+	local list, count = queryCellsLocal(tower.x, tower.y, tower.range, false, entry.collectContext)
 	entry.count = count
 
 	return list, count
