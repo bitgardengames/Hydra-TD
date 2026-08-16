@@ -699,12 +699,10 @@ local function updateEnemies(dt)
 
 		-- gameplay queries use path position only
 		if moved then
-			-- Spatial only emits a lifecycle hook when the cell changes. Aura
-			-- membership can also change while its source stays within one cell.
-			if e.supportSourceIndex then
-				EnemySupport.markSourceDirty(e)
-			end
 			Spatial.updateEnemy(e)
+			-- Cell hooks handle crossings; this handles exact circular-boundary
+			-- crossings when either participant moves inside one spatial cell.
+			EnemySupport.onEnemyMoved(e, e.prevX, e.prevY)
 		end
 
 		-- Reached end of path

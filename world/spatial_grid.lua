@@ -309,6 +309,15 @@ function Spatial.pointToCell(x, y)
 	return floor(x * INV_CELL), floor(y * INV_CELL)
 end
 
+-- Return the exact cell footprint traversed by queryCells. Systems which keep
+-- secondary spatial indexes can use this without duplicating grid policy.
+function Spatial.queryCellBounds(x, y, radius)
+	local cx = floor(x * INV_CELL)
+	local cy = floor(y * INV_CELL)
+	local cellRadius = queryCellRadius(radius)
+	return cx - cellRadius, cy - cellRadius, cx + cellRadius, cy + cellRadius
+end
+
 function Spatial.queryIncludesCell(x, y, radius, cx, cy)
 	local centerX = floor(x * INV_CELL)
 	local centerY = floor(y * INV_CELL)
