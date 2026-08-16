@@ -2,6 +2,7 @@ local Sound = require("systems.sound")
 local Save = require("core.save")
 local Camera = require("core.camera")
 local Theme = require("core.theme")
+local SimulationClock = require("core.simulation_clock")
 
 local lg = love.graphics
 local random = love.math.random
@@ -78,8 +79,10 @@ local deathPool = {}
 local placePuffPool = {}
 local plasmaParticlePool = {}
 local towerTransformationPool = {}
-local poisonDragMultipliers = {}
 local acquire
+
+local poisonDragBase = 0.94
+local poisonFixedStepMultiplier = poisonDragBase ^ (SimulationClock.step * 60)
 
 function Effects.spawnTowerTransformation(x, y, opts)
 	opts = opts or {}
@@ -368,6 +371,8 @@ function Effects.spawnPoisonSplash(x, y)
 		p.y = y
 		p.vx = cos(a) * sp
 		p.vy = sin(a) * sp
+		p.drag = poisonDragBase
+		p.dragMultiplier = poisonFixedStepMultiplier
 		p.r = random(2, 4)
 		p.t = 0
 		p.life = 0.24
@@ -483,12 +488,6 @@ function Effects.update(dt)
 	local drag96 = 0.96 ^ frameExponent
 	local drag92 = 0.92 ^ frameExponent
 
-	-- Poison particles may use different drag bases. Reuse this table so the
-	-- update only evaluates each distinct base once without allocating per frame.
-	for drag in pairs(poisonDragMultipliers) do
-		poisonDragMultipliers[drag] = nil
-	end
-
 	local transformations = Effects.towerTransformations
 	for i = #transformations, 1, -1 do
 		local e = transformations[i]
@@ -588,11 +587,12 @@ function Effects.update(dt)
 		p.x = p.x + p.vx * dt
 		p.y = p.y + p.vy * dt
 
-		local dragBase = p.drag or 0.94
-		local drag = poisonDragMultipliers[dragBase]
-		if not drag then
-			drag = dragBase ^ frameExponent
-			poisonDragMultipliers[dragBase] = drag
+		-- Simulation normally uses the fixed-step multiplier computed at spawn.
+		-- Direct callers using a nonstandard delta retain frame-rate-independent
+		-- decay by recalculating for that exceptional update only.
+		local drag = p.dragMultiplier
+		if dt ~= SimulationClock.step then
+			drag = p.drag ^ frameExponent
 		end
 		p.vx = p.vx * drag
 		p.vy = p.vy * drag
