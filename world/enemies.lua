@@ -77,6 +77,10 @@ local function acquireEnemy()
 end
 
 local function releaseEnemy(e)
+	-- Support owns references to aura sources outside both the enemy list and the
+	-- spatial grid. Unregister here as well as in the spatial removal hook so a
+	-- partially indexed enemy can never be cleared while still retained there.
+	if e.supportSourceIndex then EnemySupport.remove(e) end
 	local supportAffected = e.supportAffected
 	local supportContributions = e.supportContributions
 	if supportAffected then Util.clearTable(supportAffected) end

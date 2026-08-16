@@ -238,17 +238,24 @@ function Support.update(dt)
 	local i = 1
 	while i <= #sources do
 		local source = sources[i]
-		local aura = source.def.support
-		local changed = aura ~= source.support or aura ~= source._supportAura
-		source.support = aura
-		if source.hp <= 0 then Support.detachDead(source) end
-		if source.supportSourceIndex and (changed or not aura
-			or aura.radius ~= source._supportRadius
-			or aura.speedMultiplier ~= source._supportMultiplier) then markDirty(source) end
-		if aura and source.hp > 0 then
-			source.supportPulse = ((source.supportPulse or 0) + dt) % aura.pulsePeriod
+		-- Pooled enemies are cleared on release. A missing definition means this
+		-- source escaped its normal lifecycle hook, so discard the stale reference
+		-- rather than dereferencing the recycled table.
+		if source.def then
+			local aura = source.def.support
+			local changed = aura ~= source.support or aura ~= source._supportAura
+			source.support = aura
+			if source.hp <= 0 then Support.detachDead(source) end
+			if source.supportSourceIndex and (changed or not aura
+				or aura.radius ~= source._supportRadius
+				or aura.speedMultiplier ~= source._supportMultiplier) then markDirty(source) end
+			if aura and source.hp > 0 then
+				source.supportPulse = ((source.supportPulse or 0) + dt) % aura.pulsePeriod
+			end
+			if sources[i] == source then i = i + 1 end
+		else
+			Support.remove(source)
 		end
-		if sources[i] == source then i = i + 1 end
 	end
 end
 
@@ -257,29 +264,33 @@ function Support.flushDirtySources()
 		local source = dirtySources[i]
 		dirtySourceSet[source], dirtySources[i] = nil, nil
 		if source.supportSourceIndex then
-			local aura = source.def.support
-			local definitionChanged = aura ~= source.support or aura ~= source._supportAura
-				or not aura or aura.radius ~= source._supportRadius
-				or aura.speedMultiplier ~= source._supportMultiplier
-			source.support = aura
-			if source.hp <= 0 then
-				Support.detachDead(source)
-			elseif aura then
-				local minX, minY, maxX, maxY = Spatial.queryCellBounds(source.x, source.y, aura.radius)
-				local boundsChanged = minX ~= source._supportMinX or minY ~= source._supportMinY
-					or maxX ~= source._supportMaxX or maxY ~= source._supportMaxY
-				if definitionChanged or boundsChanged then
-					refreshSource(source, minX, minY, maxX, maxY)
+			if source.def then
+				local aura = source.def.support
+				local definitionChanged = aura ~= source.support or aura ~= source._supportAura
+					or not aura or aura.radius ~= source._supportRadius
+					or aura.speedMultiplier ~= source._supportMultiplier
+				source.support = aura
+				if source.hp <= 0 then
+					Support.detachDead(source)
+				elseif aura then
+					local minX, minY, maxX, maxY = Spatial.queryCellBounds(source.x, source.y, aura.radius)
+					local boundsChanged = minX ~= source._supportMinX or minY ~= source._supportMinY
+						or maxX ~= source._supportMaxX or maxY ~= source._supportMaxY
+					if definitionChanged or boundsChanged then
+						refreshSource(source, minX, minY, maxX, maxY)
+					else
+						refreshMovingBoundary(source, source._supportDirtyX or source.x,
+							source._supportDirtyY or source.y)
+					end
+					source._supportAura, source._supportRadius = aura, aura.radius
+					source._supportMultiplier = aura.speedMultiplier
 				else
-					refreshMovingBoundary(source, source._supportDirtyX or source.x,
-						source._supportDirtyY or source.y)
+					clearSource(source, false)
 				end
-				source._supportAura, source._supportRadius = aura, aura.radius
-				source._supportMultiplier = aura.speedMultiplier
+				source._supportDirtyX, source._supportDirtyY = nil, nil
 			else
-				clearSource(source, false)
+				Support.remove(source)
 			end
-			source._supportDirtyX, source._supportDirtyY = nil, nil
 		end
 	end
 end

@@ -69,5 +69,13 @@ assert(target.supportBoost == 1, "source death left a contribution attached")
 Support.onEnemyCellChanged(target, 0, 0, 1, 0)
 assert(target.supportBoost == 1, "removed source remained in the cell reverse index")
 
+-- A cleared pooled source must be discarded safely if a lifecycle hook was
+-- missed, rather than crashing the next support update while reading its def.
+local stale = source(3, 64, 40, 1.5)
+occupants = {stale}
+stale.def = nil
+Support.update(0)
+assert(stale.supportSourceIndex == nil, "cleared pooled source remained registered")
+
 Support.clear()
 print("enemy support fixtures passed")
