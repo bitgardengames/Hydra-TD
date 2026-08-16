@@ -70,4 +70,12 @@ assert(damageCalls == 1, "meteor damaged an enemy outside its landing area")
 assert(impacts == 2, "meteor did not create an impact effect on empty ground")
 assert(dustBursts == 2, "meteor did not create dust on empty ground")
 
+Abilities.reset()
+State.equippedAbilities = {}
+State.mode = "menu"
+assert(Abilities.launchMeteor(320, 240), "scripted scene could not launch a meteor")
+active = Abilities.getActive()
+assert(#active == 1 and active[1].abilityId == "meteor", "scripted meteor did not use the authored meteor effect")
+assert(active[1].x == 320 and active[1].y == 240, "scripted meteor did not preserve its scene coordinates")
+
 print("meteor ability fixtures passed")
