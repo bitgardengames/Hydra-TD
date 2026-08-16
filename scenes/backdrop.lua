@@ -136,7 +136,6 @@ Backdrop.shots = {
 		camera = {gx = 16, gy = 7, ox = 0, oy = -80, zoom = 2.0},
 		meteorStrikes = {
 			{at = 1.25, gx = 16, gy = 7},
-			{at = 7.25, gx = 19, gy = 8},
 		},
 	},
 }
