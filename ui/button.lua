@@ -1,6 +1,5 @@
 local Theme = require("core.theme")
 local Text = require("ui.text")
-local Sound = require("systems.sound")
 
 local Button = {}
 
@@ -103,7 +102,7 @@ function Button.update(btn, mx, my, dt)
 
 	local anim = ensureAnim(btn)
 	local pointerHovered = pointInRect(mx, my, btn.x, btn.y, btn.w, btn.h)
-	local hovered = btn.focused == true or pointerHovered
+	local hovered = pointerHovered
 
 	Button.updateAnimation(anim, hovered, dt)
 	btn.pointerHovered = pointerHovered
@@ -147,25 +146,6 @@ function Button.draw(btn)
 	lg.setColor(r, g, b, a)
 	lg.rectangle("fill", x, fy, w, h, innerRadius)
 
-	-- Keyboard focus is intentionally rendered independently of pointer hover.
-	-- A dark halo keeps the light ring readable over both bright and dark menu
-	-- backdrops without competing with the face's hover color or press depth.
-	if btn.focused == true and btn.enabled ~= false then
-		local ringInset = outlineW + 3
-		local ringRadius = outerRadius + 2
-		local previousLineWidth = lg.getLineWidth()
-		lg.setColor(0, 0, 0, 0.9)
-		lg.setLineWidth(5)
-		lg.rectangle("line", x - ringInset, fy - ringInset,
-			w + ringInset * 2, h + ringInset * 2, ringRadius)
-
-		lg.setColor(colorText)
-		lg.setLineWidth(2)
-		lg.rectangle("line", x - ringInset, fy - ringInset,
-			w + ringInset * 2, h + ringInset * 2, ringRadius)
-		lg.setLineWidth(previousLineWidth)
-	end
-
 	-- Label
 	local ty = fy + (h - lg.getFont():getHeight()) * 0.5
 
@@ -192,82 +172,6 @@ function Button.drawList(buttons)
 	for _, btn in ipairs(buttons or {}) do
 		Button.draw(btn)
 	end
-end
-
--- Keyboard focus for the common case of an ordered list of buttons. The state
--- is deliberately separate from the list so screens can rebuild/layout their
--- buttons without losing the current selection.
-function Button.newFocus()
-	return { index = nil }
-end
-
-local function focusAt(buttons, focus, index)
-	for i, btn in ipairs(buttons or {}) do
-		btn.focused = i == index and btn.enabled ~= false
-	end
-	focus.index = index
-end
-
-function Button.resetFocus(buttons, focus, preferredIndex)
-	focus = focus or Button.newFocus()
-	local count = #(buttons or {})
-	if count == 0 then
-		focus.index = nil
-		return focus
-	end
-
-	local start = math.min(math.max(preferredIndex or 1, 1), count)
-	for offset = 0, count - 1 do
-		local index = (start + offset - 1) % count + 1
-		if buttons[index].enabled ~= false then
-			focusAt(buttons, focus, index)
-			return focus
-		end
-	end
-
-	focusAt(buttons, focus, nil)
-	return focus
-end
-
-function Button.focusButton(buttons, focus, button)
-	for i, candidate in ipairs(buttons or {}) do
-		if candidate == button and candidate.enabled ~= false then
-			focusAt(buttons, focus, i)
-			return true
-		end
-	end
-	return false
-end
-
-local function moveFocus(buttons, focus, direction)
-	local count = #(buttons or {})
-	if count == 0 then return false end
-	local index = focus.index or (direction > 0 and 0 or 1)
-
-	for _ = 1, count do
-		index = (index + direction - 1) % count + 1
-		if buttons[index].enabled ~= false and index ~= focus.index then
-			focusAt(buttons, focus, index)
-			Sound.play("uiMove")
-			return true
-		end
-	end
-	return false
-end
-
-function Button.keypressedList(buttons, focus, key)
-	if key == "up" or key == "left" then
-		return moveFocus(buttons, focus, -1)
-	elseif key == "down" or key == "right" or key == "tab" then
-		return moveFocus(buttons, focus, 1)
-	elseif key == "return" or key == "kpenter" or key == "space" then
-		local btn = focus.index and buttons[focus.index]
-		if btn and btn.enabled ~= false and btn.onClick then
-			btn.onClick()
-			return true
-		end
-	end
-	return false
 end
 
 function Button.mousepressed(btn, x, y, button)
@@ -310,10 +214,9 @@ function Button.mousereleased(btn, x, y, button)
 	end
 end
 
-function Button.mousepressedList(buttons, x, y, button, focus)
+function Button.mousepressedList(buttons, x, y, button)
 	for _, btn in ipairs(buttons or {}) do
 		if Button.mousepressed(btn, x, y, button) then
-			if focus then Button.focusButton(buttons, focus, btn) end
 			return true
 		end
 	end

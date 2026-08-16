@@ -27,7 +27,6 @@ local t = 0
 local panelT = 0
 
 local buttons = nil
-local buttonFocus = Button.newFocus()
 
 local colorBad = Theme.ui.bad
 local colorText = Theme.ui.text
@@ -139,7 +138,6 @@ function Screen.enter()
 	buildShortcutsText()
 	buildRunSummary()
 	selectedHeadline, selectedSubheadline = selectGameOverMessage()
-	Button.resetFocus(buttons, buttonFocus)
 end
 
 function Screen.load()
@@ -164,7 +162,6 @@ function Screen.load()
 			onClick = returnToMenu
 		},
 	}
-	Button.resetFocus(buttons, buttonFocus)
 
 	for i, btn in ipairs(buttons) do
 		btn.x = cx - btn.w * 0.5
@@ -312,7 +309,7 @@ function Screen.draw()
 end
 
 function Screen.mousepressed(x, y, button)
-	return Button.mousepressedList(buttons, x, y, button, buttonFocus)
+	return Button.mousepressedList(buttons, x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
@@ -325,8 +322,6 @@ function Screen.keypressed(key)
 		Sound.play("uiBack")
 	elseif key == Hotkeys.getActionKey("restartRun") then
 		restartRun()
-	else
-		return Button.keypressedList(buttons, buttonFocus, key)
 	end
 end
 

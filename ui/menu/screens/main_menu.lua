@@ -30,19 +30,16 @@ local outerRadius = baseRadius + outlineW * 0.5
 local innerRadius = baseRadius - outlineW * 0.25
 
 local buttons = nil
-local focusButtons = nil
-local buttonFocus = Button.newFocus()
 local storeButton = nil
 local confirmation = ConfirmationDialog.new()
 
-local function confirmQuit(origin)
+local function confirmQuit()
 	confirmation:show({
 		title = L("confirmation.quitTitle"),
 		description = L("confirmation.quitDescription"),
 		confirmLabel = L("confirmation.confirm"),
 		cancelLabel = L("confirmation.cancel"),
 		onConfirm = function() love.event.quit() end,
-		origin = origin,
 	})
 end
 
@@ -101,7 +98,7 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				confirmQuit(buttons[3])
+				confirmQuit()
 			end
 		},
 	}
@@ -119,13 +116,6 @@ function Screen.load()
 		}
 	end
 
-	focusButtons = {unpack(buttons)}
-	if storeButton then focusButtons[#focusButtons + 1] = storeButton end
-	Button.resetFocus(focusButtons, buttonFocus)
-end
-
-function Screen.enter()
-	Button.resetFocus(focusButtons, buttonFocus)
 end
 
 function Screen.update(dt)
@@ -237,12 +227,11 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
-	if Button.mousepressedList(buttons, x, y, button, buttonFocus) then
+	if Button.mousepressedList(buttons, x, y, button) then
 		return true
 	end
 
 	if storeButton and Button.mousepressed(storeButton, x, y, button) then
-		Button.focusButton(focusButtons, buttonFocus, storeButton)
 		return true
 	end
 end
@@ -261,10 +250,7 @@ end
 function Screen.keypressed(key)
 	if confirmation:isOpen() then return confirmation:keypressed(key) end
 	if key == "escape" then
-		Button.focusButton(focusButtons, buttonFocus, buttons[3])
-		confirmQuit(buttons[3])
-	else
-		return Button.keypressedList(focusButtons, buttonFocus, key)
+		confirmQuit()
 	end
 end
 
