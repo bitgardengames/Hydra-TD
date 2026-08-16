@@ -473,7 +473,7 @@ function Screen.load()
 	end
 end
 
-function Screen.update(dt)
+local function updatePanelLayout()
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 	Fonts.set("menu")
@@ -482,15 +482,10 @@ function Screen.update(dt)
 	LABEL_W = min(280, max(180, widestLabel + 24))
 	ROW_W = LABEL_W + SLIDER_W + SLIDER_VALUE_GAP + SLIDER_VALUE_W
 
-	if State.mode ~= "settings_gameplay" then
-		Backdrop.update(dt)
-	end
-
 	rows = getActiveRows()
 	if not isControlsTab(activeTab) then
 		keybindCapture:close()
 	end
-	tabTime = tabTime + dt
 
 	-- Panel sizing (fixed to screen, rows scroll when overflowing)
 	activeLineH = isControlsTab(activeTab) and controlsLineH or lineH
@@ -540,6 +535,10 @@ function Screen.update(dt)
 		}
 	end
 
+	return cx
+end
+
+local function updateTabAnimations(dt)
 	local mouseX, mouseY = lm.getPosition()
 	for i, rect in ipairs(tabRects) do
 		local hovered = contains(rect, mouseX, mouseY)
@@ -547,14 +546,17 @@ function Screen.update(dt)
 		local a = tabAnim[i] or 0
 		tabAnim[i] = a + (target - a) * min(1, dt * tabAnimSpeed)
 	end
+end
 
+local function updateButtons(dt, centerX)
 	for i, btn in ipairs(buttons) do
-		btn.x = cx - btn.w * 0.5
+		btn.x = centerX - btn.w * 0.5
 		btn.y = buttonsStartY + (i - 1) * gap
 	end
 	Button.updateList(buttons, dt)
+end
 
-	-- Drag slider
+local function updateDraggedSlider()
 	if draggingSlider then
 		local rect = sliderRects[draggingSlider]
 
@@ -565,7 +567,18 @@ function Screen.update(dt)
 			settingsChanged()
 		end
 	end
+end
 
+function Screen.update(dt)
+	if State.mode ~= "settings_gameplay" then
+		Backdrop.update(dt)
+	end
+	tabTime = tabTime + dt
+
+	local centerX = updatePanelLayout()
+	updateTabAnimations(dt)
+	updateButtons(dt, centerX)
+	updateDraggedSlider()
 end
 
 function Screen.draw()
