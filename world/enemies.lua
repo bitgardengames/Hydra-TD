@@ -24,6 +24,7 @@ local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- Seconds per poison tick
 local HIT_SQUASH_DUR = 0.12
+local HEALTH_BAR_HIT_DURATION = 1.0
 local MAX_ACTIVE_ENEMIES = 180
 
 local EPS = 1e-6
@@ -266,6 +267,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius
 	e.hitFlash = 0
+	-- Always initialize pooled instances: a prior occupant's recent-hit bar must
+	-- never remain visible on a newly spawned, full-health enemy.
+	e.healthBarHitTimer = 0
 	e.hitSquash = 0
 	e.hitSquashStrength = 1
 	e.dying = false
@@ -440,6 +444,7 @@ local function updatePoison(e, dt)
 		e.hitFlash = 0.03
 		e.hitSquash = HIT_SQUASH_DUR
 		e.hitSquashStrength = 0.55
+		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
 		State.addDamage("poison", damage, e.boss == true)
 		RunStats.recordDamage(e.poisonSource, "poison", damage)
 	end
@@ -516,6 +521,7 @@ local function updateEnemies(dt)
 		e.combatAge = (e.combatAge or 0) + dt
 		local isBoss = e.boss
 		e.hitSquash = max(0, (e.hitSquash or 0) - dt)
+		e.healthBarHitTimer = max(0, (e.healthBarHitTimer or 0) - dt)
 
 		-- Spawn fade-in
 		local spawnFade = e.spawnFade
@@ -786,6 +792,7 @@ local function applyDamage(e, amount, context)
 	if amount > 0 then
 		e.hitSquash = HIT_SQUASH_DUR
 		e.hitSquashStrength = 1
+		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
 	end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
 	return amount, 0

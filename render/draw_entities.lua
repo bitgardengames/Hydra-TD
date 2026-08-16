@@ -5,6 +5,7 @@ local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
 local Save = require("core.save")
+local EnemyHealthVisibility = require("render.enemy_health_visibility")
 
 local random = love.math.random
 local lg = love.graphics
@@ -396,7 +397,7 @@ local function drawEnemy(e)
 end
 
 local function drawEnemyHealth(e)
-	if e.hp <= 0 then
+	if not EnemyHealthVisibility.isVisible(e, State.selectedEnemy) then
 		return
 	end
 
@@ -430,6 +431,7 @@ local function drawEnemyHealth(e)
 	-- Background
 	lg.setColor(0, 0, 0, 0.5)
 	lg.rectangle("fill", bx, by, w, h, 3, 3)
+	local drawSubmissions = 1
 
 	local fillW = w * t
 
@@ -448,6 +450,7 @@ local function drawEnemyHealth(e)
 		-- Base
 		lg.setColor(r * darkMul, g * darkMul, b * darkMul, 0.9 * alphaScale)
 		lg.rectangle("fill", bx, by, visibleW, h, radius, radius)
+		drawSubmissions = drawSubmissions + 1
 
 		-- Highlight
 		local hw = visibleW * 0.92
@@ -462,12 +465,16 @@ local function drawEnemyHealth(e)
 
 		lg.setColor(r, g, b, 0.9 * alphaScale)
 		lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, radius)
+		drawSubmissions = drawSubmissions + 1
 	end
+
+	EnemyHealthVisibility.recordBar(drawSubmissions)
 end
 
 -- Draw all enemies
 local function drawEnemies()
 	local enemies = Enemies.enemies
+	EnemyHealthVisibility.beginFrame()
 
 	lg.setLineWidth(2)
 
@@ -1183,6 +1190,7 @@ return {
 	newEnemyPortrait = newEnemyPortrait,
 	drawEnemyPortrait = drawEnemyPortrait,
 	drawEnemies = drawEnemies,
+	getEnemyHealthRenderCounters = EnemyHealthVisibility.getCounters,
 	drawTowerBase = drawTowerBase,
 	drawTowerCore = drawTowerCore,
 	drawTowerGhost = drawTowerGhost,
