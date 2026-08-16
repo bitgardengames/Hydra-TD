@@ -10,6 +10,7 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local Difficulty = require("systems.difficulty")
+local Abilities = require("systems.abilities")
 
 local lg = love.graphics
 
@@ -120,6 +121,24 @@ Backdrop.shots = {
 		warmup = 21.0,
 		camera = {gx = 16, gy = 7, ox = 24, oy = -152, zoom = 2.0},
 	},
+
+	{
+		duration = 14,
+		map = 4,
+		towers = {
+			{kind = "slow", gx = 12, gy = 8, level = 4},
+			{kind = "cannon", gx = 14, gy = 6, level = 5},
+			{kind = "shock", gx = 19, gy = 9, level = 4},
+			{kind = "plasma", gx = 22, gy = 7, level = 4},
+		},
+		wave = 18,
+		warmup = 18.0,
+		camera = {gx = 16, gy = 7, ox = 0, oy = -80, zoom = 2.0},
+		meteorStrikes = {
+			{at = 1.25, gx = 16, gy = 7},
+			{at = 7.25, gx = 19, gy = 8},
+		},
+	},
 }
 
 function Backdrop.start(index)
@@ -133,6 +152,7 @@ function Backdrop.start(index)
 	end
 
 	local shot = Backdrop.shots[Backdrop.shotIndex]
+	Backdrop.nextMeteorStrike = 1
 
 	State.worldMapIndex = shot.map
 
@@ -226,6 +246,13 @@ function Backdrop.update(dt)
 	Backdrop.t = Backdrop.t + dt
 
 	local shot = Backdrop.shots[Backdrop.shotIndex]
+	local strikes = shot.meteorStrikes
+	local strike = strikes and strikes[Backdrop.nextMeteorStrike]
+	while strike and Backdrop.t >= strike.at do
+		Abilities.launchMeteor((strike.gx - 0.5) * Constants.TILE, (strike.gy - 0.5) * Constants.TILE)
+		Backdrop.nextMeteorStrike = Backdrop.nextMeteorStrike + 1
+		strike = strikes[Backdrop.nextMeteorStrike]
+	end
 
 	if Backdrop.t >= shot.duration and Backdrop.fadeDir == 0 then
 		Backdrop.fadeDir = 1
