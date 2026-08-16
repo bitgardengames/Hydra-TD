@@ -26,14 +26,13 @@ local innerRadius = baseRadius - outlineW * 0.25
 
 local Page = {}
 local buttons = nil
-local buttonFocus = Button.newFocus()
 local confirmation = ConfirmationDialog.new()
 
-local function confirmAction(origin, titleKey, descriptionKey, action)
+local function confirmAction(titleKey, descriptionKey, action)
 	confirmation:show({
 		title = L(titleKey), description = L(descriptionKey),
 		confirmLabel = L("confirmation.confirm"), cancelLabel = L("confirmation.cancel"),
-		onConfirm = action, origin = origin,
+		onConfirm = action,
 	})
 end
 
@@ -110,7 +109,7 @@ function Page.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				confirmAction(buttons[2], "confirmation.restartTitle", "confirmation.restartDescription", function()
+				confirmAction("confirmation.restartTitle", "confirmation.restartDescription", function()
 					State.paused = false
 					Achievements.onGameOver()
 					State.mode = "game"
@@ -138,7 +137,7 @@ function Page.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				confirmAction(buttons[4], "confirmation.mainMenuTitle", "confirmation.mainMenuDescription", function()
+				confirmAction("confirmation.mainMenuTitle", "confirmation.mainMenuDescription", function()
 					State.paused = false
 					Achievements.onGameOver()
 					Save.flush()
@@ -152,11 +151,6 @@ function Page.load()
 			end
 		},
 	}
-	Button.resetFocus(buttons, buttonFocus)
-end
-
-function Page.enter()
-	Button.resetFocus(buttons, buttonFocus)
 end
 
 function Page.update(dt)
@@ -217,7 +211,7 @@ end
 
 function Page.mousepressed(x, y, button)
 	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
-	return Button.mousepressedList(buttons, x, y, button, buttonFocus)
+	return Button.mousepressedList(buttons, x, y, button)
 end
 
 function Page.mousereleased(x, y, button)
@@ -230,8 +224,6 @@ function Page.keypressed(key)
 	if key == Hotkeys.getActionKey("escape") then
 		State.mode = "game"
 		Sound.exitPause()
-	else
-		return Button.keypressedList(buttons, buttonFocus, key)
 	end
 end
 

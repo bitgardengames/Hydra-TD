@@ -11,7 +11,7 @@ local outlineW = Theme.outline.width
 local radius = 12
 
 function ConfirmationDialog.new()
-	return setmetatable({ open = false, buttonFocus = Button.newFocus(), buttons = {} }, ConfirmationDialog)
+	return setmetatable({ open = false, buttons = {} }, ConfirmationDialog)
 end
 
 function ConfirmationDialog:isOpen()
@@ -23,11 +23,6 @@ function ConfirmationDialog:show(options)
 	self.title = options.title
 	self.description = options.description
 	self.onConfirm = options.onConfirm
-	self.origin = options.origin
-
-	if self.origin then
-		self.origin.focused = false
-	end
 
 	self.buttons = {
 		{ label = options.confirmLabel, w = 150, h = 42 },
@@ -35,7 +30,6 @@ function ConfirmationDialog:show(options)
 	}
 	self.buttons[1].onClick = function() self:confirm() end
 	self.buttons[2].onClick = function() self:cancel() end
-	Button.resetFocus(self.buttons, self.buttonFocus)
 end
 
 function ConfirmationDialog:confirm()
@@ -43,7 +37,6 @@ function ConfirmationDialog:confirm()
 	local callback = self.onConfirm
 	self.open = false
 	self.onConfirm = nil
-	self.origin = nil
 	if callback then callback() end
 end
 
@@ -51,10 +44,6 @@ function ConfirmationDialog:cancel()
 	if not self.open then return end
 	self.open = false
 	self.onConfirm = nil
-	if self.origin then
-		self.origin.focused = true
-	end
-	self.origin = nil
 end
 
 function ConfirmationDialog:update(dt)
@@ -97,15 +86,13 @@ function ConfirmationDialog:keypressed(key)
 	if not self.open then return false end
 	if key == "escape" then
 		self:cancel()
-	else
-		Button.keypressedList(self.buttons, self.buttonFocus, key)
 	end
 	return true
 end
 
 function ConfirmationDialog:mousepressed(x, y, button)
 	if not self.open then return false end
-	Button.mousepressedList(self.buttons, x, y, button, self.buttonFocus)
+	Button.mousepressedList(self.buttons, x, y, button)
 	return true
 end
 

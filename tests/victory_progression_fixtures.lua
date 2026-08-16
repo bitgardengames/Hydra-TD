@@ -6,7 +6,6 @@ love = {
 	mouse = {},
 }
 
-local capturedButtons
 local state = {
 	worldMapIndex = 1,
 	resolveMapIndex = function(index) return index end,
@@ -23,10 +22,7 @@ module("core.theme", {
 	medal = {gold = {}, silver = {}},
 })
 module("core.constants", {IS_DEMO = false})
-module("ui.button", {
-	newFocus = function() return {} end,
-	resetFocus = function(buttons) capturedButtons = buttons end,
-})
+module("ui.button", {})
 module("core.state", state)
 module("systems.sound", {play = function() end})
 module("systems.difficulty", {})
@@ -56,7 +52,17 @@ resetGame = function() end
 local Victory = require("ui.menu.screens.victory")
 
 local function findButton(id)
-	for _, button in ipairs(capturedButtons) do
+	local buttons
+	for index = 1, math.huge do
+		local name, value = debug.getupvalue(Victory.load, index)
+		if not name then break end
+		if name == "buttons" then
+			buttons = value
+			break
+		end
+	end
+	assert(buttons, "victory buttons should be available after loading")
+	for _, button in ipairs(buttons) do
 		if button.id == id then return button end
 	end
 end
