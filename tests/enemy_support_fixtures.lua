@@ -1,81 +1,70 @@
 package.path = "./?.lua;./?/init.lua;" .. package.path
 
-local occupants = {}
-local queryCount = 0
+local nearby = {}
+local queryCounts = {}
+
 package.loaded["world.spatial_grid"] = {
-	createCollectContext = function() return {} end,
-	queryCells = function()
-		queryCount = queryCount + 1
-		return occupants, #occupants
+	queryCells = function(x)
+		queryCounts[x] = (queryCounts[x] or 0) + 1
+		local result = nearby[x] or {}
+		return result, #result
 	end,
-	queryCellBounds = function(x, y, radius)
-		local size = 128
-		local cx, cy = math.floor(x / size), math.floor(y / size)
-		local cells = math.max(1, math.min(2, math.ceil(radius / size)))
-		return cx - cells, cy - cells, cx + cells, cy + cells
+	queryIncludesCell = function()
+		return true
 	end,
 }
 
 local Support = require("world.enemy_support")
 
-local function enemy(id, x, y)
-	return {id = id, x = x, y = y or 0, hp = 10, supportBoost = 1,
-		def = {}, cellX = math.floor(x / 128), cellY = math.floor((y or 0) / 128)}
+local function enemy(id, x)
+	return {id = id, x = x, y = 0, hp = 10, supportBoost = 1, def = {}}
 end
 
-local function source(id, x, radius, multiplier)
+local function source(id, x, multiplier)
 	local result = enemy(id, x)
-	result.def.support = {radius = radius, speedMultiplier = multiplier, pulsePeriod = 1}
+	result.def.support = {radius = 64, speedMultiplier = multiplier, pulsePeriod = 1}
 	result.support = result.def.support
 	Support.register(result)
 	return result
 end
 
--- A target entering and leaving the circular boundary without changing cells
--- is updated exactly and does not cause a full source membership refresh.
-local aura = source(1, 64, 40, 1.5)
-local target = enemy(2, 110)
-occupants = {aura, target}
+-- Initial membership and multiple crossings of one aura are reconciled once.
+local aura = source(1, 100, 1.5)
+local first = enemy(2, 200)
+local second = enemy(3, 300)
+nearby[100] = {aura, first, second}
 Support.flushDirtySources()
-assert(target.supportBoost == 1, "outside target unexpectedly received support")
-local baselineQueries = queryCount
-target.x = 100
-Support.onEnemyMoved(target, 110, 0)
-assert(target.supportBoost == 1.5, "same-cell aura entry was not detected")
-target.x = 110
-Support.onEnemyMoved(target, 100, 0)
-assert(target.supportBoost == 1, "same-cell aura exit was not detected")
-assert(queryCount == baselineQueries, "target movement rebuilt source membership")
-
--- Simultaneous movement is reconciled at the final positions before combat.
-target.x = 102
-Support.onEnemyMoved(target, 110, 0)
-aura.x = 60
-Support.onEnemyMoved(aura, 64, 0)
+assert(first.supportBoost == 1.5 and second.supportBoost == 1.5,
+	"initial support membership did not preserve the boost behavior")
+queryCounts[100] = 0
+Support.onEnemyCellChanged(first, 0, 0, 1, 0)
+Support.onEnemyCellChanged(second, 0, 0, 1, 0)
+assert(queryCounts[100] == 0, "a lifecycle hook refreshed an aura immediately")
 Support.flushDirtySources()
-assert(target.supportBoost == 1, "simultaneous final positions used stale membership")
+assert(queryCounts[100] == 1, "same-tick crossings did not deduplicate the dirty source")
 
--- Runtime definition mutation forces a full refresh even with stable bounds.
-aura.def.support.radius = 50
-aura.def.support.speedMultiplier = 2
-Support.update(0)
+-- A moving source invalidates itself, even without another enemy crossing it.
+queryCounts[100] = 0
+Support.markSourceDirty(aura)
 Support.flushDirtySources()
-assert(target.supportBoost == 2, "runtime aura definition change was not applied")
+assert(queryCounts[100] == 1, "moving support source was not refreshed")
 
--- Source death/removal immediately clears contributions and its reverse index.
-aura.hp = 0
-Support.detachDead(aura)
-assert(target.supportBoost == 1, "source death left a contribution attached")
-Support.onEnemyCellChanged(target, 0, 0, 1, 0)
-assert(target.supportBoost == 1, "removed source remained in the cell reverse index")
+-- Overlaps retain the strongest multiplier, including after one source leaves.
+local stronger = source(4, 400, 2)
+nearby[400] = {stronger, first}
+Support.flushDirtySources()
+assert(first.supportBoost == 2, "overlapping support did not select the strongest boost")
+nearby[400] = {stronger}
+Support.onEnemyCellChanged(first, 1, 0, 2, 0)
+Support.flushDirtySources()
+assert(first.supportBoost == 1.5, "removing one overlap did not restore the remaining boost")
 
--- A cleared pooled source must be discarded safely if a lifecycle hook was
--- missed, rather than crashing the next support update while reading its def.
-local stale = source(3, 64, 40, 1.5)
-occupants = {stale}
-stale.def = nil
-Support.update(0)
-assert(stale.supportSourceIndex == nil, "cleared pooled source remained registered")
+-- Source removal must detach its contribution immediately; the queued neighbor
+-- refresh must not change the final boost.
+Support.onEnemyRemoved(aura, 1, 0)
+assert(first.supportBoost == 1, "source removal left its contribution attached")
+Support.flushDirtySources()
+assert(first.supportBoost == 1, "source-removal flush changed the final boost")
 
 Support.clear()
 print("enemy support fixtures passed")

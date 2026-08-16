@@ -77,10 +77,6 @@ local function acquireEnemy()
 end
 
 local function releaseEnemy(e)
-	-- Support owns references to aura sources outside both the enemy list and the
-	-- spatial grid. Unregister here as well as in the spatial removal hook so a
-	-- partially indexed enemy can never be cleared while still retained there.
-	if e.supportSourceIndex then EnemySupport.remove(e) end
 	local supportAffected = e.supportAffected
 	local supportContributions = e.supportContributions
 	if supportAffected then Util.clearTable(supportAffected) end
@@ -703,10 +699,12 @@ local function updateEnemies(dt)
 
 		-- gameplay queries use path position only
 		if moved then
+			-- Spatial only emits a lifecycle hook when the cell changes. Aura
+			-- membership can also change while its source stays within one cell.
+			if e.supportSourceIndex then
+				EnemySupport.markSourceDirty(e)
+			end
 			Spatial.updateEnemy(e)
-			-- Cell hooks handle crossings; this handles exact circular-boundary
-			-- crossings when either participant moves inside one spatial cell.
-			EnemySupport.onEnemyMoved(e, e.prevX, e.prevY)
 		end
 
 		-- Reached end of path

@@ -120,20 +120,6 @@ Backdrop.shots = {
 		warmup = 21.0,
 		camera = {gx = 16, gy = 7, ox = 24, oy = -152, zoom = 2.0},
 	},
-
-	{
-		duration = 14,
-		map = 4,
-		towers = {
-			{kind = "slow", gx = 12, gy = 8, level = 4},
-			{kind = "cannon", gx = 14, gy = 6, level = 5},
-			{kind = "shock", gx = 19, gy = 9, level = 4},
-			{kind = "plasma", gx = 22, gy = 7, level = 4},
-		},
-		wave = 18,
-		warmup = 18.0,
-		camera = {gx = 16, gy = 7, ox = 0, oy = -80, zoom = 2.0},
-	},
 }
 
 function Backdrop.start(index)
