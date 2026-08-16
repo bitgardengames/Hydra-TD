@@ -198,6 +198,20 @@ local function playActivationEffect(effect, x, y)
 	end
 end
 
+-- Cinematic scenes can launch the authored meteor without depending on the
+-- player's equipped abilities, unlocks, targeting state, or cooldowns.
+function Abilities.launchMeteor(x, y)
+	local def = AbilityDefs.meteor
+	local effect = def and getEffect(def)
+	if not effect or not x or not y then
+		return false
+	end
+
+	activateDamageArea(effect, x, y, def.id)
+	playActivationEffect(effect, x, y)
+	return true
+end
+
 local function collectAffected(entityKind, effect, x, y, affected, occupied)
 	clearBuffer(affected, occupied)
 	if not entityKind or not effect.radius or not x or not y then return 0 end
