@@ -9,6 +9,7 @@ GATES = (("combat", "run_fixtures.py"), ("pacing", "campaign_pacing_report.py"),
          ("economy", "economy_fixtures.py"),
          ("campaign challenge", "challenge_fixtures.py"),
          ("strategy diversity + robustness", "strategy_analysis.py"),
+         ("headless campaign policies", "campaign_simulator.py"),
          ("ability + interactions", "interaction_fixtures.py"),
          ("polish metrics", "polish_report.py"))
 failed = []
