@@ -45,41 +45,7 @@ end
 function Effects.shake(amount, duration)
 	local s = settings()
 	local shakeScale = (s.screenShake == false or s.cameraMotion == false) and 0 or 1
-	Camera.setMotionEnabled(shakeScale > 0)
 	Camera.shake((amount or 0.8) * shakeScale, duration or 0.14)
-end
-
-local function motionAllowed()
-	local s = settings()
-	local allowed = s.screenShake ~= false and s.cameraMotion ~= false
-	Camera.setMotionEnabled(allowed)
-	return allowed
-end
-
-function Effects.impactCamera(x, y, strength)
-	if not motionAllowed() then return end
-	local sw, sh = lg.getDimensions()
-	local cx, cy = Camera.screenToWorld(sw * 0.5, sh * 0.5)
-	local dx, dy = cx - (x or cx), cy - (y or cy)
-	local length = max(0.001, sqrt(dx * dx + dy * dy))
-	local amount = min(8, strength or 5)
-	Camera.kick(dx / length * amount, dy / length * amount, 0.1)
-	Camera.settle(amount * 0.32, 0.27, atan2(dy, dx))
-end
-
-function Effects.bossArrivalCamera()
-	if not motionAllowed() then return end
-	Camera.zoomPulse(0.007, 0.7)
-	Camera.vignettePulse(0.09, 0.65)
-end
-
-function Effects.waveCompletionCamera()
-	if motionAllowed() then Camera.easeHome(0.28) end
-end
-
--- Runs on the presentation clock, including while simulation is paused.
-function Effects.updateCameraSettings()
-	motionAllowed()
 end
 
 Effects.splashes = {}
@@ -140,7 +106,6 @@ function Effects.spawnTowerTransformation(x, y, opts)
 		}
 	end
 	Effects.towerTransformations[#Effects.towerTransformations + 1] = e
-	if opts.finalTier and motionAllowed() then Camera.zoomPulse(-0.005, 0.38) end
 end
 
 acquire = function(pool)
@@ -343,7 +308,6 @@ end
 
 -- Cannon Impact
 function Effects.spawnCannonImpact(x, y, r)
-	Effects.impactCamera(x, y, min(7, 3 + (r or 0) * 0.035))
 	local s = acquire(splashPool)
 
 	s.x = x

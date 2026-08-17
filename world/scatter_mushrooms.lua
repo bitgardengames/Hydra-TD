@@ -100,7 +100,6 @@ function Mushrooms.draw()
 	if #list == 0 then return end
 
 	local styles = getMushroomStyles()
-	local light = ScatterCommon.getLighting(Map.getBiome())
 
 	for i = 1, #list do
 		local m = list[i]
@@ -123,8 +122,8 @@ function Mushrooms.draw()
 		local stemColor = {0.86, 0.82, 0.76}
 
 		-- Shadow
-		ScatterCommon.drawShadow(lg, x, y + 1, capW * 0.34 * shW, capH * 0.75 * shH,
-			math.min(1, stemH / TILE), shA / Theme.lighting.shadowOpacity, light)
+		lg.setColor(0, 0, 0, shA)
+		lg.ellipse("fill", x, y + 1, capW * 0.34 * shW, capH * 0.75 * shH)
 
 		-- Stem
 		lg.setColor(style.outline)
@@ -136,7 +135,7 @@ function Mushrooms.draw()
 			stemW
 		)
 
-		ScatterCommon.setLitColor(lg, stemColor, false, 1, light)
+		lg.setColor(stemColor[1] * darkMul, stemColor[2] * darkMul, stemColor[3] * darkMul)
 		lg.rectangle("fill",
 			x - stemW * 0.5,
 			y - stemH,
@@ -158,7 +157,7 @@ function Mushrooms.draw()
 			capBodyH * 0.5
 		)
 
-		ScatterCommon.setLitColor(lg, style.fill, false, 1, light)
+		lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
 		lg.rectangle("fill",
 			x - capW * 0.5,
 			capBodyY,
@@ -173,7 +172,7 @@ function Mushrooms.draw()
 		lg.setColor(style.outline)
 		lg.arc("fill", "open", x, capCY, capW * 0.5 + outlineW, math.pi, math.pi * 2, 24)
 
-		ScatterCommon.setLitColor(lg, style.fill, false, 1, light)
+		lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
 		lg.arc("fill", "open", x, capCY, capW * 0.5, math.pi, math.pi * 2, 24)
 
 		-- =========================
@@ -182,7 +181,7 @@ function Mushrooms.draw()
 		local hx = x + capW * 0.08 * (m.lean or 0)
 		local hy = capCY - capH * highlightOffset
 
-		ScatterCommon.setLitColor(lg, style.fill, true, 1, light)
+		lg.setColor(style.fill)
 		lg.arc("fill", "open", hx, hy, capW * 0.5 * highlightScale, math.pi, math.pi * 2, 24)
 
 		-- 🔥 PROPER highlight body (aligned with lighting system)
@@ -192,7 +191,7 @@ function Mushrooms.draw()
 		local hw = capW * highlightScale
 		local hh = capBodyH * highlightScale
 
-		ScatterCommon.setLitColor(lg, style.fill, true, 1, light)
+		lg.setColor(style.fill)
 		lg.rectangle("fill",
 			hx - hw * 0.5,
 			hy,

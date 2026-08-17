@@ -269,13 +269,6 @@ local function addTower(kind, gx, gy)
 		recoil = 0,
 		recoilStrength = def.recoilStrength or 0,
 		recoilDecay = def.recoilDecay or 18,
-		-- Render state is authored in normalized, named phases.  The simulation
-		-- starts each phase at the same point that it starts/fires an attack.
-		firePhase = "idle",
-		firePhaseProgress = 0,
-		firePhaseElapsed = 0,
-		firePhaseDuration = 0,
-		idlePhase = unitFromSeed(towerPhaseSeed(kind, gx, gy)) * TWO_PI,
 		angle = -pi / 2,
 		levelUpAnim = 0,
 		spawnAnim = 1,
@@ -632,40 +625,10 @@ local function updateTowerVisuals(t, dt)
 	t.recoil = max(0, t.recoil - recoilDecay * dt)
 
 	if t.cooldown > 0 then
-		local pct = 1 - (t.cooldown / max(0.001, t.fireInterval))
+		local pct = 1 - (t.cooldown * t.fireInterval)
 		t.charge = max(0, min(1, pct))
 	else
 		t.charge = 1
-	end
-end
-
-local function beginFirePhase(t, phase, duration)
-	t.firePhase = phase
-	t.firePhaseElapsed = 0
-	t.firePhaseDuration = max(0.001, duration)
-	t.firePhaseProgress = 0
-end
-
-local function advanceFirePhase(t, dt)
-	-- Only plasma containment and poison fluid have functional idle movement.
-	if t.kind == "plasma" or t.kind == "poison" then
-		t.idlePhase = (t.idlePhase or 0) + dt * (t.kind == "plasma" and 0.7 or 1.15)
-	end
-
-	if t.firePhase == "idle" or t.firePhase == "anticipation" then return end
-	t.firePhaseElapsed = (t.firePhaseElapsed or 0) + dt
-	local duration = max(0.001, t.firePhaseDuration or 0)
-	t.firePhaseProgress = min(1, t.firePhaseElapsed / duration)
-	if t.firePhaseProgress < 1 then return end
-
-	local cadence = max(0.08, t.fireInterval or 1)
-	if t.firePhase == "discharge" then
-		beginFirePhase(t, "recoil", min(0.11, cadence * 0.16))
-	elseif t.firePhase == "recoil" then
-		beginFirePhase(t, "settle", min(0.18, cadence * 0.24))
-	else
-		t.firePhase = "idle"
-		t.firePhaseProgress = 0
 	end
 end
 
@@ -691,10 +654,6 @@ local function updateTowers(dt)
 		t.retargetT = max(0, (t.retargetT or 0) - dt)
 		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
 
-		advanceFirePhase(t, dt * attackSpeed)
-		if t.firePhase == "anticipation" then
-			t.firePhaseProgress = 1 - t.windUp / max(0.001, t.firePhaseDuration or 0.08)
-		end
 		updateTowerVisuals(t, dt)
 
 		if t.cooldown > 0
@@ -824,25 +783,17 @@ local function updateTowers(dt)
 					Emissions.emit(t, target)
 					t.fireAnim = 1
 					t.recoil = t.recoilStrength or 0
-					beginFirePhase(t, "discharge", min(0.055, max(0.018, t.fireInterval * 0.08)))
 
 					t.cooldown = t.fireInterval
-				else
-					t.firePhase = "idle"
-					t.firePhaseProgress = 0
 				end
 
 				t.windUp = 0
 
-		elseif windUpCompleted then
-			t.firePhase = "idle"
-			t.firePhaseProgress = 0
 		elseif t.windUp > 0 then
 			-- Keep winding up.
 		elseif t.cooldown <= 0 and target then
 			if not canRotate or (aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS) then
 				t.windUp = 0.08
-				beginFirePhase(t, "anticipation", t.windUp)
 			end
 		end
 

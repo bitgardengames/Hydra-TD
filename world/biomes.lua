@@ -42,7 +42,6 @@ end
 -- Biome definitions
 Biomes.defs = {
 	default = { -- Baseline, cozy fantasy
-		lighting = {ambientMultiplier = 1.0, highlightTint = {1.0, 0.97, 0.90}},
 		terrain = {
 			grass = {0.28, 0.58, 0.34},
 			path = {0.64, 0.63, 0.60},
@@ -100,7 +99,6 @@ Biomes.defs = {
 	},
 
 	drylands = {
-		lighting = {shadowOpacity = 0.20, ambientMultiplier = 1.03, highlightTint = {1.0, 0.91, 0.76}},
 		terrain = {
 			grass = {0.78, 0.68, 0.48},
 			path = {0.67, 0.49, 0.31},
@@ -152,7 +150,6 @@ Biomes.defs = {
 	},
 
 	autumn = {
-		lighting = {shadowOpacity = 0.19, highlightTint = {1.0, 0.88, 0.72}},
 		terrain = {
 			grass = {0.56, 0.46, 0.24},
 			path = {0.68, 0.56, 0.38},
@@ -206,7 +203,6 @@ Biomes.defs = {
 	},
 
 	halloween = {
-		lighting = {shadowOpacity = 0.24, ambientMultiplier = 0.88, highlightTint = {0.82, 0.72, 1.0}},
 		terrain = {
 			grass = {0.22, 0.14, 0.28},
 			path = {0.18, 0.12, 0.14},
@@ -252,7 +248,6 @@ Biomes.defs = {
 	},
 
 	winter = {
-		lighting = {shadowOpacity = 0.14, ambientMultiplier = 1.05, highlightTint = {0.88, 0.96, 1.0}},
 		terrain = {
 			grass = {0.76, 0.82, 0.88},
 			path = {0.42, 0.56, 0.66},
@@ -309,7 +304,6 @@ Biomes.defs = {
 	},
 
 	candy = { -- Sprinkles would be fun for scatter instead of rocks. Could make jube jubes or whatever instead of rocks. Trees could be lollipops or gumdrops (dome (half-circle))
-		lighting = {shadowOpacity = 0.13, ambientMultiplier = 1.04, highlightTint = {1.0, 0.92, 0.98}},
 		terrain = {
 			grass = {0.92, 0.78, 0.86}, -- soft pink base
 			path = {0.98, 0.92, 0.55}, -- creamy yellow (like frosting)
@@ -362,7 +356,6 @@ Biomes.defs = {
 	},
 
 	void = {
-		lighting = {shadowOpacity = 0.28, ambientMultiplier = 0.76, highlightTint = {0.72, 0.52, 1.0}},
 		terrain = {
 			grass = {0.04, 0.02, 0.08}, -- near-black purple
 			path = {0.55, 0.25, 0.75}, -- glowing purple
@@ -387,7 +380,6 @@ Biomes.defs = {
 	},
 
 	mushroom = {
-		lighting = {shadowOpacity = 0.22, ambientMultiplier = 0.90, highlightTint = {0.68, 0.82, 1.0}},
 		terrain = {
 			grass = {0.22, 0.22, 0.30},
 			path = {0.58, 0.56, 0.64},

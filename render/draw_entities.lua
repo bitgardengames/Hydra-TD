@@ -6,7 +6,6 @@ local Towers = require("world.towers")
 local MapMod = require("world.map")
 local Save = require("core.save")
 local EnemyHealthVisibility = require("render.enemy_health_visibility")
-local ScatterCommon = require("world.scatter_common")
 
 local random = love.math.random
 local lg = love.graphics
@@ -56,14 +55,9 @@ local EYE_SMOOTH = 0.35
 local EYE_DEADZONE = 0.03
 local HIT_SQUASH_DUR = 0.12
 local UPGRADE_FLASH_DURATION = 0.3
-local LOCOMOTION_EPS = 0.001
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
-end
-
-local function worldLighting()
-	return ScatterCommon.getLighting(MapMod.getBiome())
 end
 
 local function prepareEnemyRenderData()
@@ -110,65 +104,7 @@ local function prepareEnemyRenderData()
 		e.eyeDY = eyeDY + (rawDY - eyeDY) * EYE_SMOOTH
 
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
-
-		-- Locomotion is a render-only odometer. Unlike wall-clock animation, its
-		-- phase advances by the same amount for the same piece of road at 1x and
-		-- 4x speed (and does not keep walking while paused).
-		local travelX = e.rTravelX
-		local travelY = e.rTravelY
-		if travelX then
-			local moveX = baseX - travelX
-			local moveY = baseY - travelY
-			local traveled = sqrt(moveX * moveX + moveY * moveY)
-			if traveled > LOCOMOTION_EPS then
-				e.rTravelDistance = (e.rTravelDistance or 0) + traveled
-				e.rMoveX = moveX / traveled
-				e.rMoveY = moveY / traveled
-			end
-		else
-			e.rTravelDistance = 0
-			e.rMoveX, e.rMoveY = 1, 0
-		end
-		e.rTravelX, e.rTravelY = baseX, baseY
-		e.rLocomotionPhase = (e.rTravelDistance or 0) / max(6, e.radius * 0.72)
 	end
-end
-
-local function enemyLocomotion(e)
-	local phase = e.rLocomotionPhase or 0
-	local motion = Save.data.settings.cameraMotion ~= false and 1 or 0.12
-	local bob, lean, scaleY = 0, 0, 1
-	local moveX = e.rMoveX or 1
-
-	if e.boss then
-		local lowHealth = e.maxHp > 0 and e.hp / e.maxHp <= 0.35
-		local cadence = lowHealth and 1.55 or 0.72
-		bob = -abs(sin(phase * cadence)) * 1.1
-		lean = sin(phase * cadence * 0.5) * 0.055
-		scaleY = 1 - abs(sin(phase * cadence)) * (lowHealth and 0.045 or 0.025)
-	elseif e.kind == "runner" then
-		bob = -abs(sin(phase * 1.65)) * 0.75
-		lean = moveX * 0.13 + sin(phase * 1.65) * 0.025
-	elseif e.kind == "bulwark" or e.kind == "tank" then
-		local step = abs(sin(phase * 0.68))
-		bob = step * 0.65
-		lean = sin(phase * 0.34) * 0.07
-		scaleY = 1 - step * 0.075
-	elseif e.kind == "regenerator" then
-		local safeToBreathe = (e.hitFlash or 0) <= 0 and (e.hitSquash or 0) <= 0
-		if safeToBreathe then
-			bob = -sin(phase * 0.55) * 0.45
-			scaleY = 1 + sin(phase * 0.55) * 0.025
-		end
-	elseif e.support or e.summon then
-		bob = -1.2 - sin(phase * 0.62) * 0.8
-		lean = moveX * 0.025
-	else -- grunt and any deliberately plain variants
-		bob = -abs(sin(phase)) * 1.15
-		lean = sin(phase) * 0.045
-	end
-
-	return bob * motion, lean * motion, 1 + (scaleY - 1) * motion
 end
 
 -- Draw a single enemy
@@ -183,29 +119,14 @@ local function drawEnemy(e)
 	local r = e.radius
 	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
 	squash = squash * (e.hitSquashStrength or 1)
-	local bodyBob, bodyLean, locomotionScaleY = enemyLocomotion(e)
 
 	-- Keep the shadow anchored to the ground while the enemy body reacts to a hit.
 	-- Drawing it before the squash transform also keeps its footprint unchanged.
 	if e.shadow then
-		local shadowAlpha = (enemyAlpha * enemyAlpha) * (esA / Theme.lighting.shadowOpacity)
-		local height = max(0, -bodyBob + (1 - locomotionScaleY) * r)
-		local shadowScale = max(0.88, 1 - height / max(1, r) * 0.09)
-		ScatterCommon.drawShadow(lg, ix, iy + e.radius, e.radius * 1.4 * shadowScale,
-			e.radius * 0.4 * shadowScale, 0.12, shadowAlpha, worldLighting())
-	end
+		local shadowAlpha = esA * (enemyAlpha * enemyAlpha)
 
-	-- Runner streaks are short and directional, so they read as speed without
-	-- changing the enemy's collision-sized silhouette.
-	if e.kind == "runner" and Save.data.settings.cameraMotion ~= false then
-		local dx, dy = e.rMoveX or 1, e.rMoveY or 0
-		lg.setColor(outR, outG, outB, 0.32 * enemyAlpha)
-		lg.setLineWidth(2)
-		for n = -1, 1 do
-			local sideX, sideY = -dy * n * 4, dx * n * 4
-			lg.line(ix - dx * (r + 4) + sideX, iy - dy * (r + 4) + sideY,
-				ix - dx * (r + 11 + abs(n) * 2) + sideX, iy - dy * (r + 11 + abs(n) * 2) + sideY)
-		end
+		lg.setColor(esR, esG, esB, shadowAlpha)
+		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.4, e.radius * 0.4)
 	end
 
 	-- Briefly compress the whole silhouette on impact, while widening it enough to
@@ -213,11 +134,7 @@ local function drawEnemy(e)
 	-- remains unscaled and readable.
 	lg.push()
 	lg.translate(ix, iy)
-	lg.translate(0, bodyBob)
-	lg.rotate(bodyLean)
-	-- Locomotion compression and hit squash multiply together rather than one
-	-- animation taking ownership of the silhouette transform.
-	lg.scale(1 + squash * 0.12, locomotionScaleY * (1 - squash * 0.16))
+	lg.scale(1 + squash * 0.12, 1 - squash * 0.16)
 	lg.translate(-ix, -iy)
 
 	-- Mechanical silhouettes are deliberately geometric and remain legible without
@@ -225,14 +142,12 @@ local function drawEnemy(e)
 	if e.support then
 		-- The banner trails opposite the Warcaller's horizontal facing. Mirror the
 		-- whole standard so both its pole and cloth keep a consistent silhouette.
-		local movementX = e.rMoveX or e.eyeDX or 1
-		local flagDirection = movementX < 0 and 1 or -1
+		local flagDirection = (e.eyeDX or 0) < 0 and 1 or -1
 		local poleX = ix + flagDirection * r * 0.55
-		local lag = min(5, abs(movementX) * 5) * flagDirection
 		lg.setColor(outR, outG, outB, enemyAlpha)
 		lg.rectangle("fill", poleX - (flagDirection < 0 and 3 or 0), iy - r * 2.0, 3, r * 1.7)
 		lg.polygon("fill", ix + flagDirection * r * 0.7, iy - r * 1.9,
-			ix + flagDirection * r * 1.65 + lag, iy - r * 1.55,
+			ix + flagDirection * r * 1.65, iy - r * 1.55,
 			ix + flagDirection * r * 0.7, iy - r * 1.2)
 	end
 	if e.summon then
@@ -311,8 +226,7 @@ local function drawEnemy(e)
 
 	-- Body lighting (canonical system)
 	-- Base (shadowed)
-	local light = worldLighting()
-	ScatterCommon.setLitColor(lg, enemyBody, false, enemyAlpha, light)
+	lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul)
 	lg.circle("fill", ix, iy, r)
 
 	-- Top highlight
@@ -320,7 +234,7 @@ local function drawEnemy(e)
 	local hy = iy - r * highlightOffset
 	local hr = r * highlightScale
 
-	ScatterCommon.setLitColor(lg, enemyBody, true, enemyAlpha, light)
+	lg.setColor(eR, eG, eB, enemyAlpha)
 	lg.circle("fill", hx, hy, hr)
 
     -- Hit flash
@@ -625,7 +539,6 @@ local function drawEnemyPortrait(enemy, x, y, animT)
 
 	enemy.rx, enemy.ry = x, y
 	enemy.rAnimT = animT or 0
-	enemy.rLocomotionPhase = animT or 0
 	if enemy.support then
 		enemy.supportPulse = (animT or 0) % enemy.support.pulsePeriod
 	end
@@ -761,19 +674,6 @@ local function drawCannonFX(t)
 	lg.setColor(1.0, 0.8, 0.6, alpha * 0.25)
 	lg.circle("fill", mx, my, r * 0.5)
 
-	-- A short, deterministic smoke puff follows the flash instead of becoming a
-	-- free-running particle decoration.
-	local smoke = t.firePhase == "recoil" and (1 - (t.firePhaseProgress or 0))
-		or (t.firePhase == "settle" and (1 - (t.firePhaseProgress or 0)) * 0.45) or 0
-	if smoke > 0 then
-		for i = 1, 3 do
-			local drift = (1 - smoke) * (5 + i * 2)
-			lg.setColor(0.62, 0.65, 0.68, smoke * (0.34 - i * 0.045))
-			lg.circle("fill", mx + cos(t.angle + i * 0.55) * drift,
-				my + sin(t.angle + i * 0.55) * drift - drift * 0.45, 2 + i + drift * 0.12)
-		end
-	end
-
 	lg.setLineWidth(1)
 end
 
@@ -905,7 +805,7 @@ local function drawTowerBase(kind, cx, cy, alpha, tintR, tintG, tintB, height)
 end
 
 -- Draw tower core shape
-local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, tintB, fireAnim, renderState)
+local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, tintB, fireAnim)
 	local def = towerDefs[kind]
 
 	if not def then
@@ -919,13 +819,6 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	tintG = tintG or 1
 	tintB = tintB or 1
 	fireAnim = fireAnim or 0
-	local phase = renderState and renderState.firePhase or "idle"
-	local phaseT = renderState and renderState.firePhaseProgress or 0
-	local anticipation = phase == "anticipation" and phaseT or 0
-	local discharge = phase == "discharge" and (1 - phaseT) or 0
-	local recoilPhase = phase == "recoil" and (1 - phaseT) or 0
-	local settle = phase == "settle" and (1 - phaseT) or 0
-	local idlePhase = renderState and renderState.idlePhase or 0
 
 	local color = def.color
 	local outlineW = outlineWidth
@@ -1080,17 +973,14 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	lg.translate(-recoil, 0)
 
 	if kind == "cannon" then
-		-- The tube compresses before firing and eases back to its authored length.
-		local barrelH = size * 0.28 * (1 + anticipation * 0.18 - settle * 0.08)
-		local barrelX = size * 0.26 - anticipation * size * 0.08 + settle * size * 0.04
+		local barrelH = size * 0.28
 
 		lg.setColor(outR, outG, outB, outlineA)
-		lg.rectangle("fill", barrelX, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
+		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
 	elseif kind == "shock" then
 		local barrelLen = size * 0.52
 		local barrelW = size * 0.12
-		-- Prongs spread while storing charge, then snap together at discharge.
-		local offset = size * (0.12 + anticipation * 0.13 - discharge * 0.07)
+		local offset = size * 0.12
 
 		for i = -1, 1, 2 do
 			local oy = offset * i
@@ -1099,15 +989,14 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 			lg.rectangle("fill", size * 0.28, oy - barrelW * 0.5, barrelLen, barrelW, 2, 2)
 		end
 	elseif kind == "poison" then
-		local bubble = sin(idlePhase * 2.1) * size * 0.018
-		local sacRadius = size * 0.16 + bubble - anticipation * size * 0.055 + discharge * size * 0.035
+		local pulse = fireAnim * (1 - fireAnim) * 4
+		local sacRadius = size * 0.16 + pulse
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.circle("fill", size * 0.26, 0, sacRadius)
 	elseif kind == "lancer" then
-		local thrust = discharge * size * 0.22 - anticipation * size * 0.2 - recoilPhase * size * 0.08
 		lg.setColor(outR, outG, outB, outlineA)
-		lg.rectangle("fill", size * 0.32 + thrust, -size * 0.08, size * 0.58, size * 0.16, 2, 2)
+		lg.rectangle("fill", size * 0.32, -size * 0.08, size * 0.58, size * 0.16, 2, 2)
 	elseif kind == "slow" then
 		local ex = rectInner
 		local ey = 0
@@ -1122,37 +1011,17 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 		lg.rectangle("fill", -s, -s, s * 2, s * 2, 2)
 
 		lg.pop()
-
-		-- Charge collapses into the core; discharge reverses it as a frost pulse.
-		local ringRadius = size * (0.48 - anticipation * 0.24 + discharge * 0.18)
-		lg.setColor(0.82, 0.94, 1, alpha * (0.35 + anticipation * 0.55 + discharge * 0.35))
-		lg.setLineWidth(2)
-		lg.circle("line", 0, 0, ringRadius)
-		lg.setLineWidth(1)
 	elseif kind == "plasma" then
 		local barrelH = size * 0.24
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.58, barrelH, 3, 3)
-
-		-- Containment rotates slowly at idle and accelerates with real charge.
-		local rotation = idlePhase + anticipation * pi * 0.8
-		local coreLight = 0.45 + anticipation * 0.5 + discharge * 0.55
-		lg.setColor(0.92, 0.68, 1, min(1, coreLight) * alpha)
-		lg.circle("fill", 0, 0, size * (0.1 + anticipation * 0.035))
-		lg.setLineWidth(2)
-		for i = 0, 1 do
-			local a = rotation + i * HALF_PI
-			local dx, dy = cos(a) * size * 0.27, sin(a) * size * 0.27
-			lg.line(-dx, -dy, dx, dy)
-		end
-		lg.setLineWidth(1)
 	end
 
 	lg.pop()
 end
 
-local function drawTowerBaseHighlight(kind, cx, cy, alpha, light)
+local function drawTowerBaseHighlight(kind, cx, cy, alpha)
 	local def = towerDefs[kind]
 
 	if not def then
@@ -1172,11 +1041,7 @@ local function drawTowerBaseHighlight(kind, cx, cy, alpha, light)
 	local hw = baseInner * 2 * highlightScale
 	local hh = baseInner * 2 * highlightScale
 
-	if light then
-		ScatterCommon.setLitColor(lg, c, true, alpha, light)
-	else
-		lg.setColor(c[1], c[2], c[3], alpha)
-	end
+	lg.setColor(c[1], c[2], c[3], alpha)
 	lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
 end
 
@@ -1196,11 +1061,7 @@ local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
 end
 
 local function drawTowerInstance(t, cx, renderY)
-	local light = worldLighting()
-	local ambient = light.ambientMultiplier
-	drawTowerBase(t.kind, cx, renderY, 1, darkMul * ambient, darkMul * ambient, darkMul * ambient)
-	drawTowerBaseHighlight(t.kind, cx, renderY, 1, light)
-	drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, 1, 1, 1, 1, t.fireAnim, t)
+	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
 end
 
 local function drawTowerUpgradeFlash(t, cx, renderY)
@@ -1297,14 +1158,8 @@ local function drawTowers()
 		local widthMult = 1 + (1 - easeSpawn) * 0.4
 		local alphaMult = easeSpawn
 
-		-- Tight base contact plus a short directional cast grounds the tower even
-		-- while its spawn animation lifts the body.
-		local light = worldLighting()
-		local towerAlpha = alphaMult * (tsA / Theme.lighting.shadowOpacity)
-		ScatterCommon.drawShadow(lg, cx, t.y + size * 0.4, size * 0.85 * widthMult,
-			size * 0.30, 0.18 + (1 - easeSpawn) * 0.18, towerAlpha, light)
-		ScatterCommon.drawShadow(lg, cx, groundY + size * 0.34, size * 0.48,
-			size * 0.16, 0, towerAlpha * 0.8, light)
+		lg.setColor(tsR, tsG, tsB, tsA * alphaMult)
+		lg.ellipse("fill", cx, t.y + size * 0.4, size * 0.85 * widthMult, size * 0.30)
 
 		-- Only draw ground base after spawn completes
 		if spawn <= 0 then

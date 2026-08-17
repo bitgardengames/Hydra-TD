@@ -13,21 +13,13 @@ Theme.outline = {
 }
 
 Theme.lighting = {
-	-- Light travels from the upper-left toward the world. Shadows use the
-	-- opposite vector, so every renderer can share one readable sun direction.
-	direction = {-0.45, -0.89},
-	shadowOffset = 7,
-	shadowSoftness = 0.22, -- second, slightly larger primitive (no shader needed)
-	shadowOpacity = 0.18,
-	ambientMultiplier = 1.0,
-	highlightTint = {1.0, 0.97, 0.90},
 	shadowMul = 0.68,
 	highlightOffset = 0.10,
 	highlightScale = 0.90,
 }
 
 Theme.shadow = {
-	alpha = Theme.lighting.shadowOpacity,
+	alpha = 0.18,
 	width = 1.4,
 	height = 0.4,
 }
