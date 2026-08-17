@@ -45,6 +45,7 @@ local cache = {
 	textW = 0,
 	thresholds = nil,
 }
+local presentationPulse = 0
 
 local BossHP = {}
 
@@ -108,6 +109,7 @@ local function motionEnabled()
 end
 
 function BossHP.update(dt)
+	presentationPulse = max(0, presentationPulse - max(0, dt or 0))
 	local boss = resolveBoss()
 	local hp = boss and boss.hp
 	local maxHp = boss and boss.maxHp
@@ -143,6 +145,12 @@ function BossHP.update(dt)
 	end
 end
 
+function BossHP.presentationEvent(kind)
+	if kind == "boss_incoming" then presentationPulse = 0.8 end
+	if kind == "boss_spawn" then presentationPulse = 0.45 end
+	if kind == "boss_defeated" then presentationPulse = 0.3 end
+end
+
 function BossHP.draw()
 	local boss = resolveBoss()
 	local hp = boss and boss.hp
@@ -165,6 +173,7 @@ function BossHP.draw()
 	local x = floor((sw - barW) * 0.5)
 	local fy = y - idleLift
 	local alpha = reveal
+	if presentationPulse > 0 then alpha = min(1, alpha + presentationPulse * 0.35) end
 	local r, g, b, a = colorBase[1], colorBase[2], colorBase[3], (colorBase[4] or 1) * alpha
 
 	-- Both layers unfold together so the raised cutaway remains intact throughout.

@@ -30,6 +30,7 @@ end
 
 local function drawUI()
 	Tooltip.hide()
+	Effects.drawOverlay()
 
 	Fonts.set("ui")
 

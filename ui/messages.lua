@@ -2,6 +2,7 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local Text = require("ui.text")
+local L = require("core.localization")
 
 local Messages = {}
 
@@ -117,7 +118,8 @@ local function removeAt(index)
 	list[#list] = nil
 end
 
-function Messages.add(text, r, g, b)
+function Messages.add(text, r, g, b, opts)
+	opts = opts or {}
 	local h = lg.getFont():getHeight()
 
 	list[#list + 1] = {
@@ -141,7 +143,22 @@ function Messages.add(text, r, g, b)
 		removeAt(1)
 	end
 
-	Sound.play("message")
+	if not opts.silent then Sound.play("message", opts.sound) end
+end
+
+function Messages.presentationEvent(kind, payload)
+	payload = payload or {}
+	local keys = {
+		wave_start = "messages.waveStart",
+		wave_cleared = "messages.waveCleared",
+		boss_incoming = "messages.bossIncoming",
+		boss_spawn = "messages.bossSpawn",
+		boss_defeated = "messages.bossDefeated",
+	}
+	if not keys[kind] then return end
+	local color = (kind == "wave_cleared" or kind == "boss_defeated") and {0.6, 1, 0.6} or {1, 0.72, 0.35}
+	Messages.add(L(keys[kind], payload.wave), color[1], color[2], color[3], {silent = true})
+	Sound.play("message", {pitch = (kind == "boss_incoming" or kind == "boss_spawn") and 0.82 or 1.08})
 end
 
 -- Contextual tips are deliberately separate from transient messages: there can

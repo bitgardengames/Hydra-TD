@@ -12,6 +12,9 @@ local EnemyTraits = require("world.enemy_traits")
 local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Spatial = require("world.spatial_grid")
 local Effects = require("world.effects")
+local Messages = require("ui.messages")
+local BossHP = require("ui.boss_hp")
+local Constants = require("core.constants")
 local DevelopmentCounters = require("core.development_counters")
 
 local Waves = {}
@@ -252,6 +255,8 @@ local bossAddsDefaults = {
 }
 local spawner = {}
 local bossAdds = {}
+local bossSpawnPresented = false
+local lastBossPosition = nil
 
 local function resetTable(target, defaults, overrides)
 	copyValues(target, defaults)
@@ -397,8 +402,28 @@ local function beginSpawner(kind, count, gap, hpMult, spdMult, composition, grou
 	State.inPrep = false
 end
 
+local function presentationPath(map)
+	local result = {}
+	for i, point in ipairs((map and map.path) or {}) do
+		result[i] = {(point[1] - 0.5) * Constants.TILE, (point[2] - 0.5) * Constants.TILE}
+	end
+	return result
+end
+
+-- Presentation events are explicit and fan out synchronously to UI, sound and
+-- playfield feedback. They only enqueue visual state; simulation never waits.
+function Waves.presentationEvent(kind, payload)
+	payload = payload or {}
+	Messages.presentationEvent(kind, payload)
+	BossHP.presentationEvent(kind, payload)
+	Effects.presentationEvent(kind, payload)
+end
+
 local function startBossWave(wave, map)
-	Effects.shake(0, 0.3)
+	bossSpawnPresented = false
+	lastBossPosition = nil
+	local path = presentationPath(map)
+	Waves.presentationEvent("boss_incoming", {wave = State.wave, path = path})
 	local bossIndex = math.max(1, math.floor(State.wave / 10))
 	local bossKind = wave.bossArchetype or getBossByArchetype(map, bossIndex)
 	local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
@@ -457,6 +482,12 @@ function Waves.startWave()
 
 	-- WaveBuilder enforces the boss invariant, leaving startup as a simple dispatch.
 	local wave = WaveBuilder.build(State.wave, map, State.endless)
+	local start = map and map.path and map.path[1]
+	Waves.presentationEvent("wave_start", {
+		wave = State.wave,
+		x = start and (start[1] - 0.5) * Constants.TILE,
+		y = start and (start[2] - 0.5) * Constants.TILE,
+	})
 	if wave.boss then
 		startBossWave(wave, map)
 	else
@@ -549,6 +580,14 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 		local enemy = Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
 			(group and group.spdMult) or spawner.spdMult, nil, nil, nil, {affixes = affixes})
 		enemy.scheduledWaveEnemy = true
+		if enemy.boss and not bossSpawnPresented then
+			bossSpawnPresented = true
+			lastBossPosition = {x = enemy.x, y = enemy.y}
+			Waves.presentationEvent("boss_spawn", {wave = State.wave, x = enemy.x, y = enemy.y})
+			-- A modest cue replaces the previous zero-strength call; Effects.shake
+			-- becomes a no-op under either motion accessibility setting.
+			Effects.shake(1.1, 0.22)
+		end
 		spawner.compositionIndex = spawner.compositionIndex + 1
 		advanceSpawner(group)
 	end)
@@ -593,6 +632,7 @@ local function updateBossAdds(dt, activeCap, spawnLoops)
 		bossAdds.queued = 0
 		return
 	end
+	lastBossPosition = {x = boss.x, y = boss.y}
 
 	bossAdds.timer = bossAdds.timer - dt
 	bossAdds.queueTimer = bossAdds.queueTimer - dt
@@ -642,6 +682,23 @@ end
 function Waves.resetSpawner()
 	resetTable(spawner, spawnerDefaults)
 	resetTable(bossAdds, bossAddsDefaults)
+end
+
+function Waves.presentWaveCleared()
+	if State.activeBossKind then
+		Waves.presentationEvent("boss_defeated", {
+			wave = State.wave,
+			x = lastBossPosition and lastBossPosition.x,
+			y = lastBossPosition and lastBossPosition.y,
+		})
+	end
+	local map = Maps[State.mapIndex]
+	local finish = map and map.path and map.path[#map.path]
+	Waves.presentationEvent("wave_cleared", {
+		wave = State.wave,
+		x = finish and (finish[1] - 0.5) * Constants.TILE,
+		y = finish and (finish[2] - 0.5) * Constants.TILE,
+	})
 end
 
 function Waves.getSpawner()
