@@ -54,6 +54,7 @@ Biomes.defs = {
 			lightMul = 1.06,
 			darkMul = 0.94,
 		},
+		pathDetail = {density = 0.07, contrast = 0.04, markStyle = "mixed"},
 
 		world = {
 			tree = {
@@ -111,6 +112,7 @@ Biomes.defs = {
 			lightMul = 1.04,
 			darkMul = 0.96,
 		},
+		pathDetail = {density = 0.06, contrast = 0.05, markStyle = "pebbled"},
 
 		world = {
 			rock = {
@@ -162,6 +164,7 @@ Biomes.defs = {
 			lightMul = 1.05,
 			darkMul = 0.92,
 		},
+		pathDetail = {density = 0.07, contrast = 0.04, markStyle = "mixed"},
 
 		world = {
 			tree = {
@@ -215,6 +218,7 @@ Biomes.defs = {
 			lightMul = 1.02,
 			darkMul = 0.98,
 		},
+		pathDetail = {density = 0.05, contrast = 0.04, markStyle = "fine"},
 
 		world = {
 			tree = {
@@ -260,6 +264,7 @@ Biomes.defs = {
 			lightMul = 1.08,
 			darkMul = 0.90,
 		},
+		pathDetail = {density = 0.07, contrast = 0.05, markStyle = "pebbled"},
 
 		world = {
 			tree = {
@@ -316,6 +321,7 @@ Biomes.defs = {
 			lightMul = 1.06, -- was 1.10
 			darkMul = 0.92,  -- was 0.90
 		},
+		pathDetail = {density = 0.04, contrast = 0.035, markStyle = "fine"},
 
 		world = {
 			tree = {
@@ -369,6 +375,7 @@ Biomes.defs = {
 			lightMul = 1.08,
 			darkMul = 0.92,
 		},
+		pathDetail = {density = 0.06, contrast = 0.035, markStyle = "dots"},
 
 		world = {
 			tree = {
@@ -421,6 +428,7 @@ Biomes.defs = {
 			lightMul = 1.02,
 			darkMul = 0.98,
 		},
+		pathDetail = {enabled = false, density = 0, contrast = 0.04, markStyle = "fine"},
 
 		-- No world objects at all
 		world = {
@@ -448,6 +456,7 @@ Biomes.defs = {
 			lightMul = 1.05,
 			darkMul = 0.94,
 		},
+		pathDetail = {density = 0.06, contrast = 0.04, markStyle = "dashes"},
 
 		world = {
 			mushroom = {

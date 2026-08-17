@@ -52,6 +52,118 @@ local grassCacheW
 local grassCacheH
 local grassCacheR, grassCacheG, grassCacheB, grassCacheA
 
+local pathDetailCanvas
+local pathDetailCacheMapRef
+local pathDetailCacheTile
+local pathDetailCacheW
+local pathDetailCacheH
+local pathDetailCacheR, pathDetailCacheG, pathDetailCacheB, pathDetailCacheA
+local pathDetailCacheDensity
+local pathDetailCacheContrast
+local pathDetailCacheStyle
+
+local function buildPathDetailCache(terrain)
+	local map = MapMod.map
+	local detail = map and map.biome and map.biome.pathDetail
+
+	if not map or not map.isPath or not detail or detail.enabled == false or (detail.density or 0) <= 0 then
+		pathDetailCanvas = nil
+		pathDetailCacheMapRef = nil
+		return
+	end
+
+	local path = terrain.path
+	local pR, pG, pB, pA = path[1] or 0, path[2] or 0, path[3] or 0, path[4] or 1
+	local density = detail.density or 0.06
+	local contrast = detail.contrast or 0.04
+	local style = detail.markStyle or "mixed"
+
+	if pathDetailCanvas
+		and pathDetailCacheMapRef == map.isPath
+		and pathDetailCacheW == gridW
+		and pathDetailCacheH == gridH
+		and pathDetailCacheTile == tile
+		and pathDetailCacheR == pR
+		and pathDetailCacheG == pG
+		and pathDetailCacheB == pB
+		and pathDetailCacheA == pA
+		and pathDetailCacheDensity == density
+		and pathDetailCacheContrast == contrast
+		and pathDetailCacheStyle == style then
+		return
+	end
+
+	pathDetailCacheMapRef = map.isPath
+	pathDetailCacheW, pathDetailCacheH, pathDetailCacheTile = gridW, gridH, tile
+	pathDetailCacheR, pathDetailCacheG, pathDetailCacheB, pathDetailCacheA = pR, pG, pB, pA
+	pathDetailCacheDensity, pathDetailCacheContrast, pathDetailCacheStyle = density, contrast, style
+	pathDetailCanvas = lg.newCanvas(gridW * tile, gridH * tile)
+
+	local light = {min(1, pR * (1 + contrast)), min(1, pG * (1 + contrast)), min(1, pB * (1 + contrast)), pA}
+	local dark = {pR * (1 - contrast), pG * (1 - contrast), pB * (1 - contrast), pA}
+	local safeRadius = tile * 0.5 - outlineW - 5
+	local candidates = 3
+
+	lg.push("all")
+	lg.setCanvas(pathDetailCanvas)
+	lg.clear(0, 0, 0, 0)
+
+	for y = 1, gridH do
+		for x = 1, gridW do
+			local col = map.isPath[x]
+
+			if col and col[y] then
+				local cx, cy = gridToCenter(x, y)
+
+				for i = 1, candidates do
+					if hashNoise(x, y, 41 + i * 17) < density then
+						local angle = hashNoise(x, y, 103 + i * 29) * math.pi * 2
+						local radius = sqrt(hashNoise(x, y, 157 + i * 31)) * safeRadius
+						local px = cx + math.cos(angle) * radius
+						local py = cy + sin(angle) * radius
+						local kindRoll = hashNoise(x, y, 211 + i * 37)
+						local dotCut, dashCut = 0.5, 0.84
+
+						if style == "dots" then
+							dotCut, dashCut = 0.7, 0.93
+						elseif style == "dashes" then
+							dotCut, dashCut = 0.3, 0.9
+						elseif style == "pebbled" then
+							dotCut, dashCut = 0.42, 0.82
+						elseif style == "fine" then
+							dotCut, dashCut = 0.65, 0.94
+						end
+
+						lg.setColor(hashNoise(x, y, 263 + i * 43) < 0.5 and light or dark)
+						if kindRoll < dotCut then
+							lg.circle("fill", px, py, 1.25)
+						elseif kindRoll < dashCut then
+							local dashAngle = hashNoise(x, y, 307 + i * 47) * math.pi * 2
+							local dx, dy = math.cos(dashAngle) * 2.5, sin(dashAngle) * 2.5
+							lg.setLineWidth(1.5)
+							lg.line(px - dx, py - dy, px + dx, py + dy)
+						else
+							lg.circle("fill", px - 1.8, py, 1.5)
+							lg.circle("fill", px + 1.8, py + 1, 1.15)
+						end
+					end
+				end
+			end
+		end
+	end
+
+	lg.pop()
+end
+
+local function drawPathDetails()
+	buildPathDetailCache(getTerrain())
+
+	if pathDetailCanvas then
+		lg.setColor(1, 1, 1, 1)
+		lg.draw(pathDetailCanvas, 0, 0)
+	end
+end
+
 local function buildGrassScatterCache(terrain)
 	local map = MapMod.map
 
@@ -211,6 +323,7 @@ end
 
 local function updatePathColor(color)
 	colorPath = color
+	pathDetailCacheMapRef = nil
 end
 
 local function updateGrassColor(_)
@@ -418,6 +531,7 @@ local function drawWorld()
 	drawGrass()
 	drawWater()
 	drawPath()
+	drawPathDetails()
 	drawScatter()
 end
 
@@ -542,6 +656,7 @@ return {
 	drawGrass = drawGrass,
 	drawWater = drawWater,
 	drawPath = drawPath,
+	drawPathDetails = drawPathDetails,
 	drawScatter = drawScatter,
 	drawAnimatedScatter = drawAnimatedScatter,
 	drawGrid = drawGrid,
