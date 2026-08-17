@@ -471,6 +471,11 @@ return {
 
 	messages = {
 		bonus = "Perfect Wave +$%s",
+		waveStart = "Wave %s started",
+		waveCleared = "Wave %s cleared",
+		bossIncoming = "Boss incoming!",
+		bossSpawn = "Boss has arrived!",
+		bossDefeated = "Boss defeated!",
 	},
 
 	inspect = {

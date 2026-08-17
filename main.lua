@@ -251,6 +251,7 @@ local function updateGameplayOutcome()
 
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
+		Waves.presentWaveCleared()
 		local campaignFinalWave = CampaignWaveDefs.getFinalWave(Maps[State.mapIndex])
 		if campaignFinalWave and State.wave == campaignFinalWave and not State.endless then
 			local previousFurthestIndex = Save.data.furthestIndex or 1

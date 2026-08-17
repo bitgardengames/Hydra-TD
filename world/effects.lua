@@ -59,6 +59,9 @@ Effects.death = {}
 Effects.placePuffs = {}
 Effects.plasmaParticles = {}
 Effects.towerTransformations = {}
+-- Short-lived, pooled presentation cues are separate from combat particles so
+-- they can never affect simulation state or collision timing.
+Effects.presentation = {}
 
 local zapJitter = 4
 local halfJitter = zapJitter * 0.5
@@ -79,6 +82,7 @@ local deathPool = {}
 local placePuffPool = {}
 local plasmaParticlePool = {}
 local towerTransformationPool = {}
+local presentationPool = {}
 local acquire
 
 local poisonDragBase = 0.94
@@ -118,6 +122,25 @@ acquire = function(pool)
 	end
 
 	return {}
+end
+
+function Effects.presentationEvent(kind, opts)
+	opts = opts or {}
+	local e = acquire(presentationPool)
+	e.kind, e.t = kind, 0
+	e.life = opts.life or ((kind == "boss_incoming") and 0.8 or 0.45)
+	e.x, e.y = opts.x, opts.y
+	e.path = opts.path
+	e.particles = nil
+	if kind == "wave_cleared" or kind == "boss_defeated" then
+		e.particles = {}
+		local count = Effects.particleCount(kind == "boss_defeated" and 16 or 10,
+			Theme.effects.intensity.normal)
+		for i = 1, count do
+			e.particles[i] = {angle = random() * pi * 2, distance = random(24, 70)}
+		end
+	end
+	Effects.presentation[#Effects.presentation + 1] = e
 end
 
 local function release(pool, obj)
@@ -487,6 +510,14 @@ function Effects.update(dt)
 	local frameExponent = dt * 60
 	local drag96 = 0.96 ^ frameExponent
 	local drag92 = 0.92 ^ frameExponent
+	for i = #Effects.presentation, 1, -1 do
+		local e = Effects.presentation[i]
+		e.t = e.t + dt
+		if e.t >= e.life then
+			swapRemove(Effects.presentation, i)
+			release(presentationPool, e)
+		end
+	end
 
 	local transformations = Effects.towerTransformations
 	for i = #transformations, 1, -1 do
@@ -675,6 +706,27 @@ function Effects.update(dt)
 end
 
 function Effects.draw()
+	for i = 1, #Effects.presentation do
+		local e = Effects.presentation[i]
+		local u = min(1, e.t / e.life)
+		local alpha = sin(pi * u)
+		if e.kind == "boss_incoming" and e.path and #e.path > 1 then
+			local upto = max(2, math.ceil(#e.path * min(1, u * 1.7)))
+			lg.setLineWidth(10 + 5 * alpha)
+			lg.setColor(Theme.ui.warn[1], Theme.ui.warn[2], Theme.ui.warn[3], 0.28 * alpha)
+			for p = 2, upto do lg.line(e.path[p - 1][1], e.path[p - 1][2], e.path[p][1], e.path[p][2]) end
+		elseif e.x and e.y then
+			local c = (e.kind == "wave_cleared" or e.kind == "boss_defeated") and Theme.ui.good or Theme.ui.warn
+			lg.setLineWidth(2 + 2 * (1 - u))
+			lg.setColor(c[1], c[2], c[3], 0.75 * (1 - u))
+			lg.circle("line", e.x, e.y, 12 + u * 55)
+			for _, p in ipairs(e.particles or {}) do
+				local d = p.distance * u
+				lg.circle("fill", e.x + cos(p.angle) * d, e.y + sin(p.angle) * d, 2)
+			end
+		end
+	end
+	lg.setLineWidth(1)
 	-- Short, low-opacity tower-local upgrade feedback, drawn beneath the louder
 	-- combat effects so enemies remain readable.
 	for i = 1, #Effects.towerTransformations do
@@ -1076,6 +1128,22 @@ function Effects.draw()
 	lg.setLineWidth(1)
 end
 
+-- Screen-space companion to presentationEvent. Kept out of Camera.begin so
+-- the accessibility-safe vignette remains stable when camera motion is off.
+function Effects.drawOverlay()
+	for i = 1, #Effects.presentation do
+		local e = Effects.presentation[i]
+		if e.kind == "boss_incoming" or e.kind == "boss_spawn" then
+			local a = sin(pi * min(1, e.t / e.life)) * 0.16
+			local w, h = lg.getDimensions()
+			lg.setColor(Theme.ui.warn[1], Theme.ui.warn[2], Theme.ui.warn[3], a)
+			lg.setLineWidth(18)
+			lg.rectangle("line", 9, 9, w - 18, h - 18)
+		end
+	end
+	lg.setLineWidth(1)
+end
+
 function Effects.load()
 	for i = 1, 12 do
 		Effects.spawnZapEffect(0, 0, {
@@ -1107,6 +1175,11 @@ function Effects.load()
 	Effects.clear()
 end
 function Effects.clear()
+	for i = #Effects.presentation, 1, -1 do
+		local e = Effects.presentation[i]
+		Effects.presentation[i] = nil
+		release(presentationPool, e)
+	end
 	-- Splashes
 	for i = #Effects.splashes, 1, -1 do
 		local s = Effects.splashes[i]
