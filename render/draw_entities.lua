@@ -55,6 +55,7 @@ local EYE_SMOOTH = 0.35
 local EYE_DEADZONE = 0.03
 local HIT_SQUASH_DUR = 0.12
 local UPGRADE_FLASH_DURATION = 0.3
+local LOCOMOTION_EPS = 0.001
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
@@ -104,7 +105,65 @@ local function prepareEnemyRenderData()
 		e.eyeDY = eyeDY + (rawDY - eyeDY) * EYE_SMOOTH
 
 		e.rAnimT = lerp(e.prevAnimT or e.animT, e.animT, a)
+
+		-- Locomotion is a render-only odometer. Unlike wall-clock animation, its
+		-- phase advances by the same amount for the same piece of road at 1x and
+		-- 4x speed (and does not keep walking while paused).
+		local travelX = e.rTravelX
+		local travelY = e.rTravelY
+		if travelX then
+			local moveX = baseX - travelX
+			local moveY = baseY - travelY
+			local traveled = sqrt(moveX * moveX + moveY * moveY)
+			if traveled > LOCOMOTION_EPS then
+				e.rTravelDistance = (e.rTravelDistance or 0) + traveled
+				e.rMoveX = moveX / traveled
+				e.rMoveY = moveY / traveled
+			end
+		else
+			e.rTravelDistance = 0
+			e.rMoveX, e.rMoveY = 1, 0
+		end
+		e.rTravelX, e.rTravelY = baseX, baseY
+		e.rLocomotionPhase = (e.rTravelDistance or 0) / max(6, e.radius * 0.72)
 	end
+end
+
+local function enemyLocomotion(e)
+	local phase = e.rLocomotionPhase or 0
+	local motion = Save.data.settings.cameraMotion ~= false and 1 or 0.12
+	local bob, lean, scaleY = 0, 0, 1
+	local moveX = e.rMoveX or 1
+
+	if e.boss then
+		local lowHealth = e.maxHp > 0 and e.hp / e.maxHp <= 0.35
+		local cadence = lowHealth and 1.55 or 0.72
+		bob = -abs(sin(phase * cadence)) * 1.1
+		lean = sin(phase * cadence * 0.5) * 0.055
+		scaleY = 1 - abs(sin(phase * cadence)) * (lowHealth and 0.045 or 0.025)
+	elseif e.kind == "runner" then
+		bob = -abs(sin(phase * 1.65)) * 0.75
+		lean = moveX * 0.13 + sin(phase * 1.65) * 0.025
+	elseif e.kind == "bulwark" or e.kind == "tank" then
+		local step = abs(sin(phase * 0.68))
+		bob = step * 0.65
+		lean = sin(phase * 0.34) * 0.07
+		scaleY = 1 - step * 0.075
+	elseif e.kind == "regenerator" then
+		local safeToBreathe = (e.hitFlash or 0) <= 0 and (e.hitSquash or 0) <= 0
+		if safeToBreathe then
+			bob = -sin(phase * 0.55) * 0.45
+			scaleY = 1 + sin(phase * 0.55) * 0.025
+		end
+	elseif e.support or e.summon then
+		bob = -1.2 - sin(phase * 0.62) * 0.8
+		lean = moveX * 0.025
+	else -- grunt and any deliberately plain variants
+		bob = -abs(sin(phase)) * 1.15
+		lean = sin(phase) * 0.045
+	end
+
+	return bob * motion, lean * motion, 1 + (scaleY - 1) * motion
 end
 
 -- Draw a single enemy
@@ -119,6 +178,7 @@ local function drawEnemy(e)
 	local r = e.radius
 	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
 	squash = squash * (e.hitSquashStrength or 1)
+	local bodyBob, bodyLean, locomotionScaleY = enemyLocomotion(e)
 
 	-- Keep the shadow anchored to the ground while the enemy body reacts to a hit.
 	-- Drawing it before the squash transform also keeps its footprint unchanged.
@@ -126,7 +186,22 @@ local function drawEnemy(e)
 		local shadowAlpha = esA * (enemyAlpha * enemyAlpha)
 
 		lg.setColor(esR, esG, esB, shadowAlpha)
-		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.4, e.radius * 0.4)
+		local height = max(0, -bodyBob + (1 - locomotionScaleY) * r)
+		local shadowScale = max(0.88, 1 - height / max(1, r) * 0.09)
+		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.4 * shadowScale, e.radius * 0.4 * shadowScale)
+	end
+
+	-- Runner streaks are short and directional, so they read as speed without
+	-- changing the enemy's collision-sized silhouette.
+	if e.kind == "runner" and Save.data.settings.cameraMotion ~= false then
+		local dx, dy = e.rMoveX or 1, e.rMoveY or 0
+		lg.setColor(outR, outG, outB, 0.32 * enemyAlpha)
+		lg.setLineWidth(2)
+		for n = -1, 1 do
+			local sideX, sideY = -dy * n * 4, dx * n * 4
+			lg.line(ix - dx * (r + 4) + sideX, iy - dy * (r + 4) + sideY,
+				ix - dx * (r + 11 + abs(n) * 2) + sideX, iy - dy * (r + 11 + abs(n) * 2) + sideY)
+		end
 	end
 
 	-- Briefly compress the whole silhouette on impact, while widening it enough to
@@ -134,7 +209,11 @@ local function drawEnemy(e)
 	-- remains unscaled and readable.
 	lg.push()
 	lg.translate(ix, iy)
-	lg.scale(1 + squash * 0.12, 1 - squash * 0.16)
+	lg.translate(0, bodyBob)
+	lg.rotate(bodyLean)
+	-- Locomotion compression and hit squash multiply together rather than one
+	-- animation taking ownership of the silhouette transform.
+	lg.scale(1 + squash * 0.12, locomotionScaleY * (1 - squash * 0.16))
 	lg.translate(-ix, -iy)
 
 	-- Mechanical silhouettes are deliberately geometric and remain legible without
@@ -142,12 +221,14 @@ local function drawEnemy(e)
 	if e.support then
 		-- The banner trails opposite the Warcaller's horizontal facing. Mirror the
 		-- whole standard so both its pole and cloth keep a consistent silhouette.
-		local flagDirection = (e.eyeDX or 0) < 0 and 1 or -1
+		local movementX = e.rMoveX or e.eyeDX or 1
+		local flagDirection = movementX < 0 and 1 or -1
 		local poleX = ix + flagDirection * r * 0.55
+		local lag = min(5, abs(movementX) * 5) * flagDirection
 		lg.setColor(outR, outG, outB, enemyAlpha)
 		lg.rectangle("fill", poleX - (flagDirection < 0 and 3 or 0), iy - r * 2.0, 3, r * 1.7)
 		lg.polygon("fill", ix + flagDirection * r * 0.7, iy - r * 1.9,
-			ix + flagDirection * r * 1.65, iy - r * 1.55,
+			ix + flagDirection * r * 1.65 + lag, iy - r * 1.55,
 			ix + flagDirection * r * 0.7, iy - r * 1.2)
 	end
 	if e.summon then
@@ -539,6 +620,7 @@ local function drawEnemyPortrait(enemy, x, y, animT)
 
 	enemy.rx, enemy.ry = x, y
 	enemy.rAnimT = animT or 0
+	enemy.rLocomotionPhase = animT or 0
 	if enemy.support then
 		enemy.supportPulse = (animT or 0) % enemy.support.pulsePeriod
 	end
