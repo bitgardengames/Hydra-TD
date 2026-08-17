@@ -247,6 +247,59 @@ Biomes.defs = {
 		},
 	},
 
+	volcanic = {
+		terrain = {
+			grass = {0.08, 0.07, 0.07},
+			path = {0.40, 0.36, 0.33},
+			pathOutline = {0.16, 0.13, 0.12},
+			water = {0.90, 0.20, 0.05},
+		},
+
+		ground = {
+			detailDensity = 0.18,
+			lightMul = 1.08,
+			darkMul = 0.90,
+		},
+
+		world = {
+			tree = {
+				trunk = {0.30, 0.18, 0.10},
+				trunkOutline = {0.10, 0.09, 0.09},
+				shapes = {"evergreen", "round"},
+
+				styles = {
+					{fill = {0.20, 0.18, 0.17}, outline = {0.08, 0.07, 0.07}},
+					{fill = {0.34, 0.20, 0.13}, outline = {0.13, 0.10, 0.09}},
+					{fill = {0.66, 0.16, 0.07}, outline = {0.24, 0.08, 0.04}},
+				},
+			},
+
+			rock = {
+				styles = {
+					{fill = {0.18, 0.17, 0.17}, outline = {0.07, 0.06, 0.06}},
+					{fill = {0.24, 0.21, 0.20}, outline = {0.10, 0.08, 0.08}},
+					{fill = {0.14, 0.13, 0.14}, outline = {0.05, 0.04, 0.05}},
+				},
+			},
+		},
+
+		scatter = {
+			trees = {
+				enabled = true,
+				density = 0.06,
+				cluster = 0.10,
+				minDistFromPath = 1,
+			},
+
+			rocks = {
+				enabled = true,
+				density = 0.22,
+				cluster = 0.14,
+				minDistFromPath = 1,
+			},
+		},
+	},
+
 	winter = {
 		terrain = {
 			grass = {0.76, 0.82, 0.88},

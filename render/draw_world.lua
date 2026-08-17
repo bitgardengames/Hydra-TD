@@ -416,7 +416,7 @@ end
 
 local function drawWorld()
 	drawGrass()
-	--drawWater()
+	drawWater()
 	drawPath()
 	drawScatter()
 end

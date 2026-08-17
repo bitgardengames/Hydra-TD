@@ -86,14 +86,19 @@ local maps = {
 		id = "gauntlet",
 		campaignStage = 1,
 		nameKey = "map.gauntlet",
-		biome = "autumn",
+		biome = "volcanic",
 		path = {
 			{5, 11}, {19, 11},
 			{19, 7}, {24, 7},
 			{24, 3}, {11, 3},
 			{11, 9}, {30, 9},
 		},
-		-- intentionally dry battlefield
+		water = {
+			-- small lava pools
+			{7, 6, 1},
+			{22, 5, 1},
+			{27, 11, 1},
+		},
 		waves = {
 			encounters = {
 				boss_suppression = { flankBurst = 2, interval = 7.9, addHpMult = 1.35, maxAliveAdds = 12 },
