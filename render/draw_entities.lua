@@ -294,17 +294,6 @@ local function drawEnemy(e)
 	local eyeSize = max(1.6, e.radius * 0.16)
 	local eyeY = iy - e.radius * 0.22
 
-	-- A high-contrast crown remains readable over every biome and body color.
-	if e.elite and e.affixes[1] then
-		local affix = e.affixes[1]
-		local c = affix.color
-		local markerY = iy - r - 11
-		lg.setColor(outR, outG, outB, enemyAlpha)
-		lg.circle("fill", ix, markerY, 7)
-		lg.setColor(c[1], c[2], c[3], enemyAlpha)
-		lg.polygon("fill", ix, markerY - 5, ix + 5, markerY, ix, markerY + 5, ix - 5, markerY)
-	end
-
 	lg.setColor(efR, efG, efB, enemyAlpha)
 
 	if e.boss and e.dying then
@@ -529,8 +518,6 @@ local function newEnemyPortrait(kind)
 		slowTimer = 0,
 		supportBoost = 1,
 		face = "normal",
-		elite = false,
-		affixes = {},
 	}
 end
 

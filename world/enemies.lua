@@ -7,7 +7,6 @@ local MapMod = require("world.map")
 local Spatial = require("world.spatial_grid")
 local EnemySupport = require("world.enemy_support")
 local EnemyDefs = require("world.enemy_defs")
-local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Floaters = require("ui.floaters")
 local Achievements = require("systems.achievements")
 local L = require("core.localization")
@@ -208,22 +207,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 
 	e.kind = kind
 	e.def = def
-	e.affixes = {}
-	e.affixById = {}
-	local hpAffixMult, speedAffixMult, rewardAffixMult = 1, 1, 1
-	for _, id in ipairs(opts.affixes or {}) do
-		local affix = EnemyAffixDefs[id]
-		if affix and not e.affixById[id] then
-			e.affixes[#e.affixes + 1] = affix
-			e.affixById[id] = affix
-			local behavior = affix.behavior or {}
-			hpAffixMult = hpAffixMult * (behavior.hpMultiplier or 1)
-			speedAffixMult = speedAffixMult * (behavior.speedMultiplier or 1)
-			rewardAffixMult = rewardAffixMult * (behavior.rewardMultiplier or 1)
-			Save.markAffixEncountered(id)
-		end
-	end
-	e.elite = #e.affixes > 0
 
 	-- World position
 	e.x = x
@@ -256,13 +239,13 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.healthThresholds = def.healthThresholds or def.phaseThresholds
 	e.hpScale = hpScale
 	e.spdScale = spdScale
-	e.hp = (def.hp * hpScale * hpAffixMult) or 0
-	e.maxHp = def.hp * hpScale * hpAffixMult
-	e.baseSpeed = def.speed * spdScale * speedAffixMult
+	e.hp = (def.hp * hpScale) or 0
+	e.maxHp = def.hp * hpScale
+	e.baseSpeed = def.speed * spdScale
 	e.speed = e.baseSpeed
 	-- Kill income is the economic floor for imperfect play; wave number does not
 	-- compound it independently of authored counts and compositions.
-	e.reward = def.reward * Difficulty.get().rewardBias * rewardAffixMult
+	e.reward = def.reward * Difficulty.get().rewardBias
 	e.score = def.score or 0
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius
@@ -777,9 +760,6 @@ end
 local function applyDamage(e, amount, context)
 	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
 	context = context or {}
-	for _, affix in ipairs(e.affixes or {}) do
-		amount = amount * ((affix.behavior and affix.behavior.damageTakenMultiplier) or 1)
-	end
 	local raw = amount
 	if e.armor then
 		local heavy = context.sourceKind == "cannon" or context.sourceKind == "lancer"
@@ -813,7 +793,7 @@ local function setPathDistance(e, distance)
 end
 
 -- Produces the player-facing, render-agnostic description of every currently
--- active enemy state.  Identity (traits and elite affixes) deliberately does not
+-- active enemy state. Identity traits deliberately do not
 -- belong here: callers can therefore present expiring state separately from the
 -- mechanics that define an enemy.
 local function getDisplayStatuses(e)
@@ -875,9 +855,6 @@ end
 
 local function applySlow(e, factor, duration)
 	if not e or e.hp <= 0 then return false end
-	for _, affix in ipairs(e.affixes or {}) do
-		duration = (duration or 0) * ((affix.behavior and affix.behavior.statusDurationMultiplier) or 1)
-	end
 	local newFactor = math.max(0, math.min(1, factor))
 	if not e.slowFactor or newFactor < e.slowFactor then e.slowFactor = newFactor end
 	e.slowTimer = math.max(e.slowTimer or 0, duration or 0)

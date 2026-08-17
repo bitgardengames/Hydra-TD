@@ -1,7 +1,5 @@
 local DifficultyCurve = require("systems.difficulty_curve")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
-local EnemyDefs = require("world.enemy_defs")
-local AffixDefs = require("world.enemy_affix_defs")
 
 local Builder = {}
 
@@ -53,7 +51,7 @@ local function buildComposition(waveIndex, baseKind, count, tier)
 			if waveIndex >= u.wave and (i + j * 2) % u.every == 0 then kind = u.kind end
 		end
 		-- Each endless tier inserts a predictable flank group. Rotating the kind
-		-- creates simultaneous mixed pressure without making every unit elite.
+		-- creates simultaneous mixed pressure without obscuring enemy archetypes.
 		if tier > 0 then
 			local groupSize = math.min(3 + tier, 9)
 			local groupCycle = math.max(10, 18 - math.min(tier, 8))
@@ -61,29 +59,7 @@ local function buildComposition(waveIndex, baseKind, count, tier)
 				kind = pressureKinds[((tier + math.floor((i - 1) / groupCycle)) % #pressureKinds) + 1]
 			end
 		end
-		composition[i] = {kind = kind, affixes = {}}
-	end
-	-- Elite power has its own hard budget, independent of the body cap. The index
-	-- stride and affix rotation are pure functions of wave/tier, making previews
-	-- and actual spawns agree without consuming RNG state.
-	local budget = math.min(12, 2 + tier * 2)
-	local eliteTarget = math.min(math.floor(budget / 2), math.max(0, math.floor(count / 8)))
-	for n = 1, eliteTarget do
-		-- Evenly spaced slots plus a wave-based rotation are unique while
-		-- eliteTarget <= count, so the advertised elite count is exact.
-		local slot = math.floor((n - 0.5) * count / eliteTarget)
-		local index = 1 + ((slot + waveIndex * 7) % count)
-		local entry = composition[index]
-		local start = ((waveIndex + n + tier) % #AffixDefs.order) + 1
-		for offset = 0, #AffixDefs.order - 1 do
-			local id = AffixDefs.order[((start + offset - 1) % #AffixDefs.order) + 1]
-			local affix = AffixDefs[id]
-			if affix.cost <= budget and AffixDefs.isEligible(id, EnemyDefs[entry.kind], {}) then
-				entry.affixes[1] = id
-				budget = budget - affix.cost
-				break
-			end
-		end
+		composition[i] = kind
 	end
 	return composition
 end
