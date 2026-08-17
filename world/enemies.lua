@@ -321,7 +321,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	if e.boss then
 		State.activeBoss = e
 		State.activeBossKind = e.kind
-		Effects.shake(0, 0.35)
+		Effects.bossArrivalCamera()
 	end
 
 	return e
