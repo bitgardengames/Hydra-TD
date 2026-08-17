@@ -10,7 +10,12 @@ local state = {
 	worldMapIndex = 1,
 	resolveMapIndex = function(index) return index end,
 }
-local maps = {{id = "first"}, {id = "second"}, {id = "final"}}
+local maps = {{id = "first"}, {id = "highridge"}, {id = "twinloop"}}
+local campaignComplete = false
+local campaignUnlocks = {
+	isChallengeModeUnlocked = function() return campaignComplete end,
+	isEndlessUnlocked = function() return campaignComplete end,
+}
 
 local function module(name, value)
 	package.loaded[name] = value
@@ -36,7 +41,7 @@ module("core.save", {})
 module("core.localization", setmetatable({}, {__call = function(_, key) return key end}))
 module("world.tower_defs", {})
 module("systems.ability_defs", {})
-module("systems.campaign_unlocks", {isEndlessUnlocked = function() return true end})
+module("systems.campaign_unlocks", campaignUnlocks)
 module("render.draw_entities", {})
 module("ui.run_recap", {})
 module("ui.scroll_view", {
@@ -71,13 +76,19 @@ state.worldMapIndex = #maps - 1
 Victory.load()
 local nextButton = assert(findButton("next"), "penultimate victory should present Next Map")
 assert(nextButton.label == "menu.nextMap", "progression action should retain the Next Map label")
+assert(not campaignUnlocks.isChallengeModeUnlocked(), "Challenge should remain locked after High Ridge")
+assert(not campaignUnlocks.isEndlessUnlocked(), "Endless should remain locked after High Ridge")
+assert(not findButton("endless").enabled, "Endless should remain locked after High Ridge")
 nextButton.onClick()
 assert(state.worldMapIndex == #maps, "penultimate victory should advance exactly one map")
 
 state.worldMapIndex = #maps
+campaignComplete = true
 Victory.load()
 assert(not findButton("next"), "final victory must not present a same-map Next Map restart")
-assert(findButton("endless"), "Endless should remain available when campaign unlocks permit it")
+assert(campaignUnlocks.isChallengeModeUnlocked(), "Challenge should unlock after Twin Loop")
+assert(campaignUnlocks.isEndlessUnlocked(), "Endless should unlock after Twin Loop")
+assert(findButton("endless").enabled, "Endless should unlock after Twin Loop")
 assert(findButton("menu"), "final victory should retain a non-progression menu action")
 
 print("victory progression fixtures passed")
