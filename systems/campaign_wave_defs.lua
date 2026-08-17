@@ -359,7 +359,7 @@ local wavesByMapId = {
 		-- practice
 		[5] = { g("warcaller", 11, 0.78, 0.00), g("bulwark", 4, 0.70, 1.40), g("runner", 5, 0.56, 1.70) },
 		-- practice
-		[6] = { g("bulwark", 6, 0.58, 0.00), g("runner", 7, 0.46, 0.30), g("warcaller", 10, 0.70, 1.00), g("regenerator", 13, 0.81, 2.00) },
+		[6] = { g("bulwark", 5, 0.58, 0.00), g("runner", 7, 0.46, 0.30), g("warcaller", 10, 0.70, 1.00), g("regenerator", 13, 0.81, 2.00) },
 		-- mixed check
 		[7] = { g("bulwark", 3, 0.54, 0.00, {"fortified"}), g("runner", 4, 0.43, 0.30), g("warcaller", 7, 0.61, 0.95, {affixes = {"relentless"}, positions = {4}}), g("regenerator", 7, 0.70, 1.75), g("bulwark", 8, 0.78, 2.35) },
 		-- mixed check

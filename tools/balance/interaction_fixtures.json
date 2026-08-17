@@ -1334,7 +1334,7 @@
       "tower": "plasma"
     }
   ],
-  "definition_sha256": "145169b2e23144b9d032b3be5bc4984f1517cc152c911afaae9cd6b1d2f26325",
+  "definition_sha256": "ca6d1a86c0e62b24d459f85e4b103c6c454ea5148f1375c84554fc619b66bfc6",
   "format_version": 1,
   "overlap": {
     "base_total_damage": 113,

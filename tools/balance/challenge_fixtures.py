@@ -117,7 +117,9 @@ def definitions():
 
     maps = {}
     wave_root = block(waves_text, r"local wavesByMapId")
-    group_re = re.compile(r'g\("([a-z_]+)",\s*(\d+),\s*([0-9.]+),\s*([0-9.]+)\)')
+    # Match the schedule arguments, not the closing parenthesis: campaign
+    # groups may append affix metadata that does not change this calculation.
+    group_re = re.compile(r'g\("([a-z_]+)",\s*(\d+),\s*([0-9.]+),\s*([0-9.]+)')
     for map_id, body in named_blocks(wave_root).items():
         maps[map_id] = []
         for wave in range(1, 11):

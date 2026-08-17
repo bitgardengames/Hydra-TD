@@ -23,7 +23,9 @@ local TIP_PADDING_Y = 8
 local TIP_GAP = 10
 local TIP_DISMISS_PADDING_X = 10
 local TIP_DISMISS_PADDING_Y = 4
-local TIP_MAX_WIDTH = 760
+-- Keep contextual coaching clear of the compact wave-progress panel at the
+-- minimum supported width while retaining room for counter explanations.
+local TIP_MAX_WIDTH = 560
 local TIP_MIN_MESSAGE_WIDTH = 240
 
 local list = {}
