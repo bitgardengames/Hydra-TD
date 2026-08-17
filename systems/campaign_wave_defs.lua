@@ -44,8 +44,17 @@ local pacingTargetsByMapId = {
 	twinloop = { openingPressure = 17, peakSimultaneous = 17, totalWaveDuration = { 2.00, 16.76 }, downtimeBetweenGroups = { 0.12, 1.55 } },
 }
 
-local function g(kind, count, spacing, delay)
-	return { kind = kind, count = count, spacing = spacing, delay = delay or 0 }
+-- The optional affix spec is either a plain list (every member of the group is
+-- elite) or an authored assignment descriptor.  Descriptors use one-based
+-- `positions`, so placement is stable and never consumes the Endless RNG/budget.
+local function g(kind, count, spacing, delay, affixSpec)
+	local group = { kind = kind, count = count, spacing = spacing, delay = delay or 0 }
+	if affixSpec and affixSpec.affixes then
+		group.eliteAssignment = affixSpec
+	else
+		group.affixes = affixSpec
+	end
+	return group
 end
 
 -- Groups remain plain numeric arrays because WaveBuilder consumes them with ipairs.
@@ -298,7 +307,7 @@ local wavesByMapId = {
 		-- orientation
 		[1] = { g("grunt", 17, 0.78, 0.00) },
 		-- demonstration
-		[2] = { g("bulwark", 6, 0.87, 0.00), g("runner", 6, 0.70, 0.30) },
+		[2] = { g("bulwark", 6, 0.87, 0.00, {affixes = {"fortified"}, positions = {3}}), g("runner", 6, 0.70, 0.30) },
 		-- demonstration
 		[3] = { g("grunt", 13, 0.72, 0.00), g("bulwark", 2, 0.86, 1.80), g("runner", 2, 0.69, 2.10) },
 		-- practice
@@ -320,7 +329,7 @@ local wavesByMapId = {
 		-- orientation
 		[1] = { g("grunt", 19, 0.56, 0.00) },
 		-- demonstration
-		[2] = { g("bulwark", 6, 0.64, 0.00), g("runner", 6, 0.51, 0.30) },
+		[2] = { g("bulwark", 6, 0.64, 0.00, {affixes = {"relentless"}, positions = {4}}), g("runner", 6, 0.51, 0.30) },
 		-- demonstration
 		[3] = { g("grunt", 14, 0.53, 0.00), g("bulwark", 2, 0.63, 0.60), g("runner", 2, 0.50, 0.90) },
 		-- practice
@@ -336,7 +345,7 @@ local wavesByMapId = {
 		-- mixed check
 		[9] = { g("bulwark", 3, 0.31, 0.00), g("runner", 4, 0.25, 0.30), g("warcaller", 7, 0.36, 0.08), g("regenerator", 8, 0.40, 0.15), g("bulwark", 8, 0.45, 0.28), g("runner", 9, 0.50, 0.37) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.35, 0.73), g("runner", 4, 0.28, 1.03), g("warcaller", 7, 0.40, 0.82), g("regenerator", 8, 0.46, 0.95), g("bulwark", 8, 0.52, 1.04) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.35, 0.73, {affixes = {"fortified"}, positions = {2}}), g("runner", 4, 0.28, 1.03), g("warcaller", 7, 0.40, 0.82, {affixes = {"relentless"}, positions = {5}}), g("regenerator", 8, 0.46, 0.95), g("bulwark", 8, 0.52, 1.04) },
 	},
 	steppingstones = {
 		-- orientation
@@ -352,13 +361,13 @@ local wavesByMapId = {
 		-- practice
 		[6] = { g("bulwark", 6, 0.58, 0.00), g("runner", 7, 0.46, 0.30), g("warcaller", 10, 0.70, 1.00), g("regenerator", 13, 0.81, 2.00) },
 		-- mixed check
-		[7] = { g("bulwark", 3, 0.54, 0.00), g("runner", 4, 0.43, 0.30), g("warcaller", 7, 0.61, 0.95), g("regenerator", 7, 0.70, 1.75), g("bulwark", 8, 0.78, 2.35) },
+		[7] = { g("bulwark", 3, 0.54, 0.00, {"fortified"}), g("runner", 4, 0.43, 0.30), g("warcaller", 7, 0.61, 0.95, {affixes = {"relentless"}, positions = {4}}), g("regenerator", 7, 0.70, 1.75), g("bulwark", 8, 0.78, 2.35) },
 		-- mixed check
 		[8] = { g("grunt", 8, 0.48, 0.00), g("tank", 8, 0.54, 0.95), g("runner", 9, 0.61, 1.55), g("bulwark", 10, 0.68, 2.15) },
 		-- mixed check
 		[9] = { g("bulwark", 4, 0.45, 0.00), g("runner", 4, 0.36, 0.30), g("warcaller", 8, 0.51, 0.75), g("regenerator", 9, 0.58, 1.35), g("bulwark", 9, 0.64, 1.95), g("runner", 10, 0.72, 2.35) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 3.95), g("runner", 4, 0.40, 4.25), g("warcaller", 7, 0.58, 4.35), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
+		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 3.95, {affixes = {"fortified"}, positions = {2}}), g("runner", 4, 0.40, 4.25), g("warcaller", 7, 0.58, 4.35, {affixes = {"relentless"}, positions = {4}}), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
 	},
 	twinloop = {
 		-- orientation
@@ -400,9 +409,9 @@ local encounterPlansByMapId = {
 	circuit = { lesson = "Regenerator Relay", featuredThreat = "regenerator", bossArchetype = "boss_summoner" },
 	outerloop = { lesson = "Long Rotation", featuredThreat = "bulwark", bossArchetype = "boss_suppression" },
 	terrace = { lesson = "Warcaller Escalation", featuredThreat = "warcaller", bossArchetype = "boss_summoner" },
-	highridge = { lesson = "Durable Front, Fast Leak", featuredThreat = "runner", bossArchetype = "boss_summoner" },
-	crossflow = { lesson = "Crossing Lanes", featuredThreat = "bulwark", bossArchetype = "boss_summoner" },
-	steppingstones = { lesson = "Island Platoons", featuredThreat = "warcaller", bossArchetype = "boss_displacement" },
+	highridge = { lesson = "Fortified Lesson", briefing = "Fortified elites absorb punishment: focus heavy hits to crack their extra health and defense.", featuredThreat = "runner", bossArchetype = "boss_summoner" },
+	crossflow = { lesson = "Relentless Lesson", briefing = "Relentless elites shake off slows quickly: build overlapping damage coverage instead.", featuredThreat = "bulwark", bossArchetype = "boss_summoner" },
+	steppingstones = { lesson = "Elite Pairing", briefing = "Read each elite: heavy focus counters Fortified while coverage catches Relentless.", featuredThreat = "warcaller", bossArchetype = "boss_displacement" },
 	twinloop = { lesson = "Summoner Orbits", featuredThreat = "summoner", bossArchetype = "boss_summoner" },
 }
 
@@ -427,6 +436,7 @@ for mapId, plan in pairs(encounterPlansByMapId) do
 		wave.beatRole = beat.role
 		wave.objectiveProgressKey = "campaign.lesson." .. mapId
 		wave.featuredThreat = plan.featuredThreat
+		wave.mapBriefing = plan.briefing
 		if beat.role == "finalExam" then
 			wave.bossArchetype = plan.bossArchetype
 			wave.bossIntent = "Test " .. plan.lesson .. " under boss pressure"
@@ -437,6 +447,18 @@ end
 local function mapIdOf(mapOrId)
 	if type(mapOrId) == "table" then return mapOrId.id end
 	if type(mapOrId) == "string" then return mapOrId end
+	return nil
+end
+
+-- Public because preview and spawn fixtures must be able to prove that the
+-- authored ordinal resolves identically without booting the Love runtime.
+function CampaignWaveDefs.resolveGroupAffixes(group, position)
+	if group.affixes then return group.affixes end
+	local assignment = group.eliteAssignment
+	if not assignment then return nil end
+	for _, authoredPosition in ipairs(assignment.positions or {}) do
+		if authoredPosition == position then return assignment.affixes end
+	end
 	return nil
 end
 

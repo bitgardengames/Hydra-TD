@@ -108,7 +108,9 @@ local function refreshPreview()
 	previewCache.endless = State.endless
 	previewCache.title = L("hud.upcomingWave", State.wave)
 	previewCache.total = L("hud.waveTotal", preview.count)
-	previewCache.beat = preview.beatName
+	-- Late campaign elite lessons use this line as the map briefing as well as
+	-- the immediate wave-preview counterplay reminder.
+	previewCache.beat = preview.mapBriefing or preview.beatName
 
 	local entries = previewCache.entries
 	for i = #entries, 1, -1 do entries[i] = nil end

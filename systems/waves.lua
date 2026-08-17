@@ -4,6 +4,7 @@ local Enemies = require("world.enemies")
 local Difficulty = require("systems.difficulty")
 local DifficultyCurve = require("systems.difficulty_curve")
 local WaveBuilder = require("systems.wave_builder")
+local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
@@ -200,11 +201,18 @@ local function resolveWaveGroups(wave, map, waveNumber)
 			spacing = group.spacing,
 			delay = group.delay,
 			affixes = group.affixes,
+			eliteAssignment = group.eliteAssignment,
 			hpMult = group.hpMult,
 			spdMult = group.spdMult,
 		}
 	end
 	return groups
+end
+
+-- Resolve authored placement by ordinal, not RNG.  This same function feeds the
+-- preview segmentation and live spawn queue, making their affix claims identical.
+local function resolveGroupAffixes(group, position)
+	return CampaignWaveDefs.resolveGroupAffixes(group, position)
 end
 
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
@@ -289,16 +297,22 @@ local function describeEnemyGroup(kind, count, spacing, delay, affixes)
 	return group
 end
 
-local function describeAuthoredGroups(groups, includeAffixes)
+local function describeAuthoredGroups(groups)
 	local descriptions = {}
 	for _, group in ipairs(groups or {}) do
-		descriptions[#descriptions + 1] = describeEnemyGroup(
-			group.kind,
-			group.count,
-			group.spacing,
-			group.delay,
-			includeAffixes and group.affixes or nil
-		)
+		for position = 1, group.count do
+			local affixes = resolveGroupAffixes(group, position) or {}
+			local affixKey = table.concat(affixes, ",")
+			local previous = descriptions[#descriptions]
+			if previous and previous.kind == group.kind and previous.affixKey == affixKey then
+				previous.count = previous.count + 1
+			else
+				local description = describeEnemyGroup(group.kind, 1, group.spacing,
+					position == 1 and group.delay or 0, affixes)
+				description.affixKey = affixKey
+				descriptions[#descriptions + 1] = description
+			end
+		end
 	end
 	return descriptions
 end
@@ -332,10 +346,8 @@ function Waves.getWavePreview(waveNumber)
 	local resolvedGroups = resolveWaveGroups(wave, map, waveNumber)
 	local groups
 
-	if wave.boss then
-		groups = describeAuthoredGroups(resolvedGroups, true)
-	elseif resolvedGroups then
-		groups = describeAuthoredGroups(resolvedGroups, false)
+	if resolvedGroups then
+		groups = describeAuthoredGroups(resolvedGroups)
 	else
 		groups = describeComposition(wave.composition, wave.spacing)
 	end
@@ -356,6 +368,7 @@ function Waves.getWavePreview(waveNumber)
 		beatRole = wave.beatRole,
 		objectiveProgressKey = wave.objectiveProgressKey,
 		featuredThreat = wave.featuredThreat,
+		mapBriefing = wave.mapBriefing,
 		bossArchetype = wave.bossArchetype,
 		bossIntent = wave.bossIntent,
 	}
@@ -483,8 +496,9 @@ local function currentSpawnEntry()
 	local itemKind = type(item) == "table" and item.kind or item
 	local itemAffixes = type(item) == "table" and item.affixes or nil
 
+	local groupPosition = group and (group.count - spawner.groupRemaining + 1) or nil
 	return group, group and group.kind or itemKind or spawner.kind,
-		group and group.affixes or itemAffixes
+		group and resolveGroupAffixes(group, groupPosition) or itemAffixes
 end
 
 local function advanceSpawner(group)
