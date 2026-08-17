@@ -171,6 +171,42 @@ recovery gaps. `--check` compares each map's measured summary with the targets i
 `systems/campaign_wave_defs.lua`, exposing accidental count, duration, or density
 creep as a pacing regression.
 
+## Headless campaign policies
+
+Run the deterministic campaign player directly, or enforce its authored bands:
+
+```sh
+python3 tools/balance/campaign_simulator.py
+python3 tools/balance/campaign_simulator.py --check
+python3 tools/balance/campaign_simulator.py --summary
+```
+
+The simulator runs novice, competent, and expert policies across every campaign
+map and difficulty with three deterministic variants.  Unlike the aggregate
+challenge estimates, it advances individual enemies along authored route lengths
+on fixed ticks and executes acquisition, cooldowns, attacks, splash/chain hits,
+armor, regeneration, poison, slows, kills, leaks, purchases, upgrades, sales,
+and active abilities.  Each policy has an explicit, constrained placement search,
+counter-knowledge probability, purchase lookahead, upgrade preference, timing
+accuracy, retry allowance, and search budget.  Thus weaker policies choose bad
+positions, miss counters, mistime abilities, and spend shortsightedly; their
+damage and money are not silently multiplied by a handicap.
+
+Stable JSON records each variant's victory, lives, failed wave, unused money,
+tower composition, rebuilds, ability uses/utilization, and the victory-rate margin
+between the strongest and weakest policy. `campaign_acceptance_bands.json` owns
+the reviewed expectations: novice for Easy, competent for Normal, and expert for
+Hard, while allowing several builds and deterministic retries.  The report also
+fingerprints every runtime definition or implementation file it consumes/mirrors,
+so combat-rule changes cannot silently retain an old result.
+
+This CI model mirrors runtime combat semantics but does not load LÖVE. Projectile
+travel is resolved at firing time, placement is reduced to coverage intervals on
+the exact route length, boss packages/summoned adds and visual-frame behavior are
+not modeled, and campaign unlock progression is assumed. It is deterministic
+balance evidence, not a replacement for runtime integration tests or human
+playtesting.
+
 ## Campaign economy
 
 The economy fixture parses every authored campaign group, enemy reward, and

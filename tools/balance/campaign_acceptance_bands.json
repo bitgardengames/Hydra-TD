@@ -1,0 +1,14 @@
+{
+  "format_version": 1,
+  "campaigns_per_policy": 3,
+  "required_policy_by_difficulty": {
+    "easy": {"policy": "novice", "minimum_victory_rate": 0.66},
+    "normal": {"policy": "competent", "minimum_victory_rate": 0.66},
+    "hard": {"policy": "expert", "minimum_victory_rate": 0.66}
+  },
+  "metric_bands": {
+    "minimum_policy_margin": 0.0,
+    "maximum_mean_rebuilds": 8.0,
+    "minimum_ability_utilization": 0.05
+  }
+}
