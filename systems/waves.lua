@@ -195,7 +195,7 @@ local function resolveWaveGroups(wave, map, waveNumber)
 	local groups = {}
 	for i, group in ipairs(wave.groups) do
 		groups[i] = {
-			kind = group.kind == "boss" and getBossByArchetype(map, bossIndex) or group.kind,
+			kind = group.kind == "boss" and (wave.bossArchetype or getBossByArchetype(map, bossIndex)) or group.kind,
 			count = group.count,
 			spacing = group.spacing,
 			delay = group.delay,
@@ -351,6 +351,13 @@ function Waves.getWavePreview(waveNumber)
 		totalCount = wave.count or 0,
 		counts = counts,
 		composition = groups,
+		beatKey = wave.beatKey,
+		beatName = wave.beatName,
+		beatRole = wave.beatRole,
+		objectiveProgressKey = wave.objectiveProgressKey,
+		featuredThreat = wave.featuredThreat,
+		bossArchetype = wave.bossArchetype,
+		bossIntent = wave.bossIntent,
 	}
 end
 
@@ -380,7 +387,7 @@ end
 local function startBossWave(wave, map)
 	Effects.shake(0, 0.3)
 	local bossIndex = math.max(1, math.floor(State.wave / 10))
-	local bossKind = getBossByArchetype(map, bossIndex)
+	local bossKind = wave.bossArchetype or getBossByArchetype(map, bossIndex)
 	local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
 	local tier = WaveBuilder.getIntensityTier(State.wave)
 	local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, true)
