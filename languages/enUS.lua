@@ -113,7 +113,7 @@ return {
 			plasma = "Plasma tower",
 			secondAbilitySlot = "second active ability slot",
 			enhancedAbilities = "enhanced active abilities",
-			challengeEndless = "Complete the campaign: unlock Challenge and Endless modes",
+			challengeEndless = "Challenge and Endless modes",
 		},
 		tacticalHint = "Tactical hint: %s",
 		previewListSeparator = ", ",
@@ -546,6 +546,14 @@ return {
 
 	victory = {
 		medalProgress = "Difficulty medals earned",
+		finalCampaign = {
+			title = "Campaign Complete",
+			firstClear = "You completed the campaign on %s difficulty.",
+			repeatClear = "You conquered the campaign again on %s difficulty.",
+			rewardUnlocked = "New reward: Challenge and Endless modes unlocked.",
+			challengePrompt = "Challenge and Endless await whenever you are ready.",
+			endlessAction = "Begin Endless Challenge",
+		},
 		rewardUnlocked = "Reward Unlocked",
 		rewardPrevious = "Previous",
 		rewardNext = "Next",

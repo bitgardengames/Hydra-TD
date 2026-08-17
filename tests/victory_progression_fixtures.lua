@@ -84,11 +84,19 @@ assert(state.worldMapIndex == #maps, "penultimate victory should advance exactly
 
 state.worldMapIndex = #maps
 campaignComplete = true
+state.unlockedRewardsThisVictory = {{type = "campaign_complete", id = "challenge_endless"}}
 Victory.load()
 assert(not findButton("next"), "final victory must not present a same-map Next Map restart")
 assert(campaignUnlocks.isChallengeModeUnlocked(), "Challenge should unlock after Twin Loop")
 assert(campaignUnlocks.isEndlessUnlocked(), "Endless should unlock after Twin Loop")
 assert(findButton("endless").enabled, "Endless should unlock after Twin Loop")
+assert(findButton("endless").label == "victory.finalCampaign.endlessAction",
+	"final victory should frame Endless as the post-campaign challenge")
 assert(findButton("menu"), "final victory should retain a non-progression menu action")
+
+state.unlockedRewardsThisVictory = {}
+Victory.load()
+assert(findButton("endless").label == "victory.finalCampaign.endlessAction",
+	"repeat final clears should retain the post-campaign Endless framing")
 
 print("victory progression fixtures passed")
