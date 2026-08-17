@@ -176,7 +176,7 @@ def hud_metrics() -> dict:
         protected = {
             "boss_health": [math.floor((w-354)/2), 16, 354, 34],
             "damage_meter": panels["damage_meter_six_rows"],
-            "contextual_tip_max": [math.floor((w-min(760, w-48))/2), 24, min(760, w-48), 100],
+            "contextual_tip_max": [math.floor((w-min(560, w-48))/2), 24, min(560, w-48), 100],
         }
         def overlaps(a, b):
             return a[0] < b[0]+b[2] and a[0]+a[2] > b[0] and a[1] < b[1]+b[3] and a[1]+a[3] > b[1]
@@ -196,7 +196,7 @@ def message_tip_metrics() -> dict:
     source = (ROOT / "ui/messages.lua").read_text()
     expected = {"margin": 24, "pad_x": 12, "pad_y": 8, "gap": 10,
                 "dismiss_pad_x": 10, "dismiss_pad_y": 4,
-                "max_width": 760, "min_message_width": 240}
+                "max_width": 560, "min_message_width": 240}
     names = {"margin": "TIP_MARGIN", "pad_x": "TIP_PADDING_X",
              "pad_y": "TIP_PADDING_Y", "gap": "TIP_GAP",
              "dismiss_pad_x": "TIP_DISMISS_PADDING_X",

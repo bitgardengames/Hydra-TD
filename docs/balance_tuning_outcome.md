@@ -23,9 +23,10 @@ median first-upgrade purchase moves from wave 2 to wave 3.
 ### Enemies, income, and waves
 
 Tank, Bulwark, Regenerator, Warcaller, and Summoner base HP are now
-**41, 55, 37, 35, 37, and 50**. Boss HP is now **330 / 290 / 330 / 360** for the
-base, summoner, displacement, and suppression encounters. Rewards remain tied to
-the established durability bands, avoiding income inflation from the HP pass.
+**41, 54, 37, 35, 37, and 50**. Boss HP is now **330 / 290 / 330 / 360** for the
+base, summoner, displacement, and suppression encounters. Bulwark rewards are now **$16**, preserving the authored threat-per-dollar band
+while funding the demonstrated Cannon counter sooner; other rewards remain
+unchanged.
 
 Flawless completion income is now **$2 on Easy and Normal** in ordinary rounding
 cases and **$1 on Hard**, with existing boss and milestone modifiers still
@@ -34,26 +35,29 @@ visible cushion without moving the economy fixtures outside their purchasing
 bands.
 
 The long-form Outer Loop, Terrace, and High Ridge openings each use **17 rather
-than 18 Grunts**. This removes one low-information opening target after the enemy
-durability increase while retaining every map's authored opening-pressure,
-duration, recovery, and peak-density identity.
+than 18 Grunts**. Stepping Stones wave 6 now opens with **five rather than six
+Bulwarks**, directly addressing the marginal Hard/expert leak recorded in the
+structured playtests while retaining its paired-platoon identity.
 
 ## Aggregate result
 
 | Metric | Previous baseline | Tuned baseline | Authored target |
 |:--|--:|--:|:--|
-| Required / affordable DPS | 6,412 bp | 6,455 bp | 4,200–9,000 bp |
-| Wave-income coverage | 4,532 bp | 4,500 bp | 3,500–8,000 bp |
-| Threat per reward dollar | 5 | 5 | 3–5 |
+| Required / affordable DPS | 6,455 bp | 6,240 bp | 4,200–9,000 bp |
+| Wave-income coverage | 4,500 bp | 4,762 bp | 3,500–8,000 bp |
+| Threat per reward dollar | 5 | 4 | 3–5 |
 | Specialist role performance | 10,000 bp | 10,000 bp | 9,000–10,000 bp |
-| Leak allowance | 2,467 bp | 2,444 bp | 500–2,200 bp |
+| Leak allowance | 2,444 bp | 2,200 bp | 500–2,200 bp |
 | First-upgrade timing | wave 2 | wave 3 | waves 2–5 |
-| Wave-to-wave growth | 12,000 bp | 12,025 bp | 10,100–13,500 bp |
+| Wave-to-wave growth | 12,025 bp | 12,000 bp | 10,100–13,500 bp |
 
-Leak allowance remains outside the aspirational target. The residual gap remains
-an explicit playtest focus rather than being hidden by loosening fixture bands or
-shipping a failed economy candidate. All hard campaign, affordability, role,
-economy, interaction, pacing, and polish constraints pass with the applied values.
+Leak allowance now meets the authored target at its 2,200 bp upper bound. The
+accepted changes are supported by the Easy/Normal/Hard,
+first-time/competent/expert observations in
+`docs/structured_balance_playtests.md`; knowledge failures were handled through
+existing coaching surfaces, while only correctly understood numerical failures
+drove allow-listed tuning. All hard campaign, affordability, role, economy,
+interaction, pacing, and polish constraints pass with the applied values.
 
 ## Reproduction
 

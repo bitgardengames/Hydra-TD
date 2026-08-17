@@ -14,7 +14,7 @@ SOURCE = ROOT / "systems/campaign_wave_defs.lua"
 WINDOW_SECONDS = 5.0
 GROUP = re.compile(
     r'g\("(?P<kind>[a-z]+)",\s*(?P<count>\d+),\s*'
-    r'(?P<spacing>[0-9.]+),\s*(?P<delay>[0-9.]+)\)'
+    r'(?P<spacing>[0-9.]+),\s*(?P<delay>[0-9.]+)'
 )
 
 
