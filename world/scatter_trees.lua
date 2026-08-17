@@ -191,6 +191,7 @@ function Trees.draw(mode)
 	local trunk = getTreeTrunk()
 	local trunkOutline = getTreeTrunkOutline()
 	local swayTime = love.timer.getTime()
+	local light = ScatterCommon.getLighting(Map.getBiome())
 
 	local function nextTree(_, index)
 		while index < #trees do
@@ -232,8 +233,8 @@ function Trees.draw(mode)
 		local shadowW = rOuter * shW
 		local shadowH = rOuter * shH
 
-		lg.setColor(0, 0, 0, shA)
-		lg.ellipse("fill", x, shadowY, shadowW, shadowH)
+		ScatterCommon.drawShadow(lg, x, shadowY, shadowW, shadowH,
+			math.min(1.5, rOuter / TILE + 0.45), shA / Theme.lighting.shadowOpacity, light)
 
 		-- Trunk outline
 		lg.setColor(trunkOutline)
@@ -257,7 +258,7 @@ function Trees.draw(mode)
 			lg.circle("fill", x, canopyY, rOuter)
 
 			-- Base
-			lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
+			ScatterCommon.setLitColor(lg, style.fill, false, 1, light)
 			lg.circle("fill", x, canopyY, rInner)
 
 			-- Top highlight
@@ -265,7 +266,7 @@ function Trees.draw(mode)
 			local hy = canopyY - rInner * highlightOffset
 			local hr = rInner * highlightScale
 
-			lg.setColor(style.fill)
+			ScatterCommon.setLitColor(lg, style.fill, true, 1, light)
 			lg.circle("fill", hx, hy, hr)
 
 			lg.pop()
@@ -285,7 +286,7 @@ function Trees.draw(mode)
 			lg.rectangle("fill", x - rOuter, canopyY - rOuter, rOuter * 2, rOuter * 2, outerRadius)
 
 			-- Base
-			lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
+			ScatterCommon.setLitColor(lg, style.fill, false, 1, light)
 			lg.rectangle("fill", x - rInner, canopyY - rInner, rInner * 2, rInner * 2, innerRadius)
 
 			-- Top highlight
@@ -295,7 +296,7 @@ function Trees.draw(mode)
 			local hw = rInner * 2 * highlightScale
 			local hh = rInner * 2 * highlightScale
 
-			lg.setColor(style.fill)
+			ScatterCommon.setLitColor(lg, style.fill, true, 1, light)
 			lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
 
 			lg.pop()
@@ -349,11 +350,7 @@ function Trees.draw(mode)
 				local bx3, by3 = insetPoint(x3, y3)
 
 				-- Base (shadowed)
-				lg.setColor(
-					style.fill[1] * darkMul,
-					style.fill[2] * darkMul,
-					style.fill[3] * darkMul
-				)
+				ScatterCommon.setLitColor(lg, style.fill, false, 1, light)
 				lg.polygon("fill", bx1, by1, bx2, by2, bx3, by3)
 
 				-- Highlight (same system)
@@ -369,7 +366,7 @@ function Trees.draw(mode)
 				local hx2, hy2 = scale(bx2, by2)
 				local hx3, hy3 = scale(bx3, by3)
 
-				lg.setColor(style.fill)
+				ScatterCommon.setLitColor(lg, style.fill, true, 1, light)
 				lg.polygon("fill", hx1, hy1, hx2, hy2, hx3, hy3)
 			end
 

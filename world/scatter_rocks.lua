@@ -84,6 +84,7 @@ function Rocks.draw()
 	end
 
 	local styles = getRockStyles()
+	local light = ScatterCommon.getLighting(Map.getBiome())
 
 	for i = 1, #rocks do
 		local r = rocks[i]
@@ -117,12 +118,15 @@ function Rocks.draw()
 		local outerRadius = 5 * s + outlineW * 0.5
 		local innerRadius = outerRadius - outlineW
 
+		ScatterCommon.drawShadow(lg, x, y + hOuter * 0.34, wOuter * 0.58,
+			hOuter * 0.28, 0.12, 1, light)
+
 		-- Outline
 		lg.setColor(oR, oG, oB, 1)
 		lg.rectangle("fill", x - wOuter * 0.5, y - hOuter * 0.5, wOuter, hOuter, outerRadius)
 
 		-- Fill (shadowed base)
-		lg.setColor(rCol * darkMul, gCol * darkMul, bCol * darkMul, 1)
+		ScatterCommon.setLitColor(lg, fill, false, 1, light)
 		lg.rectangle("fill", x - wInner * 0.5, y - hInner * 0.5, wInner, hInner, innerRadius)
 
 		-- Highlight
@@ -131,7 +135,7 @@ function Rocks.draw()
 		local hw = wInner * highlightScale
 		local hh = hInner * highlightScale
 
-		lg.setColor(rCol, gCol, bCol, 1)
+		ScatterCommon.setLitColor(lg, fill, true, 1, light)
 		lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
 
 		-- Paired rock
@@ -149,12 +153,15 @@ function Rocks.draw()
 			local pairOuterRadius = 5 * ps + outlineW * 0.5
 			local pairInnerRadius = pairOuterRadius - outlineW
 
+			ScatterCommon.drawShadow(lg, px, py + phOuter * 0.34, pwOuter * 0.58,
+				phOuter * 0.28, 0.08, 1, light)
+
 			-- Outline
 			lg.setColor(oR, oG, oB, 1)
 			lg.rectangle("fill", px - pwOuter * 0.5, py - phOuter * 0.5, pwOuter, phOuter, pairOuterRadius)
 
 			-- Fill
-			lg.setColor(rCol * darkMul, gCol * darkMul, bCol * darkMul, 1)
+			ScatterCommon.setLitColor(lg, fill, false, 1, light)
 			lg.rectangle("fill", px - pwInner * 0.5, py - phInner * 0.5, pwInner, phInner, pairInnerRadius)
 
 			-- Highlight
@@ -163,7 +170,7 @@ function Rocks.draw()
 			local phw = pwInner * highlightScale
 			local phh = phInner * highlightScale
 
-			lg.setColor(rCol, gCol, bCol, 1)
+			ScatterCommon.setLitColor(lg, fill, true, 1, light)
 			lg.rectangle("fill", phx - phw * 0.5, phy - phh * 0.5, phw, phh, pairInnerRadius)
 		end
 
