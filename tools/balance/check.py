@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 GATES = (("combat", "run_fixtures.py"), ("pacing", "campaign_pacing_report.py"),
          ("economy", "economy_fixtures.py"),
          ("campaign challenge", "challenge_fixtures.py"),
+         ("strategy diversity + robustness", "strategy_analysis.py"),
          ("ability + interactions", "interaction_fixtures.py"),
          ("polish metrics", "polish_report.py"))
 failed = []
@@ -17,4 +18,7 @@ for name, script in GATES:
     print(f'{"PASS" if result.returncode == 0 else "FAIL"} {name}')
     if result.returncode:
         failed.append(name)
+    if script == "strategy_analysis.py" and not result.returncode:
+        subprocess.run([sys.executable, str(ROOT / "tools/balance" / script), "--summary"],
+                       cwd=ROOT, check=True)
 raise SystemExit(bool(failed))

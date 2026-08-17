@@ -39,6 +39,31 @@ one dependency-free command:
 python3 tools/balance/check.py
 ```
 
+The aggregate report includes a strategy-family audit for every map, wave, and
+difficulty. Run its full machine-readable report directly with:
+
+```sh
+python3 tools/balance/strategy_analysis.py
+python3 tools/balance/strategy_analysis.py --check
+```
+
+The audit deterministically samples affordable plans across tower-role mixes,
+upgrade branches, placement regions, and ability loadouts. Purchase-order-only
+differences are canonicalized away. Each viable family is perturbed by moving a
+tower, delaying an upgrade or ability, substituting a tower, and removing five
+percent of available income. The report gives the independently viable and
+robust family counts, margin, and fraction of perturbations survived. Thresholds
+live in `strategy_bands.json`; an encounter may waive them only by listing its
+full `difficulty/map/wave_N` id in `puzzles` as an explicit design decision.
+
+These are conservative static proxies for strategic breathing room, not claims
+that an AI played the map. A passing count can still hide awkward targeting,
+unfun pacing, inaccessible execution, or families that players will not discover;
+a failure can reveal either brittle tuning or an intentionally puzzle-like idea.
+Use the detailed families to choose human playtest cases, then review placement,
+timing, clarity, enjoyment, and player-observed success. The metrics inform that
+review and must never replace it.
+
 ## Reviewed tuning proposals
 
 `recommend.py` is a deterministic, standard-library-only constrained optimizer.
