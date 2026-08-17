@@ -155,7 +155,7 @@ return {
 		},
 		behaviors = {
 			{id = "emit_on_target"},
-			{id = "hit_chain", data = {jumps = 5, radius = 62, falloff = 0.82}},
+			{id = "hit_chain", data = {jumps = 4, radius = 62, falloff = 0.82}},
 			{id = "chain_zap_fx"}
 		}
 	},
