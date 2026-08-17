@@ -756,6 +756,19 @@ local function drawCannonFX(t)
 	lg.setColor(1.0, 0.8, 0.6, alpha * 0.25)
 	lg.circle("fill", mx, my, r * 0.5)
 
+	-- A short, deterministic smoke puff follows the flash instead of becoming a
+	-- free-running particle decoration.
+	local smoke = t.firePhase == "recoil" and (1 - (t.firePhaseProgress or 0))
+		or (t.firePhase == "settle" and (1 - (t.firePhaseProgress or 0)) * 0.45) or 0
+	if smoke > 0 then
+		for i = 1, 3 do
+			local drift = (1 - smoke) * (5 + i * 2)
+			lg.setColor(0.62, 0.65, 0.68, smoke * (0.34 - i * 0.045))
+			lg.circle("fill", mx + cos(t.angle + i * 0.55) * drift,
+				my + sin(t.angle + i * 0.55) * drift - drift * 0.45, 2 + i + drift * 0.12)
+		end
+	end
+
 	lg.setLineWidth(1)
 end
 
@@ -887,7 +900,7 @@ local function drawTowerBase(kind, cx, cy, alpha, tintR, tintG, tintB, height)
 end
 
 -- Draw tower core shape
-local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, tintB, fireAnim)
+local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, tintB, fireAnim, renderState)
 	local def = towerDefs[kind]
 
 	if not def then
@@ -901,6 +914,13 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	tintG = tintG or 1
 	tintB = tintB or 1
 	fireAnim = fireAnim or 0
+	local phase = renderState and renderState.firePhase or "idle"
+	local phaseT = renderState and renderState.firePhaseProgress or 0
+	local anticipation = phase == "anticipation" and phaseT or 0
+	local discharge = phase == "discharge" and (1 - phaseT) or 0
+	local recoilPhase = phase == "recoil" and (1 - phaseT) or 0
+	local settle = phase == "settle" and (1 - phaseT) or 0
+	local idlePhase = renderState and renderState.idlePhase or 0
 
 	local color = def.color
 	local outlineW = outlineWidth
@@ -1055,14 +1075,17 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	lg.translate(-recoil, 0)
 
 	if kind == "cannon" then
-		local barrelH = size * 0.28
+		-- The tube compresses before firing and eases back to its authored length.
+		local barrelH = size * 0.28 * (1 + anticipation * 0.18 - settle * 0.08)
+		local barrelX = size * 0.26 - anticipation * size * 0.08 + settle * size * 0.04
 
 		lg.setColor(outR, outG, outB, outlineA)
-		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
+		lg.rectangle("fill", barrelX, -barrelH * 0.5, size * 0.54, barrelH, 4, 4)
 	elseif kind == "shock" then
 		local barrelLen = size * 0.52
 		local barrelW = size * 0.12
-		local offset = size * 0.12
+		-- Prongs spread while storing charge, then snap together at discharge.
+		local offset = size * (0.12 + anticipation * 0.13 - discharge * 0.07)
 
 		for i = -1, 1, 2 do
 			local oy = offset * i
@@ -1071,14 +1094,15 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 			lg.rectangle("fill", size * 0.28, oy - barrelW * 0.5, barrelLen, barrelW, 2, 2)
 		end
 	elseif kind == "poison" then
-		local pulse = fireAnim * (1 - fireAnim) * 4
-		local sacRadius = size * 0.16 + pulse
+		local bubble = sin(idlePhase * 2.1) * size * 0.018
+		local sacRadius = size * 0.16 + bubble - anticipation * size * 0.055 + discharge * size * 0.035
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.circle("fill", size * 0.26, 0, sacRadius)
 	elseif kind == "lancer" then
+		local thrust = discharge * size * 0.22 - anticipation * size * 0.2 - recoilPhase * size * 0.08
 		lg.setColor(outR, outG, outB, outlineA)
-		lg.rectangle("fill", size * 0.32, -size * 0.08, size * 0.58, size * 0.16, 2, 2)
+		lg.rectangle("fill", size * 0.32 + thrust, -size * 0.08, size * 0.58, size * 0.16, 2, 2)
 	elseif kind == "slow" then
 		local ex = rectInner
 		local ey = 0
@@ -1093,11 +1117,31 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 		lg.rectangle("fill", -s, -s, s * 2, s * 2, 2)
 
 		lg.pop()
+
+		-- Charge collapses into the core; discharge reverses it as a frost pulse.
+		local ringRadius = size * (0.48 - anticipation * 0.24 + discharge * 0.18)
+		lg.setColor(0.82, 0.94, 1, alpha * (0.35 + anticipation * 0.55 + discharge * 0.35))
+		lg.setLineWidth(2)
+		lg.circle("line", 0, 0, ringRadius)
+		lg.setLineWidth(1)
 	elseif kind == "plasma" then
 		local barrelH = size * 0.24
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.58, barrelH, 3, 3)
+
+		-- Containment rotates slowly at idle and accelerates with real charge.
+		local rotation = idlePhase + anticipation * pi * 0.8
+		local coreLight = 0.45 + anticipation * 0.5 + discharge * 0.55
+		lg.setColor(0.92, 0.68, 1, min(1, coreLight) * alpha)
+		lg.circle("fill", 0, 0, size * (0.1 + anticipation * 0.035))
+		lg.setLineWidth(2)
+		for i = 0, 1 do
+			local a = rotation + i * HALF_PI
+			local dx, dy = cos(a) * size * 0.27, sin(a) * size * 0.27
+			lg.line(-dx, -dy, dx, dy)
+		end
+		lg.setLineWidth(1)
 	end
 
 	lg.pop()
@@ -1143,7 +1187,9 @@ local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
 end
 
 local function drawTowerInstance(t, cx, renderY)
-	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
+	drawTowerBase(t.kind, cx, renderY, 1, darkMul, darkMul, darkMul)
+	drawTowerBaseHighlight(t.kind, cx, renderY, 1)
+	drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, 1, 1, 1, 1, t.fireAnim, t)
 end
 
 local function drawTowerUpgradeFlash(t, cx, renderY)
