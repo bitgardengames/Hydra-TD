@@ -18,6 +18,6 @@ Recorded 2026-08-17 against the `intended_challenge` authored profile. These run
 
 ## Decisions
 
-The first-time failures were knowledge failures: players saw the Fast/Slow relationship but missed the elite modifier. They were resolved without stat changes by reviewing the existing map briefing, preview portraits, hover tooltip counter rows, trait labels, and the game-over largest-leak diagnosis. Contextual coaching was narrowed to remain readable without covering the compact wave panel at 1280 pixels.
+The first-time failures were knowledge failures: players saw the Fast/Slow relationship but missed the overlapping threat composition. They were resolved without stat changes by reviewing the existing map briefing, preview portraits, hover tooltip counter rows, trait labels, and the game-over largest-leak diagnosis. Contextual coaching was narrowed to remain readable without covering the compact wave panel at 1280 pixels.
 
 The competent/expert failures had correct counter choices, low unspent reserves, and an accurate explanation of the leak. The accepted numerical changes therefore stayed inside `tuning_parameters.json`: Bulwark reward increased from $14 to $16, Bulwark HP decreased from 55 to 54, and Stepping Stones wave 6's leading Bulwark group decreased from six to five. The last change targets the exact marginal Hard/expert failure rather than flattening every map.

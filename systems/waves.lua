@@ -9,7 +9,6 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
 local EnemyTraits = require("world.enemy_traits")
-local EnemyAffixDefs = require("world.enemy_affix_defs")
 local Spatial = require("world.spatial_grid")
 local Effects = require("world.effects")
 local Messages = require("ui.messages")
@@ -203,19 +202,11 @@ local function resolveWaveGroups(wave, map, waveNumber)
 			count = group.count,
 			spacing = group.spacing,
 			delay = group.delay,
-			affixes = group.affixes,
-			eliteAssignment = group.eliteAssignment,
 			hpMult = group.hpMult,
 			spdMult = group.spdMult,
 		}
 	end
 	return groups
-end
-
--- Resolve authored placement by ordinal, not RNG.  This same function feeds the
--- preview segmentation and live spawn queue, making their affix claims identical.
-local function resolveGroupAffixes(group, position)
-	return CampaignWaveDefs.resolveGroupAffixes(group, position)
 end
 
 -- Keep spawner table shape so nothing else breaks (UI, debug, etc.)
@@ -228,7 +219,6 @@ local spawnerDefaults = {
 	spdMult = 1.0,
 	kind = nil,
 	composition = nil,
-	affixes = nil,
 	compositionIndex = 1,
 	groups = nil,
 	groupIndex = 1,
@@ -266,7 +256,7 @@ end
 resetTable(spawner, spawnerDefaults)
 resetTable(bossAdds, bossAddsDefaults)
 
-local function describeEnemyGroup(kind, count, spacing, delay, affixes)
+local function describeEnemyGroup(kind, count, spacing, delay)
 	local def = EnemyDefs[kind]
 	local group = {
 		kind = kind,
@@ -277,18 +267,7 @@ local function describeEnemyGroup(kind, count, spacing, delay, affixes)
 		tags = {},
 		counterHints = {},
 		traitIds = {},
-		affixes = affixes or {},
-		affixNames = {},
-		affixDescriptions = {},
 	}
-
-	for _, id in ipairs(group.affixes) do
-		local affix = EnemyAffixDefs[id]
-		if affix then
-			group.affixNames[#group.affixNames + 1] = L(affix.nameKey)
-			group.affixDescriptions[#group.affixDescriptions + 1] = L(affix.descriptionKey)
-		end
-	end
 
 	for _, traitId in ipairs((def and def.traits) or {}) do
 		local trait = EnemyTraits.get(traitId)
@@ -305,19 +284,8 @@ end
 local function describeAuthoredGroups(groups)
 	local descriptions = {}
 	for _, group in ipairs(groups or {}) do
-		for position = 1, group.count do
-			local affixes = resolveGroupAffixes(group, position) or {}
-			local affixKey = table.concat(affixes, ",")
-			local previous = descriptions[#descriptions]
-			if previous and previous.kind == group.kind and previous.affixKey == affixKey then
-				previous.count = previous.count + 1
-			else
-				local description = describeEnemyGroup(group.kind, 1, group.spacing,
-					position == 1 and group.delay or 0, affixes)
-				description.affixKey = affixKey
-				descriptions[#descriptions + 1] = description
-			end
-		end
+		descriptions[#descriptions + 1] = describeEnemyGroup(
+			group.kind, group.count, group.spacing, group.delay)
 	end
 	return descriptions
 end
@@ -326,18 +294,14 @@ local function describeComposition(composition, spacing)
 	local descriptions = {}
 	for _, item in ipairs(composition or {}) do
 		local kind = type(item) == "table" and item.kind or item
-		local affixes = type(item) == "table" and item.affixes or {}
-		local affixKey = table.concat(affixes, ",")
 		local previous = descriptions[#descriptions]
 
 		-- Coalesce only adjacent identical entries so the preview preserves spawn
 		-- order while avoiding a row for every enemy in an endless wave.
-		if previous and previous.kind == kind and previous.affixKey == affixKey then
+		if previous and previous.kind == kind then
 			previous.count = previous.count + 1
 		else
-			local description = describeEnemyGroup(kind, 1, spacing, 0, affixes)
-			description.affixKey = affixKey
-			descriptions[#descriptions + 1] = description
+			descriptions[#descriptions + 1] = describeEnemyGroup(kind, 1, spacing, 0)
 		end
 	end
 	return descriptions
@@ -525,11 +489,7 @@ local function currentSpawnEntry()
 	local group = spawner.groups and spawner.groups[spawner.groupIndex]
 	local item = spawner.composition and spawner.composition[spawner.compositionIndex]
 	local itemKind = type(item) == "table" and item.kind or item
-	local itemAffixes = type(item) == "table" and item.affixes or nil
-
-	local groupPosition = group and (group.count - spawner.groupRemaining + 1) or nil
-	return group, group and group.kind or itemKind or spawner.kind,
-		group and resolveGroupAffixes(group, groupPosition) or itemAffixes
+	return group, group and group.kind or itemKind or spawner.kind
 end
 
 local function advanceSpawner(group)
@@ -570,7 +530,7 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 		return spawner.active and spawner.remaining or 0
 	end, activeCap, spawnLoops, function()
 		spawner.waitingGroupDelay = false
-		local group, kind, affixes = currentSpawnEntry()
+		local group, kind = currentSpawnEntry()
 		if not kind then
 			spawner.remaining = 0
 			spawner.active = false
@@ -578,7 +538,7 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 		end
 
 		local enemy = Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
-			(group and group.spdMult) or spawner.spdMult, nil, nil, nil, {affixes = affixes})
+			(group and group.spdMult) or spawner.spdMult)
 		enemy.scheduledWaveEnemy = true
 		if enemy.boss and not bossSpawnPresented then
 			bossSpawnPresented = true

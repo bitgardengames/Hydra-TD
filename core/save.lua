@@ -43,7 +43,6 @@ local META_TABLES = {
 	"unlockedAchievements",
 	"clearedMaps",
 	"encounteredEnemies",
-	"encounteredAffixes",
 	"enemyHistory",
 	"towerHistory",
 	"discoveredModules",
@@ -438,16 +437,6 @@ function Save.markEnemyEncountered(kind)
 
 	if not meta.encounteredEnemies[kind] then
 		meta.encounteredEnemies[kind] = true
-		Save.markDirty()
-	end
-end
-
-function Save.markAffixEncountered(id)
-	if not Save.data or type(id) ~= "string" then return end
-	local meta = Save.data.meta
-	meta.encounteredAffixes = meta.encounteredAffixes or {}
-	if not meta.encounteredAffixes[id] then
-		meta.encounteredAffixes[id] = true
 		Save.markDirty()
 	end
 end
