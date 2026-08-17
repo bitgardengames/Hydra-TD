@@ -299,6 +299,7 @@ local function updateGameplayOutcome()
 		State.wave = State.wave + 1
 		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 		State.inPrep = true
+		Effects.waveCompletionCamera()
 	end
 end
 
@@ -316,6 +317,7 @@ end
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
 	Save.update(dt)
+	Effects.updateCameraSettings()
 	Camera.update(dt)
 
 	local mode = State.mode
