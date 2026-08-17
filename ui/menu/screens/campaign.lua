@@ -139,6 +139,35 @@ local function difficultyButtonLabel()
 	return format("%s: %s", L("settings.difficulty"), L("difficulty." .. current))
 end
 
+local function showDifficultyTooltip()
+	local key = Save.data.settings.difficulty or Difficulty.default
+	local def = Difficulty.defs[key] or Difficulty.get()
+	local baseline = Difficulty.defs.normal
+	local function scaleKey(value, standard)
+		if value < standard then return "lower" end
+		if value > standard then return "higher" end
+		return "standard"
+	end
+	local durability = L("difficulty.description.durability",
+		L("difficulty.description.durabilityScale." .. scaleKey(def.enemyHpBias, 1)),
+		L("difficulty.description.durabilityScale." .. scaleKey(def.bossHpBias, 1)))
+	local income = L("difficulty.description.income." .. scaleKey(def.rewardBias, baseline.rewardBias))
+	local flawlessBonus = L("difficulty.description.flawlessBonus."
+		.. scaleKey(def.perfectWaveBonus, baseline.perfectWaveBonus))
+
+	Tooltip.show({
+		title = L("difficulty." .. def.key),
+		rows = {
+			{kind = "text", text = L("difficulty.description.audience." .. def.key), padAfter = 6},
+			{label = L("difficulty.tooltip.enemyDurability"), value = durability},
+			{label = L("difficulty.tooltip.startingLives"), value = tostring(def.startLives)},
+			{label = L("difficulty.tooltip.income"), value = income},
+			{label = L("difficulty.tooltip.flawlessBonus"), value = flawlessBonus},
+			{label = L("difficulty.tooltip.sellRefund"), value = format("%d%%", floor(def.sellRefund * 100 + 0.5))},
+		},
+	})
+end
+
 -- Helpers
 local function isMapLocked(i)
 	return not Save.isMapUnlocked(i, Maps[i].id)
@@ -458,8 +487,15 @@ function Screen.update(dt)
 	layoutCampaignButtons(layout.cx, layout.buttonsStartY)
 
 	local mx, my = love.mouse.getPosition()
+	local difficultyHovered = false
 	for i, btn in ipairs(campaignButtons) do
 		Button.update(btn, mx, my, dt)
+		if btn.id == "difficulty" then
+			difficultyHovered = btn.pointerHovered
+		end
+	end
+	if difficultyHovered then
+		showDifficultyTooltip()
 	end
 	AbilityLoadout.update(dt)
 end

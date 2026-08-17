@@ -149,6 +149,36 @@ return {
 		easy = "Easy",
 		normal = "Normal",
 		hard = "Hard",
+		tooltip = {
+			enemyDurability = "Enemy durability",
+			startingLives = "Starting lives",
+			income = "Income pressure",
+			flawlessBonus = "Flawless bonus",
+			sellRefund = "Sell refund",
+		},
+		description = {
+			audience = {
+				easy = "For learning strategies and experimenting with towers.",
+				normal = "The standard campaign experience for mastering each map.",
+				hard = "For optimized builds and precise enemy counterplay.",
+			},
+			durability = "%s enemies; %s bosses",
+			durabilityScale = {
+				lower = "Weaker",
+				standard = "Standard",
+				higher = "Tougher",
+			},
+			income = {
+				lower = "Less income from kills",
+				standard = "Standard income from kills",
+				higher = "More income from kills",
+			},
+			flawlessBonus = {
+				lower = "Reduced bonus for a clean wave",
+				standard = "Full bonus for a clean wave",
+				higher = "Increased bonus for a clean wave",
+			},
+		},
 	},
 
 	ui = {
