@@ -44,7 +44,7 @@ function Cactus.clear()
 	Cactus.list = {}
 end
 
-local function drawPart(x, baseY, w, h, style)
+local function drawPart(x, baseY, w, h, style, light)
 	local fill = style.fill
 	local outline = style.outline
 
@@ -61,7 +61,7 @@ local function drawPart(x, baseY, w, h, style)
 	lg.rectangle("fill", x - wOuter * 0.5, cy - hOuter * 0.5, wOuter, hOuter, outerRadius)
 
 	-- Base
-	lg.setColor(fill[1] * darkMul, fill[2] * darkMul, fill[3] * darkMul, 1)
+	ScatterCommon.setLitColor(lg, fill, false, 1, light)
 	lg.rectangle("fill", x - w * 0.5, cy - h * 0.5, w, h, innerRadius)
 
 	-- Highlight
@@ -70,7 +70,7 @@ local function drawPart(x, baseY, w, h, style)
 	local hw = w * highlightScale
 	local hh = h * highlightScale
 
-	lg.setColor(fill)
+	ScatterCommon.setLitColor(lg, fill, true, 1, light)
 	lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius * highlightScale)
 end
 
@@ -164,6 +164,7 @@ function Cactus.draw()
 
 	local styles = getCactusStyles()
 	local flowerColor = {0.95, 0.45, 0.55}
+	local light = ScatterCommon.getLighting(Map.getBiome())
 
 	for i = 1, #list do
 		local c = list[i]
@@ -184,8 +185,8 @@ function Cactus.draw()
 		end
 
 		local radius = w
-		lg.setColor(0, 0, 0, shA)
-		lg.ellipse("fill", x, baseY + 1, radius * shW, radius * shH)
+		ScatterCommon.drawShadow(lg, x, baseY + 1, radius * shW, radius * shH,
+			math.min(1.25, h / TILE), shA / Theme.lighting.shadowOpacity, light)
 
 		if c.shape == "round" then
 			local cy = baseY - h * 0.5
@@ -197,10 +198,10 @@ function Cactus.draw()
 			lg.setColor(style.outline)
 			lg.ellipse("fill", x, cy, rx + outlineW, ry + outlineW)
 
-			lg.setColor(style.fill[1] * darkMul, style.fill[2] * darkMul, style.fill[3] * darkMul)
+			ScatterCommon.setLitColor(lg, style.fill, false, 1, light)
 			lg.ellipse("fill", x, cy, rx, ry)
 
-			lg.setColor(style.fill)
+			ScatterCommon.setLitColor(lg, style.fill, true, 1, light)
 			lg.ellipse("fill", x, cy - ry * highlightOffset, rx * highlightScale, ry * highlightScale)
 
 			if c.hasFlower then
@@ -216,13 +217,13 @@ function Cactus.draw()
 				local armX = edgeX + (w * (0.16 + a.offset * 0.34)) * a.side
 				local armY = baseY - h * (0.44 + a.y * 0.32)
 
-				drawPart(armX, armY, armW, armH, style)
+				drawPart(armX, armY, armW, armH, style, light)
 			end
 
 			if c.armMode >= 1 then drawArm(c.arm1) end
 			if c.armMode >= 2 then drawArm(c.arm2) end
 
-			drawPart(x, baseY, w, h, style)
+			drawPart(x, baseY, w, h, style, light)
 
 			if c.hasFlower then
 				local top = baseY - h

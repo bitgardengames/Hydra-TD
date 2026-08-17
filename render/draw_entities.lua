@@ -6,6 +6,7 @@ local Towers = require("world.towers")
 local MapMod = require("world.map")
 local Save = require("core.save")
 local EnemyHealthVisibility = require("render.enemy_health_visibility")
+local ScatterCommon = require("world.scatter_common")
 
 local random = love.math.random
 local lg = love.graphics
@@ -59,6 +60,10 @@ local LOCOMOTION_EPS = 0.001
 
 local function lerp(a, b, t)
 	return a + (b - a) * t
+end
+
+local function worldLighting()
+	return ScatterCommon.getLighting(MapMod.getBiome())
 end
 
 local function prepareEnemyRenderData()
@@ -183,12 +188,11 @@ local function drawEnemy(e)
 	-- Keep the shadow anchored to the ground while the enemy body reacts to a hit.
 	-- Drawing it before the squash transform also keeps its footprint unchanged.
 	if e.shadow then
-		local shadowAlpha = esA * (enemyAlpha * enemyAlpha)
-
-		lg.setColor(esR, esG, esB, shadowAlpha)
+		local shadowAlpha = (enemyAlpha * enemyAlpha) * (esA / Theme.lighting.shadowOpacity)
 		local height = max(0, -bodyBob + (1 - locomotionScaleY) * r)
 		local shadowScale = max(0.88, 1 - height / max(1, r) * 0.09)
-		lg.ellipse("fill", ix, iy + e.radius, e.radius * 1.4 * shadowScale, e.radius * 0.4 * shadowScale)
+		ScatterCommon.drawShadow(lg, ix, iy + e.radius, e.radius * 1.4 * shadowScale,
+			e.radius * 0.4 * shadowScale, 0.12, shadowAlpha, worldLighting())
 	end
 
 	-- Runner streaks are short and directional, so they read as speed without
@@ -307,7 +311,8 @@ local function drawEnemy(e)
 
 	-- Body lighting (canonical system)
 	-- Base (shadowed)
-	lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul)
+	local light = worldLighting()
+	ScatterCommon.setLitColor(lg, enemyBody, false, enemyAlpha, light)
 	lg.circle("fill", ix, iy, r)
 
 	-- Top highlight
@@ -315,7 +320,7 @@ local function drawEnemy(e)
 	local hy = iy - r * highlightOffset
 	local hr = r * highlightScale
 
-	lg.setColor(eR, eG, eB, enemyAlpha)
+	ScatterCommon.setLitColor(lg, enemyBody, true, enemyAlpha, light)
 	lg.circle("fill", hx, hy, hr)
 
     -- Hit flash
@@ -1147,7 +1152,7 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	lg.pop()
 end
 
-local function drawTowerBaseHighlight(kind, cx, cy, alpha)
+local function drawTowerBaseHighlight(kind, cx, cy, alpha, light)
 	local def = towerDefs[kind]
 
 	if not def then
@@ -1167,7 +1172,11 @@ local function drawTowerBaseHighlight(kind, cx, cy, alpha)
 	local hw = baseInner * 2 * highlightScale
 	local hh = baseInner * 2 * highlightScale
 
-	lg.setColor(c[1], c[2], c[3], alpha)
+	if light then
+		ScatterCommon.setLitColor(lg, c, true, alpha, light)
+	else
+		lg.setColor(c[1], c[2], c[3], alpha)
+	end
 	lg.rectangle("fill", hx - hw * 0.5, hy - hh * 0.5, hw, hh, innerRadius)
 end
 
@@ -1187,8 +1196,10 @@ local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
 end
 
 local function drawTowerInstance(t, cx, renderY)
-	drawTowerBase(t.kind, cx, renderY, 1, darkMul, darkMul, darkMul)
-	drawTowerBaseHighlight(t.kind, cx, renderY, 1)
+	local light = worldLighting()
+	local ambient = light.ambientMultiplier
+	drawTowerBase(t.kind, cx, renderY, 1, darkMul * ambient, darkMul * ambient, darkMul * ambient)
+	drawTowerBaseHighlight(t.kind, cx, renderY, 1, light)
 	drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, 1, 1, 1, 1, t.fireAnim, t)
 end
 
@@ -1286,8 +1297,14 @@ local function drawTowers()
 		local widthMult = 1 + (1 - easeSpawn) * 0.4
 		local alphaMult = easeSpawn
 
-		lg.setColor(tsR, tsG, tsB, tsA * alphaMult)
-		lg.ellipse("fill", cx, t.y + size * 0.4, size * 0.85 * widthMult, size * 0.30)
+		-- Tight base contact plus a short directional cast grounds the tower even
+		-- while its spawn animation lifts the body.
+		local light = worldLighting()
+		local towerAlpha = alphaMult * (tsA / Theme.lighting.shadowOpacity)
+		ScatterCommon.drawShadow(lg, cx, t.y + size * 0.4, size * 0.85 * widthMult,
+			size * 0.30, 0.18 + (1 - easeSpawn) * 0.18, towerAlpha, light)
+		ScatterCommon.drawShadow(lg, cx, groundY + size * 0.34, size * 0.48,
+			size * 0.16, 0, towerAlpha * 0.8, light)
 
 		-- Only draw ground base after spawn completes
 		if spawn <= 0 then
