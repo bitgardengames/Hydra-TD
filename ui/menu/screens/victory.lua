@@ -49,6 +49,8 @@ local rewardClosePressed = false
 local rewardActionPressed = nil
 local hoveredMedalTier = nil
 local medalHoverScales = {1, 1, 1}
+local isFinalCampaignMap = false
+local unlockedFinalChallenge = false
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -186,6 +188,15 @@ local function buildRewardCards()
 		end
 	end
 	rewardCardIndex = 1
+end
+
+local function hasNewFinalChallengeReward()
+	for _, reward in ipairs(State.unlockedRewardsThisVictory or {}) do
+		if reward.type == "campaign_complete" and reward.id == "challenge_endless" then
+			return true
+		end
+	end
+	return false
 end
 
 local function rewardCardBlockingInput()
@@ -372,7 +383,8 @@ local function calculateLayout()
 	local buttonsHeight = #buttons * buttonHeight + max(0, #buttons - 1) * buttonGap
 	local titleHeight = compact and 34 or 50
 	local sectionGap = compact and 8 or 18
-	local difficultyY = compact and 12 or difficultyOffset
+	local campaignMessageH = isFinalCampaignMap and (compact and 72 or 86) or 0
+	local difficultyY = (compact and 12 or difficultyOffset) + campaignMessageH
 	local _, clusterH = Medals.getClusterSize(medalR, medalGap)
 	local medalY = difficultyY + (compact and 30 or 38)
 	local recapContentH = medalY + clusterH + 14
@@ -391,6 +403,7 @@ local function calculateLayout()
 		padX = padX, padY = padY,
 		titleY = boxY + padY, recapY = recapY, recapH = viewportH,
 		difficultyY = difficultyY, medalY = medalY,
+		campaignMessageH = campaignMessageH,
 		recapContentH = recapContentH, buttonsStartY = buttonsStartY,
 		buttonGap = buttonGap, buttonHeight = buttonHeight,
 	}
@@ -427,6 +440,8 @@ end
 
 function Screen.load()
 	local hasNextMap = State.worldMapIndex < #Maps
+	isFinalCampaignMap = State.worldMapIndex == #Maps
+	unlockedFinalChallenge = isFinalCampaignMap and hasNewFinalChallengeReward()
 	buttons = {}
 
 	if hasNextMap then
@@ -450,7 +465,7 @@ function Screen.load()
 
 	buttons[#buttons + 1] = {
 		id = "endless",
-		label = L("menu.endless"),
+		label = isFinalCampaignMap and L("victory.finalCampaign.endlessAction") or L("menu.endless"),
 		w = btnW,
 		h = btnH,
 		onClick = function()
@@ -482,6 +497,9 @@ function Screen.load()
 end
 
 function Screen.enter()
+	-- Victory-specific actions and campaign-completion copy depend on the map and
+	-- rewards from the run that just ended, not the state present at app startup.
+	Screen.load()
 	hideMedalTooltip()
 	medalHoverScales = {1, 1, 1}
 	t = 0
@@ -604,11 +622,23 @@ function Screen.draw()
 
 	Fonts.set(g.compact and "menu" or "title")
 	lg.setColor(colorGood[1], colorGood[2], colorGood[3], alpha)
-	Text.printfShadow(L("game.victory"), boxX + g.padX, titleY, boxW - g.padX * 2, "center")
+	local titleKey = isFinalCampaignMap and "victory.finalCampaign.title" or "game.victory"
+	Text.printfShadow(L(titleKey), boxX + g.padX, titleY, boxW - g.padX * 2, "center")
 
 	-- The recap may scroll, but the heading and action buttons remain outside its clip.
 	lg.setScissor(g.boxX, g.recapY, g.boxW, g.recapH)
 	local recapContentY = g.recapY - recapScroll.offset
+	if isFinalCampaignMap then
+		local difficulty = RunRecap.getDifficultyLabel() or L("difficulty." .. Difficulty.key())
+		local messageKey = unlockedFinalChallenge and "firstClear" or "repeatClear"
+		Fonts.set("ui")
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.9 * alpha)
+		Text.printfShadow(L("victory.finalCampaign." .. messageKey, difficulty), boxX + g.padX,
+			recapContentY + 2, boxW - g.padX * 2, "center")
+		lg.setColor(colorGood[1], colorGood[2], colorGood[3], 0.9 * alpha)
+		Text.printfShadow(L("victory.finalCampaign." .. (unlockedFinalChallenge and "rewardUnlocked" or "challengePrompt")),
+			boxX + g.padX, recapContentY + (g.compact and 38 or 44), boxW - g.padX * 2, "center")
+	end
 	-- Difficulty
 	local difficultyLabel = RunRecap.getDifficultyLabel()
 	local difficultyY = recapContentY + g.difficultyY
