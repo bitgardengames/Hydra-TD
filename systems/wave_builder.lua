@@ -112,6 +112,7 @@ function Builder.build(waveIndex, mapDef, isEndless)
 			beatRole = campaignGroups.beatRole,
 			objectiveProgressKey = campaignGroups.objectiveProgressKey,
 			featuredThreat = campaignGroups.featuredThreat,
+			mapBriefing = campaignGroups.mapBriefing,
 			bossArchetype = campaignGroups.bossArchetype,
 			bossIntent = campaignGroups.bossIntent,
 		}

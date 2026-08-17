@@ -674,7 +674,7 @@ return {
 	},
 
 	enemyAffix = {
-		unknown = "◆ Unknown elite affix — encounter it in Endless mode to reveal it",
+		unknown = "◆ Unknown elite affix — study the elite lessons on High Ridge and Crossflow to reveal it",
 		fortified = {
 			name = "Fortified",
 			description = "45% more health and 18% less incoming damage; worth 35% more bounty.",
