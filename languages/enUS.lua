@@ -551,6 +551,14 @@ return {
 		rewardNext = "Next",
 		rewardContinue = "Continue",
 		rewardClose = "Close",
+		completion = {
+			eyebrow = "Full Game Complete",
+			title = "Campaign Complete!",
+			body = "Twin Loop is secure. You have completed the full campaign.",
+			modes = "Challenge adds tougher campaign conditions. Endless lets you defend this map for as long as you can.",
+			campaignAction = "Campaign Map",
+			endlessAction = "Play Endless",
+		},
 		rewardGenericDesc = "New campaign option available on future runs.",
 		rewardDescriptions = {
 			tower = "Available in the tower shop during future runs.",

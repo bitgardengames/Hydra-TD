@@ -149,6 +149,10 @@ local function updateMedalTooltip()
 	hideMedalTooltip()
 end
 
+local function isFullGameCompletionCard(card)
+	return card and card.type == "full_game_completion"
+end
+
 local function buildRewardCards()
 	rewardCards = {}
 
@@ -185,6 +189,19 @@ local function buildRewardCards()
 			}
 		end
 	end
+
+	-- The campaign-complete reward is deliberately presented last.  It is an
+	-- acknowledgement of the whole campaign rather than another ordinary unlock,
+	-- and should never interrupt repeat Twin Loop clears.
+	local map = Maps[State.worldMapIndex]
+	if State.wasFirstClear and map and map.id == "twinloop" then
+		rewardCards[#rewardCards + 1] = {
+			type = "full_game_completion",
+			name = L("victory.completion.title"),
+			description = L("victory.completion.body"),
+			color = Theme.medal.gold,
+		}
+	end
 	rewardCardIndex = 1
 end
 
@@ -194,7 +211,7 @@ end
 
 local function getRewardCardBounds(g)
 	local w = min(rewardCardW, g.sw - 36)
-	local h = rewardCardH
+	local h = isFullGameCompletionCard(rewardCards[rewardCardIndex]) and 280 or rewardCardH
 	local x = (g.sw - w) * 0.5
 	local y = max(18, g.boxY + 24)
 	return x, y, w, h
@@ -210,6 +227,15 @@ local function pointInRewardClose(x, y)
 end
 
 local function closeRewardCard()
+	if isFullGameCompletionCard(rewardCards[rewardCardIndex]) then
+		rewardCards = {}
+		rewardCardIndex = 1
+		rewardCardT = 0
+		rewardClosePressed = false
+		rewardActionPressed = nil
+		Sound.play("uiBack")
+		return
+	end
 	table.remove(rewardCards, rewardCardIndex)
 	rewardCardIndex = min(rewardCardIndex, max(1, #rewardCards))
 	rewardCardT = 0
@@ -231,12 +257,19 @@ local function getRewardActionBounds(g, action)
 	local x, y, w, h = getRewardCardBounds(g)
 	local buttonW = 112
 	local buttonY = y + h - rewardActionH - 12
-	if action == "previous" then return x + 18, buttonY, buttonW, rewardActionH end
+	if action == "previous" or action == "campaign" then return x + 18, buttonY, buttonW, rewardActionH end
 	return x + w - buttonW - 18, buttonY, buttonW, rewardActionH
 end
 
 local function pointInRewardAction(x, y)
 	if #rewardCards <= 0 or not layout then return nil end
+	if isFullGameCompletionCard(rewardCards[rewardCardIndex]) then
+		for _, action in ipairs({"campaign", "endless"}) do
+			local bx, by, bw, bh = getRewardActionBounds(layout, action)
+			if x >= bx and x <= bx + bw and y >= by and y <= by + bh then return action end
+		end
+		return nil
+	end
 	if rewardCardIndex > 1 then
 		local bx, by, bw, bh = getRewardActionBounds(layout, "previous")
 		if x >= bx and x <= bx + bw and y >= by and y <= by + bh then return "previous" end
@@ -247,7 +280,24 @@ local function pointInRewardAction(x, y)
 end
 
 local function activateRewardAction(action)
-	if action == "previous" and rewardCardIndex > 1 then
+	if action == "campaign" then
+		finishRewardCards()
+		Save.flush()
+		State.gameOver = false
+		State.victory = false
+		State.endless = false
+		State.mapIndex = State.resolveMapIndex(State.worldMapIndex)
+		State.mode = "campaign"
+		return
+	elseif action == "endless" and CampaignUnlocks.isEndlessUnlocked() then
+		finishRewardCards()
+		State.speed = 1
+		State.endless = true
+		State.gameOver = false
+		State.victory = false
+		State.mode = "game"
+		return
+	elseif action == "previous" and rewardCardIndex > 1 then
 		rewardCardIndex = rewardCardIndex - 1
 	elseif action == "next" then
 		if rewardCardIndex < #rewardCards then
@@ -268,6 +318,7 @@ local function drawRewardUnlockCard(g)
 
 	local index = rewardCardIndex
 	local card = rewardCards[index]
+	local completion = isFullGameCompletionCard(card)
 	local intro = min(1, rewardCardT * 2.2)
 	local scale = 0.78 + 0.22 * easeOutBack(intro)
 	local alpha = min(1, rewardCardT * 3)
@@ -291,7 +342,7 @@ local function drawRewardUnlockCard(g)
 
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], alpha)
-	Text.printfShadow(L("victory.rewardUnlocked"), x + 18, y + 16, w - 36, "center")
+	Text.printfShadow(isFullGameCompletionCard(card) and L("victory.completion.eyebrow") or L("victory.rewardUnlocked"), x + 18, y + 16, w - 36, "center")
 
 	local closeX = x + w - rewardCloseSize - 10
 	local closeY = y + 10
@@ -307,8 +358,10 @@ local function drawRewardUnlockCard(g)
 	lg.line(closeX + 22, closeY + 10, closeX + 10, closeY + 22)
 
 	local iconX, iconY = x + 74, y + 105
-	lg.setColor(0.04, 0.05, 0.07, 0.8 * alpha)
-	lg.circle("fill", iconX, iconY, 43)
+	if not completion then
+		lg.setColor(0.04, 0.05, 0.07, 0.8 * alpha)
+		lg.circle("fill", iconX, iconY, 43)
+	end
 	if card.type == "tower" then
 		DrawEntities.drawTowerBase(card.id, iconX, iconY + 10, alpha)
 		DrawEntities.drawTowerCore(card.id, iconX, iconY + 10, -0.65, 0, alpha)
@@ -318,12 +371,16 @@ local function drawRewardUnlockCard(g)
 
 	Fonts.set("menu")
 	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-	Text.printfShadow(card.name, x + 132, y + 64, w - 154, "left")
+	Text.printfShadow(card.name, completion and x + 28 or x + 132, y + 64, completion and w - 56 or w - 154, completion and "center" or "left")
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.82 * alpha)
-	Text.printfShadow(card.description, x + 132, y + 100, w - 154, "left")
+	Text.printfShadow(card.description, completion and x + 28 or x + 132, y + 100, completion and w - 56 or w - 154, completion and "center" or "left")
+	if completion then
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
+		Text.printfShadow(L("victory.completion.modes"), x + 28, y + 142, w - 56, "center")
+	end
 
-	if #rewardCards > 1 then
+	if #rewardCards > 1 and not completion then
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.55 * alpha)
 		Text.printfShadow(('%d / %d'):format(index, #rewardCards), x + 18, y + h - 36, w - 36, "center")
 	end
@@ -339,9 +396,14 @@ local function drawRewardUnlockCard(g)
 		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
 		Text.printfShadow(label, bx, by + 7, bw, "center")
 	end
-	if index > 1 then drawAction("previous", L("victory.rewardPrevious")) end
-	local finalLabel = #rewardCards == 1 and L("victory.rewardClose") or L("victory.rewardContinue")
-	drawAction("next", index < #rewardCards and L("victory.rewardNext") or finalLabel)
+	if completion then
+		drawAction("campaign", L("victory.completion.campaignAction"))
+		drawAction("endless", L("victory.completion.endlessAction"))
+	else
+		if index > 1 then drawAction("previous", L("victory.rewardPrevious")) end
+		local finalLabel = #rewardCards == 1 and L("victory.rewardClose") or L("victory.rewardContinue")
+		drawAction("next", index < #rewardCards and L("victory.rewardNext") or finalLabel)
+	end
 
 	lg.pop()
 end
@@ -491,10 +553,10 @@ function Screen.enter()
 	rewardClosePressed = false
 	rewardActionPressed = nil
 	recapScroll:reset()
-	buildRewardCards()
 	resetConfetti()
 	Medals.resetAnimations()
 	recordFirstClear()
+	buildRewardCards()
 
 	previousMedalCount = Medals.getCount(State.previousCompletionDifficulty)
 	currentMedalCount = Medals.getCount(Difficulty.key())
