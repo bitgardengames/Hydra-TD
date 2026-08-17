@@ -20,10 +20,10 @@ local pacingIdentityByMapId = {
 	circuit = "relay: regenerators hand pressure from group to group",
 	outerloop = "long rotation: broad formations with generous recovery",
 	terrace = "escalation: warcaller pulses inside steady escorts",
-	highridge = "mixed timing: durable fronts followed by runner leak pressure",
-	crossflow = "crossing lanes: paired groups meet in the engagement window",
-	steppingstones = "islands: discrete platoons with pronounced safe gaps",
-	twinloop = "final exam: two dense cycles orbit summoner pressure",
+	highridge = "finale lesson one: staggered Fortified fronts expose runner leaks",
+	crossflow = "finale lesson two: tighter crossings add Relentless pressure",
+	steppingstones = "finale synthesis: separated platoons pair both elite counters",
+	twinloop = "campaign final exam: two dense cycles orbit summoner pressure",
 }
 
 local pacingTargetsByMapId = {
@@ -409,10 +409,10 @@ local encounterPlansByMapId = {
 	circuit = { lesson = "Regenerator Relay", featuredThreat = "regenerator", bossArchetype = "boss_summoner" },
 	outerloop = { lesson = "Long Rotation", featuredThreat = "bulwark", bossArchetype = "boss_suppression" },
 	terrace = { lesson = "Warcaller Escalation", featuredThreat = "warcaller", bossArchetype = "boss_summoner" },
-	highridge = { lesson = "Fortified Lesson", briefing = "Fortified elites absorb punishment: focus heavy hits to crack their extra health and defense.", featuredThreat = "runner", bossArchetype = "boss_summoner" },
-	crossflow = { lesson = "Relentless Lesson", briefing = "Relentless elites shake off slows quickly: build overlapping damage coverage instead.", featuredThreat = "bulwark", bossArchetype = "boss_summoner" },
-	steppingstones = { lesson = "Elite Pairing", briefing = "Read each elite: heavy focus counters Fortified while coverage catches Relentless.", featuredThreat = "warcaller", bossArchetype = "boss_displacement" },
-	twinloop = { lesson = "Summoner Orbits", featuredThreat = "summoner", bossArchetype = "boss_summoner" },
+	highridge = { lesson = "Finale I: Fortified Fronts", briefing = "Fortified elites absorb punishment: focus heavy hits to crack their extra health and defense.", featuredThreat = "runner", bossArchetype = "boss_summoner" },
+	crossflow = { lesson = "Finale II: Relentless Crossings", briefing = "Relentless elites shake off slows quickly: build overlapping damage coverage instead.", featuredThreat = "bulwark", bossArchetype = "boss_summoner" },
+	steppingstones = { lesson = "Finale III: Elite Pairing", briefing = "Read each elite: heavy focus counters Fortified while coverage catches Relentless.", featuredThreat = "warcaller", bossArchetype = "boss_displacement" },
+	twinloop = { lesson = "Campaign Final: Summoner Orbits", featuredThreat = "summoner", bossArchetype = "boss_summoner" },
 }
 
 local beatByWave = {

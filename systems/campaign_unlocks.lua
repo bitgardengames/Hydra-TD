@@ -35,7 +35,7 @@ local rewardsByMapId = {
 	-- rewards contiguous at the front rather than using route progression as a
 	-- placeholder reward or leaving gaps between unlocks.
 	terrace = {{type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"}},
-	highridge = {{type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"}},
+	twinloop = {{type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"}},
 }
 
 local requiredMapByTower = {
