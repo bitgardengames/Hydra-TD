@@ -137,7 +137,7 @@ function Inspect.getButtons()
 end
 
 -- Compact status rows. The caller controls the available row count, preventing
--- elaborate elite/boss combinations from entering the bottom action region.
+-- elaborate boss combinations from entering the bottom action region.
 local STATUS_ROW_H = 18
 local STATUS_BAR_W = 54
 
@@ -378,13 +378,10 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			for _, status in ipairs(statuses) do rows[#rows + 1] = {status = status} end
 		end
 		local traits = (e.def and e.def.traits) or {}
-		if #traits > 0 or #(e.affixes or {}) > 0 then
+		if #traits > 0 then
 			rows[#rows + 1] = {header = L("inspect.permanentTraits")}
 			for _, traitId in ipairs(traits) do
 				rows[#rows + 1] = {trait = "• " .. L("enemyTrait." .. traitId .. ".tag")}
-			end
-			for _, affix in ipairs(e.affixes or {}) do
-				rows[#rows + 1] = {trait = affix.icon .. " " .. L(affix.nameKey), color = affix.color}
 			end
 		end
 
