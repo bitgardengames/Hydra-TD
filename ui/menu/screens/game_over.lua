@@ -262,23 +262,25 @@ function Screen.draw()
 
 	-- Highlight strip
 	local count = #highlights
-	local totalGap = highlightGap * (count - 1)
-	local cardW = (boxW - paddingX * 2 - totalGap) / count
+	if count > 0 then
+		local totalGap = highlightGap * (count - 1)
+		local cardW = (boxW - paddingX * 2 - totalGap) / count
 
-	for i, item in ipairs(highlights) do
-		local x = boxX + paddingX + (i - 1) * (cardW + highlightGap)
-		local y = highlightsY
+		for i, item in ipairs(highlights) do
+			local x = boxX + paddingX + (i - 1) * (cardW + highlightGap)
+			local y = highlightsY
 
-		lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.6 * alpha)
-		lg.rectangle("fill", x, y, cardW, highlightH, 10, 10)
+			lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.6 * alpha)
+			lg.rectangle("fill", x, y, cardW, highlightH, 10, 10)
 
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.68 * alpha)
-		Fonts.set("ui")
-		Text.printfShadow(item.label, x + 10, y + 8, cardW - 20, "left")
+			lg.setColor(colorText[1], colorText[2], colorText[3], 0.68 * alpha)
+			Fonts.set("ui")
+			Text.printfShadow(item.label, x + 10, y + 8, cardW - 20, "left")
 
-		lg.setColor(colorButton[1], colorButton[2], colorButton[3], alpha)
-		Fonts.set("menu")
-		Text.printfShadow(item.value, x + 10, y + 28, cardW - 20, "left")
+			lg.setColor(colorButton[1], colorButton[2], colorButton[3], alpha)
+			Fonts.set("menu")
+			Text.printfShadow(item.value, x + 10, y + 28, cardW - 20, "left")
+		end
 	end
 
 	-- Map/difficulty context

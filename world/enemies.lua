@@ -1,5 +1,4 @@
 local Theme = require("core.theme")
-local Sound = require("systems.sound")
 local Util = require("core.util")
 local State = require("core.state")
 local Effects = require("world.effects")
@@ -13,6 +12,7 @@ local L = require("core.localization")
 local Save = require("core.save")
 local RunStats = require("systems.run_stats")
 local Difficulty = require("systems.difficulty")
+local GameplayOutcome = require("systems.gameplay_outcome")
 
 local enemies = {}
 local enemyPool = {}
@@ -359,17 +359,7 @@ local function recordKiller(e)
 end
 
 local function beginGameOver(reason)
-	State.lives = 0
-	State.gameOver = true
-	State.victory = false
-	Achievements.onGameOver()
-	State.mode = "game_over"
-	State.endT = 0
-	State.endReady = false
-	State.endTitle = L("game.gameOver")
-	State.endReason = reason
-	Sound.play("gameOver")
-	Sound.playMusic("gameOver")
+	GameplayOutcome.defeat(reason)
 end
 
 local function handleEnemyEscaped(e, i, isBoss)
