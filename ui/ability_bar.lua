@@ -85,8 +85,8 @@ end
 local function drawButton(button, def, activeTime)
 	local x, y = button.x, button.y
 	local available = button.lockMessage == nil
-	local cooldown = State.abilityCooldowns[button.abilityId] or 0
-	local ready = available and cooldown <= 0
+	local charge = State.abilityCharges[button.abilityId] or 0
+	local ready = available and charge >= def.chargeRequired
 
 	local anim = button.anim or Button.newAnimation({errorT = 0})
 	local errorEase = anim.errorT * anim.errorT * (3 - 2 * anim.errorT)
@@ -112,7 +112,7 @@ local function drawButton(button, def, activeTime)
 	elseif not available then
 		iconState = "locked"
 	elseif not ready then
-		iconState = "cooldown"
+		iconState = "charging"
 	else
 		iconState = "ready"
 	end
@@ -140,11 +140,11 @@ local function drawButton(button, def, activeTime)
 		Text.printfShadow("🔒", fx, fy + 6, SIZE, "center")
 		Text.printfShadow(button.lockMessage, fx + 3, fy + SIZE - 25, SIZE - 6, "center")
 	elseif not ready then
-		local ratio = min(1, cooldown / def.cooldown)
+		local ratio = min(1, charge / def.chargeRequired)
 		lg.setColor(0.02 + 0.35 * errorEase, 0.03, 0.05, 0.72 + 0.18 * errorEase)
-		lg.rectangle("fill", fx, fy + SIZE * (1 - ratio), SIZE, SIZE * ratio, innerRadius)
+		lg.rectangle("fill", fx, fy, SIZE, SIZE * (1 - ratio), innerRadius)
 		lg.setColor(1, 1 - 0.55 * errorEase, 1 - 0.55 * errorEase, 0.9 + 0.1 * errorEase)
-		Text.printfShadow(tostring(math.ceil(cooldown)), fx, fy + 20, SIZE, "center")
+		Text.printfShadow(string.format("%d/%d", charge, def.chargeRequired), fx, fy + 20, SIZE, "center")
 	elseif State.abilityTargeting and State.abilityTargeting.abilityId == button.abilityId then
 		lg.setColor(1, 0.86, 0.35, 1)
 		lg.setLineWidth(3)
@@ -183,12 +183,12 @@ function AbilityBar.update(dt, mx, my)
 			local hovered = mx >= x and mx <= x + SIZE and my >= y and my <= y + SIZE
 			local button = buttons[i] or {}
 			buttons[i] = button
-			local cooldown = State.abilityCooldowns[abilityId] or 0
+			local charge = State.abilityCharges[abilityId] or 0
 			local lockMessage = CampaignUnlocks.getAbilityLockMessage(abilityId, i)
 			local available = lockMessage == nil
 			local sameDisplay = button.abilityId == abilityId and button.wasAvailable == available
-			if sameDisplay and not runReset and button.previousCooldown and
-				button.previousCooldown > 0 and cooldown <= 0 and available then
+			if sameDisplay and not runReset and button.previousCharge and
+				button.previousCharge < def.chargeRequired and charge >= def.chargeRequired and available then
 				button.readyT = 1
 				Sound.playAbilityReady()
 			elseif not sameDisplay or runReset then
@@ -198,9 +198,9 @@ function AbilityBar.update(dt, mx, my)
 			button.abilityId = abilityId
 			button.slotIndex = i
 			button.lockMessage = lockMessage
-			button.enabled = available and cooldown <= 0
+			button.enabled = available and charge >= def.chargeRequired
 			button.hovered = hovered
-			button.previousCooldown = cooldown
+			button.previousCharge = charge
 			button.wasAvailable = available
 			button.readyT = max(0, (button.readyT or 0) - dt * 2.8)
 			updateButton(button, hovered, dt)

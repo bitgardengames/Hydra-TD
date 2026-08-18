@@ -112,7 +112,9 @@ for the player's towers.
 ## Shared implementation and balance guardrails
 
 - Ability definitions should declare their target mode, radius, duration,
-  cooldown, effect values, and enhanced values as data.
+  kill-charge requirement, effect values, and enhanced values as data. Normal
+  scheduled kills grant one charge, bosses grant five, summoned enemies grant
+  none, and ability-caused kills cannot recharge the ability loadout.
 - Tower buffs should store an expiry time and multiplier on each affected tower.
   Derive effective attack timing from those values instead of permanently
   rewriting base tower stats.
@@ -124,6 +126,6 @@ for the player's towers.
   was included at the edge of the cast.
 - Prefer multiplicative stacking with a conservative cap if future modules or
   abilities add more attack-speed modifiers.
-- Cooldowns should remain independent. Combinations such as Gravity Well into
-  Meteor or Overdrive should be encouraged; their opportunity cost is spending
-  both equipped cooldowns at once.
+- Charge remains independent per equipped ability. Combinations such as Gravity
+  Well into Meteor or Overdrive are encouraged; their opportunity cost is
+  spending both filled charge meters at once. Waiting never restores charge.

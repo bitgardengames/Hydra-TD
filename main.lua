@@ -126,7 +126,7 @@ function resetGame()
 	State.selectedTower = nil
 	State.selectedEnemy = nil
 	State.equippedAbilities = CampaignUnlocks.getEquippedAbilities()
-	State.abilityCooldowns = {}
+	State.abilityCharges = {}
 	State.abilityTargeting = nil
 	require("systems.abilities").reset()
     State.hoverGX = nil

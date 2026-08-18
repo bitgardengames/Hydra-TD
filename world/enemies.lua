@@ -292,6 +292,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	-- Reset this on every pooled instance so summoned/procedural enemies cannot
 	-- inherit the flag from an enemy that previously occupied the table.
 	e.scheduledWaveEnemy = false
+	e.summoned = opts.summoned == true
 
 	computeNudgeParams(e)
 
@@ -336,6 +337,9 @@ local function handleEnemyKilled(e, i, isBoss)
 	State.money = State.money + reward
 	State.score = State.score + (e.score or 0)
 	State.totalKills = (State.totalKills or 0) + 1
+	-- Keep charge beside the canonical kill award so every actual death grants
+	-- at most once, including bosses after their delayed death animation.
+	require("systems.abilities").chargeFromKill(e, e.lastDamageSourceKind)
 	if e.scheduledWaveEnemy then
 		State.spawnedKills = (State.spawnedKills or 0) + 1
 	end
@@ -607,6 +611,7 @@ local function updateEnemies(dt)
 					local child = spawnEnemy(summon.kind, e.hpScale, e.spdScale, e.x, e.y, e.pathSeg, {
 						pathDistance = e.dist,
 						pathT = e.pathT,
+						summoned = true,
 					})
 					-- Opposing visual offsets make the pair readable without changing
 					-- their shared gameplay position on the path.
@@ -771,6 +776,7 @@ local function applyDamage(e, amount, context)
 		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
 	end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
+	e.lastDamageSourceKind = context.sourceKind
 	return amount, 0
 end
 

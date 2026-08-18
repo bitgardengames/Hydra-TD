@@ -122,7 +122,7 @@ function AbilityIcons.draw(abilityId, cx, cy, scale, alpha, state)
 	lg.push("all")
 	local kind = stateName(state)
 	local drawer = type(abilityId) == "string" and drawers[abilityId] or nil
-	(drawer or unknown)(cx, cy, scale, (kind == "locked" or kind == "cooldown") and alpha * 0.58 or alpha)
+	(drawer or unknown)(cx, cy, scale, (kind == "locked" or kind == "charging") and alpha * 0.58 or alpha)
 	drawAccent(kind, cx, cy, scale, alpha)
 	lg.pop()
 

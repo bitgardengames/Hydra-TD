@@ -53,10 +53,10 @@ local state = {
 	placingFadeT = 0,
 	selectedTower = nil,
 	selectedEnemy = nil,
-	-- Up to four abilities can be equipped. Cooldowns are tracked separately so
-	-- using one ability does not lock the rest of the loadout.
+	-- Up to four abilities can be equipped. Each independently earns kill charge.
+	-- New runs fill these values so the opening wave retains one immediate cast.
 	equippedAbilities = {"meteor", "frost_nova"},
-	abilityCooldowns = {},
+	abilityCharges = {},
 	abilityTargeting = nil,
 
 	hoverGX = nil,

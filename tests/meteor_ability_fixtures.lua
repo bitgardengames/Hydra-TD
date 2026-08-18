@@ -37,7 +37,7 @@ local Abilities = require("systems.abilities")
 State.mode = "game"
 State.modulePicker.active = false
 State.equippedAbilities = {"meteor"}
-State.abilityCooldowns = {}
+State.abilityCharges = {}
 Abilities.reset()
 
 assert(Abilities.beginTargeting("meteor"), "meteor targeting did not begin")
@@ -60,7 +60,7 @@ assert(dustBursts == 1, "meteor landing did not create a dust burst")
 assert(shakeStrength == 10 and shakeDuration == .4, "meteor landing did not use the stronger impact shake")
 assert(#Abilities.getActive() == 0, "landed meteor was not removed")
 
-State.abilityCooldowns.meteor = 0
+State.abilityCharges.meteor = require("systems.ability_defs").meteor.chargeRequired
 assert(Abilities.beginTargeting("meteor"), "meteor targeting did not restart")
 local emptyPreview = Abilities.getTargetPreview(250, 250)
 assert(emptyPreview.valid and emptyPreview.count == 0, "meteor required an enemy at its target")
