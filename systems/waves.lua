@@ -337,13 +337,6 @@ function Waves.getWavePreview(waveNumber)
 		totalCount = wave.count or 0,
 		counts = counts,
 		composition = groups,
-		beatKey = wave.beatKey,
-		beatName = wave.beatName,
-		beatRole = wave.beatRole,
-		objectiveProgressKey = wave.objectiveProgressKey,
-		featuredThreat = wave.featuredThreat,
-		bossArchetype = wave.bossArchetype,
-		bossIntent = wave.bossIntent,
 	}
 end
 

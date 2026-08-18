@@ -83,13 +83,7 @@ function Builder.build(waveIndex, mapDef, isEndless)
 			groups = campaignGroups,
 			composition = composition,
 			intensityTier = 0,
-			beatKey = campaignGroups.beatKey,
-			beatName = campaignGroups.beatName,
-			beatRole = campaignGroups.beatRole,
-			objectiveProgressKey = campaignGroups.objectiveProgressKey,
-			featuredThreat = campaignGroups.featuredThreat,
 			bossArchetype = campaignGroups.bossArchetype,
-			bossIntent = campaignGroups.bossIntent,
 		}
 	end
 

@@ -44,7 +44,6 @@ local previewCache = {
 	endless = nil,
 	title = "",
 	total = "",
-	beat = nil,
 	entries = {},
 	startKey = nil,
 	startPrompt = "",
@@ -58,7 +57,6 @@ local combatProgress = {
 	startFraction = 0,
 	fillStartedAt = nil,
 	title = "",
-	beat = nil,
 	count = "",
 }
 
@@ -101,7 +99,6 @@ local function refreshPreview()
 	previewCache.endless = State.endless
 	previewCache.title = L("hud.upcomingWave", State.wave)
 	previewCache.total = L("hud.waveTotal", preview.count)
-	previewCache.beat = preview.beatName
 
 	local entries = previewCache.entries
 	for i = #entries, 1, -1 do entries[i] = nil end
@@ -124,8 +121,7 @@ local function getPreviewHeight()
 		bodyH = bodyH + entry.rowH + ROW_GAP
 	end
 	bodyH = math.max(textH, bodyH - ROW_GAP)
-	local beatH = previewCache.beat and (textH + HEADER_GAP) or 0
-	return PANEL_PAD * 2 + HEADER_H + HEADER_GAP + beatH + bodyH + HEADER_GAP + textH
+	return PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH + HEADER_GAP + textH
 end
 
 local function updateCombatProgress(now)
@@ -164,8 +160,7 @@ local function updateCombatProgress(now)
 		end
 	end
 
-	combatProgress.beat = Waves.getWavePreview(State.wave).beatName
-	combatProgress.title = combatProgress.beat or L("hud.upcomingWave", State.wave)
+	combatProgress.title = L("hud.upcomingWave", State.wave)
 	combatProgress.count = L("hud.waveProgress", cleared, total)
 	return combatProgress
 end
@@ -222,11 +217,6 @@ local function drawPreview()
 	local font = lg.getFont()
 	local textH = font:getHeight()
 	local rowY = headerY + HEADER_H + HEADER_GAP
-	if previewCache.beat then
-		lg.setColor(Theme.ui.accent or Theme.ui.good)
-		Text.printShadow(previewCache.beat, innerX, rowY)
-		rowY = rowY + textH + HEADER_GAP
-	end
 	local animT = love.timer.getTime()
 	local mouseX, mouseY = love.mouse.getPosition()
 	for i = 1, #previewCache.entries do
