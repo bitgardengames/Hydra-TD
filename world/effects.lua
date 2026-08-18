@@ -126,6 +126,16 @@ end
 
 function Effects.presentationEvent(kind, opts)
 	opts = opts or {}
+	if kind == "boss_spawn" then
+		-- The incoming cue traces the route only until the boss is actually on the
+		-- field. Its lifetime can overlap the spawn event on fast frames, so stop
+		-- drawing the route immediately while allowing the remaining presentation
+		-- cues (such as the screen-edge warning) to finish normally.
+		for i = 1, #Effects.presentation do
+			local active = Effects.presentation[i]
+			if active.kind == "boss_incoming" then active.path = nil end
+		end
+	end
 	local e = acquire(presentationPool)
 	e.kind, e.t = kind, 0
 	e.life = opts.life or ((kind == "boss_incoming") and 0.8 or 0.45)
