@@ -8,7 +8,7 @@ AnimatedRunStats.__index = AnimatedRunStats
 local ROW_H = 42
 local ROW_GAP = 8
 local ROW_DURATION = 0.7
-local BAR_MAX_WIDTH = 420
+local BAR_MAX_WIDTH = 380
 
 local function clamp(value)
 	return math.max(0, math.min(1, value))
@@ -76,16 +76,16 @@ function AnimatedRunStats:draw(x, y, width, alpha)
 	alpha = alpha or 1
 	for index, row in ipairs(self.rows) do
 		local rowY = y + (index - 1) * (ROW_H + ROW_GAP)
+		local barWidth = math.min(width, BAR_MAX_WIDTH)
+		local barX = x + (width - barWidth) * 0.5
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.78 * alpha)
-		Text.printfShadow(row.label, x, rowY, width * 0.68, "left")
+		Text.printfShadow(row.label, barX, rowY, barWidth * 0.68, "left")
 		local value = formatNumber(row.displayedValue)
 		if row.denominator then value = value .. " / " .. formatNumber(row.denominator) end
-		Text.printfShadow(value, x, rowY, width, "right")
+		Text.printfShadow(value, barX, rowY, barWidth, "right")
 		local barY = rowY + 25
 		if row.denominator and row.denominator > 0 then
-			local barWidth = math.min(width, BAR_MAX_WIDTH)
-			local barX = x + (width - barWidth) * 0.5
 			lg.setColor(Theme.ui.screenDim[1], Theme.ui.screenDim[2], Theme.ui.screenDim[3], 0.6 * alpha)
 			lg.rectangle("fill", barX, barY, barWidth, 8, 4, 4)
 			lg.setColor(self.fillColor[1], self.fillColor[2], self.fillColor[3], 0.9 * alpha)
