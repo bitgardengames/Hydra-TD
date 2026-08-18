@@ -149,7 +149,6 @@ end
 function Messages.presentationEvent(kind, payload)
 	payload = payload or {}
 	local keys = {
-		wave_start = "messages.waveStart",
 		wave_cleared = "messages.waveCleared",
 		boss_incoming = "messages.bossIncoming",
 		boss_spawn = "messages.bossSpawn",
