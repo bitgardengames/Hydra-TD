@@ -130,9 +130,18 @@ function resetGame()
     State.hoverGX = nil
     State.hoverGY = nil
 
-    State.gameOver = false
+	State.gameOver = false
     State.victory = false
     State.endless = false
+	State.endT = 0
+	State.endReady = false
+	State.endTitle = nil
+	State.endReason = nil
+	State.previousCompletionDifficulty = nil
+	State.wasFirstClear = false
+	State.unlockedTowersThisVictory = {}
+	State.unlockedRewardsThisVictory = {}
+	State.unlockedAbilitiesThisVictory = {}
     State.activeBoss = nil
 	State.activeBossKind = nil
 

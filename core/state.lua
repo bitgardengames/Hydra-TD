@@ -36,6 +36,9 @@ local state = {
 
 	previousCompletionDifficulty = nil,
 	wasFirstClear = false,
+	unlockedTowersThisVictory = {},
+	unlockedRewardsThisVictory = {},
+	unlockedAbilitiesThisVictory = {},
 
 	carouselT = 1,
 	carouselDir = 0,

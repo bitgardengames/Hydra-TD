@@ -16,6 +16,19 @@ local mainSource = read(sourceFiles.main)
 local enemiesSource = read(sourceFiles.enemies)
 assert(mainSource:find('GameplayOutcome.defeat(L("game.outOfLives"))', 1, true),
 	"normal out-of-lives handling should use the shared defeat transition")
+for _, reset in ipairs({
+	"State.endT = 0",
+	"State.endReady = false",
+	"State.endTitle = nil",
+	"State.endReason = nil",
+	"State.previousCompletionDifficulty = nil",
+	"State.wasFirstClear = false",
+	"State.unlockedTowersThisVictory = {}",
+	"State.unlockedRewardsThisVictory = {}",
+	"State.unlockedAbilitiesThisVictory = {}",
+}) do
+	assert(mainSource:find(reset, 1, true), "resetGame should clear run outcome state: " .. reset)
+end
 assert(enemiesSource:find('beginGameOver(L("game.bossBreach"))', 1, true),
 	"a boss breach should retain its specific defeat cause")
 assert(enemiesSource:find("GameplayOutcome.defeat(reason)", 1, true),
@@ -67,7 +80,13 @@ module("ui.menu.menu", {
 		state.mode = mode
 		enterCalls = enterCalls + 1
 		-- Model Screen.enter rebuilding data from the just-finalized state.
-		recap = {reason = state.endReason, lives = state.lives, gameOver = state.gameOver}
+		recap = {
+			reason = state.endReason,
+			lives = state.lives,
+			gameOver = state.gameOver,
+			rewards = state.unlockedRewardsThisVictory,
+			previousCompletionDifficulty = state.previousCompletionDifficulty,
+		}
 	end,
 })
 
@@ -97,5 +116,37 @@ end
 assert(recordCalls == #causes, "failed-run bookkeeping should occur once per run")
 assert(achievementCalls == #causes, "achievement finalization should occur once per run")
 assert(enterCalls == #causes, "Screen.enter should run once per defeat transition")
+
+-- Reproduce the regression sequence: a boss defeat leaves boss-specific recap
+-- data, the player restarts, and ordinary leaks end the new run. These are the
+-- outcome fields resetGame clears before gameplay resumes.
+state.endReason = "game.bossBreach"
+state.previousCompletionDifficulty = "normal"
+state.wasFirstClear = true
+state.unlockedTowersThisVictory = {"cannon"}
+state.unlockedRewardsThisVictory = {{type = "ability", id = "meteor"}}
+state.unlockedAbilitiesThisVictory = {"meteor"}
+
+state.mode = "game"
+state.lives = 1
+state.gameOver = false
+state.victory = false
+state.endT = 0
+state.endReady = false
+state.endTitle = nil
+state.endReason = nil
+state.previousCompletionDifficulty = nil
+state.wasFirstClear = false
+state.unlockedTowersThisVictory = {}
+state.unlockedRewardsThisVictory = {}
+state.unlockedAbilitiesThisVictory = {}
+
+assert(GameplayOutcome.defeat("game.outOfLives"), "normal leaks should end the restarted run")
+assert(recap.reason == "game.outOfLives" and recap.reason ~= "game.bossBreach",
+	"the second recap should contain current generic defeat copy, not the prior boss reason")
+assert(#recap.rewards == 0 and recap.previousCompletionDifficulty == nil,
+	"the second recap should not retain rewards or completion data from the previous run")
+assert(#state.unlockedTowersThisVictory == 0 and #state.unlockedAbilitiesThisVictory == 0,
+	"the restarted run should not retain victory unlock collections")
 
 print("defeat transition fixtures passed")
