@@ -9,17 +9,19 @@ local function smoothstep(t)
 	return t * t * (3 - 2 * t)
 end
 
--- Complete a rotation early in each cycle, then hold the equivalent neutral
--- angle for the rest of it. This makes a spin one move in the choreography
--- instead of leaving a tower in a perpetual rotation. The easing also brings
--- the turret smoothly into and out of the move.
-local function spinMove(localTime, phase, cycleLength, moveLength)
+-- Spend most of each cycle on the tower's regular dance, then complete one
+-- rotation as an occasional extra move. Zero and one full turn render at the
+-- same angle, so the tower can cleanly return to its usual choreography.
+local function spinMove(localTime, phase)
+	local cycleLength = 5.6
+	local moveStart = 4.45
+	local moveLength = 0.9
 	local phaseDelay = phase / (pi * 2) * cycleLength
 	local cycleTime = (localTime + phaseDelay) % cycleLength
-	if cycleTime >= moveLength then
+	if cycleTime < moveStart or cycleTime >= moveStart + moveLength then
 		return 0
 	end
-	return smoothstep(cycleTime / moveLength) * pi * 2
+	return smoothstep((cycleTime - moveStart) / moveLength) * pi * 2
 end
 
 -- Return a render-only offset and turn for a tower's turret. The curves use
@@ -34,50 +36,40 @@ function Dance.pose(clock, kind, index)
 	local localTime = math.max(0, clock - (index - 1) * 0.045)
 	local entrance = smoothstep(localTime / 0.4)
 	local phase = ((index - 1) % 4) * pi * 0.32
+	local sway, bob, turn
 
 	if kind == "lancer" then
 		-- A broad side-to-side salute with a gentle floating bounce.
 		local beat = localTime * pi * 1.8 + phase
-		return sin(beat) * 3.4 * entrance,
-			-cos(beat * 2) * 2.2 * entrance,
-			sin(beat) * 0.48 * entrance
+		sway, bob, turn = sin(beat) * 3.4, -cos(beat * 2) * 2.2, sin(beat) * 0.48
 	elseif kind == "slow" then
 		-- Slow traces a relaxed circle while following the orbit with its barrel.
 		local orbit = localTime * pi * 1.05 + phase
-		return cos(orbit) * 3.8 * entrance,
-			sin(orbit) * 3.8 * entrance,
-			sin(orbit) * 0.5 * entrance
+		sway, bob, turn = cos(orbit) * 3.8, sin(orbit) * 3.8, sin(orbit) * 0.5
 	elseif kind == "cannon" then
 		-- The heavy cannon rocks through a wide, weighty pendulum.
 		local swing = localTime * pi * 1.35 + phase
-		return sin(swing) * 2.2 * entrance,
-			-cos(swing * 2) * 1.5 * entrance,
-			sin(swing) * 0.62 * entrance
+		sway, bob, turn = sin(swing) * 2.2, -cos(swing * 2) * 1.5, sin(swing) * 0.62
 	elseif kind == "shock" then
 		-- Shock buzzes around a tight circle, occasionally throwing in a spin.
 		local orbit = localTime * pi * 2.5 + phase
-		return cos(orbit) * 2.7 * entrance,
-			sin(orbit) * 2.7 * entrance,
-			(sin(orbit) * 0.22 + spinMove(localTime, phase, 3.2, 0.85)) * entrance
+		sway, bob, turn = cos(orbit) * 2.7, sin(orbit) * 2.7, sin(orbit) * 0.22
 	elseif kind == "poison" then
 		-- A languid figure-eight gives poison its lopsided wobble.
 		local drift = localTime * pi * 1.15 + phase
-		return sin(drift) * 3.2 * entrance,
-			sin(drift * 2) * 2 * entrance,
-			sin(drift + pi / 3) * 0.42 * entrance
+		sway, bob, turn = sin(drift) * 3.2, sin(drift * 2) * 2, sin(drift + pi / 3) * 0.42
 	elseif kind == "plasma" then
 		-- Plasma floats in a broad orbit and mixes in a leisurely full rotation.
 		local orbit = localTime * pi * 1.5 + phase
-		return cos(orbit) * 4.2 * entrance,
-			sin(orbit) * 4.2 * entrance,
-			(sin(orbit) * 0.3 + spinMove(localTime, phase, 4.1, 1.25)) * entrance
+		sway, bob, turn = cos(orbit) * 4.2, sin(orbit) * 4.2, sin(orbit) * 0.3
+	else
+		-- Custom/modded towers still get a restrained, smooth circular cheer.
+		local orbit = localTime * pi * 1.4 + phase
+		sway, bob, turn = cos(orbit) * 2.5, sin(orbit) * 2.5, sin(orbit) * 0.35
 	end
 
-	-- Custom/modded towers still get a restrained, smooth circular cheer.
-	local orbit = localTime * pi * 1.4 + phase
-	return cos(orbit) * 2.5 * entrance,
-		sin(orbit) * 2.5 * entrance,
-		sin(orbit) * 0.35 * entrance
+	return sway * entrance, bob * entrance,
+		(turn + spinMove(localTime, phase)) * entrance
 end
 
 return Dance

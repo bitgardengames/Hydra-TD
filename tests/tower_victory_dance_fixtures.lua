@@ -33,18 +33,19 @@ local afterX, afterY, afterTurn = pose(1.251, "shock", 1)
 assert(math.abs(afterX - beforeX) < 0.05 and math.abs(afterY - beforeY) < 0.05
 	and math.abs(afterTurn - beforeTurn) < 0.05, "dance motion should remain fluid between frames")
 
--- Spins are individual dance moves rather than an angle that grows forever.
--- The turret should spend part of the choreography back near its neutral turn.
-for _, kind in ipairs({"shock", "plasma"}) do
+-- Every tower occasionally adds a spin, then returns to its regular dance
+-- instead of accumulating an ever-growing angle. Include the fallback dance so
+-- custom tower kinds receive the extra move too.
+for _, kind in ipairs({"lancer", "slow", "cannon", "shock", "poison", "plasma", "custom"}) do
 	local maxTurn = 0
 	local foundNeutral = false
-	for step = 10, 120 do
+	for step = 10, 240 do
 		local _, _, turn = pose(step * 0.05, kind, 1)
 		maxTurn = math.max(maxTurn, math.abs(turn))
 		if step > 30 and math.abs(turn) < 0.35 then
 			foundNeutral = true
 		end
-		assert(math.abs(turn) <= math.pi * 2 + 0.31,
+		assert(math.abs(turn) <= math.pi * 2 + 0.63,
 			kind .. " rotation should stay bounded instead of accumulating forever")
 	end
 	assert(maxTurn > math.pi, kind .. " should still include a full-spin move")
