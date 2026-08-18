@@ -41,6 +41,19 @@ stats:finish()
 assert(stats.rows[1].fill == nil, "zero denominators must be safe and omit the bar")
 assert(AnimatedRunStats.formatNumber(1234567) == "1,234,567", "large values need separators")
 
+local rectangles = {}
+love.graphics.setColor = function() end
+love.graphics.rectangle = function(_, x, _, width)
+	table.insert(rectangles, {x = x, width = width})
+end
+stats:setRows({{label = "Kills", value = 75, denominator = 100}})
+stats:finish()
+stats:draw(10, 20, 500)
+assert(rectangles[1].x == 50 and rectangles[1].width == 420,
+	"wide recap progress bars should be capped and centered")
+assert(rectangles[2].x == rectangles[1].x and rectangles[2].width == 315,
+	"progress fills should use the same compact track geometry")
+
 local function source(path)
 	local file = assert(io.open(path, "r"))
 	local value = file:read("*a")

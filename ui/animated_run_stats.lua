@@ -8,6 +8,7 @@ AnimatedRunStats.__index = AnimatedRunStats
 local ROW_H = 42
 local ROW_GAP = 8
 local ROW_DURATION = 0.7
+local BAR_MAX_WIDTH = 420
 
 local function clamp(value)
 	return math.max(0, math.min(1, value))
@@ -83,10 +84,12 @@ function AnimatedRunStats:draw(x, y, width, alpha)
 		Text.printfShadow(value, x, rowY, width, "right")
 		local barY = rowY + 25
 		if row.denominator and row.denominator > 0 then
+			local barWidth = math.min(width, BAR_MAX_WIDTH)
+			local barX = x + (width - barWidth) * 0.5
 			lg.setColor(Theme.ui.screenDim[1], Theme.ui.screenDim[2], Theme.ui.screenDim[3], 0.6 * alpha)
-			lg.rectangle("fill", x, barY, width, 8, 4, 4)
+			lg.rectangle("fill", barX, barY, barWidth, 8, 4, 4)
 			lg.setColor(self.fillColor[1], self.fillColor[2], self.fillColor[3], 0.9 * alpha)
-			lg.rectangle("fill", x, barY, width * clamp(row.fill or 0), 8, 4, 4)
+			lg.rectangle("fill", barX, barY, barWidth * clamp(row.fill or 0), 8, 4, 4)
 		end
 	end
 	if not self.complete then
