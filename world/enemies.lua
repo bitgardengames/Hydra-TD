@@ -288,6 +288,10 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.supportContributions = e.supportContributions or {}
 	e.supportPulse = 0
 	e.combatAge = 0
+	-- Wave spawners opt authored enemies into the recap count after creation.
+	-- Reset this on every pooled instance so summoned/procedural enemies cannot
+	-- inherit the flag from an enemy that previously occupied the table.
+	e.scheduledWaveEnemy = false
 
 	computeNudgeParams(e)
 
@@ -332,6 +336,9 @@ local function handleEnemyKilled(e, i, isBoss)
 	State.money = State.money + reward
 	State.score = State.score + (e.score or 0)
 	State.totalKills = (State.totalKills or 0) + 1
+	if e.scheduledWaveEnemy then
+		State.spawnedKills = (State.spawnedKills or 0) + 1
+	end
 	local rewardText = incomeMultiplier > 1 and L("floater.goldRushReward", reward, incomeMultiplier) or "+" .. reward
 	Floaters.add(e.x, e.y - 20, rewardText, cmR, cmG, cmB, true)
 

@@ -96,7 +96,7 @@ local function buildRunSummary()
 
 	local map = RunRecap.getMap()
 	runStats:setRows({
-		{label = L("runRecap.enemiesDefeated"), value = State.totalKills or 0,
+		{label = L("runRecap.enemiesDefeated"), value = State.spawnedKills or 0,
 			denominator = CampaignWaveDefs.getTotalEnemyCount(map)},
 		{label = L("runRecap.wavesReached"), value = reachedWave,
 			denominator = CampaignWaveDefs.getFinalWave(map)},

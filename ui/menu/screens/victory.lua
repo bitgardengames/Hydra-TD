@@ -514,7 +514,7 @@ function Screen.enter()
 	local map = Maps[State.worldMapIndex]
 	local finalWave = CampaignWaveDefs.getFinalWave(map)
 	runStats:setRows({
-		{label = L("runRecap.enemiesDefeated"), value = State.totalKills or 0,
+		{label = L("runRecap.enemiesDefeated"), value = State.spawnedKills or 0,
 			denominator = CampaignWaveDefs.getTotalEnemyCount(map)},
 		{label = L("runRecap.livesRemaining"), value = State.lives or 0,
 			denominator = Difficulty.get().startLives},
