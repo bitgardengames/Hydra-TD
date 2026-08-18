@@ -7,7 +7,6 @@ local Towers = require("world.towers")
 local Enemies = require("world.enemies")
 local Floaters = require("ui.floaters")
 local Waves = require("systems.waves")
-local Maps = require("world.map_defs")
 local Menu = require("ui.menu.menu")
 local BottomBar = require("ui.bottom_bar")
 local Button = require("ui.button")
@@ -20,7 +19,6 @@ local GameSpeed = require("core.game_speed")
 local DamageMeter = require("ui.damage_meter")
 
 local floor = math.floor
-local min = math.min
 
 local TILE = Constants.TILE
 
@@ -368,31 +366,6 @@ local function handleEscape()
 	return true
 end
 
-local function handleVictoryHotkey(key)
-	if not (State.gameOver and State.victory) then
-		return false
-	end
-	if key == Hotkeys.getActionKey("endless") and CampaignUnlocks.isEndlessUnlocked() then
-		State.gameOver = false
-		State.victory = false
-		State.endless = true
-		State.inPrep = true
-		return true
-	end
-	if key ~= Hotkeys.getActionKey("nextMap") then
-		return false
-	end
-
-	local nextIndex = min(State.worldMapIndex + 1, #Maps)
-	State.worldMapIndex = nextIndex
-	State.mapIndex = State.resolveMapIndex(nextIndex)
-	State.endless = false
-	State.gameOver = false
-	State.victory = false
-	State.mode = "campaign"
-	return true
-end
-
 local function handleGameplayHotkey(key)
 	local bindingKind, bindingId = Hotkeys.getBinding(key)
 	if bindingKind == "action" then
@@ -422,10 +395,6 @@ local function keypressed(key)
 	if Menu.handlesMode(State.mode) then
 		Menu.keypressed(key)
 
-		return
-	end
-
-	if handleVictoryHotkey(key) then
 		return
 	end
 

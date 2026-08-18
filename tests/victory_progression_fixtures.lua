@@ -42,6 +42,20 @@ module("core.localization", setmetatable({}, {__call = function(_, key) return k
 module("world.tower_defs", {})
 module("systems.ability_defs", {})
 module("systems.campaign_unlocks", campaignUnlocks)
+module("systems.gameplay_outcome", {
+	continueIntoEndless = function()
+		state.gameOver = false
+		state.victory = false
+		state.endless = true
+		state.wave = state.wave + 1
+		state.waveLeaks = 0
+		state.activeBoss = nil
+		state.activeBossKind = nil
+		state.inPrep = true
+		state.speed = 1
+		state.mode = "game"
+	end,
+})
 module("render.draw_entities", {})
 module("ui.run_recap", {})
 module("ui.scroll_view", {
