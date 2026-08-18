@@ -451,6 +451,20 @@ function CampaignWaveDefs.getFinalWave(mapOrId)
 	return waves and #waves or nil
 end
 
+-- Authored groups are the honest campaign kill target: spawned adds and any
+-- future procedural enemies are intentionally not folded into this summary.
+function CampaignWaveDefs.getTotalEnemyCount(mapOrId)
+	local waves = wavesByMapId[mapIdOf(mapOrId)]
+	if not waves then return nil end
+	local total = 0
+	for _, wave in ipairs(waves) do
+		for _, group in ipairs(wave) do
+			total = total + math.max(0, tonumber(group.count) or 0)
+		end
+	end
+	return total
+end
+
 CampaignWaveDefs.wavesByMapId = wavesByMapId
 CampaignWaveDefs.pacingIdentityByMapId = pacingIdentityByMapId
 CampaignWaveDefs.pacingTargetsByMapId = pacingTargetsByMapId

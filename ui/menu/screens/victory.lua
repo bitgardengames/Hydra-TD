@@ -21,6 +21,8 @@ local RunRecap = require("ui.run_recap")
 local ScrollView = require("ui.scroll_view")
 local AbilityIcons = require("ui.ability_icons")
 local Tooltip = require("ui.tooltip")
+local AnimatedRunStats = require("ui.animated_run_stats")
+local CampaignWaveDefs = require("systems.campaign_wave_defs")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -52,6 +54,7 @@ local hoveredMedalTier = nil
 local medalHoverScales = {1, 1, 1}
 local isFinalCampaignMap = false
 local unlockedFinalChallenge = false
+local runStats = AnimatedRunStats.new(Theme.ui.good)
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -387,7 +390,8 @@ local function calculateLayout()
 	local campaignMessageH = isFinalCampaignMap and (compact and 72 or 86) or 0
 	local difficultyY = (compact and 12 or difficultyOffset) + campaignMessageH
 	local _, clusterH = Medals.getClusterSize(medalR, medalGap)
-	local medalY = difficultyY + (compact and 30 or 38)
+	local statsY = difficultyY + (compact and 24 or 30)
+	local medalY = statsY + runStats:getHeight() + (compact and 24 or 32)
 	local recapContentH = medalY + clusterH + 14
 	local desiredBoxH = padY * 2 + titleHeight + recapContentH + sectionGap + buttonsHeight
 	local boxH = min(desiredBoxH, sh - edge * 2)
@@ -403,7 +407,7 @@ local function calculateLayout()
 		boxX = boxX, boxY = boxY, boxW = boxW, boxH = boxH,
 		padX = padX, padY = padY,
 		titleY = boxY + padY, recapY = recapY, recapH = viewportH,
-		difficultyY = difficultyY, medalY = medalY,
+		difficultyY = difficultyY, statsY = statsY, medalY = medalY,
 		campaignMessageH = campaignMessageH,
 		recapContentH = recapContentH, buttonsStartY = buttonsStartY,
 		buttonGap = buttonGap, buttonHeight = buttonHeight,
@@ -507,6 +511,16 @@ function Screen.enter()
 	rewardActionPressed = nil
 	recapScroll:reset()
 	buildRewardCards()
+	local map = Maps[State.worldMapIndex]
+	local finalWave = CampaignWaveDefs.getFinalWave(map)
+	runStats:setRows({
+		{label = L("runRecap.enemiesDefeated"), value = State.totalKills or 0,
+			denominator = CampaignWaveDefs.getTotalEnemyCount(map)},
+		{label = L("runRecap.livesRemaining"), value = State.lives or 0,
+			denominator = Difficulty.get().startLives},
+		{label = L("runRecap.wavesCleared"), value = finalWave or RunRecap.getReachedWave(),
+			denominator = finalWave},
+	})
 	resetConfetti()
 	Medals.resetAnimations()
 	recordFirstClear()
@@ -541,7 +555,8 @@ function Screen.update(dt)
 	-- newly earned medal behind it. The reveal's own delay starts once the
 	-- reward card has been dismissed.
 	if #rewardCards == 0 then
-		Medals.update(dt)
+		runStats:update(dt)
+		if runStats:isComplete() then Medals.update(dt) end
 	end
 	local sw, sh = lg.getDimensions()
 
@@ -645,6 +660,7 @@ function Screen.draw()
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.78 * alpha)
 		Text.printfShadow(format("%s: %s  •  %s: %s", L("gameOver.map"), RunRecap.getMapName(), L("settings.difficulty"), difficultyLabel), boxX + g.padX, difficultyY, boxW - g.padX * 2, "center")
 	end
+	runStats:draw(boxX + g.padX, recapContentY + g.statsY, boxW - g.padX * 2, alpha)
 
 	-- Medals
 	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
@@ -690,6 +706,10 @@ function Screen.mousepressed(x, y, button)
 		end
 		return true
 	end
+	if button == 1 and not runStats:isComplete() then
+		runStats:finish()
+		return true
+	end
 
 	return Button.mousepressedList(buttons, x, y, button)
 end
@@ -722,6 +742,10 @@ function Screen.keypressed(key)
 		elseif key == "escape" then
 			closeRewardCard()
 		end
+		return true
+	end
+	if (key == "return" or key == "kpenter" or key == "space") and not runStats:isComplete() then
+		runStats:finish()
 		return true
 	end
 

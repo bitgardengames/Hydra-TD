@@ -14,6 +14,7 @@ for _, map in ipairs(Maps) do
 	local waves = CampaignWaveDefs.wavesByMapId[map.id]
 	assert(waves, map.id .. " has no campaign encounters")
 	assert(#waves == 10, map.id .. " must author exactly ten waves")
+	local authoredTotal = 0
 	local roles = {}
 	local featured = false
 
@@ -25,11 +26,14 @@ for _, map in ipairs(Maps) do
 			map.id .. " wave " .. waveIndex .. " has no lesson objective")
 		roles[wave.beatRole] = true
 		for _, group in ipairs(wave) do
+			authoredTotal = authoredTotal + group.count
 			assert(EnemyDefs[group.kind], map.id .. " uses unknown enemy " .. tostring(group.kind))
 			assert(available[group.kind], map.id .. " uses unavailable enemy " .. group.kind)
 			if group.kind == wave.featuredThreat then featured = true end
 		end
 	end
+	assert(CampaignWaveDefs.getTotalEnemyCount(map) == authoredTotal,
+		map.id .. " enemy-count summary must match authored groups")
 
 	for role in pairs(requiredRoles) do
 		assert(roles[role], map.id .. " is missing the " .. role .. " beat")
