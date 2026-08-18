@@ -4,7 +4,10 @@ package.path = "./?.lua;./?/init.lua;" .. package.path
 love = {graphics = {}}
 package.loaded["core.theme"] = {ui = {good = {1, 1, 1}, text = {1, 1, 1}, screenDim = {0, 0, 0}}}
 package.loaded["core.fonts"] = {set = function() end}
-package.loaded["ui.text"] = {printfShadow = function() end}
+local printed = {}
+package.loaded["ui.text"] = {printfShadow = function(text, x, _, width, alignment)
+	table.insert(printed, {text = text, x = x, width = width, alignment = alignment})
+end}
 
 local AnimatedRunStats = require("ui.animated_run_stats")
 local stats = AnimatedRunStats.new()
@@ -49,10 +52,15 @@ end
 stats:setRows({{label = "Kills", value = 75, denominator = 100}})
 stats:finish()
 stats:draw(10, 20, 500)
-assert(rectangles[1].x == 50 and rectangles[1].width == 420,
+assert(rectangles[1].x == 70 and rectangles[1].width == 380,
 	"wide recap progress bars should be capped and centered")
-assert(rectangles[2].x == rectangles[1].x and rectangles[2].width == 315,
+assert(rectangles[2].x == rectangles[1].x and rectangles[2].width == 285,
 	"progress fills should use the same compact track geometry")
+assert(printed[1].x == rectangles[1].x and printed[1].alignment == "left",
+	"stat labels should begin at the progress bar's left endpoint")
+assert(printed[2].x == rectangles[1].x and printed[2].width == rectangles[1].width
+		and printed[2].alignment == "right",
+	"stat values should end at the progress bar's right endpoint")
 
 local function source(path)
 	local file = assert(io.open(path, "r"))
