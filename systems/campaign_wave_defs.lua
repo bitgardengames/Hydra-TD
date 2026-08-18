@@ -383,54 +383,27 @@ local wavesByMapId = {
 	},
 }
 
--- Each campaign has its own vocabulary and explicit final-boss intent.  The four
--- beats are deliberately authored here rather than inferred from wave number.
--- `featuredThreat` names the enemy (or baseline grunt for route lessons) whose
--- presence makes the encounter exercise the lesson.
-local encounterPlansByMapId = {
-	riverbend = { lesson = "Even Stream", featuredThreat = "grunt", bossArchetype = "boss_summoner" },
-	switchback = { lesson = "Pack Resets", featuredThreat = "grunt", bossArchetype = "boss_summoner" },
-	highpass = { lesson = "Long Columns", featuredThreat = "grunt", bossArchetype = "boss_summoner" },
-	roundabout = { lesson = "Converging Packs", featuredThreat = "grunt", bossArchetype = "boss_displacement" },
-	gauntlet = { lesson = "Burst Recovery", featuredThreat = "grunt", bossArchetype = "boss_suppression" },
-	snaketrail = { lesson = "Armored Cadence", featuredThreat = "tank", bossArchetype = "boss_summoner" },
-	backtrack = { lesson = "Runner Pincer", featuredThreat = "runner", bossArchetype = "boss_displacement" },
-	lowvalley = { lesson = "Bulwark Blockade", featuredThreat = "bulwark", bossArchetype = "boss_suppression" },
-	circuit = { lesson = "Regenerator Relay", featuredThreat = "regenerator", bossArchetype = "boss_summoner" },
-	outerloop = { lesson = "Long Rotation", featuredThreat = "bulwark", bossArchetype = "boss_suppression" },
-	terrace = { lesson = "Warcaller Escalation", featuredThreat = "warcaller", bossArchetype = "boss_summoner" },
-	highridge = { lesson = "Finale I: Staggered Fronts", featuredThreat = "runner", bossArchetype = "boss_summoner" },
-	crossflow = { lesson = "Finale II: Tight Crossings", featuredThreat = "bulwark", bossArchetype = "boss_summoner" },
-	steppingstones = { lesson = "Finale III: Platoon Pairing", featuredThreat = "warcaller", bossArchetype = "boss_displacement" },
-	twinloop = { lesson = "Campaign Final: Summoner Orbits", featuredThreat = "summoner", bossArchetype = "boss_summoner" },
+-- Boss selections remain explicit because they affect the spawned enemy type.
+local bossArchetypeByMapId = {
+	riverbend = "boss_summoner",
+	switchback = "boss_summoner",
+	highpass = "boss_summoner",
+	roundabout = "boss_displacement",
+	gauntlet = "boss_suppression",
+	snaketrail = "boss_summoner",
+	backtrack = "boss_displacement",
+	lowvalley = "boss_suppression",
+	circuit = "boss_summoner",
+	outerloop = "boss_suppression",
+	terrace = "boss_summoner",
+	highridge = "boss_summoner",
+	crossflow = "boss_summoner",
+	steppingstones = "boss_displacement",
+	twinloop = "boss_summoner",
 }
 
-local beatByWave = {
-	[1] = { role = "demonstration", name = "Baseline Demonstration" },
-	[2] = { role = "demonstration", name = "Mechanic Demonstration" },
-	[3] = { role = "controlledPractice", name = "Guided Pairing" },
-	[4] = { role = "controlledPractice", name = "Controlled Practice I" },
-	[5] = { role = "controlledPractice", name = "Controlled Practice II" },
-	[6] = { role = "controlledPractice", name = "Independent Practice" },
-	[7] = { role = "complication", name = "First Complication" },
-	[8] = { role = "complication", name = "Layered Complication" },
-	[9] = { role = "complication", name = "Full Complication" },
-	[10] = { role = "finalExam", name = "Final Exam" },
-}
-
-for mapId, plan in pairs(encounterPlansByMapId) do
-	for waveIndex, wave in ipairs(wavesByMapId[mapId]) do
-		local beat = beatByWave[waveIndex]
-		wave.beatKey = "campaign." .. mapId .. "." .. beat.role .. "." .. waveIndex
-		wave.beatName = plan.lesson .. ": " .. beat.name
-		wave.beatRole = beat.role
-		wave.objectiveProgressKey = "campaign.lesson." .. mapId
-		wave.featuredThreat = plan.featuredThreat
-		if beat.role == "finalExam" then
-			wave.bossArchetype = plan.bossArchetype
-			wave.bossIntent = "Test " .. plan.lesson .. " under boss pressure"
-		end
-	end
+for mapId, bossArchetype in pairs(bossArchetypeByMapId) do
+	wavesByMapId[mapId][10].bossArchetype = bossArchetype
 end
 
 local function mapIdOf(mapOrId)
@@ -468,6 +441,5 @@ end
 CampaignWaveDefs.wavesByMapId = wavesByMapId
 CampaignWaveDefs.pacingIdentityByMapId = pacingIdentityByMapId
 CampaignWaveDefs.pacingTargetsByMapId = pacingTargetsByMapId
-CampaignWaveDefs.encounterPlansByMapId = encounterPlansByMapId
 
 return CampaignWaveDefs
