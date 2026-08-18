@@ -15,6 +15,7 @@ local L = require("core.localization")
 local TowerDefs = require("world.tower_defs")
 local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
+local GameplayOutcome = require("systems.gameplay_outcome")
 local DrawEntities = require("render.draw_entities")
 local RunRecap = require("ui.run_recap")
 local ScrollView = require("ui.scroll_view")
@@ -470,11 +471,7 @@ function Screen.load()
 		h = btnH,
 		onClick = function()
 			Sound.play("uiConfirm")
-			State.speed = 1
-			State.endless = true
-			State.gameOver = false
-			State.victory = false
-			State.mode = "game"
+			GameplayOutcome.continueIntoEndless()
 		end,
 		enabled = not Constants.IS_DEMO and CampaignUnlocks.isEndlessUnlocked(),
 	}

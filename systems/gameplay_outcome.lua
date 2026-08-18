@@ -5,8 +5,27 @@ local Difficulty = require("systems.difficulty")
 local Achievements = require("systems.achievements")
 local Sound = require("systems.sound")
 local L = require("core.localization")
+local GameSpeed = require("core.game_speed")
 
 local GameplayOutcome = {}
+
+function GameplayOutcome.continueIntoEndless()
+	if not (State.gameOver and State.victory) then
+		return false
+	end
+
+	State.gameOver = false
+	State.victory = false
+	State.endless = true
+	State.wave = State.wave + 1
+	State.waveLeaks = 0
+	State.activeBoss = nil
+	State.activeBossKind = nil
+	State.inPrep = true
+	GameSpeed.reset()
+	State.mode = "game"
+	return true
+end
 
 function GameplayOutcome.recordCurrentRun(completed)
 	if State.ignoreStats then
