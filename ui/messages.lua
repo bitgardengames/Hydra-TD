@@ -149,8 +149,6 @@ end
 function Messages.presentationEvent(kind, payload)
 	payload = payload or {}
 	local keys = {
-		boss_incoming = "messages.bossIncoming",
-		boss_spawn = "messages.bossSpawn",
 		boss_defeated = "messages.bossDefeated",
 	}
 	local text
@@ -167,7 +165,7 @@ function Messages.presentationEvent(kind, payload)
 	end
 	local color = (kind == "wave_cleared" or kind == "boss_defeated") and {0.6, 1, 0.6} or {1, 0.72, 0.35}
 	Messages.add(text, color[1], color[2], color[3], {silent = true})
-	Sound.play("message", {pitch = (kind == "boss_incoming" or kind == "boss_spawn") and 0.82 or 1.08})
+	Sound.play("message", {pitch = 1.08})
 end
 
 -- Contextual tips are deliberately separate from transient messages: there can

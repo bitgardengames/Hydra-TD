@@ -52,9 +52,9 @@ end
 stats:setRows({{label = "Kills", value = 75, denominator = 100}})
 stats:finish()
 stats:draw(10, 20, 500)
-assert(rectangles[1].x == 70 and rectangles[1].width == 380,
+assert(rectangles[1].x == 90 and rectangles[1].width == 340,
 	"wide recap progress bars should be capped and centered")
-assert(rectangles[2].x == rectangles[1].x and rectangles[2].width == 285,
+assert(rectangles[2].x == rectangles[1].x and rectangles[2].width == 255,
 	"progress fills should use the same compact track geometry")
 assert(printed[1].x == rectangles[1].x and printed[1].alignment == "left",
 	"stat labels should begin at the progress bar's left endpoint")

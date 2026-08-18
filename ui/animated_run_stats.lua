@@ -8,7 +8,7 @@ AnimatedRunStats.__index = AnimatedRunStats
 local ROW_H = 42
 local ROW_GAP = 8
 local ROW_DURATION = 0.7
-local BAR_MAX_WIDTH = 380
+local BAR_MAX_WIDTH = 340
 
 local function clamp(value)
 	return math.max(0, math.min(1, value))
