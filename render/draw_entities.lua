@@ -1052,7 +1052,7 @@ local function drawTowerInstance(t, cx, renderY, index)
 	local headY = renderY
 	local headAngle = t.angle
 	if State.victory then
-		local bob, nod = TowerVictoryDance.pose(State.victoryDanceClock, index)
+		local bob, nod = TowerVictoryDance.pose(State.victoryDanceClock, t.kind, index)
 		headY = headY + bob
 		headAngle = headAngle + nod
 	end

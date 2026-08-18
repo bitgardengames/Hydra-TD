@@ -361,18 +361,15 @@ function love.update(dt)
 	State.renderAlpha = max(0, min(1, simulationAccumulator / step))
 
 	if mode ~= "game" then
+		if mode == "victory" then
+			State.victoryDanceClock = (State.victoryDanceClock or 0) + dt
+		end
 		updateMetaScreens(dt, mode)
 
 		return
 	end
 
 	Input.updateHover()
-
-	if mode == "victory" then
-		State.victoryDanceClock = (State.victoryDanceClock or 0) + dt
-		Menu.update(dt)
-		Overlay.update(dt)
-	end
 
 	updateGamePresentation(dt)
 
