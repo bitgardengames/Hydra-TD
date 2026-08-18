@@ -1049,18 +1049,20 @@ local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
 end
 
 local function drawTowerInstance(t, cx, renderY, index)
+	local headX = cx
 	local headY = renderY
 	local headAngle = t.angle
 	if State.victory then
-		local bob, nod = TowerVictoryDance.pose(State.victoryDanceClock, t.kind, index)
+		local sway, bob, turn = TowerVictoryDance.pose(State.victoryDanceClock, t.kind, index)
+		headX = headX + sway
 		headY = headY + bob
-		headAngle = headAngle + nod
+		headAngle = headAngle + turn
 	end
 
 	-- Keep the tower body planted while only its turret joins the victory dance.
 	drawTowerBase(t.kind, cx, renderY, 1, darkMul, darkMul, darkMul)
 	drawTowerBaseHighlight(t.kind, cx, renderY, 1)
-	drawTowerCore(t.kind, cx, headY, headAngle, t.recoil, 1, 1, 1, 1, 0)
+	drawTowerCore(t.kind, headX, headY, headAngle, t.recoil, 1, 1, 1, 1, 0)
 end
 
 local function drawTowerUpgradeFlash(t, cx, renderY)
