@@ -18,7 +18,15 @@ assert(stats.rows[1].displayedValue > 0 and stats.rows[1].displayedValue < 75,
 	"elapsed-time interpolation must produce an intermediate value")
 assert(stats.rows[1].fill > 0 and stats.rows[1].fill < 0.75,
 	"bar fill must ease toward the honest denominator ratio")
+assert(stats.rows[2].displayedValue == 0,
+	"the next result must wait for the current row animation to finish")
 assert(stats.rows[2].fill == nil, "a stat without a target must omit its bar")
+stats:update(stats.rowDuration - 0.275)
+assert(stats.rows[1].displayedValue == 75 and stats.rows[2].displayedValue == 0,
+	"result animations must play in sequence without overlap")
+stats:update(0.1)
+assert(stats.rows[2].displayedValue > 0 and stats.rows[2].displayedValue < 12345,
+	"the next result must begin after the previous row finishes")
 stats:update(10)
 assert(stats:isComplete() and stats.rows[1].displayedValue == 75,
 	"elapsed animation must complete at the final value")

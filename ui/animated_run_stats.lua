@@ -7,6 +7,7 @@ AnimatedRunStats.__index = AnimatedRunStats
 
 local ROW_H = 42
 local ROW_GAP = 8
+local ROW_DURATION = 0.7
 
 local function clamp(value)
 	return math.max(0, math.min(1, value))
@@ -22,7 +23,7 @@ local function formatNumber(value)
 end
 
 function AnimatedRunStats.new(fillColor)
-	return setmetatable({rows = {}, elapsed = 0, rowDuration = 0.55,
+	return setmetatable({rows = {}, elapsed = 0, rowDuration = ROW_DURATION,
 		fillColor = fillColor or Theme.ui.good, complete = true}, AnimatedRunStats)
 end
 
@@ -44,13 +45,14 @@ function AnimatedRunStats:update(dt)
 	if self.complete then return end
 	self.elapsed = self.elapsed + math.max(0, dt or 0)
 	for index, row in ipairs(self.rows) do
-		local progress = clamp((self.elapsed - (index - 1) * 0.16) / self.rowDuration)
+		-- Give each result its own moment instead of overlapping every fill.
+		local progress = clamp((self.elapsed - (index - 1) * self.rowDuration) / self.rowDuration)
 		local eased = 1 - (1 - progress) ^ 3
 		row.displayedValue = (row.value or 0) * eased
 		row.fill = row.denominator and row.denominator > 0
 			and clamp((row.value or 0) / row.denominator) * eased or nil
 	end
-	local lastStart = math.max(0, (#self.rows - 1) * 0.16)
+	local lastStart = math.max(0, (#self.rows - 1) * self.rowDuration)
 	if self.elapsed >= lastStart + self.rowDuration then self:finish() end
 end
 
