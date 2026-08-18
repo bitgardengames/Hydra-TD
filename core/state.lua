@@ -36,6 +36,7 @@ local state = {
 	endReady = false,
 	endTitle = nil,
 	endReason = nil,
+	victoryDanceClock = 0,
 
 	previousCompletionDifficulty = nil,
 	wasFirstClear = false,

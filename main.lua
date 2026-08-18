@@ -138,6 +138,7 @@ function resetGame()
 	State.endReady = false
 	State.endTitle = nil
 	State.endReason = nil
+	State.victoryDanceClock = 0
 	State.previousCompletionDifficulty = nil
 	State.wasFirstClear = false
 	State.unlockedTowersThisVictory = {}
@@ -369,6 +370,7 @@ function love.update(dt)
 	Input.updateHover()
 
 	if mode == "victory" then
+		State.victoryDanceClock = (State.victoryDanceClock or 0) + dt
 		Menu.update(dt)
 		Overlay.update(dt)
 	end
