@@ -234,8 +234,13 @@ local function updateGameplayOutcome()
 
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
-		Waves.presentWaveCleared()
 		local campaignFinalWave = CampaignWaveDefs.getFinalWave(Maps[State.mapIndex])
+		local perfectWaveBonus
+		if State.waveLeaks == 0 and not (campaignFinalWave and State.wave == campaignFinalWave and not State.endless) then
+			perfectWaveBonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
+			State.money = State.money + perfectWaveBonus
+		end
+		Waves.presentWaveCleared(perfectWaveBonus)
 		if campaignFinalWave and State.wave == campaignFinalWave and not State.endless then
 			local previousFurthestIndex = Save.data.furthestIndex or 1
 			local nextMapIndex = State.worldMapIndex + 1
@@ -269,12 +274,6 @@ local function updateGameplayOutcome()
 			Sound.play("victory")
 			Save.flush()
 			return
-		end
-
-		if State.waveLeaks == 0 then
-			local bonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
-			State.money = State.money + bonus
-			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
 		end
 
 		State.activeBoss = nil

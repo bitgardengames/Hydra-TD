@@ -647,7 +647,7 @@ function Waves.resetSpawner()
 	resetTable(bossAdds, bossAddsDefaults)
 end
 
-function Waves.presentWaveCleared()
+function Waves.presentWaveCleared(perfectWaveBonus)
 	if State.activeBossKind then
 		Waves.presentationEvent("boss_defeated", {
 			wave = State.wave,
@@ -659,6 +659,7 @@ function Waves.presentWaveCleared()
 	local finish = map and map.path and map.path[#map.path]
 	Waves.presentationEvent("wave_cleared", {
 		wave = State.wave,
+		perfectWaveBonus = perfectWaveBonus,
 		x = finish and (finish[1] - 0.5) * Constants.TILE,
 		y = finish and (finish[2] - 0.5) * Constants.TILE,
 	})
