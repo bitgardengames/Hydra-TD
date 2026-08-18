@@ -149,14 +149,24 @@ end
 function Messages.presentationEvent(kind, payload)
 	payload = payload or {}
 	local keys = {
-		wave_cleared = "messages.waveCleared",
 		boss_incoming = "messages.bossIncoming",
 		boss_spawn = "messages.bossSpawn",
 		boss_defeated = "messages.bossDefeated",
 	}
-	if not keys[kind] then return end
+	local text
+	if kind == "wave_cleared" then
+		if payload.perfectWaveBonus then
+			text = L("messages.perfectWaveCleared", payload.wave, payload.perfectWaveBonus)
+		else
+			text = L("messages.waveComplete")
+		end
+	elseif keys[kind] then
+		text = L(keys[kind], payload.wave)
+	else
+		return
+	end
 	local color = (kind == "wave_cleared" or kind == "boss_defeated") and {0.6, 1, 0.6} or {1, 0.72, 0.35}
-	Messages.add(L(keys[kind], payload.wave), color[1], color[2], color[3], {silent = true})
+	Messages.add(text, color[1], color[2], color[3], {silent = true})
 	Sound.play("message", {pitch = (kind == "boss_incoming" or kind == "boss_spawn") and 0.82 or 1.08})
 end
 

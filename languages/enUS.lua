@@ -470,8 +470,8 @@ return {
 	},
 
 	messages = {
-		bonus = "Perfect Wave +$%s",
-		waveCleared = "Wave %s cleared",
+		waveComplete = "Wave complete",
+		perfectWaveCleared = "Wave %s Cleared (perfect wave bonus +$%s)",
 		bossIncoming = "Boss incoming!",
 		bossSpawn = "Boss has arrived!",
 		bossDefeated = "Boss defeated!",
