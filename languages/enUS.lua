@@ -484,7 +484,6 @@ return {
 		kills = "Kills: %d",
 		hp = "HP: %s / %s",
 		modifiers = "Modifiers:",
-		temporaryStatuses = "TEMPORARY STATUS",
 		permanentTraits = "TRAITS",
 		moreStatuses = "+%d more",
 	},

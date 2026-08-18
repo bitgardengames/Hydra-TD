@@ -144,7 +144,7 @@ local STATUS_BAR_W = 54
 local function drawStatusRow(status, x, y, w)
 	local color = status.color or colorText
 	lg.setColor(color)
-	local label = status.icon .. " " .. status.label
+	local label = status.label
 	if status.stacks then label = label .. " x" .. status.stacks end
 	Text.printShadow(label, x, y)
 	if status.value then
@@ -374,7 +374,6 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		local rows = {}
 		local statuses = Enemies.getDisplayStatuses(e)
 		if #statuses > 0 then
-			rows[#rows + 1] = {header = L("inspect.temporaryStatuses")}
 			for _, status in ipairs(statuses) do rows[#rows + 1] = {status = status} end
 		end
 		local traits = (e.def and e.def.traits) or {}
