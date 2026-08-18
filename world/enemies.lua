@@ -331,6 +331,7 @@ local function handleEnemyKilled(e, i, isBoss)
 	local reward = floor(e.reward * incomeMultiplier + 0.5)
 	State.money = State.money + reward
 	State.score = State.score + (e.score or 0)
+	State.totalKills = (State.totalKills or 0) + 1
 	local rewardText = incomeMultiplier > 1 and L("floater.goldRushReward", reward, incomeMultiplier) or "+" .. reward
 	Floaters.add(e.x, e.y - 20, rewardText, cmR, cmG, cmB, true)
 

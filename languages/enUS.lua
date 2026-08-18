@@ -549,6 +549,15 @@ return {
 		shortcuts = "Press %s to restart • %s for main menu",
 	},
 
+	runRecap = {
+		enemiesDefeated = "Enemies defeated",
+		livesRemaining = "Lives remaining",
+		wavesCleared = "Waves cleared",
+		wavesReached = "Waves reached",
+		score = "Score",
+		skipHint = "Confirm or click to reveal all stats",
+	},
+
 	victory = {
 		medalProgress = "Difficulty medals earned",
 		finalCampaign = {

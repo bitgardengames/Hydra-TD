@@ -10,6 +10,8 @@ local L = require("core.localization")
 local RunRecap = require("ui.run_recap")
 local Save = require("core.save")
 local Hotkeys = require("core.hotkeys")
+local AnimatedRunStats = require("ui.animated_run_stats")
+local CampaignWaveDefs = require("systems.campaign_wave_defs")
 
 local lg = love.graphics
 
@@ -31,7 +33,6 @@ local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorDim = Theme.ui.screenDim
 local colorOutline = Theme.outline.color
-local colorButton = Theme.ui.button
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -48,8 +49,6 @@ local gap = 62
 local headerHeight = 36
 local subtitleSpacing = 28
 local highlightOffset = 22
-local highlightGap = 12
-local highlightH = 52
 local difficultyOffset = 18
 local tipOffset = 16
 local buttonsOffset = 34
@@ -62,7 +61,7 @@ local difficultyY = 0
 local tipY = 0
 local panelW = 560
 local panelX = 0
-local highlights = {}
+local runStats = AnimatedRunStats.new(Theme.ui.bad or Theme.ui.warn)
 
 local function buildShortcutsText()
 	local unbound = L("settings.controlUnbound")
@@ -95,10 +94,14 @@ local function buildRunSummary()
 	local reachedWave = RunRecap.getReachedWave()
 	local score = State.score or 0
 
-	highlights = {
-		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
-		{ label = L("gameOver.score"), value = tostring(score) },
-	}
+	local map = RunRecap.getMap()
+	runStats:setRows({
+		{label = L("runRecap.enemiesDefeated"), value = State.totalKills or 0,
+			denominator = CampaignWaveDefs.getTotalEnemyCount(map)},
+		{label = L("runRecap.wavesReached"), value = reachedWave,
+			denominator = CampaignWaveDefs.getFinalWave(map)},
+		{label = L("runRecap.score"), value = score},
+	})
 end
 
 local function selectGameOverMessage()
@@ -163,6 +166,7 @@ function Screen.update(dt)
 	local speed = 4.5
 	local pt = math.min(1, t * speed)
 	panelT = pt * pt * (3 - 2 * pt)
+	runStats:update(dt)
 
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
@@ -170,12 +174,15 @@ function Screen.update(dt)
 	panelW = math.min(560, sw - 64)
 	panelX = cx - panelW * 0.5
 
-	contentStartY = floor(sh * 0.5 - 190)
+	local buttonsHeight = (#buttons - 1) * gap + btnH
+	local contentHeight = headerHeight + subtitleSpacing + highlightOffset
+		+ runStats:getHeight() + difficultyOffset + tipOffset + 24 + buttonsOffset + buttonsHeight
+	contentStartY = floor((sh - contentHeight) * 0.5)
 
 	titleY = contentStartY
 	reasonY = titleY + headerHeight + subtitleSpacing
 	highlightsY = reasonY + highlightOffset
-	difficultyY = highlightsY + highlightH + difficultyOffset
+	difficultyY = highlightsY + runStats:getHeight() + difficultyOffset
 	tipY = difficultyY + tipOffset + 24
 
 	local buttonsStartY = tipY + buttonsOffset
@@ -194,7 +201,7 @@ function Screen.draw()
 	local count = #buttons
 	local buttonsHeight = (count - 1) * gap + btnH
 
-	local highlightsHeight = highlightH
+	local highlightsHeight = runStats:getHeight()
 	local contentHeight = headerHeight
 		+ subtitleSpacing
 		+ highlightOffset
@@ -247,28 +254,7 @@ function Screen.draw()
 		Text.printfShadow(selectedSubheadline, 0, reasonY, sw, "center")
 	end
 
-	-- Highlight strip
-	local count = #highlights
-	if count > 0 then
-		local totalGap = highlightGap * (count - 1)
-		local cardW = (boxW - paddingX * 2 - totalGap) / count
-
-		for i, item in ipairs(highlights) do
-			local x = boxX + paddingX + (i - 1) * (cardW + highlightGap)
-			local y = highlightsY
-
-			lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.6 * alpha)
-			lg.rectangle("fill", x, y, cardW, highlightH, 10, 10)
-
-			lg.setColor(colorText[1], colorText[2], colorText[3], 0.68 * alpha)
-			Fonts.set("ui")
-			Text.printfShadow(item.label, x + 10, y + 8, cardW - 20, "left")
-
-			lg.setColor(colorButton[1], colorButton[2], colorButton[3], alpha)
-			Fonts.set("menu")
-			Text.printfShadow(item.value, x + 10, y + 28, cardW - 20, "left")
-		end
-	end
+	runStats:draw(boxX + paddingX, highlightsY, boxW - paddingX * 2, alpha)
 
 	-- Map/difficulty context
 	Fonts.set("ui")
@@ -294,6 +280,10 @@ function Screen.draw()
 end
 
 function Screen.mousepressed(x, y, button)
+	if button == 1 and not runStats:isComplete() then
+		runStats:finish()
+		return true
+	end
 	return Button.mousepressedList(buttons, x, y, button)
 end
 
@@ -302,7 +292,10 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.keypressed(key)
-	if key == Hotkeys.getActionKey("returnToMenu") then
+	if (key == "return" or key == "kpenter" or key == "space") and not runStats:isComplete() then
+		runStats:finish()
+		return true
+	elseif key == Hotkeys.getActionKey("returnToMenu") then
 		returnToMenu(false)
 		Sound.play("uiBack")
 	elseif key == Hotkeys.getActionKey("restartRun") then

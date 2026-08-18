@@ -107,6 +107,7 @@ function resetGame()
 	State.lives = diff.startLives
 	State.livesAnim = 0
     State.score = 0
+	State.totalKills = 0
     State.wave = 1
 	State.waveLeaks = 0
 	State.totalLeaks = 0
