@@ -2,27 +2,35 @@
 local Dance = require("render.tower_victory_dance")
 
 local function pose(t, kind, i)
-	local bob, nod = Dance.pose(t, kind, i)
-	assert(type(bob) == "number" and type(nod) == "number", "poses must be numeric")
-	assert(math.abs(bob) <= 7.001, "turret bob must stay within its visual budget")
-	assert(math.abs(nod) <= 0.181, "turret nod must stay within its visual budget")
-	return bob, nod
+	local sway, bob, turn = Dance.pose(t, kind, i)
+	assert(type(sway) == "number" and type(bob) == "number" and type(turn) == "number",
+		"poses must be numeric")
+	assert(math.abs(sway) <= 4.201, "turret sway must stay within its visual budget")
+	assert(math.abs(bob) <= 4.201, "turret bob must stay within its visual budget")
+	return sway, bob, turn
 end
 
 local kinds = {"lancer", "slow", "cannon", "shock", "poison", "plasma"}
 local seen = {}
 for _, kind in ipairs(kinds) do
-	local bob, nod = pose(1.25, kind, 1)
-	local signature = string.format("%.4f:%.4f", bob, nod)
+	local sway, bob, turn = pose(1.25, kind, 1)
+	local signature = string.format("%.4f:%.4f:%.4f", sway, bob, turn)
 	assert(not seen[signature], "each tower type should have a unique dance pose")
 	seen[signature] = kind
 end
 
-local b1, n1 = pose(1.25, "cannon", 1)
-local b2, n2 = pose(1.25, "cannon", 2)
-assert(b1 ~= b2 or n1 ~= n2, "duplicate towers should be slightly out of phase")
+local x1, b1, n1 = pose(1.25, "cannon", 1)
+local x2, b2, n2 = pose(1.25, "cannon", 2)
+assert(x1 ~= x2 or b1 ~= b2 or n1 ~= n2, "duplicate towers should be slightly out of phase")
 
-local delayedBob, delayedNod = pose(0.02, "lancer", 4)
-assert(delayedBob == 0 and delayedNod == 0, "the opening cheer should stagger across towers")
+local delayedSway, delayedBob, delayedTurn = pose(0.02, "lancer", 4)
+assert(delayedSway == 0 and delayedBob == 0 and delayedTurn == 0,
+	"the opening cheer should stagger across towers")
+
+-- Tiny time steps should produce tiny pose changes: no hard kick or snap at a beat edge.
+local beforeX, beforeY, beforeTurn = pose(1.25, "shock", 1)
+local afterX, afterY, afterTurn = pose(1.251, "shock", 1)
+assert(math.abs(afterX - beforeX) < 0.05 and math.abs(afterY - beforeY) < 0.05
+	and math.abs(afterTurn - beforeTurn) < 0.05, "dance motion should remain fluid between frames")
 
 print("tower victory dance fixtures passed")

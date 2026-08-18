@@ -1,11 +1,17 @@
 local sin = math.sin
+local cos = math.cos
 local pi = math.pi
 
 local Dance = {}
 
--- Return a render-only pose for a tower's turret. Each tower type has its own
--- movement, while the index adds a small entrance/phase offset so duplicates do
--- not move as one rigid block.
+local function smoothstep(t)
+	t = math.max(0, math.min(1, t))
+	return t * t * (3 - 2 * t)
+end
+
+-- Return a render-only offset and turn for a tower's turret. The curves use
+-- paired sine waves rather than sharp, one-sided hops so direction changes ease
+-- naturally. Index-based delays and phases keep groups from moving in lockstep.
 function Dance.pose(clock, kind, index)
 	clock = math.max(0, clock or 0)
 	kind = kind or "lancer"
@@ -13,38 +19,52 @@ function Dance.pose(clock, kind, index)
 
 	-- Let the cheer travel across the board when the victory screen opens.
 	local localTime = math.max(0, clock - (index - 1) * 0.045)
-	local entrance = math.min(1, localTime / 0.28)
-	local phase = ((index - 1) % 4) * 0.16
+	local entrance = smoothstep(localTime / 0.4)
+	local phase = ((index - 1) % 4) * pi * 0.32
 
 	if kind == "lancer" then
-		-- Sharp double-bounce, like an emphatic victory salute.
-		local beat = math.max(0, sin(localTime * pi * 2.4))
-		return -beat * beat * 7 * entrance, sin(localTime * pi * 1.2) * 0.11 * entrance
+		-- A broad side-to-side salute with a gentle floating bounce.
+		local beat = localTime * pi * 1.8 + phase
+		return sin(beat) * 3.4 * entrance,
+			-cos(beat * 2) * 2.2 * entrance,
+			sin(beat) * 0.48 * entrance
 	elseif kind == "slow" then
-		-- Slow keeps its characteristic smooth, weightless orbit.
-		return sin(localTime * pi * 1.7) * 4 * entrance,
-			sin(localTime * pi * 0.85 + pi / 3) * 0.18 * entrance
+		-- Slow traces a relaxed circle while following the orbit with its barrel.
+		local orbit = localTime * pi * 1.05 + phase
+		return cos(orbit) * 3.8 * entrance,
+			sin(orbit) * 3.8 * entrance,
+			orbit * 0.32 * entrance
 	elseif kind == "cannon" then
-		-- The heavy cannon makes short, punchy recoil hops.
-		local kick = math.max(0, sin((localTime + phase) * pi * 3.1))
-		return -kick * 5.5 * entrance, -kick * 0.15 * entrance
+		-- The heavy cannon rocks through a wide, weighty pendulum.
+		local swing = localTime * pi * 1.35 + phase
+		return sin(swing) * 2.2 * entrance,
+			-cos(swing * 2) * 1.5 * entrance,
+			sin(swing) * 0.62 * entrance
 	elseif kind == "shock" then
-		-- An energetic high-frequency shimmy.
-		return sin((localTime + phase) * pi * 4.2) * 2.5 * entrance,
-			sin((localTime + phase) * pi * 5.4) * 0.17 * entrance
+		-- Shock buzzes around a tight circular path and spins continuously.
+		local orbit = localTime * pi * 2.5 + phase
+		return cos(orbit) * 2.7 * entrance,
+			sin(orbit) * 2.7 * entrance,
+			orbit * 0.72 * entrance
 	elseif kind == "poison" then
-		-- A lopsided, languid wobble.
-		return (-2.5 + sin((localTime + phase) * pi * 1.45) * 2.5) * entrance,
-			sin((localTime + phase) * pi * 1.45 + pi / 2) * 0.13 * entrance
+		-- A languid figure-eight gives poison its lopsided wobble.
+		local drift = localTime * pi * 1.15 + phase
+		return sin(drift) * 3.2 * entrance,
+			sin(drift * 2) * 2 * entrance,
+			sin(drift + pi / 3) * 0.42 * entrance
 	elseif kind == "plasma" then
-		-- Plasma floats up and spins through a broad celebratory arc.
-		return -math.abs(sin((localTime + phase) * pi * 1.9)) * 6 * entrance,
-			sin((localTime + phase) * pi * 1.9) * 0.18 * entrance
+		-- Plasma floats in a broad orbit while completing celebratory rotations.
+		local orbit = localTime * pi * 1.5 + phase
+		return cos(orbit) * 4.2 * entrance,
+			sin(orbit) * 4.2 * entrance,
+			orbit * entrance
 	end
 
-	-- Custom/modded towers still get a restrained generic cheer.
-	return -math.abs(sin((localTime + phase) * pi * 2.2)) * 4 * entrance,
-		sin((localTime + phase) * pi * 1.1) * 0.12 * entrance
+	-- Custom/modded towers still get a restrained, smooth circular cheer.
+	local orbit = localTime * pi * 1.4 + phase
+	return cos(orbit) * 2.5 * entrance,
+		sin(orbit) * 2.5 * entrance,
+		sin(orbit) * 0.35 * entrance
 end
 
 return Dance
