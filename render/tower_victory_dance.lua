@@ -9,6 +9,19 @@ local function smoothstep(t)
 	return t * t * (3 - 2 * t)
 end
 
+-- Complete a rotation early in each cycle, then hold the equivalent neutral
+-- angle for the rest of it. This makes a spin one move in the choreography
+-- instead of leaving a tower in a perpetual rotation. The easing also brings
+-- the turret smoothly into and out of the move.
+local function spinMove(localTime, phase, cycleLength, moveLength)
+	local phaseDelay = phase / (pi * 2) * cycleLength
+	local cycleTime = (localTime + phaseDelay) % cycleLength
+	if cycleTime >= moveLength then
+		return 0
+	end
+	return smoothstep(cycleTime / moveLength) * pi * 2
+end
+
 -- Return a render-only offset and turn for a tower's turret. The curves use
 -- paired sine waves rather than sharp, one-sided hops so direction changes ease
 -- naturally. Index-based delays and phases keep groups from moving in lockstep.
@@ -33,7 +46,7 @@ function Dance.pose(clock, kind, index)
 		local orbit = localTime * pi * 1.05 + phase
 		return cos(orbit) * 3.8 * entrance,
 			sin(orbit) * 3.8 * entrance,
-			orbit * 0.32 * entrance
+			sin(orbit) * 0.5 * entrance
 	elseif kind == "cannon" then
 		-- The heavy cannon rocks through a wide, weighty pendulum.
 		local swing = localTime * pi * 1.35 + phase
@@ -41,11 +54,11 @@ function Dance.pose(clock, kind, index)
 			-cos(swing * 2) * 1.5 * entrance,
 			sin(swing) * 0.62 * entrance
 	elseif kind == "shock" then
-		-- Shock buzzes around a tight circular path and spins continuously.
+		-- Shock buzzes around a tight circle, occasionally throwing in a spin.
 		local orbit = localTime * pi * 2.5 + phase
 		return cos(orbit) * 2.7 * entrance,
 			sin(orbit) * 2.7 * entrance,
-			orbit * 0.72 * entrance
+			(sin(orbit) * 0.22 + spinMove(localTime, phase, 3.2, 0.85)) * entrance
 	elseif kind == "poison" then
 		-- A languid figure-eight gives poison its lopsided wobble.
 		local drift = localTime * pi * 1.15 + phase
@@ -53,11 +66,11 @@ function Dance.pose(clock, kind, index)
 			sin(drift * 2) * 2 * entrance,
 			sin(drift + pi / 3) * 0.42 * entrance
 	elseif kind == "plasma" then
-		-- Plasma floats in a broad orbit while completing celebratory rotations.
+		-- Plasma floats in a broad orbit and mixes in a leisurely full rotation.
 		local orbit = localTime * pi * 1.5 + phase
 		return cos(orbit) * 4.2 * entrance,
 			sin(orbit) * 4.2 * entrance,
-			orbit * entrance
+			(sin(orbit) * 0.3 + spinMove(localTime, phase, 4.1, 1.25)) * entrance
 	end
 
 	-- Custom/modded towers still get a restrained, smooth circular cheer.
