@@ -2,7 +2,7 @@
   "abilities": [
     {
       "ability": "meteor",
-      "cooldown": 35.0,
+      "charge_required": 14,
       "effect": {
         "damage": 85.0,
         "radius": 82.0
@@ -15,31 +15,11 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 35.0,
-          "simulation_ticks": 3500,
-          "speed": 1,
-          "wall_seconds": 35.0
-        },
-        {
-          "simulation_seconds": 35.0,
-          "simulation_ticks": 1750,
-          "speed": 2,
-          "wall_seconds": 17.5
-        },
-        {
-          "simulation_seconds": 35.0,
-          "simulation_ticks": 875,
-          "speed": 4,
-          "wall_seconds": 8.75
-        }
-      ],
       "variant": "base"
     },
     {
       "ability": "meteor",
-      "cooldown": 35.0,
+      "charge_required": 14,
       "effect": {
         "damage": 115.0,
         "radius": 96.0
@@ -52,31 +32,11 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 35.0,
-          "simulation_ticks": 3500,
-          "speed": 1,
-          "wall_seconds": 35.0
-        },
-        {
-          "simulation_seconds": 35.0,
-          "simulation_ticks": 1750,
-          "speed": 2,
-          "wall_seconds": 17.5
-        },
-        {
-          "simulation_seconds": 35.0,
-          "simulation_ticks": 875,
-          "speed": 4,
-          "wall_seconds": 8.75
-        }
-      ],
       "variant": "enhanced"
     },
     {
       "ability": "frost_nova",
-      "cooldown": 28.0,
+      "charge_required": 11,
       "effect": {
         "duration": 5.0,
         "radius": 105.0
@@ -89,31 +49,11 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 28.0,
-          "simulation_ticks": 2800,
-          "speed": 1,
-          "wall_seconds": 28.0
-        },
-        {
-          "simulation_seconds": 28.0,
-          "simulation_ticks": 1400,
-          "speed": 2,
-          "wall_seconds": 14.0
-        },
-        {
-          "simulation_seconds": 28.0,
-          "simulation_ticks": 700,
-          "speed": 4,
-          "wall_seconds": 7.0
-        }
-      ],
       "variant": "base"
     },
     {
       "ability": "frost_nova",
-      "cooldown": 28.0,
+      "charge_required": 11,
       "effect": {
         "duration": 6.5,
         "radius": 120.0
@@ -126,31 +66,11 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 28.0,
-          "simulation_ticks": 2800,
-          "speed": 1,
-          "wall_seconds": 28.0
-        },
-        {
-          "simulation_seconds": 28.0,
-          "simulation_ticks": 1400,
-          "speed": 2,
-          "wall_seconds": 14.0
-        },
-        {
-          "simulation_seconds": 28.0,
-          "simulation_ticks": 700,
-          "speed": 4,
-          "wall_seconds": 7.0
-        }
-      ],
       "variant": "enhanced"
     },
     {
       "ability": "overdrive",
-      "cooldown": 38.0,
+      "charge_required": 16,
       "effect": {
         "attackSpeed": 1.7,
         "duration": 7.0,
@@ -164,31 +84,11 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 38.0,
-          "simulation_ticks": 3800,
-          "speed": 1,
-          "wall_seconds": 38.0
-        },
-        {
-          "simulation_seconds": 38.0,
-          "simulation_ticks": 1900,
-          "speed": 2,
-          "wall_seconds": 19.0
-        },
-        {
-          "simulation_seconds": 38.0,
-          "simulation_ticks": 950,
-          "speed": 4,
-          "wall_seconds": 9.5
-        }
-      ],
       "variant": "base"
     },
     {
       "ability": "overdrive",
-      "cooldown": 38.0,
+      "charge_required": 16,
       "effect": {
         "attackSpeed": 1.85,
         "duration": 8.0,
@@ -202,31 +102,11 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 38.0,
-          "simulation_ticks": 3800,
-          "speed": 1,
-          "wall_seconds": 38.0
-        },
-        {
-          "simulation_seconds": 38.0,
-          "simulation_ticks": 1900,
-          "speed": 2,
-          "wall_seconds": 19.0
-        },
-        {
-          "simulation_seconds": 38.0,
-          "simulation_ticks": 950,
-          "speed": 4,
-          "wall_seconds": 9.5
-        }
-      ],
       "variant": "enhanced"
     },
     {
       "ability": "gravity_well",
-      "cooldown": 40.0,
+      "charge_required": 18,
       "effect": {
         "damage": 28.0,
         "duration": 3.0,
@@ -241,31 +121,11 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 40.0,
-          "simulation_ticks": 4000,
-          "speed": 1,
-          "wall_seconds": 40.0
-        },
-        {
-          "simulation_seconds": 40.0,
-          "simulation_ticks": 2000,
-          "speed": 2,
-          "wall_seconds": 20.0
-        },
-        {
-          "simulation_seconds": 40.0,
-          "simulation_ticks": 1000,
-          "speed": 4,
-          "wall_seconds": 10.0
-        }
-      ],
       "variant": "base"
     },
     {
       "ability": "gravity_well",
-      "cooldown": 40.0,
+      "charge_required": 18,
       "effect": {
         "damage": 42.0,
         "duration": 3.0,
@@ -280,62 +140,22 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 40.0,
-          "simulation_ticks": 4000,
-          "speed": 1,
-          "wall_seconds": 40.0
-        },
-        {
-          "simulation_seconds": 40.0,
-          "simulation_ticks": 2000,
-          "speed": 2,
-          "wall_seconds": 20.0
-        },
-        {
-          "simulation_seconds": 40.0,
-          "simulation_ticks": 1000,
-          "speed": 4,
-          "wall_seconds": 10.0
-        }
-      ],
       "variant": "enhanced"
     },
     {
       "ability": "gold_rush",
-      "cooldown": 55.0,
+      "charge_required": 24,
       "effect": {
         "duration": 8.0,
         "multiplier": 1.5
       },
       "kind": "income_multiplier",
       "radius_samples_included": [],
-      "speed_runs": [
-        {
-          "simulation_seconds": 55.0,
-          "simulation_ticks": 5500,
-          "speed": 1,
-          "wall_seconds": 55.0
-        },
-        {
-          "simulation_seconds": 55.0,
-          "simulation_ticks": 2750,
-          "speed": 2,
-          "wall_seconds": 27.5
-        },
-        {
-          "simulation_seconds": 55.0,
-          "simulation_ticks": 1375,
-          "speed": 4,
-          "wall_seconds": 13.75
-        }
-      ],
       "variant": "base"
     },
     {
       "ability": "last_stand",
-      "cooldown": 45.0,
+      "charge_required": 20,
       "effect": {
         "attackSpeed": 1.45,
         "duration": 6.0,
@@ -350,31 +170,11 @@
         true,
         false
       ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 45.0,
-          "simulation_ticks": 4500,
-          "speed": 1,
-          "wall_seconds": 45.0
-        },
-        {
-          "simulation_seconds": 45.0,
-          "simulation_ticks": 2250,
-          "speed": 2,
-          "wall_seconds": 22.5
-        },
-        {
-          "simulation_seconds": 45.0,
-          "simulation_ticks": 1125,
-          "speed": 4,
-          "wall_seconds": 11.25
-        }
-      ],
       "variant": "base"
     },
     {
       "ability": "last_stand",
-      "cooldown": 45.0,
+      "charge_required": 20,
       "effect": {
         "attackSpeed": 1.45,
         "duration": 6.0,
@@ -389,26 +189,6 @@
         true,
         true,
         false
-      ],
-      "speed_runs": [
-        {
-          "simulation_seconds": 45.0,
-          "simulation_ticks": 4500,
-          "speed": 1,
-          "wall_seconds": 45.0
-        },
-        {
-          "simulation_seconds": 45.0,
-          "simulation_ticks": 2250,
-          "speed": 2,
-          "wall_seconds": 22.5
-        },
-        {
-          "simulation_seconds": 45.0,
-          "simulation_ticks": 1125,
-          "speed": 4,
-          "wall_seconds": 11.25
-        }
       ],
       "variant": "enhanced"
     }
@@ -1334,7 +1114,7 @@
       "tower": "plasma"
     }
   ],
-  "definition_sha256": "593ad8573c167a555ec970aa4b3b3c17ded07d1bbc5cdcef2bc236c45b13540c",
+  "definition_sha256": "0f2b2f8c82d68a81acb1978eeb042b58ef98a444005e449e24213cebcc1a4378",
   "format_version": 1,
   "overlap": {
     "base_total_damage": 113,

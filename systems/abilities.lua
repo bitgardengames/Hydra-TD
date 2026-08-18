@@ -78,7 +78,23 @@ end
 
 function Abilities.isReady(id)
 	local def = Abilities.getEquipped(id)
-	return def and (State.abilityCooldowns[def.id] or 0) <= 0 or false
+	return def and (State.abilityCharges[def.id] or 0) >= def.chargeRequired or false
+end
+
+-- Awarded only by the canonical enemy-death path. Summoned enemies and
+-- ability-caused kills are excluded to prevent farming and self-recharging
+-- area abilities; a boss is explicitly worth several normal enemies.
+function Abilities.chargeFromKill(enemy, sourceKind)
+	if not enemy or enemy.summoned or sourceKind == "ability" then return 0 end
+	local amount = (enemy.boss or (enemy.def and enemy.def.boss)) and AbilityDefs.bossCharge or 1
+	for _, id in ipairs(State.equippedAbilities or {}) do
+		local def = AbilityDefs[id]
+		if def then
+			State.abilityCharges[id] = math.min(def.chargeRequired,
+				(State.abilityCharges[id] or 0) + amount)
+		end
+	end
+	return amount
 end
 
 function Abilities.beginTargeting(id)
@@ -199,7 +215,7 @@ local function playActivationEffect(effect, x, y)
 end
 
 -- Cinematic scenes can launch the authored meteor without depending on the
--- player's equipped abilities, unlocks, targeting state, or cooldowns.
+-- player's equipped abilities, unlocks, targeting state, or charge.
 function Abilities.launchMeteor(x, y)
 	local def = AbilityDefs.meteor
 	local effect = def and getEffect(def)
@@ -284,7 +300,7 @@ function Abilities.activate(x, y)
 	-- creates a timed effect or resolves immediately.
 	activateEffect(effect, x, y, def.id)
 	playActivationEffect(effect, x, y)
-	State.abilityCooldowns[def.id] = def.cooldown
+	State.abilityCharges[def.id] = 0
 	State.abilityTargeting = nil
 	return true
 end
@@ -367,10 +383,6 @@ local timedEffectHandlers = {
 function Abilities.update(dt)
 	clock = clock + dt
 	State.abilityClock = clock
-	for id, cooldown in pairs(State.abilityCooldowns) do
-		State.abilityCooldowns[id] = math.max(0, cooldown - dt)
-	end
-
 	for i = #active, 1, -1 do
 		local effect = active[i]
 		local handlers = timedEffectHandlers[effect.kind]
@@ -435,6 +447,11 @@ function Abilities.reset()
 	clearBuffer(previewAffected, previewAffectedCount)
 	previewAffectedCount = 0
 	State.abilityClock = 0
+	State.abilityCharges = State.abilityCharges or {}
+	for _, id in ipairs(State.equippedAbilities or {}) do
+		local def = AbilityDefs[id]
+		if def then State.abilityCharges[id] = def.chargeRequired end
+	end
 end
 
 return Abilities

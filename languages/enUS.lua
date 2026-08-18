@@ -36,8 +36,9 @@ return {
 		gravityWell = {name = "Gravity Well", desc = "Pull enemies in the targeted area backward for 3 seconds, then deal 28 damage (42 when enhanced)."},
 		goldRush = {name = "Gold Rush", desc = "Earn 50% more income from non-boss kills for 8 seconds."},
 		lastStand = {name = "Last Stand", desc = "Make towers in the targeted area attack 45% faster for 6 seconds and fire a volley at the first escaping enemy (two volleys when enhanced)."},
-		cooldown = "%s  %ds",
-		cooldownLabel = "Cooldown",
+		charge = "%s  %d/%d charge",
+		chargeLabel = "Charge required",
+		chargeValue = "%d kills",
 		durationLabel = "Active duration",
 	},
 

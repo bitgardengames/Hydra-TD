@@ -53,7 +53,7 @@ def abilities(text):
     rows = []
     for ability_id in order:
         raw = definitions[ability_id]
-        cooldown = nums(raw)["cooldown"]
+        charge_required = int(nums(raw)["chargeRequired"])
         effects = re.findall(r"(?:upgradedE|e)ffect\s*=\s*\{([^}]+)", raw)
         for index, effect_raw in enumerate(effects):
             effect = nums(effect_raw)
@@ -62,15 +62,9 @@ def abilities(text):
             samples = ((0, 0), (radius, 0), (0, radius),
                        (radius / math.sqrt(2), radius / math.sqrt(2)), (radius + .01, 0))
             included = [round(x*x+y*y, 7) <= radius*radius for x, y in samples] if radius else []
-            runs = []
-            for speed in (1, 2, 4):
-                ticks = math.ceil(cooldown / (.01 * speed))
-                runs.append({"speed": speed, "simulation_ticks": ticks,
-                             "simulation_seconds": round(ticks*.01*speed, 6),
-                             "wall_seconds": round(ticks*.01, 6)})
             rows.append({"ability": ability_id, "variant": "enhanced" if index else "base",
-                         "kind": kind, "effect": effect, "cooldown": cooldown,
-                         "radius_samples_included": included, "speed_runs": runs})
+                         "kind": kind, "effect": effect, "charge_required": charge_required,
+                         "radius_samples_included": included})
     return rows
 
 
@@ -146,9 +140,8 @@ def validate(data):
     for row in data["abilities"]:
         if row["radius_samples_included"] and row["radius_samples_included"] != [True]*4+[False]:
             errors.append(row["ability"]+": edge-of-radius contract changed")
-        elapsed = [run["simulation_seconds"] for run in row["speed_runs"]]
-        if max(elapsed)-min(elapsed) > .04:
-            errors.append(row["ability"]+": cooldown depends on speed")
+        if row["charge_required"] <= 0:
+            errors.append(row["ability"]+": charge requirement must be positive")
     if set(row["formation"] for row in data["branches"]) != set(FORMATIONS):
         errors.append("branch formations incomplete")
     if data["targeting"]["expected_target"] != "slowed_front":

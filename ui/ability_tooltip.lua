@@ -18,7 +18,7 @@ function AbilityTooltip.show(abilityId)
 	if not tooltip or tooltip.title ~= title or tooltip.rows[1].text ~= description then
 		local rows = {
 			{kind = "text", text = description, padAfter = 4},
-			{label = L("ability.cooldownLabel"), value = string.format("%gs", def.cooldown)},
+			{label = L("ability.chargeLabel"), value = L("ability.chargeValue", def.chargeRequired)},
 		}
 		if def.effect and def.effect.duration then
 			rows[#rows + 1] = {label = L("ability.durationLabel"), value = string.format("%gs", def.effect.duration)}
