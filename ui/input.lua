@@ -133,12 +133,6 @@ local function releaseShopButton(b, x, y)
 		return
 	end
 
-	if b.canAfford ~= true then
-		Sound.play("uiBack")
-		showFloaterAtScreen(x, y, affordabilityMessage(b.cost))
-		return
-	end
-
 	local ok, why = beginTowerPlacement(b.kind)
 	if ok then
 		Sound.play("uiConfirm")
@@ -375,12 +369,7 @@ local function handleGameplayHotkey(key)
 		return false
 	end
 
-	local def = Towers.TowerDefs[bindingId]
-	if def and State.money < def.cost then
-		Sound.play("uiBack")
-		local mx, my = love.mouse.getPosition()
-		showFloaterAtScreen(mx, my, affordabilityMessage(def.cost))
-	elseif beginTowerPlacement(bindingId) then
+	if beginTowerPlacement(bindingId) then
 		deselect()
 	end
 	return true
