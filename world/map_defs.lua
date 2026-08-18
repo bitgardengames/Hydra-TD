@@ -247,7 +247,7 @@ local maps = {
 
 	{
 		id = "highridge",
-		-- The finale begins by teaching Fortified targets in staggered formations.
+		-- The finale begins with staggered mixed formations.
 		campaignStage = 3,
 		nameKey = "map.highridge",
 		-- High Ridge teaches staggered mixed-wave timing: durable fronts create
@@ -266,8 +266,7 @@ local maps = {
 
 	{
 		id = "crossflow",
-		-- Crossflow escalates High Ridge's lesson with tighter, overlapping groups
-		-- and adds Relentless targets to the elite vocabulary.
+		-- Crossflow escalates High Ridge's lesson with tighter, overlapping groups.
 		campaignStage = 3,
 		nameKey = "map.crossflow",
 		biome = "winter",
@@ -290,8 +289,8 @@ local maps = {
 
 	{
 		id = "steppingstones",
-		-- Stepping Stones combines both elite lessons while its separated pockets
-		-- demand deliberate ability timing before the final map.
+		-- Stepping Stones uses separated pockets to demand deliberate ability timing
+		-- before the final map.
 		campaignStage = 3,
 		nameKey = "map.steppingstones",
 		biome = "autumn",
@@ -314,8 +313,8 @@ local maps = {
 
 	{
 		id = "twinloop",
-		-- Twin Loop is the campaign's final exam: the preceding elite lessons now
-		-- share the route with Summoners and its two-loop pressure cycle.
+		-- Twin Loop is the campaign's final exam: earlier enemy archetypes share the
+		-- route with Summoners and its two-loop pressure cycle.
 		prerequisiteMapId = "steppingstones",
 		campaignStage = 3,
 		nameKey = "map.twinloop",

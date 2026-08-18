@@ -486,7 +486,7 @@ return {
 		hp = "HP: %s / %s",
 		modifiers = "Modifiers:",
 		temporaryStatuses = "TEMPORARY STATUS",
-		permanentTraits = "TRAITS & AFFIXES",
+		permanentTraits = "TRAITS",
 		moreStatuses = "+%d more",
 	},
 
@@ -684,18 +684,6 @@ return {
 		compatible = "Compatible run modules — %s",
 		history = "History — %d placed • %d upgrades • %d kills • %.0f damage • %.0f best run",
 		nativeRole = "NATIVE ROLE — %s",
-	},
-
-	enemyAffix = {
-		unknown = "◆ Unknown elite affix — study the elite lessons on High Ridge and Crossflow to reveal it",
-		fortified = {
-			name = "Fortified",
-			description = "45% more health and 18% less incoming damage; worth 35% more bounty.",
-		},
-		relentless = {
-			name = "Relentless",
-			description = "Moves 18% faster and recovers from slowing effects 45% sooner; worth 25% more bounty.",
-		},
 	},
 
 	overlay = {

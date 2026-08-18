@@ -85,13 +85,6 @@ local function buildEnemyTooltip(group)
 	for _, hint in ipairs(group.counterHints) do
 		rows[#rows + 1] = {kind = "text", text = L("hud.counterHint", hint), padAfter = 4}
 	end
-	for i, description in ipairs(group.affixDescriptions) do
-		rows[#rows + 1] = {
-			kind = "text",
-			text = group.affixNames[i] .. ": " .. description,
-			padAfter = 4,
-		}
-	end
 	return {title = group.name, rows = rows}
 end
 
@@ -108,9 +101,7 @@ local function refreshPreview()
 	previewCache.endless = State.endless
 	previewCache.title = L("hud.upcomingWave", State.wave)
 	previewCache.total = L("hud.waveTotal", preview.count)
-	-- Late campaign elite lessons use this line as the map briefing as well as
-	-- the immediate wave-preview counterplay reminder.
-	previewCache.beat = preview.mapBriefing or preview.beatName
+	previewCache.beat = preview.beatName
 
 	local entries = previewCache.entries
 	for i = #entries, 1, -1 do entries[i] = nil end

@@ -17,7 +17,7 @@ time.
 - **Why it feels powerful:** The player chooses their best kill zone and gets an
   immediate barrage. It scales naturally with the defense they built, while the
   area limit rewards good tower clustering and timing.
-- **Best moment:** A boss or mixed elite pack enters the player's most expensive
+- **Best moment:** A boss or mixed enemy pack enters the player's most expensive
   cluster of towers.
 - **Readability:** On cast, send a gold-blue ring from the target point through
   affected towers. While active, give each tower a thin pulsing outline, small
