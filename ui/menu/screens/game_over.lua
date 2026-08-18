@@ -7,8 +7,6 @@ local Fonts = require("core.fonts")
 local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
-local Modules = require("systems.modules")
-local RunStats = require("systems.run_stats")
 local RunRecap = require("ui.run_recap")
 local Save = require("core.save")
 local Hotkeys = require("core.hotkeys")
@@ -65,7 +63,6 @@ local tipY = 0
 local panelW = 560
 local panelX = 0
 local highlights = {}
-local summaryLines = {}
 
 local function buildShortcutsText()
 	local unbound = L("settings.controlUnbound")
@@ -102,16 +99,6 @@ local function buildRunSummary()
 		{ label = L("gameOver.waveReached"), value = tostring(reachedWave) },
 		{ label = L("gameOver.score"), value = tostring(score) },
 	}
-	RunStats.captureLoadout(Modules.active, State.selectedContracts or State.contracts)
-	local summary = RunStats.summarize(State.money)
-	summaryLines = {
-		string.format("MVP %s  •  Leak %s (%d)  •  Damage %s", summary.mvp, summary.leak, summary.leakCount, summary.damageType),
-		"Build: " .. (summary.build ~= "" and summary.build or "none") .. (summary.paths ~= "" and "  •  " .. summary.paths or ""),
-		summary.observation,
-	}
-	if State.isReplayMode() and (summary.modules ~= "" or summary.contracts ~= "") then
-		table.insert(summaryLines, 3, "Modules: " .. (summary.modules ~= "" and summary.modules or "none") .. "  •  Contracts: " .. (summary.contracts ~= "" and summary.contracts or "none"))
-	end
 end
 
 local function selectGameOverMessage()
@@ -189,7 +176,7 @@ function Screen.update(dt)
 	reasonY = titleY + headerHeight + subtitleSpacing
 	highlightsY = reasonY + highlightOffset
 	difficultyY = highlightsY + highlightH + difficultyOffset
-	tipY = difficultyY + tipOffset + 72
+	tipY = difficultyY + tipOffset + 24
 
 	local buttonsStartY = tipY + buttonsOffset
 
@@ -214,7 +201,7 @@ function Screen.draw()
 		+ highlightsHeight
 		+ difficultyOffset
 		+ tipOffset
-		+ 72
+		+ 24
 		+ buttonsOffset
 		+ buttonsHeight
 	local boxW = panelW
@@ -294,10 +281,6 @@ function Screen.draw()
 		RunRecap.getDifficultyLabel() or "--"
 	)
 	Text.printfShadow(contextLine, boxX + paddingX, difficultyY, boxW - paddingX * 2, "center")
-	for i, line in ipairs(summaryLines) do
-		Text.printfShadow(line, boxX + paddingX, difficultyY + 17 + (i - 1) * 15, boxW - paddingX * 2, "center")
-	end
-
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.6 * alpha)
 	Text.printfShadow(shortcutsText, boxX + paddingX, tipY, boxW - paddingX * 2, "center")
 

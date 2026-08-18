@@ -330,7 +330,6 @@ local function handleEnemyKilled(e, i, isBoss)
 	local incomeMultiplier = require("systems.abilities").getKillIncomeMultiplier(e)
 	local reward = floor(e.reward * incomeMultiplier + 0.5)
 	State.money = State.money + reward
-	RunStats.recordIncome(reward, "kill")
 	State.score = State.score + (e.score or 0)
 	local rewardText = incomeMultiplier > 1 and L("floater.goldRushReward", reward, incomeMultiplier) or "+" .. reward
 	Floaters.add(e.x, e.y - 20, rewardText, cmR, cmG, cmB, true)
@@ -364,7 +363,6 @@ end
 
 local function handleEnemyEscaped(e, i, isBoss)
 	Save.recordEnemyResult(e.kind, "leak")
-	RunStats.recordLeak(e.kind)
 	Effects.shake(isBoss and 12 or 5)
 	if isBoss then
 		State.activeBoss = nil
@@ -419,7 +417,7 @@ local function updatePoison(e, dt)
 		e.hitSquashStrength = 0.55
 		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
 		State.addDamage("poison", damage, e.boss == true)
-		RunStats.recordDamage(e.poisonSource, "poison", damage)
+		RunStats.recordDamage(e.poisonSource, damage)
 	end
 
 	if e.poisonTimer <= 0 then

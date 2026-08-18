@@ -307,7 +307,7 @@ local function addTower(kind, gx, gy)
 	recomputeTowerStats(t)
 
 	State.money = State.money - def.cost
-	RunStats.recordPurchase(t, def.cost)
+	RunStats.recordPurchase(t)
 	Save.recordTowerPlacement(kind)
 
 	MapMod.setBlocked(gx, gy)
@@ -387,7 +387,6 @@ local function upgradeTower(t, specializationId)
 		t.branchSelections = t.branchSelections or {}
 		t.branchSelections[#t.branchSelections + 1] = specializationId
 	end
-	RunStats.recordUpgrade(t, specializationId, cost, State.wave, t.level >= 5)
 	Save.recordTowerUpgrade(t.kind, specializationId)
 	recomputeTowerStats(t)
 	Modules.invalidateTower(t)
@@ -555,7 +554,6 @@ local function sellTower(t)
 	end
 
 	State.money = State.money + t.sellValue
-	RunStats.recordSale(t, t.sellValue)
 
 	local col = MapMod.map.blocked[t.gx]
 

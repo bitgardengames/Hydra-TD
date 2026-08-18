@@ -356,7 +356,7 @@ local function resolveDamage(p, evt)
 	end
 
 	State.addDamage(p.sourceKind, effectiveDamage, e.boss == true)
-	RunStats.recordDamage(t, evt.damageType or p.damageType or p.sourceKind, effectiveDamage)
+	RunStats.recordDamage(t, effectiveDamage)
 	if effectiveDamage > 0 and (not Save.data or Save.data.settings.showDamageNumbers ~= false) then
 		Floaters.add(e.x, e.y - (e.radius or 10), tostring(math.floor(effectiveDamage + 0.5)), 1, 0.82, 0.45)
 	end

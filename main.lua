@@ -272,7 +272,6 @@ local function updateGameplayOutcome()
 		if State.waveLeaks == 0 then
 			local bonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
 			State.money = State.money + bonus
-			RunStats.recordIncome(bonus, "flawless")
 			Messages.add(L("messages.bonus", bonus), 0.6, 1.0, 0.6)
 		end
 
