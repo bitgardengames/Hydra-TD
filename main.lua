@@ -33,7 +33,6 @@ local Achievements = require("systems.achievements")
 local Menu = require("ui.menu.menu")
 local Overlay = require("ui.overlay")
 local Victory = require("ui.menu.screens.victory")
-local GameOver = require("ui.menu.screens.game_over")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local Modules = require("systems.modules")
@@ -44,6 +43,7 @@ local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local GameSpeed = require("core.game_speed")
 local SimulationClock = require("core.simulation_clock")
 local DevelopmentCounters = require("core.development_counters")
+local GameplayOutcome = require("systems.gameplay_outcome")
 
 local lg = love.graphics
 
@@ -56,28 +56,6 @@ local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 
 local SCREENSHOT_DIR = "screenshots"
 local simulationAccumulator = 0
-
--- Revisit this being a global
-function finalizeCurrentRun(completed)
-	--if State.mode ~= "game" and State.mode ~= "pause" then
-	--	return
-	--end
-
-	if State.ignoreStats then
-		return
-	end
-
-	local map = Maps[State.worldMapIndex]
-	if not map then
-		return
-	end
-	local mapId = map.id
-	local stats = Save.data.mapStats[mapId]
-
-	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
-
-	Save.recordMapResult(mapId, Difficulty.key(), completed == true)
-end
 
 function resetGame()
 	simulationAccumulator = 0
@@ -239,13 +217,7 @@ local function updateGameplayOutcome()
 	-- simulation tick so their timing cannot depend on rendered FPS.
 	-- Loss condition
 	if State.lives <= 0 and not State.gameOver then
-		State.gameOver = true
-		State.victory = false
-
-		Achievements.onGameOver()
-		finalizeCurrentRun(false)
-		State.mode = "game_over"
-		Sound.play("gameOver")
+		GameplayOutcome.defeat(L("game.outOfLives"))
 		return
 	end
 
@@ -270,7 +242,7 @@ local function updateGameplayOutcome()
 			State.speed = 0.35
 			State.gameOver = true
 			State.victory = true
-			finalizeCurrentRun(true)
+			GameplayOutcome.recordCurrentRun(true)
 
 			if State.totalLeaks == 0 then
 				local diff = Difficulty.key()
