@@ -10,6 +10,7 @@ local state = {
 	-- Run-local recap counters. These deliberately do not mirror persistent
 	-- achievement or per-tower history totals.
 	totalKills = 0,
+	spawnedKills = 0,
 
 	mapIndex = 1,
 	worldMapIndex = 1,

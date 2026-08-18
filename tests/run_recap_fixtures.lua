@@ -73,10 +73,21 @@ local stateSource = source("core/state.lua")
 local mainSource = source("main.lua")
 local enemySource = source("world/enemies.lua")
 local victorySource = source("ui/menu/screens/victory.lua")
+local gameOverSource = source("ui/menu/screens/game_over.lua")
 assert(stateSource:find("totalKills = 0", 1, true), "state must declare the run kill counter")
+assert(stateSource:find("spawnedKills = 0", 1, true), "state must declare the recap kill counter")
 assert(mainSource:find("State.totalKills = 0", 1, true), "resetGame must reset run kills")
+assert(mainSource:find("State.spawnedKills = 0", 1, true), "resetGame must reset recap kills")
 assert(enemySource:find("State.totalKills = (State.totalKills or 0) + 1", 1, true),
 	"enemy death must increment run kills")
+assert(enemySource:find("if e.scheduledWaveEnemy then", 1, true),
+	"only scheduled wave enemies may increment recap kills")
+assert(enemySource:find("State.spawnedKills = (State.spawnedKills or 0) + 1", 1, true),
+	"scheduled enemy death must increment recap kills")
+assert(victorySource:find("value = State.spawnedKills or 0", 1, true),
+	"victory recap must display only scheduled enemy kills")
+assert(gameOverSource:find("value = State.spawnedKills or 0", 1, true),
+	"defeat recap must display only scheduled enemy kills")
 assert(victorySource:find("if runStats:isComplete() then Medals.update(dt) end", 1, true),
 	"medals must wait for stat completion")
 assert(victorySource:find("if #rewardCards == 0 then", 1, true),
