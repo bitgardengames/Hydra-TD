@@ -6,6 +6,7 @@ local Towers = require("world.towers")
 local MapMod = require("world.map")
 local Save = require("core.save")
 local EnemyHealthVisibility = require("render.enemy_health_visibility")
+local TowerVictoryDance = require("render.tower_victory_dance")
 
 local random = love.math.random
 local lg = love.graphics
@@ -1047,8 +1048,19 @@ local function drawTowerVisual(kind, cx, cy, angle, recoil, alpha)
 	drawTowerCore(kind, cx, cy, angle, recoil, alpha, 1, 1, 1, 0)
 end
 
-local function drawTowerInstance(t, cx, renderY)
-	drawTowerVisual(t.kind, cx, renderY, t.angle, t.recoil, 1)
+local function drawTowerInstance(t, cx, renderY, index)
+	local headY = renderY
+	local headAngle = t.angle
+	if State.victory then
+		local bob, nod = TowerVictoryDance.pose(State.victoryDanceClock, index)
+		headY = headY + bob
+		headAngle = headAngle + nod
+	end
+
+	-- Keep the tower body planted while only its turret joins the victory dance.
+	drawTowerBase(t.kind, cx, renderY, 1, darkMul, darkMul, darkMul)
+	drawTowerBaseHighlight(t.kind, cx, renderY, 1)
+	drawTowerCore(t.kind, cx, headY, headAngle, t.recoil, 1, 1, 1, 1, 0)
 end
 
 local function drawTowerUpgradeFlash(t, cx, renderY)
@@ -1154,7 +1166,7 @@ local function drawTowers()
 		end
 
 		-- Top
-		drawTowerInstance(t, cx, renderY)
+		drawTowerInstance(t, cx, renderY, i)
 		drawTowerUpgradeFlash(t, cx, renderY)
 		if (t.abilityAttackSpeed or 1) > 1 then
 			local pulse = .55 + .3 * sin((State.abilityClock or 0) * 7 + i)
