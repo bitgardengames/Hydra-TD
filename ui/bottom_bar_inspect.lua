@@ -139,7 +139,8 @@ end
 -- Compact status rows. The caller controls the available row count, preventing
 -- elaborate boss combinations from entering the bottom action region.
 local STATUS_ROW_H = 18
-local STATUS_BAR_W = 54
+local STATUS_BAR_W = 64
+local STATUS_BAR_H = 6
 
 local function drawStatusRow(status, x, y, w)
 	local color = status.color or colorText
@@ -153,11 +154,11 @@ local function drawStatusRow(status, x, y, w)
 	end
 	if status.remainingFraction then
 		local bx = x + w - STATUS_BAR_W
-		local by = y + 13
+		local by = y + 11
 		lg.setColor(0, 0, 0, 0.35)
-		lg.rectangle("fill", bx, by, STATUS_BAR_W, 3, 2, 2)
+		lg.rectangle("fill", bx, by, STATUS_BAR_W, STATUS_BAR_H, 3, 3)
 		lg.setColor(color)
-		lg.rectangle("fill", bx, by, STATUS_BAR_W * status.remainingFraction, 3, 2, 2)
+		lg.rectangle("fill", bx, by, STATUS_BAR_W * status.remainingFraction, STATUS_BAR_H, 3, 3)
 	end
 end
 
