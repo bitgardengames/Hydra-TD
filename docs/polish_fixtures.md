@@ -27,13 +27,12 @@ also **6.5–8.5/s**, assuming one aggregated visible number per attack. Seconda
 chain, splash, poison, and repeated-field hits are intentionally excluded: this
 is a readable baseline, not a worst-case particle benchmark.
 
-## Ability uptime and overlap
+## Ability duration and overlap
 
-Uptime is effect duration divided by cooldown, for base and enhanced variants.
-Instant abilities correctly report zero. Each simultaneous pair's overlap is
-the shorter active duration when cast together. Enhanced uptime alarms at
-**0–25%** and pair overlap at **0–8.5 seconds** catch accidental near-permanent
-effects while allowing intentional burst combinations.
+Instant abilities correctly report zero duration. Each simultaneous pair's
+overlap is the shorter active duration when cast together. Pair overlap alarms
+at **0–8.5 seconds** catch accidentally long effects while allowing intentional
+burst combinations.
 
 ## Preview and HUD fit
 

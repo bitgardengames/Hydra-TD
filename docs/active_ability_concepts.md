@@ -13,7 +13,6 @@ time.
 
 - **Effect:** Towers in a 110-unit radius attack 70% faster for 7 seconds.
 - **Cooldown:** 38 seconds.
-- **Enhanced effect:** 125-unit radius, 85% faster attacks, and 8 seconds.
 - **Why it feels powerful:** The player chooses their best kill zone and gets an
   immediate barrage. It scales naturally with the defense they built, while the
   area limit rewards good tower clustering and timing.
@@ -39,8 +38,6 @@ Select two nearby towers to link them into a temporary shared power circuit.
   Whenever either tower fires, the other tower immediately reduces its current
   attack cooldown by 0.12 seconds.
 - **Cooldown:** 34 seconds.
-- **Enhanced effect:** The link may chain through one additional tower located
-  near the line between the selected pair.
 - **Why it feels powerful:** It turns two favorite towers into a coordinated
   centerpiece and makes unusual cross-lane pairings exciting. Unlike Overdrive,
   it rewards selecting individual high-value towers rather than a dense cluster.
@@ -62,8 +59,6 @@ a comeback opportunity.
   leave the selected area, all affected towers instantly finish their current
   wind-up and fire at that enemy if it is in range.
 - **Cooldown:** 45 seconds.
-- **Enhanced effect:** The emergency volley can trigger twice, at least 1.5
-  seconds apart.
 - **Why it feels powerful:** The ability responds directly to the frightening
   moment when enemies break through, without granting lives or automatically
   deleting the wave. The player's existing towers still deliver the save.
@@ -83,7 +78,6 @@ for the player's towers.
   toward the cast point, with bosses and heavy enemies resisting most of the
   displacement. The well then bursts for modest damage.
 - **Cooldown:** 40 seconds.
-- **Enhanced effect:** 110-unit radius and a stronger final burst.
 - **Why it feels powerful:** It visibly reshapes a bad wave, creates fresh splash
   and chain opportunities, and invites combinations with Cannon, Shock, Meteor,
   and tower buffs. It is distinct from Frost Nova because enemy spacing and
@@ -112,7 +106,7 @@ for the player's towers.
 ## Shared implementation and balance guardrails
 
 - Ability definitions should declare their target mode, radius, duration,
-  kill-charge requirement, effect values, and enhanced values as data. Normal
+  kill-charge requirement, and effect values as data. Normal
   scheduled kills grant one charge, bosses grant five, summoned enemies grant
   none, and ability-caused kills cannot recharge the ability loadout.
 - Tower buffs should store an expiry time and multiplier on each affected tower.

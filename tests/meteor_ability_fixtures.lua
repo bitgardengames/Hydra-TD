@@ -10,7 +10,6 @@ local dustBursts = 0
 package.loaded["systems.campaign_unlocks"] = {
 	isAbilityUnlocked = function() return true end,
 	isAbilitySlotUnlocked = function() return true end,
-	isAbilityUpgradeUnlocked = function() return false end,
 }
 package.loaded["world.enemies"] = {
 	enemies = {{x = 100, y = 100, rx = 100, ry = 100, hp = 100}},

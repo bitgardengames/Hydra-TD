@@ -43,7 +43,6 @@ end
 for _, abilityId in ipairs(AbilityDefs.order) do
 	check(CampaignUnlocks.isAbilityUnlocked(abilityId), abilityId .. " was relocked on a completed campaign")
 end
-check(CampaignUnlocks.isAbilityUpgradeUnlocked("enhanced_abilities"), "completed ability upgrade was relocked")
 check(CampaignUnlocks.isChallengeModeUnlocked(), "completed campaign mode was relocked")
 
 -- A completion only unlocks the reward attached to that map.

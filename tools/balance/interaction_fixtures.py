@@ -54,16 +54,16 @@ def abilities(text):
     for ability_id in order:
         raw = definitions[ability_id]
         charge_required = int(nums(raw)["chargeRequired"])
-        effects = re.findall(r"(?:upgradedE|e)ffect\s*=\s*\{([^}]+)", raw)
-        for index, effect_raw in enumerate(effects):
+        effects = re.findall(r"\beffect\s*=\s*\{([^}]+)", raw)
+        for effect_raw in effects:
             effect = nums(effect_raw)
             kind = re.search(r'kind\s*=\s*"([a-z_]+)"', effect_raw).group(1)
             radius = effect.get("radius", 0)
             samples = ((0, 0), (radius, 0), (0, radius),
                        (radius / math.sqrt(2), radius / math.sqrt(2)), (radius + .01, 0))
             included = [round(x*x+y*y, 7) <= radius*radius for x, y in samples] if radius else []
-            rows.append({"ability": ability_id, "variant": "enhanced" if index else "base",
-                         "kind": kind, "effect": effect, "charge_required": charge_required,
+            rows.append({"ability": ability_id, "kind": kind, "effect": effect,
+                         "charge_required": charge_required,
                          "radius_samples_included": included})
     return rows
 
@@ -127,7 +127,7 @@ def build():
                             "radius_rule": "distance_squared <= radius_squared"},
             "abilities": abilities(texts["systems/ability_defs.lua"]),
             "overlap": {"casts": ["meteor", "gravity_well"],
-                        "base_total_damage": 113, "enhanced_total_damage": 157,
+                        "total_damage": 113,
                         "coverage": 1.0, "proc_count": 2, "leaks": 0,
                         "expected_damage_stacks": True, "independent_expiries": True,
                         "speed_invariant": True},

@@ -11,7 +11,6 @@ lg.setLineWidth = function() end
 package.loaded["systems.campaign_unlocks"] = {
 	isAbilityUnlocked = function() return true end,
 	isAbilitySlotUnlocked = function() return true end,
-	isAbilityUpgradeUnlocked = function() return false end,
 	getAbilityLockMessage = function() return nil end,
 }
 package.loaded["world.enemies"] = {enemies = {}, applyDamage = function() end, applySlow = function() end}

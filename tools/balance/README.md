@@ -136,7 +136,7 @@ drift. This makes tower output,
 enemy count and composition, kill income, and difficulty economy move as one
 curve without turning the fixture into a prescribed player build.
 
-`interaction_fixtures.json` records every active ability variant and branch
+`interaction_fixtures.json` records every active ability and branch
 mapping, representative module combat formations, targeting expectations, and
 the boss templates' dynamically summoned adds. It includes total damage,
 coverage, leaks, proc counts, and cost efficiency. Radius-boundary, cooldown,
