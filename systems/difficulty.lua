@@ -9,7 +9,7 @@ Difficulty.defs = {
 
 		-- Enemy baseline bias
 		enemySpeedBias = 1.0,
-		enemyHpBias = 0.95,
+		enemyHpBias = 1.0,
 		bossHpBias = 1.0,
 
 		-- Economy
@@ -27,7 +27,7 @@ Difficulty.defs = {
 		key = "normal",
 
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.05,
+		enemyHpBias = 1.1,
 		bossHpBias = 1.05,
 
 		rewardBias = 1.0,
@@ -46,7 +46,7 @@ Difficulty.defs = {
 
 		enemySpeedBias = 1.0,
 		enemyHpBias = 1.2,
-		bossHpBias = 1.2,
+		bossHpBias = 1.25,
 
 		rewardBias = 0.95,
 		perfectWaveBonus = 1.25,
