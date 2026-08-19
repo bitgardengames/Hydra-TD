@@ -6,6 +6,7 @@ local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local EnemyDefs = require("world.enemy_defs")
 
 local available = { boss = true }
+local minimumSpawnSpacing = 0.5
 
 for _, map in ipairs(Maps) do
 	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
@@ -21,6 +22,8 @@ for _, map in ipairs(Maps) do
 			authoredTotal = authoredTotal + group.count
 			assert(EnemyDefs[group.kind], map.id .. " uses unknown enemy " .. tostring(group.kind))
 			assert(available[group.kind], map.id .. " uses unavailable enemy " .. group.kind)
+			assert(group.count == 1 or group.spacing >= minimumSpawnSpacing,
+				map.id .. " places consecutive enemies too close together")
 		end
 	end
 	assert(CampaignWaveDefs.getTotalEnemyCount(map) == authoredTotal,
