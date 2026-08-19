@@ -33,7 +33,9 @@ local unlocks = {
 
 Builder.endlessTierWaves = 5
 Builder.maxWaveEnemies = 120
-Builder.minSpawnSpacing = 0.3
+-- Never compress an endless wave into a near-continuous stack. This floor is
+-- shared by every procedural template as tiers tighten their cadence.
+Builder.minSpawnSpacing = 0.5
 
 function Builder.getIntensityTier(waveIndex)
 	local endlessWave = math.max(0, (tonumber(waveIndex) or 0) - DifficultyCurve.campaignEnd)
