@@ -2,7 +2,7 @@
   "abilities": [
     {
       "ability": "meteor",
-      "charge_required": 14,
+      "charge_required": 28,
       "effect": {
         "damage": 85.0,
         "radius": 82.0
@@ -19,7 +19,7 @@
     },
     {
       "ability": "meteor",
-      "charge_required": 14,
+      "charge_required": 28,
       "effect": {
         "damage": 115.0,
         "radius": 96.0
@@ -36,7 +36,7 @@
     },
     {
       "ability": "frost_nova",
-      "charge_required": 11,
+      "charge_required": 22,
       "effect": {
         "duration": 5.0,
         "radius": 105.0
@@ -53,7 +53,7 @@
     },
     {
       "ability": "frost_nova",
-      "charge_required": 11,
+      "charge_required": 22,
       "effect": {
         "duration": 6.5,
         "radius": 120.0
@@ -70,7 +70,7 @@
     },
     {
       "ability": "overdrive",
-      "charge_required": 16,
+      "charge_required": 32,
       "effect": {
         "attackSpeed": 1.7,
         "duration": 7.0,
@@ -88,7 +88,7 @@
     },
     {
       "ability": "overdrive",
-      "charge_required": 16,
+      "charge_required": 32,
       "effect": {
         "attackSpeed": 1.85,
         "duration": 8.0,
@@ -106,7 +106,7 @@
     },
     {
       "ability": "gravity_well",
-      "charge_required": 18,
+      "charge_required": 36,
       "effect": {
         "damage": 28.0,
         "duration": 3.0,
@@ -125,7 +125,7 @@
     },
     {
       "ability": "gravity_well",
-      "charge_required": 18,
+      "charge_required": 36,
       "effect": {
         "damage": 42.0,
         "duration": 3.0,
@@ -144,7 +144,7 @@
     },
     {
       "ability": "gold_rush",
-      "charge_required": 24,
+      "charge_required": 48,
       "effect": {
         "duration": 8.0,
         "multiplier": 1.5
@@ -155,7 +155,7 @@
     },
     {
       "ability": "last_stand",
-      "charge_required": 20,
+      "charge_required": 40,
       "effect": {
         "attackSpeed": 1.45,
         "duration": 6.0,
@@ -174,7 +174,7 @@
     },
     {
       "ability": "last_stand",
-      "charge_required": 20,
+      "charge_required": 40,
       "effect": {
         "attackSpeed": 1.45,
         "duration": 6.0,
@@ -1114,7 +1114,7 @@
       "tower": "plasma"
     }
   ],
-  "definition_sha256": "0f2b2f8c82d68a81acb1978eeb042b58ef98a444005e449e24213cebcc1a4378",
+  "definition_sha256": "475576dcf8ef4a4c03bbc64d84f558e7471fd5bb3ee2c3ac8f2400163530df23",
   "format_version": 1,
   "overlap": {
     "base_total_damage": 113,
