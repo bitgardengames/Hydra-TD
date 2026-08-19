@@ -450,7 +450,7 @@ function Abilities.reset()
 	State.abilityCharges = State.abilityCharges or {}
 	for _, id in ipairs(State.equippedAbilities or {}) do
 		local def = AbilityDefs[id]
-		if def then State.abilityCharges[id] = def.chargeRequired end
+		if def then State.abilityCharges[id] = 0 end
 	end
 end
 
