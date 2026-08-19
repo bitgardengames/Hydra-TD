@@ -16,11 +16,15 @@ stats:setRows({
 	{label = "Score", value = 12345},
 })
 assert(not stats:isComplete(), "a newly reset sequence must animate")
+assert(stats.rows[1].barOpacity == 0 and stats.rows[2].barOpacity == 0,
+	"progress bars must start fully transparent")
 stats:update(0.275)
 assert(stats.rows[1].displayedValue > 0 and stats.rows[1].displayedValue < 75,
 	"elapsed-time interpolation must produce an intermediate value")
 assert(stats.rows[1].fill > 0 and stats.rows[1].fill < 0.75,
 	"bar fill must ease toward the honest denominator ratio")
+assert(stats.rows[1].barOpacity == 1 and stats.rows[2].barOpacity == 0,
+	"each progress bar must appear only when its fill begins")
 assert(stats.rows[2].displayedValue == 0,
 	"the next result must wait for the current row animation to finish")
 assert(stats.rows[2].fill == nil, "a stat without a target must omit its bar")
@@ -38,6 +42,12 @@ stats:reset()
 stats:finish()
 assert(stats:isComplete() and stats.rows[1].fill == 0.75,
 	"skip must immediately finish values and fills")
+
+stats:setRows({{label = "Perfect", value = 100, denominator = 100}})
+stats:update(stats.rowDuration)
+assert(stats.rows[1].flashElapsed == 0, "a full bar must begin flashing after reaching its fill")
+stats:update(0.1)
+assert(stats.rows[1].flashElapsed > 0, "the full-bar flash must continue after stat completion")
 
 stats:setRows({{label = "Zero", value = 4, denominator = 0}})
 stats:finish()
