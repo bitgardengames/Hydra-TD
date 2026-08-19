@@ -29,6 +29,8 @@ local PANEL_PAD = 12
 local PANEL_INSET = 16
 local MAX_ABILITIES = 6
 local IDLE_LIFT = 5
+local CHARGE_BAR_GAP = 5
+local CHARGE_BAR_H = 7
 
 local colorOutline = Theme.outline.color
 local colorBackdrop = Theme.ui.backdrop
@@ -141,10 +143,16 @@ local function drawButton(button, def, activeTime)
 		Text.printfShadow(button.lockMessage, fx + 3, fy + SIZE - 25, SIZE - 6, "center")
 	elseif not ready then
 		local ratio = min(1, charge / def.chargeRequired)
-		lg.setColor(0.02 + 0.35 * errorEase, 0.03, 0.05, 0.72 + 0.18 * errorEase)
-		lg.rectangle("fill", fx, fy, SIZE, SIZE * (1 - ratio), innerRadius)
-		lg.setColor(1, 1 - 0.55 * errorEase, 1 - 0.55 * errorEase, 0.9 + 0.1 * errorEase)
-		Text.printfShadow(string.format("%d/%d", charge, def.chargeRequired), fx, fy + 20, SIZE, "center")
+		local barY = fy + SIZE + CHARGE_BAR_GAP
+		lg.setColor(colorOutline)
+		lg.rectangle("fill", fx - outlineW, barY - outlineW,
+			SIZE + outlineW * 2, CHARGE_BAR_H + outlineW * 2, CHARGE_BAR_H * 0.5 + outlineW)
+		lg.setColor(0.04 + 0.25 * errorEase, 0.05, 0.07, 0.96)
+		lg.rectangle("fill", fx, barY, SIZE, CHARGE_BAR_H, CHARGE_BAR_H * 0.5)
+		if ratio > 0 then
+			lg.setColor(1, 0.78 - 0.22 * errorEase, 0.18, 1)
+			lg.rectangle("fill", fx, barY, SIZE * ratio, CHARGE_BAR_H, CHARGE_BAR_H * 0.5)
+		end
 	elseif State.abilityTargeting and State.abilityTargeting.abilityId == button.abilityId then
 		lg.setColor(1, 0.86, 0.35, 1)
 		lg.setLineWidth(3)
@@ -168,7 +176,7 @@ function AbilityBar.update(dt, mx, my)
 	local sw, sh = lg.getDimensions()
 	local totalW = count * SIZE + math.max(0, count - 1) * GAP
 	local panelW = totalW + PANEL_PAD * 2
-	local panelH = SIZE + PANEL_PAD * 2
+	local panelH = SIZE + CHARGE_BAR_GAP + CHARGE_BAR_H + PANEL_PAD * 2
 	local panelX = floor((sw - panelW) * 0.5)
 	local panelY = sh - PANEL_INSET - panelH
 	local clock = State.abilityClock or 0
@@ -215,7 +223,7 @@ function AbilityBar.draw()
 	local sw, sh = lg.getDimensions()
 	local totalW = count * SIZE + math.max(0, count - 1) * GAP
 	local panelW = totalW + PANEL_PAD * 2
-	local panelH = SIZE + PANEL_PAD * 2
+	local panelH = SIZE + CHARGE_BAR_GAP + CHARGE_BAR_H + PANEL_PAD * 2
 	local panelX = floor((sw - panelW) * 0.5)
 	local panelY = sh - PANEL_INSET - panelH
 
