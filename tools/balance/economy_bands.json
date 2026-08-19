@@ -1,7 +1,7 @@
 {
   "format_version": 1,
   "bands": {
-    "easy": {"wave_10_balanced_power": [1100, 2650], "wave_10_conservative_power": [900, 2100], "sell_loss_lancer": [8, 10]},
+    "easy": {"wave_10_balanced_power": [1100, 2700], "wave_10_conservative_power": [900, 2100], "sell_loss_lancer": [8, 10]},
     "normal": {"wave_10_balanced_power": [1100, 2500], "wave_10_conservative_power": [900, 1950], "sell_loss_lancer": [14, 16]},
     "hard": {"wave_10_balanced_power": [1100, 2400], "wave_10_conservative_power": [900, 1900], "sell_loss_lancer": [23, 25]}
   },

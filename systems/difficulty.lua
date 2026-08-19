@@ -1,21 +1,20 @@
 local Difficulty = {}
 
--- Difficulty changes durability and economy only. Starting cash and enemy
--- behavior stay consistent so campaign progression has the same rules on every
--- difficulty.
+-- Each difficulty is a distinct campaign contract, not a barely perceptible
+-- stat nudge. Normal is the authored baseline; Easy provides meaningful room
+-- to recover, while Hard demands tighter builds and punishes rebuilding.
 Difficulty.defs = {
 	easy = {
 		key = "easy",
 
 		-- Enemy baseline bias
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.0,
-		bossHpBias = 1.0,
+		enemyHpBias = 0.8,
+		bossHpBias = 0.8,
 
 		-- Economy
-		rewardBias = 1.05,
-		-- A clean clear rounds to $2 before milestone and boss modifiers.
-		perfectWaveBonus = 1.5,
+		rewardBias = 1.10,
+		perfectWaveBonus = 2,
 
 		-- Player affordances
 		startMoney = 120,
@@ -27,8 +26,8 @@ Difficulty.defs = {
 		key = "normal",
 
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.1,
-		bossHpBias = 1.05,
+		enemyHpBias = 1.0,
+		bossHpBias = 1.0,
 
 		rewardBias = 1.0,
 		-- A visible $2 clean-clear reward cushions imperfect purchasing without
@@ -46,7 +45,7 @@ Difficulty.defs = {
 
 		enemySpeedBias = 1.0,
 		enemyHpBias = 1.2,
-		bossHpBias = 1.25,
+		bossHpBias = 1.35,
 
 		rewardBias = 0.95,
 		perfectWaveBonus = 1.25,
