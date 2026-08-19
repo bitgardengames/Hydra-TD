@@ -14,7 +14,7 @@ return {
 		cost = 50,
 		range = 4.25 * Constants.TILE,
 		fireRate = 1.2,
-		damage = 3,
+		damage = 2,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 10,
 		projSpeed = 370,
@@ -45,7 +45,7 @@ return {
 		cost = 60,
 		range = 3.75 * Constants.TILE,
 		fireRate = 2.2, -- shots/sec
-		damage = 9,
+		damage = 8,
 		recoilStrength = Constants.TILE * 0.08,
 		recoilDecay = 18,
 		projSpeed = 520,
@@ -75,7 +75,7 @@ return {
 		cost = 70,
 		range = 3.55 * Constants.TILE,
 		fireRate = 1.4,
-		damage = 2,
+		damage = 1,
 		recoilStrength = Constants.TILE * 0.06,
 		recoilDecay = 16,
 		projSpeed = 360,
@@ -112,7 +112,7 @@ return {
 		-- At three targets, splash already gives this about twice the Lancer's
 		-- total damage per second. Keep the shell to two Lancer hits so
 		-- Cannon pays for that crowd damage with weaker single-target efficiency.
-		damage = 18,
+		damage = 16,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
 		projSpeed = 280,
@@ -142,7 +142,7 @@ return {
 		cost = 95,
 		range = 3.7 * Constants.TILE,
 		fireRate = 1.1,
-		damage = 6,
+		damage = 5,
 		recoilStrength = Constants.TILE * 0.03,
 		recoilDecay = 5, -- Dramatic because the recoil is so small
 		turnSpeed = 9,
@@ -169,7 +169,7 @@ return {
 		cost = 120,
 		range = 3.4 * Constants.TILE,
 		fireRate = 0.75,
-		damage = 5,
+		damage = 4,
 		recoilStrength = Constants.TILE * 0.14,
 		recoilDecay = 18,
 		projSpeed = 120,
