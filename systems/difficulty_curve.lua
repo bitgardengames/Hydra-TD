@@ -12,8 +12,10 @@ DifficultyCurve.localExponent = 1.25
 DifficultyCurve.mapIndexCap = 15
 DifficultyCurve.finalMapHp = 1.75
 
--- Endless adds restrained durability tiers after evaluating the same local arc.
-DifficultyCurve.endlessHpPerTier = 1.10
+-- Endless continues growing from the campaign finale instead of restarting the
+-- local ten-wave arc. This is expressed as growth per ten waves, but applied
+-- fractionally so every endless wave is tougher than the one before it.
+DifficultyCurve.endlessHpPerTier = 1.35
 
 function DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
 	if tonumber(authoredScalar) then return math.max(0.1, tonumber(authoredScalar)) end
@@ -24,13 +26,14 @@ end
 
 function DifficultyCurve.getEnemyHpMultiplier(waveIndex, mapIndex, authoredScalar)
 	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
-	local localWave = ((waveIndex - 1) % DifficultyCurve.campaignEnd) + 1
+	local localWave = math.min(waveIndex, DifficultyCurve.campaignEnd)
 	local progress = (localWave - 1) / (DifficultyCurve.campaignEnd - 1)
 	local localHp = DifficultyCurve.localStartHp
 		+ (DifficultyCurve.localEndHp - DifficultyCurve.localStartHp)
 			* (progress ^ DifficultyCurve.localExponent)
-	local endlessTier = math.max(0, math.floor((waveIndex - 1) / DifficultyCurve.campaignEnd))
-	local endlessHp = DifficultyCurve.endlessHpPerTier ^ endlessTier
+	local endlessWaves = math.max(0, waveIndex - DifficultyCurve.campaignEnd)
+	local endlessHp = DifficultyCurve.endlessHpPerTier
+		^ (endlessWaves / DifficultyCurve.campaignEnd)
 	local mapHp = DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
 	return localHp * endlessHp * mapHp * Difficulty.get().enemyHpBias
 end
