@@ -27,8 +27,10 @@ State.modulePicker.active = false
 State.equippedAbilities = {"meteor"}
 State.abilityCharges = {}
 Abilities.reset()
-assert(State.abilityCharges.meteor == Defs.meteor.chargeRequired and Abilities.isReady("meteor"),
-	"new runs must initialize equipped abilities ready")
+assert(State.abilityCharges.meteor == 0 and not Abilities.isReady("meteor"),
+	"new runs must initialize equipped abilities uncharged")
+assert(not Abilities.beginTargeting("meteor"), "uncharged abilities must not begin targeting")
+State.abilityCharges.meteor = Defs.meteor.chargeRequired
 assert(Abilities.beginTargeting("meteor") and Abilities.activate(100, 100), "ready ability must activate")
 assert(State.abilityCharges.meteor == 0 and not Abilities.isReady("meteor"),
 	"activation must consume all required charge")
