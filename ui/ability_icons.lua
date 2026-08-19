@@ -122,7 +122,9 @@ function AbilityIcons.draw(abilityId, cx, cy, scale, alpha, state)
 	lg.push("all")
 	local kind = stateName(state)
 	local drawer = type(abilityId) == "string" and drawers[abilityId] or nil
-	(drawer or unknown)(cx, cy, scale, (kind == "locked" or kind == "charging") and alpha * 0.58 or alpha)
+	-- Always render the complete glyph. Call sites can add a neutral cover for
+	-- unavailable states without losing the identity and color of the ability.
+	(drawer or unknown)(cx, cy, scale, alpha)
 	drawAccent(kind, cx, cy, scale, alpha)
 	lg.pop()
 
