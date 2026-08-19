@@ -1,12 +1,26 @@
 local sin = math.sin
 local cos = math.cos
 local pi = math.pi
+local max = math.max
+local min = math.min
+local tau = pi * 2
 
 local Dance = {}
 
-local function smoothstep(t)
-	t = math.max(0, math.min(1, t))
-	return t * t * (3 - 2 * t)
+-- Unlike cubic smoothstep, this curve also has zero acceleration at either
+-- end. That matters at the seams of a looping animation: velocity alone being
+-- continuous can still leave a small but visible hitch as a turret sets off.
+local function smootherstep(t)
+	t = max(0, min(1, t))
+	return t * t * t * (t * (t * 6 - 15) + 10)
+end
+
+-- A unit-height pulse whose velocity and acceleration are both zero where it
+-- joins the base dance. Keeping this polynomial here avoids stacking several
+-- easing calls for every turret on every frame.
+local function smoothPulse(t)
+	local joined = t * (1 - t)
+	return 64 * joined * joined * joined
 end
 
 -- Spend most of each cycle on the tower's regular dance, then complete one
@@ -16,30 +30,30 @@ local function spinMove(localTime, phase)
 	local cycleLength = 7.2
 	local moveStart = 6.05
 	local moveLength = 0.9
-	local phaseDelay = phase / (pi * 2) * cycleLength
+	local phaseDelay = phase / tau * cycleLength
 	local cycleTime = (localTime + phaseDelay) % cycleLength
 	if cycleTime < moveStart or cycleTime >= moveStart + moveLength then
 		return 0
 	end
-	return smoothstep((cycleTime - moveStart) / moveLength) * pi * 2
+	return smootherstep((cycleTime - moveStart) / moveLength) * tau
 end
 
 -- Give every tower a short signature flourish between its regular beats. The
--- squared sine envelope starts and ends at rest, so these little hops and
--- shimmies can be layered onto the looping dances without a visible snap.
+-- pulse envelope starts and ends with zero velocity and acceleration, so these
+-- little hops and shimmies layer onto the looping dances without a visible snap.
 local function signatureMove(localTime, kind, phase)
 	local cycleLength = 4.8
 	local moveStart = 2.75
 	local moveLength = 1.2
-	local phaseDelay = phase / (pi * 2) * cycleLength
+	local phaseDelay = phase / tau * cycleLength
 	local cycleTime = (localTime + phaseDelay) % cycleLength
 	if cycleTime < moveStart or cycleTime >= moveStart + moveLength then
 		return 0, 0, 0
 	end
 
 	local progress = (cycleTime - moveStart) / moveLength
-	local envelope = sin(progress * pi) ^ 2
-	local wiggle = sin(progress * pi * 2)
+	local envelope = smoothPulse(progress)
+	local wiggle = sin(progress * tau)
 
 	if kind == "lancer" then
 		-- An eager heel-click: spring upward and kick the lance side to side.
@@ -49,7 +63,7 @@ local function signatureMove(localTime, kind, phase)
 		return wiggle * envelope * 1.1, envelope * 1.5, -wiggle * envelope * 0.45
 	elseif kind == "cannon" then
 		-- Two stout little stomps make the heavy turret feel cheerfully weighty.
-		local stomp = sin(progress * pi * 2) ^ 2
+		local stomp = sin(progress * tau) ^ 2
 		return -wiggle * envelope * 0.8, stomp * envelope * 1.8, wiggle * envelope * 0.24
 	elseif kind == "shock" then
 		-- A quick three-beat electric shimmy.
@@ -78,8 +92,8 @@ function Dance.pose(clock, kind, index)
 	index = index or 1
 
 	-- Let the cheer travel across the board when the victory screen opens.
-	local localTime = math.max(0, clock - (index - 1) * 0.045)
-	local entrance = smoothstep(localTime / 0.4)
+	local localTime = max(0, clock - (index - 1) * 0.045)
+	local entrance = smootherstep(localTime / 0.4)
 	local phase = ((index - 1) % 4) * pi * 0.32
 	local sway, bob, turn
 
