@@ -16,6 +16,10 @@ local lg = love.graphics
 local floor = math.floor
 local min = math.min
 local max = math.max
+local ceil = math.ceil
+local cos = math.cos
+local sin = math.sin
+local pi = math.pi
 
 local AbilityBar = {}
 local buttons = {}
@@ -38,6 +42,39 @@ local outerRadius = 9 + outlineW * 0.5
 local innerRadius = 9 - outlineW * 0.25
 local panelRadius = 18 + outlineW * 0.5
 local panelInnerRadius = 18 - outlineW * 0.25
+
+-- Charge lives inside the icon decoration so AbilityIcons can reserve its
+-- outermost ring for active/ready feedback.
+local chargeColors = {
+	meteor = {0.58, 0.25, 0.12},
+	frost_nova = {0.30, 0.52, 0.62},
+	overdrive = {0.58, 0.44, 0.16},
+	gravity_well = {0.38, 0.23, 0.58},
+	gold_rush = {0.58, 0.46, 0.14},
+	last_stand = {0.58, 0.34, 0.14},
+}
+
+-- Draw a circular progress fill beginning at 12 o'clock and advancing
+-- clockwise. A complete charge uses a circle to avoid a seam in the fan.
+local function drawChargeSector(cx, cy, radius, ratio, color)
+	ratio = max(0, min(1, tonumber(ratio) or 0))
+	if ratio <= 0 then return end
+
+	lg.setColor(color[1], color[2], color[3], 0.24)
+	if ratio >= 1 then
+		lg.circle("fill", cx, cy, radius)
+		return
+	end
+
+	local segmentCount = max(1, ceil(48 * ratio))
+	local vertices = {cx, cy}
+	for i = 0, segmentCount do
+		local angle = -pi * 0.5 + pi * 2 * ratio * i / segmentCount
+		vertices[#vertices + 1] = cx + cos(angle) * radius
+		vertices[#vertices + 1] = cy + sin(angle) * radius
+	end
+	lg.polygon("fill", vertices)
+end
 
 local function getDisplayedAbilities()
 	local displayed = {}
@@ -116,6 +153,11 @@ local function drawButton(button, def, activeTime)
 	else
 		iconState = "ready"
 	end
+	if available then
+		local ratio = min(1, charge / def.chargeRequired)
+		drawChargeSector(fx + SIZE * 0.5, fy + SIZE * 0.5, SIZE * 0.5 - 6,
+			ratio, chargeColors[button.abilityId] or {0.42, 0.44, 0.48})
+	end
 	AbilityIcons.draw(button.abilityId, fx + SIZE * 0.5, fy + SIZE * 0.5, (available and 1 or 0.82) + readyEase * 0.1, 1, iconState)
 
 	-- A high-contrast border remains visible even with motion/particle options
@@ -140,9 +182,6 @@ local function drawButton(button, def, activeTime)
 		Text.printfShadow("🔒", fx, fy + 6, SIZE, "center")
 		Text.printfShadow(button.lockMessage, fx + 3, fy + SIZE - 25, SIZE - 6, "center")
 	elseif not ready then
-		local ratio = min(1, charge / def.chargeRequired)
-		lg.setColor(0.02 + 0.35 * errorEase, 0.03, 0.05, 0.72 + 0.18 * errorEase)
-		lg.rectangle("fill", fx, fy, SIZE, SIZE * (1 - ratio), innerRadius)
 		lg.setColor(1, 1 - 0.55 * errorEase, 1 - 0.55 * errorEase, 0.9 + 0.1 * errorEase)
 		Text.printfShadow(string.format("%d/%d", charge, def.chargeRequired), fx, fy + 20, SIZE, "center")
 	elseif State.abilityTargeting and State.abilityTargeting.abilityId == button.abilityId then
