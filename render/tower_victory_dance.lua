@@ -13,8 +13,8 @@ end
 -- rotation as an occasional extra move. Zero and one full turn render at the
 -- same angle, so the tower can cleanly return to its usual choreography.
 local function spinMove(localTime, phase)
-	local cycleLength = 5.6
-	local moveStart = 4.45
+	local cycleLength = 7.2
+	local moveStart = 6.05
 	local moveLength = 0.9
 	local phaseDelay = phase / (pi * 2) * cycleLength
 	local cycleTime = (localTime + phaseDelay) % cycleLength
