@@ -74,7 +74,7 @@ local paddingY = 30
 
 local btnW = 240
 local btnH = 42
-local panelW = 560
+local panelW = 520
 local rewardCardW = 420
 local rewardCardH = 220
 local rewardInputDelay = 0.3

@@ -74,4 +74,14 @@ for _, kind in ipairs({"lancer", "slow", "cannon", "shock", "poison", "plasma", 
 	assert(foundNeutral, kind .. " should return to non-spinning dance moves")
 end
 
+-- Full spins should remain an occasional flourish rather than repeating during
+-- the first several beats of the dance.
+for _, kind in ipairs({"lancer", "slow", "cannon", "shock", "poison", "custom"}) do
+	for step = 10, 120 do
+		local _, _, turn = pose(step * 0.05, kind, 1)
+		assert(math.abs(turn) < math.pi,
+			kind .. " should save its full-spin flourish for later in the dance")
+	end
+end
+
 print("tower victory dance fixtures passed")
