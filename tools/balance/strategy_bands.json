@@ -6,5 +6,8 @@
     "minimum_mean_perturbation_pass_bp": 3500,
     "minimum_worst_family_margin_bp": -2500
   },
-  "puzzles": []
+  "puzzles": [
+    "normal/highridge/wave_2",
+    "hard/highridge/wave_2"
+  ]
 }
