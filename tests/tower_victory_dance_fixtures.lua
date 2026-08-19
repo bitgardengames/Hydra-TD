@@ -27,6 +27,19 @@ local delayedSway, delayedBob, delayedTurn = pose(0.02, "lancer", 4)
 assert(delayedSway == 0 and delayedBob == 0 and delayedTurn == 0,
 	"the opening cheer should stagger across towers")
 
+-- The entrance should leave rest without an acceleration kick. A quintic ease
+-- makes the first two frame-to-frame deltas almost identical at either seam.
+local function delta(kind, from, step)
+	local x1, y1, turn1 = pose(from, kind, 1)
+	local x2, y2, turn2 = pose(from + step, kind, 1)
+	return x2 - x1, y2 - y1, turn2 - turn1
+end
+
+local entranceDx, entranceDy, entranceTurn = delta("lancer", 0, 0.001)
+assert(math.abs(entranceDx) < 0.00001 and math.abs(entranceDy) < 0.00001
+	and math.abs(entranceTurn) < 0.00001,
+	"the dance entrance should ease away from a complete rest")
+
 -- Signature flourishes should make each tower's movement distinct across a
 -- whole phrase, not merely at one lucky sample in the base loop.
 local phrases = {}
@@ -48,6 +61,20 @@ assert(plasmaBob < -2 and plasmaTurn > 2, "plasma should hop into a happy half-t
 local shockLeft = select(1, pose(3.03, "shock", 1))
 local shockRight = select(1, pose(3.13, "shock", 1))
 assert(shockLeft * shockRight < 0, "shock should shimmy rapidly from side to side")
+
+-- Signature moves join the base choreography at 2.75 seconds. Their combined
+-- motion should retain the base curve's tiny acceleration at that boundary.
+for _, kind in ipairs(kinds) do
+	local epsilon = 0.001
+	local beforeX, beforeY, beforeTurn = pose(2.75 - epsilon, kind, 1)
+	local edgeX, edgeY, edgeTurn = pose(2.75, kind, 1)
+	local afterX, afterY, afterTurn = pose(2.75 + epsilon, kind, 1)
+	local flourishAcceleration = math.abs((afterX - edgeX) - (edgeX - beforeX))
+		+ math.abs((afterY - edgeY) - (edgeY - beforeY))
+		+ math.abs((afterTurn - edgeTurn) - (edgeTurn - beforeTurn))
+	assert(flourishAcceleration < 0.001,
+		kind .. " signature should blend into its nod without an acceleration kick")
+end
 
 -- Tiny time steps should produce tiny pose changes: no hard kick or snap at a beat edge.
 local beforeX, beforeY, beforeTurn = pose(1.25, "shock", 1)
