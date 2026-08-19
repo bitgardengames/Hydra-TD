@@ -3,12 +3,12 @@
 -- balance fixtures auditable without a hidden global multiplier. HP and kill
 -- rewards use whole numbers so an authored count has a legible threat
 -- and income budget in tools/balance/challenge_fixtures.py. Standard archetypes
--- pay $1 per three to five base effective durability, after mechanic weighting.
+-- pay $1 per three to six base effective durability, after mechanic weighting.
 
 return {
 	grunt = {
 		nameKey = "enemy.grunt",
-		hp = 15,
+		hp = 17,
 		speed = 70,
 		reward = 5,
 		score = 10,
@@ -17,7 +17,7 @@ return {
 
 	tank = {
 		nameKey = "enemy.tank",
-		hp = 41,
+		hp = 45,
 		speed = 45,
 		reward = 8,
 		score = 22,
@@ -26,7 +26,7 @@ return {
 
 	runner = {
 		nameKey = "enemy.runner",
-		hp = 12,
+		hp = 13,
 		speed = 95,
 		reward = 4,
 		score = 12,
@@ -37,7 +37,7 @@ return {
 	bulwark = {
 		nameKey = "enemy.bulwark",
 		descriptionKey = "enemy.bulwarkDescription",
-		hp = 54, speed = 40, reward = 16, score = 30, radius = 14,
+		hp = 59, speed = 40, reward = 16, score = 30, radius = 14,
 		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
 		traits = {"armored"},
 	},
@@ -45,7 +45,7 @@ return {
 	regenerator = {
 		nameKey = "enemy.regenerator",
 		descriptionKey = "enemy.regeneratorDescription",
-		hp = 37, speed = 53, reward = 10, score = 28, radius = 12,
+		hp = 41, speed = 53, reward = 10, score = 28, radius = 12,
 		regeneration = { hpPerSecond = 2.5, delay = 1.25 },
 		modifiers = { poison = 1.25 },
 		traits = {"regenerates"},
@@ -54,7 +54,7 @@ return {
 	warcaller = {
 		nameKey = "enemy.warcaller",
 		descriptionKey = "enemy.warcallerDescription",
-		hp = 37, speed = 48, reward = 10, score = 38, radius = 13,
+		hp = 41, speed = 48, reward = 10, score = 38, radius = 13,
 		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
 		targetPriority = 34,
 		traits = {"support"},
@@ -63,7 +63,7 @@ return {
 	summoner = {
 		nameKey = "enemy.summoner",
 		descriptionKey = "enemy.summonerDescription",
-		hp = 50, speed = 42, reward = 12, score = 44, radius = 14,
+		hp = 55, speed = 42, reward = 12, score = 44, radius = 14,
 		summon = { kind = "runner", count = 2, period = 6.0, initialDelay = 2.5, spacing = 9 },
 		targetPriority = 38,
 		traits = {"summons"},
@@ -71,7 +71,7 @@ return {
 
 	boss = {
 		nameKey = "enemy.boss",
-		hp = 350,
+		hp = 385,
 		speed = 45,
 		reward = 64,
 		score = 300,
@@ -87,7 +87,7 @@ return {
 
 	boss_summoner = {
 		nameKey = "enemy.bossSummoner",
-		hp = 310,
+		hp = 341,
 		speed = 42,
 		reward = 110,
 		score = 380,
@@ -100,7 +100,7 @@ return {
 
 	boss_displacement = {
 		nameKey = "enemy.bossDisplacement",
-		hp = 350,
+		hp = 385,
 		speed = 48,
 		reward = 125,
 		score = 430,
@@ -113,7 +113,7 @@ return {
 
 	boss_suppression = {
 		nameKey = "enemy.bossSuppression",
-		hp = 760,
+		hp = 836,
 		speed = 40,
 		reward = 140,
 		score = 500,
