@@ -7,8 +7,9 @@ AnimatedRunStats.__index = AnimatedRunStats
 
 local ROW_H = 42
 local ROW_GAP = 8
-local ROW_DURATION = 0.7
+local ROW_DURATION = 0.8
 local BAR_MAX_WIDTH = 340
+local FULL_BAR_FLASH_DURATION = 0.65
 
 local function clamp(value)
 	return math.max(0, math.min(1, value))
@@ -39,12 +40,20 @@ function AnimatedRunStats:reset()
 	for _, row in ipairs(self.rows) do
 		row.displayedValue = 0
 		row.fill = 0
+		row.barOpacity = 0
+		row.flashElapsed = nil
 	end
 end
 
 function AnimatedRunStats:update(dt)
+	dt = math.max(0, dt or 0)
+	for _, row in ipairs(self.rows) do
+		if row.flashElapsed then
+			row.flashElapsed = math.min(FULL_BAR_FLASH_DURATION, row.flashElapsed + dt)
+		end
+	end
 	if self.complete then return end
-	self.elapsed = self.elapsed + math.max(0, dt or 0)
+	self.elapsed = self.elapsed + dt
 	for index, row in ipairs(self.rows) do
 		-- Give each result its own moment instead of overlapping every fill.
 		local progress = clamp((self.elapsed - (index - 1) * self.rowDuration) / self.rowDuration)
@@ -52,6 +61,9 @@ function AnimatedRunStats:update(dt)
 		row.displayedValue = (row.value or 0) * eased
 		row.fill = row.denominator and row.denominator > 0
 			and clamp((row.value or 0) / row.denominator) * eased or nil
+		-- Fade the track in with the leading edge instead of revealing an empty bar.
+		row.barOpacity = clamp(progress * 4)
+		if row.fill and row.fill >= 1 and not row.flashElapsed then row.flashElapsed = 0 end
 	end
 	local lastStart = math.max(0, (#self.rows - 1) * self.rowDuration)
 	if self.elapsed >= lastStart + self.rowDuration then self:finish() end
@@ -62,6 +74,8 @@ function AnimatedRunStats:finish()
 		row.displayedValue = row.value or 0
 		row.fill = row.denominator and row.denominator > 0
 			and clamp((row.value or 0) / row.denominator) or nil
+		row.barOpacity = row.fill and 1 or 0
+		if row.fill and row.fill >= 1 and not row.flashElapsed then row.flashElapsed = 0 end
 	end
 	self.complete = true
 end
@@ -86,9 +100,15 @@ function AnimatedRunStats:draw(x, y, width, alpha)
 		Text.printfShadow(value, barX, rowY, barWidth, "right")
 		local barY = rowY + 25
 		if row.denominator and row.denominator > 0 then
-			lg.setColor(Theme.ui.screenDim[1], Theme.ui.screenDim[2], Theme.ui.screenDim[3], 0.6 * alpha)
+			local barAlpha = alpha * (row.barOpacity or 0)
+			lg.setColor(Theme.ui.screenDim[1], Theme.ui.screenDim[2], Theme.ui.screenDim[3], 0.6 * barAlpha)
 			lg.rectangle("fill", barX, barY, barWidth, 8, 4, 4)
-			lg.setColor(self.fillColor[1], self.fillColor[2], self.fillColor[3], 0.9 * alpha)
+			local flash = row.flashElapsed and row.flashElapsed < FULL_BAR_FLASH_DURATION
+				and math.sin(row.flashElapsed / FULL_BAR_FLASH_DURATION * math.pi) or 0
+			local red = self.fillColor[1] + (1 - self.fillColor[1]) * flash
+			local green = self.fillColor[2] + (1 - self.fillColor[2]) * flash
+			local blue = self.fillColor[3] + (1 - self.fillColor[3]) * flash
+			lg.setColor(red, green, blue, (0.9 + 0.1 * flash) * barAlpha)
 			lg.rectangle("fill", barX, barY, barWidth * clamp(row.fill or 0), 8, 4, 4)
 		end
 	end
