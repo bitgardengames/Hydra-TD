@@ -68,8 +68,7 @@ function Abilities.getEquipped(abilityId)
 end
 
 local function getEffect(def)
-	local upgraded = def.upgradeId and CampaignUnlocks.isAbilityUpgradeUnlocked(def.upgradeId)
-	return upgraded and (def.upgradedEffect or def.effect) or def.effect
+	return def.effect
 end
 
 function Abilities.getEffect(def)

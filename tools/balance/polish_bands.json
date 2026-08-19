@@ -6,7 +6,6 @@
     "base_projectile_events_per_second": [6.5, 8.5],
     "tier_5_projectile_events_per_second": [8.0, 11.0],
     "base_damage_floater_events_per_second": [6.5, 8.5],
-    "ability_uptime_ratio": [0.0, 0.25],
     "ability_overlap_seconds": [0.0, 8.5],
     "wave_preview_rows": [1, 6],
     "wave_preview_wrapped_lines": [1, 20],

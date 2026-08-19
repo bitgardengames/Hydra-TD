@@ -14,25 +14,7 @@
         true,
         true,
         false
-      ],
-      "variant": "base"
-    },
-    {
-      "ability": "meteor",
-      "charge_required": 28,
-      "effect": {
-        "damage": 115.0,
-        "radius": 96.0
-      },
-      "kind": "damage_area",
-      "radius_samples_included": [
-        true,
-        true,
-        true,
-        true,
-        false
-      ],
-      "variant": "enhanced"
+      ]
     },
     {
       "ability": "frost_nova",
@@ -48,25 +30,7 @@
         true,
         true,
         false
-      ],
-      "variant": "base"
-    },
-    {
-      "ability": "frost_nova",
-      "charge_required": 22,
-      "effect": {
-        "duration": 6.5,
-        "radius": 120.0
-      },
-      "kind": "slow_area",
-      "radius_samples_included": [
-        true,
-        true,
-        true,
-        true,
-        false
-      ],
-      "variant": "enhanced"
+      ]
     },
     {
       "ability": "overdrive",
@@ -83,26 +47,7 @@
         true,
         true,
         false
-      ],
-      "variant": "base"
-    },
-    {
-      "ability": "overdrive",
-      "charge_required": 32,
-      "effect": {
-        "attackSpeed": 1.85,
-        "duration": 8.0,
-        "radius": 125.0
-      },
-      "kind": "tower_haste_area",
-      "radius_samples_included": [
-        true,
-        true,
-        true,
-        true,
-        false
-      ],
-      "variant": "enhanced"
+      ]
     },
     {
       "ability": "gravity_well",
@@ -120,27 +65,7 @@
         true,
         true,
         false
-      ],
-      "variant": "base"
-    },
-    {
-      "ability": "gravity_well",
-      "charge_required": 36,
-      "effect": {
-        "damage": 42.0,
-        "duration": 3.0,
-        "pullSpeed": 44.0,
-        "radius": 110.0
-      },
-      "kind": "gravity_well",
-      "radius_samples_included": [
-        true,
-        true,
-        true,
-        true,
-        false
-      ],
-      "variant": "enhanced"
+      ]
     },
     {
       "ability": "gold_rush",
@@ -150,8 +75,7 @@
         "multiplier": 1.5
       },
       "kind": "income_multiplier",
-      "radius_samples_included": [],
-      "variant": "base"
+      "radius_samples_included": []
     },
     {
       "ability": "last_stand",
@@ -169,28 +93,7 @@
         true,
         true,
         false
-      ],
-      "variant": "base"
-    },
-    {
-      "ability": "last_stand",
-      "charge_required": 40,
-      "effect": {
-        "attackSpeed": 1.45,
-        "duration": 6.0,
-        "radius": 125.0,
-        "volleyDelay": 1.5,
-        "volleys": 2.0
-      },
-      "kind": "last_stand",
-      "radius_samples_included": [
-        true,
-        true,
-        true,
-        true,
-        false
-      ],
-      "variant": "enhanced"
+      ]
     }
   ],
   "assumptions": {
@@ -1114,21 +1017,20 @@
       "tower": "plasma"
     }
   ],
-  "definition_sha256": "d185b5046a1ce1aec7a144298c903a40ceffddfb72f233a3209fcc5439f3f374",
+  "definition_sha256": "a4d9f626ae7dfabc7c1830ccdca436e42547e7e0127cadc437eacfc1579579c5",
   "format_version": 1,
   "overlap": {
-    "base_total_damage": 113,
     "casts": [
       "meteor",
       "gravity_well"
     ],
     "coverage": 1.0,
-    "enhanced_total_damage": 157,
     "expected_damage_stacks": true,
     "independent_expiries": true,
     "leaks": 0,
     "proc_count": 2,
-    "speed_invariant": true
+    "speed_invariant": true,
+    "total_damage": 113
   },
   "targeting": {
     "expected_target": "slowed_front",

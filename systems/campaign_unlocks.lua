@@ -34,7 +34,6 @@ local rewardsByMapId = {
 	-- There are fewer meaningful unlocks than campaign maps. Keep the real
 	-- rewards contiguous at the front rather than using route progression as a
 	-- placeholder reward or leaving gaps between unlocks.
-	terrace = {{type = "ability_upgrade", id = "enhanced_abilities", labelKey = "campaign.rewards.enhancedAbilities"}},
 	twinloop = {{type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"}},
 }
 
@@ -52,13 +51,12 @@ end
 
 local function validateRewards()
 	local AbilityDefs = require("systems.ability_defs")
-	local knownMaps, knownTowers, knownAbilities, knownUpgrades = {}, {}, {}, {}
+	local knownMaps, knownTowers, knownAbilities = {}, {}, {}
 	for _, map in ipairs(Maps) do knownMaps[map.id] = true end
 	for _, towerId in ipairs(Constants.TOWER_LIST) do knownTowers[towerId] = true end
 	for abilityId, def in pairs(AbilityDefs) do
 		if type(def) == "table" and def.id then
 			knownAbilities[abilityId] = true
-			if def.upgradeId then knownUpgrades[def.upgradeId] = true end
 		end
 	end
 	for mapId, rewards in pairs(rewardsByMapId) do
@@ -68,8 +66,6 @@ local function validateRewards()
 				assert(knownTowers[reward.id], "campaign reward uses unknown tower ID: " .. tostring(reward.id))
 			elseif reward.type == "ability" then
 				assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id))
-			elseif reward.type == "ability_upgrade" then
-				assert(knownUpgrades[reward.id], "campaign reward uses unknown ability upgrade ID: " .. tostring(reward.id))
 			elseif reward.type == "map" then
 				assert(knownMaps[reward.id], "campaign reward uses unknown map ID: " .. tostring(reward.id))
 			end
@@ -129,10 +125,6 @@ local function isFeatureUnlocked(featureType, id)
 	return getProgressIndex() >= requiredMap or isRewardMapCompleted(requiredMap)
 end
 
-local function isRewardUnlocked(rewardType, rewardId)
-	return isFeatureUnlocked(rewardType, rewardId)
-end
-
 function CampaignUnlocks.getRequiredMap(kind)
 	return requiredMapByTower[kind] or UNKNOWN_REQUIRED_MAP
 end
@@ -166,10 +158,6 @@ end
 
 function CampaignUnlocks.isAbilitySlotUnlocked(slotIndex)
 	return (tonumber(slotIndex) or 1) <= CampaignUnlocks.getUnlockedAbilitySlots()
-end
-
-function CampaignUnlocks.isAbilityUpgradeUnlocked(upgradeId)
-	return isRewardUnlocked("ability_upgrade", upgradeId)
 end
 
 function CampaignUnlocks.getUnlockedAbilitySlots()

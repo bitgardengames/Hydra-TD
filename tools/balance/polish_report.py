@@ -104,20 +104,14 @@ def ability_metrics() -> dict:
     root = named_tables(lua_table(text, "AbilityDefs"))
     rows = []
     for ability, raw in root.items():
-        cooldown = float(re.search(r"\bcooldown\s*=\s*([0-9.]+)", raw).group(1))
-        effects = re.findall(r"(?:upgradedE|e)ffect\s*=\s*\{([^}]+)", raw)
+        effects = re.findall(r"\beffect\s*=\s*\{([^}]+)", raw)
         durations = [float(m.group(1)) for effect in effects
                      if (m := re.search(r"\bduration\s*=\s*([0-9.]+)", effect))]
-        base = durations[0] if durations else 0
-        enhanced = durations[-1] if durations else 0
-        rows.append({"ability": ability, "cooldown_seconds": cooldown,
-                     "base_duration_seconds": base, "enhanced_duration_seconds": enhanced,
-                     "base_uptime_ratio": round(base / cooldown, 4),
-                     "enhanced_uptime_ratio": round(enhanced / cooldown, 4)})
-    sustained = [row for row in rows if row["enhanced_duration_seconds"] > 0]
+        duration = durations[0] if durations else 0
+        rows.append({"ability": ability, "duration_seconds": duration})
+    sustained = [row for row in rows if row["duration_seconds"] > 0]
     overlaps = [{"abilities": [a["ability"], b["ability"]],
-                 "base_seconds": min(a["base_duration_seconds"], b["base_duration_seconds"]),
-                 "enhanced_seconds": min(a["enhanced_duration_seconds"], b["enhanced_duration_seconds"])}
+                 "seconds": min(a["duration_seconds"], b["duration_seconds"])}
                 for i, a in enumerate(sustained) for b in sustained[i + 1:]]
     return {"abilities": rows, "simultaneous_cast_overlap_windows": overlaps}
 
@@ -277,10 +271,8 @@ def checks(data: dict) -> list[tuple[str, bool, str]]:
     for level in ("base", "tier_5"):
         alarm("events/projectiles/"+level, data["event_rates"]["projectile_events_per_second"][level], b[level+"_projectile_events_per_second"])
     alarm("events/floaters", data["event_rates"]["damage_floater_events_per_second"]["base"], b["base_damage_floater_events_per_second"])
-    for row in data["abilities"]["abilities"]:
-        alarm("ability/uptime/"+row["ability"], row["enhanced_uptime_ratio"], b["ability_uptime_ratio"])
     for row in data["abilities"]["simultaneous_cast_overlap_windows"]:
-        alarm("ability/overlap/"+"+".join(row["abilities"]), row["enhanced_seconds"], b["ability_overlap_seconds"])
+        alarm("ability/overlap/"+"+".join(row["abilities"]), row["seconds"], b["ability_overlap_seconds"])
     alarm("preview/rows", data["wave_preview"]["maximum_rows"], b["wave_preview_rows"])
     alarm("preview/wrap", data["wave_preview"]["maximum_wrapped_counter_lines"], b["wave_preview_wrapped_lines"])
     alarm("hud/overflow", max(x["overflow_pixels"] for x in data["hud_bounds"]["configurations"]), b["hud_overflow_pixels"])
