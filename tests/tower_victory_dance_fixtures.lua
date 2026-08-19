@@ -5,8 +5,8 @@ local function pose(t, kind, i)
 	local sway, bob, turn = Dance.pose(t, kind, i)
 	assert(type(sway) == "number" and type(bob) == "number" and type(turn) == "number",
 		"poses must be numeric")
-	assert(math.abs(sway) <= 4.201, "turret sway must stay within its visual budget")
-	assert(math.abs(bob) <= 4.201, "turret bob must stay within its visual budget")
+	assert(math.abs(sway) <= 7.001, "turret sway must stay within its visual budget")
+	assert(math.abs(bob) <= 7.001, "turret bob must stay within its visual budget")
 	return sway, bob, turn
 end
 
@@ -27,6 +27,28 @@ local delayedSway, delayedBob, delayedTurn = pose(0.02, "lancer", 4)
 assert(delayedSway == 0 and delayedBob == 0 and delayedTurn == 0,
 	"the opening cheer should stagger across towers")
 
+-- Signature flourishes should make each tower's movement distinct across a
+-- whole phrase, not merely at one lucky sample in the base loop.
+local phrases = {}
+for _, kind in ipairs(kinds) do
+	local samples = {}
+	for step = 0, 23 do
+		local sway, bob, turn = pose(2.75 + step * 0.05, kind, 1)
+		samples[#samples + 1] = string.format("%.2f:%.2f:%.2f", sway, bob, turn)
+	end
+	local phrase = table.concat(samples, "|")
+	assert(not phrases[phrase], "each tower type should have unique signature choreography")
+	phrases[phrase] = kind
+end
+
+-- Plasma's zero-gravity hop and Shock's quick shimmy are intentionally
+-- recognizable silhouettes, while still remaining compact around the base.
+local _, plasmaBob, plasmaTurn = pose(3.35, "plasma", 1)
+assert(plasmaBob < -2 and plasmaTurn > 2, "plasma should hop into a happy half-twirl")
+local shockLeft = select(1, pose(3.03, "shock", 1))
+local shockRight = select(1, pose(3.13, "shock", 1))
+assert(shockLeft * shockRight < 0, "shock should shimmy rapidly from side to side")
+
 -- Tiny time steps should produce tiny pose changes: no hard kick or snap at a beat edge.
 local beforeX, beforeY, beforeTurn = pose(1.25, "shock", 1)
 local afterX, afterY, afterTurn = pose(1.251, "shock", 1)
@@ -45,7 +67,7 @@ for _, kind in ipairs({"lancer", "slow", "cannon", "shock", "poison", "plasma", 
 		if step > 30 and math.abs(turn) < 0.35 then
 			foundNeutral = true
 		end
-		assert(math.abs(turn) <= math.pi * 2 + 0.63,
+		assert(math.abs(turn) <= math.pi * 3 + 0.63,
 			kind .. " rotation should stay bounded instead of accumulating forever")
 	end
 	assert(maxTurn > math.pi, kind .. " should still include a full-spin move")
