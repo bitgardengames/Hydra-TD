@@ -142,7 +142,7 @@ return {
 		cost = 95,
 		range = 3.7 * Constants.TILE,
 		fireRate = 1.1,
-		damage = 6,
+		damage = 7,
 		recoilStrength = Constants.TILE * 0.03,
 		recoilDecay = 5, -- Dramatic because the recoil is so small
 		turnSpeed = 9,
