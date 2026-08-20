@@ -29,6 +29,38 @@ module("core.game_speed", {
 		state.speed = 1
 	end,
 })
+module("systems.difficulty_curve", {campaignEnd = 10})
+module("systems.campaign_wave_defs", {})
+
+package.loaded["systems.wave_builder"] = nil
+local WaveBuilder = require("systems.wave_builder")
+
+-- Endless rules are selected by five-wave circuits, not incidental divisibility.
+local first = WaveBuilder.getEndlessRules(11)
+assert(first.id == "rapid_deployment" and first.milestoneNumber == 1,
+	"the first circuit should announce Rapid Deployment")
+assert(first.nextMilestoneWave == 15 and not first.milestone,
+	"UI metadata should point at the explicit wave-15 milestone")
+local firstAgain = WaveBuilder.getEndlessRules(11)
+assert(firstAgain.id == first.id and firstAgain.nextMilestoneWave == first.nextMilestoneWave,
+	"milestone selection must be deterministic")
+
+local milestone = WaveBuilder.build(15, nil, true)
+assert(milestone.boss and milestone.endlessRules.milestone,
+	"every fifth Endless wave should be an explicit boss milestone")
+assert(milestone.endlessRules.nameKey == "endless.rules.bossMilestone.name",
+	"milestones should expose a localized UI-facing rule name")
+
+local secondCircuit = WaveBuilder.build(16, nil, true)
+assert(secondCircuit.endlessRules.id == "heavy_column",
+	"the pressure rule should rotate after a milestone")
+assert(secondCircuit.endlessRules.descriptionKey and secondCircuit.composition,
+	"normal Endless waves should expose rule copy and a shared-roster composition")
+for _, kind in ipairs(secondCircuit.composition) do
+	assert(kind == "grunt" or kind == "runner" or kind == "tank" or kind == "bulwark"
+		or kind == "regenerator" or kind == "warcaller" or kind == "summoner",
+		"Endless must remix only campaign enemy kinds")
+end
 
 local GameplayOutcome = require("systems.gameplay_outcome")
 assert(GameplayOutcome.continueIntoEndless(), "final-wave victory should continue into Endless")
@@ -38,6 +70,11 @@ assert(not state.gameOver and not state.victory, "terminal campaign state should
 assert(state.wave == 21 and state.waveLeaks == 0, "Endless should await the wave after the campaign finale")
 assert(state.activeBoss == nil and state.activeBossKind == nil, "campaign boss state should not carry forward")
 assert(state.inPrep and state.speed == 1, "the next wave should await player start at normal speed")
+assert(state.endlessRules.identityKey == "endless.identity",
+	"continuation should surface the Milestone Circuit identity")
+assert(state.endlessRules.ruleNameKey == "endless.rules.rapidDeployment.name"
+	and state.endlessRules.nextMilestoneWave == 25,
+	"continuation UI metadata should describe the active deterministic circuit")
 
 local flawlessBonuses = 0
 local presentations = {}

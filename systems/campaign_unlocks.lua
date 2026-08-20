@@ -34,7 +34,12 @@ local rewardsByMapId = {
 	-- There are fewer meaningful unlocks than campaign maps. Keep the real
 	-- rewards contiguous at the front rather than using route progression as a
 	-- placeholder reward or leaving gaps between unlocks.
-	twinloop = {{type = "campaign_complete", id = "challenge_endless", labelKey = "campaign.rewards.challengeEndless"}},
+	twinloop = {{
+		type = "campaign_complete",
+		id = "challenge_endless",
+		labelKey = "campaign.rewards.challengeEndless",
+		descriptionKey = "victory.rewardDescriptions.challenge_endless",
+	}},
 }
 
 local requiredMapByTower = {

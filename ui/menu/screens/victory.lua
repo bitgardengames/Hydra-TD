@@ -186,7 +186,7 @@ local function buildRewardCards()
 				type = reward.type,
 				id = reward.id,
 				name = reward.labelKey and L(reward.labelKey) or reward.label or reward.id,
-				description = L("victory.rewardDescriptions." .. reward.type),
+				description = L(reward.descriptionKey or ("victory.rewardDescriptions." .. reward.type)),
 				color = Theme.ui.good,
 			}
 		end

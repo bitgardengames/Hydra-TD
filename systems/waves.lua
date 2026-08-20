@@ -337,6 +337,7 @@ function Waves.getWavePreview(waveNumber)
 		totalCount = wave.count or 0,
 		counts = counts,
 		composition = groups,
+		endlessRules = wave.endlessRules,
 	}
 end
 
