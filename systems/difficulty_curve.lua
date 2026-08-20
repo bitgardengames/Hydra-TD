@@ -8,8 +8,10 @@ local DifficultyCurve = {}
 DifficultyCurve.campaignEnd = 20
 DifficultyCurve.campaignMidpoint = 10
 DifficultyCurve.localStartHp = 1.0
-DifficultyCurve.localMidHp = 1.62
-DifficultyCurve.localEndHp = 2.35
+-- Keep the opening wave approachable, then build to roughly 1.85x the former
+-- durability targets so base towers cannot coast through the late campaign.
+DifficultyCurve.localMidHp = 3.0
+DifficultyCurve.localEndHp = 4.35
 DifficultyCurve.localExponent = 1.25
 DifficultyCurve.mapIndexCap = 15
 DifficultyCurve.finalMapHp = 1.75
