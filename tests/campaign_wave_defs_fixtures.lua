@@ -16,6 +16,8 @@ for _, map in ipairs(Maps) do
 
 	for waveIndex = 1, 20 do
 		local wave = CampaignWaveDefs.get(map, waveIndex)
+		assert(wave.boss == (waveIndex == 10 or waveIndex == 20),
+			map.id .. " must reserve bosses for waves 10 and 20")
 		local counted = 0
 		for _, group in ipairs(wave.groups) do
 			authoredTotal = authoredTotal + group.count
