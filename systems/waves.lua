@@ -373,11 +373,11 @@ local function startBossWave(wave, map)
 	resetTable(bossAdds, bossAddsDefaults, {
 		active = true,
 		kind = encounter.flankKind,
-		burst = min(8, encounter.flankBurst + math.floor(tier / 2)),
-		timer = max(1.5, encounter.initialDelay - tier * 0.12),
-		interval = max(3.0, encounter.interval * (0.96 ^ tier)),
-		maxAlive = min(32, encounter.maxAliveAdds + tier * 2),
-		maxTotal = min(72, encounter.maxTotalAdds + tier * 5),
+		burst = min(8, encounter.flankBurst + math.floor(bossIndex / 2)),
+		timer = max(1.5, encounter.initialDelay - bossIndex * 0.12),
+		interval = max(3.0, encounter.interval * (0.96 ^ bossIndex)),
+		maxAlive = min(32, encounter.maxAliveAdds + bossIndex * 2),
+		maxTotal = min(72, encounter.maxTotalAdds + bossIndex * 5),
 		hpMult = addHpMult * encounter.addHpMult,
 		spdMult = spdMult * encounter.addSpdMult,
 	})
