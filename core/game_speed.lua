@@ -4,7 +4,7 @@ local GameSpeed = {}
 
 -- Keep gameplay speed choices ordered here so every control cycles through the
 -- same values. Callers should use cycle() rather than changing State.speed.
-GameSpeed.supported = {1, 2, 4}
+GameSpeed.supported = {1, 2}
 
 -- Presentation policy is deliberately expressed in wall-clock seconds. Gameplay
 -- cooldowns still consume simulation dt; these multipliers only decide how often
@@ -14,7 +14,6 @@ GameSpeed.supported = {1, 2, 4}
 GameSpeed.soundCooldownScale = {
 	[1] = { ui = 1.0, important = 1.0, repetitive = 0.50 },
 	[2] = { ui = 1.0, important = 1.0, repetitive = 0.75 },
-	[4] = { ui = 1.0, important = 1.0, repetitive = 1.00 },
 }
 
 function GameSpeed.getSoundCooldownScale(category, speed)
