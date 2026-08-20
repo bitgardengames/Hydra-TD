@@ -272,7 +272,6 @@ local function addTower(kind, gx, gy)
 		recoilDecay = def.recoilDecay or 18,
 		angle = -pi / 2,
 		levelUpAnim = 0,
-		spawnAnim = 1,
 		target = nil,
 		lastTargetId = nil,
 		lastTargetX = nil,
@@ -595,7 +594,6 @@ end
 
 local function updateTowerVisuals(t, dt)
 	t.fireAnim = max(0, t.fireAnim - dt * 8)
-	t.spawnAnim = max(0, (t.spawnAnim or 0) - dt * 5)
 	t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)
 	t.upgradeFlash = max(0, (t.upgradeFlash or 0) - dt)
 
@@ -610,15 +608,7 @@ local function updateTowerVisuals(t, dt)
 		animatedHeight = t.height
 	end
 
-	local spawn = t.spawnAnim or 0
-	local bodyY = t.y
-	if spawn > 0 then
-		local pSpawn = 1 - spawn
-		local easeSpawn = pSpawn * pSpawn * (3 - 2 * pSpawn)
-		bodyY = bodyY - ((1 - easeSpawn) * 8)
-	end
-
-	t.renderY = bodyY - animatedHeight
+	t.renderY = t.y - animatedHeight
 
 	local recoilDecay = t.recoilDecay or 18
 	t.recoil = max(0, t.recoil - recoilDecay * dt)
