@@ -372,38 +372,18 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
         Text.printShadow(L("inspect.hp", formatInt(e.hp), formatInt(e.maxHp)), bodyX, bodyY)
 
-		local rows = {}
 		local statuses = Enemies.getDisplayStatuses(e)
-		if #statuses > 0 then
-			for _, status in ipairs(statuses) do rows[#rows + 1] = {status = status} end
-		end
-		local traits = (e.def and e.def.traits) or {}
-		if #traits > 0 then
-			rows[#rows + 1] = {header = L("inspect.permanentTraits")}
-			for _, traitId in ipairs(traits) do
-				rows[#rows + 1] = {trait = "• " .. L("enemyTrait." .. traitId .. ".tag")}
-			end
-		end
 
 		local statusY = bodyY + 24
 		local availableH = max(0, panelY + h - OUTER_PAD - statusY)
-		local visibleRows = min(#rows, floor(availableH / STATUS_ROW_H))
+		local visibleRows = min(#statuses, floor(availableH / STATUS_ROW_H))
 		for i = 1, visibleRows do
-			local row = rows[i]
-			if row.header then
-				lg.setColor(colorDisabled)
-				Text.printShadow(row.header, bodyX, statusY)
-			elseif row.status then
-				drawStatusRow(row.status, bodyX, statusY, infoW)
-			else
-				lg.setColor(row.color or colorText)
-				Text.printShadow(row.trait, bodyX + 4, statusY)
-			end
+			drawStatusRow(statuses[i], bodyX, statusY, infoW)
 			statusY = statusY + STATUS_ROW_H
 		end
-		if visibleRows < #rows and visibleRows > 0 then
+		if visibleRows < #statuses and visibleRows > 0 then
 			lg.setColor(colorDisabled)
-			Text.printfShadow(L("inspect.moreStatuses", #rows - visibleRows), bodyX, statusY - STATUS_ROW_H, infoW, "right")
+			Text.printfShadow(L("inspect.moreStatuses", #statuses - visibleRows), bodyX, statusY - STATUS_ROW_H, infoW, "right")
 		end
     end
 end
