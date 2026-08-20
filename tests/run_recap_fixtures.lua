@@ -94,10 +94,14 @@ assert(enemySource:find("if e.scheduledWaveEnemy then", 1, true),
 	"only scheduled wave enemies may increment recap kills")
 assert(enemySource:find("State.spawnedKills = (State.spawnedKills or 0) + 1", 1, true),
 	"scheduled enemy death must increment recap kills")
-assert(victorySource:find("value = State.spawnedKills or 0", 1, true),
-	"victory recap must display only scheduled enemy kills")
-assert(gameOverSource:find("value = State.spawnedKills or 0", 1, true),
-	"defeat recap must display only scheduled enemy kills")
+for name, screenSource in pairs({victory = victorySource, defeat = gameOverSource}) do
+	assert(screenSource:find('{label = L("runRecap.score"), value = State.score or 0}', 1, true),
+		name .. " recap must display the final score")
+	assert(not screenSource:find('L("runRecap.enemiesDefeated")', 1, true),
+		name .. " recap must not display kill stats")
+	assert(not screenSource:find("RecordRows.build", 1, true),
+		name .. " recap must not display run records")
+end
 assert(victorySource:find("if runStats:isComplete() then Medals.update(dt) end", 1, true),
 	"medals must wait for stat completion")
 assert(victorySource:find("if #rewardCards == 0 then", 1, true),
