@@ -112,7 +112,7 @@ return {
 		-- At three targets, splash already gives this about twice the Lancer's
 		-- total damage per second. Keep the shell to two Lancer hits so
 		-- Cannon pays for that crowd damage with weaker single-target efficiency.
-		damage = 18,
+		damage = 14,
 		recoilStrength = Constants.TILE * 0.12,
 		recoilDecay = 14,
 		projSpeed = 280,
