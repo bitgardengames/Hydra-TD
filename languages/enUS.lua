@@ -113,7 +113,7 @@ return {
 			meteor = "Meteor active ability",
 			plasma = "Plasma tower",
 			secondAbilitySlot = "second active ability slot",
-			challengeEndless = "Challenge and Endless modes",
+			challengeEndless = "Challenge mode and the Endless Milestone Circuit",
 		},
 		tacticalHint = "Tactical hint: %s",
 		previewListSeparator = ", ",
@@ -459,6 +459,16 @@ return {
 		counterHint = "Counter: %s",
 	},
 
+	endless = {
+		identity = "Milestone Circuit: rotating pressure rules and a boss encounter every five waves.",
+		rules = {
+			rapidDeployment = {name = "Rule: Rapid Deployment", description = "Runners arrive in tighter formations. Boss milestone at wave %d."},
+			heavyColumn = {name = "Rule: Heavy Column", description = "Tank-heavy formations test focused damage. Boss milestone at wave %d."},
+			mixedFront = {name = "Rule: Mixed Front", description = "Larger mixed formations test adaptable defenses. Boss milestone at wave %d."},
+			bossMilestone = {name = "Milestone: Boss Encounter", description = "Defeat the circuit boss to begin the next rotating rule."},
+		},
+	},
+
 	enemyTrait = {
 		armored = {tag = "ARMORED", counter = "Use heavy Cannon or Lancer hits to punch through its plates."},
 		regenerates = {tag = "REGENERATING", counter = "Keep damage or poison on it so its healing cannot restart."},
@@ -560,9 +570,9 @@ return {
 			title = "Campaign Complete",
 			firstClear = "You completed the campaign on %s difficulty.",
 			repeatClear = "You conquered the campaign again on %s difficulty.",
-			rewardUnlocked = "New reward: Challenge and Endless modes unlocked.",
-			challengePrompt = "Challenge and Endless await whenever you are ready.",
-			endlessAction = "Begin Endless Challenge",
+			rewardUnlocked = "New reward: Challenge mode and the Endless Milestone Circuit unlocked.",
+			challengePrompt = "The Milestone Circuit rotates pressure rules, with a boss every five waves.",
+			endlessAction = "Begin Milestone Circuit",
 		},
 		rewardUnlocked = "Reward Unlocked",
 		rewardPrevious = "Previous",
@@ -575,7 +585,8 @@ return {
 			ability = "Available to equip in the active ability loadout.",
 			ability_slot = "Available in the active ability loadout for future runs.",
 			map = "Available as the next campaign map.",
-			campaign_complete = "Campaign complete! Challenge and Endless modes are now available.",
+			campaign_complete = "Unlocks Challenge mode and Endless's rotating five-wave Milestone Circuit.",
+			challenge_endless = "Endless rotates named pressure rules, culminating in a boss milestone every five waves.",
 		},
 		shortcuts = "Press N for next map • Esc for main menu",
 	},
