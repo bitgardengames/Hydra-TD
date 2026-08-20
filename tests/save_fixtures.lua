@@ -157,8 +157,15 @@ check(normal.bestScore == 130 and normal.fastestClear == 80 and normal.fewestLea
 	"a failed run updated clear-only records")
 check(#Save.recordRun("switchback", "campaign", "normal", {outcome = "abandoned", score = 9999}) == 0
 	and normal.bestScore == 130, "an abandoned run updated records")
-Save.recordRun("switchback", "endless", "hard", {outcome = "failed", score = 20, wave = 31})
-check(Save.getMapRecords("switchback", "endless", "hard").highestEndlessWave == 31,
-	"endless wave was not recorded")
+Save.recordRun("switchback", "endless", "hard", {outcome = "failed", score = 20, wave = 31,
+	duration = 400, kills = 300, buildSeed = 1234})
+local endless = Save.getMapRecords("switchback", "endless", "hard")
+check(endless.highestEndlessWave == 31 and endless.longestEndlessDuration == 400
+	and endless.highestEndlessKills == 300 and endless.buildSeed == 1234,
+	"endless wave, duration, kills, and seed were not recorded")
+Save.recordRun("switchback", "endless", "hard", {outcome = "failed", score = 10, wave = 20,
+	duration = 200, kills = 100, buildSeed = 9999})
+check(endless.highestEndlessWave == 31 and endless.buildSeed == 1234,
+	"a worse endless run replaced the high-wave record")
 
 print("save fixtures passed")

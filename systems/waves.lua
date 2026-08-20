@@ -14,6 +14,7 @@ local Messages = require("ui.messages")
 local BossHP = require("ui.boss_hp")
 local Constants = require("core.constants")
 local DevelopmentCounters = require("core.development_counters")
+local RunModes = require("systems.run_modes")
 
 local Waves = {}
 
@@ -24,6 +25,52 @@ local min = math.min
 local BASE_ACTIVE_ENEMY_CAP = 140
 local MAX_SPAWN_CATCHUP_PER_FRAME = 12
 local SPAWN_BACKPRESSURE_DELAY = 0.10
+
+local endlessRoster = {"grunt", "runner", "tank", "shield", "regenerator", "warcaller"}
+
+local function seededValue(seed, wave, slot)
+	-- Integer-only hash remains identical across Lua/LuaJIT and save reloads.
+	local n = (math.floor(tonumber(seed) or 1) % 2147483647 + wave * 48271 + slot * 69621) % 2147483647
+	n = (n * 16807) % 2147483647
+	return n
+end
+
+function Waves.generateEndlessWave(waveNumber, seed)
+	waveNumber = math.max(21, math.floor(tonumber(waveNumber) or 21))
+	local scaling = DifficultyCurve.getEndlessScaling(waveNumber)
+	local boss = waveNumber % 10 == 0
+	local groupCount = boss and 4 or (2 + seededValue(seed, waveNumber, 1) % 3)
+	local remaining, groups = scaling.density, {}
+	if boss then
+		groups[1] = {kind = "boss", count = 1, spacing = 0, delay = 0}
+		remaining = remaining - 1
+	end
+	for slot = #groups + 1, groupCount do
+		local slotsLeft = groupCount - slot + 1
+		local count = slot == groupCount and remaining
+			or math.max(4, math.floor(remaining / slotsLeft) + (seededValue(seed, waveNumber, slot) % 7) - 3)
+		count = math.min(count, remaining - (slotsLeft - 1) * 4, 40)
+		local elite = waveNumber % 5 == 0 and slot == (boss and 2 or 1)
+		groups[#groups + 1] = {
+			kind = endlessRoster[(seededValue(seed, waveNumber, slot + 9) % #endlessRoster) + 1],
+			count = count, spacing = math.max(0.16, 0.48 - (waveNumber - 20) * 0.002),
+			delay = slot == 1 and 0 or 0.35, eliteTrait = elite and "veteran" or nil,
+			hpMult = elite and 1.65 or nil, spdMult = elite and 1.12 or nil,
+			rewardMult = scaling.reward,
+		}
+		remaining = remaining - count
+	end
+	local count = 0
+	for _, group in ipairs(groups) do count = count + group.count end
+	return {boss = boss, count = count, groups = groups, procedural = true}
+end
+
+local function getWave(map, waveNumber)
+	if RunModes.isEndless(State) and waveNumber > DifficultyCurve.campaignEnd then
+		return Waves.generateEndlessWave(waveNumber, State.buildSeed)
+	end
+	return CampaignWaveDefs.get(map, waveNumber)
+end
 
 local function getActiveEnemyCap(_waveNumber)
 	return BASE_ACTIVE_ENEMY_CAP
@@ -199,6 +246,8 @@ local function resolveWaveGroups(wave, map, waveNumber)
 			delay = group.delay,
 			hpMult = group.hpMult,
 			spdMult = group.spdMult,
+			rewardMult = group.rewardMult,
+			eliteTrait = group.eliteTrait,
 		}
 	end
 	return groups
@@ -291,7 +340,7 @@ end
 -- live spawner tables so callers (notably the prep HUD) can safely look ahead.
 function Waves.getWavePreview(waveNumber)
 	local map = Maps[State.mapIndex]
-	local wave = CampaignWaveDefs.get(map, waveNumber)
+	local wave = getWave(map, waveNumber)
 	local resolvedGroups = resolveWaveGroups(wave, map, waveNumber)
 	local groups = describeAuthoredGroups(resolvedGroups)
 
@@ -360,8 +409,9 @@ local function startBossWave(wave, map)
 	State.activeBoss = nil
 	State.activeBossKind = bossKind
 	for i, group in ipairs(groups or {}) do
-		group.hpMult = i == 1 and hpMult or addHpMult
-		group.spdMult = spdMult
+		local baseHp = i == 1 and hpMult or addHpMult
+		group.hpMult = baseHp * (group.hpMult or 1)
+		group.spdMult = spdMult * (group.spdMult or 1)
 	end
 	beginSpawner(wave.count or 1, hpMult, spdMult, groups)
 
@@ -389,6 +439,12 @@ local function startNormalWave(wave, map)
 	resetTable(bossAdds, bossAddsDefaults)
 	local count = max(1, wave.count or 1)
 	local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, false)
+	if wave.procedural then
+		for _, group in ipairs(wave.groups or {}) do
+			group.hpMult = hpMult * (group.hpMult or 1)
+			group.spdMult = spdMult * (group.spdMult or 1)
+		end
+	end
 	beginSpawner(count, hpMult, spdMult, wave.groups)
 end
 
@@ -402,7 +458,7 @@ function Waves.startWave()
 		Steam.setRichPresence(L("presence.gameStatus", State.wave, diffText))
 	end
 
-	local wave = CampaignWaveDefs.get(map, State.wave)
+	local wave = getWave(map, State.wave)
 	local start = map and map.path and map.path[1]
 	Waves.presentationEvent("wave_start", {
 		wave = State.wave,
@@ -489,6 +545,8 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 
 		local enemy = Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
 			(group and group.spdMult) or spawner.spdMult)
+		if group and group.rewardMult then enemy.reward = math.min(1e6, enemy.reward * group.rewardMult) end
+		if group and group.eliteTrait then enemy.eliteTrait = group.eliteTrait end
 		enemy.scheduledWaveEnemy = true
 		if enemy.boss and not bossSpawnPresented then
 			bossSpawnPresented = true

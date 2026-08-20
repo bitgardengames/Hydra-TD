@@ -23,7 +23,10 @@ end
 assert(math.abs(hp(20) - 4.35) < 0.000001,
 	"campaign wave twenty should provide the final durability check")
 
-assert(hp(21) == hp(20),
-	"enemy health should remain capped at the campaign finale")
+assert(hp(21) > hp(20), "endless wave 21 should transition beyond campaign durability")
+assert(hp(1000000) <= 4.35 * Curve.endlessHpCap,
+	"late endless durability must remain bounded")
+assert(Curve.getEnemySpeedMultiplier(1000000) <= Curve.endlessSpeedCap,
+	"late endless speed must remain bounded")
 
 print("difficulty curve fixtures passed")

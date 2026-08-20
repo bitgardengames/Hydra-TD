@@ -11,6 +11,7 @@ local L = require("core.localization")
 local Save = require("core.save")
 local Difficulty = require("systems.difficulty")
 local ConfirmationDialog = require("ui.confirmation_dialog")
+local RunModes = require("systems.run_modes")
 
 local Screen = {}
 
@@ -75,7 +76,21 @@ function Screen.load()
 			h = btnH,
 			onClick = function()
 				State.ignoreStats = false
+				RunModes.set(State, RunModes.CAMPAIGN)
 				Difficulty.set(Save.data.settings.difficulty)
+				require("ui.menu.menu").set("campaign")
+				Sound.play("uiConfirm")
+			end
+		},
+		{
+			id = "endless",
+			label = L("menu.endless"),
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				State.ignoreStats = false
+				State.buildSeed = nil
+				RunModes.set(State, RunModes.ENDLESS)
 				require("ui.menu.menu").set("campaign")
 				Sound.play("uiConfirm")
 			end
