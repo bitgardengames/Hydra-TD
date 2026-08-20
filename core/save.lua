@@ -208,10 +208,6 @@ local function normalizeLoadedData(data)
 	changed = normalizeMapStats(data.mapStats) or changed
 	changed = normalizeSettings(data) or changed
 	changed = normalizeMeta(data) or changed
-	changed = defaultTable(data, "contracts") or changed
-	changed = defaultTable(data.contracts, "attempted") or changed
-	changed = defaultTable(data.contracts, "completed") or changed
-	changed = defaultTable(data.contracts, "personalBests") or changed
 
 	if not data.mapIdMigrationDone then
 		changed = migrateMapIds() or changed
@@ -219,32 +215,6 @@ local function normalizeLoadedData(data)
 		changed = true
 	end
 	return changed
-end
-
-function Save.recordContractAttempt(contractId)
-	if not Save.data or type(contractId) ~= "string" or contractId == "" then return false end
-	local attempted = Save.data.contracts.attempted
-	if attempted[contractId] then return false end
-	attempted[contractId] = true
-	Save.markDirty()
-	return true
-end
-
-function Save.recordContractCompletion(contract, result)
-	if not Save.data or type(contract) ~= "table" or type(contract.id) ~= "string" then return false end
-	local Contracts = require("systems.contracts")
-	local value = Contracts.objectiveValue(contract, result or {})
-	if value == nil then return false end
-	Save.data.contracts.attempted[contract.id] = true
-	Save.data.contracts.completed[contract.id] = true
-	local previous = Save.data.contracts.personalBests[contract.id]
-	local better = not previous or (contract.objective.direction == "min" and value < previous.value)
-		or (contract.objective.direction ~= "min" and value > previous.value)
-	if better then
-		Save.data.contracts.personalBests[contract.id] = {objective = contract.objective.id, value = value}
-	end
-	Save.markDirty()
-	return better
 end
 
 local function createFreshData()

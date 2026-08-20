@@ -82,17 +82,6 @@ function Screen.load()
 		},
 
 		{
-			id = "contracts",
-			label = L("menu.contracts"),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				require("ui.menu.menu").set("contracts")
-				Sound.play("uiConfirm")
-			end
-		},
-
-		{
 			id = "settings",
 			label = L("menu.settings"),
 			w = btnW,

@@ -161,18 +161,4 @@ Save.recordRun("switchback", "endless", "hard", {outcome = "failed", score = 20,
 check(Save.getMapRecords("switchback", "endless", "hard").highestEndlessWave == 31,
 	"endless wave was not recorded")
 
--- Contract migration is additive, attempts are idempotent, and only better
--- objective results replace a personal best.
-check(type(Save.data.contracts.attempted) == "table"
-	and type(Save.data.contracts.completed) == "table"
-	and type(Save.data.contracts.personalBests) == "table", "contract history was not migrated")
-local contract = require("systems.contracts").generate(20000 * 86400, "daily", 1)
-check(Save.recordContractAttempt(contract.id), "first contract attempt was not recorded")
-check(not Save.recordContractAttempt(contract.id), "repeat attempt was recorded twice")
-contract.objective = {id = "score", direction = "max", label = "Highest score"}
-check(Save.recordContractCompletion(contract, {score = 100}), "first personal best was not recorded")
-check(not Save.recordContractCompletion(contract, {score = 90}), "worse repeat result replaced personal best")
-check(Save.data.contracts.personalBests[contract.id].value == 100, "personal best value changed")
-check(Save.data.contracts.completed[contract.id] == true, "completion ID was not persisted")
-
 print("save fixtures passed")

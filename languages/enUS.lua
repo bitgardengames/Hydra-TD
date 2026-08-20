@@ -7,7 +7,6 @@ return {
 
 	menu = {
 		play = "Play",
-		contracts = "Contracts",
 		settings = "Settings",
 		quit = "Quit",
 		back = "Back",
