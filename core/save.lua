@@ -408,7 +408,8 @@ end
 
 local RECORD_RULES = {
 	bestScore = "max", fastestClear = "min", highestRemainingLives = "max",
-	fewestLeaks = "min", highestEndlessWave = "max",
+	fewestLeaks = "min", highestEndlessWave = "max", longestEndlessDuration = "max",
+	highestEndlessKills = "max",
 }
 
 function Save.getMapRecords(mapId, mode, difficulty)
@@ -434,7 +435,11 @@ function Save.recordRun(mapId, mode, difficulty, result)
 		candidates.highestRemainingLives = result.remainingLives
 		candidates.fewestLeaks = result.leaks
 	end
-	if mode == "endless" then candidates.highestEndlessWave = result.wave end
+	if mode == "endless" then
+		candidates.highestEndlessWave = result.wave
+		candidates.longestEndlessDuration = result.duration
+		candidates.highestEndlessKills = result.kills
+	end
 	local improved = {}
 	for key, value in pairs(candidates) do
 		value = tonumber(value)
@@ -442,6 +447,9 @@ function Save.recordRun(mapId, mode, difficulty, result)
 		if value and value >= 0 and (old == nil or (rule == "min" and value < old) or (rule == "max" and value > old)) then
 			record[key] = value; improved[#improved + 1] = key
 		end
+	end
+	if mode == "endless" and #improved > 0 and result.buildSeed ~= nil then
+		record.buildSeed = result.buildSeed
 	end
 	if #improved > 0 then record.updatedAt = os.time(); Save.flush() end
 	return improved

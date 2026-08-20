@@ -25,7 +25,8 @@ function RunStats.finish(outcome, state)
 	if RunStats.final then return RunStats.final end
 	state = state or {}
 	RunStats.final = {outcome = outcome, duration = RunStats.elapsed, score = state.score or 0,
-		remainingLives = state.lives or 0, leaks = state.totalLeaks or 0, wave = state.wave or 0}
+		remainingLives = state.lives or 0, leaks = state.totalLeaks or 0, wave = state.wave or 0,
+		kills = state.totalKills or 0, buildSeed = state.buildSeed}
 	return RunStats.final
 end
 

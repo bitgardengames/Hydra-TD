@@ -24,10 +24,11 @@ local state = {
 	pauseT = 0,
 	gameOver = false,
 	victory = false,
+	runMode = "campaign",
+	buildSeed = nil,
 	-- Experimental run systems are intentionally limited to replay modes.  Keep
 	-- these flags independent from save data so old module discoveries remain
 	-- compatible without changing the standard campaign rules.
-	challenge = false,
 	activeBoss = nil,
 	activeBossKind = nil,
 	speed = 1,
@@ -99,7 +100,7 @@ local state = {
 }
 
 function state.isReplayMode()
-	return state.challenge == true
+	return not require("systems.run_modes").isCampaign(state)
 end
 
 function state.addDamage(kind, dmg, isBoss)

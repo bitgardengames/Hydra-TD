@@ -7,6 +7,7 @@ return {
 
 	menu = {
 		play = "Play",
+		endless = "Endless",
 		settings = "Settings",
 		quit = "Quit",
 		back = "Back",

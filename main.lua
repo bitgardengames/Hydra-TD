@@ -44,6 +44,7 @@ local GameSpeed = require("core.game_speed")
 local SimulationClock = require("core.simulation_clock")
 local DevelopmentCounters = require("core.development_counters")
 local GameplayOutcome = require("systems.gameplay_outcome")
+local RunModes = require("systems.run_modes")
 
 local lg = love.graphics
 
@@ -111,6 +112,11 @@ function resetGame()
 	State.score = 0
 	State.totalKills = 0
 	State.spawnedKills = 0
+	if RunModes.isEndless(State) and State.buildSeed == nil then
+		State.buildSeed = os.time()
+	elseif RunModes.isCampaign(State) then
+		State.buildSeed = nil
+	end
     State.wave = 1
 	State.waveLeaks = 0
 	State.totalLeaks = 0
@@ -227,14 +233,15 @@ local function updateGameplayOutcome()
 	-- These transitions are gameplay, not presentation: resolve them after each
 	-- simulation tick so their timing cannot depend on rendered FPS.
 	-- Loss condition
-	if State.lives <= 0 and not State.gameOver then
+	if RunModes.lossCondition(State) and not State.gameOver then
 		GameplayOutcome.defeat(L("game.outOfLives"))
 		return
 	end
 
 	-- If wave is finished, go to prep
 	if not State.inPrep and Waves.allEnemiesCleared() then
-		local campaignFinalWave = CampaignWaveDefs.getFinalWave(Maps[State.mapIndex])
+		local campaignFinalWave = RunModes.hasCampaignVictory(State)
+			and CampaignWaveDefs.getFinalWave(Maps[State.mapIndex]) or nil
 		local perfectWaveBonus
 		if State.waveLeaks == 0 and not (campaignFinalWave and State.wave == campaignFinalWave) then
 			perfectWaveBonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)

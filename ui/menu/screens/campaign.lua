@@ -18,6 +18,7 @@ local Towers = require("world.towers")
 local EnemyDefs = require("world.enemy_defs")
 local AbilityLoadout = require("ui.ability_loadout")
 local RecordRows = require("ui.record_rows")
+local RunModes = require("systems.run_modes")
 
 local lg = love.graphics
 local floor = math.floor
@@ -142,6 +143,10 @@ end
 
 -- Helpers
 local function isMapLocked(i)
+	if RunModes.isEndless(State) then
+		local stats = Save.data.mapStats and Save.data.mapStats[Maps[i].id]
+		return not (stats and stats.completedDifficulty)
+	end
 	return not Save.isMapUnlocked(i, Maps[i].id)
 end
 
@@ -411,7 +416,7 @@ function Screen.load()
 				Sound.play("uiConfirm")
 
 				State.worldMapIndex = State.mapIndex
-				State.challenge = false
+				RunModes.set(State, RunModes.get(State))
 				State.ignoreStats = false
 				State.mode = "game"
 				Backdrop.stop()
@@ -606,7 +611,7 @@ function Screen.draw()
 	for i, message in ipairs(previewMessages) do
 		Text.printfShadow(message, 0, metaY + (i - 1) * 18, sw, "center")
 	end
-	local records = Save.getMapRecords(map.id, "campaign", Save.data.settings.difficulty or Difficulty.default)
+	local records = Save.getMapRecords(map.id, RunModes.get(State), Save.data.settings.difficulty or Difficulty.default)
 	local recordRows = RecordRows.build(records)
 	if #recordRows > 0 then
 		local summary = {}
