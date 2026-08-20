@@ -299,6 +299,7 @@ function Abilities.activate(x, y)
 	-- creates a timed effect or resolves immediately.
 	activateEffect(effect, x, y, def.id)
 	playActivationEffect(effect, x, y)
+	require("systems.run_stats").recordAbilityUse()
 	State.abilityCharges[def.id] = 0
 	State.abilityTargeting = nil
 	return true

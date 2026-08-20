@@ -577,6 +577,14 @@ return {
 
 	victory = {
 		medalProgress = "Difficulty medals earned",
+		damageDealt = "DAMAGE DEALT",
+		rewards = "REWARDS",
+		mapNumber = "Map %d of %d",
+		gameTime = "Game time",
+		moneyRemaining = "Money remaining",
+		towersPlaced = "Towers placed",
+		abilitiesUsed = "Abilities used",
+		coinsEarned = "Coins earned",
 		finalCampaign = {
 			title = "Campaign Complete",
 			firstClear = "You completed the campaign on %s difficulty.",
