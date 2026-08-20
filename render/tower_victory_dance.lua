@@ -41,6 +41,31 @@ end
 -- Give every tower a short signature flourish between its regular beats. The
 -- pulse envelope starts and ends with zero velocity and acceleration, so these
 -- little hops and shimmies layer onto the looping dances without a visible snap.
+local function signatureOffsets(progress, kind)
+	local envelope = smoothPulse(progress)
+	local wiggle = sin(progress * tau)
+
+	if kind == "lancer" then
+		return wiggle * envelope * 1.7, -envelope * 2.4, wiggle * envelope * 0.32
+	elseif kind == "slow" then
+		return wiggle * envelope * 1.1, envelope * 1.5, -wiggle * envelope * 0.45
+	elseif kind == "cannon" then
+		local stomp = sin(progress * tau) ^ 2
+		return -wiggle * envelope * 0.8, stomp * envelope * 1.8, wiggle * envelope * 0.24
+	elseif kind == "shock" then
+		local buzz = sin(progress * pi * 6)
+		return buzz * envelope * 1.5, -math.abs(buzz) * envelope * 0.8,
+			buzz * envelope * 0.36
+	elseif kind == "poison" then
+		local wobble = sin(progress * pi * 4)
+		return wobble * envelope * 1.3, envelope * 1.2, -wobble * envelope * 0.3
+	elseif kind == "plasma" then
+		return wiggle * envelope * 0.8, -envelope * 2.8, envelope * pi
+	end
+
+	return wiggle * envelope, -envelope * 1.4, wiggle * envelope * 0.25
+end
+
 local function signatureMove(localTime, kind, phase)
 	local cycleLength = 4.8
 	local moveStart = 2.75
@@ -52,35 +77,32 @@ local function signatureMove(localTime, kind, phase)
 	end
 
 	local progress = (cycleTime - moveStart) / moveLength
-	local envelope = smoothPulse(progress)
-	local wiggle = sin(progress * tau)
+	return signatureOffsets(progress, kind)
+end
 
-	if kind == "lancer" then
-		-- An eager heel-click: spring upward and kick the lance side to side.
-		return wiggle * envelope * 1.7, -envelope * 2.4, wiggle * envelope * 0.32
-	elseif kind == "slow" then
-		-- A bashful curtsy, complete with a small look in either direction.
-		return wiggle * envelope * 1.1, envelope * 1.5, -wiggle * envelope * 0.45
-	elseif kind == "cannon" then
-		-- Two stout little stomps make the heavy turret feel cheerfully weighty.
-		local stomp = sin(progress * tau) ^ 2
-		return -wiggle * envelope * 0.8, stomp * envelope * 1.8, wiggle * envelope * 0.24
-	elseif kind == "shock" then
-		-- A quick three-beat electric shimmy.
-		local buzz = sin(progress * pi * 6)
-		return buzz * envelope * 1.5, -math.abs(buzz) * envelope * 0.8,
-			buzz * envelope * 0.36
-	elseif kind == "poison" then
-		-- A gooey shoulder wiggle that droops in the middle.
-		local wobble = sin(progress * pi * 4)
-		return wobble * envelope * 1.3, envelope * 1.2, -wobble * envelope * 0.3
-	elseif kind == "plasma" then
-		-- A buoyant zero-gravity hop with a happy half-twirl.
-		return wiggle * envelope * 0.8, -envelope * 2.8, envelope * pi
+-- A compact, non-looping version of the victory choreography for places that
+-- show one tower at a time. It enters with a bounce, glances both ways, performs
+-- the same kind-specific flourish used by pose(), then settles at rest.
+function Dance.previewPose(clock, kind, motionEnabled)
+	local baseAngle = -0.65
+	if motionEnabled == false then return 0, 0, baseAngle, 1 end
+
+	clock = max(0, clock or 0)
+	kind = kind or "lancer"
+	local entrance = smootherstep(clock / 0.42)
+	local bounce = -sin(entrance * pi) * 5
+	local scale = 0.72 + entrance * 0.28 + sin(entrance * pi) * 0.1
+
+	local lookProgress = max(0, min(1, (clock - 0.38) / 0.72))
+	local look = sin(lookProgress * tau) * smoothPulse(lookProgress) * 0.5
+
+	local signatureProgress = (clock - 1.12) / 1.2
+	local sway, bob, turn = 0, 0, 0
+	if signatureProgress >= 0 and signatureProgress <= 1 then
+		sway, bob, turn = signatureOffsets(signatureProgress, kind)
 	end
 
-	-- Modded towers get a modest hop rather than borrowing a named tower's move.
-	return wiggle * envelope, -envelope * 1.4, wiggle * envelope * 0.25
+	return sway, bounce + bob, baseAngle + look + turn, scale
 end
 
 -- Return a render-only offset and turn for a tower's turret. The curves use
