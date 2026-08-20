@@ -4,7 +4,7 @@ local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local BACKUP_FILE = SAVE_DIR .. "/save.bak.lua"
 local TEMP_FILE = SAVE_DIR .. "/save.tmp.lua"
-local SAVE_VERSION = 9 -- Add per-map, mode, and difficulty run records
+local SAVE_VERSION = 6 -- Unreleased save-format changes
 local DIRTY_DELAY = 0.35
 
 local Hotkeys = require("core.hotkeys")
@@ -113,14 +113,15 @@ local function normalizeMapStats(mapStats)
 	return changed
 end
 
-local function migrateRunRecords(data, oldVersion)
-	if oldVersion >= 9 then return false end
-	-- Version 7/8 map entries had no scoped record collection.  Create it
-	-- explicitly so normalization never has to infer (or erase) versioned data.
+local function migrateRunRecords(data)
+	local changed = false
 	for _, stats in pairs(data.mapStats or {}) do
-		if type(stats) == "table" and stats.completedDifficulty and type(stats.records) ~= "table" then stats.records = {} end
+		if type(stats) == "table" and stats.completedDifficulty and type(stats.records) ~= "table" then
+			stats.records = {}
+			changed = true
+		end
 	end
-	return true
+	return changed
 end
 
 local function normalizeSettings(data)
@@ -195,8 +196,7 @@ local function migrateMapIds()
 end
 
 local function normalizeLoadedData(data)
-	local oldVersion = tonumber(data.version) or 0
-	local changed = migrateRunRecords(data, oldVersion)
+	local changed = migrateRunRecords(data)
 	changed = migrateVersion(data) or changed
 	changed = defaultValue(data, "furthestIndex", 1) or changed
 	changed = defaultTable(data, "unlockedMaps") or changed

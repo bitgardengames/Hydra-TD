@@ -52,12 +52,12 @@ for path in pairs(files) do
 	if path:match("^saves/save%.corrupt%-%d%d%d%d%d%d%d%d%-%d%d%d%d%d%d") then diagnostic = path end
 end
 check(diagnostic and files[diagnostic], "malformed primary was not preserved")
-check(Save.data.version == 8, "malformed save did not produce fresh data")
+check(Save.data.version == 6, "malformed save did not produce fresh data")
 
 -- Older saves migrate while retaining fields this version does not know about.
 reset({["saves/save.lua"] = "return { version = 1, unknownFutureField = { enabled = true } }"})
 Save.load()
-check(Save.data.version == 8, "old version was not migrated")
+check(Save.data.version == 6, "old version was not migrated")
 check(Save.data.unknownFutureField.enabled, "unknown field was discarded")
 check(files["saves/save.bak.lua"], "pre-migration save was not backed up")
 
@@ -106,9 +106,10 @@ check(Save.dirty, "replaced ability selection did not mark the save dirty")
 accepted, changed = Save.setEquippedAbilities("meteor")
 check(not accepted and not changed, "invalid ability selection was not rejected")
 
--- Map history retains only completion difficulty and the time each medal was earned.
+-- Map history from an earlier build of the same unreleased save version is
+-- normalized without relying on another version bump.
 reset({["saves/save.lua"] = [[return {
-	version = 7,
+	version = 6,
 	mapStats = {riverbend = {
 		bestWave = 19, legacyPeakWave = 42, wins = 3, losses = 4,
 		completedDifficulty = "normal", medalEarnedAt = {easy = 100, normal = 200},
@@ -119,7 +120,7 @@ local mapStats = Save.data.mapStats.riverbend
 check(mapStats.completedDifficulty == "normal", "map completion difficulty was discarded")
 check(mapStats.medalEarnedAt.easy == 100 and mapStats.medalEarnedAt.normal == 200,
 	"map completion timestamps were discarded")
-check(type(mapStats.records) == "table", "version 7 map records were not explicitly migrated")
+check(type(mapStats.records) == "table", "legacy map records were not explicitly migrated")
 check(mapStats.bestWave == nil and mapStats.legacyPeakWave == nil
 	and mapStats.wins == nil and mapStats.losses == nil, "excess map statistics survived migration")
 check(Save.data.mapStats.failed_map == nil, "an uncleared map record survived migration")
@@ -131,7 +132,7 @@ check(Save.data.mapStats.switchback.completedDifficulty == "hard", "a map clear 
 check(type(Save.data.mapStats.switchback.medalEarnedAt.hard) == "number",
 	"a map clear timestamp was not recorded")
 
--- Version 9 records are isolated by map/mode/difficulty and only strict
+-- Records are isolated by map/mode/difficulty and only strict
 -- improvements replace a best. Failed runs may improve score, but never clear
 -- quality; cancelled runs are rejected before persistence.
 local first = Save.recordRun("switchback", "campaign", "normal", {
