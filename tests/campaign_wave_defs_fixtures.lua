@@ -11,32 +11,33 @@ local minimumSpawnSpacing = 0.5
 for _, map in ipairs(Maps) do
 	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
 
-	local waves = CampaignWaveDefs.wavesByMapId[map.id]
-	assert(waves, map.id .. " has no campaign encounters")
-	assert(#waves == 20, map.id .. " must author exactly twenty waves")
+	assert(CampaignWaveDefs.getFinalWave(map) == 20, map.id .. " must author exactly twenty waves")
 	local authoredTotal = 0
 
 	for waveIndex = 1, 20 do
-		local wave = waves[waveIndex]
-		for _, group in ipairs(wave) do
+		local wave = CampaignWaveDefs.get(map, waveIndex)
+		local counted = 0
+		for _, group in ipairs(wave.groups) do
 			authoredTotal = authoredTotal + group.count
+			counted = counted + group.count
 			assert(EnemyDefs[group.kind], map.id .. " uses unknown enemy " .. tostring(group.kind))
 			assert(available[group.kind], map.id .. " uses unavailable enemy " .. group.kind)
 			assert(group.count == 1 or group.spacing >= minimumSpawnSpacing,
 				map.id .. " places consecutive enemies too close together")
 		end
+		assert(wave.count == counted, map.id .. " wave count must match its groups")
 	end
 	assert(CampaignWaveDefs.getTotalEnemyCount(map) == authoredTotal,
 		map.id .. " enemy-count summary must match authored groups")
 
 	for _, bossWaveIndex in ipairs({10, 20}) do
-		local bossWave = waves[bossWaveIndex]
-		assert(bossWave[1].kind == "boss" and EnemyDefs[bossWave.bossArchetype],
+		local bossWave = CampaignWaveDefs.get(map, bossWaveIndex)
+		assert(bossWave.boss and EnemyDefs[bossWave.bossArchetype],
 			map.id .. " wave " .. bossWaveIndex .. " has no legal explicit boss selection")
 	end
 
-	local final = waves[20]
-	assert(final[1].kind == "boss" and EnemyDefs[final.bossArchetype],
+	local final = CampaignWaveDefs.get(map, 20)
+	assert(final.boss and EnemyDefs[final.bossArchetype],
 		map.id .. " final exam has no legal explicit boss selection")
 end
 

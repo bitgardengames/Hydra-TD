@@ -43,344 +43,344 @@ local pacingTargetsByMapId = {
 	twinloop = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 2.00, 19.26 }, downtimeBetweenGroups = { 0.12, 1.55 } },
 }
 
--- Consecutive enemies always receive at least half a second of separation.
+-- A wave is written as a short list of spawn groups. Delay is the pause after
+-- the previous group, so the common case (start immediately) can omit it.
 local function g(kind, count, spacing, delay)
 	return { kind = kind, count = count, spacing = spacing, delay = delay or 0 }
 end
 
--- Groups remain plain numeric arrays because WaveBuilder consumes them with ipairs.
--- Encounter metadata is attached as named fields on those arrays below, allowing
--- curriculum/UI consumers to describe why a wave exists without affecting spawns.
+-- The authored table stays private; callers receive the small runtime wave shape
+-- returned by get() rather than depending on its storage details.
 local wavesByMapId = {
 	riverbend = {
 		-- orientation
-		[1] = { g("grunt", 8, 0.90, 0.0) },
+		[1] = { g("grunt", 8, 0.90) },
 		-- demonstration
-		[2] = { g("grunt", 12, 0.72, 0.0) },
+		[2] = { g("grunt", 12, 0.72) },
 		-- demonstration
-		[3] = { g("grunt", 10, 0.62, 0.0), g("grunt", 8, 0.58, 1.4) },
+		[3] = { g("grunt", 10, 0.62), g("grunt", 8, 0.58, 1.4) },
 		-- practice
-		[4] = { g("grunt", 20, 0.50, 0.0) },
+		[4] = { g("grunt", 20, 0.50) },
 		-- practice
-		[5] = { g("grunt", 24, 0.50, 0.0) },
+		[5] = { g("grunt", 24, 0.50) },
 		-- practice: a sustained stream hands off to a trailing pack
-		[6] = { g("grunt", 16, 0.50, 0.0), g("grunt", 10, 0.50, 0.65) },
+		[6] = { g("grunt", 16, 0.50), g("grunt", 10, 0.50, 0.65) },
 		-- mixed check: two packs compress the recovery window
-		[7] = { g("grunt", 14, 0.50, 0.0), g("grunt", 14, 0.50, 0.30) },
+		[7] = { g("grunt", 14, 0.50), g("grunt", 14, 0.50, 0.30) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 13, 0.50, 0.0), g("grunt", 9, 0.50, 0.15), g("grunt", 8, 0.50, 0.12) },
+		[8] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.15), g("grunt", 8, 0.50, 0.12) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 13, 0.50, 0.0), g("grunt", 10, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
+		[9] = { g("grunt", 13, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 12, 0.50, 1.0), g("grunt", 13, 0.50, 0.35), g("grunt", 9, 0.50, 0.25) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 1.0), g("grunt", 13, 0.50, 0.35), g("grunt", 9, 0.50, 0.25) },
 	},
 	switchback = {
 		-- orientation
-		[1] = { g("grunt", 10, 0.87, 0.00) },
+		[1] = { g("grunt", 10, 0.87) },
 		-- demonstration
-		[2] = { g("grunt", 12, 0.71, 0.00) },
+		[2] = { g("grunt", 12, 0.71) },
 		-- demonstration
-		[3] = { g("grunt", 11, 0.61, 0.00), g("grunt", 8, 0.59, 1.75) },
+		[3] = { g("grunt", 11, 0.61), g("grunt", 8, 0.59, 1.75) },
 		-- practice
-		[4] = { g("grunt", 19, 0.50, 0.00) },
+		[4] = { g("grunt", 19, 0.50) },
 		-- practice
-		[5] = { g("grunt", 23, 0.50, 0.00) },
+		[5] = { g("grunt", 23, 0.50) },
 		-- practice: a sustained stream hands off to a trailing pack
-		[6] = { g("grunt", 16, 0.50, 0.00), g("grunt", 10, 0.50, 0.81) },
+		[6] = { g("grunt", 16, 0.50), g("grunt", 10, 0.50, 0.81) },
 		-- mixed check: two packs compress the recovery window
-		[7] = { g("grunt", 13, 0.50, 0.00), g("grunt", 14, 0.50, 0.38) },
+		[7] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.38) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 13, 0.50, 0.00), g("grunt", 8, 0.50, 0.19), g("grunt", 7, 0.50, 0.15) },
+		[8] = { g("grunt", 13, 0.50), g("grunt", 8, 0.50, 0.19), g("grunt", 7, 0.50, 0.15) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 12, 0.50, 0.00), g("grunt", 10, 0.50, 0.10), g("grunt", 9, 0.50, 0.10) },
+		[9] = { g("grunt", 12, 0.50), g("grunt", 10, 0.50, 0.10), g("grunt", 9, 0.50, 0.10) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.50, 1.25), g("grunt", 12, 0.50, 0.44), g("grunt", 9, 0.50, 0.31) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.25), g("grunt", 12, 0.50, 0.44), g("grunt", 9, 0.50, 0.31) },
 	},
 	highpass = {
 		-- orientation
-		[1] = { g("grunt", 10, 1.03, 0.00) },
+		[1] = { g("grunt", 10, 1.03) },
 		-- demonstration
-		[2] = { g("grunt", 12, 0.85, 0.00) },
+		[2] = { g("grunt", 12, 0.85) },
 		-- demonstration
-		[3] = { g("grunt", 12, 0.73, 0.00), g("grunt", 8, 0.71, 1.47) },
+		[3] = { g("grunt", 12, 0.73), g("grunt", 8, 0.71, 1.47) },
 		-- practice
-		[4] = { g("grunt", 18, 0.57, 0.00) },
+		[4] = { g("grunt", 18, 0.57) },
 		-- practice
-		[5] = { g("grunt", 22, 0.51, 0.00) },
+		[5] = { g("grunt", 22, 0.51) },
 		-- practice: a sustained stream hands off to a trailing pack
-		[6] = { g("grunt", 15, 0.52, 0.00), g("grunt", 9, 0.50, 0.68) },
+		[6] = { g("grunt", 15, 0.52), g("grunt", 9, 0.50, 0.68) },
 		-- mixed check: two packs compress the recovery window
-		[7] = { g("grunt", 12, 0.50, 0.00), g("grunt", 13, 0.50, 0.32) },
+		[7] = { g("grunt", 12, 0.50), g("grunt", 13, 0.50, 0.32) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 12, 0.50, 0.00), g("grunt", 8, 0.50, 0.16), g("grunt", 6, 0.50, 0.13) },
+		[8] = { g("grunt", 12, 0.50), g("grunt", 8, 0.50, 0.16), g("grunt", 6, 0.50, 0.13) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 11, 0.50, 0.00), g("grunt", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
+		[9] = { g("grunt", 11, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.50, 1.05), g("grunt", 12, 0.50, 0.37), g("grunt", 8, 0.50, 0.26) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.05), g("grunt", 12, 0.50, 0.37), g("grunt", 8, 0.50, 0.26) },
 	},
 	roundabout = {
 		-- orientation
-		[1] = { g("grunt", 11, 0.75, 0.00) },
+		[1] = { g("grunt", 11, 0.75) },
 		-- demonstration
-		[2] = { g("grunt", 13, 0.63, 0.00) },
+		[2] = { g("grunt", 13, 0.63) },
 		-- demonstration
-		[3] = { g("grunt", 12, 0.55, 0.00), g("grunt", 8, 0.53, 0.69) },
+		[3] = { g("grunt", 12, 0.55), g("grunt", 8, 0.53, 0.69) },
 		-- practice
-		[4] = { g("grunt", 18, 0.50, 0.00) },
+		[4] = { g("grunt", 18, 0.50) },
 		-- practice
-		[5] = { g("grunt", 22, 0.50, 0.00) },
+		[5] = { g("grunt", 22, 0.50) },
 		-- practice: a sustained stream hands off to a trailing pack
-		[6] = { g("grunt", 15, 0.50, 0.00), g("grunt", 9, 0.50, 0.28) },
+		[6] = { g("grunt", 15, 0.50), g("grunt", 9, 0.50, 0.28) },
 		-- mixed check: two packs compress the recovery window
-		[7] = { g("grunt", 12, 0.50, 0.00), g("grunt", 13, 0.50, 0.09) },
+		[7] = { g("grunt", 12, 0.50), g("grunt", 13, 0.50, 0.09) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 12, 0.50, 0.00), g("grunt", 8, 0.50, 0.08), g("grunt", 7, 0.50, 0.08) },
+		[8] = { g("grunt", 12, 0.50), g("grunt", 8, 0.50, 0.08), g("grunt", 7, 0.50, 0.08) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 10, 0.50, 0.00), g("grunt", 9, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
+		[9] = { g("grunt", 10, 0.50), g("grunt", 9, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.50, 0.47), g("grunt", 11, 0.50, 0.11), g("grunt", 8, 0.50, 0.08) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 0.47), g("grunt", 11, 0.50, 0.11), g("grunt", 8, 0.50, 0.08) },
 	},
 	gauntlet = {
 		-- orientation
-		[1] = { g("grunt", 12, 0.60, 0.00) },
+		[1] = { g("grunt", 12, 0.60) },
 		-- demonstration
-		[2] = { g("grunt", 13, 0.52, 0.00) },
+		[2] = { g("grunt", 13, 0.52) },
 		-- demonstration
-		[3] = { g("grunt", 13, 0.50, 0.00), g("grunt", 8, 0.50, 2.94) },
+		[3] = { g("grunt", 13, 0.50), g("grunt", 8, 0.50, 2.94) },
 		-- practice
-		[4] = { g("grunt", 18, 0.50, 0.00) },
+		[4] = { g("grunt", 18, 0.50) },
 		-- practice
-		[5] = { g("grunt", 22, 0.50, 0.00) },
+		[5] = { g("grunt", 22, 0.50) },
 		-- practice: a sustained stream hands off to a trailing pack
-		[6] = { g("grunt", 15, 0.50, 0.00), g("grunt", 9, 0.50, 1.37) },
+		[6] = { g("grunt", 15, 0.50), g("grunt", 9, 0.50, 1.37) },
 		-- mixed check: two packs compress the recovery window
-		[7] = { g("grunt", 12, 0.50, 0.00), g("grunt", 13, 0.50, 0.98) },
+		[7] = { g("grunt", 12, 0.50), g("grunt", 13, 0.50, 0.98) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 12, 0.50, 0.00), g("grunt", 8, 0.50, 0.67), g("grunt", 6, 0.50, 0.60) },
+		[8] = { g("grunt", 12, 0.50), g("grunt", 8, 0.50, 0.67), g("grunt", 6, 0.50, 0.60) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 10, 0.50, 0.00), g("grunt", 9, 0.50, 0.52), g("grunt", 8, 0.50, 0.52) },
+		[9] = { g("grunt", 10, 0.50), g("grunt", 9, 0.50, 0.52), g("grunt", 8, 0.50, 0.52) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 10, 0.50, 2.45), g("grunt", 11, 0.50, 1.08), g("grunt", 9, 0.50, 0.88) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 10, 0.50, 2.45), g("grunt", 11, 0.50, 1.08), g("grunt", 9, 0.50, 0.88) },
 	},
 	snaketrail = {
 		-- orientation
-		[1] = { g("grunt", 17, 0.90, 0.00) },
+		[1] = { g("grunt", 17, 0.90) },
 		-- demonstration
-		[2] = { g("tank", 10, 0.89, 0.00) },
+		[2] = { g("tank", 10, 0.89) },
 		-- demonstration
-		[3] = { g("grunt", 15, 0.73, 0.00), g("tank", 5, 0.87, 1.88) },
+		[3] = { g("grunt", 15, 0.73), g("tank", 5, 0.87, 1.88) },
 		-- practice
-		[4] = { g("tank", 11, 0.70, 0.00), g("grunt", 14, 0.60, 1.00) },
+		[4] = { g("tank", 11, 0.70), g("grunt", 14, 0.60, 1.00) },
 		-- practice
-		[5] = { g("grunt", 11, 0.76, 0.00), g("tank", 9, 0.67, 0.88) },
+		[5] = { g("grunt", 11, 0.76), g("tank", 9, 0.67, 0.88) },
 		-- practice
-		[6] = { g("tank", 10, 0.56, 0.00), g("grunt", 13, 0.67, 0.62) },
+		[6] = { g("tank", 10, 0.56), g("grunt", 13, 0.67, 0.62) },
 		-- mixed check
-		[7] = { g("tank", 7, 0.52, 0.00), g("grunt", 8, 0.59, 0.38) },
+		[7] = { g("tank", 7, 0.52), g("grunt", 8, 0.59, 0.38) },
 		-- mixed check
-		[8] = { g("grunt", 9, 0.50, 0.00), g("tank", 9, 0.53, 0.38) },
+		[8] = { g("grunt", 9, 0.50), g("tank", 9, 0.53, 0.38) },
 		-- mixed check
-		[9] = { g("tank", 8, 0.50, 0.00), g("grunt", 9, 0.50, 0.25) },
+		[9] = { g("tank", 8, 0.50), g("grunt", 9, 0.50, 0.25) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("tank", 8, 0.50, 2.25), g("grunt", 8, 0.55, 2.50) },
+		[10] = { g("boss", 1, 0.00), g("tank", 8, 0.50, 2.25), g("grunt", 8, 0.55, 2.50) },
 	},
 	backtrack = {
 		-- orientation
-		[1] = { g("grunt", 17, 0.70, 0.00) },
+		[1] = { g("grunt", 17, 0.70) },
 		-- demonstration
-		[2] = { g("runner", 10, 0.71, 0.00) },
+		[2] = { g("runner", 10, 0.71) },
 		-- demonstration
-		[3] = { g("grunt", 14, 0.58, 0.00), g("runner", 5, 0.69, 1.12) },
+		[3] = { g("grunt", 14, 0.58), g("runner", 5, 0.69, 1.12) },
 		-- practice
-		[4] = { g("runner", 11, 0.56, 0.00), g("grunt", 14, 0.50, 0.60) },
+		[4] = { g("runner", 11, 0.56), g("grunt", 14, 0.50, 0.60) },
 		-- practice
-		[5] = { g("tank", 11, 0.60, 0.00), g("runner", 8, 0.53, 0.52) },
+		[5] = { g("tank", 11, 0.60), g("runner", 8, 0.53, 0.52) },
 		-- practice
-		[6] = { g("runner", 10, 0.50, 0.00), g("tank", 10, 0.53, 0.38), g("grunt", 14, 0.63, 0.75) },
+		[6] = { g("runner", 10, 0.50), g("tank", 10, 0.53, 0.38), g("grunt", 14, 0.63, 0.75) },
 		-- mixed check
-		[7] = { g("runner", 6, 0.50, 0.00), g("tank", 8, 0.50, 0.22), g("grunt", 8, 0.53, 0.52) },
+		[7] = { g("runner", 6, 0.50), g("tank", 8, 0.50, 0.22), g("grunt", 8, 0.53, 0.52) },
 		-- mixed check
-		[8] = { g("tank", 8, 0.50, 0.00), g("runner", 8, 0.50, 0.22), g("grunt", 10, 0.50, 0.45) },
+		[8] = { g("tank", 8, 0.50), g("runner", 8, 0.50, 0.22), g("grunt", 10, 0.50, 0.45) },
 		-- mixed check
-		[9] = { g("runner", 7, 0.50, 0.00), g("tank", 8, 0.50, 0.15), g("grunt", 10, 0.50, 0.38) },
+		[9] = { g("runner", 7, 0.50), g("tank", 8, 0.50, 0.15), g("grunt", 10, 0.50, 0.38) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("runner", 7, 0.50, 1.35), g("tank", 7, 0.50, 1.50), g("grunt", 8, 0.50, 1.72) },
+		[10] = { g("boss", 1, 0.00), g("runner", 7, 0.50, 1.35), g("tank", 7, 0.50, 1.50), g("grunt", 8, 0.50, 1.72) },
 	},
 	lowvalley = {
 		-- orientation
-		[1] = { g("grunt", 17, 0.82, 0.00) },
+		[1] = { g("grunt", 17, 0.82) },
 		-- demonstration
-		[2] = { g("bulwark", 9, 0.84, 0.00) },
+		[2] = { g("bulwark", 9, 0.84) },
 		-- demonstration
-		[3] = { g("grunt", 13, 0.69, 0.00), g("bulwark", 4, 0.82, 2.17) },
+		[3] = { g("grunt", 13, 0.69), g("bulwark", 4, 0.82, 2.17) },
 		-- practice
-		[4] = { g("bulwark", 10, 0.66, 0.00), g("grunt", 13, 0.57, 1.16) },
+		[4] = { g("bulwark", 10, 0.66), g("grunt", 13, 0.57, 1.16) },
 		-- practice
-		[5] = { g("runner", 10, 0.71, 0.00), g("bulwark", 8, 0.63, 1.01) },
+		[5] = { g("runner", 10, 0.71), g("bulwark", 8, 0.63, 1.01) },
 		-- practice
-		[6] = { g("bulwark", 10, 0.53, 0.00), g("runner", 9, 0.63, 0.72), g("tank", 13, 0.74, 1.45) },
+		[6] = { g("bulwark", 10, 0.53), g("runner", 9, 0.63, 0.72), g("tank", 13, 0.74, 1.45) },
 		-- mixed check
-		[7] = { g("bulwark", 6, 0.50, 0.00), g("runner", 7, 0.56, 0.43), g("tank", 7, 0.63, 1.01), g("grunt", 9, 0.71, 1.45) },
+		[7] = { g("bulwark", 6, 0.50), g("runner", 7, 0.56, 0.43), g("tank", 7, 0.63, 1.01), g("grunt", 9, 0.71, 1.45) },
 		-- mixed check
-		[8] = { g("grunt", 8, 0.50, 0.00), g("tank", 8, 0.50, 0.43), g("runner", 9, 0.56, 0.87), g("bulwark", 11, 0.62, 1.30) },
+		[8] = { g("grunt", 8, 0.50), g("tank", 8, 0.50, 0.43), g("runner", 9, 0.56, 0.87), g("bulwark", 11, 0.62, 1.30) },
 		-- mixed check
-		[9] = { g("bulwark", 7, 0.50, 0.00), g("runner", 8, 0.50, 0.29), g("tank", 9, 0.52, 0.72), g("grunt", 9, 0.59, 1.16) },
+		[9] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.29), g("tank", 9, 0.52, 0.72), g("grunt", 9, 0.59, 1.16) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 7, 0.50, 2.61), g("runner", 7, 0.52, 2.90), g("tank", 8, 0.60, 3.33), g("grunt", 8, 0.67, 3.62) },
+		[10] = { g("boss", 1, 0.00), g("bulwark", 7, 0.50, 2.61), g("runner", 7, 0.52, 2.90), g("tank", 8, 0.60, 3.33), g("grunt", 8, 0.67, 3.62) },
 	},
 	circuit = {
 		-- orientation
-		[1] = { g("grunt", 17, 0.70, 0.00) },
+		[1] = { g("grunt", 17, 0.70) },
 		-- demonstration
-		[2] = { g("regenerator", 9, 0.74, 0.00) },
+		[2] = { g("regenerator", 9, 0.74) },
 		-- demonstration
-		[3] = { g("grunt", 13, 0.61, 0.00), g("regenerator", 4, 0.73, 0.98) },
+		[3] = { g("grunt", 13, 0.61), g("regenerator", 4, 0.73, 0.98) },
 		-- practice
-		[4] = { g("regenerator", 10, 0.59, 0.00), g("grunt", 13, 0.50, 0.52) },
+		[4] = { g("regenerator", 10, 0.59), g("grunt", 13, 0.50, 0.52) },
 		-- practice
-		[5] = { g("bulwark", 10, 0.63, 0.00), g("regenerator", 7, 0.56, 0.45) },
+		[5] = { g("bulwark", 10, 0.63), g("regenerator", 7, 0.56, 0.45) },
 		-- practice
-		[6] = { g("regenerator", 10, 0.50, 0.00), g("bulwark", 9, 0.56, 0.33), g("runner", 13, 0.65, 0.65) },
+		[6] = { g("regenerator", 10, 0.50), g("bulwark", 9, 0.56, 0.33), g("runner", 13, 0.65, 0.65) },
 		-- mixed check
-		[7] = { g("regenerator", 6, 0.50, 0.00), g("bulwark", 7, 0.50, 0.20), g("runner", 7, 0.56, 0.45), g("tank", 8, 0.63, 0.65) },
+		[7] = { g("regenerator", 6, 0.50), g("bulwark", 7, 0.50, 0.20), g("runner", 7, 0.56, 0.45), g("tank", 8, 0.63, 0.65) },
 		-- mixed check
-		[8] = { g("regenerator", 8, 0.50, 0.00), g("grunt", 8, 0.50, 0.20), g("tank", 9, 0.50, 0.39), g("runner", 10, 0.55, 0.59) },
+		[8] = { g("regenerator", 8, 0.50), g("grunt", 8, 0.50, 0.20), g("tank", 9, 0.50, 0.39), g("runner", 10, 0.55, 0.59) },
 		-- mixed check
-		[9] = { g("regenerator", 6, 0.50, 0.00), g("bulwark", 7, 0.50, 0.13), g("runner", 9, 0.50, 0.33), g("tank", 9, 0.52, 0.52), g("grunt", 10, 0.57, 0.65) },
+		[9] = { g("regenerator", 6, 0.50), g("bulwark", 7, 0.50, 0.13), g("runner", 9, 0.50, 0.33), g("tank", 9, 0.52, 0.52), g("grunt", 10, 0.57, 0.65) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("regenerator", 6, 0.50, 1.17), g("bulwark", 7, 0.50, 1.30), g("runner", 8, 0.53, 1.49), g("tank", 8, 0.60, 1.62) },
+		[10] = { g("boss", 1, 0.00), g("regenerator", 6, 0.50, 1.17), g("bulwark", 7, 0.50, 1.30), g("runner", 8, 0.53, 1.49), g("tank", 8, 0.60, 1.62) },
 	},
 	outerloop = {
 		-- orientation
-		[1] = { g("grunt", 17, 0.89, 0.00) },
+		[1] = { g("grunt", 17, 0.89) },
 		-- demonstration
-		[2] = { g("regenerator", 9, 0.94, 0.00) },
+		[2] = { g("regenerator", 9, 0.94) },
 		-- demonstration
-		[3] = { g("grunt", 13, 0.78, 0.00), g("regenerator", 4, 0.93, 2.55) },
+		[3] = { g("grunt", 13, 0.78), g("regenerator", 4, 0.93, 2.55) },
 		-- practice
-		[4] = { g("regenerator", 10, 0.75, 0.00), g("grunt", 13, 0.64, 1.36) },
+		[4] = { g("regenerator", 10, 0.75), g("grunt", 13, 0.64, 1.36) },
 		-- practice
-		[5] = { g("bulwark", 10, 0.80, 0.00), g("regenerator", 7, 0.71, 1.19) },
+		[5] = { g("bulwark", 10, 0.80), g("regenerator", 7, 0.71, 1.19) },
 		-- practice
-		[6] = { g("regenerator", 10, 0.60, 0.00), g("bulwark", 9, 0.71, 0.85), g("runner", 13, 0.84, 1.70) },
+		[6] = { g("regenerator", 10, 0.60), g("bulwark", 9, 0.71, 0.85), g("runner", 13, 0.84, 1.70) },
 		-- mixed check
-		[7] = { g("regenerator", 6, 0.55, 0.00), g("bulwark", 7, 0.63, 0.51), g("runner", 7, 0.71, 1.19), g("tank", 8, 0.80, 1.70) },
+		[7] = { g("regenerator", 6, 0.55), g("bulwark", 7, 0.63, 0.51), g("runner", 7, 0.71, 1.19), g("tank", 8, 0.80, 1.70) },
 		-- mixed check
-		[8] = { g("grunt", 8, 0.50, 0.00), g("tank", 8, 0.56, 0.51), g("runner", 9, 0.63, 1.02), g("bulwark", 10, 0.70, 1.53) },
+		[8] = { g("grunt", 8, 0.50), g("tank", 8, 0.56, 0.51), g("runner", 9, 0.63, 1.02), g("bulwark", 10, 0.70, 1.53) },
 		-- mixed check
-		[9] = { g("regenerator", 7, 0.50, 0.00), g("bulwark", 8, 0.52, 0.34), g("runner", 9, 0.59, 0.85), g("tank", 9, 0.66, 1.36), g("grunt", 10, 0.73, 1.70) },
+		[9] = { g("regenerator", 7, 0.50), g("bulwark", 8, 0.52, 0.34), g("runner", 9, 0.59, 0.85), g("tank", 9, 0.66, 1.36), g("grunt", 10, 0.73, 1.70) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("regenerator", 7, 0.51, 3.06), g("bulwark", 7, 0.59, 3.40), g("runner", 8, 0.67, 3.91), g("tank", 8, 0.76, 4.25) },
+		[10] = { g("boss", 1, 0.00), g("regenerator", 7, 0.51, 3.06), g("bulwark", 7, 0.59, 3.40), g("runner", 8, 0.67, 3.91), g("tank", 8, 0.76, 4.25) },
 	},
 	terrace = {
 		-- orientation
-		[1] = { g("grunt", 17, 0.61, 0.00) },
+		[1] = { g("grunt", 17, 0.61) },
 		-- demonstration
-		[2] = { g("warcaller", 9, 0.67, 0.00) },
+		[2] = { g("warcaller", 9, 0.67) },
 		-- demonstration
-		[3] = { g("grunt", 13, 0.56, 0.00), g("warcaller", 4, 0.66, 1.08) },
+		[3] = { g("grunt", 13, 0.56), g("warcaller", 4, 0.66, 1.08) },
 		-- practice
-		[4] = { g("warcaller", 10, 0.53, 0.00), g("grunt", 13, 0.50, 0.58) },
+		[4] = { g("warcaller", 10, 0.53), g("grunt", 13, 0.50, 0.58) },
 		-- practice
-		[5] = { g("regenerator", 10, 0.57, 0.00), g("warcaller", 7, 0.51, 0.50) },
+		[5] = { g("regenerator", 10, 0.57), g("warcaller", 7, 0.51, 0.50) },
 		-- practice
-		[6] = { g("warcaller", 10, 0.50, 0.00), g("regenerator", 9, 0.51, 0.36), g("bulwark", 13, 0.60, 0.72) },
+		[6] = { g("warcaller", 10, 0.50), g("regenerator", 9, 0.51, 0.36), g("bulwark", 13, 0.60, 0.72) },
 		-- mixed check
-		[7] = { g("warcaller", 6, 0.50, 0.00), g("regenerator", 7, 0.50, 0.22), g("bulwark", 7, 0.51, 0.50), g("runner", 8, 0.57, 0.72) },
+		[7] = { g("warcaller", 6, 0.50), g("regenerator", 7, 0.50, 0.22), g("bulwark", 7, 0.51, 0.50), g("runner", 8, 0.57, 0.72) },
 		-- mixed check
-		[8] = { g("warcaller", 8, 0.50, 0.00), g("grunt", 7, 0.50, 0.22), g("tank", 9, 0.50, 0.43), g("runner", 10, 0.50, 0.65) },
+		[8] = { g("warcaller", 8, 0.50), g("grunt", 7, 0.50, 0.22), g("tank", 9, 0.50, 0.43), g("runner", 10, 0.50, 0.65) },
 		-- mixed check
-		[9] = { g("warcaller", 6, 0.50, 0.00), g("regenerator", 7, 0.50, 0.14), g("bulwark", 8, 0.50, 0.36), g("runner", 8, 0.50, 0.58), g("tank", 9, 0.52, 0.72) },
+		[9] = { g("warcaller", 6, 0.50), g("regenerator", 7, 0.50, 0.14), g("bulwark", 8, 0.50, 0.36), g("runner", 8, 0.50, 0.58), g("tank", 9, 0.52, 0.72) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("warcaller", 6, 0.50, 1.30), g("regenerator", 7, 0.50, 1.44), g("bulwark", 8, 0.50, 1.66), g("runner", 7, 0.54, 1.80) },
+		[10] = { g("boss", 1, 0.00), g("warcaller", 6, 0.50, 1.30), g("regenerator", 7, 0.50, 1.44), g("bulwark", 8, 0.50, 1.66), g("runner", 7, 0.54, 1.80) },
 	},
 	highridge = {
 		-- orientation
-		[1] = { g("grunt", 17, 0.78, 0.00) },
+		[1] = { g("grunt", 17, 0.78) },
 		-- demonstration
-		[2] = { g("bulwark", 6, 0.87, 0.00), g("runner", 6, 0.70, 0.30) },
+		[2] = { g("bulwark", 6, 0.87), g("runner", 6, 0.70, 0.30) },
 		-- demonstration
-		[3] = { g("grunt", 13, 0.72, 0.00), g("bulwark", 2, 0.86, 1.80), g("runner", 2, 0.69, 2.10) },
+		[3] = { g("grunt", 13, 0.72), g("bulwark", 2, 0.86, 1.80), g("runner", 2, 0.69, 2.10) },
 		-- practice
-		[4] = { g("bulwark", 6, 0.69, 0.00), g("runner", 6, 0.55, 0.30), g("grunt", 13, 0.59, 0.96) },
+		[4] = { g("bulwark", 6, 0.69), g("runner", 6, 0.55, 0.30), g("grunt", 13, 0.59, 0.96) },
 		-- practice
-		[5] = { g("warcaller", 10, 0.74, 0.00), g("bulwark", 4, 0.66, 0.84), g("runner", 4, 0.53, 1.14) },
+		[5] = { g("warcaller", 10, 0.74), g("bulwark", 4, 0.66, 0.84), g("runner", 4, 0.53, 1.14) },
 		-- practice
-		[6] = { g("bulwark", 6, 0.55, 0.00), g("runner", 6, 0.50, 0.30), g("warcaller", 10, 0.66, 0.60), g("regenerator", 13, 0.77, 1.20) },
+		[6] = { g("bulwark", 6, 0.55), g("runner", 6, 0.50, 0.30), g("warcaller", 10, 0.66, 0.60), g("regenerator", 13, 0.77, 1.20) },
 		-- mixed check
-		[7] = { g("bulwark", 3, 0.51, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.58, 0.36), g("regenerator", 7, 0.66, 0.84), g("bulwark", 8, 0.74, 1.20) },
+		[7] = { g("bulwark", 3, 0.51), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.58, 0.36), g("regenerator", 7, 0.66, 0.84), g("bulwark", 8, 0.74, 1.20) },
 		-- mixed check
-		[8] = { g("warcaller", 8, 0.50, 0.00), g("bulwark", 4, 0.52, 0.36), g("runner", 5, 0.50, 0.66), g("grunt", 9, 0.58, 0.72), g("tank", 10, 0.64, 1.08) },
+		[8] = { g("warcaller", 8, 0.50), g("bulwark", 4, 0.52, 0.36), g("runner", 5, 0.50, 0.66), g("grunt", 9, 0.58, 0.72), g("tank", 10, 0.64, 1.08) },
 		-- mixed check
-		[9] = { g("bulwark", 4, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.50, 0.24), g("regenerator", 9, 0.54, 0.60), g("bulwark", 8, 0.61, 0.96), g("runner", 10, 0.68, 1.20) },
+		[9] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.50, 0.24), g("regenerator", 9, 0.54, 0.60), g("bulwark", 8, 0.61, 0.96), g("runner", 10, 0.68, 1.20) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 2.16), g("runner", 4, 0.50, 2.46), g("warcaller", 7, 0.54, 2.40), g("regenerator", 8, 0.62, 2.76), g("bulwark", 8, 0.70, 3.00) },
+		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 2.16), g("runner", 4, 0.50, 2.46), g("warcaller", 7, 0.54, 2.40), g("regenerator", 8, 0.62, 2.76), g("bulwark", 8, 0.70, 3.00) },
 	},
 	crossflow = {
 		-- orientation
-		[1] = { g("grunt", 19, 0.56, 0.00) },
+		[1] = { g("grunt", 19, 0.56) },
 		-- demonstration
-		[2] = { g("bulwark", 6, 0.64, 0.00), g("runner", 6, 0.51, 0.30) },
+		[2] = { g("bulwark", 6, 0.64), g("runner", 6, 0.51, 0.30) },
 		-- demonstration
-		[3] = { g("grunt", 14, 0.53, 0.00), g("bulwark", 2, 0.63, 0.60), g("runner", 2, 0.50, 0.90) },
+		[3] = { g("grunt", 14, 0.53), g("bulwark", 2, 0.63, 0.60), g("runner", 2, 0.50, 0.90) },
 		-- practice
-		[4] = { g("bulwark", 6, 0.51, 0.00), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.28) },
+		[4] = { g("bulwark", 6, 0.51), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.28) },
 		-- practice
-		[5] = { g("warcaller", 11, 0.55, 0.00), g("bulwark", 4, 0.50, 0.23), g("runner", 4, 0.50, 0.53) },
+		[5] = { g("warcaller", 11, 0.55), g("bulwark", 4, 0.50, 0.23), g("runner", 4, 0.50, 0.53) },
 		-- practice
-		[6] = { g("bulwark", 6, 0.50, 0.00), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.50, 0.15), g("regenerator", 13, 0.57, 0.37) },
+		[6] = { g("bulwark", 6, 0.50), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.50, 0.15), g("regenerator", 13, 0.57, 0.37) },
 		-- mixed check
-		[7] = { g("bulwark", 3, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.08), g("regenerator", 7, 0.50, 0.23), g("bulwark", 8, 0.54, 0.37) },
+		[7] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.08), g("regenerator", 7, 0.50, 0.23), g("bulwark", 8, 0.54, 0.37) },
 		-- mixed check
-		[8] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("grunt", 8, 0.50, 0.08), g("tank", 9, 0.50, 0.19), g("runner", 10, 0.50, 0.33) },
+		[8] = { g("bulwark", 4, 0.50), g("runner", 5, 0.50, 0.30), g("grunt", 8, 0.50, 0.08), g("tank", 9, 0.50, 0.19), g("runner", 10, 0.50, 0.33) },
 		-- mixed check
-		[9] = { g("bulwark", 3, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.08), g("regenerator", 8, 0.50, 0.15), g("bulwark", 8, 0.50, 0.28), g("runner", 9, 0.50, 0.37) },
+		[9] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.08), g("regenerator", 8, 0.50, 0.15), g("bulwark", 8, 0.50, 0.28), g("runner", 9, 0.50, 0.37) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 0.73), g("runner", 4, 0.50, 1.03), g("warcaller", 7, 0.50, 0.82), g("regenerator", 8, 0.50, 0.95), g("bulwark", 8, 0.52, 1.04) },
+		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 0.73), g("runner", 4, 0.50, 1.03), g("warcaller", 7, 0.50, 0.82), g("regenerator", 8, 0.50, 0.95), g("bulwark", 8, 0.52, 1.04) },
 	},
 	steppingstones = {
 		-- orientation
-		[1] = { g("grunt", 20, 0.80, 0.00) },
+		[1] = { g("grunt", 20, 0.80) },
 		-- demonstration
-		[2] = { g("bulwark", 6, 0.92, 0.00), g("runner", 6, 0.74, 0.30) },
+		[2] = { g("bulwark", 6, 0.92), g("runner", 6, 0.74, 0.30) },
 		-- demonstration
-		[3] = { g("grunt", 14, 0.76, 0.00), g("bulwark", 2, 0.90, 3.00), g("runner", 2, 0.72, 3.30) },
+		[3] = { g("grunt", 14, 0.76), g("bulwark", 2, 0.90, 3.00), g("runner", 2, 0.72, 3.30) },
 		-- practice
-		[4] = { g("bulwark", 6, 0.73, 0.00), g("runner", 7, 0.58, 0.30), g("grunt", 13, 0.63, 1.60) },
+		[4] = { g("bulwark", 6, 0.73), g("runner", 7, 0.58, 0.30), g("grunt", 13, 0.63, 1.60) },
 		-- practice
-		[5] = { g("warcaller", 11, 0.78, 0.00), g("bulwark", 4, 0.70, 1.40), g("runner", 5, 0.56, 1.70) },
+		[5] = { g("warcaller", 11, 0.78), g("bulwark", 4, 0.70, 1.40), g("runner", 5, 0.56, 1.70) },
 		-- practice
-		[6] = { g("bulwark", 5, 0.58, 0.00), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.70, 1.00), g("regenerator", 13, 0.81, 2.00) },
+		[6] = { g("bulwark", 5, 0.58), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.70, 1.00), g("regenerator", 13, 0.81, 2.00) },
 		-- mixed check
-		[7] = { g("bulwark", 3, 0.54, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.61, 0.95), g("regenerator", 7, 0.70, 1.75), g("bulwark", 8, 0.78, 2.35) },
+		[7] = { g("bulwark", 3, 0.54), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.61, 0.95), g("regenerator", 7, 0.70, 1.75), g("bulwark", 8, 0.78, 2.35) },
 		-- mixed check
-		[8] = { g("grunt", 8, 0.50, 0.00), g("tank", 8, 0.54, 0.95), g("runner", 9, 0.61, 1.55), g("bulwark", 10, 0.68, 2.15) },
+		[8] = { g("grunt", 8, 0.50), g("tank", 8, 0.54, 0.95), g("runner", 9, 0.61, 1.55), g("bulwark", 10, 0.68, 2.15) },
 		-- mixed check
-		[9] = { g("bulwark", 4, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.51, 0.75), g("regenerator", 9, 0.58, 1.35), g("bulwark", 9, 0.64, 1.95), g("runner", 10, 0.72, 2.35) },
+		[9] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.51, 0.75), g("regenerator", 9, 0.58, 1.35), g("bulwark", 9, 0.64, 1.95), g("runner", 10, 0.72, 2.35) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 3.95), g("runner", 4, 0.50, 4.25), g("warcaller", 7, 0.58, 4.35), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
+		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 3.95), g("runner", 4, 0.50, 4.25), g("warcaller", 7, 0.58, 4.35), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
 	},
 	twinloop = {
 		-- orientation
-		[1] = { g("grunt", 20, 0.51, 0.00) },
+		[1] = { g("grunt", 20, 0.51) },
 		-- demonstration
-		[2] = { g("summoner", 3, 1.00, 0.00) },
+		[2] = { g("summoner", 3, 1.00) },
 		-- demonstration
-		[3] = { g("grunt", 10, 0.50, 0.00), g("summoner", 2, 0.84, 0.93) },
+		[3] = { g("grunt", 10, 0.50), g("summoner", 2, 0.84, 0.93) },
 		-- practice
-		[4] = { g("bulwark", 6, 0.50, 0.00), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.50) },
+		[4] = { g("bulwark", 6, 0.50), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.50) },
 		-- practice
-		[5] = { g("warcaller", 11, 0.52, 0.00), g("bulwark", 4, 0.50, 0.43), g("runner", 4, 0.50, 0.73) },
+		[5] = { g("warcaller", 11, 0.52), g("bulwark", 4, 0.50, 0.43), g("runner", 4, 0.50, 0.73) },
 		-- practice
-		[6] = { g("bulwark", 6, 0.50, 0.00), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.50, 0.31), g("regenerator", 13, 0.54, 0.62) },
+		[6] = { g("bulwark", 6, 0.50), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.50, 0.31), g("regenerator", 13, 0.54, 0.62) },
 		-- mixed check
-		[7] = { g("bulwark", 3, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.19), g("regenerator", 7, 0.50, 0.43), g("bulwark", 8, 0.52, 0.62) },
+		[7] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.19), g("regenerator", 7, 0.50, 0.43), g("bulwark", 8, 0.52, 0.62) },
 		-- mixed check
-		[8] = { g("tank", 8, 0.50, 0.00), g("runner", 7, 0.50, 0.19), g("bulwark", 8, 0.50, 0.37), g("regenerator", 10, 0.50, 0.56) },
+		[8] = { g("tank", 8, 0.50), g("runner", 7, 0.50, 0.19), g("bulwark", 8, 0.50, 0.37), g("regenerator", 10, 0.50, 0.56) },
 		-- mixed check
-		[9] = { g("bulwark", 3, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.12), g("regenerator", 8, 0.50, 0.31), g("bulwark", 8, 0.50, 0.50), g("runner", 9, 0.50, 0.62) },
+		[9] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.12), g("regenerator", 8, 0.50, 0.31), g("bulwark", 8, 0.50, 0.50), g("runner", 9, 0.50, 0.62) },
 		-- final exam
-		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 1.12), g("runner", 4, 0.50, 1.42), g("warcaller", 7, 0.50, 1.24), g("regenerator", 8, 0.50, 1.43), g("bulwark", 7, 0.50, 1.55) },
+		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 1.12), g("runner", 4, 0.50, 1.42), g("warcaller", 7, 0.50, 1.24), g("regenerator", 8, 0.50, 1.43), g("bulwark", 7, 0.50, 1.55) },
 	},
 }
 
@@ -454,7 +454,20 @@ function CampaignWaveDefs.get(mapOrId, waveIndex)
 	local waves = wavesByMapId[mapIdOf(mapOrId)]
 	if not waves then return nil end
 	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
-	return waves[waveIndex]
+	local groups = waves[waveIndex]
+	if not groups then return nil end
+
+	local count = 0
+	for _, group in ipairs(groups) do
+		count = count + group.count
+	end
+
+	return {
+		boss = groups[1].kind == "boss",
+		bossArchetype = groups.bossArchetype,
+		count = count,
+		groups = groups,
+	}
 end
 
 function CampaignWaveDefs.getFinalWave(mapOrId)
@@ -476,7 +489,6 @@ function CampaignWaveDefs.getTotalEnemyCount(mapOrId)
 	return total
 end
 
-CampaignWaveDefs.wavesByMapId = wavesByMapId
 CampaignWaveDefs.pacingIdentityByMapId = pacingIdentityByMapId
 CampaignWaveDefs.pacingTargetsByMapId = pacingTargetsByMapId
 

@@ -14,7 +14,7 @@ SOURCE = ROOT / "systems/campaign_wave_defs.lua"
 WINDOW_SECONDS = 5.0
 GROUP = re.compile(
     r'g\("(?P<kind>[a-z]+)",\s*(?P<count>\d+),\s*'
-    r'(?P<spacing>[0-9.]+),\s*(?P<delay>[0-9.]+)'
+    r'(?P<spacing>[0-9.]+)(?:,\s*(?P<delay>[0-9.]+))?'
 )
 
 
@@ -54,7 +54,7 @@ def parse_waves(text: str) -> dict[str, list[list[dict]]]:
                 groups.append({
                     "kind": group["kind"], "count": int(group["count"]),
                     "spacing": float(group["spacing"]),
-                    "delay": float(group["delay"]),
+                    "delay": float(group["delay"] or 0),
                 })
             if not groups:
                 raise ValueError(f"{map_id} wave {wave} has no groups")
