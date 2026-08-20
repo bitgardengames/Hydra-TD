@@ -22,7 +22,7 @@ function GameplayOutcome.recordCurrentRun(completed)
 	local stats = Save.data.mapStats[map.id]
 	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
 	local difficulty = Difficulty.key()
-	local mode = State.runMode or (State.activeContract and "contract") or (State.endless and "endless") or "campaign"
+	local mode = State.runMode or (State.endless and "endless") or "campaign"
 	local result = RunStats.finish(completed and "completed" or "failed", State)
 	State.runResult = result
 	State.newRecords = Save.recordRun(map.id, mode, difficulty, result)

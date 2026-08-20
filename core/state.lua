@@ -28,7 +28,6 @@ local state = {
 	-- these flags independent from save data so old module discoveries remain
 	-- compatible without changing the standard campaign rules.
 	challenge = false,
-	activeContract = nil,
 	activeBoss = nil,
 	activeBossKind = nil,
 	speed = 1,

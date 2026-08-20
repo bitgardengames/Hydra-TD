@@ -50,10 +50,7 @@ local function cancelPlacement()
 end
 
 local function beginTowerPlacement(kind)
-	if State.activeContract and not require("systems.contracts").isTowerAllowed(State.activeContract, kind) then
-		return false, "contract_restricted"
-	end
-	if not State.activeContract and not CampaignUnlocks.isTowerUnlocked(kind) then
+	if not CampaignUnlocks.isTowerUnlocked(kind) then
 		return false, "locked"
 	end
 

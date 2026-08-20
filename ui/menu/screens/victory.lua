@@ -447,8 +447,8 @@ local function resetConfetti()
 end
 
 function Screen.load()
-	local hasNextMap = not State.activeContract and State.worldMapIndex < #Maps
-	isFinalCampaignMap = not State.activeContract and State.worldMapIndex == #Maps
+	local hasNextMap = State.worldMapIndex < #Maps
+	isFinalCampaignMap = State.worldMapIndex == #Maps
 	buttons = {}
 
 	if hasNextMap then
@@ -512,12 +512,12 @@ function Screen.enter()
 		{label = L("runRecap.wavesCleared"), value = finalWave or RunRecap.getReachedWave(),
 			denominator = finalWave},
 	}
-	local records = Save.getMapRecords(map.id, State.runMode or (State.activeContract and "contract") or "campaign", Difficulty.key())
+	local records = Save.getMapRecords(map.id, State.runMode or "campaign", Difficulty.key())
 	for _, row in ipairs(RecordRows.build(records, State.newRecords)) do rows[#rows + 1] = row end
 	runStats:setRows(rows)
 	resetConfetti()
 	Medals.resetAnimations()
-	if not State.activeContract then recordFirstClear() end
+	recordFirstClear()
 
 	previousMedalCount = Medals.getCount(State.previousCompletionDifficulty)
 	currentMedalCount = Medals.getCount(Difficulty.key())

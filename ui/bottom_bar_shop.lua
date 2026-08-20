@@ -142,9 +142,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local x = startX + col * (SHOP_BTN_W + GAP_X)
 		local yb = startY + row * (SHOP_BTN_H + GAP_Y)
 
-		local contractAllowed = not State.activeContract
-			or require("systems.contracts").isTowerAllowed(State.activeContract, key)
-		local unlocked = contractAllowed and (State.activeContract ~= nil or CampaignUnlocks.isTowerUnlocked(key))
+		local unlocked = CampaignUnlocks.isTowerUnlocked(key)
 		local selected = unlocked and State.placing == key
 		local canAfford = unlocked and State.money >= def.cost
 		local pulse = selected and (0.9 + sin(now * 6) * 0.1) or 1

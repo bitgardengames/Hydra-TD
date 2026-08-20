@@ -1,5 +1,4 @@
 local Difficulty = require("systems.difficulty")
-local State = require("core.state")
 
 local DifficultyCurve = {}
 
@@ -39,13 +38,11 @@ function DifficultyCurve.getEnemyHpMultiplier(waveIndex, mapIndex, authoredScala
 				* (progress ^ DifficultyCurve.localExponent)
 	end
 	local mapHp = DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
-	local contractMultiplier = State.activeContract and State.activeContract.mutator.enemyHpMultiplier or 1
-	return localHp * mapHp * Difficulty.get().enemyHpBias * contractMultiplier
+	return localHp * mapHp * Difficulty.get().enemyHpBias
 end
 
 function DifficultyCurve.getEnemySpeedMultiplier(_waveIndex)
-	local contractMultiplier = State.activeContract and State.activeContract.mutator.enemySpeedMultiplier or 1
-	return Difficulty.get().enemySpeedBias * contractMultiplier
+	return Difficulty.get().enemySpeedBias
 end
 
 function DifficultyCurve.getBossHpMultiplier(waveIndex, mapIndex, authoredScalar)

@@ -412,7 +412,6 @@ function Screen.load()
 
 				State.worldMapIndex = State.mapIndex
 				State.challenge = false
-				State.activeContract = nil
 				State.ignoreStats = false
 				State.mode = "game"
 				Backdrop.stop()

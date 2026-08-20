@@ -104,7 +104,7 @@ local function buildRunSummary()
 			denominator = CampaignWaveDefs.getFinalWave(map)},
 		{label = L("runRecap.score"), value = score},
 	}
-	local records = map and Save.getMapRecords(map.id, State.runMode or (State.activeContract and "contract") or "campaign", Difficulty.key())
+	local records = map and Save.getMapRecords(map.id, State.runMode or "campaign", Difficulty.key())
 	for _, row in ipairs(RecordRows.build(records, State.newRecords)) do rows[#rows + 1] = row end
 	runStats:setRows(rows)
 end
