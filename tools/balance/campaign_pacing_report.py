@@ -45,7 +45,7 @@ def parse_waves(text: str) -> dict[str, list[list[dict]]]:
     result = {}
     for map_id, block in maps.items():
         waves = []
-        for wave in range(1, 11):
+        for wave in range(1, 21):
             match = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)\}}", block)
             if not match:
                 raise ValueError(f"{map_id} wave {wave} is missing")
