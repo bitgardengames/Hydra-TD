@@ -183,12 +183,15 @@ local function drawHeader(l)
 		local stats = statsFor(map.id)
 		total = total + (stats and Medals.getCount(stats.completedDifficulty) or 0)
 	end
-	local badgeW = 94
+	local badgeW = 132
 	panel(l.sw - l.margin - badgeW, 18, badgeW, 45)
-	Medals.drawTier(l.sw - l.margin - badgeW + 20, 40, 3, 9)
+	-- The campaign total is medal progress, not a generic score. Show all three
+	-- finishes here so the summary uses the same bronze/silver/gold language as
+	-- the map rows and detail panel.
+	Medals.draw(l.sw - l.margin - badgeW + 10, 31, 3, 7, 3)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text)
-	lg.printf(format("%d/%d", total, #Maps * 3), l.sw - l.margin - badgeW + 35, 31, 52, "center")
+	lg.printf(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 59, 31, 52, "center")
 end
 
 local function drawMapList(l)
@@ -249,6 +252,9 @@ local function drawCenter(l, map, entry)
 	local earned = stats and Medals.getCount(stats.completedDifficulty) or 0
 	local clusterW = Medals.getClusterSize(13, 9)
 	Medals.draw(x + w - clusterW, y + 5, earned, 13, 9, pulseTime)
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
+	lg.printf(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
 	local previewY = y + 70
 	local maxPreviewH = max(120, floor(l.center.h * 0.40))
@@ -290,15 +296,32 @@ local function drawCenter(l, map, entry)
 	end
 
 	local rewardsY = statY + 67
-	if rewardsY + 44 < l.center.y + l.center.h then
+	if rewardsY + 62 < l.center.y + l.center.h then
 		lg.setColor(Theme.ui.panel)
-		lg.rectangle("fill", x, rewardsY, w, 48, 7)
+		lg.rectangle("fill", x, rewardsY, w, 62, 7)
 		lg.setColor(Theme.ui.text)
 		lg.print(L("campaign.completionRewards"), x + 10, rewardsY + 5)
+
+		local selected = Save.data.settings.difficulty or "normal"
+		local selectedTier = difficultyIndex(selected)
+		local rewardCellY = rewardsY + 31
+		local rewardCellW = w / 3
+		Medals.drawTier(x + 19, rewardCellY + 7, selectedTier, 8)
+		lg.setColor(Theme.ui.text)
+		lg.print(L("campaign.medalReward", L("campaign.medals." .. MEDAL_NAMES[selectedTier])), x + 34, rewardCellY - 2)
+
+		local def = Difficulty.defs[selected] or Difficulty.defs.normal
+		lg.setColor(Theme.ui.money)
+		lg.circle("fill", x + rewardCellW + 18, rewardCellY + 7, 8)
+		lg.setColor(Theme.outline.color)
+		lg.circle("line", x + rewardCellW + 18, rewardCellY + 7, 5)
+		lg.setColor(Theme.ui.text)
+		lg.print(L("campaign.perfectBonus", def.perfectWaveBonus), x + rewardCellW + 32, rewardCellY - 2)
+
 		local reward = CampaignUnlocks.getRewardForMap(map)
-		local rewardText = reward and (reward.labelKey and L(reward.labelKey) or reward.label) or L("campaign.medalReward")
+		local rewardText = reward and (reward.labelKey and L(reward.labelKey) or reward.label) or L("campaign.noUnlockReward")
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
-		lg.print(rewardText, x + 10, rewardsY + 26)
+		lg.printf(rewardText, x + rewardCellW * 2 + 6, rewardCellY - 2, rewardCellW - 14, "center")
 	end
 end
 
