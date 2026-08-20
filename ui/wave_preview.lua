@@ -41,12 +41,9 @@ local innerSmallRadius = 6 - outlineW * 0.25
 local previewCache = {
 	wave = nil,
 	mapIndex = nil,
-	endless = nil,
 	title = "",
 	total = "",
 	entries = {},
-	ruleName = nil,
-	ruleDescription = nil,
 	startKey = nil,
 	startPrompt = "",
 }
@@ -90,20 +87,15 @@ end
 
 local function refreshPreview()
 	if previewCache.wave == State.wave
-		and previewCache.mapIndex == State.mapIndex
-		and previewCache.endless == State.endless then
+		and previewCache.mapIndex == State.mapIndex then
 		return
 	end
 
 	local preview = Waves.getWavePreview(State.wave)
 	previewCache.wave = State.wave
 	previewCache.mapIndex = State.mapIndex
-	previewCache.endless = State.endless
 	previewCache.title = L("hud.upcomingWave", State.wave)
 	previewCache.total = L("hud.waveTotal", preview.count)
-	previewCache.ruleName = preview.endlessRules and L(preview.endlessRules.nameKey) or nil
-	previewCache.ruleDescription = preview.endlessRules and L(preview.endlessRules.descriptionKey,
-		preview.endlessRules.nextMilestoneWave) or nil
 
 	local entries = previewCache.entries
 	for i = #entries, 1, -1 do entries[i] = nil end
@@ -126,8 +118,7 @@ local function getPreviewHeight()
 		bodyH = bodyH + entry.rowH + ROW_GAP
 	end
 	bodyH = math.max(textH, bodyH - ROW_GAP)
-	local rulesH = previewCache.ruleName and (textH * 3 + ROW_GAP) or 0
-	return PANEL_PAD * 2 + HEADER_H + HEADER_GAP + rulesH + bodyH + HEADER_GAP + textH
+	return PANEL_PAD * 2 + HEADER_H + HEADER_GAP + bodyH + HEADER_GAP + textH
 end
 
 local function updateCombatProgress(now)
@@ -223,14 +214,6 @@ local function drawPreview()
 	local font = lg.getFont()
 	local textH = font:getHeight()
 	local rowY = headerY + HEADER_H + HEADER_GAP
-	if previewCache.ruleName then
-		lg.setColor(Theme.ui.good)
-		Text.printShadow(previewCache.ruleName, innerX, rowY)
-		rowY = rowY + textH + ROW_GAP
-		lg.setColor(colorText)
-		Text.printfShadow(previewCache.ruleDescription, innerX, rowY, innerW, "left")
-		rowY = rowY + textH * 2 + ROW_GAP
-	end
 	local animT = love.timer.getTime()
 	local mouseX, mouseY = love.mouse.getPosition()
 	for i = 1, #previewCache.entries do

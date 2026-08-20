@@ -134,7 +134,6 @@ function resetGame()
 
 	State.gameOver = false
     State.victory = false
-    State.endless = false
 	State.endT = 0
 	State.endReady = false
 	State.endTitle = nil
@@ -237,12 +236,12 @@ local function updateGameplayOutcome()
 	if not State.inPrep and Waves.allEnemiesCleared() then
 		local campaignFinalWave = CampaignWaveDefs.getFinalWave(Maps[State.mapIndex])
 		local perfectWaveBonus
-		if State.waveLeaks == 0 and not (campaignFinalWave and State.wave == campaignFinalWave and not State.endless) then
+		if State.waveLeaks == 0 and not (campaignFinalWave and State.wave == campaignFinalWave) then
 			perfectWaveBonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
 			State.money = State.money + perfectWaveBonus
 		end
 		Waves.presentWaveCleared(perfectWaveBonus)
-		if campaignFinalWave and State.wave == campaignFinalWave and not State.endless then
+		if campaignFinalWave and State.wave == campaignFinalWave then
 			local previousFurthestIndex = Save.data.furthestIndex or 1
 			local nextMapIndex = State.worldMapIndex + 1
 			Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)

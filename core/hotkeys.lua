@@ -17,7 +17,6 @@ Hotkeys.defaultKb = {
 		upgrade = "u",
 		sell = "x",
 		nextMap = "n",
-		endless = "e",
 		restartRun = "r",
 		returnToMenu = "escape",
 		fastForward = "tab",

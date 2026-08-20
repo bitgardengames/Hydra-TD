@@ -21,17 +21,13 @@ local Waves = {}
 local max = math.max
 local min = math.min
 
--- Runtime budgets complement WaveBuilder's per-wave budget. The active cap is
--- intentionally lower than several queued endless groups, applying backpressure
--- rather than allowing a slow frame to turn into an unbounded spawn burst.
+-- Runtime budgets keep queued groups from producing unbounded spawn bursts.
 local BASE_ACTIVE_ENEMY_CAP = 140
-local MAX_ACTIVE_ENEMY_CAP = 180
 local MAX_SPAWN_CATCHUP_PER_FRAME = 12
 local SPAWN_BACKPRESSURE_DELAY = 0.10
 
-local function getActiveEnemyCap(waveNumber)
-	local tier = WaveBuilder.getIntensityTier(waveNumber)
-	return min(MAX_ACTIVE_ENEMY_CAP, BASE_ACTIVE_ENEMY_CAP + tier * 4)
+local function getActiveEnemyCap(_waveNumber)
+	return BASE_ACTIVE_ENEMY_CAP
 end
 
 local function copyValues(dst, src)
@@ -302,7 +298,7 @@ local function describeComposition(composition, spacing)
 		local previous = descriptions[#descriptions]
 
 		-- Coalesce only adjacent identical entries so the preview preserves spawn
-		-- order while avoiding a row for every enemy in an endless wave.
+		-- order while avoiding a row for every enemy in a large wave.
 		if previous and previous.kind == kind then
 			previous.count = previous.count + 1
 		else
@@ -316,7 +312,7 @@ end
 -- live spawner tables so callers (notably the prep HUD) can safely look ahead.
 function Waves.getWavePreview(waveNumber)
 	local map = Maps[State.mapIndex]
-	local wave = WaveBuilder.build(waveNumber, map, State.endless)
+	local wave = WaveBuilder.build(waveNumber, map)
 	local resolvedGroups = resolveWaveGroups(wave, map, waveNumber)
 	local groups
 
@@ -337,7 +333,6 @@ function Waves.getWavePreview(waveNumber)
 		totalCount = wave.count or 0,
 		counts = counts,
 		composition = groups,
-		endlessRules = wave.endlessRules,
 	}
 end
 
@@ -389,7 +384,6 @@ local function startBossWave(wave, map)
 	local bossIndex = math.max(1, math.floor(State.wave / 10))
 	local bossKind = wave.bossArchetype or getBossByArchetype(map, bossIndex)
 	local encounter = resolveBossEncounterTemplate(map, bossKind, bossIndex)
-	local tier = WaveBuilder.getIntensityTier(State.wave)
 	local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, true)
 	local addHpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave, State.mapIndex, map and map.hpScalar)
 	local groups = resolveWaveGroups(wave, map, State.wave)
@@ -443,7 +437,7 @@ function Waves.startWave()
 	end
 
 	-- WaveBuilder enforces the boss invariant, leaving startup as a simple dispatch.
-	local wave = WaveBuilder.build(State.wave, map, State.endless)
+	local wave = WaveBuilder.build(State.wave, map)
 	local start = map and map.path and map.path[1]
 	Waves.presentationEvent("wave_start", {
 		wave = State.wave,

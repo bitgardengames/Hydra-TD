@@ -24,7 +24,6 @@ local state = {
 	pauseT = 0,
 	gameOver = false,
 	victory = false,
-	endless = false,
 	-- Experimental run systems are intentionally limited to replay modes.  Keep
 	-- these flags independent from save data so old module discoveries remain
 	-- compatible without changing the standard campaign rules.
@@ -100,7 +99,7 @@ local state = {
 }
 
 function state.isReplayMode()
-	return state.challenge == true or state.endless == true
+	return state.challenge == true
 end
 
 function state.addDamage(kind, dmg, isBoss)

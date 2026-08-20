@@ -5,42 +5,8 @@ local Difficulty = require("systems.difficulty")
 local Achievements = require("systems.achievements")
 local Sound = require("systems.sound")
 local L = require("core.localization")
-local GameSpeed = require("core.game_speed")
-local WaveBuilder = require("systems.wave_builder")
 
 local GameplayOutcome = {}
-
--- Player-facing contract for the retained Endless mode. Keeping this beside
--- continuation makes the victory screen and transition use the same rules as waves.
-function GameplayOutcome.getEndlessContinuationMetadata(nextWave)
-	local rules = WaveBuilder.getEndlessRules(nextWave or (State.wave + 1))
-	return {
-		identityKey = "endless.identity",
-		ruleNameKey = rules.nameKey,
-		ruleDescriptionKey = rules.descriptionKey,
-		nextMilestoneWave = rules.nextMilestoneWave,
-		milestoneNumber = rules.milestoneNumber,
-	}
-end
-
-function GameplayOutcome.continueIntoEndless()
-	if not (State.gameOver and State.victory) then
-		return false
-	end
-
-	State.gameOver = false
-	State.victory = false
-	State.endless = true
-	State.wave = State.wave + 1
-	State.endlessRules = GameplayOutcome.getEndlessContinuationMetadata(State.wave)
-	State.waveLeaks = 0
-	State.activeBoss = nil
-	State.activeBossKind = nil
-	State.inPrep = true
-	GameSpeed.reset()
-	State.mode = "game"
-	return true
-end
 
 function GameplayOutcome.recordCurrentRun(completed)
 	if State.ignoreStats then

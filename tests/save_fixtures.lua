@@ -110,7 +110,7 @@ check(not accepted and not changed, "invalid ability selection was not rejected"
 reset({["saves/save.lua"] = [[return {
 	version = 6,
 	mapStats = {riverbend = {
-		bestWave = 19, bestEndlessWave = 42, wins = 3, losses = 4,
+		bestWave = 19, legacyPeakWave = 42, wins = 3, losses = 4,
 		completedDifficulty = "normal", medalEarnedAt = {easy = 100, normal = 200},
 	}, failed_map = {bestWave = 12, losses = 2}},
 }]]})
@@ -119,7 +119,7 @@ local mapStats = Save.data.mapStats.riverbend
 check(mapStats.completedDifficulty == "normal", "map completion difficulty was discarded")
 check(mapStats.medalEarnedAt.easy == 100 and mapStats.medalEarnedAt.normal == 200,
 	"map completion timestamps were discarded")
-check(mapStats.bestWave == nil and mapStats.bestEndlessWave == nil
+check(mapStats.bestWave == nil and mapStats.legacyPeakWave == nil
 	and mapStats.wins == nil and mapStats.losses == nil, "excess map statistics survived migration")
 check(Save.data.mapStats.failed_map == nil, "an uncleared map record survived migration")
 

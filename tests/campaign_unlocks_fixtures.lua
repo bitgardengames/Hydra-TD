@@ -43,21 +43,10 @@ end
 for _, abilityId in ipairs(AbilityDefs.order) do
 	check(CampaignUnlocks.isAbilityUnlocked(abilityId), abilityId .. " was relocked on a completed campaign")
 end
-check(CampaignUnlocks.isChallengeModeUnlocked(), "completed campaign mode was relocked")
 
 -- A completion only unlocks the reward attached to that map.
 save.data.mapStats = {switchback = {completedDifficulty = "easy"}}
 check(CampaignUnlocks.isAbilityUnlocked("meteor"), "completed map did not unlock its ability")
 check(not CampaignUnlocks.isAbilityUnlocked("overdrive"), "uncompleted map unlocked its ability")
-
--- High Ridge starts the finale, but only Twin Loop completes the campaign.
-save.data.furthestIndex = 1
-save.data.mapStats = {highridge = {completedDifficulty = "normal"}}
-check(not CampaignUnlocks.isChallengeModeUnlocked(), "Challenge unlocked after High Ridge")
-check(not CampaignUnlocks.isEndlessUnlocked(), "Endless unlocked after High Ridge")
-
-save.data.mapStats.twinloop = {completedDifficulty = "normal"}
-check(CampaignUnlocks.isChallengeModeUnlocked(), "Challenge stayed locked after Twin Loop")
-check(CampaignUnlocks.isEndlessUnlocked(), "Endless stayed locked after Twin Loop")
 
 print("campaign unlock fixtures passed")
