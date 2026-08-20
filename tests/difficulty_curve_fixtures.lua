@@ -20,7 +20,7 @@ for wave = 2, 10 do
 		("enemy health must increase from wave %d to wave %d"):format(wave - 1, wave))
 end
 
-assert(hp(11) == hp(10),
-	"enemy health should remain capped at the campaign finale")
+assert(hp(20) == hp(10),
+	"the second act should add composition pressure without hidden durability growth")
 
 print("difficulty curve fixtures passed")
