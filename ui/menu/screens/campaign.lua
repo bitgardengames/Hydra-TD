@@ -87,12 +87,11 @@ local function drawRewardIcon(reward, cx, cy)
 	if reward.type == "tower" then
 		lg.push("all")
 		lg.translate(cx, cy)
-		lg.scale(0.62)
 		DrawEntities.drawTowerBase(reward.id, 0, 5, 1)
 		DrawEntities.drawTowerCore(reward.id, 0, 5, -math.pi * 0.5, 0, 1)
 		lg.pop()
 	elseif reward.type == "ability" then
-		AbilityIcons.draw(reward.id, cx, cy, 0.62, 1)
+		AbilityIcons.draw(reward.id, cx, cy, 1, 1)
 	end
 end
 
@@ -368,12 +367,6 @@ local function drawRight(l, map)
 		lg.print(L("difficulty." .. key), x + 40, cy + 8)
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
 		lg.print(L(DIFFICULTY_HINTS[key]), x + 40, cy + 30)
-		if active then
-			lg.setColor(Theme.ui.good)
-			lg.circle("fill", x + w - 19, cy + 28, 10)
-			lg.setColor(Theme.outline.color)
-			lg.printf("✓", x + w - 27, cy + 19, 16, "center")
-		end
 	end
 
 	local resourcesY = cardY + 3 * 67 + 10
@@ -411,7 +404,7 @@ end
 function Screen.load()
 	buttons = {
 		play = {id = "play", label = L("campaign.playMap"), onClick = playMap},
-		back = {id = "back", label = "←  " .. L("menu.back"), w = 140, h = 42, onClick = goBack},
+		back = {id = "back", label = L("menu.back"), w = 140, h = 42, onClick = goBack},
 	}
 end
 
