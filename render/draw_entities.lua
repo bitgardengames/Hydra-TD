@@ -7,6 +7,7 @@ local MapMod = require("world.map")
 local Save = require("core.save")
 local EnemyHealthVisibility = require("render.enemy_health_visibility")
 local TowerVictoryDance = require("render.tower_victory_dance")
+local TowerIdleAnimation = require("render.tower_idle_animation")
 
 local random = love.math.random
 local lg = love.graphics
@@ -17,6 +18,10 @@ local max = math.max
 local abs = math.abs
 local cos = math.cos
 local pi = math.pi
+
+-- Weak keys keep this presentation-only timing out of tower/save/simulation
+-- state and let sold towers disappear without explicit lifecycle bookkeeping.
+local towerIdleStarts = setmetatable({}, {__mode = "k"})
 
 -- Theme aliases
 local outlineColor = Theme.outline.color
@@ -1072,17 +1077,40 @@ local function drawTowerInstance(t, cx, renderY, index)
 	local headX = cx
 	local headY = renderY
 	local headAngle = t.angle
+	local idleEffect = 0
 	if State.victory then
 		local sway, bob, turn = TowerVictoryDance.pose(State.victoryDanceClock, t.kind, index)
 		headX = headX + sway
 		headY = headY + bob
 		headAngle = headAngle + turn
+	else
+		local clock = State.abilityClock or 0
+		local recentlyFired = (t.fireAnim or 0) > 0 or (t.recoil or 0) > 0.05
+		if t.target or recentlyFired then
+			towerIdleStarts[t] = nil
+		else
+			local idleStart = towerIdleStarts[t]
+			if not idleStart then
+				idleStart = clock
+				towerIdleStarts[t] = idleStart
+			end
+			local settings = Save.data and Save.data.settings
+			local motionEnabled = not settings or settings.cameraMotion ~= false
+			local phase = (((t.gx or 0) * 73 + (t.gy or 0) * 151 + index * 199) % 997) / 997
+			local sway, bob, turn, effect = TowerIdleAnimation.pose(
+				clock - idleStart, t.kind, index, phase, motionEnabled)
+			headX = headX + sway
+			headY = headY + bob
+			headAngle = headAngle + turn
+			idleEffect = effect
+		end
 	end
 
-	-- Keep the tower body planted while only its turret joins the victory dance.
+	-- Keep the tower body planted while only its turret receives either pose.
 	drawTowerBase(t.kind, cx, renderY, 1, darkMul, darkMul, darkMul)
 	drawTowerBaseHighlight(t.kind, cx, renderY, 1)
-	drawTowerCore(t.kind, headX, headY, headAngle, t.recoil, 1, 1, 1, 1, 0)
+	drawTowerCore(t.kind, headX, headY, headAngle, t.recoil, 1, 1, 1, 1,
+		idleEffect)
 end
 
 local function drawTowerUpgradeFlash(t, cx, renderY)
