@@ -1,4 +1,5 @@
 local Constants = require("core.constants")
+local TowerStatDisplay = require("core.tower_stat_display")
 local Theme = require("core.theme")
 local TowerDefs = require("world.tower_defs")
 local Sound = require("systems.sound")
@@ -535,8 +536,8 @@ getUpgradePreview = function(t, specializationId)
 	nextStats.directDamage = nextDamage
 	nextStats.mechanics = nextBehaviors
 	addPreviewRow(rows, "damage", numberText(currentDamage, 1), numberText(nextDamage, 1), nextDamage > currentDamage and "good" or "bad")
-	addPreviewRow(rows, "fireRate", numberText(currentStats.fireRate, 2, "/s"), numberText(nextStats.fireRate, 2, "/s"), nextStats.fireRate > currentStats.fireRate and "good" or "bad")
-	addPreviewRow(rows, "range", numberText(currentStats.range / Constants.TILE, 2), numberText(nextStats.range / Constants.TILE, 2), nextStats.range > currentStats.range and "good" or "bad")
+	addPreviewRow(rows, "fireRate", tostring(TowerStatDisplay.attackSpeed(currentStats.fireRate)), tostring(TowerStatDisplay.attackSpeed(nextStats.fireRate)), nextStats.fireRate > currentStats.fireRate and "good" or "bad")
+	addPreviewRow(rows, "range", tostring(TowerStatDisplay.range(currentStats.range)), tostring(TowerStatDisplay.range(nextStats.range)), nextStats.range > currentStats.range and "good" or "bad")
 	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
 
 	return {

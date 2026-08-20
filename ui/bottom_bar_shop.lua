@@ -8,12 +8,11 @@ local Theme = require("core.theme")
 local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local Constants = require("core.constants")
+local TowerStatDisplay = require("core.tower_stat_display")
 
 local lg = love.graphics
 local sin = math.sin
-local abs = math.abs
 local floor = math.floor
-local format = string.format
 local tostring = tostring
 
 local Shop = {}
@@ -60,26 +59,6 @@ local function formatNum(n)
 	numCache[v] = s
 
 	return s
-end
-
-local function formatStat(value)
-	if not value then
-		return value
-	end
-
-	-- Round to 1 decimal
-	local rounded = floor(value * 10 + 0.5) / 10
-
-	-- If effectively whole number, return integer string
-	if abs(rounded - floor(rounded)) < 0.001 then
-		return tostring(floor(rounded))
-	end
-
-	return format("%.1f", rounded)
-end
-
-local function formatInterval(seconds)
-	return (("%.2f"):format(seconds):gsub("0+$", ""):gsub("%.$", "")) .. "s"
 end
 
 local function getShopButton(i)
@@ -213,11 +192,11 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 
 					rows[2].kind = nil
 					rows[2].label = L("stats.fireRate")
-					rows[2].value = formatInterval(1 / def.fireRate)
+					rows[2].value = TowerStatDisplay.attackSpeed(def.fireRate)
 
 					rows[3].kind = nil
 					rows[3].label = L("stats.range")
-					rows[3].value = formatStat(def.range)
+					rows[3].value = TowerStatDisplay.range(def.range)
 
 					rows[4].kind = "text"
 					rows[4].text = L(def.descKey)
