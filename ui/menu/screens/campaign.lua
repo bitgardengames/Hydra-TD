@@ -43,6 +43,12 @@ local buttons = {}
 local pulseTime = 0
 local hoveredMedal
 local listOffset = 0
+local scrollbarDragging = false
+local scrollbarGrabY = 0
+
+local LIST_ROW_H = 72
+local LIST_PREVIEW_W = 116
+local LIST_PREVIEW_H = 55
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -116,8 +122,28 @@ local function layout()
 end
 
 local function visibleRows(l)
-	local rowH = 66
+	local rowH = LIST_ROW_H
 	return rowH, max(1, floor((l.left.h - 18) / rowH))
+end
+
+local function scrollbarGeometry(l)
+	local _, count = visibleRows(l)
+	if #Maps <= count then return nil end
+	local trackX = l.left.x + l.left.w - 13
+	local trackY = l.left.y + 10
+	local trackH = l.left.h - 20
+	local thumbH = max(32, trackH * count / #Maps)
+	local maxOffset = #Maps - count
+	local thumbY = trackY + (trackH - thumbH) * listOffset / maxOffset
+	return trackX, trackY, 6, trackH, thumbY, thumbH, maxOffset
+end
+
+local function scrollToThumb(l, thumbY)
+	local _, trackY, _, trackH, _, thumbH, maxOffset = scrollbarGeometry(l)
+	if not trackY then return end
+	local travel = trackH - thumbH
+	local progress = travel > 0 and (thumbY - trackY) / travel or 0
+	listOffset = floor(max(0, min(1, progress)) * maxOffset + 0.5)
 end
 
 local function keepSelectedVisible(l)
@@ -212,7 +238,7 @@ local function drawMapList(l)
 	panel(l.left.x, l.left.y, l.left.w, l.left.h)
 	local rowH, count = visibleRows(l)
 	local rowX = l.left.x + 10
-	local rowW = l.left.w - 20
+	local rowW = l.left.w - 31
 	for visible = 1, count do
 		local index = listOffset + visible
 		local map = Maps[index]
@@ -224,11 +250,11 @@ local function drawMapList(l)
 		lg.rectangle("fill", rowX, y, rowW, rowH - 7, 7)
 		local entry = MapPreviewCache.get(map.id)
 		if entry then
-			local scale = min(1, 104 / entry.canvas:getWidth(), 49 / entry.canvas:getHeight())
+			local scale = min(1, LIST_PREVIEW_W / entry.canvas:getWidth(), LIST_PREVIEW_H / entry.canvas:getHeight())
 			lg.setColor(1, 1, 1, locked and 0.28 or 0.9)
 			lg.draw(entry.canvas, rowX + 4, y + 5, 0, scale, scale)
 		end
-		local textX = rowX + 116
+		local textX = rowX + LIST_PREVIEW_W + 12
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text)
 		lg.print(index .. "  " .. L(map.nameKey), textX, y + 7)
@@ -239,6 +265,14 @@ local function drawMapList(l)
 			local stats = statsFor(map.id)
 			Medals.draw(textX, y + 31, stats and Medals.getCount(stats.completedDifficulty) or 0, 7, 6, pulseTime)
 		end
+	end
+
+	local trackX, trackY, trackW, trackH, thumbY, thumbH = scrollbarGeometry(l)
+	if trackX then
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.14)
+		lg.rectangle("fill", trackX, trackY, trackW, trackH, 3)
+		lg.setColor(scrollbarDragging and Theme.ui.warn or Theme.ui.selected)
+		lg.rectangle("fill", trackX, thumbY, trackW, thumbH, 3)
 	end
 end
 
@@ -271,7 +305,7 @@ local function drawCenter(l, map, entry)
 	lg.printf(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
 	local previewY = y + 70
-	local maxPreviewH = max(120, floor(l.center.h * 0.40))
+	local maxPreviewH = max(120, floor(l.center.h * 0.44))
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
 	local previewX = x + (w - previewW) * 0.5
@@ -413,7 +447,14 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 	Medals.update(dt)
 	local l = layout()
-	keepSelectedVisible(l)
+	if scrollbarDragging then
+		if love.mouse.isDown(1) then
+			local _, my = love.mouse.getPosition()
+			scrollToThumb(l, my - scrollbarGrabY)
+		else
+			scrollbarDragging = false
+		end
+	end
 	buttons.back.x, buttons.back.y = l.margin, l.sh - l.footerH + 10
 	local rightPad = 20
 	buttons.play.x = l.right.x + rightPad
@@ -484,8 +525,20 @@ end
 function Screen.mousepressed(x, y, button)
 	if button ~= 1 then return end
 	local l = layout()
+	local trackX, trackY, trackW, trackH, thumbY, thumbH = scrollbarGeometry(l)
+	if trackX and x >= trackX - 4 and x <= trackX + trackW + 4
+		and y >= trackY and y <= trackY + trackH then
+		if y >= thumbY and y <= thumbY + thumbH then
+			scrollbarGrabY = y - thumbY
+		else
+			scrollbarGrabY = thumbH * 0.5
+			scrollToThumb(l, y - scrollbarGrabY)
+		end
+		scrollbarDragging = true
+		return true
+	end
 	local rowH, count = visibleRows(l)
-	if x >= l.left.x + 10 and x <= l.left.x + l.left.w - 10 and y >= l.left.y + 10 then
+	if x >= l.left.x + 10 and x <= l.left.x + l.left.w - 21 and y >= l.left.y + 10 then
 		local row = floor((y - l.left.y - 10) / rowH) + 1
 		if row >= 1 and row <= count then
 			local index = listOffset + row
@@ -501,6 +554,10 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
+	if button == 1 and scrollbarDragging then
+		scrollbarDragging = false
+		return true
+	end
 	for _, item in pairs(buttons) do if Button.mousereleased(item, x, y, button) then return true end end
 end
 
@@ -518,6 +575,7 @@ function Screen.resize()
 	Tooltip.hide()
 	MapPreviewCache.buildAll(520, 312)
 	Backdrop.start()
+	keepSelectedVisible(layout())
 end
 
 function Screen.enter() keepSelectedVisible(layout()) end
