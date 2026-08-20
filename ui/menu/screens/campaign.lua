@@ -14,714 +14,481 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
-local Towers = require("world.towers")
-local EnemyDefs = require("world.enemy_defs")
-local AbilityLoadout = require("ui.ability_loadout")
-local RecordRows = require("ui.record_rows")
+local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local RunModes = require("systems.run_modes")
 
 local lg = love.graphics
 local floor = math.floor
+local min = math.min
+local max = math.max
 local format = string.format
 
 local Screen = {}
-
--- Colors
-local colorText = Theme.ui.text
-local colorShadow = Theme.ui.shadow
-local colorDim = Theme.ui.screenDim
-local colorBackdrop = Theme.ui.backdrop
-local colorHover = {0.94, 0.94, 0.94}
-local colorEnabled = {0.88, 0.88, 0.88}
-local colorDisabled = {0.65, 0.65, 0.65}
-local colorOutline = Theme.outline.color
-
--- Layout
-local outlineW = Theme.outline.width
-local baseRadius = 6 * 3
-local outerRadius = baseRadius + outlineW * 0.5
-local innerRadius = baseRadius - outlineW * 0.25
-
-local PAD_PREVIEW = 44
-local PAD_TITLE = 60
-local PAD_META = 92
-local TITLE_OFFSET = -22
-
-local paddingX = 28
-local paddingY = 28
-
-local btnW = 240
-local btnH = 42
-local gap = 62
-
--- Arrow navigation
-local ARROW_SIZE = 20
-local PATH_TRIM_START = 34
-local PATH_TRIM_END = 72
-
--- State
-local campaignButtons = {}
-local pulseTime = 0
-local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
+local DIFFICULTIES = {"easy", "normal", "hard"}
 local MEDAL_NAMES = {"bronze", "silver", "gold"}
-local medalR = 9
-local medalGap = 10
-local medalInsetX = 22
-local medalInsetY = 20
-local getMapStats
+local DIFFICULTY_COLORS = {
+	easy = Theme.ui.good,
+	normal = Theme.ui.warn,
+	hard = Theme.ui.bad,
+}
+local DIFFICULTY_HINTS = {
+	easy = "campaign.difficultyEasy",
+	normal = "campaign.difficultyNormal",
+	hard = "campaign.difficultyHard",
+}
 
-local function hideMedalTooltip()
-	Tooltip.hide()
+local buttons = {}
+local pulseTime = 0
+local hoveredMedal
+local listOffset = 0
+
+local function statsFor(mapId)
+	return Save.data.mapStats and Save.data.mapStats[mapId]
 end
 
-local function updateMedalTooltip(mapId, previewX, previewY)
-	local stats = getMapStats(mapId)
-	local earnedCount = stats and stats.completedDifficulty and Medals.getCount(stats.completedDifficulty) or 0
-	local mx, my = love.mouse.getPosition()
-	local step = medalR * 2 + medalGap
-
-	for tier = 1, earnedCount do
-		-- These are the three medal hit rectangles, matching Medals.draw's
-		-- centers and diameter exactly.
-		local x = previewX + medalInsetX + (tier - 1) * step
-		local y = previewY + medalInsetY
-		local w, h = medalR * 2, medalR * 2
-
-		if mx >= x and mx <= x + w and my >= y and my <= y + h then
-			local difficultyKey = DIFFICULTY_ORDER[tier]
-			local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[difficultyKey]
-			local earnedDate = L("campaign.medalDateUnavailable")
-			if type(timestamp) == "number" then
-				earnedDate = os.date(L("campaign.medalDateFormat"), timestamp)
-			end
-
-			Tooltip.show({
-				title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[tier]), L("difficulty." .. difficultyKey)),
-				rows = {{label = L("campaign.medalEarnedOn"), value = earnedDate}},
-			})
-			return
-		end
+local function isMapLocked(index)
+	if RunModes.isEndless(State) then
+		local stats = statsFor(Maps[index].id)
+		return not (stats and stats.completedDifficulty)
 	end
-
-	hideMedalTooltip()
+	return not Save.isMapUnlocked(index, Maps[index].id)
 end
 
-local function getDifficultyIndex(key)
-	for i, difficultyKey in ipairs(DIFFICULTY_ORDER) do
-		if difficultyKey == key then
-			return i
-		end
+local function difficultyIndex(key)
+	for i, value in ipairs(DIFFICULTIES) do
+		if value == key then return i end
 	end
-
 	return 2
 end
 
-local function cycleDifficulty(dir)
-	local current = Save.data.settings.difficulty or Difficulty.default
-	local index = getDifficultyIndex(current)
-	local nextIndex = index + dir
-
-	if nextIndex < 1 then
-		nextIndex = #DIFFICULTY_ORDER
-	elseif nextIndex > #DIFFICULTY_ORDER then
-		nextIndex = 1
-	end
-
-	local nextDifficulty = DIFFICULTY_ORDER[nextIndex]
-
-	Save.data.settings.difficulty = nextDifficulty
-	Difficulty.set(nextDifficulty)
+local function selectDifficulty(key)
+	if Save.data.settings.difficulty == key then return end
+	Save.data.settings.difficulty = key
+	Difficulty.set(key)
 	Save.markDirty()
 	Sound.play("uiMove")
 end
 
-local function difficultyButtonLabel()
-	local current = Save.data.settings.difficulty or Difficulty.default
-
-	return format("%s: %s", L("settings.difficulty"), L("difficulty." .. current))
+local function panel(x, y, w, h, selected)
+	lg.setColor(selected and Theme.ui.selected or Theme.outline.color)
+	lg.rectangle("fill", x - 2, y - 2, w + 4, h + 4, 10)
+	lg.setColor(Theme.ui.panel2)
+	lg.rectangle("fill", x, y, w, h, 8)
 end
 
--- Helpers
-local function isMapLocked(i)
-	if RunModes.isEndless(State) then
-		local stats = Save.data.mapStats and Save.data.mapStats[Maps[i].id]
-		return not (stats and stats.completedDifficulty)
-	end
-	return not Save.isMapUnlocked(i, Maps[i].id)
+local function divider(x, y, w)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.12)
+	lg.rectangle("fill", x, y, w, 1)
 end
 
-local function pointAlongPath(path, distance)
-	local points = path.points
-	for i = 2, #points do
-		local point = points[i]
-		if distance <= point.distance then
-			local previous = points[i - 1]
-			local segmentLength = point.distance - previous.distance
-			local progress = segmentLength > 0 and (distance - previous.distance) / segmentLength or 0
-			return previous.x + (point.x - previous.x) * progress,
-				previous.y + (point.y - previous.y) * progress
-		end
-	end
-
-	local last = points[#points]
-	return last.x, last.y
-end
-
-local function drawPathCurrent(entry, previewX, previewY, pulseT)
-	local path = entry.previewPath
-	local totalLen = path and path.totalLength or 0
-	if totalLen <= 0 then return end
-
-	-- Animate along path
-	local speed = 140
-	local trimStart = math.min(PATH_TRIM_START, totalLen * 0.45)
-	local trimEnd = math.min(PATH_TRIM_END, totalLen * 0.45)
-	local animLen = totalLen - trimStart - trimEnd
-	if animLen <= 0 then
-		return
-	end
-
-	local dist = trimStart + ((pulseT * speed) % animLen)
-	local tailDist = 55
-	local tailMaxAlpha = 0.28
-	local fadeWindow = math.min(36, animLen * 0.2)
-	local fadeIn = 1
-	local fadeOut = 1
-
-	if fadeWindow > 0 then
-		fadeIn = math.min(1, (dist - trimStart) / fadeWindow)
-		fadeOut = math.min(1, (trimStart + animLen - dist) / fadeWindow)
-	end
-
-	local headAlphaScale = math.min(fadeIn, fadeOut)
-
-	local headX, headY = pointAlongPath(path, dist)
-	local tail = 0
-	while tail < tailDist do
-		local trailX, trailY = pointAlongPath(path, math.max(trimStart, dist - tail))
-		local fade = 1 - tail / tailDist
-		local alpha = tailMaxAlpha * fade * fade * headAlphaScale
-		lg.setColor(1, 1, 1, alpha)
-		lg.circle("fill", previewX + trailX, previewY + trailY, 4 + fade * 2)
-		tail = tail + 8
-	end
-
-	lg.setColor(1, 1, 1, 0.9 * headAlphaScale)
-	lg.circle("fill", previewX + headX, previewY + headY, 3)
-end
-
-local function pointInTriangle(px, py, ax, ay, bx, by, cx, cy)
-	if ax == nil or ay == nil or bx == nil or by == nil or cx == nil or cy == nil then
-		return false
-	end
-	local function sign(px, py, ax, ay, bx, by)
-		return (px - bx) * (ay - by) - (ax - bx) * (py - by)
-	end
-
-	local b1 = sign(px, py, ax, ay, bx, by) < 0
-	local b2 = sign(px, py, bx, by, cx, cy) < 0
-	local b3 = sign(px, py, cx, cy, ax, ay) < 0
-
-	return (b1 == b2) and (b2 == b3)
-end
-
-local function resolveArrowColor(enabled, hover)
-	if not enabled then
-		return colorDisabled
-	end
-
-	if hover then
-		return colorHover
-	end
-
-	return colorEnabled
-end
-
-local function drawTriangleWithShadow(points, color)
-	-- Shadow
-	lg.setColor(colorShadow)
-	lg.polygon("fill", points[1] + 1, points[2] + 1, points[3] + 1, points[4] + 1, points[5] + 1, points[6] + 1)
-
-	-- Main triangle
-	lg.setColor(color)
-	lg.polygon("fill", unpack(points))
-end
-
-getMapStats = function(mapId)
-	local stats = Save.data.mapStats
-
-	return stats and stats[mapId]
-end
-
-local function getCompletionString(mapId)
-	local s = getMapStats(mapId)
-
-	if not s then
-		return nil
-	end
-
-	if s.completedDifficulty then
-		local diff = L("difficulty." .. s.completedDifficulty)
-		return L("campaign.completed", diff)
-	end
-
-	return nil
-end
-
-local function localizedTowerList(kinds)
-	local names = {}
-
-	for _, kind in ipairs(kinds or {}) do
-		local def = Towers.TowerDefs[kind]
-		names[#names + 1] = L((def and def.nameKey) or ("tower." .. kind))
-	end
-
-	return table.concat(names, L("campaign.previewListSeparator"))
-end
-
-local function buildPreviewMessages(map)
-	local messages = {}
-	local reward = CampaignUnlocks.getRewardForMap(map)
-
-	if #(map.introducesEnemies or {}) > 0 then
-		local names = {}
-		for _, enemyId in ipairs(map.introducesEnemies) do
-			local def = EnemyDefs[enemyId]
-			names[#names + 1] = L((def and def.nameKey) or ("enemy." .. enemyId))
-		end
-		messages[#messages + 1] = L(#names == 1 and "campaign.newEnemy" or "campaign.newEnemies", table.concat(names, L("campaign.previewListSeparator")))
-	end
-
-	if reward then
-		local rewardLabel = reward.labelKey and L(reward.labelKey) or reward.label
-		if reward.type == "tower" then
-			messages[#messages + 1] = L("campaign.clearReward", rewardLabel or localizedTowerList({reward.id}))
-		elseif rewardLabel then
-			messages[#messages + 1] = L("campaign.clearReward", rewardLabel)
-		end
-	end
-
-	return messages
-end
-
-local function layoutCampaignButtons(cx, buttonsStartY)
-	for i, btn in ipairs(campaignButtons) do
-		btn.x = cx - btn.w * 0.5
-		btn.y = buttonsStartY + (i - 1) * gap
-		btn.enabled = (btn.id ~= "play") or not isMapLocked(State.mapIndex)
-
-		if btn.id == "difficulty" then
-			btn.label = difficultyButtonLabel()
-		end
-	end
-end
-
-local function getCampaignLayout(entry)
+local function layout()
 	local sw, sh = lg.getDimensions()
-	local preview = entry.canvas
-	local pw, ph = preview:getWidth(), preview:getHeight()
-	local cx = floor(sw * 0.5)
-	local buttonsBlockH = (#campaignButtons - 1) * gap + campaignButtons[1].h
-	local contentH = ph + PAD_PREVIEW + PAD_TITLE + PAD_META + buttonsBlockH
-	local boxW = pw + paddingX * 2
-	local boxH = contentH + paddingY * 2
-	local boxX = cx - boxW * 0.5
-	local boxY = floor(sh * 0.5 - boxH * 0.5)
-	local previewX = cx - pw * 0.5
-	local previewY = boxY + paddingY
-	local textY = previewY + ph + PAD_PREVIEW + TITLE_OFFSET
-
+	local margin = max(18, floor(sw * 0.022))
+	local headerH = max(78, floor(sh * 0.12))
+	local footerH = max(62, floor(sh * 0.09))
+	local gap = max(10, floor(sw * 0.009))
+	local contentY = headerH
+	local contentH = sh - headerH - footerH
+	local leftW = floor(sw * 0.27)
+	local rightW = floor(sw * 0.245)
+	local centerW = sw - margin * 2 - gap * 2 - leftW - rightW
 	return {
-		sw = sw,
-		sh = sh,
-		cx = cx,
-		preview = preview,
-		previewX = previewX,
-		previewY = previewY,
-		previewW = pw,
-		previewH = ph,
-		boxX = boxX,
-		boxY = boxY,
-		boxW = boxW,
-		boxH = boxH,
-		textY = textY,
-		arrowY = textY + 28,
-		buttonsStartY = textY + PAD_TITLE + PAD_META,
+		sw = sw, sh = sh, margin = margin, headerH = headerH, footerH = footerH,
+		gap = gap, contentY = contentY, contentH = contentH,
+		left = {x = margin, y = contentY, w = leftW, h = contentH},
+		center = {x = margin + leftW + gap, y = contentY, w = centerW, h = contentH},
+		right = {x = sw - margin - rightW, y = contentY, w = rightW, h = contentH},
 	}
 end
 
-local function canNavigateMaps(direction)
+local function visibleRows(l)
+	local rowH = 66
+	return rowH, max(1, floor((l.left.h - 18) / rowH))
+end
+
+local function keepSelectedVisible(l)
+	local _, count = visibleRows(l)
+	if State.mapIndex <= listOffset then listOffset = State.mapIndex - 1 end
+	if State.mapIndex > listOffset + count then listOffset = State.mapIndex - count end
+	listOffset = max(0, min(listOffset, max(0, #Maps - count)))
+end
+
+local function navigate(direction)
 	local nextIndex = State.mapIndex + direction
-	if nextIndex < 1 or nextIndex > #Maps then
-		return false
-	end
-
-	return direction < 0 or not isMapLocked(nextIndex)
-end
-
-local function navigateMaps(direction)
-	if not canNavigateMaps(direction) then
+	if nextIndex < 1 or nextIndex > #Maps or (direction > 0 and isMapLocked(nextIndex)) then
 		Sound.play("uiError")
-		return false
+		return
 	end
-
-	hideMedalTooltip()
-	State.mapIndex = State.resolveMapIndex(State.mapIndex + direction)
+	Tooltip.hide()
+	State.mapIndex = State.resolveMapIndex(nextIndex)
+	keepSelectedVisible(layout())
 	Sound.play("uiMove")
-	return true
 end
 
-local function getArrowPoints(layout, direction)
-	local ax
-	if direction < 0 then
-		ax = layout.boxX + paddingX + ARROW_SIZE * 2
-		return {ax + ARROW_SIZE * 0.5, layout.arrowY - ARROW_SIZE, ax - ARROW_SIZE * 0.5, layout.arrowY, ax + ARROW_SIZE * 0.5, layout.arrowY + ARROW_SIZE}
+local function playMap()
+	if isMapLocked(State.mapIndex) then Sound.play("uiError"); return end
+	Tooltip.hide()
+	Sound.play("uiConfirm")
+	State.worldMapIndex = State.mapIndex
+	RunModes.set(State, RunModes.get(State))
+	State.ignoreStats = false
+	State.mode = "game"
+	Backdrop.stop()
+	Difficulty.set(Save.data.settings.difficulty)
+	resetGame()
+	Sound.playMusic("gameplay")
+end
+
+local function goBack()
+	Tooltip.hide()
+	Save.flush()
+	State.mode = "menu"
+	Steam.setRichPresence(L("presence.menu"))
+	Sound.play("uiBack")
+end
+
+local function drawHeader(l)
+	Fonts.set("title")
+	lg.setColor(Theme.ui.text)
+	Text.printShadow(L("campaign.title"), l.margin, 20)
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
+	Text.printShadow(L("campaign.selectMap"), l.margin, 61)
+
+	local startX = l.left.x + l.left.w + 18
+	local available = l.right.x - startX - 14
+	local step = available / (#Maps - 1)
+	local y = 49
+	lg.setLineWidth(4)
+	for i = 1, #Maps - 1 do
+		lg.setColor(i < State.mapIndex and Theme.ui.good or Theme.ui.panel)
+		lg.line(startX + (i - 1) * step, y, startX + i * step, y)
+	end
+	for i = 1, #Maps do
+		local x = startX + (i - 1) * step
+		local locked = isMapLocked(i)
+		local selected = i == State.mapIndex
+		lg.setColor(selected and Theme.ui.warn or (locked and Theme.ui.panel or Theme.ui.good))
+		lg.circle("fill", x, y, selected and 17 or 13)
+		lg.setColor(Theme.outline.color)
+		lg.circle("line", x, y, selected and 17 or 13)
+		Fonts.set("ui")
+		lg.setColor(selected and Theme.outline.color or Theme.ui.text)
+		lg.printf(locked and "•" or tostring(i), x - 12, y - 9, 24, "center")
+	end
+	lg.setLineWidth(1)
+
+	local total = 0
+	for _, map in ipairs(Maps) do
+		local stats = statsFor(map.id)
+		total = total + (stats and Medals.getCount(stats.completedDifficulty) or 0)
+	end
+	local badgeW = 94
+	panel(l.sw - l.margin - badgeW, 18, badgeW, 45)
+	Medals.drawTier(l.sw - l.margin - badgeW + 20, 40, 3, 9)
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.text)
+	lg.printf(format("%d/%d", total, #Maps * 3), l.sw - l.margin - badgeW + 35, 31, 52, "center")
+end
+
+local function drawMapList(l)
+	panel(l.left.x, l.left.y, l.left.w, l.left.h)
+	local rowH, count = visibleRows(l)
+	local rowX = l.left.x + 10
+	local rowW = l.left.w - 20
+	for visible = 1, count do
+		local index = listOffset + visible
+		local map = Maps[index]
+		if not map then break end
+		local y = l.left.y + 10 + (visible - 1) * rowH
+		local selected = index == State.mapIndex
+		local locked = isMapLocked(index)
+		lg.setColor(selected and Theme.ui.selected or Theme.ui.panel)
+		lg.rectangle("fill", rowX, y, rowW, rowH - 7, 7)
+		local entry = MapPreviewCache.get(map.id)
+		if entry then
+			local scale = min(1, 104 / entry.canvas:getWidth(), 49 / entry.canvas:getHeight())
+			lg.setColor(1, 1, 1, locked and 0.28 or 0.9)
+			lg.draw(entry.canvas, rowX + 4, y + 5, 0, scale, scale)
+		end
+		local textX = rowX + 116
+		Fonts.set("ui")
+		lg.setColor(Theme.ui.text)
+		lg.print(index .. "  " .. L(map.nameKey), textX, y + 7)
+		if locked then
+			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.55)
+			lg.print(L("campaign.locked"), textX, y + 31)
+		else
+			local stats = statsFor(map.id)
+			Medals.draw(textX, y + 31, stats and Medals.getCount(stats.completedDifficulty) or 0, 7, 6, pulseTime)
+		end
+	end
+end
+
+local function recordValue(record, key, fallback)
+	local value = record and record[key]
+	if value == nil then return fallback end
+	if key == "fastestClear" and type(value) == "number" then
+		return format("%d:%02d", floor(value / 60), floor(value % 60))
+	end
+	return tostring(value)
+end
+
+local function drawCenter(l, map, entry)
+	panel(l.center.x, l.center.y, l.center.w, l.center.h)
+	local pad = 20
+	local x, y, w = l.center.x + pad, l.center.y + 18, l.center.w - pad * 2
+	Fonts.set("title")
+	lg.setColor(Theme.ui.text)
+	lg.print(L(map.nameKey), x, y)
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75)
+	lg.print(L("campaign.mapOf", State.mapIndex, #Maps), x, y + 43)
+
+	local stats = statsFor(map.id)
+	local earned = stats and Medals.getCount(stats.completedDifficulty) or 0
+	local clusterW = Medals.getClusterSize(13, 9)
+	Medals.draw(x + w - clusterW, y + 5, earned, 13, 9, pulseTime)
+
+	local previewY = y + 70
+	local maxPreviewH = max(120, floor(l.center.h * 0.40))
+	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
+	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
+	local previewX = x + (w - previewW) * 0.5
+	lg.setColor(1, 1, 1, isMapLocked(State.mapIndex) and 0.35 or 1)
+	lg.draw(entry.canvas, previewX, previewY, 0, scale, scale)
+	lg.setColor(Theme.outline.color)
+	lg.setLineWidth(3)
+	lg.rectangle("line", previewX, previewY, previewW, previewH, 7)
+	lg.setLineWidth(1)
+
+	local infoY = previewY + previewH + 12
+	lg.setColor(Theme.ui.panel)
+	lg.rectangle("fill", x, infoY, w, 52, 7)
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.text)
+	lg.printf(L("campaign.hints." .. map.id), x + 12, infoY + 8, w - 24, "left")
+
+	local record = Save.getMapRecords(map.id, RunModes.get(State), Save.data.settings.difficulty or "normal")
+	local statY = infoY + 64
+	local cellGap = 8
+	local cellW = (w - cellGap * 2) / 3
+	local values = {
+		{L("campaign.waves"), tostring(CampaignWaveDefs.getFinalWave(map) or "—")},
+		{L("campaign.enemies"), tostring(CampaignWaveDefs.getTotalEnemyCount(map) or "—")},
+		{L("campaign.bestTime"), recordValue(record, "fastestClear", "—")},
+	}
+	for i, item in ipairs(values) do
+		local cellX = x + (i - 1) * (cellW + cellGap)
+		lg.setColor(Theme.ui.panel)
+		lg.rectangle("fill", cellX, statY, cellW, 55, 7)
+		Fonts.set("ui")
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
+		lg.printf(item[1], cellX, statY + 5, cellW, "center")
+		lg.setColor(Theme.ui.text)
+		lg.printf(item[2], cellX, statY + 27, cellW, "center")
 	end
 
-	ax = layout.boxX + layout.boxW - paddingX - ARROW_SIZE * 2
-	return {ax - ARROW_SIZE * 0.5, layout.arrowY - ARROW_SIZE, ax + ARROW_SIZE * 0.5, layout.arrowY, ax - ARROW_SIZE * 0.5, layout.arrowY + ARROW_SIZE}
+	local rewardsY = statY + 67
+	if rewardsY + 44 < l.center.y + l.center.h then
+		lg.setColor(Theme.ui.panel)
+		lg.rectangle("fill", x, rewardsY, w, 48, 7)
+		lg.setColor(Theme.ui.text)
+		lg.print(L("campaign.completionRewards"), x + 10, rewardsY + 5)
+		local reward = CampaignUnlocks.getRewardForMap(map)
+		local rewardText = reward and (reward.labelKey and L(reward.labelKey) or reward.label) or L("campaign.medalReward")
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
+		lg.print(rewardText, x + 10, rewardsY + 26)
+	end
 end
 
-local function pointInArrow(x, y, layout, direction)
-	local points = getArrowPoints(layout, direction)
-	return pointInTriangle(x, y, points[1], points[2], points[3], points[4], points[5], points[6])
+local function drawRight(l, map)
+	panel(l.right.x, l.right.y, l.right.w, l.right.h)
+	local pad = 20
+	local x, y, w = l.right.x + pad, l.right.y + 18, l.right.w - pad * 2
+	Fonts.set("menu")
+	lg.setColor(Theme.ui.text)
+	lg.print(L("settings.difficulty"), x, y)
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
+	lg.print(L("campaign.difficultyDescription"), x, y + 31)
+	local selected = Save.data.settings.difficulty or "normal"
+	local cardY = y + 61
+	for i, key in ipairs(DIFFICULTIES) do
+		local cy = cardY + (i - 1) * 67
+		local active = key == selected
+		lg.setColor(active and Theme.ui.buttonSelected or Theme.ui.panel)
+		lg.rectangle("fill", x, cy, w, 57, 7)
+		lg.setColor(DIFFICULTY_COLORS[key])
+		lg.circle("fill", x + 20, cy + 20, 10)
+		lg.setColor(Theme.outline.color)
+		lg.circle("fill", x + 17, cy + 18, 2)
+		lg.circle("fill", x + 23, cy + 18, 2)
+		Fonts.set("ui")
+		lg.setColor(Theme.ui.text)
+		lg.print(L("difficulty." .. key), x + 40, cy + 8)
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
+		lg.print(L(DIFFICULTY_HINTS[key]), x + 40, cy + 30)
+		if active then
+			lg.setColor(Theme.ui.good)
+			lg.circle("fill", x + w - 19, cy + 28, 10)
+			lg.setColor(Theme.outline.color)
+			lg.printf("✓", x + w - 27, cy + 19, 16, "center")
+		end
+	end
+
+	local resourcesY = cardY + 3 * 67 + 10
+	divider(x, resourcesY, w)
+	Fonts.set("menu")
+	lg.setColor(Theme.ui.text)
+	lg.print(L("campaign.startingResources"), x, resourcesY + 15)
+	local def = Difficulty.defs[selected] or Difficulty.defs.normal
+	local resourceY = resourcesY + 55
+	local resourceW = (w - 8) / 3
+	local resources = {
+		{format("$%d", def.startMoney), L("campaign.startingMoney"), Theme.ui.money},
+		{tostring(def.startLives), L("campaign.lives"), Theme.ui.lives},
+		{format("%d%%", floor(def.sellRefund * 100 + 0.5)), L("campaign.sellRefund"), Theme.ui.wave},
+	}
+	for i, resource in ipairs(resources) do
+		local rx = x + (i - 1) * (resourceW + 4)
+		lg.setColor(Theme.ui.panel)
+		lg.rectangle("fill", rx, resourceY, resourceW, 57, 7)
+		Fonts.set("ui")
+		lg.setColor(resource[3])
+		lg.printf(resource[1], rx, resourceY + 8, resourceW, "center")
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
+		lg.printf(resource[2], rx, resourceY + 31, resourceW, "center")
+	end
+
+	local play = buttons.play
+	play.x, play.y, play.w, play.h = x, l.right.y + l.right.h - 74, w, 52
+	play.label = L("campaign.playMap") .. "  •  " .. L(map.nameKey) .. " - " .. L("difficulty." .. selected)
+	play.enabled = not isMapLocked(State.mapIndex)
+	Fonts.set("ui")
+	Button.draw(play)
 end
 
--- Load
 function Screen.load()
-	AbilityLoadout.refresh()
-	campaignButtons = {
-		{
-			id = "difficulty",
-			label = difficultyButtonLabel(),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				cycleDifficulty(1)
-			end
-		},
-
-		{
-			id = "play",
-			label = L("menu.play"),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				hideMedalTooltip()
-				if isMapLocked(State.mapIndex) then
-					Sound.play("uiError")
-					return
-				end
-
-				Sound.play("uiConfirm")
-
-				State.worldMapIndex = State.mapIndex
-				RunModes.set(State, RunModes.get(State))
-				State.ignoreStats = false
-				State.mode = "game"
-				Backdrop.stop()
-				Difficulty.set(Save.data.settings.difficulty)
-				resetGame()
-				Sound.playMusic("gameplay")
-			end
-		},
-
-		{
-			id = "back",
-			label = L("menu.back"),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				hideMedalTooltip()
-				Save.flush()
-				State.mode = "menu"
-				Steam.setRichPresence(L("presence.menu"))
-				Sound.play("uiBack")
-			end
-		}
+	buttons = {
+		play = {id = "play", label = L("campaign.playMap"), onClick = playMap},
+		back = {id = "back", label = "←  " .. L("menu.back"), w = 140, h = 42, onClick = goBack},
 	}
 end
 
 function Screen.update(dt)
 	pulseTime = pulseTime + dt
-
 	Backdrop.update(dt)
 	Medals.update(dt)
-
-	local index = State.mapIndex
-	local map = Maps[index]
-	local entry = MapPreviewCache.get(map.id)
-
-	if not entry then
-		hideMedalTooltip()
-		return
-	end
-
-	local layout = getCampaignLayout(entry)
-	updateMedalTooltip(map.id, layout.previewX, layout.previewY)
-
-	-- Buttons
-	layoutCampaignButtons(layout.cx, layout.buttonsStartY)
-
+	local l = layout()
+	keepSelectedVisible(l)
+	buttons.back.x, buttons.back.y = l.margin, l.sh - l.footerH + 10
+	local rightPad = 20
+	buttons.play.x = l.right.x + rightPad
+	buttons.play.y = l.right.y + l.right.h - 74
+	buttons.play.w = l.right.w - rightPad * 2
+	buttons.play.h = 52
+	buttons.play.enabled = not isMapLocked(State.mapIndex)
 	local mx, my = love.mouse.getPosition()
-	for i, btn in ipairs(campaignButtons) do
-		Button.update(btn, mx, my, dt)
+	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
+
+	local map = Maps[State.mapIndex]
+	local stats = statsFor(map.id)
+	local count = stats and Medals.getCount(stats.completedDifficulty) or 0
+	hoveredMedal = nil
+	if count > 0 then
+		-- Medal tooltips remain available in both the list and detail presentation.
+		local step = 35
+		local lcenter = l.center
+		local clusterW = Medals.getClusterSize(13, 9)
+		local startX = lcenter.x + lcenter.w - 20 - clusterW
+		for tier = 1, count do
+			if mx >= startX + (tier - 1) * step and mx <= startX + (tier - 1) * step + 26
+				and my >= lcenter.y + 23 and my <= lcenter.y + 49 then hoveredMedal = tier end
+		end
 	end
-	AbilityLoadout.update(dt)
+	if hoveredMedal then
+		local key = DIFFICULTIES[hoveredMedal]
+		local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[key]
+		local date = type(timestamp) == "number" and os.date(L("campaign.medalDateFormat"), timestamp)
+			or L("campaign.medalDateUnavailable")
+		Tooltip.show({title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[hoveredMedal]), L("difficulty." .. key)), rows = {{label = L("campaign.medalEarnedOn"), value = date}}})
+	else Tooltip.hide() end
 end
 
 function Screen.draw()
 	Backdrop.draw()
-
-	local index = State.mapIndex
-	local map = Maps[index]
-	local mapCount = #Maps
+	local l = layout()
+	lg.setColor(Theme.ui.screenDim)
+	lg.rectangle("fill", 0, 0, l.sw, l.sh)
+	drawHeader(l)
+	drawMapList(l)
+	local map = Maps[State.mapIndex]
 	local entry = MapPreviewCache.get(map.id)
+	if entry then drawCenter(l, map, entry) end
+	drawRight(l, map)
 
-	if not entry then
-		return
-	end
-
-	local layout = getCampaignLayout(entry)
-	local sw, sh = layout.sw, layout.sh
-	local previewX, previewY = layout.previewX, layout.previewY
-	local pw, ph = layout.previewW, layout.previewH
-
-	-- Dim background
-	lg.setColor(colorDim)
-	lg.rectangle("fill", 0, 0, sw, sh)
-
-	-- Panel
-	lg.setColor(colorOutline)
-	lg.rectangle("fill", layout.boxX - outlineW, layout.boxY - outlineW, layout.boxW + outlineW * 2, layout.boxH + outlineW * 2, outerRadius)
-
-	lg.setColor(colorBackdrop)
-	lg.rectangle("fill", layout.boxX, layout.boxY, layout.boxW, layout.boxH, innerRadius)
-
-	-- Preview
-	local locked = isMapLocked(index)
-	local alpha = locked and 0.35 or 1.0
-
-	lg.setColor(1, 1, 1, alpha)
-
-	lg.draw(layout.preview, previewX, previewY)
-
-	drawPathCurrent(entry, previewX, previewY, pulseTime)
-
-	-- Completion medals
-	local stats = getMapStats(map.id)
-	local count = stats and stats.completedDifficulty and Medals.getCount(stats.completedDifficulty) or 0
-
-	local platePadX = 10
-	local platePadY = 8
-
-	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
-
-	local plateX = previewX + medalInsetX - platePadX
-	local plateY = previewY + medalInsetY - platePadY
-	local plateW = clusterW + platePadX * 2
-	local plateH = clusterH + platePadY * 2
-
-	lg.setColor(colorDim)
-	lg.rectangle("fill", plateX, plateY, plateW, plateH, 8, 8)
-
-	Medals.draw(previewX + medalInsetX, previewY + medalInsetY, count, medalR, medalGap, pulseTime)
-
-	--[[ Completion stats
-	local statText = getCompletionString(map.id)
-
-	if statText then
-		local pad = 8
-		local offsetX = 12 -- move right
-		local offsetY = 4 -- move up
-
-		local font = Fonts.get("ui")
-
-		Fonts.set("ui")
-
-		local tw = font:getWidth(statText)
-		local th = 16
-
-		local bx = previewX + pad + offsetX
-		local by = previewY + ph - th - pad * 2 - offsetY
-		local bw = tw + pad * 2
-		local bh = th + pad * 2
-
-		-- Backdrop
-		lg.setColor(colorDim)
-		lg.rectangle("fill", bx - pad, by - pad, bw, bh, 8, 8)
-
-		-- Text
-		lg.setColor(colorText)
-		lg.print(statText, bx, by)
-	end]]
-
-	Fonts.set("title")
-
-	-- Frame
-	lg.setColor(colorOutline)
-	lg.setLineWidth(3)
-	lg.rectangle("line", previewX, previewY, pw, ph)
-	lg.setLineWidth(1)
-
-	-- Locked overlay
-	if locked then
-		lg.setColor(0.01, 0.01, 0.01, 0.45)
-		lg.rectangle("fill", previewX, previewY, pw, ph, 12, 12)
-
-		lg.setColor(colorText)
-		Text.printfShadow(L("campaign.locked"), previewX, previewY + ph * 0.5 - 16, pw, "center")
-	end
-
-	local textY = layout.textY
-
-	-- Arrows
-	local leftEnabled = canNavigateMaps(-1)
-	local rightEnabled = canNavigateMaps(1)
-	local mx, my = love.mouse.getPosition()
-
-	-- Left
-	do
-		local points = getArrowPoints(layout, -1)
-		local hover = leftEnabled and pointInArrow(mx, my, layout, -1)
-
-		local color = resolveArrowColor(leftEnabled, hover)
-		drawTriangleWithShadow(points, color)
-	end
-
-	-- Right
-	do
-		local points = getArrowPoints(layout, 1)
-		local hover = rightEnabled and pointInArrow(mx, my, layout, 1)
-
-		local color = resolveArrowColor(rightEnabled, hover)
-		drawTriangleWithShadow(points, color)
-	end
-
-	-- Title
-	lg.setColor(colorText)
-	Text.printfShadow(L(map.nameKey), 0, textY, sw, "center")
-
+	buttons.back.x, buttons.back.y = l.margin, l.sh - l.footerH + 10
 	Fonts.set("ui")
-
-	Text.printfShadow(L("campaign.mapOf", index, mapCount), 0, textY + PAD_TITLE, sw, "center")
-
-	local previewMessages = buildPreviewMessages(map)
-	local metaY = textY + PAD_TITLE + 20
-	for i, message in ipairs(previewMessages) do
-		Text.printfShadow(message, 0, metaY + (i - 1) * 18, sw, "center")
-	end
-	local records = Save.getMapRecords(map.id, RunModes.get(State), Save.data.settings.difficulty or Difficulty.default)
-	local recordRows = RecordRows.build(records)
-	if #recordRows > 0 then
-		local summary = {}
-		for _, row in ipairs(recordRows) do summary[#summary + 1] = row.label .. ": " .. tostring(row.value) end
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.7)
-		Text.printfShadow(table.concat(summary, "  •  "), layout.boxX + paddingX,
-			layout.buttonsStartY - 22, layout.boxW - paddingX * 2, "center")
-	end
-
-	-- Buttons
-	layoutCampaignButtons(layout.cx, layout.buttonsStartY)
-
-	Fonts.set("menu")
-
-	for i, btn in ipairs(campaignButtons) do
-		Button.draw(btn)
-	end
-
-	AbilityLoadout.draw()
+	Button.draw(buttons.back)
 end
 
 function Screen.keypressed(key)
-	if key == "left" then
-		navigateMaps(-1)
-	elseif key == "right" then
-		navigateMaps(1)
-	elseif key == "up" then
-		cycleDifficulty(-1)
-	elseif key == "down" then
-		cycleDifficulty(1)
-	elseif key == "return" or key == "kpenter" or key == "space" then
-		for _, btn in ipairs(campaignButtons) do
-			if btn.id == "play" and btn.enabled ~= false and btn.onClick then
-				btn.onClick()
-				return true
-			end
-		end
-	elseif key == "escape" then
-		hideMedalTooltip()
-		Save.flush()
-		State.mode = "menu"
-		Steam.setRichPresence(L("presence.menu"))
-		Sound.play("uiBack")
-	end
+	if key == "left" then navigate(-1)
+	elseif key == "right" then navigate(1)
+	elseif key == "up" or key == "down" then
+		local direction = key == "up" and -1 or 1
+		local i = difficultyIndex(Save.data.settings.difficulty or "normal")
+		selectDifficulty(DIFFICULTIES[((i - 1 + direction) % #DIFFICULTIES) + 1])
+	elseif key == "return" or key == "kpenter" or key == "space" then playMap()
+	elseif key == "escape" then goBack() end
 end
 
 function Screen.gamepadpressed(_, button)
-	local mappedKey = ({dpup = "up", dpdown = "down"})[button]
-	if mappedKey then
-		Screen.keypressed(mappedKey)
+	local key = ({dpup = "up", dpdown = "down", dpleft = "left", dpright = "right", a = "return", b = "escape"})[button]
+	if key then Screen.keypressed(key); return true end
+end
+
+function Screen.mousepressed(x, y, button)
+	if button ~= 1 then return end
+	local l = layout()
+	local rowH, count = visibleRows(l)
+	if x >= l.left.x + 10 and x <= l.left.x + l.left.w - 10 and y >= l.left.y + 10 then
+		local row = floor((y - l.left.y - 10) / rowH) + 1
+		if row >= 1 and row <= count then
+			local index = listOffset + row
+			if Maps[index] and not isMapLocked(index) then State.mapIndex = index; Sound.play("uiMove"); return true end
+		end
+	end
+	local dx, dy, dw = l.right.x + 20, l.right.y + 79, l.right.w - 40
+	for i, key in ipairs(DIFFICULTIES) do
+		local cy = dy + (i - 1) * 67
+		if x >= dx and x <= dx + dw and y >= cy and y <= cy + 57 then selectDifficulty(key); return true end
+	end
+	for _, item in pairs(buttons) do if Button.mousepressed(item, x, y, button) then return true end end
+end
+
+function Screen.mousereleased(x, y, button)
+	for _, item in pairs(buttons) do if Button.mousereleased(item, x, y, button) then return true end end
+end
+
+function Screen.wheelmoved(_, y)
+	local l = layout()
+	local mx = love.mouse.getPosition()
+	if mx >= l.left.x and mx <= l.left.x + l.left.w then
+		local _, count = visibleRows(l)
+		listOffset = max(0, min(listOffset - y, max(0, #Maps - count)))
 		return true
 	end
 end
 
-function Screen.mousepressed(x, y, button)
-	if AbilityLoadout.mousepressed(x, y, button) then return true end
-	if button == 1 then
-		local index = State.mapIndex
-		local map = Maps[index]
-		local entry = MapPreviewCache.get(map.id)
-
-		if not entry then
-			return
-		end
-
-		local layout = getCampaignLayout(entry)
-
-		-- Left
-		if canNavigateMaps(-1) and pointInArrow(x, y, layout, -1) then
-			navigateMaps(-1)
-			return true
-		end
-
-		-- Right
-		if canNavigateMaps(1) and pointInArrow(x, y, layout, 1) then
-			navigateMaps(1)
-			return true
-		end
-	end
-
-	-- Buttons
-	for _, btn in ipairs(campaignButtons) do
-		if Button.mousepressed(btn, x, y, button) then
-			return true
-		end
-	end
-end
-
-function Screen.mousereleased(x, y, button)
-	if AbilityLoadout.mousereleased(x, y, button) then return true end
-	for _, btn in ipairs(campaignButtons) do
-		if Button.mousereleased(btn, x, y, button) then
-			return true
-		end
-	end
-end
-
-function Screen.resize(w, h)
-	hideMedalTooltip()
+function Screen.resize()
+	Tooltip.hide()
 	MapPreviewCache.buildAll(520, 312)
 	Backdrop.start()
 end
 
-function Screen.enter()
-	hideMedalTooltip()
-	AbilityLoadout.refresh()
-end
-
-function Screen.leave()
-	hideMedalTooltip()
-end
+function Screen.enter() keepSelectedVisible(layout()) end
+function Screen.leave() Tooltip.hide() end
 
 return Screen
