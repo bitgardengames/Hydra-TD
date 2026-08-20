@@ -26,21 +26,21 @@ local pacingIdentityByMapId = {
 }
 
 local pacingTargetsByMapId = {
-	riverbend = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 6.30, 17.10 }, downtimeBetweenGroups = { 0.08, 1.40 } },
-	switchback = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.81, 16.50 }, downtimeBetweenGroups = { 0.10, 1.75 } },
-	highpass = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 9.27, 15.68 }, downtimeBetweenGroups = { 0.08, 1.47 } },
-	roundabout = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.50, 14.16 }, downtimeBetweenGroups = { 0.08, 0.69 } },
-	gauntlet = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.24, 17.91 }, downtimeBetweenGroups = { 0.52, 2.94 } },
-	snaketrail = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.63, 15.80 }, downtimeBetweenGroups = { 0.25, 2.50 } },
-	backtrack = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.39, 18.59 }, downtimeBetweenGroups = { 0.15, 1.72 } },
-	lowvalley = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.72, 27.47 }, downtimeBetweenGroups = { 0.29, 3.62 } },
-	circuit = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.92, 20.42 }, downtimeBetweenGroups = { 0.13, 1.62 } },
-	outerloop = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.52, 31.23 }, downtimeBetweenGroups = { 0.34, 4.25 } },
-	terrace = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.36, 18.46 }, downtimeBetweenGroups = { 0.14, 1.80 } },
-	highridge = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 8.15, 28.26 }, downtimeBetweenGroups = { 0.24, 3.00 } },
-	crossflow = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 6.05, 17.71 }, downtimeBetweenGroups = { 0.08, 1.04 } },
-	steppingstones = { openingPressure = 10, peakSimultaneous = 10, totalWaveDuration = { 8.60, 39.13 }, downtimeBetweenGroups = { 0.30, 5.35 } },
-	twinloop = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 2.00, 19.26 }, downtimeBetweenGroups = { 0.12, 1.55 } },
+	riverbend = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 6.30, 22.10 }, downtimeBetweenGroups = { 0.08, 1.40 } },
+	switchback = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.81, 21.00 }, downtimeBetweenGroups = { 0.10, 1.75 } },
+	highpass = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 9.27, 19.68 }, downtimeBetweenGroups = { 0.08, 1.47 } },
+	roundabout = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.50, 18.16 }, downtimeBetweenGroups = { 0.08, 0.69 } },
+	gauntlet = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.24, 22.41 }, downtimeBetweenGroups = { 0.52, 2.94 } },
+	snaketrail = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.63, 17.55 }, downtimeBetweenGroups = { 0.25, 2.50 } },
+	backtrack = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.39, 23.71 }, downtimeBetweenGroups = { 0.15, 1.72 } },
+	lowvalley = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.72, 31.53 }, downtimeBetweenGroups = { 0.29, 3.62 } },
+	circuit = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.92, 26.73 }, downtimeBetweenGroups = { 0.13, 1.62 } },
+	outerloop = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.52, 35.69 }, downtimeBetweenGroups = { 0.34, 4.25 } },
+	terrace = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.36, 23.80 }, downtimeBetweenGroups = { 0.14, 1.80 } },
+	highridge = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 8.15, 32.46 }, downtimeBetweenGroups = { 0.24, 3.00 } },
+	crossflow = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 6.05, 23.18 }, downtimeBetweenGroups = { 0.08, 1.04 } },
+	steppingstones = { openingPressure = 10, peakSimultaneous = 11, totalWaveDuration = { 8.60, 43.57 }, downtimeBetweenGroups = { 0.30, 5.35 } },
+	twinloop = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 2.00, 23.85 }, downtimeBetweenGroups = { 0.12, 1.55 } },
 }
 
 -- Consecutive enemies always receive at least half a second of separation.
@@ -71,8 +71,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 13, 0.50, 0.0), g("grunt", 9, 0.50, 0.15), g("grunt", 8, 0.50, 0.12) },
 		-- mixed check: a tight three-pack density exam
 		[9] = { g("grunt", 13, 0.50, 0.0), g("grunt", 10, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- midpoint boss: an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00, 0.0), g("grunt", 12, 0.50, 1.0), g("grunt", 13, 0.50, 0.35), g("grunt", 9, 0.50, 0.25) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("grunt", 17, 0.50, 0.00), g("grunt", 11, 0.50, 0.70) },
+		[12] = { g("grunt", 15, 0.50, 0.00), g("grunt", 15, 0.50, 0.30) },
+		[13] = { g("grunt", 15, 0.50, 0.00), g("grunt", 10, 0.50, 0.15), g("grunt", 9, 0.50, 0.12) },
+		[14] = { g("grunt", 15, 0.50, 0.00), g("grunt", 12, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
+		[15] = { g("grunt", 17, 0.50, 0.00), g("grunt", 17, 0.50, 0.32) },
+		[16] = { g("grunt", 16, 0.50, 0.00), g("grunt", 11, 0.50, 0.15), g("grunt", 10, 0.50, 0.12) },
+		[17] = { g("grunt", 16, 0.50, 0.00), g("grunt", 12, 0.50, 0.08), g("grunt", 11, 0.50, 0.08) },
+		[18] = { g("grunt", 20, 0.50, 0.00), g("grunt", 13, 0.50, 0.70) },
+		[19] = { g("grunt", 17, 0.50, 0.00), g("grunt", 13, 0.50, 0.08), g("grunt", 12, 0.50, 0.08) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("grunt", 15, 0.50, 1.00), g("grunt", 17, 0.50, 0.35), g("grunt", 12, 0.50, 0.25) },
 	},
 	switchback = {
 		-- orientation
@@ -93,8 +105,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 13, 0.50, 0.00), g("grunt", 8, 0.50, 0.19), g("grunt", 7, 0.50, 0.15) },
 		-- mixed check: a tight three-pack density exam
 		[9] = { g("grunt", 12, 0.50, 0.00), g("grunt", 10, 0.50, 0.10), g("grunt", 9, 0.50, 0.10) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- midpoint boss: an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.50, 1.25), g("grunt", 12, 0.50, 0.44), g("grunt", 9, 0.50, 0.31) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("grunt", 17, 0.50, 0.00), g("grunt", 11, 0.50, 0.87) },
+		[12] = { g("grunt", 14, 0.50, 0.00), g("grunt", 15, 0.50, 0.38) },
+		[13] = { g("grunt", 15, 0.50, 0.00), g("grunt", 9, 0.50, 0.19), g("grunt", 8, 0.50, 0.15) },
+		[14] = { g("grunt", 14, 0.50, 0.00), g("grunt", 12, 0.50, 0.10), g("grunt", 10, 0.50, 0.10) },
+		[15] = { g("grunt", 15, 0.50, 0.00), g("grunt", 17, 0.50, 0.41) },
+		[16] = { g("grunt", 16, 0.50, 0.00), g("grunt", 10, 0.50, 0.19), g("grunt", 8, 0.50, 0.15) },
+		[17] = { g("grunt", 15, 0.50, 0.00), g("grunt", 12, 0.50, 0.10), g("grunt", 11, 0.50, 0.10) },
+		[18] = { g("grunt", 20, 0.50, 0.00), g("grunt", 13, 0.50, 0.87) },
+		[19] = { g("grunt", 16, 0.50, 0.00), g("grunt", 13, 0.50, 0.10), g("grunt", 12, 0.50, 0.10) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("grunt", 14, 0.50, 1.25), g("grunt", 15, 0.50, 0.44), g("grunt", 12, 0.50, 0.31) },
 	},
 	highpass = {
 		-- orientation
@@ -115,8 +139,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 12, 0.50, 0.00), g("grunt", 8, 0.50, 0.16), g("grunt", 6, 0.50, 0.13) },
 		-- mixed check: a tight three-pack density exam
 		[9] = { g("grunt", 11, 0.50, 0.00), g("grunt", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- midpoint boss: an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.50, 1.05), g("grunt", 12, 0.50, 0.37), g("grunt", 8, 0.50, 0.26) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("grunt", 16, 0.52, 0.00), g("grunt", 10, 0.50, 0.73) },
+		[12] = { g("grunt", 13, 0.50, 0.00), g("grunt", 14, 0.50, 0.32) },
+		[13] = { g("grunt", 13, 0.50, 0.00), g("grunt", 9, 0.50, 0.16), g("grunt", 7, 0.50, 0.13) },
+		[14] = { g("grunt", 13, 0.50, 0.00), g("grunt", 12, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
+		[15] = { g("grunt", 14, 0.50, 0.00), g("grunt", 15, 0.50, 0.35) },
+		[16] = { g("grunt", 15, 0.50, 0.00), g("grunt", 10, 0.50, 0.16), g("grunt", 7, 0.50, 0.13) },
+		[17] = { g("grunt", 14, 0.50, 0.00), g("grunt", 12, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
+		[18] = { g("grunt", 19, 0.50, 0.00), g("grunt", 11, 0.50, 0.73) },
+		[19] = { g("grunt", 14, 0.50, 0.00), g("grunt", 13, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("grunt", 14, 0.50, 1.05), g("grunt", 15, 0.50, 0.37), g("grunt", 10, 0.50, 0.26) },
 	},
 	roundabout = {
 		-- orientation
@@ -137,8 +173,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 12, 0.50, 0.00), g("grunt", 8, 0.50, 0.08), g("grunt", 7, 0.50, 0.08) },
 		-- mixed check: a tight three-pack density exam
 		[9] = { g("grunt", 10, 0.50, 0.00), g("grunt", 9, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- midpoint boss: an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 11, 0.50, 0.47), g("grunt", 11, 0.50, 0.11), g("grunt", 8, 0.50, 0.08) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("grunt", 16, 0.50, 0.00), g("grunt", 10, 0.50, 0.30) },
+		[12] = { g("grunt", 13, 0.50, 0.00), g("grunt", 14, 0.50, 0.09) },
+		[13] = { g("grunt", 13, 0.50, 0.00), g("grunt", 9, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
+		[14] = { g("grunt", 12, 0.50, 0.00), g("grunt", 10, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
+		[15] = { g("grunt", 14, 0.50, 0.00), g("grunt", 15, 0.50, 0.10) },
+		[16] = { g("grunt", 15, 0.50, 0.00), g("grunt", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
+		[17] = { g("grunt", 12, 0.50, 0.00), g("grunt", 11, 0.50, 0.08), g("grunt", 11, 0.50, 0.08) },
+		[18] = { g("grunt", 19, 0.50, 0.00), g("grunt", 11, 0.50, 0.30) },
+		[19] = { g("grunt", 13, 0.50, 0.00), g("grunt", 12, 0.50, 0.08), g("grunt", 12, 0.50, 0.08) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("grunt", 14, 0.50, 0.47), g("grunt", 14, 0.50, 0.11), g("grunt", 10, 0.50, 0.08) },
 	},
 	gauntlet = {
 		-- orientation
@@ -159,8 +207,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 12, 0.50, 0.00), g("grunt", 8, 0.50, 0.67), g("grunt", 6, 0.50, 0.60) },
 		-- mixed check: a tight three-pack density exam
 		[9] = { g("grunt", 10, 0.50, 0.00), g("grunt", 9, 0.50, 0.52), g("grunt", 8, 0.50, 0.52) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- midpoint boss: an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00, 0.00), g("grunt", 10, 0.50, 2.45), g("grunt", 11, 0.50, 1.08), g("grunt", 9, 0.50, 0.88) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("grunt", 16, 0.50, 0.00), g("grunt", 10, 0.50, 1.48) },
+		[12] = { g("grunt", 13, 0.50, 0.00), g("grunt", 14, 0.50, 0.98) },
+		[13] = { g("grunt", 13, 0.50, 0.00), g("grunt", 9, 0.50, 0.67), g("grunt", 7, 0.50, 0.60) },
+		[14] = { g("grunt", 12, 0.50, 0.00), g("grunt", 10, 0.50, 0.52), g("grunt", 9, 0.50, 0.52) },
+		[15] = { g("grunt", 14, 0.50, 0.00), g("grunt", 15, 0.50, 1.06) },
+		[16] = { g("grunt", 15, 0.50, 0.00), g("grunt", 10, 0.50, 0.67), g("grunt", 7, 0.50, 0.60) },
+		[17] = { g("grunt", 12, 0.50, 0.00), g("grunt", 11, 0.50, 0.52), g("grunt", 10, 0.50, 0.52) },
+		[18] = { g("grunt", 19, 0.50, 0.00), g("grunt", 11, 0.50, 1.48) },
+		[19] = { g("grunt", 13, 0.50, 0.00), g("grunt", 12, 0.50, 0.52), g("grunt", 10, 0.50, 0.52) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("grunt", 13, 0.50, 2.45), g("grunt", 14, 0.50, 1.08), g("grunt", 12, 0.50, 0.88) },
 	},
 	snaketrail = {
 		-- orientation
@@ -181,8 +241,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 9, 0.50, 0.00), g("tank", 9, 0.53, 0.38) },
 		-- mixed check
 		[9] = { g("tank", 8, 0.50, 0.00), g("grunt", 9, 0.50, 0.25) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("tank", 8, 0.50, 2.25), g("grunt", 8, 0.55, 2.50) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("tank", 11, 0.56, 0.00), g("grunt", 14, 0.67, 0.67) },
+		[12] = { g("tank", 8, 0.52, 0.00), g("grunt", 9, 0.59, 0.38) },
+		[13] = { g("grunt", 10, 0.50, 0.00), g("tank", 10, 0.53, 0.38) },
+		[14] = { g("tank", 9, 0.50, 0.00), g("grunt", 10, 0.50, 0.25) },
+		[15] = { g("tank", 8, 0.52, 0.00), g("grunt", 9, 0.59, 0.41) },
+		[16] = { g("grunt", 11, 0.50, 0.00), g("tank", 11, 0.51, 0.38) },
+		[17] = { g("tank", 10, 0.50, 0.00), g("grunt", 11, 0.50, 0.25) },
+		[18] = { g("tank", 13, 0.54, 0.00), g("grunt", 17, 0.65, 0.67) },
+		[19] = { g("tank", 10, 0.50, 0.00), g("grunt", 12, 0.50, 0.25) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("tank", 10, 0.50, 2.25), g("grunt", 10, 0.53, 2.50) },
 	},
 	backtrack = {
 		-- orientation
@@ -203,8 +275,20 @@ local wavesByMapId = {
 		[8] = { g("tank", 8, 0.50, 0.00), g("runner", 8, 0.50, 0.22), g("grunt", 10, 0.50, 0.45) },
 		-- mixed check
 		[9] = { g("runner", 7, 0.50, 0.00), g("tank", 8, 0.50, 0.15), g("grunt", 10, 0.50, 0.38) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("runner", 7, 0.50, 1.35), g("tank", 7, 0.50, 1.50), g("grunt", 8, 0.50, 1.72) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("runner", 11, 0.50, 0.00), g("tank", 11, 0.53, 0.41), g("grunt", 15, 0.63, 0.81) },
+		[12] = { g("runner", 7, 0.50, 0.00), g("tank", 9, 0.50, 0.22), g("grunt", 9, 0.53, 0.52) },
+		[13] = { g("tank", 9, 0.50, 0.00), g("runner", 9, 0.50, 0.22), g("grunt", 11, 0.50, 0.45) },
+		[14] = { g("runner", 8, 0.50, 0.00), g("tank", 9, 0.50, 0.15), g("grunt", 12, 0.50, 0.38) },
+		[15] = { g("runner", 7, 0.50, 0.00), g("tank", 9, 0.50, 0.24), g("grunt", 9, 0.53, 0.56) },
+		[16] = { g("tank", 10, 0.50, 0.00), g("runner", 10, 0.50, 0.22), g("grunt", 12, 0.50, 0.45) },
+		[17] = { g("runner", 9, 0.50, 0.00), g("tank", 10, 0.50, 0.15), g("grunt", 12, 0.50, 0.38) },
+		[18] = { g("runner", 13, 0.50, 0.00), g("tank", 13, 0.51, 0.41), g("grunt", 18, 0.61, 0.81) },
+		[19] = { g("runner", 9, 0.50, 0.00), g("tank", 10, 0.50, 0.15), g("grunt", 13, 0.50, 0.38) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("runner", 9, 0.50, 1.35), g("tank", 9, 0.50, 1.50), g("grunt", 10, 0.50, 1.72) },
 	},
 	lowvalley = {
 		-- orientation
@@ -225,8 +309,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 8, 0.50, 0.00), g("tank", 8, 0.50, 0.43), g("runner", 9, 0.56, 0.87), g("bulwark", 11, 0.62, 1.30) },
 		-- mixed check
 		[9] = { g("bulwark", 7, 0.50, 0.00), g("runner", 8, 0.50, 0.29), g("tank", 9, 0.52, 0.72), g("grunt", 9, 0.59, 1.16) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 7, 0.50, 2.61), g("runner", 7, 0.52, 2.90), g("tank", 8, 0.60, 3.33), g("grunt", 8, 0.67, 3.62) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("bulwark", 11, 0.53, 0.00), g("runner", 10, 0.63, 0.78), g("tank", 14, 0.74, 1.57) },
+		[12] = { g("bulwark", 7, 0.50, 0.00), g("runner", 8, 0.56, 0.43), g("tank", 8, 0.63, 1.01), g("grunt", 10, 0.71, 1.45) },
+		[13] = { g("grunt", 9, 0.50, 0.00), g("tank", 9, 0.50, 0.43), g("runner", 10, 0.56, 0.87), g("bulwark", 12, 0.62, 1.30) },
+		[14] = { g("bulwark", 8, 0.50, 0.00), g("runner", 9, 0.50, 0.29), g("tank", 10, 0.52, 0.72), g("grunt", 10, 0.59, 1.16) },
+		[15] = { g("bulwark", 7, 0.50, 0.00), g("runner", 8, 0.56, 0.46), g("tank", 8, 0.63, 1.09), g("grunt", 11, 0.71, 1.57) },
+		[16] = { g("grunt", 10, 0.50, 0.00), g("tank", 10, 0.50, 0.43), g("runner", 11, 0.54, 0.87), g("bulwark", 13, 0.60, 1.30) },
+		[17] = { g("bulwark", 9, 0.50, 0.00), g("runner", 10, 0.50, 0.29), g("tank", 11, 0.50, 0.72), g("grunt", 11, 0.57, 1.16) },
+		[18] = { g("bulwark", 13, 0.51, 0.00), g("runner", 11, 0.61, 0.78), g("tank", 17, 0.72, 1.57) },
+		[19] = { g("bulwark", 9, 0.50, 0.00), g("runner", 10, 0.50, 0.29), g("tank", 12, 0.50, 0.72), g("grunt", 12, 0.57, 1.16) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("bulwark", 9, 0.50, 2.61), g("runner", 9, 0.50, 2.90), g("tank", 10, 0.58, 3.33), g("grunt", 10, 0.65, 3.62) },
 	},
 	circuit = {
 		-- orientation
@@ -247,8 +343,20 @@ local wavesByMapId = {
 		[8] = { g("regenerator", 8, 0.50, 0.00), g("grunt", 8, 0.50, 0.20), g("tank", 9, 0.50, 0.39), g("runner", 10, 0.55, 0.59) },
 		-- mixed check
 		[9] = { g("regenerator", 6, 0.50, 0.00), g("bulwark", 7, 0.50, 0.13), g("runner", 9, 0.50, 0.33), g("tank", 9, 0.52, 0.52), g("grunt", 10, 0.57, 0.65) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("regenerator", 6, 0.50, 1.17), g("bulwark", 7, 0.50, 1.30), g("runner", 8, 0.53, 1.49), g("tank", 8, 0.60, 1.62) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("regenerator", 11, 0.50, 0.00), g("bulwark", 10, 0.56, 0.36), g("runner", 14, 0.65, 0.70) },
+		[12] = { g("regenerator", 7, 0.50, 0.00), g("bulwark", 8, 0.50, 0.20), g("runner", 8, 0.56, 0.45), g("tank", 9, 0.63, 0.65) },
+		[13] = { g("regenerator", 9, 0.50, 0.00), g("grunt", 9, 0.50, 0.20), g("tank", 10, 0.50, 0.39), g("runner", 11, 0.55, 0.59) },
+		[14] = { g("regenerator", 7, 0.50, 0.00), g("bulwark", 8, 0.50, 0.13), g("runner", 10, 0.50, 0.33), g("tank", 10, 0.52, 0.52), g("grunt", 12, 0.57, 0.65) },
+		[15] = { g("regenerator", 7, 0.50, 0.00), g("bulwark", 8, 0.50, 0.22), g("runner", 8, 0.56, 0.49), g("tank", 9, 0.63, 0.70) },
+		[16] = { g("regenerator", 10, 0.50, 0.00), g("grunt", 10, 0.50, 0.20), g("tank", 11, 0.50, 0.39), g("runner", 12, 0.53, 0.59) },
+		[17] = { g("regenerator", 7, 0.50, 0.00), g("bulwark", 9, 0.50, 0.13), g("runner", 11, 0.50, 0.33), g("tank", 11, 0.50, 0.52), g("grunt", 12, 0.55, 0.65) },
+		[18] = { g("regenerator", 13, 0.50, 0.00), g("bulwark", 11, 0.54, 0.36), g("runner", 17, 0.63, 0.70) },
+		[19] = { g("regenerator", 8, 0.50, 0.00), g("bulwark", 9, 0.50, 0.13), g("runner", 12, 0.50, 0.33), g("tank", 12, 0.50, 0.52), g("grunt", 13, 0.55, 0.65) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("regenerator", 8, 0.50, 1.17), g("bulwark", 9, 0.50, 1.30), g("runner", 10, 0.51, 1.49), g("tank", 10, 0.58, 1.62) },
 	},
 	outerloop = {
 		-- orientation
@@ -269,8 +377,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 8, 0.50, 0.00), g("tank", 8, 0.56, 0.51), g("runner", 9, 0.63, 1.02), g("bulwark", 10, 0.70, 1.53) },
 		-- mixed check
 		[9] = { g("regenerator", 7, 0.50, 0.00), g("bulwark", 8, 0.52, 0.34), g("runner", 9, 0.59, 0.85), g("tank", 9, 0.66, 1.36), g("grunt", 10, 0.73, 1.70) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("regenerator", 7, 0.51, 3.06), g("bulwark", 7, 0.59, 3.40), g("runner", 8, 0.67, 3.91), g("tank", 8, 0.76, 4.25) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("regenerator", 11, 0.60, 0.00), g("bulwark", 10, 0.71, 0.92), g("runner", 14, 0.84, 1.84) },
+		[12] = { g("regenerator", 7, 0.55, 0.00), g("bulwark", 8, 0.63, 0.51), g("runner", 8, 0.71, 1.19), g("tank", 9, 0.80, 1.70) },
+		[13] = { g("grunt", 9, 0.50, 0.00), g("tank", 9, 0.56, 0.51), g("runner", 10, 0.63, 1.02), g("bulwark", 11, 0.70, 1.53) },
+		[14] = { g("regenerator", 8, 0.50, 0.00), g("bulwark", 9, 0.52, 0.34), g("runner", 10, 0.59, 0.85), g("tank", 10, 0.66, 1.36), g("grunt", 12, 0.73, 1.70) },
+		[15] = { g("regenerator", 7, 0.55, 0.00), g("bulwark", 8, 0.63, 0.55), g("runner", 8, 0.71, 1.29), g("tank", 9, 0.80, 1.84) },
+		[16] = { g("grunt", 10, 0.50, 0.00), g("tank", 10, 0.54, 0.51), g("runner", 11, 0.61, 1.02), g("bulwark", 12, 0.68, 1.53) },
+		[17] = { g("regenerator", 9, 0.50, 0.00), g("bulwark", 10, 0.50, 0.34), g("runner", 11, 0.57, 0.85), g("tank", 11, 0.64, 1.36), g("grunt", 12, 0.71, 1.70) },
+		[18] = { g("regenerator", 13, 0.58, 0.00), g("bulwark", 11, 0.69, 0.92), g("runner", 17, 0.82, 1.84) },
+		[19] = { g("regenerator", 9, 0.50, 0.00), g("bulwark", 10, 0.50, 0.34), g("runner", 12, 0.57, 0.85), g("tank", 12, 0.64, 1.36), g("grunt", 13, 0.71, 1.70) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("regenerator", 9, 0.50, 3.06), g("bulwark", 9, 0.57, 3.40), g("runner", 10, 0.65, 3.91), g("tank", 10, 0.74, 4.25) },
 	},
 	terrace = {
 		-- orientation
@@ -291,8 +411,20 @@ local wavesByMapId = {
 		[8] = { g("warcaller", 8, 0.50, 0.00), g("grunt", 7, 0.50, 0.22), g("tank", 9, 0.50, 0.43), g("runner", 10, 0.50, 0.65) },
 		-- mixed check
 		[9] = { g("warcaller", 6, 0.50, 0.00), g("regenerator", 7, 0.50, 0.14), g("bulwark", 8, 0.50, 0.36), g("runner", 8, 0.50, 0.58), g("tank", 9, 0.52, 0.72) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("warcaller", 6, 0.50, 1.30), g("regenerator", 7, 0.50, 1.44), g("bulwark", 8, 0.50, 1.66), g("runner", 7, 0.54, 1.80) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("warcaller", 11, 0.50, 0.00), g("regenerator", 10, 0.51, 0.39), g("bulwark", 14, 0.60, 0.78) },
+		[12] = { g("warcaller", 7, 0.50, 0.00), g("regenerator", 8, 0.50, 0.22), g("bulwark", 8, 0.51, 0.50), g("runner", 9, 0.57, 0.72) },
+		[13] = { g("warcaller", 9, 0.50, 0.00), g("grunt", 8, 0.50, 0.22), g("tank", 10, 0.50, 0.43), g("runner", 11, 0.50, 0.65) },
+		[14] = { g("warcaller", 7, 0.50, 0.00), g("regenerator", 8, 0.50, 0.14), g("bulwark", 9, 0.50, 0.36), g("runner", 9, 0.50, 0.58), g("tank", 10, 0.52, 0.72) },
+		[15] = { g("warcaller", 7, 0.50, 0.00), g("regenerator", 8, 0.50, 0.24), g("bulwark", 8, 0.51, 0.54), g("runner", 9, 0.57, 0.78) },
+		[16] = { g("warcaller", 10, 0.50, 0.00), g("grunt", 8, 0.50, 0.22), g("tank", 11, 0.50, 0.43), g("runner", 12, 0.50, 0.65) },
+		[17] = { g("warcaller", 7, 0.50, 0.00), g("regenerator", 9, 0.50, 0.14), g("bulwark", 10, 0.50, 0.36), g("runner", 10, 0.50, 0.58), g("tank", 11, 0.50, 0.72) },
+		[18] = { g("warcaller", 13, 0.50, 0.00), g("regenerator", 11, 0.50, 0.39), g("bulwark", 17, 0.58, 0.78) },
+		[19] = { g("warcaller", 8, 0.50, 0.00), g("regenerator", 9, 0.50, 0.14), g("bulwark", 10, 0.50, 0.36), g("runner", 10, 0.50, 0.58), g("tank", 12, 0.50, 0.72) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("warcaller", 8, 0.50, 1.30), g("regenerator", 9, 0.50, 1.44), g("bulwark", 10, 0.50, 1.66), g("runner", 9, 0.52, 1.80) },
 	},
 	highridge = {
 		-- orientation
@@ -313,8 +445,20 @@ local wavesByMapId = {
 		[8] = { g("warcaller", 8, 0.50, 0.00), g("bulwark", 4, 0.52, 0.36), g("runner", 5, 0.50, 0.66), g("grunt", 9, 0.58, 0.72), g("tank", 10, 0.64, 1.08) },
 		-- mixed check
 		[9] = { g("bulwark", 4, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.50, 0.24), g("regenerator", 9, 0.54, 0.60), g("bulwark", 8, 0.61, 0.96), g("runner", 10, 0.68, 1.20) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 2.16), g("runner", 4, 0.50, 2.46), g("warcaller", 7, 0.54, 2.40), g("regenerator", 8, 0.62, 2.76), g("bulwark", 8, 0.70, 3.00) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("bulwark", 7, 0.55, 0.00), g("runner", 7, 0.50, 0.32), g("warcaller", 11, 0.66, 0.65), g("regenerator", 14, 0.77, 1.30) },
+		[12] = { g("bulwark", 4, 0.51, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 8, 0.58, 0.36), g("regenerator", 8, 0.66, 0.84), g("bulwark", 9, 0.74, 1.20) },
+		[13] = { g("warcaller", 9, 0.50, 0.00), g("bulwark", 5, 0.52, 0.36), g("runner", 6, 0.50, 0.66), g("grunt", 10, 0.58, 0.72), g("tank", 11, 0.64, 1.08) },
+		[14] = { g("bulwark", 5, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 9, 0.50, 0.24), g("regenerator", 10, 0.54, 0.60), g("bulwark", 9, 0.61, 0.96), g("runner", 12, 0.68, 1.20) },
+		[15] = { g("bulwark", 4, 0.51, 0.00), g("runner", 5, 0.50, 0.32), g("warcaller", 8, 0.58, 0.39), g("regenerator", 8, 0.66, 0.91), g("bulwark", 9, 0.74, 1.30) },
+		[16] = { g("warcaller", 10, 0.50, 0.00), g("bulwark", 5, 0.50, 0.36), g("runner", 6, 0.50, 0.66), g("grunt", 11, 0.56, 0.72), g("tank", 12, 0.62, 1.08) },
+		[17] = { g("bulwark", 5, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 10, 0.50, 0.24), g("regenerator", 11, 0.52, 0.60), g("bulwark", 10, 0.59, 0.96), g("runner", 12, 0.66, 1.20) },
+		[18] = { g("bulwark", 8, 0.53, 0.00), g("runner", 8, 0.50, 0.32), g("warcaller", 13, 0.64, 0.65), g("regenerator", 17, 0.75, 1.30) },
+		[19] = { g("bulwark", 5, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 10, 0.50, 0.24), g("regenerator", 12, 0.52, 0.60), g("bulwark", 10, 0.59, 0.96), g("runner", 13, 0.66, 1.20) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("bulwark", 5, 0.50, 2.16), g("runner", 5, 0.50, 2.46), g("warcaller", 9, 0.52, 2.40), g("regenerator", 10, 0.60, 2.76), g("bulwark", 10, 0.68, 3.00) },
 	},
 	crossflow = {
 		-- orientation
@@ -335,8 +479,20 @@ local wavesByMapId = {
 		[8] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("grunt", 8, 0.50, 0.08), g("tank", 9, 0.50, 0.19), g("runner", 10, 0.50, 0.33) },
 		-- mixed check
 		[9] = { g("bulwark", 3, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.08), g("regenerator", 8, 0.50, 0.15), g("bulwark", 8, 0.50, 0.28), g("runner", 9, 0.50, 0.37) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 0.73), g("runner", 4, 0.50, 1.03), g("warcaller", 7, 0.50, 0.82), g("regenerator", 8, 0.50, 0.95), g("bulwark", 8, 0.52, 1.04) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("bulwark", 7, 0.50, 0.00), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.50, 0.16), g("regenerator", 14, 0.57, 0.40) },
+		[12] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 8, 0.50, 0.08), g("regenerator", 8, 0.50, 0.23), g("bulwark", 9, 0.54, 0.37) },
+		[13] = { g("bulwark", 5, 0.50, 0.00), g("runner", 6, 0.50, 0.30), g("grunt", 9, 0.50, 0.08), g("tank", 10, 0.50, 0.19), g("runner", 11, 0.50, 0.33) },
+		[14] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 8, 0.50, 0.08), g("regenerator", 9, 0.50, 0.15), g("bulwark", 9, 0.50, 0.28), g("runner", 10, 0.50, 0.37) },
+		[15] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.32), g("warcaller", 8, 0.50, 0.09), g("regenerator", 8, 0.50, 0.25), g("bulwark", 9, 0.54, 0.40) },
+		[16] = { g("bulwark", 5, 0.50, 0.00), g("runner", 6, 0.50, 0.30), g("grunt", 10, 0.50, 0.08), g("tank", 11, 0.50, 0.19), g("runner", 12, 0.50, 0.33) },
+		[17] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 9, 0.50, 0.08), g("regenerator", 10, 0.50, 0.15), g("bulwark", 10, 0.50, 0.28), g("runner", 11, 0.50, 0.37) },
+		[18] = { g("bulwark", 8, 0.50, 0.00), g("runner", 9, 0.50, 0.32), g("warcaller", 13, 0.50, 0.16), g("regenerator", 17, 0.55, 0.40) },
+		[19] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 9, 0.50, 0.08), g("regenerator", 10, 0.50, 0.15), g("bulwark", 10, 0.50, 0.28), g("runner", 12, 0.50, 0.37) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("bulwark", 5, 0.50, 0.73), g("runner", 5, 0.50, 1.03), g("warcaller", 9, 0.50, 0.82), g("regenerator", 10, 0.50, 0.95), g("bulwark", 10, 0.50, 1.04) },
 	},
 	steppingstones = {
 		-- orientation
@@ -357,8 +513,20 @@ local wavesByMapId = {
 		[8] = { g("grunt", 8, 0.50, 0.00), g("tank", 8, 0.54, 0.95), g("runner", 9, 0.61, 1.55), g("bulwark", 10, 0.68, 2.15) },
 		-- mixed check
 		[9] = { g("bulwark", 4, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.51, 0.75), g("regenerator", 9, 0.58, 1.35), g("bulwark", 9, 0.64, 1.95), g("runner", 10, 0.72, 2.35) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 3.95), g("runner", 4, 0.50, 4.25), g("warcaller", 7, 0.58, 4.35), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("bulwark", 6, 0.58, 0.00), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.70, 1.08), g("regenerator", 14, 0.81, 2.16) },
+		[12] = { g("bulwark", 4, 0.54, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 8, 0.61, 0.95), g("regenerator", 8, 0.70, 1.75), g("bulwark", 9, 0.78, 2.35) },
+		[13] = { g("grunt", 9, 0.50, 0.00), g("tank", 9, 0.54, 0.95), g("runner", 10, 0.61, 1.55), g("bulwark", 11, 0.68, 2.15) },
+		[14] = { g("bulwark", 5, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 9, 0.51, 0.75), g("regenerator", 10, 0.58, 1.35), g("bulwark", 10, 0.64, 1.95), g("runner", 12, 0.72, 2.35) },
+		[15] = { g("bulwark", 4, 0.54, 0.00), g("runner", 5, 0.50, 0.32), g("warcaller", 8, 0.61, 1.03), g("regenerator", 8, 0.70, 1.89), g("bulwark", 9, 0.78, 2.54) },
+		[16] = { g("grunt", 10, 0.50, 0.00), g("tank", 10, 0.52, 0.95), g("runner", 11, 0.59, 1.55), g("bulwark", 12, 0.66, 2.15) },
+		[17] = { g("bulwark", 5, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 10, 0.50, 0.75), g("regenerator", 11, 0.56, 1.35), g("bulwark", 11, 0.62, 1.95), g("runner", 12, 0.70, 2.35) },
+		[18] = { g("bulwark", 6, 0.56, 0.00), g("runner", 9, 0.50, 0.32), g("warcaller", 13, 0.68, 1.08), g("regenerator", 17, 0.79, 2.16) },
+		[19] = { g("bulwark", 5, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 10, 0.50, 0.75), g("regenerator", 12, 0.56, 1.35), g("bulwark", 12, 0.62, 1.95), g("runner", 13, 0.70, 2.35) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("bulwark", 5, 0.50, 3.95), g("runner", 5, 0.50, 4.25), g("warcaller", 9, 0.56, 4.35), g("regenerator", 10, 0.64, 4.95), g("bulwark", 10, 0.72, 5.35) },
 	},
 	twinloop = {
 		-- orientation
@@ -379,8 +547,20 @@ local wavesByMapId = {
 		[8] = { g("tank", 8, 0.50, 0.00), g("runner", 7, 0.50, 0.19), g("bulwark", 8, 0.50, 0.37), g("regenerator", 10, 0.50, 0.56) },
 		-- mixed check
 		[9] = { g("bulwark", 3, 0.50, 0.00), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.12), g("regenerator", 8, 0.50, 0.31), g("bulwark", 8, 0.50, 0.50), g("runner", 9, 0.50, 0.62) },
-		-- final exam
+		-- midpoint boss
 		[10] = { g("boss", 1, 0.00, 0.00), g("bulwark", 4, 0.50, 1.12), g("runner", 4, 0.50, 1.42), g("warcaller", 7, 0.50, 1.24), g("regenerator", 8, 0.50, 1.43), g("bulwark", 7, 0.50, 1.55) },
+		-- escalation: the second act revisits the map lesson with measured composition growth
+		[11] = { g("bulwark", 7, 0.50, 0.00), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.50, 0.33), g("regenerator", 14, 0.54, 0.67) },
+		[12] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 8, 0.50, 0.19), g("regenerator", 8, 0.50, 0.43), g("bulwark", 9, 0.52, 0.62) },
+		[13] = { g("tank", 9, 0.50, 0.00), g("runner", 8, 0.50, 0.19), g("bulwark", 9, 0.50, 0.37), g("regenerator", 11, 0.50, 0.56) },
+		[14] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 8, 0.50, 0.12), g("regenerator", 9, 0.50, 0.31), g("bulwark", 9, 0.50, 0.50), g("runner", 10, 0.50, 0.62) },
+		[15] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.32), g("warcaller", 8, 0.50, 0.21), g("regenerator", 8, 0.50, 0.46), g("bulwark", 9, 0.52, 0.67) },
+		[16] = { g("tank", 10, 0.50, 0.00), g("runner", 8, 0.50, 0.19), g("bulwark", 10, 0.50, 0.37), g("regenerator", 12, 0.50, 0.56) },
+		[17] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 9, 0.50, 0.12), g("regenerator", 10, 0.50, 0.31), g("bulwark", 10, 0.50, 0.50), g("runner", 11, 0.50, 0.62) },
+		[18] = { g("bulwark", 8, 0.50, 0.00), g("runner", 9, 0.50, 0.32), g("warcaller", 13, 0.50, 0.33), g("regenerator", 17, 0.52, 0.67) },
+		[19] = { g("bulwark", 4, 0.50, 0.00), g("runner", 5, 0.50, 0.30), g("warcaller", 9, 0.50, 0.12), g("regenerator", 10, 0.50, 0.31), g("bulwark", 10, 0.50, 0.50), g("runner", 12, 0.50, 0.62) },
+		-- final exam: the second boss closes the full campaign-map arc
+		[20] = { g("boss", 1, 0.00, 0.00), g("bulwark", 5, 0.50, 1.12), g("runner", 5, 0.50, 1.42), g("warcaller", 9, 0.50, 1.24), g("regenerator", 10, 0.50, 1.43), g("bulwark", 9, 0.50, 1.55) },
 	},
 }
 
@@ -403,8 +583,30 @@ local bossArchetypeByMapId = {
 	twinloop = "boss_summoner",
 }
 
+local finalBossArchetypeByMapId = {
+	riverbend = "boss_displacement",
+	switchback = "boss_suppression",
+	highpass = "boss_aegis",
+	roundabout = "boss_summoner",
+	gauntlet = "boss_displacement",
+	snaketrail = "boss_aegis",
+	backtrack = "boss_summoner",
+	lowvalley = "boss_ravager",
+	circuit = "boss_summoner",
+	outerloop = "boss_suppression",
+	terrace = "boss_suppression",
+	highridge = "boss_ravager",
+	crossflow = "boss_aegis",
+	steppingstones = "boss_summoner",
+	twinloop = "boss_ravager",
+}
+
 for mapId, bossArchetype in pairs(bossArchetypeByMapId) do
 	wavesByMapId[mapId][10].bossArchetype = bossArchetype
+end
+
+for mapId, bossArchetype in pairs(finalBossArchetypeByMapId) do
+	wavesByMapId[mapId][20].bossArchetype = bossArchetype
 end
 
 local function mapIdOf(mapOrId)
