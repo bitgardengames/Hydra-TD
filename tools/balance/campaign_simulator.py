@@ -34,7 +34,7 @@ DEFINITION_FILES = (
     "world/tower_branch_defs.lua", "world/enemy_defs.lua", "world/enemies.lua",
     "world/enemy_traits.lua", "world/projectiles.lua", "world/projectile_behaviors.lua",
     "world/targeting.lua", "systems/ability_defs.lua", "systems/abilities.lua",
-    "systems/campaign_wave_defs.lua", "systems/wave_builder.lua", "systems/waves.lua",
+    "systems/campaign_wave_defs.lua", "systems/waves.lua",
     "systems/difficulty.lua", "systems/difficulty_curve.lua", "systems/campaign_unlocks.lua",
 )
 

@@ -119,7 +119,7 @@ def definitions():
     wave_root = block(waves_text, r"local wavesByMapId")
     # Match the schedule arguments, not the closing parenthesis: campaign
     # groups may append metadata that does not change this calculation.
-    group_re = re.compile(r'g\("([a-z_]+)",\s*(\d+),\s*([0-9.]+),\s*([0-9.]+)')
+    group_re = re.compile(r'g\("([a-z_]+)",\s*(\d+),\s*([0-9.]+)(?:,\s*([0-9.]+))?')
     for map_id, body in named_blocks(wave_root).items():
         maps[map_id] = []
         for wave in range(1, 11):
@@ -128,7 +128,7 @@ def definitions():
                 raise ValueError(f"missing {map_id} wave {wave}")
             maps[map_id].append([{"kind": k, "count": int(c),
                                   "spacing_ms": half_up(decimal_bp(s) * 1000, BP),
-                                  "delay_ms": half_up(decimal_bp(d) * 1000, BP)}
+                                  "delay_ms": half_up(decimal_bp(d or "0") * 1000, BP)}
                                  for k, c, s, d in group_re.findall(row.group(1))])
     return towers, enemies, diffs, curve, maps
 

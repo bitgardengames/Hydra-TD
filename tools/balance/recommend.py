@@ -67,8 +67,8 @@ def value_span(text: str, parameter: dict) -> tuple[int, int, str]:
         start, end = root + relative_start, root + relative_end
         body = text[start:end]
         row = re.search(rf"^\s*\[{wave}\]\s*=\s*\{{([^\n]+)", body, re.M)
-        # Tuning addresses the four authored schedule arguments.
-        calls = list(re.finditer(r'g\("[a-z_]+",\s*([0-9.]+),\s*([0-9.]+),\s*([0-9.]+)', row.group(1))) if row else []
+        # Start-immediately groups omit the optional delay argument.
+        calls = list(re.finditer(r'g\("[a-z_]+",\s*([0-9.]+),\s*([0-9.]+)(?:,\s*([0-9.]+))?', row.group(1))) if row else []
         call = calls[int(group) - 1]
         capture = 1 if key == "count" else 2
         return start + row.start(1) + call.start(capture), start + row.start(1) + call.end(capture), call.group(capture)

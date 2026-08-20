@@ -3,7 +3,6 @@ local Maps = require("world.map_defs")
 local Enemies = require("world.enemies")
 local Difficulty = require("systems.difficulty")
 local DifficultyCurve = require("systems.difficulty_curve")
-local WaveBuilder = require("systems.wave_builder")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local Steam = require("core.steam")
 local L = require("core.localization")
@@ -213,9 +212,6 @@ local spawnerDefaults = {
 	timer = 0,
 	hpMult = 1.0,
 	spdMult = 1.0,
-	kind = nil,
-	composition = nil,
-	compositionIndex = 1,
 	groups = nil,
 	groupIndex = 1,
 	groupRemaining = 0,
@@ -291,36 +287,13 @@ local function describeAuthoredGroups(groups)
 	return descriptions
 end
 
-local function describeComposition(composition, spacing)
-	local descriptions = {}
-	for _, item in ipairs(composition or {}) do
-		local kind = item
-		local previous = descriptions[#descriptions]
-
-		-- Coalesce only adjacent identical entries so the preview preserves spawn
-		-- order while avoiding a row for every enemy in a large wave.
-		if previous and previous.kind == kind then
-			previous.count = previous.count + 1
-		else
-			descriptions[#descriptions + 1] = describeEnemyGroup(kind, 1, spacing, 0)
-		end
-	end
-	return descriptions
-end
-
 -- Build a display-only description of a wave.  Keep this independent of the
 -- live spawner tables so callers (notably the prep HUD) can safely look ahead.
 function Waves.getWavePreview(waveNumber)
 	local map = Maps[State.mapIndex]
-	local wave = WaveBuilder.build(waveNumber, map)
+	local wave = CampaignWaveDefs.get(map, waveNumber)
 	local resolvedGroups = resolveWaveGroups(wave, map, waveNumber)
-	local groups
-
-	if resolvedGroups then
-		groups = describeAuthoredGroups(resolvedGroups)
-	else
-		groups = describeComposition(wave.composition, wave.spacing)
-	end
+	local groups = describeAuthoredGroups(resolvedGroups)
 
 	local counts = {}
 	for _, group in ipairs(groups) do
@@ -336,18 +309,14 @@ function Waves.getWavePreview(waveNumber)
 	}
 end
 
-local function beginSpawner(kind, count, gap, hpMult, spdMult, composition, groups)
+local function beginSpawner(count, hpMult, spdMult, groups)
 	local firstGroup = groups and groups[1]
 	resetTable(spawner, spawnerDefaults, {
 		active = true,
 		remaining = count or 0,
-		gap = gap or spawnerDefaults.gap,
 		timer = (firstGroup and firstGroup.delay) or 0,
 		hpMult = hpMult or spawnerDefaults.hpMult,
 		spdMult = spdMult or spawnerDefaults.spdMult,
-		kind = kind,
-		composition = composition,
-		compositionIndex = 1,
 		groups = groups,
 		groupIndex = 1,
 		groupRemaining = firstGroup and firstGroup.count or 0,
@@ -394,7 +363,7 @@ local function startBossWave(wave, map)
 		group.hpMult = i == 1 and hpMult or addHpMult
 		group.spdMult = spdMult
 	end
-	beginSpawner(bossKind, wave.count or 1, 0, hpMult, spdMult, nil, groups)
+	beginSpawner(wave.count or 1, hpMult, spdMult, groups)
 
 	if not encounter then
 		resetTable(bossAdds, bossAddsDefaults)
@@ -419,11 +388,8 @@ local function startNormalWave(wave, map)
 	State.activeBossKind = nil
 	resetTable(bossAdds, bossAddsDefaults)
 	local count = max(1, wave.count or 1)
-	local kind = wave.enemy or "grunt"
 	local hpMult, spdMult = getWaveMultipliers(State.wave, State.mapIndex, map, false)
-	local gap = wave.spacing or 1.0
-
-	beginSpawner(kind, count, gap, hpMult, spdMult, wave.composition, wave.groups)
+	beginSpawner(count, hpMult, spdMult, wave.groups)
 end
 
 -- Wave start
@@ -436,8 +402,7 @@ function Waves.startWave()
 		Steam.setRichPresence(L("presence.gameStatus", State.wave, diffText))
 	end
 
-	-- WaveBuilder enforces the boss invariant, leaving startup as a simple dispatch.
-	local wave = WaveBuilder.build(State.wave, map)
+	local wave = CampaignWaveDefs.get(map, State.wave)
 	local start = map and map.path and map.path[1]
 	Waves.presentationEvent("wave_start", {
 		wave = State.wave,
@@ -479,18 +444,12 @@ end
 
 local function currentSpawnEntry()
 	local group = spawner.groups and spawner.groups[spawner.groupIndex]
-	local item = spawner.composition and spawner.composition[spawner.compositionIndex]
-	return group, group and group.kind or item or spawner.kind
+	return group, group and group.kind
 end
 
 local function advanceSpawner(group)
 	spawner.remaining = spawner.remaining - 1
 	spawner.spawned = spawner.spawned + 1
-	if not group then
-		spawner.timer = spawner.timer + spawner.gap
-		return
-	end
-
 	spawner.groupRemaining = spawner.groupRemaining - 1
 	if spawner.groupRemaining > 0 or spawner.remaining <= 0 then
 		spawner.timer = spawner.timer + (group.spacing or spawner.gap)
@@ -539,7 +498,6 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 			-- becomes a no-op under either motion accessibility setting.
 			Effects.shake(1.1, 0.22)
 		end
-		spawner.compositionIndex = spawner.compositionIndex + 1
 		advanceSpawner(group)
 	end)
 
