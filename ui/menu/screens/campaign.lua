@@ -16,6 +16,8 @@ local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local RunModes = require("systems.run_modes")
+local DrawEntities = require("render.draw_entities")
+local AbilityIcons = require("ui.ability_icons")
 
 local lg = love.graphics
 local floor = math.floor
@@ -79,6 +81,19 @@ end
 local function divider(x, y, w)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.12)
 	lg.rectangle("fill", x, y, w, 1)
+end
+
+local function drawRewardIcon(reward, cx, cy)
+	if reward.type == "tower" then
+		lg.push("all")
+		lg.translate(cx, cy)
+		lg.scale(0.62)
+		DrawEntities.drawTowerBase(reward.id, 0, 5, 1)
+		DrawEntities.drawTowerCore(reward.id, 0, 5, -math.pi * 0.5, 0, 1)
+		lg.pop()
+	elseif reward.type == "ability" then
+		AbilityIcons.draw(reward.id, cx, cy, 0.62, 1)
+	end
 end
 
 local function layout()
@@ -302,26 +317,27 @@ local function drawCenter(l, map, entry)
 		lg.setColor(Theme.ui.text)
 		lg.print(L("campaign.completionRewards"), x + 10, rewardsY + 5)
 
-		local selected = Save.data.settings.difficulty or "normal"
-		local selectedTier = difficultyIndex(selected)
 		local rewardCellY = rewardsY + 31
-		local rewardCellW = w / 3
-		Medals.drawTier(x + 19, rewardCellY + 7, selectedTier, 8)
-		lg.setColor(Theme.ui.text)
-		lg.print(L("campaign.medalReward", L("campaign.medals." .. MEDAL_NAMES[selectedTier])), x + 34, rewardCellY - 2)
-
-		local def = Difficulty.defs[selected] or Difficulty.defs.normal
-		lg.setColor(Theme.ui.money)
-		lg.circle("fill", x + rewardCellW + 18, rewardCellY + 7, 8)
-		lg.setColor(Theme.outline.color)
-		lg.circle("line", x + rewardCellW + 18, rewardCellY + 7, 5)
-		lg.setColor(Theme.ui.text)
-		lg.print(L("campaign.perfectBonus", def.perfectWaveBonus), x + rewardCellW + 32, rewardCellY - 2)
-
-		local reward = CampaignUnlocks.getRewardForMap(map)
-		local rewardText = reward and (reward.labelKey and L(reward.labelKey) or reward.label) or L("campaign.noUnlockReward")
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
-		lg.printf(rewardText, x + rewardCellW * 2 + 6, rewardCellY - 2, rewardCellW - 14, "center")
+		local rewards = CampaignUnlocks.getRewardsForMap(map)
+		if #rewards == 0 then
+			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
+			lg.printf(L("campaign.noUnlockReward"), x + 10, rewardCellY - 2, w - 20, "center")
+		else
+			Fonts.set("ui")
+			local rewardCellW = w / #rewards
+			for i, reward in ipairs(rewards) do
+				local cellX = x + (i - 1) * rewardCellW
+				local rewardText = reward.labelKey and L(reward.labelKey) or reward.label or reward.id
+				local iconSize = 34
+				local textW = Fonts.get():getWidth(rewardText)
+				local contentW = min(rewardCellW - 12, iconSize + textW)
+				local iconX = cellX + (rewardCellW - contentW) * 0.5 + iconSize * 0.5
+				drawRewardIcon(reward, iconX, rewardCellY + 7)
+				lg.setColor(Theme.ui.text)
+				lg.printf(rewardText, iconX + iconSize * 0.5, rewardCellY - 2,
+					max(0, cellX + rewardCellW - 6 - (iconX + iconSize * 0.5)), "left")
+			end
+		end
 	end
 end
 
