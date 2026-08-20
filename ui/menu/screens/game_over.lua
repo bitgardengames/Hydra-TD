@@ -12,6 +12,8 @@ local Save = require("core.save")
 local Hotkeys = require("core.hotkeys")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
+local Difficulty = require("systems.difficulty")
+local RecordRows = require("ui.record_rows")
 
 local lg = love.graphics
 
@@ -95,13 +97,16 @@ local function buildRunSummary()
 	local score = State.score or 0
 
 	local map = RunRecap.getMap()
-	runStats:setRows({
+	local rows = {
 		{label = L("runRecap.enemiesDefeated"), value = State.spawnedKills or 0,
 			denominator = CampaignWaveDefs.getTotalEnemyCount(map)},
 		{label = L("runRecap.wavesReached"), value = reachedWave,
 			denominator = CampaignWaveDefs.getFinalWave(map)},
 		{label = L("runRecap.score"), value = score},
-	})
+	}
+	local records = map and Save.getMapRecords(map.id, State.runMode or (State.activeContract and "contract") or "campaign", Difficulty.key())
+	for _, row in ipairs(RecordRows.build(records, State.newRecords)) do rows[#rows + 1] = row end
+	runStats:setRows(rows)
 end
 
 local function selectGameOverMessage()

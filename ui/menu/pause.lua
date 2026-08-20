@@ -138,6 +138,7 @@ function Page.load()
 			h = btnH,
 			onClick = function()
 				confirmAction("confirmation.mainMenuTitle", "confirmation.mainMenuDescription", function()
+					require("systems.gameplay_outcome").cancel("abandon")
 					State.paused = false
 					Achievements.onGameOver()
 					Save.flush()

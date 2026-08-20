@@ -58,6 +58,7 @@ local SCREENSHOT_DIR = "screenshots"
 local simulationAccumulator = 0
 
 function resetGame()
+	if RunStats.data and not RunStats.final and State.mode == "game" then GameplayOutcome.cancel("restart") end
 	simulationAccumulator = 0
 	--State.worldMapIndex = 1 -- Map override
 
@@ -100,6 +101,8 @@ function resetGame()
 
 	local diff = Difficulty.get()
 	RunStats.reset()
+	State.runResult = nil
+	State.newRecords = {}
 
     -- Core game state
 	local startMoneyMultiplier = State.activeContract and State.activeContract.mutator.startingMoneyMultiplier or 1
@@ -313,6 +316,7 @@ function love.update(dt)
 	Camera.update(dt)
 
 	local mode = State.mode
+	if mode == "game" and not State.paused then RunStats.update(dt) end
 	local target = (mode == "pause" or mode == "settings_gameplay") and 1 or 0
 
 	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)

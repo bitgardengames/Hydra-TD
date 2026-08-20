@@ -17,6 +17,7 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 local Towers = require("world.towers")
 local EnemyDefs = require("world.enemy_defs")
 local AbilityLoadout = require("ui.ability_loadout")
+local RecordRows = require("ui.record_rows")
 
 local lg = love.graphics
 local floor = math.floor
@@ -605,6 +606,15 @@ function Screen.draw()
 	local metaY = textY + PAD_TITLE + 20
 	for i, message in ipairs(previewMessages) do
 		Text.printfShadow(message, 0, metaY + (i - 1) * 18, sw, "center")
+	end
+	local records = Save.getMapRecords(map.id, "campaign", Save.data.settings.difficulty or Difficulty.default)
+	local recordRows = RecordRows.build(records)
+	if #recordRows > 0 then
+		local summary = {}
+		for _, row in ipairs(recordRows) do summary[#summary + 1] = row.label .. ": " .. tostring(row.value) end
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.7)
+		Text.printfShadow(table.concat(summary, "  •  "), layout.boxX + paddingX,
+			layout.buttonsStartY - 22, layout.boxW - paddingX * 2, "center")
 	end
 
 	-- Buttons
