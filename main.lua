@@ -72,7 +72,7 @@ function resetGame()
     MapMod.clearBlocked()
     MapMod.buildPath(Maps[State.worldMapIndex])
 
-	local seed = 123456 + State.worldMapIndex * 1009
+	local seed = State.activeContract and State.activeContract.seed or (123456 + State.worldMapIndex * 1009)
 	love.math.setRandomSeed(seed)
 
 	local biome = MapMod.map.biome
@@ -102,7 +102,8 @@ function resetGame()
 	RunStats.reset()
 
     -- Core game state
-	State.money = diff.startMoney
+	local startMoneyMultiplier = State.activeContract and State.activeContract.mutator.startingMoneyMultiplier or 1
+	State.money = math.floor(diff.startMoney * startMoneyMultiplier + 0.5)
     State.moneyLerp = State.money
 	State.lives = diff.startLives
 	State.livesAnim = 0
@@ -125,7 +126,8 @@ function resetGame()
     State.placing = nil
 	State.selectedTower = nil
 	State.selectedEnemy = nil
-	State.equippedAbilities = CampaignUnlocks.getEquippedAbilities()
+	State.equippedAbilities = State.activeContract and {"meteor", "frost_nova"}
+		or CampaignUnlocks.getEquippedAbilities()
 	State.abilityCharges = {}
 	State.abilityTargeting = nil
 	require("systems.abilities").reset()
@@ -247,11 +249,16 @@ local function updateGameplayOutcome()
 		end
 		Waves.presentWaveCleared(perfectWaveBonus)
 		if campaignFinalWave and State.wave == campaignFinalWave then
+			if State.activeContract then
+				Save.recordContractCompletion(State.activeContract, State)
+			end
 			local previousFurthestIndex = Save.data.furthestIndex or 1
-			local nextMapIndex = State.worldMapIndex + 1
-			Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)
-			State.unlockedTowersThisVictory = CampaignUnlocks.getNewlyUnlockedTowers(previousFurthestIndex, Save.data.furthestIndex)
-			State.unlockedRewardsThisVictory = CampaignUnlocks.getNewRewards(previousFurthestIndex, Save.data.furthestIndex)
+			if not State.activeContract then
+				local nextMapIndex = State.worldMapIndex + 1
+				Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)
+			end
+			State.unlockedTowersThisVictory = State.activeContract and {} or CampaignUnlocks.getNewlyUnlockedTowers(previousFurthestIndex, Save.data.furthestIndex)
+			State.unlockedRewardsThisVictory = State.activeContract and {} or CampaignUnlocks.getNewRewards(previousFurthestIndex, Save.data.furthestIndex)
 			State.unlockedAbilitiesThisVictory = {}
 			for _, reward in ipairs(State.unlockedRewardsThisVictory) do
 				if reward.type == "ability" then
@@ -259,13 +266,13 @@ local function updateGameplayOutcome()
 				end
 			end
 
-			Achievements.onGameOver()
+			if not State.activeContract then Achievements.onGameOver() end
 			State.speed = 0.35
 			State.gameOver = true
 			State.victory = true
 			GameplayOutcome.recordCurrentRun(true)
 
-			if State.totalLeaks == 0 then
+			if not State.activeContract and State.totalLeaks == 0 then
 				local diff = Difficulty.key()
 				if diff == "hard" then
 					Achievements.unlock("NO_LEAKS_NORMAL")
