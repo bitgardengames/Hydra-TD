@@ -167,7 +167,7 @@ local function drawHeader(l)
 	Text.printShadow(L("campaign.title"), l.margin, 20)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
-	Text.printShadow(L("campaign.selectMap"), l.margin, 61)
+	Text.printShadow(L("campaign.selectMap"), l.margin, 66)
 
 	local startX = l.left.x + l.left.w + 18
 	local available = l.right.x - startX - 14
@@ -183,9 +183,9 @@ local function drawHeader(l)
 		local locked = isMapLocked(i)
 		local selected = i == State.mapIndex
 		lg.setColor(selected and Theme.ui.warn or (locked and Theme.ui.panel or Theme.ui.good))
-		lg.circle("fill", x, y, selected and 17 or 13)
+		lg.circle("fill", x, y, selected and 19 or 15)
 		lg.setColor(Theme.outline.color)
-		lg.circle("line", x, y, selected and 17 or 13)
+		lg.circle("line", x, y, selected and 19 or 15)
 		Fonts.set("ui")
 		lg.setColor(selected and Theme.outline.color or Theme.ui.text)
 		lg.printf(locked and "•" or tostring(i), x - 12, y - 9, 24, "center")
@@ -197,15 +197,15 @@ local function drawHeader(l)
 		local stats = statsFor(map.id)
 		total = total + (stats and Medals.getCount(stats.completedDifficulty) or 0)
 	end
-	local badgeW = 132
-	panel(l.sw - l.margin - badgeW, 18, badgeW, 45)
+	local badgeW = 150
+	panel(l.sw - l.margin - badgeW, 15, badgeW, 51)
 	-- The campaign total is medal progress, not a generic score. Show all three
 	-- finishes here so the summary uses the same bronze/silver/gold language as
 	-- the map rows and detail panel.
-	Medals.draw(l.sw - l.margin - badgeW + 10, 31, 3, 7, 3)
-	Fonts.set("ui")
+	Medals.draw(l.sw - l.margin - badgeW + 10, 31, 3, 9, 5)
+	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
-	lg.printf(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 59, 31, 52, "center")
+	lg.printf(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 68, 26, 62, "center")
 end
 
 local function drawMapList(l)
