@@ -411,7 +411,6 @@ function Screen.load()
 
 				State.worldMapIndex = State.mapIndex
 				State.challenge = false
-				State.endless = false
 				State.mode = "game"
 				Backdrop.stop()
 				Difficulty.set(Save.data.settings.difficulty)

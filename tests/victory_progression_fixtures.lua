@@ -11,11 +11,6 @@ local state = {
 	resolveMapIndex = function(index) return index end,
 }
 local maps = {{id = "first"}, {id = "highridge"}, {id = "twinloop"}}
-local campaignComplete = false
-local campaignUnlocks = {
-	isChallengeModeUnlocked = function() return campaignComplete end,
-	isEndlessUnlocked = function() return campaignComplete end,
-}
 
 local function module(name, value)
 	package.loaded[name] = value
@@ -41,21 +36,6 @@ module("core.save", {})
 module("core.localization", setmetatable({}, {__call = function(_, key) return key end}))
 module("world.tower_defs", {})
 module("systems.ability_defs", {})
-module("systems.campaign_unlocks", campaignUnlocks)
-module("systems.gameplay_outcome", {
-	continueIntoEndless = function()
-		state.gameOver = false
-		state.victory = false
-		state.endless = true
-		state.wave = state.wave + 1
-		state.waveLeaks = 0
-		state.activeBoss = nil
-		state.activeBossKind = nil
-		state.inPrep = true
-		state.speed = 1
-		state.mode = "game"
-	end,
-})
 module("render.draw_entities", {})
 module("ui.run_recap", {})
 module("ui.scroll_view", {
@@ -90,27 +70,13 @@ state.worldMapIndex = #maps - 1
 Victory.load()
 local nextButton = assert(findButton("next"), "penultimate victory should present Next Map")
 assert(nextButton.label == "menu.nextMap", "progression action should retain the Next Map label")
-assert(not campaignUnlocks.isChallengeModeUnlocked(), "Challenge should remain locked after High Ridge")
-assert(not campaignUnlocks.isEndlessUnlocked(), "Endless should remain locked after High Ridge")
-assert(not findButton("endless").enabled, "Endless should remain locked after High Ridge")
 nextButton.onClick()
 assert(state.worldMapIndex == #maps, "penultimate victory should advance exactly one map")
 
 state.worldMapIndex = #maps
-campaignComplete = true
-state.unlockedRewardsThisVictory = {{type = "campaign_complete", id = "challenge_endless"}}
-Victory.load()
-assert(not findButton("next"), "final victory must not present a same-map Next Map restart")
-assert(campaignUnlocks.isChallengeModeUnlocked(), "Challenge should unlock after Twin Loop")
-assert(campaignUnlocks.isEndlessUnlocked(), "Endless should unlock after Twin Loop")
-assert(findButton("endless").enabled, "Endless should unlock after Twin Loop")
-assert(findButton("endless").label == "victory.finalCampaign.endlessAction",
-	"final victory should frame Endless as the post-campaign challenge")
-assert(findButton("menu"), "final victory should retain a non-progression menu action")
-
 state.unlockedRewardsThisVictory = {}
 Victory.load()
-assert(findButton("endless").label == "victory.finalCampaign.endlessAction",
-	"repeat final clears should retain the post-campaign Endless framing")
+assert(not findButton("next"), "final victory must not present a same-map Next Map restart")
+assert(findButton("menu"), "final victory should retain a menu action")
 
 print("victory progression fixtures passed")

@@ -54,15 +54,15 @@ but may be waived only through the documented release exception process.
 | --- | --- | --- | --- |
 | INS-01 | RB | Remove the game and its user-data directory, reboot, then install the RC through the release channel. Launch it from the client, not the repository. | Install has no stale/local files; first launch reaches the main menu, reports the recorded build, creates valid defaults, and needs no developer runtime. |
 | INS-02 | RB | Install over the current public release without deleting its files; launch and play one map. | Client updates cleanly; no obsolete-file errors, duplicate content, or version mismatch. |
-| SAVE-01 | RB | In the previous public build create saves at: new profile, partial campaign, final map unlocked, completed campaign/Endless unlocked, custom settings/keybinds, and partially completed achievements. Back them up, install RC, and load each copy once. | Migration is automatic and non-destructive; campaign medals/unlocks, stats, achievements, loadout, settings, and bindings retain valid values. Play, save, relaunch, and confirm the migrated format remains stable. |
+| SAVE-01 | RB | In the previous public build create saves at: new profile, partial campaign, final map unlocked, completed campaign, custom settings/keybinds, and partially completed achievements. Back them up, install RC, and load each copy once. | Migration is automatic and non-destructive; campaign medals/unlocks, stats, achievements, loadout, settings, and bindings retain valid values. Play, save, relaunch, and confirm the migrated format remains stable. |
 | SAVE-02 | RB | Test separate corrupted copies: truncated/empty file, malformed bytes, valid file with a damaged field/table, and newest save damaged when a backup exists. Launch once per copy. | Game does not crash or hang. It uses a valid backup or safe defaults, clearly communicates recovery where applicable, preserves recoverable progress, and writes a usable save only after recovery. |
 | SAVE-03 | P1 | Make the save read-only or temporarily deny write access; play until a save point, restore access, and relaunch. | Failure is handled without a crash or false success; recovery does not silently destroy the last good save. |
 | FLOW-01 | RB | From an active campaign run trigger defeat, choose Restart, lose again, and return to menu. | Defeat recap is correct; Restart resets wave, enemies, towers, money, lives, ability charge/effects, pause state, and run stats without changing earned progression. Menu remains usable. |
 | FLOW-02 | RB | Win a non-final map, inspect recap/rewards, continue, then replay and choose menu/restart where offered. | Victory is recorded once, correct next content unlocks, rewards are not duplicated, and each navigation path starts a clean run. |
-| FLOW-03 | RB | Win the final campaign map, exercise its continue/menu flow, relaunch, then start the newly unlocked content. | Final completion, medal, achievements/rewards, and final-campaign unlocks persist; Endless/related challenge is available and launches correctly. |
+| FLOW-03 | RB | Win the final campaign map, exercise its menu flow, relaunch, then inspect the saved campaign completion. | Final completion, medals, achievements, and campaign progress persist correctly. |
 | LIFE-01 | RB | Quit from main menu, active play, pause menu, victory, and defeat. Relaunch after each. Also close via the OS window control once. | Process exits promptly with no hang/crash/orphan process; Steam status clears; the last completed save transaction is intact and no in-progress run is falsely awarded. |
 
-## Campaign, bosses, and Endless
+## Campaign and bosses
 
 Execute `CAMP-01` once for **every campaign map at every difficulty**. Record a
 separate result row for each combination (for example `CAMP-01/map-3/hard`). Do
@@ -72,8 +72,6 @@ not infer one difficulty from another.
 | --- | --- | --- | --- |
 | CAMP-01 | RB | Complete every campaign map on **Easy**, **Normal**, and **Hard**, including at least one leak and one clean wave per difficulty. Verify previews, starting money/lives, rewards, map progression, and medals. | All maps are completable; selected difficulty is used in play/recap and persists; difficulty-specific economy/enemy/boss behavior and the correct medal/completion state apply without cross-difficulty corruption. |
 | BOSS-01 | RB | For every authored boss encounter on each difficulty, reach the boss normally; observe spawn, boss HUD, abilities/attacks/adds/phases, leak behavior, and defeat/kill. Replay at least one encounter after restart. | Correct boss spawns on schedule and path; HUD/health/phases and special behavior are correct; kill/leak resolves exactly once, awards correct charge/stat/progression, and leaves no stuck entities or music/UI. |
-| END-01 | RB | After final-campaign unlock, choose Continue into Endless from victory; also launch Endless by its normal menu route after relaunch. Complete several additional waves, pause, and return to menu. | Campaign victory is saved before continuation; wave numbering/scaling/rewards continue, no victory screen repeats, and both entry routes use the intended unlocked state. |
-| END-02 | P1 | Lose a late Endless run, review recap, restart, and return to menu/relaunch. | Defeat and best/stat tracking are accurate; campaign completion remains intact; Restart starts the intended mode at its defined starting state. |
 
 ## Towers and every upgrade branch
 
@@ -116,7 +114,7 @@ edge-of-map targeting, pause/focus loss during targeting/effect, and restart cle
 
 | ID | Gate | Setup / action | Expected result |
 | --- | --- | --- | --- |
-| PROG-01 | RB | From a fresh save, progress through every map reward and final completion. At each step inspect locked maps, towers, abilities, loadout slots, and Endless before and after earning the prerequisite. | Only intended items unlock, exactly once and at the correct step; locked content cannot be selected; unlock cards/text are accurate; state survives relaunch. |
+| PROG-01 | RB | From a fresh save, progress through every map reward and final completion. At each step inspect locked maps, towers, abilities, loadout slots before and after earning each prerequisite. | Only intended items unlock, exactly once and at the correct step; locked content cannot be selected; unlock cards/text are accurate; state survives relaunch. |
 | ACH-01 | RB | Using fresh/repro saves, trigger every packaged achievement condition: boss totals; enemy totals; 250/1000 kills for each of six towers; Easy/Normal/Hard campaign clears; Normal/Hard no-leak clears; first/100 tower upgrades; last-second condition. Check in-game Progress and Steam. | Each achievement/stat increments only from eligible gameplay, unlocks once at the threshold, matches Steam after callback/store, persists offline locally, and does not unlock early or regress. |
 | ACH-02 | P1 | Cross multiple achievement thresholds in one session, quit/relaunch, then reconnect Steam after earning one while offline. | Notifications do not block play; all in-game values persist and Steam reconciles without duplicates or lost progress. |
 
@@ -153,7 +151,6 @@ frame times above 33.3 ms, no unbounded memory/save growth, and no thermal crash
 | ID | Gate | Duration / action | Expected result |
 | --- | --- | --- | --- |
 | PERF-01 | RB | On minimum hardware at 1280x720, play a representative late campaign wave and every boss with a dense six-tower build, projectiles/effects, damage meter, and abilities. Capture at least 10 minutes including a worst-case burst. | Meets thresholds; input remains responsive; simulation speed, audio, UI, and enemy/path behavior remain correct under load. |
-| SOAK-01 | RB | Continue a completed campaign into Endless for at least **4 hours or 100 Endless waves, whichever is longer**. Use all towers/abilities, pause/focus/overlay periodically, and sample metrics every 30 minutes. | No crash, hang, runaway entity count, numerical/UI overflow, progressive slowdown, audio loss, save corruption, or unbounded RAM/VRAM growth; defeat and clean quit still work. |
 | SOAK-02 | RB | For at least **100 cycles**, alternate active-run Restart, defeat Restart, victory/menu continuation, and return-to-menu/start; vary map/difficulty and include pause/settings every tenth cycle. Relaunch packaged game every 25 cycles. | Every cycle begins cleanly; no retained enemies/effects/charge/stats, duplicate handlers/music, navigation failure, progression duplication, memory trend, crash, or corrupted save. |
 | PERF-02 | P1 | Repeat `PERF-01` in fullscreen native resolution on each minimum-supported platform and compare to the last released build using the same capture. | No material unexplained regression; any accepted regression has a linked defect/waiver and updated published requirements if necessary. |
 

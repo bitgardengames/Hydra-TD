@@ -14,8 +14,6 @@ local Save = require("core.save")
 local L = require("core.localization")
 local TowerDefs = require("world.tower_defs")
 local AbilityDefs = require("systems.ability_defs")
-local CampaignUnlocks = require("systems.campaign_unlocks")
-local GameplayOutcome = require("systems.gameplay_outcome")
 local DrawEntities = require("render.draw_entities")
 local RunRecap = require("ui.run_recap")
 local ScrollView = require("ui.scroll_view")
@@ -53,7 +51,6 @@ local rewardActionPressed = nil
 local hoveredMedalTier = nil
 local medalHoverScales = {1, 1, 1}
 local isFinalCampaignMap = false
-local unlockedFinalChallenge = false
 local runStats = AnimatedRunStats.new(Theme.ui.good)
 
 -- Colors
@@ -192,15 +189,6 @@ local function buildRewardCards()
 		end
 	end
 	rewardCardIndex = 1
-end
-
-local function hasNewFinalChallengeReward()
-	for _, reward in ipairs(State.unlockedRewardsThisVictory or {}) do
-		if reward.type == "campaign_complete" and reward.id == "challenge_endless" then
-			return true
-		end
-	end
-	return false
 end
 
 local function rewardCardBlockingInput()
@@ -446,7 +434,6 @@ end
 function Screen.load()
 	local hasNextMap = State.worldMapIndex < #Maps
 	isFinalCampaignMap = State.worldMapIndex == #Maps
-	unlockedFinalChallenge = isFinalCampaignMap and hasNewFinalChallengeReward()
 	buttons = {}
 
 	if hasNextMap then
@@ -468,17 +455,6 @@ function Screen.load()
 		}
 	end
 
-	buttons[#buttons + 1] = {
-		id = "endless",
-		label = isFinalCampaignMap and L("victory.finalCampaign.endlessAction") or L("menu.endless"),
-		w = btnW,
-		h = btnH,
-		onClick = function()
-			Sound.play("uiConfirm")
-			GameplayOutcome.continueIntoEndless()
-		end,
-		enabled = not Constants.IS_DEMO and CampaignUnlocks.isEndlessUnlocked(),
-	}
 
 	buttons[#buttons + 1] = {
 		id = "menu",
@@ -642,14 +618,11 @@ function Screen.draw()
 	local recapContentY = g.recapY - recapScroll.offset
 	if isFinalCampaignMap then
 		local difficulty = RunRecap.getDifficultyLabel() or L("difficulty." .. Difficulty.key())
-		local messageKey = unlockedFinalChallenge and "firstClear" or "repeatClear"
+		local messageKey = State.wasFirstClear and "firstClear" or "repeatClear"
 		Fonts.set("ui")
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.9 * alpha)
 		Text.printfShadow(L("victory.finalCampaign." .. messageKey, difficulty), boxX + g.padX,
 			recapContentY + 2, boxW - g.padX * 2, "center")
-		lg.setColor(colorGood[1], colorGood[2], colorGood[3], 0.9 * alpha)
-		Text.printfShadow(L("victory.finalCampaign." .. (unlockedFinalChallenge and "rewardUnlocked" or "challengePrompt")),
-			boxX + g.padX, recapContentY + (g.compact and 38 or 44), boxW - g.padX * 2, "center")
 	end
 	-- Difficulty
 	local difficultyLabel = RunRecap.getDifficultyLabel()

@@ -34,12 +34,6 @@ local rewardsByMapId = {
 	-- There are fewer meaningful unlocks than campaign maps. Keep the real
 	-- rewards contiguous at the front rather than using route progression as a
 	-- placeholder reward or leaving gaps between unlocks.
-	twinloop = {{
-		type = "campaign_complete",
-		id = "challenge_endless",
-		labelKey = "campaign.rewards.challengeEndless",
-		descriptionKey = "victory.rewardDescriptions.challenge_endless",
-	}},
 }
 
 local requiredMapByTower = {
@@ -201,14 +195,6 @@ end
 
 function CampaignUnlocks.isModuleCategoryUnlocked(category)
 	return category == "identity" or category == "special" or isFeatureUnlocked("module_category", category)
-end
-
-function CampaignUnlocks.isChallengeModeUnlocked()
-	return isFeatureUnlocked("campaign_complete", "challenge_endless")
-end
-
-function CampaignUnlocks.isEndlessUnlocked()
-	return CampaignUnlocks.isChallengeModeUnlocked()
 end
 
 function CampaignUnlocks.isTowerUnlocked(kind)
