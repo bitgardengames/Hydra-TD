@@ -384,6 +384,42 @@ local wavesByMapId = {
 	},
 }
 
+-- The second act revisits each map's established composition in a different
+-- order, with measured count growth. This keeps each map's pacing identity and
+-- enemy curriculum intact while ensuring waves 11-19 are not simple repeats.
+-- Wave 20 builds on the first boss encounter with a larger escort.
+local secondActProfiles = {
+	{ source = 7, countScale = 1.08, delayScale = 1.10 },
+	{ source = 6, countScale = 1.12, delayScale = 1.05 },
+	{ source = 8, countScale = 1.10, delayScale = 1.00 },
+	{ source = 7, countScale = 1.16, delayScale = 0.95 },
+	{ source = 9, countScale = 1.12, delayScale = 1.05 },
+	{ source = 6, countScale = 1.24, delayScale = 0.90 },
+	{ source = 8, countScale = 1.20, delayScale = 0.90 },
+	{ source = 7, countScale = 1.30, delayScale = 0.85 },
+	{ source = 9, countScale = 1.25, delayScale = 0.85 },
+}
+
+local function scaledWave(source, countScale, delayScale)
+	local wave = {}
+	for _, group in ipairs(source) do
+		wave[#wave + 1] = g(
+			group.kind,
+			math.max(1, math.floor(group.count * countScale + 0.5)),
+			group.spacing,
+			group.delay * delayScale
+		)
+	end
+	return wave
+end
+
+for _, waves in pairs(wavesByMapId) do
+	for offset, profile in ipairs(secondActProfiles) do
+		waves[10 + offset] = scaledWave(waves[profile.source], profile.countScale, profile.delayScale)
+	end
+	waves[20] = scaledWave(waves[10], 1.25, 0.90)
+end
+
 -- Boss selections remain explicit because they affect the spawned enemy type.
 local bossArchetypeByMapId = {
 	riverbend = "boss_summoner",
@@ -405,6 +441,7 @@ local bossArchetypeByMapId = {
 
 for mapId, bossArchetype in pairs(bossArchetypeByMapId) do
 	wavesByMapId[mapId][10].bossArchetype = bossArchetype
+	wavesByMapId[mapId][20].bossArchetype = bossArchetype
 end
 
 local function mapIdOf(mapOrId)
