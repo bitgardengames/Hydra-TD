@@ -8,6 +8,7 @@ local Save = require("core.save")
 local EnemyHealthVisibility = require("render.enemy_health_visibility")
 local TowerVictoryDance = require("render.tower_victory_dance")
 local TowerIdleAnimation = require("render.tower_idle_animation")
+local TowerWaveCheer = require("render.tower_wave_cheer")
 
 local random = love.math.random
 local lg = love.graphics
@@ -1083,6 +1084,14 @@ local function drawTowerInstance(t, cx, renderY, index)
 		headX = headX + sway
 		headY = headY + bob
 		headAngle = headAngle + turn
+	elseif (State.perfectWaveCelebrationClock or 0) > 0 then
+		local settings = Save.data and Save.data.settings
+		local motionEnabled = not settings or settings.cameraMotion ~= false
+		local sway, bob, turn = TowerWaveCheer.pose(
+			State.perfectWaveCelebrationClock, index, motionEnabled)
+		headX = headX + sway
+		headY = headY + bob
+		headAngle = headAngle + turn
 	else
 		local clock = State.abilityClock or 0
 		local recentlyFired = (t.fireAnim or 0) > 0 or (t.recoil or 0) > 0.05
@@ -1111,6 +1120,33 @@ local function drawTowerInstance(t, cx, renderY, index)
 	drawTowerBaseHighlight(t.kind, cx, renderY, 1)
 	drawTowerCore(t.kind, headX, headY, headAngle, t.recoil, 1, 1, 1, 1,
 		idleEffect)
+end
+
+local function drawPerfectWaveStar(t, cx, renderY)
+	local remaining = State.perfectWaveCelebrationClock or 0
+	if State.victory or remaining <= 0 or State.featuredPerfectWaveTower ~= t then return end
+
+	local settings = Save.data and Save.data.settings
+	local motionEnabled = not settings or settings.cameraMotion ~= false
+	local dense = not settings or settings.highDensityParticles ~= false
+	local elapsed = TowerWaveCheer.duration - remaining
+	local fadeIn = min(1, elapsed / 0.12)
+	local fadeOut = min(1, remaining / 0.22)
+	local alpha = fadeIn * fadeOut
+	local y = renderY - size * 1.05
+	if motionEnabled then y = y - sin(elapsed * pi * 3) * 0.8 end
+	local radius = dense and 4.5 or 3.8
+	local points = {}
+	for i = 0, 9 do
+		local angle = -HALF_PI + i * pi / 5
+		local r = (i % 2 == 0) and radius or radius * 0.43
+		points[#points + 1] = cx + cos(angle) * r
+		points[#points + 1] = y + sin(angle) * r
+	end
+	lg.setColor(colorSelected[1], colorSelected[2], colorSelected[3], alpha)
+	lg.polygon("fill", points)
+	lg.setColor(outR, outG, outB, alpha * 0.8)
+	lg.polygon("line", points)
 end
 
 local function drawTowerUpgradeFlash(t, cx, renderY)
@@ -1217,6 +1253,7 @@ local function drawTowers()
 
 		-- Top
 		drawTowerInstance(t, cx, renderY, i)
+		drawPerfectWaveStar(t, cx, renderY)
 		drawTowerUpgradeFlash(t, cx, renderY)
 		if (t.abilityAttackSpeed or 1) > 1 then
 			local pulse = .55 + .3 * sin((State.abilityClock or 0) * 7 + i)
