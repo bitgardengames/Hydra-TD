@@ -52,12 +52,12 @@ for path in pairs(files) do
 	if path:match("^saves/save%.corrupt%-%d%d%d%d%d%d%d%d%-%d%d%d%d%d%d") then diagnostic = path end
 end
 check(diagnostic and files[diagnostic], "malformed primary was not preserved")
-check(Save.data.version == 7, "malformed save did not produce fresh data")
+check(Save.data.version == 8, "malformed save did not produce fresh data")
 
 -- Older saves migrate while retaining fields this version does not know about.
 reset({["saves/save.lua"] = "return { version = 1, unknownFutureField = { enabled = true } }"})
 Save.load()
-check(Save.data.version == 7, "old version was not migrated")
+check(Save.data.version == 8, "old version was not migrated")
 check(Save.data.unknownFutureField.enabled, "unknown field was discarded")
 check(files["saves/save.bak.lua"], "pre-migration save was not backed up")
 
@@ -129,5 +129,19 @@ Save.recordMapResult("switchback", "hard", true)
 check(Save.data.mapStats.switchback.completedDifficulty == "hard", "a map clear was not recorded")
 check(type(Save.data.mapStats.switchback.medalEarnedAt.hard) == "number",
 	"a map clear timestamp was not recorded")
+
+-- Contract migration is additive, attempts are idempotent, and only better
+-- objective results replace a personal best.
+check(type(Save.data.contracts.attempted) == "table"
+	and type(Save.data.contracts.completed) == "table"
+	and type(Save.data.contracts.personalBests) == "table", "contract history was not migrated")
+local contract = require("systems.contracts").generate(20000 * 86400, "daily", 1)
+check(Save.recordContractAttempt(contract.id), "first contract attempt was not recorded")
+check(not Save.recordContractAttempt(contract.id), "repeat attempt was recorded twice")
+contract.objective = {id = "score", direction = "max", label = "Highest score"}
+check(Save.recordContractCompletion(contract, {score = 100}), "first personal best was not recorded")
+check(not Save.recordContractCompletion(contract, {score = 90}), "worse repeat result replaced personal best")
+check(Save.data.contracts.personalBests[contract.id].value == 100, "personal best value changed")
+check(Save.data.contracts.completed[contract.id] == true, "completion ID was not persisted")
 
 print("save fixtures passed")

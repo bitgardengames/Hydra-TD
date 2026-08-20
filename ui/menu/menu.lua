@@ -5,6 +5,7 @@ local Settings = require("ui.menu.screens.settings")
 local Screens = {
 	menu = require("ui.menu.screens.main_menu"),
 	campaign = require("ui.menu.screens.campaign"),
+	contracts = require("ui.menu.screens.contracts"),
 	settings = Settings,
 	settings_gameplay = Settings,
 	victory = require("ui.menu.screens.victory"),

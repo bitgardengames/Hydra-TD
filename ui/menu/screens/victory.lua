@@ -446,8 +446,8 @@ local function resetConfetti()
 end
 
 function Screen.load()
-	local hasNextMap = State.worldMapIndex < #Maps
-	isFinalCampaignMap = State.worldMapIndex == #Maps
+	local hasNextMap = not State.activeContract and State.worldMapIndex < #Maps
+	isFinalCampaignMap = not State.activeContract and State.worldMapIndex == #Maps
 	buttons = {}
 
 	if hasNextMap then
@@ -513,7 +513,7 @@ function Screen.enter()
 	})
 	resetConfetti()
 	Medals.resetAnimations()
-	recordFirstClear()
+	if not State.activeContract then recordFirstClear() end
 
 	previousMedalCount = Medals.getCount(State.previousCompletionDifficulty)
 	currentMedalCount = Medals.getCount(Difficulty.key())
