@@ -139,7 +139,6 @@ function resetGame()
 	State.endTitle = nil
 	State.endReason = nil
 	State.victoryDanceClock = 0
-	State.perfectWaveCelebrationClock = 0
 	State.previousCompletionDifficulty = nil
 	State.wasFirstClear = false
 	State.unlockedTowersThisVictory = {}
@@ -206,8 +205,6 @@ end
 
 local function updateGamePresentation(dt)
 	State.renderStep = dt
-	State.perfectWaveCelebrationClock = max(0,
-		(State.perfectWaveCelebrationClock or 0) - dt)
 
 	State.livesAnim = max(0, State.livesAnim - dt * 2)
 	State.waveAnim = max(0, State.waveAnim - dt * 4.5)
@@ -242,8 +239,6 @@ local function updateGameplayOutcome()
 		if State.waveLeaks == 0 and not (campaignFinalWave and State.wave == campaignFinalWave) then
 			perfectWaveBonus = Waves.getWaveCompletionBonus(State.wave, State.waveLeaks)
 			State.money = State.money + perfectWaveBonus
-
-			State.perfectWaveCelebrationClock = 1.05
 		end
 		Waves.presentWaveCleared(perfectWaveBonus)
 		if campaignFinalWave and State.wave == campaignFinalWave then
