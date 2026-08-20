@@ -13,6 +13,20 @@ function RunStats.reset()
 		towerKinds = {},
 	}
 	RunStats.nextTowerId = 0
+	RunStats.elapsed = 0
+	RunStats.final = nil
+end
+
+function RunStats.update(dt)
+	if not RunStats.final then RunStats.elapsed = RunStats.elapsed + math.max(0, tonumber(dt) or 0) end
+end
+
+function RunStats.finish(outcome, state)
+	if RunStats.final then return RunStats.final end
+	state = state or {}
+	RunStats.final = {outcome = outcome, duration = RunStats.elapsed, score = state.score or 0,
+		remainingLives = state.lives or 0, leaks = state.totalLeaks or 0, wave = state.wave or 0}
+	return RunStats.final
 end
 
 local function getData()

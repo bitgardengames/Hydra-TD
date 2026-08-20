@@ -4,7 +4,7 @@ local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local BACKUP_FILE = SAVE_DIR .. "/save.bak.lua"
 local TEMP_FILE = SAVE_DIR .. "/save.tmp.lua"
-local SAVE_VERSION = 8 -- Add rotating contract history and personal bests
+local SAVE_VERSION = 9 -- Add per-map, mode, and difficulty run records
 local DIRTY_DELAY = 0.35
 
 local Hotkeys = require("core.hotkeys")
@@ -91,17 +91,18 @@ local function normalizeMapStats(mapStats)
 	local changed = false
 	for mapId, stats in pairs(mapStats) do
 		if type(stats) == "table" and (stats.completedDifficulty == "easy"
-			or stats.completedDifficulty == "normal" or stats.completedDifficulty == "hard")
+			or stats.completedDifficulty == "normal" or stats.completedDifficulty == "hard"
+			or type(stats.records) == "table")
 		then
 			if type(stats.medalEarnedAt) ~= "table" then
 				-- Older medals intentionally remain undated.
 				stats.medalEarnedAt = {}
 				changed = true
 			end
+			if type(stats.records) ~= "table" then stats.records = {}; changed = true end
 			for key in pairs(stats) do
-				if key ~= "completedDifficulty" and key ~= "medalEarnedAt" then
-					stats[key] = nil
-					changed = true
+				if key ~= "completedDifficulty" and key ~= "medalEarnedAt" and key ~= "records" then
+					stats[key] = nil; changed = true
 				end
 			end
 		else
@@ -110,6 +111,16 @@ local function normalizeMapStats(mapStats)
 		end
 	end
 	return changed
+end
+
+local function migrateRunRecords(data, oldVersion)
+	if oldVersion >= 9 then return false end
+	-- Version 7/8 map entries had no scoped record collection.  Create it
+	-- explicitly so normalization never has to infer (or erase) versioned data.
+	for _, stats in pairs(data.mapStats or {}) do
+		if type(stats) == "table" and stats.completedDifficulty and type(stats.records) ~= "table" then stats.records = {} end
+	end
+	return true
 end
 
 local function normalizeSettings(data)
@@ -184,7 +195,9 @@ local function migrateMapIds()
 end
 
 local function normalizeLoadedData(data)
-	local changed = migrateVersion(data)
+	local oldVersion = tonumber(data.version) or 0
+	local changed = migrateRunRecords(data, oldVersion)
+	changed = migrateVersion(data) or changed
 	changed = defaultValue(data, "furthestIndex", 1) or changed
 	changed = defaultTable(data, "unlockedMaps") or changed
 	changed = defaultTable(data, "mapStats") or changed
@@ -421,6 +434,47 @@ function Save.recordMapResult(mapId, difficulty, completed)
 	end
 
 	Save.flush()
+end
+
+local RECORD_RULES = {
+	bestScore = "max", fastestClear = "min", highestRemainingLives = "max",
+	fewestLeaks = "min", highestEndlessWave = "max",
+}
+
+function Save.getMapRecords(mapId, mode, difficulty)
+	local s = Save.data and Save.data.mapStats and Save.data.mapStats[mapId]
+	return s and s.records and s.records[mode] and s.records[mode][difficulty] or nil
+end
+
+-- Returns the keys which were strictly improved. Ties deliberately retain the
+-- original record and timestamp. Clear-only metrics cannot be set by a defeat;
+-- cancelled runs (restart/abandon) never reach this function.
+function Save.recordRun(mapId, mode, difficulty, result)
+	if not Save.data or type(result) ~= "table" or (result.outcome ~= "completed" and result.outcome ~= "failed") then return {} end
+	if type(mapId) ~= "string" or type(mode) ~= "string" or type(difficulty) ~= "string" then return {} end
+	local stats = Save.data.mapStats[mapId] or {medalEarnedAt = {}, records = {}}
+	Save.data.mapStats[mapId] = stats
+	stats.records = type(stats.records) == "table" and stats.records or {}
+	stats.records[mode] = type(stats.records[mode]) == "table" and stats.records[mode] or {}
+	local record = stats.records[mode][difficulty] or {}
+	stats.records[mode][difficulty] = record
+	local candidates = {bestScore = result.score}
+	if result.outcome == "completed" then
+		candidates.fastestClear = result.duration
+		candidates.highestRemainingLives = result.remainingLives
+		candidates.fewestLeaks = result.leaks
+	end
+	if mode == "endless" then candidates.highestEndlessWave = result.wave end
+	local improved = {}
+	for key, value in pairs(candidates) do
+		value = tonumber(value)
+		local old, rule = record[key], RECORD_RULES[key]
+		if value and value >= 0 and (old == nil or (rule == "min" and value < old) or (rule == "max" and value > old)) then
+			record[key] = value; improved[#improved + 1] = key
+		end
+	end
+	if #improved > 0 then record.updatedAt = os.time(); Save.flush() end
+	return improved
 end
 
 -- Serialization

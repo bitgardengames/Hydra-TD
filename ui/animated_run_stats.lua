@@ -93,7 +93,8 @@ function AnimatedRunStats:draw(x, y, width, alpha)
 		local barWidth = math.min(width, BAR_MAX_WIDTH)
 		local barX = x + (width - barWidth) * 0.5
 		Fonts.set("ui")
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.78 * alpha)
+		local rowColor = row.isRecord and Theme.ui.good or Theme.ui.text
+		lg.setColor(rowColor[1], rowColor[2], rowColor[3], 0.78 * alpha)
 		Text.printfShadow(row.label, barX, rowY, barWidth * 0.68, "left")
 		local value = formatNumber(row.displayedValue)
 		if row.denominator then value = value .. " / " .. formatNumber(row.denominator) end

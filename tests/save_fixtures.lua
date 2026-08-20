@@ -108,7 +108,7 @@ check(not accepted and not changed, "invalid ability selection was not rejected"
 
 -- Map history retains only completion difficulty and the time each medal was earned.
 reset({["saves/save.lua"] = [[return {
-	version = 6,
+	version = 7,
 	mapStats = {riverbend = {
 		bestWave = 19, legacyPeakWave = 42, wins = 3, losses = 4,
 		completedDifficulty = "normal", medalEarnedAt = {easy = 100, normal = 200},
@@ -119,6 +119,7 @@ local mapStats = Save.data.mapStats.riverbend
 check(mapStats.completedDifficulty == "normal", "map completion difficulty was discarded")
 check(mapStats.medalEarnedAt.easy == 100 and mapStats.medalEarnedAt.normal == 200,
 	"map completion timestamps were discarded")
+check(type(mapStats.records) == "table", "version 7 map records were not explicitly migrated")
 check(mapStats.bestWave == nil and mapStats.legacyPeakWave == nil
 	and mapStats.wins == nil and mapStats.losses == nil, "excess map statistics survived migration")
 check(Save.data.mapStats.failed_map == nil, "an uncleared map record survived migration")
@@ -129,6 +130,35 @@ Save.recordMapResult("switchback", "hard", true)
 check(Save.data.mapStats.switchback.completedDifficulty == "hard", "a map clear was not recorded")
 check(type(Save.data.mapStats.switchback.medalEarnedAt.hard) == "number",
 	"a map clear timestamp was not recorded")
+
+-- Version 9 records are isolated by map/mode/difficulty and only strict
+-- improvements replace a best. Failed runs may improve score, but never clear
+-- quality; cancelled runs are rejected before persistence.
+local first = Save.recordRun("switchback", "campaign", "normal", {
+	outcome = "completed", score = 100, duration = 90, remainingLives = 8, leaks = 3, wave = 20,
+})
+check(#first == 4, "first clear did not establish all campaign records")
+check(#Save.recordRun("switchback", "campaign", "normal", {
+	outcome = "completed", score = 100, duration = 90, remainingLives = 8, leaks = 3,
+}) == 0, "a tied result was reported as a new record")
+Save.recordRun("switchback", "campaign", "normal", {
+	outcome = "completed", score = 120, duration = 80, remainingLives = 10, leaks = 1,
+})
+local normal = Save.getMapRecords("switchback", "campaign", "normal")
+check(normal.bestScore == 120 and normal.fastestClear == 80 and normal.highestRemainingLives == 10
+	and normal.fewestLeaks == 1, "strict improvements were not retained")
+Save.recordRun("switchback", "campaign", "easy", {outcome = "completed", score = 999,
+	duration = 20, remainingLives = 20, leaks = 0})
+check(normal.bestScore == 120, "a lower-difficulty result contaminated another difficulty")
+Save.recordRun("switchback", "campaign", "normal", {outcome = "failed", score = 130,
+	duration = 10, remainingLives = 0, leaks = 20})
+check(normal.bestScore == 130 and normal.fastestClear == 80 and normal.fewestLeaks == 1,
+	"a failed run updated clear-only records")
+check(#Save.recordRun("switchback", "campaign", "normal", {outcome = "abandoned", score = 9999}) == 0
+	and normal.bestScore == 130, "an abandoned run updated records")
+Save.recordRun("switchback", "endless", "hard", {outcome = "failed", score = 20, wave = 31})
+check(Save.getMapRecords("switchback", "endless", "hard").highestEndlessWave == 31,
+	"endless wave was not recorded")
 
 -- Contract migration is additive, attempts are idempotent, and only better
 -- objective results replace a personal best.

@@ -5,6 +5,7 @@ local Difficulty = require("systems.difficulty")
 local Achievements = require("systems.achievements")
 local Sound = require("systems.sound")
 local L = require("core.localization")
+local RunStats = require("systems.run_stats")
 
 local GameplayOutcome = {}
 
@@ -20,8 +21,19 @@ function GameplayOutcome.recordCurrentRun(completed)
 
 	local stats = Save.data.mapStats[map.id]
 	State.previousCompletionDifficulty = stats and stats.completedDifficulty or nil
-	Save.recordMapResult(map.id, Difficulty.key(), completed == true)
+	local difficulty = Difficulty.key()
+	local mode = State.runMode or (State.activeContract and "contract") or (State.endless and "endless") or "campaign"
+	local result = RunStats.finish(completed and "completed" or "failed", State)
+	State.runResult = result
+	State.newRecords = Save.recordRun(map.id, mode, difficulty, result)
+	Save.recordMapResult(map.id, difficulty, completed == true)
 	return true
+end
+
+function GameplayOutcome.cancel(reason)
+	State.runResult = RunStats.finish(reason == "restart" and "restarted" or "abandoned", State)
+	State.newRecords = {}
+	return State.runResult
 end
 
 function GameplayOutcome.defeat(reason)

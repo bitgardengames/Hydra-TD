@@ -21,6 +21,7 @@ local AbilityIcons = require("ui.ability_icons")
 local Tooltip = require("ui.tooltip")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
+local RecordRows = require("ui.record_rows")
 local TowerVictoryDance = require("render.tower_victory_dance")
 
 local Overlay = require("ui.overlay")
@@ -503,14 +504,17 @@ function Screen.enter()
 	buildRewardCards()
 	local map = Maps[State.worldMapIndex]
 	local finalWave = CampaignWaveDefs.getFinalWave(map)
-	runStats:setRows({
+	local rows = {
 		{label = L("runRecap.enemiesDefeated"), value = State.spawnedKills or 0,
 			denominator = CampaignWaveDefs.getTotalEnemyCount(map)},
 		{label = L("runRecap.livesRemaining"), value = State.lives or 0,
 			denominator = Difficulty.get().startLives},
 		{label = L("runRecap.wavesCleared"), value = finalWave or RunRecap.getReachedWave(),
 			denominator = finalWave},
-	})
+	}
+	local records = Save.getMapRecords(map.id, State.runMode or (State.activeContract and "contract") or "campaign", Difficulty.key())
+	for _, row in ipairs(RecordRows.build(records, State.newRecords)) do rows[#rows + 1] = row end
+	runStats:setRows(rows)
 	resetConfetti()
 	Medals.resetAnimations()
 	if not State.activeContract then recordFirstClear() end
