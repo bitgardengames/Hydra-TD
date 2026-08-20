@@ -57,11 +57,11 @@ local function mergeTemplateLayers(...)
 end
 
 local biomeBossArchetypes = {
-	default = {"boss_summoner", "boss_displacement", "boss_suppression"},
-	autumn = {"boss_displacement", "boss_suppression", "boss_summoner"},
-	drylands = {"boss_suppression", "boss_displacement", "boss_summoner"},
-	winter = {"boss_summoner", "boss_suppression", "boss_displacement"},
-	highlands = {"boss_displacement", "boss_summoner", "boss_suppression"},
+	default = {"boss_summoner", "boss_displacement", "boss_suppression", "boss_aegis", "boss_ravager"},
+	autumn = {"boss_displacement", "boss_aegis", "boss_suppression", "boss_ravager", "boss_summoner"},
+	drylands = {"boss_suppression", "boss_ravager", "boss_displacement", "boss_aegis", "boss_summoner"},
+	winter = {"boss_aegis", "boss_summoner", "boss_suppression", "boss_ravager", "boss_displacement"},
+	highlands = {"boss_ravager", "boss_displacement", "boss_summoner", "boss_aegis", "boss_suppression"},
 }
 
 local mapBossOverrides = {

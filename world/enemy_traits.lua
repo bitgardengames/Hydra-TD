@@ -58,6 +58,20 @@ local Traits = {
 		counter = "Use heavy or focused damage to clear the tanks while focusing the boss.",
 		answers = {"Heavy-damage specializations", "Focus-fire specializations"},
 	},
+	boss_aegis = {
+		tag = "Boss Mechanic",
+		mechanic = "Raises a damage-reducing shield for two seconds every six seconds.",
+		tell = "Three cyan shield plates close around it while protection is active.",
+		counter = "Save burst damage for the clearly telegraphed gaps between shields.",
+		answers = {"Lancer burst specializations", "Rapid-fire towers between shield windows"},
+	},
+	boss_ravager = {
+		tag = "Boss Mechanic",
+		mechanic = "Breaks into a final sprint below 45% health.",
+		tell = "Its eyes and trailing speed streaks turn red when enraged.",
+		counter = "Keep slows ready and concentrate damage before its final sprint.",
+		answers = {"Slow/control specializations", "Lancer burst specializations"},
+	},
 }
 
 function Traits.get(id)

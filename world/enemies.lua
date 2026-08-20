@@ -284,6 +284,11 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.support = def.support
 	e.summon = def.summon
 	e.summonTimer = def.summon and (def.summon.initialDelay or def.summon.period) or 0
+	e.bossShield = def.bossShield
+	e.bossShieldTimer = def.bossShield and (def.bossShield.initialDelay or def.bossShield.period) or 0
+	e.bossShieldActive = false
+	e.enrage = def.enrage
+	e.enraged = false
 	e.supportBoost = 1
 	e.supportContributions = e.supportContributions or {}
 	e.supportPulse = 0
@@ -396,6 +401,13 @@ local function handleEnemyEscaped(e, i, isBoss)
 	swapRemove(enemies, i)
 end
 
+local function incomingDamageMultiplier(e)
+	if e.bossShieldActive and e.bossShield then
+		return e.bossShield.damageMultiplier
+	end
+	return 1
+end
+
 local function updatePoison(e, dt)
 	if e.poisonStacks <= 0 then
 		return
@@ -417,6 +429,7 @@ local function updatePoison(e, dt)
 		local missingFrac = e.maxHp and e.maxHp > 0 and max(0, (e.maxHp - e.hp) / e.maxHp) or 0
 		local damage = e.poisonDPS * e.poisonStacks * ((e.modifiers and e.modifiers.poison) or 1)
 			* poisonRamp * POISON_TICK * ticks * (1 + missingFrac * (e.poisonMissingHpMult or 0))
+		damage = damage * incomingDamageMultiplier(e)
 		e.hp = e.hp - damage
 		EnemySupport.detachDead(e)
 
@@ -598,6 +611,23 @@ local function updateEnemies(dt)
 		end
 		if e.regenVisualPulse > 0 then e.regenVisualPulse = max(0, e.regenVisualPulse - dt) end
 
+		-- Aegis alternates a short, obvious protection window with a longer opening.
+		-- Ravager has just one threshold event, making its late sprint predictable.
+		if e.bossShield then
+			e.bossShieldTimer = e.bossShieldTimer - dt
+			if e.bossShieldActive and e.bossShieldTimer <= 0 then
+				e.bossShieldActive = false
+				e.bossShieldTimer = max(EPS, e.bossShield.period - e.bossShield.duration)
+			elseif not e.bossShieldActive and e.bossShieldTimer <= 0 then
+				e.bossShieldActive = true
+				e.bossShieldTimer = e.bossShield.duration
+			end
+		end
+		if e.enrage and not e.enraged and e.hp <= e.maxHp * e.enrage.healthFraction then
+			e.enraged = true
+			Effects.shake(4, 0.2)
+		end
+
 		-- Summoned runners join at the caster's current path progress rather than at
 		-- the map entrance. One cast is resolved per simulation tick, so catch-up cannot
 		-- create an unbounded catch-up burst.
@@ -623,7 +653,8 @@ local function updateEnemies(dt)
 			end
 		end
 
-		e.speed = e.baseSpeed * e.slowFactor * e.supportBoost
+		local enrageSpeed = e.enraged and e.enrage.speedMultiplier or 1
+		e.speed = e.baseSpeed * e.slowFactor * e.supportBoost * enrageSpeed
 		e.prevAnimT = e.animT
 		e.animT = e.animT + dt * e.speed * 0.03
 
@@ -762,6 +793,7 @@ local function applyDamage(e, amount, context)
 	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
 	context = context or {}
 	local raw = amount
+	amount = amount * incomingDamageMultiplier(e)
 	if e.armor then
 		local heavy = context.sourceKind == "cannon" or context.sourceKind == "lancer"
 			or raw >= (e.armor.heavyThreshold or math.huge)

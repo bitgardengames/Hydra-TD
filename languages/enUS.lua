@@ -438,6 +438,8 @@ return {
 		bossSummoner = "Summoner",
 		bossDisplacement = "Vanguard",
 		bossSuppression = "Suppressor",
+		bossAegis = "Aegis",
+		bossRavager = "Ravager",
 	},
 
 	hud = {
@@ -465,6 +467,8 @@ return {
 		boss_summoner = {tag = "SUMMONER", counter = "Clear its escorts with area or chain damage while focusing the boss."},
 		boss_displacement = {tag = "FAST ESCORTS", counter = "Slow the runner escorts while maintaining damage on the boss."},
 		boss_suppression = {tag = "ARMORED ESCORTS", counter = "Use heavy focused hits on its tank escorts while burning down the boss."},
+		boss_aegis = {tag = "CYCLING SHIELD", counter = "Save burst damage for the clear gaps between its shield windows."},
+		boss_ravager = {tag = "FINAL SPRINT", counter = "Keep slows ready and burst it down before its low-health sprint."},
 	},
 
 	messages = {
