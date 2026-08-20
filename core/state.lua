@@ -38,7 +38,6 @@ local state = {
 	endReason = nil,
 	victoryDanceClock = 0,
 	perfectWaveCelebrationClock = 0,
-	featuredPerfectWaveTower = nil,
 
 	previousCompletionDifficulty = nil,
 	wasFirstClear = false,
