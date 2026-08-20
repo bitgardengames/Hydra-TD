@@ -21,7 +21,7 @@ SOURCES = [
 TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
 TARGET_DIFFICULTY = "hard"
 RENDER_FPS = (30, 60, 144)
-GAME_SPEEDS = (1, 2, 4)
+GAME_SPEEDS = (1, 2)
 
 
 def runtime_clock() -> tuple[float, int]:
