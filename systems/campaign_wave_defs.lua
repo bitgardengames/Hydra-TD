@@ -26,21 +26,21 @@ local pacingIdentityByMapId = {
 }
 
 local pacingTargetsByMapId = {
-	riverbend = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 6.30, 17.10 }, downtimeBetweenGroups = { 0.08, 1.40 } },
-	switchback = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.81, 16.50 }, downtimeBetweenGroups = { 0.10, 1.75 } },
-	highpass = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 9.27, 15.68 }, downtimeBetweenGroups = { 0.08, 1.47 } },
-	roundabout = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.50, 14.16 }, downtimeBetweenGroups = { 0.08, 0.69 } },
-	gauntlet = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.24, 17.91 }, downtimeBetweenGroups = { 0.52, 2.94 } },
-	snaketrail = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.63, 15.80 }, downtimeBetweenGroups = { 0.25, 2.50 } },
-	backtrack = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.39, 18.59 }, downtimeBetweenGroups = { 0.15, 1.72 } },
-	lowvalley = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.72, 27.47 }, downtimeBetweenGroups = { 0.29, 3.62 } },
-	circuit = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.92, 20.42 }, downtimeBetweenGroups = { 0.13, 1.62 } },
-	outerloop = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.52, 31.23 }, downtimeBetweenGroups = { 0.34, 4.25 } },
-	terrace = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.36, 18.46 }, downtimeBetweenGroups = { 0.14, 1.80 } },
-	highridge = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 8.15, 28.26 }, downtimeBetweenGroups = { 0.24, 3.00 } },
-	crossflow = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 6.05, 17.71 }, downtimeBetweenGroups = { 0.08, 1.04 } },
-	steppingstones = { openingPressure = 10, peakSimultaneous = 10, totalWaveDuration = { 8.60, 39.13 }, downtimeBetweenGroups = { 0.30, 5.35 } },
-	twinloop = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 2.00, 19.26 }, downtimeBetweenGroups = { 0.12, 1.55 } },
+	riverbend = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 6.30, 20.95 }, downtimeBetweenGroups = { 0.07, 1.40 } },
+	switchback = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.81, 20.30 }, downtimeBetweenGroups = { 0.09, 1.75 } },
+	highpass = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 9.27, 19.51 }, downtimeBetweenGroups = { 0.07, 1.47 } },
+	roundabout = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.50, 18.09 }, downtimeBetweenGroups = { 0.07, 0.69 } },
+	gauntlet = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.24, 21.47 }, downtimeBetweenGroups = { 0.44, 2.94 } },
+	snaketrail = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.63, 16.77 }, downtimeBetweenGroups = { 0.21, 2.50 } },
+	backtrack = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 6.39, 22.43 }, downtimeBetweenGroups = { 0.13, 1.72 } },
+	lowvalley = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.72, 30.81 }, downtimeBetweenGroups = { 0.25, 3.62 } },
+	circuit = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.92, 25.92 }, downtimeBetweenGroups = { 0.11, 1.62 } },
+	outerloop = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.52, 34.83 }, downtimeBetweenGroups = { 0.29, 4.25 } },
+	terrace = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.36, 23.23 }, downtimeBetweenGroups = { 0.12, 1.80 } },
+	highridge = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 8.15, 31.69 }, downtimeBetweenGroups = { 0.20, 3.00 } },
+	crossflow = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 6.05, 22.51 }, downtimeBetweenGroups = { 0.07, 1.04 } },
+	steppingstones = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 8.60, 41.81 }, downtimeBetweenGroups = { 0.26, 5.35 } },
+	twinloop = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 2.00, 23.07 }, downtimeBetweenGroups = { 0.10, 1.55 } },
 }
 
 -- A wave is written as a short list of spawn groups. Delay is the pause after
@@ -73,6 +73,16 @@ local wavesByMapId = {
 		[9] = { g("grunt", 13, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 1.0), g("grunt", 13, 0.50, 0.35), g("grunt", 9, 0.50, 0.25) },
+		[11] = { g("grunt", 15, 0.50), g("grunt", 15, 0.50, 0.33) },
+		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.68) },
+		[13] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.15), g("grunt", 9, 0.50, 0.12) },
+		[14] = { g("grunt", 16, 0.50), g("grunt", 16, 0.50, 0.28) },
+		[15] = { g("grunt", 15, 0.50), g("grunt", 11, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
+		[16] = { g("grunt", 20, 0.50), g("grunt", 12, 0.50, 0.59) },
+		[17] = { g("grunt", 16, 0.50), g("grunt", 11, 0.50, 0.14), g("grunt", 10, 0.50, 0.11) },
+		[18] = { g("grunt", 18, 0.50), g("grunt", 18, 0.50, 0.26) },
+		[19] = { g("grunt", 16, 0.50), g("grunt", 13, 0.50, 0.07), g("grunt", 11, 0.50, 0.07) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 0.90), g("grunt", 16, 0.50, 0.32), g("grunt", 11, 0.50, 0.23) },
 	},
 	switchback = {
 		-- orientation
@@ -95,6 +105,16 @@ local wavesByMapId = {
 		[9] = { g("grunt", 12, 0.50), g("grunt", 10, 0.50, 0.10), g("grunt", 9, 0.50, 0.10) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.25), g("grunt", 12, 0.50, 0.44), g("grunt", 9, 0.50, 0.31) },
+		[11] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.42) },
+		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.85) },
+		[13] = { g("grunt", 14, 0.50), g("grunt", 9, 0.50, 0.19), g("grunt", 8, 0.50, 0.15) },
+		[14] = { g("grunt", 15, 0.50), g("grunt", 16, 0.50, 0.36) },
+		[15] = { g("grunt", 13, 0.50), g("grunt", 11, 0.50, 0.11), g("grunt", 10, 0.50, 0.11) },
+		[16] = { g("grunt", 20, 0.50), g("grunt", 12, 0.50, 0.73) },
+		[17] = { g("grunt", 16, 0.50), g("grunt", 10, 0.50, 0.17), g("grunt", 8, 0.50, 0.14) },
+		[18] = { g("grunt", 17, 0.50), g("grunt", 18, 0.50, 0.32) },
+		[19] = { g("grunt", 15, 0.50), g("grunt", 13, 0.50, 0.09), g("grunt", 11, 0.50, 0.09) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 1.12), g("grunt", 15, 0.50, 0.40), g("grunt", 11, 0.50, 0.28) },
 	},
 	highpass = {
 		-- orientation
@@ -117,6 +137,16 @@ local wavesByMapId = {
 		[9] = { g("grunt", 11, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.05), g("grunt", 12, 0.50, 0.37), g("grunt", 8, 0.50, 0.26) },
+		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.35) },
+		[12] = { g("grunt", 17, 0.52), g("grunt", 10, 0.50, 0.71) },
+		[13] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.16), g("grunt", 7, 0.50, 0.13) },
+		[14] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.30) },
+		[15] = { g("grunt", 12, 0.50), g("grunt", 11, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
+		[16] = { g("grunt", 19, 0.52), g("grunt", 11, 0.50, 0.61) },
+		[17] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.14), g("grunt", 7, 0.50, 0.12) },
+		[18] = { g("grunt", 16, 0.50), g("grunt", 17, 0.50, 0.27) },
+		[19] = { g("grunt", 14, 0.50), g("grunt", 13, 0.50, 0.07), g("grunt", 10, 0.50, 0.07) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.95), g("grunt", 15, 0.50, 0.33), g("grunt", 10, 0.50, 0.23) },
 	},
 	roundabout = {
 		-- orientation
@@ -139,6 +169,16 @@ local wavesByMapId = {
 		[9] = { g("grunt", 10, 0.50), g("grunt", 9, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 0.47), g("grunt", 11, 0.50, 0.11), g("grunt", 8, 0.50, 0.08) },
+		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.10) },
+		[12] = { g("grunt", 17, 0.50), g("grunt", 10, 0.50, 0.29) },
+		[13] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
+		[14] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.09) },
+		[15] = { g("grunt", 11, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
+		[16] = { g("grunt", 19, 0.50), g("grunt", 11, 0.50, 0.25) },
+		[17] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.07), g("grunt", 8, 0.50, 0.07) },
+		[18] = { g("grunt", 16, 0.50), g("grunt", 17, 0.50, 0.08) },
+		[19] = { g("grunt", 13, 0.50), g("grunt", 11, 0.50, 0.07), g("grunt", 11, 0.50, 0.07) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.42), g("grunt", 14, 0.50, 0.10), g("grunt", 10, 0.50, 0.07) },
 	},
 	gauntlet = {
 		-- orientation
@@ -161,6 +201,16 @@ local wavesByMapId = {
 		[9] = { g("grunt", 10, 0.50), g("grunt", 9, 0.50, 0.52), g("grunt", 8, 0.50, 0.52) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00), g("grunt", 10, 0.50, 2.45), g("grunt", 11, 0.50, 1.08), g("grunt", 9, 0.50, 0.88) },
+		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 1.08) },
+		[12] = { g("grunt", 17, 0.50), g("grunt", 10, 0.50, 1.44) },
+		[13] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.67), g("grunt", 7, 0.50, 0.60) },
+		[14] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.93) },
+		[15] = { g("grunt", 11, 0.50), g("grunt", 10, 0.50, 0.55), g("grunt", 9, 0.50, 0.55) },
+		[16] = { g("grunt", 19, 0.50), g("grunt", 11, 0.50, 1.23) },
+		[17] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.60), g("grunt", 7, 0.50, 0.54) },
+		[18] = { g("grunt", 16, 0.50), g("grunt", 17, 0.50, 0.83) },
+		[19] = { g("grunt", 13, 0.50), g("grunt", 11, 0.50, 0.44), g("grunt", 10, 0.50, 0.44) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 13, 0.50, 2.21), g("grunt", 14, 0.50, 0.97), g("grunt", 11, 0.50, 0.79) },
 	},
 	snaketrail = {
 		-- orientation
@@ -183,6 +233,16 @@ local wavesByMapId = {
 		[9] = { g("tank", 8, 0.50), g("grunt", 9, 0.50, 0.25) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("tank", 8, 0.50, 2.25), g("grunt", 8, 0.55, 2.50) },
+		[11] = { g("tank", 8, 0.52), g("grunt", 9, 0.59, 0.42) },
+		[12] = { g("tank", 11, 0.56), g("grunt", 15, 0.67, 0.65) },
+		[13] = { g("grunt", 10, 0.50), g("tank", 10, 0.53, 0.38) },
+		[14] = { g("tank", 8, 0.52), g("grunt", 9, 0.59, 0.36) },
+		[15] = { g("tank", 9, 0.50), g("grunt", 10, 0.50, 0.26) },
+		[16] = { g("tank", 12, 0.56), g("grunt", 16, 0.67, 0.56) },
+		[17] = { g("grunt", 11, 0.50), g("tank", 11, 0.53, 0.34) },
+		[18] = { g("tank", 9, 0.52), g("grunt", 10, 0.59, 0.32) },
+		[19] = { g("tank", 10, 0.50), g("grunt", 11, 0.50, 0.21) },
+		[20] = { g("boss", 1, 0.00), g("tank", 10, 0.50, 2.02), g("grunt", 10, 0.55, 2.25) },
 	},
 	backtrack = {
 		-- orientation
@@ -205,6 +265,16 @@ local wavesByMapId = {
 		[9] = { g("runner", 7, 0.50), g("tank", 8, 0.50, 0.15), g("grunt", 10, 0.50, 0.38) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("runner", 7, 0.50, 1.35), g("tank", 7, 0.50, 1.50), g("grunt", 8, 0.50, 1.72) },
+		[11] = { g("runner", 6, 0.50), g("tank", 9, 0.50, 0.24), g("grunt", 9, 0.53, 0.57) },
+		[12] = { g("runner", 11, 0.50), g("tank", 11, 0.53, 0.40), g("grunt", 16, 0.63, 0.79) },
+		[13] = { g("tank", 9, 0.50), g("runner", 9, 0.50, 0.22), g("grunt", 11, 0.50, 0.45) },
+		[14] = { g("runner", 7, 0.50), g("tank", 9, 0.50, 0.21), g("grunt", 9, 0.53, 0.49) },
+		[15] = { g("runner", 8, 0.50), g("tank", 9, 0.50, 0.16), g("grunt", 11, 0.50, 0.40) },
+		[16] = { g("runner", 12, 0.50), g("tank", 12, 0.53, 0.34), g("grunt", 17, 0.63, 0.68) },
+		[17] = { g("tank", 10, 0.50), g("runner", 10, 0.50, 0.20), g("grunt", 12, 0.50, 0.41) },
+		[18] = { g("runner", 8, 0.50), g("tank", 10, 0.50, 0.19), g("grunt", 10, 0.53, 0.44) },
+		[19] = { g("runner", 9, 0.50), g("tank", 10, 0.50, 0.13), g("grunt", 13, 0.50, 0.32) },
+		[20] = { g("boss", 1, 0.00), g("runner", 9, 0.50, 1.22), g("tank", 9, 0.50, 1.35), g("grunt", 10, 0.50, 1.55) },
 	},
 	lowvalley = {
 		-- orientation
@@ -227,6 +297,16 @@ local wavesByMapId = {
 		[9] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.29), g("tank", 9, 0.52, 0.72), g("grunt", 9, 0.59, 1.16) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("bulwark", 7, 0.50, 2.61), g("runner", 7, 0.52, 2.90), g("tank", 8, 0.60, 3.33), g("grunt", 8, 0.67, 3.62) },
+		[11] = { g("bulwark", 6, 0.50), g("runner", 8, 0.56, 0.47), g("tank", 8, 0.63, 1.11), g("grunt", 10, 0.71, 1.59) },
+		[12] = { g("bulwark", 11, 0.53), g("runner", 10, 0.63, 0.76), g("tank", 15, 0.74, 1.52) },
+		[13] = { g("grunt", 9, 0.50), g("tank", 9, 0.50, 0.43), g("runner", 10, 0.56, 0.87), g("bulwark", 12, 0.62, 1.30) },
+		[14] = { g("bulwark", 7, 0.50), g("runner", 8, 0.56, 0.41), g("tank", 8, 0.63, 0.96), g("grunt", 10, 0.71, 1.38) },
+		[15] = { g("bulwark", 8, 0.50), g("runner", 9, 0.50, 0.30), g("tank", 10, 0.52, 0.76), g("grunt", 10, 0.59, 1.22) },
+		[16] = { g("bulwark", 12, 0.53), g("runner", 11, 0.63, 0.65), g("tank", 16, 0.74, 1.30) },
+		[17] = { g("grunt", 10, 0.50), g("tank", 10, 0.50, 0.39), g("runner", 11, 0.56, 0.78), g("bulwark", 13, 0.62, 1.17) },
+		[18] = { g("bulwark", 8, 0.50), g("runner", 9, 0.56, 0.37), g("tank", 9, 0.63, 0.86), g("grunt", 12, 0.71, 1.23) },
+		[19] = { g("bulwark", 9, 0.50), g("runner", 10, 0.50, 0.25), g("tank", 11, 0.52, 0.61), g("grunt", 11, 0.59, 0.99) },
+		[20] = { g("boss", 1, 0.00), g("bulwark", 9, 0.50, 2.35), g("runner", 9, 0.52, 2.61), g("tank", 10, 0.60, 3.00), g("grunt", 10, 0.67, 3.26) },
 	},
 	circuit = {
 		-- orientation
@@ -249,6 +329,16 @@ local wavesByMapId = {
 		[9] = { g("regenerator", 6, 0.50), g("bulwark", 7, 0.50, 0.13), g("runner", 9, 0.50, 0.33), g("tank", 9, 0.52, 0.52), g("grunt", 10, 0.57, 0.65) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("regenerator", 6, 0.50, 1.17), g("bulwark", 7, 0.50, 1.30), g("runner", 8, 0.53, 1.49), g("tank", 8, 0.60, 1.62) },
+		[11] = { g("regenerator", 6, 0.50), g("bulwark", 8, 0.50, 0.22), g("runner", 8, 0.56, 0.50), g("tank", 9, 0.63, 0.72) },
+		[12] = { g("regenerator", 11, 0.50), g("bulwark", 10, 0.56, 0.35), g("runner", 15, 0.65, 0.68) },
+		[13] = { g("regenerator", 9, 0.50), g("grunt", 9, 0.50, 0.20), g("tank", 10, 0.50, 0.39), g("runner", 11, 0.55, 0.59) },
+		[14] = { g("regenerator", 7, 0.50), g("bulwark", 8, 0.50, 0.19), g("runner", 8, 0.56, 0.43), g("tank", 9, 0.63, 0.62) },
+		[15] = { g("regenerator", 7, 0.50), g("bulwark", 8, 0.50, 0.14), g("runner", 10, 0.50, 0.35), g("tank", 10, 0.52, 0.55), g("grunt", 11, 0.57, 0.68) },
+		[16] = { g("regenerator", 12, 0.50), g("bulwark", 11, 0.56, 0.30), g("runner", 16, 0.65, 0.59) },
+		[17] = { g("regenerator", 10, 0.50), g("grunt", 10, 0.50, 0.18), g("tank", 11, 0.50, 0.35), g("runner", 12, 0.55, 0.53) },
+		[18] = { g("regenerator", 8, 0.50), g("bulwark", 9, 0.50, 0.17), g("runner", 9, 0.56, 0.38), g("tank", 10, 0.63, 0.55) },
+		[19] = { g("regenerator", 8, 0.50), g("bulwark", 9, 0.50, 0.11), g("runner", 11, 0.50, 0.28), g("tank", 11, 0.52, 0.44), g("grunt", 13, 0.57, 0.55) },
+		[20] = { g("boss", 1, 0.00), g("regenerator", 8, 0.50, 1.05), g("bulwark", 9, 0.50, 1.17), g("runner", 10, 0.53, 1.34), g("tank", 10, 0.60, 1.46) },
 	},
 	outerloop = {
 		-- orientation
@@ -271,6 +361,16 @@ local wavesByMapId = {
 		[9] = { g("regenerator", 7, 0.50), g("bulwark", 8, 0.52, 0.34), g("runner", 9, 0.59, 0.85), g("tank", 9, 0.66, 1.36), g("grunt", 10, 0.73, 1.70) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("regenerator", 7, 0.51, 3.06), g("bulwark", 7, 0.59, 3.40), g("runner", 8, 0.67, 3.91), g("tank", 8, 0.76, 4.25) },
+		[11] = { g("regenerator", 6, 0.55), g("bulwark", 8, 0.63, 0.56), g("runner", 8, 0.71, 1.31), g("tank", 9, 0.80, 1.87) },
+		[12] = { g("regenerator", 11, 0.60), g("bulwark", 10, 0.71, 0.89), g("runner", 15, 0.84, 1.78) },
+		[13] = { g("grunt", 9, 0.50), g("tank", 9, 0.56, 0.51), g("runner", 10, 0.63, 1.02), g("bulwark", 11, 0.70, 1.53) },
+		[14] = { g("regenerator", 7, 0.55), g("bulwark", 8, 0.63, 0.48), g("runner", 8, 0.71, 1.13), g("tank", 9, 0.80, 1.61) },
+		[15] = { g("regenerator", 8, 0.50), g("bulwark", 9, 0.52, 0.36), g("runner", 10, 0.59, 0.89), g("tank", 10, 0.66, 1.43), g("grunt", 11, 0.73, 1.78) },
+		[16] = { g("regenerator", 12, 0.60), g("bulwark", 11, 0.71, 0.77), g("runner", 16, 0.84, 1.53) },
+		[17] = { g("grunt", 10, 0.50), g("tank", 10, 0.56, 0.46), g("runner", 11, 0.63, 0.92), g("bulwark", 12, 0.70, 1.38) },
+		[18] = { g("regenerator", 8, 0.55), g("bulwark", 9, 0.63, 0.43), g("runner", 9, 0.71, 1.01), g("tank", 10, 0.80, 1.44) },
+		[19] = { g("regenerator", 9, 0.50), g("bulwark", 10, 0.52, 0.29), g("runner", 11, 0.59, 0.72), g("tank", 11, 0.66, 1.16), g("grunt", 13, 0.73, 1.44) },
+		[20] = { g("boss", 1, 0.00), g("regenerator", 9, 0.51, 2.75), g("bulwark", 9, 0.59, 3.06), g("runner", 10, 0.67, 3.52), g("tank", 10, 0.76, 3.83) },
 	},
 	terrace = {
 		-- orientation
@@ -293,6 +393,16 @@ local wavesByMapId = {
 		[9] = { g("warcaller", 6, 0.50), g("regenerator", 7, 0.50, 0.14), g("bulwark", 8, 0.50, 0.36), g("runner", 8, 0.50, 0.58), g("tank", 9, 0.52, 0.72) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("warcaller", 6, 0.50, 1.30), g("regenerator", 7, 0.50, 1.44), g("bulwark", 8, 0.50, 1.66), g("runner", 7, 0.54, 1.80) },
+		[11] = { g("warcaller", 6, 0.50), g("regenerator", 8, 0.50, 0.24), g("bulwark", 8, 0.51, 0.55), g("runner", 9, 0.57, 0.79) },
+		[12] = { g("warcaller", 11, 0.50), g("regenerator", 10, 0.51, 0.38), g("bulwark", 15, 0.60, 0.76) },
+		[13] = { g("warcaller", 9, 0.50), g("grunt", 8, 0.50, 0.22), g("tank", 10, 0.50, 0.43), g("runner", 11, 0.50, 0.65) },
+		[14] = { g("warcaller", 7, 0.50), g("regenerator", 8, 0.50, 0.21), g("bulwark", 8, 0.51, 0.47), g("runner", 9, 0.57, 0.68) },
+		[15] = { g("warcaller", 7, 0.50), g("regenerator", 8, 0.50, 0.15), g("bulwark", 9, 0.50, 0.38), g("runner", 9, 0.50, 0.61), g("tank", 10, 0.52, 0.76) },
+		[16] = { g("warcaller", 12, 0.50), g("regenerator", 11, 0.51, 0.32), g("bulwark", 16, 0.60, 0.65) },
+		[17] = { g("warcaller", 10, 0.50), g("grunt", 8, 0.50, 0.20), g("tank", 11, 0.50, 0.39), g("runner", 12, 0.50, 0.59) },
+		[18] = { g("warcaller", 8, 0.50), g("regenerator", 9, 0.50, 0.19), g("bulwark", 9, 0.51, 0.42), g("runner", 10, 0.57, 0.61) },
+		[19] = { g("warcaller", 8, 0.50), g("regenerator", 9, 0.50, 0.12), g("bulwark", 10, 0.50, 0.31), g("runner", 10, 0.50, 0.49), g("tank", 11, 0.52, 0.61) },
+		[20] = { g("boss", 1, 0.00), g("warcaller", 8, 0.50, 1.17), g("regenerator", 9, 0.50, 1.30), g("bulwark", 10, 0.50, 1.49), g("runner", 9, 0.54, 1.62) },
 	},
 	highridge = {
 		-- orientation
@@ -315,6 +425,16 @@ local wavesByMapId = {
 		[9] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.50, 0.24), g("regenerator", 9, 0.54, 0.60), g("bulwark", 8, 0.61, 0.96), g("runner", 10, 0.68, 1.20) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 2.16), g("runner", 4, 0.50, 2.46), g("warcaller", 7, 0.54, 2.40), g("regenerator", 8, 0.62, 2.76), g("bulwark", 8, 0.70, 3.00) },
+		[11] = { g("bulwark", 3, 0.51), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.58, 0.40), g("regenerator", 8, 0.66, 0.92), g("bulwark", 9, 0.74, 1.32) },
+		[12] = { g("bulwark", 7, 0.55), g("runner", 7, 0.50, 0.32), g("warcaller", 11, 0.66, 0.63), g("regenerator", 15, 0.77, 1.26) },
+		[13] = { g("warcaller", 9, 0.50), g("bulwark", 4, 0.52, 0.36), g("runner", 6, 0.50, 0.66), g("grunt", 10, 0.58, 0.72), g("tank", 11, 0.64, 1.08) },
+		[14] = { g("bulwark", 3, 0.51), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.58, 0.34), g("regenerator", 8, 0.66, 0.80), g("bulwark", 9, 0.74, 1.14) },
+		[15] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 9, 0.50, 0.25), g("regenerator", 10, 0.54, 0.63), g("bulwark", 9, 0.61, 1.01), g("runner", 11, 0.68, 1.26) },
+		[16] = { g("bulwark", 7, 0.55), g("runner", 7, 0.50, 0.27), g("warcaller", 12, 0.66, 0.54), g("regenerator", 16, 0.77, 1.08) },
+		[17] = { g("warcaller", 10, 0.50), g("bulwark", 5, 0.52, 0.32), g("runner", 6, 0.50, 0.59), g("grunt", 11, 0.58, 0.65), g("tank", 12, 0.64, 0.97) },
+		[18] = { g("bulwark", 4, 0.51), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.58, 0.31), g("regenerator", 9, 0.66, 0.71), g("bulwark", 10, 0.74, 1.02) },
+		[19] = { g("bulwark", 5, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 10, 0.50, 0.20), g("regenerator", 11, 0.54, 0.51), g("bulwark", 10, 0.61, 0.82), g("runner", 13, 0.68, 1.02) },
+		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 1.94), g("runner", 5, 0.50, 2.21), g("warcaller", 9, 0.54, 2.16), g("regenerator", 10, 0.62, 2.48), g("bulwark", 10, 0.70, 2.70) },
 	},
 	crossflow = {
 		-- orientation
@@ -337,6 +457,16 @@ local wavesByMapId = {
 		[9] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.08), g("regenerator", 8, 0.50, 0.15), g("bulwark", 8, 0.50, 0.28), g("runner", 9, 0.50, 0.37) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 0.73), g("runner", 4, 0.50, 1.03), g("warcaller", 7, 0.50, 0.82), g("regenerator", 8, 0.50, 0.95), g("bulwark", 8, 0.52, 1.04) },
+		[11] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.50, 0.09), g("regenerator", 8, 0.50, 0.25), g("bulwark", 9, 0.54, 0.41) },
+		[12] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.50, 0.16), g("regenerator", 15, 0.57, 0.39) },
+		[13] = { g("bulwark", 4, 0.50), g("runner", 6, 0.50, 0.30), g("grunt", 9, 0.50, 0.08), g("tank", 10, 0.50, 0.19), g("runner", 11, 0.50, 0.33) },
+		[14] = { g("bulwark", 3, 0.50), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.50, 0.08), g("regenerator", 8, 0.50, 0.22), g("bulwark", 9, 0.54, 0.35) },
+		[15] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 8, 0.50, 0.08), g("regenerator", 9, 0.50, 0.16), g("bulwark", 9, 0.50, 0.29), g("runner", 10, 0.50, 0.39) },
+		[16] = { g("bulwark", 7, 0.50), g("runner", 9, 0.50, 0.27), g("warcaller", 12, 0.50, 0.14), g("regenerator", 16, 0.57, 0.33) },
+		[17] = { g("bulwark", 5, 0.50), g("runner", 6, 0.50, 0.27), g("grunt", 10, 0.50, 0.07), g("tank", 11, 0.50, 0.17), g("runner", 12, 0.50, 0.30) },
+		[18] = { g("bulwark", 4, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.50, 0.07), g("regenerator", 9, 0.50, 0.20), g("bulwark", 10, 0.54, 0.31) },
+		[19] = { g("bulwark", 4, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.50, 0.07), g("regenerator", 10, 0.50, 0.13), g("bulwark", 10, 0.50, 0.24), g("runner", 11, 0.50, 0.31) },
+		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 0.66), g("runner", 5, 0.50, 0.93), g("warcaller", 9, 0.50, 0.74), g("regenerator", 10, 0.50, 0.85), g("bulwark", 10, 0.52, 0.94) },
 	},
 	steppingstones = {
 		-- orientation
@@ -359,6 +489,16 @@ local wavesByMapId = {
 		[9] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.51, 0.75), g("regenerator", 9, 0.58, 1.35), g("bulwark", 9, 0.64, 1.95), g("runner", 10, 0.72, 2.35) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 3.95), g("runner", 4, 0.50, 4.25), g("warcaller", 7, 0.58, 4.35), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
+		[11] = { g("bulwark", 3, 0.54), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.61, 1.04), g("regenerator", 8, 0.70, 1.93), g("bulwark", 9, 0.78, 2.59) },
+		[12] = { g("bulwark", 6, 0.58), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.70, 1.05), g("regenerator", 15, 0.81, 2.10) },
+		[13] = { g("grunt", 9, 0.50), g("tank", 9, 0.54, 0.95), g("runner", 10, 0.61, 1.55), g("bulwark", 11, 0.68, 2.15) },
+		[14] = { g("bulwark", 3, 0.54), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.61, 0.90), g("regenerator", 8, 0.70, 1.66), g("bulwark", 9, 0.78, 2.23) },
+		[15] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 9, 0.51, 0.79), g("regenerator", 10, 0.58, 1.42), g("bulwark", 10, 0.64, 2.05), g("runner", 11, 0.72, 2.47) },
+		[16] = { g("bulwark", 6, 0.58), g("runner", 9, 0.50, 0.27), g("warcaller", 12, 0.70, 0.90), g("regenerator", 16, 0.81, 1.80) },
+		[17] = { g("grunt", 10, 0.50), g("tank", 10, 0.54, 0.85), g("runner", 11, 0.61, 1.40), g("bulwark", 12, 0.68, 1.94) },
+		[18] = { g("bulwark", 4, 0.54), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.61, 0.81), g("regenerator", 9, 0.70, 1.49), g("bulwark", 10, 0.78, 2.00) },
+		[19] = { g("bulwark", 5, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 10, 0.51, 0.64), g("regenerator", 11, 0.58, 1.15), g("bulwark", 11, 0.64, 1.66), g("runner", 13, 0.72, 2.00) },
+		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 3.56), g("runner", 5, 0.50, 3.83), g("warcaller", 9, 0.58, 3.91), g("regenerator", 10, 0.66, 4.46), g("bulwark", 10, 0.74, 4.81) },
 	},
 	twinloop = {
 		-- orientation
@@ -381,182 +521,6 @@ local wavesByMapId = {
 		[9] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.12), g("regenerator", 8, 0.50, 0.31), g("bulwark", 8, 0.50, 0.50), g("runner", 9, 0.50, 0.62) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 1.12), g("runner", 4, 0.50, 1.42), g("warcaller", 7, 0.50, 1.24), g("regenerator", 8, 0.50, 1.43), g("bulwark", 7, 0.50, 1.55) },
-	},
-}
-
--- Every campaign map has an explicitly authored second act. These encounters
--- revisit the map's established enemy curriculum with new formations and measured
--- pressure growth; wave 20 is a second boss exam with a larger escort.
-local secondActWavesByMapId = {
-	riverbend = {
-		[11] = { g("grunt", 15, 0.50), g("grunt", 15, 0.50, 0.33) },
-		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.68) },
-		[13] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.15), g("grunt", 9, 0.50, 0.12) },
-		[14] = { g("grunt", 16, 0.50), g("grunt", 16, 0.50, 0.28) },
-		[15] = { g("grunt", 15, 0.50), g("grunt", 11, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
-		[16] = { g("grunt", 20, 0.50), g("grunt", 12, 0.50, 0.59) },
-		[17] = { g("grunt", 16, 0.50), g("grunt", 11, 0.50, 0.14), g("grunt", 10, 0.50, 0.11) },
-		[18] = { g("grunt", 18, 0.50), g("grunt", 18, 0.50, 0.26) },
-		[19] = { g("grunt", 16, 0.50), g("grunt", 13, 0.50, 0.07), g("grunt", 11, 0.50, 0.07) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 0.90), g("grunt", 16, 0.50, 0.32), g("grunt", 11, 0.50, 0.23) },
-	},
-	switchback = {
-		[11] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.42) },
-		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.85) },
-		[13] = { g("grunt", 14, 0.50), g("grunt", 9, 0.50, 0.19), g("grunt", 8, 0.50, 0.15) },
-		[14] = { g("grunt", 15, 0.50), g("grunt", 16, 0.50, 0.36) },
-		[15] = { g("grunt", 13, 0.50), g("grunt", 11, 0.50, 0.11), g("grunt", 10, 0.50, 0.11) },
-		[16] = { g("grunt", 20, 0.50), g("grunt", 12, 0.50, 0.73) },
-		[17] = { g("grunt", 16, 0.50), g("grunt", 10, 0.50, 0.17), g("grunt", 8, 0.50, 0.14) },
-		[18] = { g("grunt", 17, 0.50), g("grunt", 18, 0.50, 0.32) },
-		[19] = { g("grunt", 15, 0.50), g("grunt", 13, 0.50, 0.09), g("grunt", 11, 0.50, 0.09) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 1.12), g("grunt", 15, 0.50, 0.40), g("grunt", 11, 0.50, 0.28) },
-	},
-	highpass = {
-		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.35) },
-		[12] = { g("grunt", 17, 0.52), g("grunt", 10, 0.50, 0.71) },
-		[13] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.16), g("grunt", 7, 0.50, 0.13) },
-		[14] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.30) },
-		[15] = { g("grunt", 12, 0.50), g("grunt", 11, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
-		[16] = { g("grunt", 19, 0.52), g("grunt", 11, 0.50, 0.61) },
-		[17] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.14), g("grunt", 7, 0.50, 0.12) },
-		[18] = { g("grunt", 16, 0.50), g("grunt", 17, 0.50, 0.27) },
-		[19] = { g("grunt", 14, 0.50), g("grunt", 13, 0.50, 0.07), g("grunt", 10, 0.50, 0.07) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.95), g("grunt", 15, 0.50, 0.33), g("grunt", 10, 0.50, 0.23) },
-	},
-	roundabout = {
-		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.10) },
-		[12] = { g("grunt", 17, 0.50), g("grunt", 10, 0.50, 0.29) },
-		[13] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
-		[14] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.09) },
-		[15] = { g("grunt", 11, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
-		[16] = { g("grunt", 19, 0.50), g("grunt", 11, 0.50, 0.25) },
-		[17] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.07), g("grunt", 8, 0.50, 0.07) },
-		[18] = { g("grunt", 16, 0.50), g("grunt", 17, 0.50, 0.08) },
-		[19] = { g("grunt", 13, 0.50), g("grunt", 11, 0.50, 0.07), g("grunt", 11, 0.50, 0.07) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.42), g("grunt", 14, 0.50, 0.10), g("grunt", 10, 0.50, 0.07) },
-	},
-	gauntlet = {
-		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 1.08) },
-		[12] = { g("grunt", 17, 0.50), g("grunt", 10, 0.50, 1.44) },
-		[13] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.67), g("grunt", 7, 0.50, 0.60) },
-		[14] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.93) },
-		[15] = { g("grunt", 11, 0.50), g("grunt", 10, 0.50, 0.55), g("grunt", 9, 0.50, 0.55) },
-		[16] = { g("grunt", 19, 0.50), g("grunt", 11, 0.50, 1.23) },
-		[17] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.60), g("grunt", 7, 0.50, 0.54) },
-		[18] = { g("grunt", 16, 0.50), g("grunt", 17, 0.50, 0.83) },
-		[19] = { g("grunt", 13, 0.50), g("grunt", 11, 0.50, 0.44), g("grunt", 10, 0.50, 0.44) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 13, 0.50, 2.21), g("grunt", 14, 0.50, 0.97), g("grunt", 11, 0.50, 0.79) },
-	},
-	snaketrail = {
-		[11] = { g("tank", 8, 0.52), g("grunt", 9, 0.59, 0.42) },
-		[12] = { g("tank", 11, 0.56), g("grunt", 15, 0.67, 0.65) },
-		[13] = { g("grunt", 10, 0.50), g("tank", 10, 0.53, 0.38) },
-		[14] = { g("tank", 8, 0.52), g("grunt", 9, 0.59, 0.36) },
-		[15] = { g("tank", 9, 0.50), g("grunt", 10, 0.50, 0.26) },
-		[16] = { g("tank", 12, 0.56), g("grunt", 16, 0.67, 0.56) },
-		[17] = { g("grunt", 11, 0.50), g("tank", 11, 0.53, 0.34) },
-		[18] = { g("tank", 9, 0.52), g("grunt", 10, 0.59, 0.32) },
-		[19] = { g("tank", 10, 0.50), g("grunt", 11, 0.50, 0.21) },
-		[20] = { g("boss", 1, 0.00), g("tank", 10, 0.50, 2.02), g("grunt", 10, 0.55, 2.25) },
-	},
-	backtrack = {
-		[11] = { g("runner", 6, 0.50), g("tank", 9, 0.50, 0.24), g("grunt", 9, 0.53, 0.57) },
-		[12] = { g("runner", 11, 0.50), g("tank", 11, 0.53, 0.40), g("grunt", 16, 0.63, 0.79) },
-		[13] = { g("tank", 9, 0.50), g("runner", 9, 0.50, 0.22), g("grunt", 11, 0.50, 0.45) },
-		[14] = { g("runner", 7, 0.50), g("tank", 9, 0.50, 0.21), g("grunt", 9, 0.53, 0.49) },
-		[15] = { g("runner", 8, 0.50), g("tank", 9, 0.50, 0.16), g("grunt", 11, 0.50, 0.40) },
-		[16] = { g("runner", 12, 0.50), g("tank", 12, 0.53, 0.34), g("grunt", 17, 0.63, 0.68) },
-		[17] = { g("tank", 10, 0.50), g("runner", 10, 0.50, 0.20), g("grunt", 12, 0.50, 0.41) },
-		[18] = { g("runner", 8, 0.50), g("tank", 10, 0.50, 0.19), g("grunt", 10, 0.53, 0.44) },
-		[19] = { g("runner", 9, 0.50), g("tank", 10, 0.50, 0.13), g("grunt", 13, 0.50, 0.32) },
-		[20] = { g("boss", 1, 0.00), g("runner", 9, 0.50, 1.22), g("tank", 9, 0.50, 1.35), g("grunt", 10, 0.50, 1.55) },
-	},
-	lowvalley = {
-		[11] = { g("bulwark", 6, 0.50), g("runner", 8, 0.56, 0.47), g("tank", 8, 0.63, 1.11), g("grunt", 10, 0.71, 1.59) },
-		[12] = { g("bulwark", 11, 0.53), g("runner", 10, 0.63, 0.76), g("tank", 15, 0.74, 1.52) },
-		[13] = { g("grunt", 9, 0.50), g("tank", 9, 0.50, 0.43), g("runner", 10, 0.56, 0.87), g("bulwark", 12, 0.62, 1.30) },
-		[14] = { g("bulwark", 7, 0.50), g("runner", 8, 0.56, 0.41), g("tank", 8, 0.63, 0.96), g("grunt", 10, 0.71, 1.38) },
-		[15] = { g("bulwark", 8, 0.50), g("runner", 9, 0.50, 0.30), g("tank", 10, 0.52, 0.76), g("grunt", 10, 0.59, 1.22) },
-		[16] = { g("bulwark", 12, 0.53), g("runner", 11, 0.63, 0.65), g("tank", 16, 0.74, 1.30) },
-		[17] = { g("grunt", 10, 0.50), g("tank", 10, 0.50, 0.39), g("runner", 11, 0.56, 0.78), g("bulwark", 13, 0.62, 1.17) },
-		[18] = { g("bulwark", 8, 0.50), g("runner", 9, 0.56, 0.37), g("tank", 9, 0.63, 0.86), g("grunt", 12, 0.71, 1.23) },
-		[19] = { g("bulwark", 9, 0.50), g("runner", 10, 0.50, 0.25), g("tank", 11, 0.52, 0.61), g("grunt", 11, 0.59, 0.99) },
-		[20] = { g("boss", 1, 0.00), g("bulwark", 9, 0.50, 2.35), g("runner", 9, 0.52, 2.61), g("tank", 10, 0.60, 3.00), g("grunt", 10, 0.67, 3.26) },
-	},
-	circuit = {
-		[11] = { g("regenerator", 6, 0.50), g("bulwark", 8, 0.50, 0.22), g("runner", 8, 0.56, 0.50), g("tank", 9, 0.63, 0.72) },
-		[12] = { g("regenerator", 11, 0.50), g("bulwark", 10, 0.56, 0.35), g("runner", 15, 0.65, 0.68) },
-		[13] = { g("regenerator", 9, 0.50), g("grunt", 9, 0.50, 0.20), g("tank", 10, 0.50, 0.39), g("runner", 11, 0.55, 0.59) },
-		[14] = { g("regenerator", 7, 0.50), g("bulwark", 8, 0.50, 0.19), g("runner", 8, 0.56, 0.43), g("tank", 9, 0.63, 0.62) },
-		[15] = { g("regenerator", 7, 0.50), g("bulwark", 8, 0.50, 0.14), g("runner", 10, 0.50, 0.35), g("tank", 10, 0.52, 0.55), g("grunt", 11, 0.57, 0.68) },
-		[16] = { g("regenerator", 12, 0.50), g("bulwark", 11, 0.56, 0.30), g("runner", 16, 0.65, 0.59) },
-		[17] = { g("regenerator", 10, 0.50), g("grunt", 10, 0.50, 0.18), g("tank", 11, 0.50, 0.35), g("runner", 12, 0.55, 0.53) },
-		[18] = { g("regenerator", 8, 0.50), g("bulwark", 9, 0.50, 0.17), g("runner", 9, 0.56, 0.38), g("tank", 10, 0.63, 0.55) },
-		[19] = { g("regenerator", 8, 0.50), g("bulwark", 9, 0.50, 0.11), g("runner", 11, 0.50, 0.28), g("tank", 11, 0.52, 0.44), g("grunt", 13, 0.57, 0.55) },
-		[20] = { g("boss", 1, 0.00), g("regenerator", 8, 0.50, 1.05), g("bulwark", 9, 0.50, 1.17), g("runner", 10, 0.53, 1.34), g("tank", 10, 0.60, 1.46) },
-	},
-	outerloop = {
-		[11] = { g("regenerator", 6, 0.55), g("bulwark", 8, 0.63, 0.56), g("runner", 8, 0.71, 1.31), g("tank", 9, 0.80, 1.87) },
-		[12] = { g("regenerator", 11, 0.60), g("bulwark", 10, 0.71, 0.89), g("runner", 15, 0.84, 1.78) },
-		[13] = { g("grunt", 9, 0.50), g("tank", 9, 0.56, 0.51), g("runner", 10, 0.63, 1.02), g("bulwark", 11, 0.70, 1.53) },
-		[14] = { g("regenerator", 7, 0.55), g("bulwark", 8, 0.63, 0.48), g("runner", 8, 0.71, 1.13), g("tank", 9, 0.80, 1.61) },
-		[15] = { g("regenerator", 8, 0.50), g("bulwark", 9, 0.52, 0.36), g("runner", 10, 0.59, 0.89), g("tank", 10, 0.66, 1.43), g("grunt", 11, 0.73, 1.78) },
-		[16] = { g("regenerator", 12, 0.60), g("bulwark", 11, 0.71, 0.77), g("runner", 16, 0.84, 1.53) },
-		[17] = { g("grunt", 10, 0.50), g("tank", 10, 0.56, 0.46), g("runner", 11, 0.63, 0.92), g("bulwark", 12, 0.70, 1.38) },
-		[18] = { g("regenerator", 8, 0.55), g("bulwark", 9, 0.63, 0.43), g("runner", 9, 0.71, 1.01), g("tank", 10, 0.80, 1.44) },
-		[19] = { g("regenerator", 9, 0.50), g("bulwark", 10, 0.52, 0.29), g("runner", 11, 0.59, 0.72), g("tank", 11, 0.66, 1.16), g("grunt", 13, 0.73, 1.44) },
-		[20] = { g("boss", 1, 0.00), g("regenerator", 9, 0.51, 2.75), g("bulwark", 9, 0.59, 3.06), g("runner", 10, 0.67, 3.52), g("tank", 10, 0.76, 3.83) },
-	},
-	terrace = {
-		[11] = { g("warcaller", 6, 0.50), g("regenerator", 8, 0.50, 0.24), g("bulwark", 8, 0.51, 0.55), g("runner", 9, 0.57, 0.79) },
-		[12] = { g("warcaller", 11, 0.50), g("regenerator", 10, 0.51, 0.38), g("bulwark", 15, 0.60, 0.76) },
-		[13] = { g("warcaller", 9, 0.50), g("grunt", 8, 0.50, 0.22), g("tank", 10, 0.50, 0.43), g("runner", 11, 0.50, 0.65) },
-		[14] = { g("warcaller", 7, 0.50), g("regenerator", 8, 0.50, 0.21), g("bulwark", 8, 0.51, 0.47), g("runner", 9, 0.57, 0.68) },
-		[15] = { g("warcaller", 7, 0.50), g("regenerator", 8, 0.50, 0.15), g("bulwark", 9, 0.50, 0.38), g("runner", 9, 0.50, 0.61), g("tank", 10, 0.52, 0.76) },
-		[16] = { g("warcaller", 12, 0.50), g("regenerator", 11, 0.51, 0.32), g("bulwark", 16, 0.60, 0.65) },
-		[17] = { g("warcaller", 10, 0.50), g("grunt", 8, 0.50, 0.20), g("tank", 11, 0.50, 0.39), g("runner", 12, 0.50, 0.59) },
-		[18] = { g("warcaller", 8, 0.50), g("regenerator", 9, 0.50, 0.19), g("bulwark", 9, 0.51, 0.42), g("runner", 10, 0.57, 0.61) },
-		[19] = { g("warcaller", 8, 0.50), g("regenerator", 9, 0.50, 0.12), g("bulwark", 10, 0.50, 0.31), g("runner", 10, 0.50, 0.49), g("tank", 11, 0.52, 0.61) },
-		[20] = { g("boss", 1, 0.00), g("warcaller", 8, 0.50, 1.17), g("regenerator", 9, 0.50, 1.30), g("bulwark", 10, 0.50, 1.49), g("runner", 9, 0.54, 1.62) },
-	},
-	highridge = {
-		[11] = { g("bulwark", 3, 0.51), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.58, 0.40), g("regenerator", 8, 0.66, 0.92), g("bulwark", 9, 0.74, 1.32) },
-		[12] = { g("bulwark", 7, 0.55), g("runner", 7, 0.50, 0.32), g("warcaller", 11, 0.66, 0.63), g("regenerator", 15, 0.77, 1.26) },
-		[13] = { g("warcaller", 9, 0.50), g("bulwark", 4, 0.52, 0.36), g("runner", 6, 0.50, 0.66), g("grunt", 10, 0.58, 0.72), g("tank", 11, 0.64, 1.08) },
-		[14] = { g("bulwark", 3, 0.51), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.58, 0.34), g("regenerator", 8, 0.66, 0.80), g("bulwark", 9, 0.74, 1.14) },
-		[15] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 9, 0.50, 0.25), g("regenerator", 10, 0.54, 0.63), g("bulwark", 9, 0.61, 1.01), g("runner", 11, 0.68, 1.26) },
-		[16] = { g("bulwark", 7, 0.55), g("runner", 7, 0.50, 0.27), g("warcaller", 12, 0.66, 0.54), g("regenerator", 16, 0.77, 1.08) },
-		[17] = { g("warcaller", 10, 0.50), g("bulwark", 5, 0.52, 0.32), g("runner", 6, 0.50, 0.59), g("grunt", 11, 0.58, 0.65), g("tank", 12, 0.64, 0.97) },
-		[18] = { g("bulwark", 4, 0.51), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.58, 0.31), g("regenerator", 9, 0.66, 0.71), g("bulwark", 10, 0.74, 1.02) },
-		[19] = { g("bulwark", 5, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 10, 0.50, 0.20), g("regenerator", 11, 0.54, 0.51), g("bulwark", 10, 0.61, 0.82), g("runner", 13, 0.68, 1.02) },
-		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 1.94), g("runner", 5, 0.50, 2.21), g("warcaller", 9, 0.54, 2.16), g("regenerator", 10, 0.62, 2.48), g("bulwark", 10, 0.70, 2.70) },
-	},
-	crossflow = {
-		[11] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.50, 0.09), g("regenerator", 8, 0.50, 0.25), g("bulwark", 9, 0.54, 0.41) },
-		[12] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.50, 0.16), g("regenerator", 15, 0.57, 0.39) },
-		[13] = { g("bulwark", 4, 0.50), g("runner", 6, 0.50, 0.30), g("grunt", 9, 0.50, 0.08), g("tank", 10, 0.50, 0.19), g("runner", 11, 0.50, 0.33) },
-		[14] = { g("bulwark", 3, 0.50), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.50, 0.08), g("regenerator", 8, 0.50, 0.22), g("bulwark", 9, 0.54, 0.35) },
-		[15] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 8, 0.50, 0.08), g("regenerator", 9, 0.50, 0.16), g("bulwark", 9, 0.50, 0.29), g("runner", 10, 0.50, 0.39) },
-		[16] = { g("bulwark", 7, 0.50), g("runner", 9, 0.50, 0.27), g("warcaller", 12, 0.50, 0.14), g("regenerator", 16, 0.57, 0.33) },
-		[17] = { g("bulwark", 5, 0.50), g("runner", 6, 0.50, 0.27), g("grunt", 10, 0.50, 0.07), g("tank", 11, 0.50, 0.17), g("runner", 12, 0.50, 0.30) },
-		[18] = { g("bulwark", 4, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.50, 0.07), g("regenerator", 9, 0.50, 0.20), g("bulwark", 10, 0.54, 0.31) },
-		[19] = { g("bulwark", 4, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.50, 0.07), g("regenerator", 10, 0.50, 0.13), g("bulwark", 10, 0.50, 0.24), g("runner", 11, 0.50, 0.31) },
-		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 0.66), g("runner", 5, 0.50, 0.93), g("warcaller", 9, 0.50, 0.74), g("regenerator", 10, 0.50, 0.85), g("bulwark", 10, 0.52, 0.94) },
-	},
-	steppingstones = {
-		[11] = { g("bulwark", 3, 0.54), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.61, 1.04), g("regenerator", 8, 0.70, 1.93), g("bulwark", 9, 0.78, 2.59) },
-		[12] = { g("bulwark", 6, 0.58), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.70, 1.05), g("regenerator", 15, 0.81, 2.10) },
-		[13] = { g("grunt", 9, 0.50), g("tank", 9, 0.54, 0.95), g("runner", 10, 0.61, 1.55), g("bulwark", 11, 0.68, 2.15) },
-		[14] = { g("bulwark", 3, 0.54), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.61, 0.90), g("regenerator", 8, 0.70, 1.66), g("bulwark", 9, 0.78, 2.23) },
-		[15] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 9, 0.51, 0.79), g("regenerator", 10, 0.58, 1.42), g("bulwark", 10, 0.64, 2.05), g("runner", 11, 0.72, 2.47) },
-		[16] = { g("bulwark", 6, 0.58), g("runner", 9, 0.50, 0.27), g("warcaller", 12, 0.70, 0.90), g("regenerator", 16, 0.81, 1.80) },
-		[17] = { g("grunt", 10, 0.50), g("tank", 10, 0.54, 0.85), g("runner", 11, 0.61, 1.40), g("bulwark", 12, 0.68, 1.94) },
-		[18] = { g("bulwark", 4, 0.54), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.61, 0.81), g("regenerator", 9, 0.70, 1.49), g("bulwark", 10, 0.78, 2.00) },
-		[19] = { g("bulwark", 5, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 10, 0.51, 0.64), g("regenerator", 11, 0.58, 1.15), g("bulwark", 11, 0.64, 1.66), g("runner", 13, 0.72, 2.00) },
-		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 3.56), g("runner", 5, 0.50, 3.83), g("warcaller", 9, 0.58, 3.91), g("regenerator", 10, 0.66, 4.46), g("bulwark", 10, 0.74, 4.81) },
-	},
-	twinloop = {
 		[11] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.50, 0.21), g("regenerator", 8, 0.50, 0.47), g("bulwark", 9, 0.52, 0.68) },
 		[12] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.50, 0.33), g("regenerator", 15, 0.54, 0.65) },
 		[13] = { g("tank", 9, 0.50), g("runner", 8, 0.50, 0.19), g("bulwark", 9, 0.50, 0.37), g("regenerator", 11, 0.50, 0.56) },
@@ -570,11 +534,6 @@ local secondActWavesByMapId = {
 	},
 }
 
-for mapId, secondAct in pairs(secondActWavesByMapId) do
-	for waveIndex = 11, 20 do
-		wavesByMapId[mapId][waveIndex] = secondAct[waveIndex]
-	end
-end
 
 -- Boss selections remain explicit because they affect the spawned enemy type.
 local bossArchetypeByMapId = {
