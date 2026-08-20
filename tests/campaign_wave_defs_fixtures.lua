@@ -13,10 +13,10 @@ for _, map in ipairs(Maps) do
 
 	local waves = CampaignWaveDefs.wavesByMapId[map.id]
 	assert(waves, map.id .. " has no campaign encounters")
-	assert(#waves == 10, map.id .. " must author exactly ten waves")
+	assert(#waves == 20, map.id .. " must author exactly twenty waves")
 	local authoredTotal = 0
 
-	for waveIndex = 1, 10 do
+	for waveIndex = 1, 20 do
 		local wave = waves[waveIndex]
 		for _, group in ipairs(wave) do
 			authoredTotal = authoredTotal + group.count
@@ -29,7 +29,13 @@ for _, map in ipairs(Maps) do
 	assert(CampaignWaveDefs.getTotalEnemyCount(map) == authoredTotal,
 		map.id .. " enemy-count summary must match authored groups")
 
-	local final = waves[10]
+	for _, bossWaveIndex in ipairs({10, 20}) do
+		local bossWave = waves[bossWaveIndex]
+		assert(bossWave[1].kind == "boss" and EnemyDefs[bossWave.bossArchetype],
+			map.id .. " wave " .. bossWaveIndex .. " has no legal explicit boss selection")
+	end
+
+	local final = waves[20]
 	assert(final[1].kind == "boss" and EnemyDefs[final.bossArchetype],
 		map.id .. " final exam has no legal explicit boss selection")
 end

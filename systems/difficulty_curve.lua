@@ -2,12 +2,14 @@ local Difficulty = require("systems.difficulty")
 
 local DifficultyCurve = {}
 
--- Campaign durability is a repeatable, local ten-wave arc. Map progression is
+-- Campaign durability is a repeatable, local twenty-wave arc. Map progression is
 -- deliberately shallow: Twin Loop (map 15) is 1.75x map one unless a designer
 -- supplies an explicit hpScalar on a map definition.
-DifficultyCurve.campaignEnd = 10
+DifficultyCurve.campaignEnd = 20
+DifficultyCurve.campaignMidpoint = 10
 DifficultyCurve.localStartHp = 1.0
-DifficultyCurve.localEndHp = 1.62
+DifficultyCurve.localMidHp = 1.62
+DifficultyCurve.localEndHp = 2.35
 DifficultyCurve.localExponent = 1.25
 DifficultyCurve.mapIndexCap = 15
 DifficultyCurve.finalMapHp = 1.75
@@ -22,10 +24,19 @@ end
 function DifficultyCurve.getEnemyHpMultiplier(waveIndex, mapIndex, authoredScalar)
 	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
 	local localWave = math.min(waveIndex, DifficultyCurve.campaignEnd)
-	local progress = (localWave - 1) / (DifficultyCurve.campaignEnd - 1)
-	local localHp = DifficultyCurve.localStartHp
-		+ (DifficultyCurve.localEndHp - DifficultyCurve.localStartHp)
-			* (progress ^ DifficultyCurve.localExponent)
+	local localHp
+	if localWave <= DifficultyCurve.campaignMidpoint then
+		local progress = (localWave - 1) / (DifficultyCurve.campaignMidpoint - 1)
+		localHp = DifficultyCurve.localStartHp
+			+ (DifficultyCurve.localMidHp - DifficultyCurve.localStartHp)
+				* (progress ^ DifficultyCurve.localExponent)
+	else
+		local progress = (localWave - DifficultyCurve.campaignMidpoint)
+			/ (DifficultyCurve.campaignEnd - DifficultyCurve.campaignMidpoint)
+		localHp = DifficultyCurve.localMidHp
+			+ (DifficultyCurve.localEndHp - DifficultyCurve.localMidHp)
+				* (progress ^ DifficultyCurve.localExponent)
+	end
 	local mapHp = DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
 	return localHp * mapHp * Difficulty.get().enemyHpBias
 end
