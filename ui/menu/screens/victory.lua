@@ -21,6 +21,7 @@ local AbilityIcons = require("ui.ability_icons")
 local Tooltip = require("ui.tooltip")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local TowerVictoryDance = require("render.tower_victory_dance")
+local MapPreviewCache = require("world.map_preview_cache")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -69,9 +70,9 @@ local innerRadius = baseRadius - outlineW * 0.25
 local paddingX = 28
 local paddingY = 30
 
-local btnW = 240
+local btnW = 260
 local btnH = 42
-local panelW = 520
+local panelW = 1120
 local rewardCardW = 420
 local rewardCardH = 220
 local rewardInputDelay = 0.3
@@ -119,7 +120,7 @@ local function updateMedalTooltip()
 		and Medals.getCount(mapStats.completedDifficulty) or 0
 	local clusterW = Medals.getClusterSize(medalR, medalGap)
 	local medalX = layout.cx - clusterW * 0.5
-	local medalY = layout.recapY - recapScroll.offset + layout.medalY
+	local medalY = layout.titleY + layout.medalY
 	local mx, my = love.mouse.getPosition()
 	local step = medalR * 2 + medalGap
 
@@ -377,40 +378,32 @@ end
 local function calculateLayout()
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
-	local compact = sh < 720
-	local edge = compact and 10 or 24
+	local compact = sw < 980 or sh < 680
+	local edge = compact and 10 or 20
 	local boxW = min(panelW, sw - edge * 2)
 	local boxX = cx - boxW * 0.5
-	local padX = min(paddingX, max(12, boxW * 0.05))
-	local padY = compact and 12 or paddingY
-	local buttonGap = compact and 8 or 14
+	local padX = compact and 16 or 22
+	local padY = compact and 12 or 20
+	local buttonGap = compact and 8 or 16
 	local buttonHeight = compact and 36 or btnH
-	local buttonsHeight = #buttons * buttonHeight + max(0, #buttons - 1) * buttonGap
-	local titleHeight = compact and 34 or 50
-	local sectionGap = compact and 8 or 18
-	local campaignMessageH = isFinalCampaignMap and (compact and 72 or 86) or 0
-	local difficultyY = (compact and 12 or difficultyOffset) + campaignMessageH
-	local _, clusterH = Medals.getClusterSize(medalR, medalGap)
-	local statsY = difficultyY + (compact and 24 or 30)
-	local medalY = statsY + runStats:getHeight() + (compact and 24 or 32)
-	local recapContentH = medalY + clusterH + 14
-	local desiredBoxH = padY * 2 + titleHeight + recapContentH + sectionGap + buttonsHeight
-	local boxH = min(desiredBoxH, sh - edge * 2)
+	local buttonsHeight = buttonHeight
+	local titleHeight = compact and 74 or 108
+	local sectionGap = 14
+	local boxH = min(compact and 620 or 680, sh - edge * 2)
 	local boxY = floor((sh - boxH) * 0.5)
 	local buttonsStartY = boxY + boxH - padY - buttonsHeight
 	local recapY = boxY + padY + titleHeight
 	local recapBottom = buttonsStartY - sectionGap
 	local viewportH = max(0, recapBottom - recapY)
-	recapScroll:update(recapContentH, viewportH)
+	recapScroll:update(viewportH, viewportH)
 
 	return {
 		sw = sw, sh = sh, cx = cx, compact = compact,
 		boxX = boxX, boxY = boxY, boxW = boxW, boxH = boxH,
 		padX = padX, padY = padY,
 		titleY = boxY + padY, recapY = recapY, recapH = viewportH,
-		difficultyY = difficultyY, statsY = statsY, medalY = medalY,
-		campaignMessageH = campaignMessageH,
-		recapContentH = recapContentH, buttonsStartY = buttonsStartY,
+		medalY = compact and 42 or 56,
+		recapContentH = viewportH, buttonsStartY = buttonsStartY,
 		buttonGap = buttonGap, buttonHeight = buttonHeight,
 	}
 end
@@ -420,8 +413,9 @@ local function layoutButtons()
 
 	for i, btn in ipairs(buttons) do
 		btn.h = layout.buttonHeight
-		btn.x = layout.cx - btn.w * 0.5
-		btn.y = layout.buttonsStartY + (i - 1) * (layout.buttonHeight + layout.buttonGap)
+		local totalW = #buttons * btn.w + max(0, #buttons - 1) * layout.buttonGap
+		btn.x = layout.cx - totalW * 0.5 + (i - 1) * (btn.w + layout.buttonGap)
+		btn.y = layout.buttonsStartY
 	end
 end
 
@@ -501,15 +495,13 @@ function Screen.enter()
 	recapScroll:reset()
 	buildRewardCards()
 	local map = Maps[State.worldMapIndex]
-	runStats:setRows({
-		{label = L("runRecap.score"), value = State.score or 0},
-	})
+	runStats:setRows({})
 	resetConfetti()
 	Medals.resetAnimations()
 	recordFirstClear()
 
 	previousMedalCount = Medals.getCount(State.previousCompletionDifficulty)
-	currentMedalCount = Medals.getCount(Difficulty.key())
+	currentMedalCount = max(previousMedalCount, Medals.getCount(Difficulty.key()))
 
 	if currentMedalCount > previousMedalCount then
 		Medals.beginReveal(previousMedalCount, currentMedalCount)
@@ -573,6 +565,62 @@ function Screen.update(dt)
 	end
 end
 
+local function formatNumber(value)
+	local text = tostring(floor((value or 0) + 0.5))
+	local changed = 1
+	while changed > 0 do
+		text, changed = text:gsub("^(%-?%d+)(%d%d%d)", "%1,%2")
+	end
+	return text
+end
+
+local function drawCard(x, y, w, h, alpha)
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], 0.85 * alpha)
+	lg.rectangle("fill", x, y, w, h, 10, 10)
+	lg.setColor(Theme.ui.panel2[1], Theme.ui.panel2[2], Theme.ui.panel2[3], 0.96 * alpha)
+	lg.rectangle("fill", x + 2, y + 2, w - 4, h - 4, 8, 8)
+end
+
+local function drawStatRow(label, value, x, y, w, alpha, color)
+	Fonts.set("ui")
+	color = color or colorText
+	lg.setColor(colorText[1], colorText[2], colorText[3], 0.7 * alpha)
+	Text.printfShadow(label, x, y, w * 0.7, "left")
+	lg.setColor(color[1], color[2], color[3], alpha)
+	Text.printfShadow(value, x, y, w, "right")
+	lg.setColor(1, 1, 1, 0.06 * alpha)
+	lg.rectangle("fill", x, y + 25, w, 1)
+end
+
+local function drawDamagePanel(x, y, w, h, alpha)
+	drawCard(x, y, w, h, alpha)
+	Fonts.set("ui")
+	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	Text.printShadow(L("victory.damageDealt"), x + 16, y + 14)
+	local stats = State.combatStats or {}
+	local total = max(1, stats.totalDamage or 0)
+	local rows = {}
+	for _, kind in ipairs(Constants.TOWER_LIST) do
+		local damage = (stats.damageByTower or {})[kind] or 0
+		if damage > 0 then rows[#rows + 1] = {kind = kind, damage = damage} end
+	end
+	table.sort(rows, function(a, b) return a.damage > b.damage end)
+	local rowY, barW = y + 48, w - 128
+	for i = 1, min(6, #rows) do
+		local row = rows[i]
+		local c = Theme.tower[row.kind] or colorGood
+		lg.setColor(c[1], c[2], c[3], alpha)
+		Text.printShadow(L("tower." .. row.kind), x + 16, rowY)
+		lg.setColor(1, 1, 1, 0.07 * alpha)
+		lg.rectangle("fill", x + 86, rowY + 6, barW, 7, 3, 3)
+		lg.setColor(c[1], c[2], c[3], 0.9 * alpha)
+		lg.rectangle("fill", x + 86, rowY + 6, barW * row.damage / total, 7, 3, 3)
+		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+		Text.printfShadow(format("%s (%d%%)", formatNumber(row.damage), floor(row.damage / total * 100 + 0.5)), x + 12, rowY, w - 28, "right")
+		rowY = rowY + 34
+	end
+end
+
 function Screen.draw()
 	-- Reuse one geometry calculation for rendering and the interactive buttons.
 	layoutButtons()
@@ -612,51 +660,68 @@ function Screen.draw()
 	lg.setColor(colorBackdrop[1], colorBackdrop[2], colorBackdrop[3], alpha)
 	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
 
-	-- Title
+	-- Victory heading and the earned medal tier replace the old three-star rating.
 	local titleY = g.titleY
-
 	Fonts.set(g.compact and "menu" or "title")
 	lg.setColor(colorGood[1], colorGood[2], colorGood[3], alpha)
 	local titleKey = isFinalCampaignMap and "victory.finalCampaign.title" or "game.victory"
 	Text.printfShadow(L(titleKey), boxX + g.padX, titleY, boxW - g.padX * 2, "center")
-
-	-- The recap may scroll, but the heading and action buttons remain outside its clip.
-	lg.setScissor(g.boxX, g.recapY, g.boxW, g.recapH)
-	local recapContentY = g.recapY - recapScroll.offset
-	if isFinalCampaignMap then
-		local difficulty = RunRecap.getDifficultyLabel() or L("difficulty." .. Difficulty.key())
-		local messageKey = State.wasFirstClear and "firstClear" or "repeatClear"
-		Fonts.set("ui")
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.9 * alpha)
-		Text.printfShadow(L("victory.finalCampaign." .. messageKey, difficulty), boxX + g.padX,
-			recapContentY + 2, boxW - g.padX * 2, "center")
-	end
-	-- Difficulty
-	local difficultyLabel = RunRecap.getDifficultyLabel()
-	local difficultyY = recapContentY + g.difficultyY
-
-	if difficultyLabel then
-		Fonts.set("ui")
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.78 * alpha)
-		Text.printfShadow(format("%s: %s  •  %s: %s", L("gameOver.map"), RunRecap.getMapName(), L("settings.difficulty"), difficultyLabel), boxX + g.padX, difficultyY, boxW - g.padX * 2, "center")
-	end
-	runStats:draw(boxX + g.padX, recapContentY + g.statsY, boxW - g.padX * 2, alpha)
-
-	-- Medals
 	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
 	local medalX = cx - clusterW * 0.5
-	local medalY = recapContentY + g.medalY
-
-	lg.setColor(colorDim[1], colorDim[2], colorDim[3], 0.75 * alpha)
-	lg.rectangle("fill", medalX - 16, medalY - 12, clusterW + 32, clusterH + 24, 14, 14)
-
-	-- Continue the campaign screen's staggered shine once reveal animations settle.
+	local medalY = titleY + g.medalY
 	Medals.drawReveal(medalX, medalY, medalR, medalGap, t, medalHoverScales)
 
+	local contentX, contentY = boxX + g.padX, g.recapY
+	local contentW, contentH = boxW - g.padX * 2, g.recapH
+	local gap = 14
+	local leftW = floor(contentW * 0.29)
+	local rightW = floor(contentW * 0.31)
+	local centerW = contentW - leftW - rightW - gap * 2
+	local centerX, rightX = contentX + leftW + gap, contentX + leftW + centerW + gap * 2
+	local map = Maps[State.worldMapIndex]
+	local result = State.runResult or {}
+
+	-- Map card.
+	drawCard(contentX, contentY, leftW, contentH, alpha)
+	Fonts.set("menu")
+	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	Text.printShadow(RunRecap.getMapName(), contentX + 14, contentY + 12)
+	Fonts.set("ui")
+	lg.setColor(colorText[1], colorText[2], colorText[3], 0.7 * alpha)
+	Text.printShadow(format(L("victory.mapNumber"), State.worldMapIndex, #Maps), contentX + 14, contentY + 40)
+	local preview = map and MapPreviewCache.get(map.id)
+	local previewY, previewH = contentY + 68, min(188, contentH * 0.42)
+	if preview and preview.canvas then
+		lg.setColor(1, 1, 1, alpha)
+		lg.draw(preview.canvas, contentX + 12, previewY, 0, (leftW - 24) / preview.canvas:getWidth(), previewH / preview.canvas:getHeight())
+	end
+	drawStatRow(L("settings.difficulty"), RunRecap.getDifficultyLabel(), contentX + 14, previewY + previewH + 18, leftW - 28, alpha, colorGood)
+	drawStatRow(L("victory.gameTime"), format("%d:%02d", floor((result.duration or 0) / 60), floor((result.duration or 0) % 60)), contentX + 14, previewY + previewH + 52, leftW - 28, alpha)
+
+	-- Run summary.
+	drawCard(centerX, contentY, centerW, contentH * 0.64, alpha)
+	drawStatRow(L("runRecap.score"), formatNumber(State.score), centerX + 14, contentY + 14, centerW - 28, alpha, colorGood)
+	drawStatRow(L("runRecap.enemiesDefeated"), formatNumber(State.totalKills), centerX + 14, contentY + 52, centerW - 28, alpha)
+	drawStatRow(L("runRecap.livesRemaining"), formatNumber(State.lives), centerX + 14, contentY + 90, centerW - 28, alpha, State.totalLeaks == 0 and colorGood or colorText)
+	drawStatRow(L("victory.moneyRemaining"), "$" .. formatNumber(State.money), centerX + 14, contentY + 128, centerW - 28, alpha, Theme.ui.money)
+	drawStatRow(L("victory.towersPlaced"), formatNumber(result.towersPlaced), centerX + 14, contentY + 166, centerW - 28, alpha)
+	drawStatRow(L("victory.abilitiesUsed"), formatNumber(result.abilitiesUsed), centerX + 14, contentY + 204, centerW - 28, alpha)
+	local medalsY = contentY + contentH * 0.64 + gap
+	drawCard(centerX, medalsY, centerW, contentH - contentH * 0.64 - gap, alpha)
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
-	Text.printfShadow(L("victory.medalProgress"), 0, medalY - 20, sw, "center")
-	lg.setScissor()
+	Text.printfShadow(L("victory.medalProgress"), centerX, medalsY + 14, centerW, "center")
+	Medals.draw(centerX + (centerW - clusterW) * 0.5, medalsY + 48, currentMedalCount, medalR, medalGap, t)
+
+	-- Damage and rewards.
+	drawDamagePanel(rightX, contentY, rightW, contentH * 0.66, alpha)
+	local rewardsY = contentY + contentH * 0.66 + gap
+	drawCard(rightX, rewardsY, rightW, contentH - contentH * 0.66 - gap, alpha)
+	Fonts.set("ui")
+	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	Text.printShadow(L("victory.rewards"), rightX + 16, rewardsY + 14)
+	drawStatRow(L("victory.coinsEarned"), "+$" .. formatNumber(State.money), rightX + 16, rewardsY + 48, rightW - 32, alpha, Theme.ui.money)
+	drawStatRow(L("runRecap.score"), "+" .. formatNumber(State.score), rightX + 16, rewardsY + 84, rightW - 32, alpha, colorGood)
 
 	-- Buttons
 	Button.drawList(buttons)

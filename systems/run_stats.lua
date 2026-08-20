@@ -11,6 +11,8 @@ function RunStats.reset()
 		damageByTower = {},
 		killsByTower = {},
 		towerKinds = {},
+		towersPlaced = 0,
+		abilitiesUsed = 0,
 	}
 	RunStats.nextTowerId = 0
 	RunStats.elapsed = 0
@@ -24,9 +26,11 @@ end
 function RunStats.finish(outcome, state)
 	if RunStats.final then return RunStats.final end
 	state = state or {}
+	local data = RunStats.data or {}
 	RunStats.final = {outcome = outcome, duration = RunStats.elapsed, score = state.score or 0,
 		remainingLives = state.lives or 0, leaks = state.totalLeaks or 0, wave = state.wave or 0,
-		kills = state.totalKills or 0, buildSeed = state.buildSeed}
+		kills = state.totalKills or 0, buildSeed = state.buildSeed,
+		towersPlaced = data.towersPlaced or 0, abilitiesUsed = data.abilitiesUsed or 0}
 	return RunStats.final
 end
 
@@ -42,6 +46,12 @@ function RunStats.recordPurchase(tower)
 	RunStats.nextTowerId = RunStats.nextTowerId + 1
 	tower.runStatsId = RunStats.nextTowerId
 	data.towerKinds[tower.runStatsId] = tower.kind
+	data.towersPlaced = data.towersPlaced + 1
+end
+
+function RunStats.recordAbilityUse()
+	local data = getData()
+	data.abilitiesUsed = data.abilitiesUsed + 1
 end
 
 function RunStats.recordDamage(tower, amount)
