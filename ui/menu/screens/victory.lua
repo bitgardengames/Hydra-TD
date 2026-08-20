@@ -21,6 +21,7 @@ local AbilityIcons = require("ui.ability_icons")
 local Tooltip = require("ui.tooltip")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
+local TowerVictoryDance = require("render.tower_victory_dance")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -313,8 +314,21 @@ local function drawRewardUnlockCard(g)
 	lg.setColor(0.04, 0.05, 0.07, 0.8 * alpha)
 	lg.circle("fill", iconX, iconY, 43)
 	if card.type == "tower" then
+		local motionEnabled = not Save.data.settings or Save.data.settings.cameraMotion ~= false
+		local sway, bob, angle, towerScale = TowerVictoryDance.previewPose(
+			rewardCardT, card.id, motionEnabled)
+		-- A stencil, rather than a rectangular scissor, keeps every animated pose
+		-- inside the icon circle even during its entrance bounce and flourish.
+		lg.stencil(function() lg.circle("fill", iconX, iconY, 43) end, "replace", 1, true)
+		lg.setStencilTest("greater", 0)
+		lg.push()
+		lg.translate(iconX, iconY + 10 + bob)
+		lg.scale(towerScale, towerScale)
+		lg.translate(-iconX, -(iconY + 10))
 		DrawEntities.drawTowerBase(card.id, iconX, iconY + 10, alpha)
-		DrawEntities.drawTowerCore(card.id, iconX, iconY + 10, -0.65, 0, alpha)
+		DrawEntities.drawTowerCore(card.id, iconX + sway, iconY + 10, angle, 0, alpha)
+		lg.pop()
+		lg.setStencilTest()
 	elseif card.type == "ability" then
 		AbilityIcons.draw(card.id, iconX, iconY, 1.45, alpha, "newly-unlocked")
 	end

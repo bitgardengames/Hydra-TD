@@ -11,6 +11,16 @@ local function pose(t, kind, i)
 end
 
 local kinds = {"lancer", "slow", "cannon", "shock", "poison", "plasma"}
+
+local _, _, staticAngle, staticScale = Dance.previewPose(1.5, "lancer", false)
+assert(staticAngle == -0.65 and staticScale == 1,
+	"reduced-motion previews should use a subdued static pose")
+local _, entranceBob, _, entranceScale = Dance.previewPose(0.2, "lancer", true)
+assert(entranceBob < 0 and entranceScale > 0.72,
+	"tower previews should enter with a small bounce")
+local _, _, settledAngle, settledScale = Dance.previewPose(3, "plasma", true)
+assert(settledAngle == -0.65 and settledScale == 1,
+	"tower previews should perform their flourish once and settle")
 local seen = {}
 for _, kind in ipairs(kinds) do
 	local sway, bob, turn = pose(1.25, kind, 1)
