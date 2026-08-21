@@ -77,6 +77,7 @@ def wave_metrics() -> dict:
 
 
 def event_rates() -> dict:
+    from upgrade_model import level_stats, progression
     text = (ROOT / "world/tower_defs.lua").read_text()
     rates = {}
     for kind in ("slow", "lancer", "poison", "cannon", "shock", "plasma"):
@@ -88,8 +89,8 @@ def event_rates() -> dict:
                 raw = text[match.end():pos]
                 break
         rate = float(re.search(r"\bfireRate\s*=\s*([0-9.]+)", raw).group(1))
-        mult = float(re.search(r"\bfireMult\s*=\s*([0-9.]+)", raw).group(1))
-        rates[kind] = {"base": rate, "tier_5": round(rate * mult ** 4, 4)}
+        _, towers = progression()
+        rates[kind] = {"base": rate, "tier_5": round(level_stats(towers[kind], 5)["fireRate"], 4)}
     base = sum(x["base"] for x in rates.values())
     maximum = sum(x["tier_5"] for x in rates.values())
     return {"formation": "one continuously engaged tower of each of the six kinds",
@@ -229,13 +230,14 @@ def message_tip_metrics() -> dict:
 
 
 def affordability_metrics() -> dict:
+    from upgrade_model import progression
     sys.path.insert(0, str(HERE))
     import economy_fixtures
     economy = economy_fixtures.build_report()
-    costs = {"slow": 50, "lancer": 60, "poison": 70, "cannon": 90, "shock": 95, "plasma": 120}
-    anchors = {kind: {"first_upgrade": math.floor(cost*1.25 + .5),
-                      "final_tier_total": math.floor(cost*9.6 + .5)}
-               for kind, cost in costs.items()}
+    multipliers, towers = progression()
+    anchors = {kind: {"first_upgrade": round(tower["cost"] * multipliers[0]),
+                      "final_tier_total": round(tower["cost"] * (1 + sum(multipliers)))}
+               for kind, tower in towers.items()}
     result = {}
     for difficulty, data in economy["difficulties"].items():
         maps = data["curves"]["balanced"]

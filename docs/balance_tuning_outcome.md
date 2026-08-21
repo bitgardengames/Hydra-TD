@@ -1,83 +1,53 @@
-# Simulated campaign balance baseline
+# Stat-only tower progression outcome
 
-This baseline was produced by running the deterministic combat, campaign pacing,
-economy, challenge, interaction, and polish simulations together. Unlike earlier
-single-coordinate recommendations, this pass applies a coordinated set of values
-to the shipped game definitions.
+## Canonical assumptions
 
-## Applied outcome
+Canonical campaign, combat, replay-policy, economy, and polish fixtures model no
+specialization and no inventory modules. The only progression inputs are the
+four `UPGRADE_COST_MULTIPLIERS` in `world/towers.lua` and each tower's `upgrade`
+`dmgMult`, `fireMult`, and `rangeAdd` values in `world/tower_defs.lua`.
+Experimental branch/module coverage remains isolated in
+`tools/balance/interaction_fixtures.py` and is not a release gate.
 
-### Towers and upgrades
+## Applied tuning
 
-The Slow, Poison, Cannon, Shock, and Plasma towers now fire at **1.20, 1.40,
-0.70, 1.10, and 0.75 shots per second**, respectively. Lancer remains at 2.20
-shots per second as the single-target baseline. The modest specialist throughput
-increase keeps each counter useful against the correspondingly tougher enemy
-roster without collapsing the specialist roles into generic damage choices.
+Upgrade prices are **0.45x / 0.65x / 0.90x / 1.20x** base cost. The maximum-level
+stat multipliers and per-tier range additions are:
 
-Upgrade prices now use **1.30x, 1.70x, 2.20x, and 2.80x** base tower cost. This
-makes the first specialization a slightly more deliberate purchase while reducing
-the old late-upgrade wall (previously 3.20x at the final tier). The simulated
-median first-upgrade purchase moves from wave 2 to wave 3.
+| Tower | Damage | Fire rate | Range/tier |
+|---|---:|---:|---:|
+| Slow | 1.70x | 1.35x | 0.16 tiles |
+| Lancer | 2.65x | 1.18x | 0.08 tiles |
+| Poison | 2.00x | 1.20x | 0.09 tiles |
+| Cannon | 2.45x | 1.12x | 0.08 tiles |
+| Shock | 2.10x | 1.20x | 0.11 tiles |
+| Plasma | 2.15x | 1.25x | 0.09 tiles |
 
-### Enemies, income, and waves
+Runtime interpolation is linear from base to those maximum multipliers; range is
+additive each tier. The fixture model mirrors that behavior rather than
+exponentiating `fireMult`.
 
-Tank, Bulwark, Regenerator, Warcaller, and Summoner base HP are now
-**41, 54, 37, 35, 37, and 50**. Boss HP is now **330 / 290 / 330 / 360** for the
-base, summoner, displacement, and suppression encounters. Bulwark rewards are now **$16**, preserving the authored threat-per-dollar band
-while funding the demonstrated Cannon counter sooner; other rewards remain
-unchanged.
+## Expansion comparison and acceptance
 
-Flawless completion income is now **$2 on Easy and Normal** in ordinary rounding
-cases and **$1 on Hard**, with existing boss and milestone modifiers still
-applying. Kill rewards remain the primary economy, but clean play now creates a
-visible cushion without moving the economy fixtures outside their purchasing
-bands.
+Each of the 24 upgrade purchases is priced against equal spending on another
+base tower. Open legal placement compares marginal raw DPS and accepts ratios of
+**0.30–1.15**. The constrained comparison accounts for the next legal tile's
+coverage (72% useful uptime), switching and overkill (88% realization), retained
+range, and bounded role utility (1.05–1.28), accepting **0.60–1.85**. The gate
+also requires at least one open-board expansion win and at least one
+placement-constrained upgrade win. This makes expansion preferable when good
+coverage tiles remain, while upgrades become competitive when placement,
+focus-fire, overkill, or specialist utility matters.
 
-The long-form Outer Loop, Terrace, and High Ridge openings each use **17 rather
-than 18 Grunts**. Stepping Stones wave 6 now opens with **five rather than six
-Bulwarks**, directly addressing the marginal Hard/expert leak recorded in the
-structured playtests while retaining its paired-platoon identity.
-
-## Aggregate result
-
-| Metric | Previous baseline | Tuned baseline | Authored target |
-|:--|--:|--:|:--|
-| Required / affordable DPS | 6,455 bp | 6,240 bp | 4,200–9,000 bp |
-| Wave-income coverage | 4,500 bp | 4,762 bp | 3,500–8,000 bp |
-| Threat per reward dollar | 5 | 4 | 3–5 |
-| Specialist role performance | 10,000 bp | 10,000 bp | 9,000–10,000 bp |
-| Leak allowance | 2,444 bp | 2,200 bp | 500–2,200 bp |
-| First-upgrade timing | wave 2 | wave 3 | waves 2–5 |
-| Wave-to-wave growth | 12,025 bp | 12,000 bp | 10,100–13,500 bp |
-
-Leak allowance now meets the authored target at its 2,200 bp upper bound. The
-accepted changes are supported by the Easy/Normal/Hard,
-first-time/competent/expert observations in
-`docs/structured_balance_playtests.md`; knowledge failures were handled through
-existing coaching surfaces, while only correctly understood numerical failures
-drove allow-listed tuning. All hard campaign, affordability, role, economy,
-interaction, pacing, and polish constraints pass with the applied values.
+Polish alarms accept first-upgrade affordability through wave **2** and complete
+stat-only towers through waves **2–8** on Hard. Current complete-tower probes span
+waves **1–6** across maps; early Slow affordability is retained as an observed
+edge rather than turned into a prescribed build.
 
 ## Reproduction
 
 ```sh
 python3 tools/balance/check.py
-python3 - <<'PY'
-import json, sys
-sys.path.insert(0, "tools/balance")
-import challenge_fixtures, recommend
-manifest = json.load(open("tools/balance/tuning_parameters.json"))["parameters"]
-files = sorted({item["source_file"] for item in manifest})
-texts = {name: open(name).read() for name in files}
-print(recommend.metrics(challenge_fixtures.build_report(), texts, manifest))
-PY
-```
-
-Regenerate checked-in evidence after an accepted value change:
-
-```sh
 python3 tools/balance/run_fixtures.py --write-docs
-python3 tools/balance/challenge_fixtures.py --write-docs
-python3 tools/balance/interaction_fixtures.py --write
+python3 tools/balance/polish_report.py --check
 ```

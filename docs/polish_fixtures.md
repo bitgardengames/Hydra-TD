@@ -49,12 +49,13 @@ damage-meter rows and all six ability slots. Authored panel bounds must have
 
 ## Upgrade timing
 
-The report reuses the balanced economy curve and runtime upgrade multipliers.
+The report reuses the balanced economy curve and runtime stat-only upgrade multipliers; specialization and inventory modules are excluded.
 For every tower and difficulty it reports the earliest/latest map wave where
 unspent purchasing power can afford the first upgrade or the complete final
 tier. These are independent affordability probes, never a prescribed build.
-On Hard, first upgrades alarm outside waves **0–2** and final tiers outside
-waves **5–10**. This protects useful upgrade feedback cadence without pinning
+On Hard, first upgrades alarm outside waves **0–2** and complete towers outside
+waves **2–8**. Observed complete-tower affordability spans waves **1–6** across
+tower kinds and maps. This protects useful upgrade feedback cadence without pinning
 income to an exact dollar snapshot.
 
 Run the focused gate with:

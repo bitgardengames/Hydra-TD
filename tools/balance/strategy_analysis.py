@@ -122,7 +122,6 @@ def analyze() -> dict:
                                    "families": families})
     source_hash = hashlib.sha256((BANDS.read_bytes() +
         (ROOT / "world/tower_defs.lua").read_bytes() +
-        (ROOT / "world/tower_branch_defs.lua").read_bytes() +
         (ROOT / "systems/ability_defs.lua").read_bytes() +
         (ROOT / "systems/campaign_wave_defs.lua").read_bytes())).hexdigest()
     return {"format_version": 1, "definition_sha256": source_hash,

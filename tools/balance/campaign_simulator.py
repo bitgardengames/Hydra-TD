@@ -27,11 +27,10 @@ BANDS = ROOT / "tools/balance/campaign_acceptance_bands.json"
 # A coarser fixed policy tick than rendering/runtime (whose source is included in
 # the fingerprint); cooldown overshoot is carried, so shot cadence stays stable.
 TICK = .2
-UPGRADE_COST = (1.3, 1.7, 2.2, 2.8)
 DEFINITION_FILES = (
     "core/simulation_clock.lua", "core/constants.lua", "world/map_defs.lua",
     "world/map.lua", "world/tower_defs.lua", "world/towers.lua",
-    "world/tower_branch_defs.lua", "world/enemy_defs.lua", "world/enemies.lua",
+    "world/enemy_defs.lua", "world/enemies.lua",
     "world/enemy_traits.lua", "world/projectiles.lua", "world/projectile_behaviors.lua",
     "world/targeting.lua", "systems/ability_defs.lua", "systems/abilities.lua",
     "systems/campaign_wave_defs.lua", "systems/waves.lua",
@@ -46,7 +45,7 @@ POLICIES = {
         "counter_knowledge": .72, "lookahead_waves": 1, "upgrade_preference": .48,
         "ability_accuracy": .76, "ability_delay": 1.6, "retries": 2, "search_budget": 12},
     "expert": {"placement_candidates": 24, "placement_noise": .02,
-        "counter_knowledge": 1.0, "lookahead_waves": 2, "upgrade_preference": .68,
+        "counter_knowledge": 1.0, "lookahead_waves": 2, "upgrade_preference": .55,
         "ability_accuracy": .94, "ability_delay": .35, "retries": 1, "search_budget": 32},
 }
 
@@ -141,6 +140,8 @@ def placement(policy_name, policy, path_len, tower_no, variant):
 
 
 def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs):
+    from upgrade_model import progression
+    upgrade_cost, _ = progression()
     towers_def, enemies_def, diffs, curve, maps = defs
     detail_towers, detail_enemies, _ = parse_detail()
     policy = POLICIES[policy_name]; diff = diffs[diff_name]
@@ -160,7 +161,7 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
             upgradable = [t for t in towers if t.level < 5]
             if upgradable and stable_unit(policy_name,map_id,diff_name,variant,wave_no,actions,"up") < policy["upgrade_preference"]:
                 target = max(upgradable, key=lambda t: (t.level, -abs(t.center-.55)))
-                cost = round(detail_towers[target.kind]["cost"] * UPGRADE_COST[target.level-1])
+                cost = round(detail_towers[target.kind]["cost"] * upgrade_cost[target.level-1])
                 if money >= cost: money -= cost; target.level += 1; continue
             kind = choose_kind(policy, preview, detail_towers, (policy_name,map_id,diff_name,variant,wave_no,actions))
             cost = detail_towers[kind]["cost"]

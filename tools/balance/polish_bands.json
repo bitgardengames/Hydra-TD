@@ -11,6 +11,6 @@
     "wave_preview_wrapped_lines": [1, 20],
     "hud_overflow_pixels": [0, 0],
     "balanced_first_upgrade_wave": [0, 2],
-    "balanced_final_tier_wave": [5, 10]
+    "balanced_final_tier_wave": [2, 8]
   }
 }
