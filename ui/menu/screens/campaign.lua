@@ -47,8 +47,9 @@ local scrollbarDragging = false
 local scrollbarGrabY = 0
 
 local LIST_ROW_H = 72
-local LIST_PREVIEW_W = 116
-local LIST_PREVIEW_H = 55
+local LIST_PREVIEW_W = 128
+local LIST_PREVIEW_H = 60
+local MAIN_PREVIEW_HEIGHT_RATIO = 0.48
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -305,7 +306,7 @@ local function drawCenter(l, map, entry)
 	lg.printf(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
 	local previewY = y + 70
-	local maxPreviewH = max(120, floor(l.center.h * 0.44))
+	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
 	local previewX = x + (w - previewW) * 0.5
