@@ -18,7 +18,6 @@ local DrawEntities = require("render.draw_entities")
 local RunRecap = require("ui.run_recap")
 local ScrollView = require("ui.scroll_view")
 local AbilityIcons = require("ui.ability_icons")
-local Tooltip = require("ui.tooltip")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local TowerVictoryDance = require("render.tower_victory_dance")
 local MapPreviewCache = require("world.map_preview_cache")
@@ -49,8 +48,6 @@ local rewardCards = {}
 local rewardCardIndex = 1
 local rewardClosePressed = false
 local rewardActionPressed = nil
-local hoveredMedalTier = nil
-local medalHoverScales = {1, 1, 1}
 local isFinalCampaignMap = false
 local runStats = AnimatedRunStats.new(Theme.ui.good)
 
@@ -84,10 +81,6 @@ local difficultyOffset = 22
 -- Medal visuals
 local medalR = 16
 local medalGap = 14
-local medalHoverScale = 1.08
-local medalHoverSpeed = 14
-local DIFFICULTY_ORDER = {"easy", "normal", "hard"}
-local MEDAL_NAMES = {"bronze", "silver", "gold"}
 local confettiColors = {
 	Theme.ui.good,
 	Theme.ui.wave,
@@ -101,56 +94,6 @@ local function easeOutBack(x)
 	local c1 = 1.70158
 	local c3 = c1 + 1
 	return 1 + c3 * ((x - 1) ^ 3) + c1 * ((x - 1) ^ 2)
-end
-
-local function hideMedalTooltip()
-	hoveredMedalTier = nil
-	Tooltip.hide()
-end
-
-local function updateMedalTooltip()
-	if #rewardCards > 0 or not layout then
-		hideMedalTooltip()
-		return
-	end
-
-	local map = Maps[State.mapIndex]
-	local mapStats = map and Save.data.mapStats and Save.data.mapStats[map.id]
-	local earnedCount = mapStats and mapStats.completedDifficulty
-		and Medals.getCount(mapStats.completedDifficulty) or 0
-	local clusterW = Medals.getClusterSize(medalR, medalGap)
-	local medalX = layout.cx - clusterW * 0.5
-	local medalY = layout.titleY + layout.medalY
-	local mx, my = love.mouse.getPosition()
-	local step = medalR * 2 + medalGap
-
-	-- Match the campaign medal hit areas, while respecting the recap's clip.
-	if my < layout.recapY or my > layout.recapY + layout.recapH then
-		hideMedalTooltip()
-		return
-	end
-
-	for tier = 1, earnedCount do
-		local x = medalX + (tier - 1) * step
-		if mx >= x and mx <= x + medalR * 2
-			and my >= medalY and my <= medalY + medalR * 2 then
-			hoveredMedalTier = tier
-			local difficultyKey = DIFFICULTY_ORDER[tier]
-			local timestamp = mapStats.medalEarnedAt and mapStats.medalEarnedAt[difficultyKey]
-			local earnedDate = L("campaign.medalDateUnavailable")
-			if type(timestamp) == "number" then
-				earnedDate = os.date(L("campaign.medalDateFormat"), timestamp)
-			end
-
-			Tooltip.show({
-				title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[tier]), L("difficulty." .. difficultyKey)),
-				rows = {{label = L("campaign.medalEarnedOn"), value = earnedDate}},
-			})
-			return
-		end
-	end
-
-	hideMedalTooltip()
 end
 
 local function buildRewardCards()
@@ -387,7 +330,7 @@ local function calculateLayout()
 	local buttonGap = compact and 8 or 16
 	local buttonHeight = compact and 36 or btnH
 	local buttonsHeight = buttonHeight
-	local titleHeight = compact and 74 or 108
+	local titleHeight = compact and 48 or 66
 	local sectionGap = 14
 	local boxH = min(compact and 620 or 680, sh - edge * 2)
 	local boxY = floor((sh - boxH) * 0.5)
@@ -402,7 +345,6 @@ local function calculateLayout()
 		boxX = boxX, boxY = boxY, boxW = boxW, boxH = boxH,
 		padX = padX, padY = padY,
 		titleY = boxY + padY, recapY = recapY, recapH = viewportH,
-		medalY = compact and 42 or 56,
 		recapContentH = viewportH, buttonsStartY = buttonsStartY,
 		buttonGap = buttonGap, buttonHeight = buttonHeight,
 	}
@@ -484,8 +426,6 @@ function Screen.enter()
 	-- Victory-specific actions and campaign-completion copy depend on the map and
 	-- rewards from the run that just ended, not the state present at app startup.
 	Screen.load()
-	hideMedalTooltip()
-	medalHoverScales = {1, 1, 1}
 	t = 0
 	panelT = 0
 	rewardCardT = 0
@@ -553,16 +493,6 @@ function Screen.update(dt)
 	end
 
 	Button.updateList(buttons, dt)
-	updateMedalTooltip()
-
-	-- Ease each medal independently so entering and leaving hover both feel
-	-- responsive without the abrupt white outline previously used here.
-	local blend = 1 - math.exp(-medalHoverSpeed * dt)
-	for tier = 1, 3 do
-		local target = tier == hoveredMedalTier and medalHoverScale or 1
-		medalHoverScales[tier] = medalHoverScales[tier]
-			+ (target - medalHoverScales[tier]) * blend
-	end
 end
 
 local function formatNumber(value)
@@ -625,7 +555,7 @@ function Screen.draw()
 	-- Reuse one geometry calculation for rendering and the interactive buttons.
 	layoutButtons()
 	local g = layout
-	local sw, sh, cx = g.sw, g.sh, g.cx
+	local sw, sh = g.sw, g.sh
 	local boxX, boxY, boxW, boxH = g.boxX, g.boxY, g.boxW, g.boxH
 
 	-- Dim world
@@ -660,16 +590,13 @@ function Screen.draw()
 	lg.setColor(colorBackdrop[1], colorBackdrop[2], colorBackdrop[3], alpha)
 	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
 
-	-- Victory heading and the earned medal tier replace the old three-star rating.
+	-- Victory heading.
 	local titleY = g.titleY
 	Fonts.set(g.compact and "menu" or "title")
 	lg.setColor(colorGood[1], colorGood[2], colorGood[3], alpha)
 	local titleKey = isFinalCampaignMap and "victory.finalCampaign.title" or "game.victory"
 	Text.printfShadow(L(titleKey), boxX + g.padX, titleY, boxW - g.padX * 2, "center")
-	local clusterW, clusterH = Medals.getClusterSize(medalR, medalGap)
-	local medalX = cx - clusterW * 0.5
-	local medalY = titleY + g.medalY
-	Medals.drawReveal(medalX, medalY, medalR, medalGap, t, medalHoverScales)
+	local clusterW = Medals.getClusterSize(medalR, medalGap)
 
 	local contentX, contentY = boxX + g.padX, g.recapY
 	local contentW, contentH = boxW - g.padX * 2, g.recapH
@@ -711,7 +638,7 @@ function Screen.draw()
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
 	Text.printfShadow(L("victory.medalProgress"), centerX, medalsY + 14, centerW, "center")
-	Medals.draw(centerX + (centerW - clusterW) * 0.5, medalsY + 48, currentMedalCount, medalR, medalGap, t)
+	Medals.drawReveal(centerX + (centerW - clusterW) * 0.5, medalsY + 48, medalR, medalGap, t)
 
 	-- Damage and rewards.
 	drawDamagePanel(rightX, contentY, rightW, contentH * 0.66, alpha)
@@ -729,11 +656,6 @@ function Screen.draw()
 	lg.pop()
 
 	drawRewardUnlockCard(g)
-	Tooltip.draw()
-end
-
-function Screen.leave()
-	hideMedalTooltip()
 end
 
 function Screen.wheelmoved(_, y)
