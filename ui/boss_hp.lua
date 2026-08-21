@@ -166,6 +166,8 @@ function BossHP.draw()
 
 	local motion = motionEnabled()
 	local visibility = motion and cache.visibility or 1
+	-- A smooth, centered unfurl gives the bar some personality without moving its
+	-- anchor or adding spring/recoil motion when the boss takes damage.
 	local reveal = visibility * visibility * (3 - 2 * visibility)
 	local sw = lg.getWidth()
 	local x = floor((sw - barW) * 0.5)
@@ -174,10 +176,9 @@ function BossHP.draw()
 	if presentationPulse > 0 then alpha = min(1, alpha + presentationPulse * 0.35) end
 	local r, g, b, a = colorBase[1], colorBase[2], colorBase[3], (colorBase[4] or 1) * alpha
 
-	-- Keep the bar at its full width while it fades in and out. This avoids the
-	-- cutaway effect caused by horizontally clipping its raised layers.
-	local shownW = barW
-	local shownX = x
+	-- Both layers unfold together so the raised cutaway remains intact throughout.
+	local shownW = max(1, floor(barW * reveal))
+	local shownX = x + floor((barW - shownW) * 0.5)
 	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
 	lg.rectangle("fill", shownX - outlineW, y - outlineW, shownW + outlineW * 2, barH + outlineW * 2, outerRadius)
 	lg.setColor(r * 0.4, g * 0.4, b * 0.4, a)
@@ -211,7 +212,10 @@ function BossHP.draw()
 		cache.textW = lg.getFont():getWidth(cache.text)
 	end
 	local textH = lg.getFont():getHeight()
-	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	-- Let the face open before introducing the label; this avoids squeezed text
+	-- during the short unfurl animation.
+	local textAlpha = max(0, min(1, (reveal - 0.55) / 0.45)) * alpha
+	lg.setColor(colorText[1], colorText[2], colorText[3], textAlpha)
 	Text.printShadow(cache.text, x + (barW - cache.textW) * 0.5, fy + (barH - textH) * 0.5)
 end
 
