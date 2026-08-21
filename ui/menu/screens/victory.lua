@@ -576,7 +576,7 @@ local function drawDamagePanel(x, y, w, h, alpha)
 		if damage > 0 then rows[#rows + 1] = {kind = kind, damage = damage} end
 	end
 	table.sort(rows, function(a, b) return a.damage > b.damage end)
-	local rowY, barW, barH = y + 48, w - 190, 9
+	local rowY, barW, barH = y + 48, w - 198, 9
 	for i = 1, min(6, #rows) do
 		local row = rows[i]
 		local c = Theme.tower[row.kind] or colorGood
