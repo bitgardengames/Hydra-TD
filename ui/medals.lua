@@ -186,6 +186,18 @@ function Medals.update(dt)
 	end
 end
 
+function Medals.isRevealComplete()
+	return revealTargetCount <= revealBaseCount and #queue == 0 and #active == 0
+end
+
+function Medals.finishReveal()
+	revealBaseCount = revealTargetCount
+	revealDelayRemaining = 0
+	queueTimer = 0
+	queue = {}
+	active = {}
+end
+
 local function drawShine(x, y, radius, phase, yOffset)
 	if phase == nil or phase < 0 or phase >= 1 then
 		return
