@@ -46,7 +46,7 @@ local listOffset = 0
 local scrollbarDragging = false
 local scrollbarGrabY = 0
 
-local LIST_ROW_H = 72
+local LIST_ROW_H = 75
 local LIST_PREVIEW_W = 128
 local LIST_PREVIEW_H = 60
 local MAIN_PREVIEW_HEIGHT_RATIO = 0.48
