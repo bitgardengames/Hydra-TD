@@ -12,25 +12,27 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 -- Rewards intentionally avoid mandatory stat power and instead emphasize new
 -- verbs, optional build utilities, and information that teaches counters.
 local rewardsByMapId = {
-	riverbend = {{type = "tower", id = "cannon", labelKey = "campaign.rewards.cannon"}},
-	switchback = {{type = "ability", id = "meteor", labelKey = "campaign.rewards.meteor"}},
+	-- Meteor gives the first clear an immediate burst-damage payoff; Cannon then
+	-- reinforces the overlapping splash lanes taught on Switchback.
+	riverbend = {{type = "ability", id = "meteor", labelKey = "campaign.rewards.meteor"}},
+	switchback = {{type = "tower", id = "cannon", labelKey = "campaign.rewards.cannon"}},
 	highpass = {
 		{type = "tower", id = "poison", label = "Poison tower"},
 	},
-	roundabout = {{type = "ability", id = "overdrive", label = "Overdrive active ability"}},
+	roundabout = {{type = "ability", id = "overdrive", labelKey = "campaign.rewards.overdrive"}},
 	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
 	gauntlet = {
 		{type = "tower", id = "shock", label = "Shock tower"},
 	},
 	-- Snake Trail's formation-control reward prepares players for denser mixed waves.
-	snaketrail = {{type = "ability", id = "gravity_well", label = "Gravity Well active ability"}},
+	snaketrail = {{type = "ability", id = "gravity_well", labelKey = "campaign.rewards.gravityWell"}},
 	-- Frost Nova is earned before Backtrack introduces runners.
-	backtrack = {{type = "ability", id = "frost_nova", label = "Frost Nova active ability"}},
-	lowvalley = {{type = "ability", id = "gold_rush", label = "Gold Rush active ability"}},
+	backtrack = {{type = "ability", id = "frost_nova", labelKey = "campaign.rewards.frostNova"}},
+	lowvalley = {{type = "ability", id = "gold_rush", labelKey = "campaign.rewards.goldRush"}},
 	circuit = {
 		{type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
 	},
-	outerloop = {{type = "ability", id = "last_stand", label = "Last Stand active ability"}},
+	outerloop = {{type = "ability", id = "last_stand", labelKey = "campaign.rewards.lastStand"}},
 	-- There are fewer meaningful unlocks than campaign maps. Keep the real
 	-- rewards contiguous at the front rather than using route progression as a
 	-- placeholder reward or leaving gaps between unlocks.

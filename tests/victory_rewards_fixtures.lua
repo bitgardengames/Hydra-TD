@@ -13,6 +13,8 @@ assert(source:find("drawRewardsPanel(rightX, rewardsY", 1, true),
 	"victory must render its rewards panel")
 assert(source:find("Text.printfShadow(reward.name", 1, true),
 	"the rewards panel must name the map reward")
+assert(source:find("reward.labelKey and L(reward.labelKey)", 1, true),
+	"victory must localize authored ability reward labels")
 assert(source:find('"victory.rewardNew" or "victory.rewardAlreadyUnlocked"', 1, true),
 	"the rewards panel must distinguish a new reward from an existing unlock")
 assert(source:find("DrawEntities.drawTowerCore(reward.id", 1, true),
