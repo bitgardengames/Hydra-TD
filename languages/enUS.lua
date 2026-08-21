@@ -31,7 +31,7 @@ return {
 	},
 
 	ability = {
-		meteor = {name = "Meteor", desc = "Deal 85 damage to all enemies in the targeted area."},
+		meteor = {name = "Meteor", desc = "Deal 75 damage to all enemies in the targeted area."},
 		frostNova = {name = "Frost Nova", desc = "Slow enemies in the targeted area to 35% speed for 5 seconds."},
 		overdrive = {name = "Overdrive", desc = "Make towers in the targeted area attack 70% faster for 7 seconds."},
 		gravityWell = {name = "Gravity Well", desc = "Pull enemies in the targeted area backward for 3 seconds, then deal 28 damage."},
