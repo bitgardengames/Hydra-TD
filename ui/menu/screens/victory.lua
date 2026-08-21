@@ -19,7 +19,6 @@ local RunRecap = require("ui.run_recap")
 local ScrollView = require("ui.scroll_view")
 local AbilityIcons = require("ui.ability_icons")
 local AnimatedRunStats = require("ui.animated_run_stats")
-local TowerVictoryDance = require("render.tower_victory_dance")
 local MapPreviewCache = require("world.map_preview_cache")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 
@@ -44,13 +43,7 @@ local t = 0
 local panelT = 0
 local recapScroll = ScrollView.new()
 local layout = nil
-local rewardCardT = 0
-local rewardCards = {}
-local earnedRewardCards = {}
 local mapRewardCards = {}
-local rewardCardIndex = 1
-local rewardClosePressed = false
-local rewardActionPressed = nil
 local isFinalCampaignMap = false
 local runStats = AnimatedRunStats.new(Theme.ui.good)
 
@@ -73,12 +66,6 @@ local paddingY = 30
 local btnW = 260
 local btnH = 42
 local panelW = 1120
-local rewardCardW = 420
-local rewardCardH = 220
-local rewardInputDelay = 0.3
-local rewardCloseSize = 32
-local rewardActionH = 34
-
 local difficultyOffset = 22
 
 -- Medal visuals
@@ -93,18 +80,8 @@ local confettiColors = {
 }
 
 
-local function easeOutBack(x)
-	local c1 = 1.70158
-	local c3 = c1 + 1
-	return 1 + c3 * ((x - 1) ^ 3) + c1 * ((x - 1) ^ 2)
-end
-
 local function buildRewardCards()
-	earnedRewardCards = {}
 	mapRewardCards = {}
-	local function add(card)
-		earnedRewardCards[#earnedRewardCards + 1] = card
-	end
 	local function rewardWasEarned(reward)
 		for _, earned in ipairs(State.unlockedRewardsThisVictory or {}) do
 			if earned.type == reward.type and earned.id == reward.id then return true end
@@ -127,222 +104,12 @@ local function buildRewardCards()
 		}
 	end
 
-	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
-		local def = TowerDefs[kind]
-		add({
-			type = "tower",
-			id = kind,
-			name = L((def and def.nameKey) or ("tower." .. kind)),
-			description = L("victory.rewardDescriptions.tower"),
-			color = (def and def.color) or Theme.ui.good,
-		})
-	end
-
-	for _, abilityId in ipairs(State.unlockedAbilitiesThisVictory or {}) do
-		local def = AbilityDefs[abilityId]
-		add({
-			type = "ability",
-			id = abilityId,
-			name = L((def and def.nameKey) or ("ability." .. abilityId .. ".name")),
-			description = L("victory.rewardDescriptions.ability"),
-			color = Theme.ui.selected,
-		})
-	end
-
-	for _, reward in ipairs(State.unlockedRewardsThisVictory or {}) do
-		if reward.type ~= "tower" and reward.type ~= "ability" then
-			add({
-				type = reward.type,
-				id = reward.id,
-				name = reward.labelKey and L(reward.labelKey) or reward.label or reward.id,
-				description = L(reward.descriptionKey or ("victory.rewardDescriptions." .. reward.type)),
-				color = Theme.ui.good,
-			})
-		end
-	end
-
 	-- The summary always describes the completed map's authored reward. Its
 	-- state distinguishes a first-clear unlock from a reward earned previously.
 	local map = Maps[State.worldMapIndex]
 	for _, reward in ipairs(CampaignUnlocks.getRewardsForMap(map)) do
 		mapRewardCards[#mapRewardCards + 1] = makeCard(reward, rewardWasEarned(reward))
 	end
-	-- The unlock overlay is dismissible, but the Victory screen must continue
-	-- to show what this clear actually earned after the overlay is closed.
-	rewardCards = {}
-	for index, card in ipairs(earnedRewardCards) do rewardCards[index] = card end
-	rewardCardIndex = 1
-end
-
-local function rewardCardBlockingInput()
-	return #rewardCards > 0 and rewardCardT < rewardInputDelay
-end
-
-local function getRewardCardBounds(g)
-	local w = min(rewardCardW, g.sw - 36)
-	local h = rewardCardH
-	local x = (g.sw - w) * 0.5
-	local y = max(18, g.boxY + 24)
-	return x, y, w, h
-end
-
-local function pointInRewardClose(x, y)
-	if #rewardCards <= 0 or not layout then return false end
-	local cardX, cardY, cardW = getRewardCardBounds(layout)
-	local closeX = cardX + cardW - rewardCloseSize - 10
-	local closeY = cardY + 10
-	return x >= closeX and x <= closeX + rewardCloseSize
-		and y >= closeY and y <= closeY + rewardCloseSize
-end
-
-local function closeRewardCard()
-	table.remove(rewardCards, rewardCardIndex)
-	rewardCardIndex = min(rewardCardIndex, max(1, #rewardCards))
-	rewardCardT = 0
-	rewardClosePressed = false
-	rewardActionPressed = nil
-	Sound.play("uiBack")
-end
-
-local function finishRewardCards()
-	rewardCards = {}
-	rewardCardIndex = 1
-	rewardCardT = 0
-	rewardClosePressed = false
-	rewardActionPressed = nil
-	Sound.play("uiConfirm")
-end
-
-local function getRewardActionBounds(g, action)
-	local x, y, w, h = getRewardCardBounds(g)
-	local buttonW = 112
-	local buttonY = y + h - rewardActionH - 12
-	if action == "previous" then return x + 18, buttonY, buttonW, rewardActionH end
-	return x + w - buttonW - 18, buttonY, buttonW, rewardActionH
-end
-
-local function pointInRewardAction(x, y)
-	if #rewardCards <= 0 or not layout then return nil end
-	if rewardCardIndex > 1 then
-		local bx, by, bw, bh = getRewardActionBounds(layout, "previous")
-		if x >= bx and x <= bx + bw and y >= by and y <= by + bh then return "previous" end
-	end
-	local bx, by, bw, bh = getRewardActionBounds(layout, "next")
-	if x >= bx and x <= bx + bw and y >= by and y <= by + bh then return "next" end
-	return nil
-end
-
-local function activateRewardAction(action)
-	if action == "previous" and rewardCardIndex > 1 then
-		rewardCardIndex = rewardCardIndex - 1
-	elseif action == "next" then
-		if rewardCardIndex < #rewardCards then
-			rewardCardIndex = rewardCardIndex + 1
-		else
-			finishRewardCards()
-			return
-		end
-	else
-		return
-	end
-	rewardCardT = 0
-	Sound.play("uiConfirm")
-end
-
-local function drawRewardUnlockCard(g)
-	if #rewardCards <= 0 then return end
-
-	local index = rewardCardIndex
-	local card = rewardCards[index]
-	local intro = min(1, rewardCardT * 2.2)
-	local scale = 0.78 + 0.22 * easeOutBack(intro)
-	local alpha = min(1, rewardCardT * 3)
-	local x, targetY, w, h = getRewardCardBounds(g)
-	local y = targetY - 40 * (1 - intro)
-	local cx, cy = x + w * 0.5, y + h * 0.5
-
-	lg.push()
-	lg.translate(cx, cy)
-	lg.scale(scale, scale)
-	lg.translate(-cx, -cy)
-
-	lg.setColor(0.02, 0.03, 0.05, 0.72 * alpha)
-	lg.rectangle("fill", x + 10, y + 14, w, h, 20, 20)
-	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
-	lg.rectangle("fill", x - outlineW, y - outlineW, w + outlineW * 2, h + outlineW * 2, 20, 20)
-	lg.setColor(colorBackdrop[1], colorBackdrop[2], colorBackdrop[3], alpha)
-	lg.rectangle("fill", x, y, w, h, 18, 18)
-	lg.setColor(card.color[1], card.color[2], card.color[3], 0.18 * alpha)
-	lg.rectangle("fill", x + 8, y + 8, w - 16, h - 16, 14, 14)
-
-	Fonts.set("ui")
-	lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], alpha)
-	Text.printfShadow(L("victory.rewardUnlocked"), x + 18, y + 16, w - 36, "center")
-
-	local closeX = x + w - rewardCloseSize - 10
-	local closeY = y + 10
-	local closeHovered = pointInRewardClose(love.mouse.getPosition())
-	local closeColor = closeHovered and Theme.ui.buttonHover or Theme.ui.button
-	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
-	lg.rectangle("fill", closeX - 2, closeY - 2, rewardCloseSize + 4, rewardCloseSize + 4, 8, 8)
-	lg.setColor(closeColor[1], closeColor[2], closeColor[3], alpha)
-	lg.rectangle("fill", closeX, closeY, rewardCloseSize, rewardCloseSize, 6, 6)
-	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-	lg.setLineWidth(3)
-	lg.line(closeX + 10, closeY + 10, closeX + 22, closeY + 22)
-	lg.line(closeX + 22, closeY + 10, closeX + 10, closeY + 22)
-
-	local iconX, iconY = x + 74, y + 105
-	lg.setColor(0.04, 0.05, 0.07, 0.8 * alpha)
-	lg.circle("fill", iconX, iconY, 43)
-	if card.type == "tower" then
-		local motionEnabled = not Save.data.settings or Save.data.settings.cameraMotion ~= false
-		local sway, bob, angle, towerScale = TowerVictoryDance.previewPose(
-			rewardCardT, card.id, motionEnabled)
-		-- A stencil, rather than a rectangular scissor, keeps every animated pose
-		-- inside the icon circle even during its entrance bounce and flourish.
-		lg.stencil(function() lg.circle("fill", iconX, iconY, 43) end, "replace", 1, true)
-		lg.setStencilTest("greater", 0)
-		lg.push()
-		lg.translate(iconX, iconY + 10 + bob)
-		lg.scale(towerScale, towerScale)
-		lg.translate(-iconX, -(iconY + 10))
-		DrawEntities.drawTowerBase(card.id, iconX, iconY + 10, alpha)
-		DrawEntities.drawTowerCore(card.id, iconX + sway, iconY + 10, angle, 0, alpha)
-		lg.pop()
-		lg.setStencilTest()
-	elseif card.type == "ability" then
-		AbilityIcons.draw(card.id, iconX, iconY, 1.45, alpha, "newly-unlocked")
-	end
-
-	Fonts.set("menu")
-	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-	Text.printfShadow(card.name, x + 132, y + 64, w - 154, "left")
-	Fonts.set("ui")
-	lg.setColor(colorText[1], colorText[2], colorText[3], 0.82 * alpha)
-	Text.printfShadow(card.description, x + 132, y + 100, w - 154, "left")
-
-	if #rewardCards > 1 then
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.55 * alpha)
-		Text.printfShadow(('%d / %d'):format(index, #rewardCards), x + 18, y + h - 36, w - 36, "center")
-	end
-
-	local function drawAction(action, label)
-		local bx, by, bw, bh = getRewardActionBounds(g, action)
-		local hovered = pointInRewardAction(love.mouse.getPosition()) == action
-		local fill = hovered and Theme.ui.buttonHover or Theme.ui.button
-		lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], alpha)
-		lg.rectangle("fill", bx - 2, by - 2, bw + 4, bh + 4, 8, 8)
-		lg.setColor(fill[1], fill[2], fill[3], alpha)
-		lg.rectangle("fill", bx, by, bw, bh, 6, 6)
-		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-		Text.printfShadow(label, bx, by + 7, bw, "center")
-	end
-	if index > 1 then drawAction("previous", L("victory.rewardPrevious")) end
-	local finalLabel = #rewardCards == 1 and L("victory.rewardClose") or L("victory.rewardContinue")
-	drawAction("next", index < #rewardCards and L("victory.rewardNext") or finalLabel)
-
-	lg.pop()
 end
 
 local function recordFirstClear()
@@ -469,10 +236,6 @@ function Screen.enter()
 	Screen.load()
 	t = 0
 	panelT = 0
-	rewardCardT = 0
-	rewardCardIndex = 1
-	rewardClosePressed = false
-	rewardActionPressed = nil
 	recapScroll:reset()
 	buildRewardCards()
 	local map = Maps[State.worldMapIndex]
@@ -503,17 +266,8 @@ function Screen.update(dt)
 
 	layoutButtons()
 
-	if #rewardCards > 0 then
-		rewardCardT = rewardCardT + dt
-	end
-
-	-- Let the reward have the player's full attention before revealing the
-	-- newly earned medal behind it. The reveal's own delay starts once the
-	-- reward card has been dismissed.
-	if #rewardCards == 0 then
-		runStats:update(dt)
-		if runStats:isComplete() then Medals.update(dt) end
-	end
+	runStats:update(dt)
+	if runStats:isComplete() then Medals.update(dt) end
 	local sw, sh = lg.getDimensions()
 
 	for _, p in ipairs(confetti) do
@@ -744,7 +498,6 @@ function Screen.draw()
 
 	lg.pop()
 
-	drawRewardUnlockCard(g)
 end
 
 function Screen.wheelmoved(_, y)
@@ -753,15 +506,6 @@ function Screen.wheelmoved(_, y)
 end
 
 function Screen.mousepressed(x, y, button)
-	if rewardCardBlockingInput() then return true end
-	if #rewardCards > 0 then
-		if button == 1 and pointInRewardClose(x, y) then
-			rewardClosePressed = true
-		else
-			rewardActionPressed = button == 1 and pointInRewardAction(x, y) or nil
-		end
-		return true
-	end
 	if button == 1 and not runStats:isComplete() then
 		runStats:finish()
 		return true
@@ -771,35 +515,10 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
-	if rewardCardBlockingInput() then return true end
-	if #rewardCards > 0 then
-		local closePressed = rewardClosePressed
-		local actionPressed = rewardActionPressed
-		rewardClosePressed = false
-		rewardActionPressed = nil
-		if button == 1 and closePressed and pointInRewardClose(x, y) then
-			closeRewardCard()
-		elseif button == 1 and actionPressed and actionPressed == pointInRewardAction(x, y) then
-			activateRewardAction(actionPressed)
-		end
-		return true
-	end
-
 	return Button.mousereleasedList(buttons, x, y, button)
 end
 
 function Screen.keypressed(key)
-	if rewardCardBlockingInput() then return true end
-	if #rewardCards > 0 then
-		if key == "left" then
-			activateRewardAction("previous")
-		elseif key == "right" or key == "return" or key == "kpenter" then
-			activateRewardAction("next")
-		elseif key == "escape" then
-			closeRewardCard()
-		end
-		return true
-	end
 	if (key == "return" or key == "kpenter" or key == "space") and not runStats:isComplete() then
 		runStats:finish()
 		return true
