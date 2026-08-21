@@ -131,6 +131,11 @@ return {
 		rewards = {
 			cannon = "Cannon Tower",
 			meteor = "Meteor active ability",
+			overdrive = "Overdrive active ability",
+			gravityWell = "Gravity Well active ability",
+			frostNova = "Frost Nova active ability",
+			goldRush = "Gold Rush active ability",
+			lastStand = "Last Stand active ability",
 			plasma = "Plasma Tower",
 			secondAbilitySlot = "second active ability slot",
 		},
