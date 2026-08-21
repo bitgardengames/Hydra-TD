@@ -22,9 +22,9 @@ return {
 		color = Theme.tower.slow,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 1.2,
-			rangeAdd = 0.14 * Constants.TILE,
-			fireMult = 1.04,
+			dmgMult = 1.7,
+			rangeAdd = 0.16 * Constants.TILE,
+			fireMult = 1.35,
 			slowDurAdd = 0.45,
 		},
 		behaviors = {
@@ -53,9 +53,9 @@ return {
 		color = Theme.tower.lancer,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 2.2,
-			rangeAdd = 0.06 * Constants.TILE,
-			fireMult = 1.08,
+			dmgMult = 2.65,
+			rangeAdd = 0.08 * Constants.TILE,
+			fireMult = 1.18,
 		},
 		behaviors = {
 			{id = "move_homing"},
@@ -83,9 +83,9 @@ return {
 		color = Theme.tower.poison,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 1.35,
-			rangeAdd = 0.05 * Constants.TILE,
-			fireMult = 1.04,
+			dmgMult = 2.0,
+			rangeAdd = 0.09 * Constants.TILE,
+			fireMult = 1.2,
 			poisonDurAdd = 0.4,
 			poisonDpsMult = 1.18,
 			stackAdd = 1,
@@ -122,9 +122,9 @@ return {
 		upgrade = {
 			-- Match Lancer's damage curve instead of letting Cannon's splash scale
 			-- faster at the levels where packed waves are largest.
-			dmgMult = 2.2,
-			rangeAdd = 0.04 * Constants.TILE,
-			fireMult = 1.03,
+			dmgMult = 2.45,
+			rangeAdd = 0.08 * Constants.TILE,
+			fireMult = 1.12,
 			splashAdd = 5, -- increase AoE radius per upgrade
 		},
 		behaviors = {
@@ -149,9 +149,9 @@ return {
 		color = Theme.tower.shock,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 1.75,
-			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.08,
+			dmgMult = 2.1,
+			rangeAdd = 0.11 * Constants.TILE,
+			fireMult = 1.2,
 		},
 		behaviors = {
 			{id = "emit_on_target"},
@@ -177,9 +177,9 @@ return {
 		color = Theme.tower.plasma,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 1.7,
-			rangeAdd = 0.05 * Constants.TILE,
-			fireMult = 1.08,
+			dmgMult = 2.15,
+			rangeAdd = 0.09 * Constants.TILE,
+			fireMult = 1.25,
 		},
 		behaviors = {
 			{id = "move_linear", data = {dist = 330}},

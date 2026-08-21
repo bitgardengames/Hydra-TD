@@ -14,10 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 CAPTURE = HERE / "fixtures.json"
 DOC = ROOT / "docs/balance_fixtures.md"
-SOURCES = [
-    "world/tower_defs.lua", "world/enemy_defs.lua", "world/tower_branch_defs.lua",
-    "systems/module_defs.lua", "systems/difficulty.lua", "systems/difficulty_curve.lua",
-]
+SOURCES = ["world/towers.lua", "world/tower_defs.lua", "world/enemy_defs.lua",
+           "systems/difficulty.lua", "systems/difficulty_curve.lua"]
 TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
 TARGET_DIFFICULTY = "hard"
 RENDER_FPS = (30, 60, 144)
@@ -98,7 +96,7 @@ def number(block: str, field: str) -> float:
 
 def definitions() -> tuple[dict, str]:
     texts = {name: (ROOT / name).read_text() for name in SOURCES}
-    tower_text, enemy_text = texts[SOURCES[0]], texts[SOURCES[1]]
+    tower_text, enemy_text = texts["world/tower_defs.lua"], texts["world/enemy_defs.lua"]
     towers = {}
     for kind in TOWERS:
         block = lua_block(tower_text, kind)
@@ -110,13 +108,14 @@ def definitions() -> tuple[dict, str]:
     difficulty_text = texts["systems/difficulty.lua"]
     difficulty = lua_block(lua_block(difficulty_text, "Difficulty.defs"), TARGET_DIFFICULTY)
     hp_bias = number(difficulty, "enemyHpBias")
-    # Loading and hashing all authoritative files makes a capture identify
-    # the precise branches, modules, and difficulty curve it was made against.
+    # Hash only canonical stat progression, enemies, and difficulty. Experimental
+    # branch/module files intentionally cannot invalidate this release fixture.
     digest = hashlib.sha256("".join(texts[name] for name in SOURCES).encode()).hexdigest()
     return {"towers": towers, "enemies": enemies, "enemy_hp_bias": hp_bias}, digest
 
 
 def load_results() -> dict:
+    from upgrade_model import expansion_comparisons, progression
     capture = json.loads(CAPTURE.read_text())
     defs, digest = definitions()
     if capture["scenario_geometry"].get("difficulty") != TARGET_DIFFICULTY:
@@ -131,13 +130,15 @@ def load_results() -> dict:
         for tower in TOWERS:
             for level in ("base", "maximum"):
                 result = scenario["results"][tower][level]
+                upgrade_costs, _ = progression()
                 result["total_cost"] = round(defs["towers"][tower]["cost"] *
-                    (1 if level == "base" else 9.6))
+                    (1 if level == "base" else 1 + sum(upgrade_costs)))
                 result["kill_count"] = scenario["count"] - result["leaks"]
                 result["damage_dealt"] = round(result["kill_count"] * durability, 3)
     capture["seed"] = 731_993
     capture["tick_seconds"] = runtime_clock()[0]
     capture["render_determinism"] = deterministic_render_comparisons()
+    capture["upgrade_vs_expansion"] = expansion_comparisons()
     return capture
 
 
@@ -179,6 +180,18 @@ def checks(data: dict) -> list[dict]:
         tank = by_name["single_tank"]["results"]
         check(f"specialist/single_tank/{level}/slow", tank["slow"][level]["coverage"] == 1,
               "Slow must maintain full Tank control coverage")
+    rows = data["upgrade_vs_expansion"]
+    for row in rows:
+        check(f'upgrade/open/{row["tower"]}/{row["tier"]}',
+              .3 <= row["open_placement_output_ratio"] <= 1.15,
+              "open legal tiles should usually favor expansion, without making upgrades traps")
+        check(f'upgrade/constrained/{row["tower"]}/{row["tier"]}',
+              .6 <= row["constrained_utility_ratio"] <= 1.85,
+              "coverage, overkill, placement scarcity, and role utility keep upgrades competitive")
+    check("upgrade/choice/open", any(x["open_placement_output_ratio"] < 1 for x in rows),
+          "at least one equal-money expansion must win")
+    check("upgrade/choice/constrained", any(x["constrained_utility_ratio"] > 1 for x in rows),
+          "at least one constrained-placement upgrade must win")
     return checks
 
 

@@ -55,7 +55,7 @@ local MAX_BRANCH_UPGRADES = 4
 -- Each entry is the cost of the next level as a multiple of the
 -- tower's purchase price. Keeping this curve explicit prevents a base-cost
 -- balance pass from being amplified by an opaque exponential formula.
-local UPGRADE_COST_MULTIPLIERS = {1.3, 1.7, 2.2, 2.8}
+local UPGRADE_COST_MULTIPLIERS = {0.45, 0.65, 0.9, 1.2}
 local RETARGET_JITTER = 0.10
 local RETARGET_MIN_FACTOR = 0.5
 local RETARGET_MAX_FACTOR = 1.5

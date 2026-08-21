@@ -5,7 +5,8 @@
     "tower_tile": "best_legal_central",
     "difficulty": "hard",
     "wave": 1,
-    "modules": []
+    "specializations": [],
+    "inventory_modules": []
   },
   "scenarios": [
     {
