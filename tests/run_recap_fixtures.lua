@@ -110,7 +110,9 @@ assert(victorySource:find("medalsY + (medalsH - clusterH) * 0.5", 1, true),
 	"victory medals must be vertically centered in their card")
 assert(victorySource:find("local rowY, barW, barH = y + 48, w - 190, 9", 1, true),
 	"victory damage bars must use the shortened width")
-assert(victorySource:find("if #rewardCards == 0 then", 1, true),
-	"stats must wait for unlock cards")
+assert(victorySource:find("runStats:update(dt)", 1, true),
+	"victory stats must begin without waiting for a reward popup")
+assert(not victorySource:find("rewardCards", 1, true),
+	"victory stats must not be gated by reward popup state")
 
 print("run recap fixtures passed")
