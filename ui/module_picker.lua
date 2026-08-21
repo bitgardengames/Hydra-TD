@@ -228,6 +228,8 @@ function ModulePicker.openTowerUpgrade(tower)
 	if not tower then
 		return false
 	end
+	-- Ordinary runs upgrade immediately; choosing a branch is reserved for the
+	-- explicitly enabled module experiment and is never inferred from replay mode.
 	if not Modules.isEnabled() then
 		return Towers.upgradeTower(tower)
 	end

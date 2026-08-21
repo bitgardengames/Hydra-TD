@@ -52,7 +52,7 @@ local AIM_RECOMPUTE_STALE_FRAMES = 6
 local SPLASH_LEAD_SPEED_THRESHOLD = 20
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_BRANCH_UPGRADES = 4
--- Each entry is the cost of the next specialization as a multiple of the
+-- Each entry is the cost of the next level as a multiple of the
 -- tower's purchase price. Keeping this curve explicit prevents a base-cost
 -- balance pass from being amplified by an opaque exponential formula.
 local UPGRADE_COST_MULTIPLIERS = {1.3, 1.7, 2.2, 2.8}
@@ -329,10 +329,6 @@ local function getUpgradeCost(tower)
 	if not tower or (tower.level or 1) >= 5 then
 		return nil
 	end
-	if State.isReplayMode() and not TowerBranchDefs.getChoices(tower.kind, (tower.level or 1) + 1) then
-		return nil
-	end
-
 	local upgradeIndex = tower.level or 1
 	local multiplier = UPGRADE_COST_MULTIPLIERS[upgradeIndex]
 
@@ -363,9 +359,6 @@ local function upgradeTower(t, specializationId)
 	local diff = Difficulty.get()
 	local nextLevel = (t.level or 1) + 1
 
-	if State.isReplayMode() and not specializationId then
-		return false, "missing_choice"
-	end
 	if specializationId and not TowerBranchDefs.isValidChoice(t.kind, nextLevel, specializationId) then
 		return false, "invalid_choice"
 	end
@@ -382,7 +375,7 @@ local function upgradeTower(t, specializationId)
 	t.levelUpAnim = 1
 	-- Render-only confirmation that follows the tower body while its new tier rises.
 	t.upgradeFlash = 0.3
-	if State.isReplayMode() then
+	if specializationId then
 		t.specializationId = specializationId
 		t.branchSelections = t.branchSelections or {}
 		t.branchSelections[#t.branchSelections + 1] = specializationId
