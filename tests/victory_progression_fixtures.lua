@@ -72,6 +72,8 @@ state.worldMapIndex = #maps - 1
 Victory.load()
 local nextButton = assert(findButton("next"), "penultimate victory should present Next Map")
 assert(nextButton.label == "menu.nextMap", "progression action should retain the Next Map label")
+assert(nextButton.textColor == package.loaded["core.theme"].ui.good,
+	"Next Map text should use the victory green")
 nextButton.onClick()
 assert(state.worldMapIndex == #maps, "penultimate victory should advance exactly one map")
 

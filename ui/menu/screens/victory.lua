@@ -429,6 +429,7 @@ function Screen.load()
 		buttons[#buttons + 1] = {
 			id = "next",
 			label = L("menu.nextMap"),
+			textColor = colorGood,
 			w = btnW,
 			h = btnH,
 			onClick = function()

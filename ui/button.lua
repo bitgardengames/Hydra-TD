@@ -152,7 +152,7 @@ function Button.draw(btn)
 	if btn.enabled == false then
 		lg.setColor(cdR, cdG, cdB)
 	else
-		lg.setColor(colorText)
+		lg.setColor(btn.textColor or colorText)
 	end
 
 	Text.printfShadow(btn.label, x, ty, w, "center")
