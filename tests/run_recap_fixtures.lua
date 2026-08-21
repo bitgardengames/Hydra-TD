@@ -108,7 +108,7 @@ assert(victorySource:find("local medalR = 32", 1, true),
 	"victory medals must use the larger presentation size")
 assert(victorySource:find("medalsY + (medalsH - clusterH) * 0.5", 1, true),
 	"victory medals must be vertically centered in their card")
-assert(victorySource:find("local rowY, barW = y + 48, w - 140", 1, true),
+assert(victorySource:find("local rowY, barW, barH = y + 48, w - 190, 9", 1, true),
 	"victory damage bars must use the shortened width")
 assert(victorySource:find("if #rewardCards == 0 then", 1, true),
 	"stats must wait for unlock cards")
