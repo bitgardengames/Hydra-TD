@@ -15,7 +15,6 @@ local colorText = Theme.ui.text
 local colorHealth = Theme.ui.bossHealth
 local colorOutline = Theme.outline.color
 local colorBase = Theme.ui.button
-local colorTrail = Theme.ui.warn
 
 local colorHealthR, colorHealthG, colorHealthB = colorHealth[1] * 0.4, colorHealth[2] * 0.4, colorHealth[3] * 0.4
 
@@ -27,8 +26,6 @@ local outerRadius = 6 + outlineW * 0.5
 local innerRadius = 6 - outlineW * 0.25
 local idleLift = 6
 
-local TRAIL_DELAY = 0.10
-local TRAIL_CATCHUP = 7
 local ENTRANCE_DURATION = 0.24
 local EXIT_DURATION = 0.18
 
@@ -36,8 +33,6 @@ local cache = {
 	identity = nil,
 	maxHp = nil,
 	displayHp = nil,
-	trailHp = nil,
-	trailDelay = 0,
 	visibility = 0,
 	hpValue = nil,
 	maxText = nil,
@@ -86,8 +81,6 @@ local function reset(boss, hp, maxHp)
 	cache.identity = boss
 	cache.maxHp = maxHp
 	cache.displayHp = hp
-	cache.trailHp = hp
-	cache.trailDelay = 0
 	cache.visibility = 0
 	cache.hpValue = nil
 	cache.maxText = formatNum(maxHp)
@@ -97,7 +90,7 @@ end
 
 local function clear()
 	cache.identity, cache.maxHp = nil, nil
-	cache.displayHp, cache.trailHp = nil, nil
+	cache.displayHp = nil
 	cache.hpValue, cache.maxText, cache.text = nil, nil, nil
 	cache.thresholds = nil
 	cache.visibility = 0
@@ -131,17 +124,9 @@ function BossHP.update(dt)
 
 	if hp < oldDisplay then
 		cache.displayHp = hp -- Damage is always immediately legible in the main fill.
-		cache.trailHp = max(cache.trailHp, oldDisplay)
-		cache.trailDelay = TRAIL_DELAY
 	elseif hp > oldDisplay then
-		-- Healing is smoothed, while never allowing the damage trail below the fill.
+		-- Healing is smoothed to keep increases in the main fill easy to follow.
 		cache.displayHp = min(hp, oldDisplay + maxHp * dt * 2.5)
-		cache.trailHp = max(cache.trailHp, cache.displayHp)
-	end
-
-	cache.trailDelay = max(0, cache.trailDelay - dt)
-	if cache.trailDelay == 0 then
-		cache.trailHp = max(cache.displayHp, cache.trailHp + (cache.displayHp - cache.trailHp) * min(1, dt * TRAIL_CATCHUP))
 	end
 end
 
@@ -188,12 +173,7 @@ function BossHP.draw()
 	lg.setColor(colorHealthR, colorHealthG, colorHealthB, alpha)
 	lg.rectangle("fill", shownX, fy, shownW, barH, innerRadius)
 
-	local trailW = floor(shownW * max(0, min(1, cache.trailHp / maxHp)))
 	local fillW = floor(shownW * max(0, min(1, cache.displayHp / maxHp)))
-	if trailW > fillW then
-		lg.setColor(colorTrail[1], colorTrail[2], colorTrail[3], 0.82 * alpha)
-		lg.rectangle("fill", shownX, fy, trailW, barH, innerRadius)
-	end
 	lg.setColor(colorHealth[1], colorHealth[2], colorHealth[3], alpha)
 	lg.rectangle("fill", shownX, fy, fillW, barH, innerRadius)
 
