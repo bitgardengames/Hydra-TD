@@ -18,7 +18,9 @@ function RunModes.get(state)
 	return RunModes.normalize(state and state.runMode)
 end
 
-function RunModes.setExperimentalModules(state, enabled)
+-- Internal plumbing for the module playtest entry point in systems/modules.lua.
+-- Run selection must never call this or infer the value from replay/endless mode.
+function RunModes._setExperimentalModulesForPlaytest(state, enabled)
 	state.runRules = state.runRules or {}
 	state.runRules.experimentalModules = enabled == true
 	return state.runRules.experimentalModules

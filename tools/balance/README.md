@@ -30,14 +30,31 @@ Run without flags to obtain the complete machine-readable capture. The
 `definition_sha256` field fingerprints the tower, enemy, branch, module, and
 difficulty sources used by the capture.
 
-## Aggregate gate
+## Aggregate gate (mandatory stat-only release coverage)
 
-Run every combat, campaign pacing, economy, ability, and interaction gate with
+The aggregate release gate targets normal campaign/replay rules: stat-only tower
+upgrades with experimental modules disabled. Module combination coverage is not
+part of this command and cannot be used as evidence for a mandatory balance row.
+
+
+Run every mandatory combat, campaign pacing, economy, ability, and polish gate with
 one dependency-free command:
 
 ```sh
 python3 tools/balance/check.py
 ```
+
+Module and specialization combinations have a separate experimental check. Run
+and review it only for an explicitly enabled internal module playtest:
+
+```sh
+python3 tools/balance/interaction_fixtures.py --check
+python3 tools/balance/interaction_fixtures.py --write
+```
+
+Its module results are experimental QA, not a release blocker. The mandatory
+aggregate report still includes stat-only ability and campaign coverage through
+its other fixtures.
 
 The aggregate report includes a strategy-family audit for every map, wave, and
 difficulty. Run its full machine-readable report directly with:
@@ -136,21 +153,24 @@ drift. This makes tower output,
 enemy count and composition, kill income, and difficulty economy move as one
 curve without turning the fixture into a prescribed player build.
 
-`interaction_fixtures.json` records every active ability and branch
-mapping, representative module combat formations, targeting expectations, and
+`interaction_fixtures.json` is the separate experimental module report. It records branch
+mappings, representative module combat formations, targeting expectations, and
 the boss templates' dynamically summoned adds. It includes total damage,
 coverage, leaks, proc counts, and cost efficiency. Radius-boundary, cooldown,
 2x speed and overlapping-effect invariants use broad tuning tolerances.
 
-The capture fingerprints tower, enemy, branch, module, ability, difficulty,
+This experimental capture fingerprints tower, enemy, branch, module, ability, difficulty,
 campaign-wave, runtime-wave, and targeting definitions. Any edit to those files
 fails the gate until the fixtures are generated and reviewed:
 
 ```sh
 python3 tools/balance/interaction_fixtures.py --write
 git diff -- tools/balance/interaction_fixtures.json
-python3 tools/balance/check.py
+python3 tools/balance/interaction_fixtures.py --check
 ```
+
+Do not add this command back to `tools/balance/check.py`; module combinations are
+kept outside mandatory stat-only release coverage.
 
 ## Campaign pacing
 

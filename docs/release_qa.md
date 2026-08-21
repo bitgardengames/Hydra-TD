@@ -73,26 +73,34 @@ not infer one difficulty from another.
 | CAMP-01 | RB | Complete every campaign map on **Easy**, **Normal**, and **Hard**, including at least one leak and one clean wave per difficulty. Verify previews, starting money/lives, rewards, map progression, and medals. | All maps are completable; selected difficulty is used in play/recap and persists; difficulty-specific economy/enemy/boss behavior and the correct medal/completion state apply without cross-difficulty corruption. |
 | BOSS-01 | RB | For every authored boss encounter on each difficulty, reach the boss normally; observe spawn, boss HUD, abilities/attacks/adds/phases, leak behavior, and defeat/kill. Replay at least one encounter after restart. | Correct boss spawns on schedule and path; HUD/health/phases and special behavior are correct; kill/leak resolves exactly once, awards correct charge/stat/progression, and leaves no stuck entities or music/UI. |
 
-## Towers and every upgrade branch
+## Towers and stat-only upgrades
 
-For each tower below, place it legally and attempt an illegal placement; inspect,
-upgrade repeatedly through the maximum level, apply/select **every upgrade/module
-offered by the packaged build**, verify preview versus resulting stats/behavior,
-targeting controls, damage meter, sell/refund, and save/restart cleanup. Test each
-compatible generic branch at least once and each tower-identity branch on its
-named tower. Record one result line per tower/branch, including the exact in-game
-branch name; the inventory below is a completeness cross-check, not permission
-to skip newly added packaged content.
+The mandatory release gate covers the shipped **stat-only game**. Experimental
+modules, specialization branches, and their projectile combinations are not part
+of campaign or replay/endless setup and must not be used to satisfy these rows.
+For each tower, place it legally and attempt an illegal placement; inspect it,
+upgrade repeatedly through maximum level without a module selection, and verify
+each preview against the resulting damage, fire rate, range, targeting controls,
+damage meter, sell/refund behavior, and restart cleanup.
 
-| ID | Gate | Tower | Required branches / variants |
+| ID | Gate | Tower | Required stat-only coverage |
 | --- | --- | --- | --- |
-| TWR-01 | RB | Slow | Base level path; movement branches; damage/output/utility/targeting branches; Permafrost, Frost Nova, Shatterburst, Cold Snap, Black Ice. |
-| TWR-02 | RB | Lancer | Base level path; movement branches; damage/output/utility/targeting branches; Ricochet, Arc Lance. |
-| TWR-03 | RB | Poison | Base level path; movement branches; damage/output/utility/targeting branches; Venom Burst, Cull Weak, Corrupt Strong, Hemotoxin, Pandemic. |
-| TWR-04 | RB | Cannon | Base level path; all compatible generic branches; Siege, Cluster, Aftershock. |
-| TWR-05 | RB | Shock | Base level path; all compatible generic branches; Storm, Conductor, Overload. |
-| TWR-06 | RB | Plasma | Base level path; all compatible generic branches; Lance, Vortex. |
-| TWR-07 | RB | Cross-branch rules | Exercise Linear, Boomerang, Wave, Spiral, Orbit; Split, Chain Hit/Fork, AoE, Tick, Growth and Bounce; Slow/Poison/infection, Orbitals, Static Field, Pierce, Suspend, Explode, Beam conversion; Low HP/Farthest Progress/Farthest Range/High HP targeting wherever compatible. | Each can be selected when eligible and visibly functions; incompatible/exclusive/stack-limited choices are rejected or omitted with clear feedback; chained effects terminate and do not double-count kills/rewards. |
+| TWR-01 | RB | Slow | Base through maximum level; damage, fire-rate, range, slow duration, targeting, and sell values. |
+| TWR-02 | RB | Lancer | Base through maximum level; damage, fire-rate, range, targeting, and sell values. |
+| TWR-03 | RB | Poison | Base through maximum level; damage, fire-rate, range, poison duration/stacks, targeting, and sell values. |
+| TWR-04 | RB | Cannon | Base through maximum level; damage, fire-rate, range/splash, targeting, and sell values. |
+| TWR-05 | RB | Shock | Base through maximum level; damage, fire-rate, range/chain behavior, targeting, and sell values. |
+| TWR-06 | RB | Plasma | Base through maximum level; damage, fire-rate, range/tick behavior, targeting, and sell values. |
+
+### Experimental module QA (non-release-gating)
+
+Run these checks only in an explicitly enabled internal module playtest. Keep the
+results separate from RC blocker evidence: exercise every choice in
+`world/tower_branch_defs.lua`, generic and tower-identity modules, exclusivity and
+stack limits, picker eligibility/preview copy, and chained projectile termination.
+Also verify campaign and replay/endless runs started normally never show a module
+picker or apply module behavior, including after loading a save whose
+`discoveredModules` table is populated.
 
 ## Active abilities
 

@@ -358,6 +358,9 @@ local function upgradeTower(t, specializationId)
 
 	local diff = Difficulty.get()
 	local nextLevel = (t.level or 1) + 1
+	if specializationId and not Modules.isEnabled() then
+		return false, "experimental_modules_disabled"
+	end
 
 	if specializationId and not TowerBranchDefs.isValidChoice(t.kind, nextLevel, specializationId) then
 		return false, "invalid_choice"
@@ -393,7 +396,7 @@ local function upgradeTower(t, specializationId)
 	Sound.play("towerUpgraded")
 
 	Achievements.increment("TOWER_UPGRADES")
-	local isFinalTier = TowerBranchDefs.getChoices(t.kind, t.level + 1) == nil
+	local isFinalTier = t.level >= 5
 	Emissions.emitUpgradeTransformation(t, transformationPreview, isFinalTier)
 	if isFinalTier then
 		Effects.shake(6, 0.3)
