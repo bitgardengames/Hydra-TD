@@ -576,7 +576,7 @@ return {
 	},
 
 	victory = {
-		medalProgress = "Difficulty medals earned",
+		medalProgress = "Medals earned",
 		damageDealt = "DAMAGE DEALT",
 		rewards = "REWARDS",
 		mapNumber = "Map %d of %d",
