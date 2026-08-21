@@ -498,7 +498,6 @@ return {
 	},
 
 	messages = {
-		waveComplete = "Wave complete",
 		perfectWaveCleared = "Wave %s Cleared (perfect wave bonus +$%s)",
 		bossDefeated = "Boss defeated!",
 	},
