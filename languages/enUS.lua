@@ -14,6 +14,7 @@ return {
 		resume = "Resume",
 		restart = "Restart",
 		mainMenu = "Main Menu",
+		mapSelect = "Map Select",
 		nextMap = "Next Map",
 		paused = "Paused",
 	},
@@ -577,8 +578,8 @@ return {
 
 	victory = {
 		medalProgress = "Medals earned",
-		damageDealt = "DAMAGE DEALT",
-		rewards = "REWARDS",
+		damageDealt = "Damage dealt",
+		rewards = "Rewards",
 		mapNumber = "Map %d of %d",
 		gameTime = "Game time",
 		moneyRemaining = "Money remaining",

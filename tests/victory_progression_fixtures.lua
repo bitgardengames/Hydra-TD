@@ -11,6 +11,7 @@ local state = {
 	resolveMapIndex = function(index) return index end,
 }
 local maps = {{id = "first"}, {id = "highridge"}, {id = "twinloop"}}
+local selectedMenu
 
 local function module(name, value)
 	package.loaded[name] = value
@@ -30,9 +31,9 @@ module("ui.text", {})
 module("core.fonts", {})
 module("world.map_defs", maps)
 module("ui.medals", {getClusterSize = function() return 10, 10 end})
-module("scenes.backdrop", {})
-module("core.steam", {})
-module("core.save", {})
+module("scenes.backdrop", {start = function() end})
+module("core.steam", {setRichPresence = function() end})
+module("core.save", {flush = function() end})
 module("core.localization", setmetatable({}, {__call = function(_, key) return key end}))
 module("world.tower_defs", {})
 module("systems.ability_defs", {})
@@ -45,6 +46,7 @@ module("ui.ability_icons", {})
 module("ui.tooltip", {})
 module("ui.overlay", {})
 module("ui.overlays.demo_complete", {})
+module("ui.menu.menu", {set = function(mode) selectedMenu = mode end})
 
 resetGame = function() end
 
@@ -77,6 +79,12 @@ state.worldMapIndex = #maps
 state.unlockedRewardsThisVictory = {}
 Victory.load()
 assert(not findButton("next"), "final victory must not present a same-map Next Map restart")
-assert(findButton("menu"), "final victory should retain a menu action")
+local mapSelectButton = assert(findButton("map_select"),
+	"final victory should retain a map selection action")
+assert(mapSelectButton.label == "menu.mapSelect",
+	"victory navigation should be labeled Map Select")
+mapSelectButton.onClick()
+assert(selectedMenu == "campaign",
+	"victory Map Select should open campaign map selection")
 
 print("victory progression fixtures passed")
