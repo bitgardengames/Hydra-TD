@@ -21,6 +21,10 @@ package.loaded["world.spatial_grid"] = {queryCells = function() return {}, 0 end
 local State = require("core.state")
 local Defs = require("systems.ability_defs")
 local Abilities = require("systems.abilities")
+local expectedChargeCosts = {meteor = 56, frost_nova = 44, overdrive = 64, gravity_well = 72, gold_rush = 96, last_stand = 80}
+for abilityId, expectedCost in pairs(expectedChargeCosts) do
+	assert(Defs[abilityId].chargeRequired == expectedCost, abilityId .. " has the wrong charge cost")
+end
 State.mode = "game"
 State.modulePicker.active = false
 State.equippedAbilities = {"meteor"}
