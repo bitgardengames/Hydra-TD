@@ -45,6 +45,7 @@ local recapScroll = ScrollView.new()
 local layout = nil
 local rewardCardT = 0
 local rewardCards = {}
+local earnedRewardCards = {}
 local rewardCardIndex = 1
 local rewardClosePressed = false
 local rewardActionPressed = nil
@@ -97,41 +98,48 @@ local function easeOutBack(x)
 end
 
 local function buildRewardCards()
-	rewardCards = {}
+	earnedRewardCards = {}
+	local function add(card)
+		earnedRewardCards[#earnedRewardCards + 1] = card
+	end
 
 	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
 		local def = TowerDefs[kind]
-		rewardCards[#rewardCards + 1] = {
+		add({
 			type = "tower",
 			id = kind,
 			name = L((def and def.nameKey) or ("tower." .. kind)),
 			description = L("victory.rewardDescriptions.tower"),
 			color = (def and def.color) or Theme.ui.good,
-		}
+		})
 	end
 
 	for _, abilityId in ipairs(State.unlockedAbilitiesThisVictory or {}) do
 		local def = AbilityDefs[abilityId]
-		rewardCards[#rewardCards + 1] = {
+		add({
 			type = "ability",
 			id = abilityId,
 			name = L((def and def.nameKey) or ("ability." .. abilityId .. ".name")),
 			description = L("victory.rewardDescriptions.ability"),
 			color = Theme.ui.selected,
-		}
+		})
 	end
 
 	for _, reward in ipairs(State.unlockedRewardsThisVictory or {}) do
 		if reward.type ~= "tower" and reward.type ~= "ability" then
-			rewardCards[#rewardCards + 1] = {
+			add({
 				type = reward.type,
 				id = reward.id,
 				name = reward.labelKey and L(reward.labelKey) or reward.label or reward.id,
 				description = L(reward.descriptionKey or ("victory.rewardDescriptions." .. reward.type)),
 				color = Theme.ui.good,
-			}
+			})
 		end
 	end
+	-- The unlock overlay is dismissible, but the Victory screen must continue
+	-- to show what this clear actually earned after the overlay is closed.
+	rewardCards = {}
+	for index, card in ipairs(earnedRewardCards) do rewardCards[index] = card end
 	rewardCardIndex = 1
 end
 
@@ -551,6 +559,38 @@ local function drawDamagePanel(x, y, w, h, alpha)
 	end
 end
 
+local function drawRewardsPanel(x, y, w, h, alpha)
+	drawCard(x, y, w, h, alpha)
+	Fonts.set("ui")
+	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+	Text.printShadow(L("victory.rewards"), x + 16, y + 14)
+
+	if #earnedRewardCards == 0 then
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.7 * alpha)
+		Text.printfShadow(L("victory.noRewardUnlocked"), x + 16, y + 58, w - 32, "center")
+		return
+	end
+
+	local rowY = y + 48
+	for index, reward in ipairs(earnedRewardCards) do
+		if rowY + 30 > y + h then break end
+		lg.setColor(reward.color[1], reward.color[2], reward.color[3], alpha)
+		lg.circle("fill", x + 22, rowY + 8, 5)
+		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+		Text.printfShadow(reward.name, x + 34, rowY, w - 50, "left")
+		rowY = rowY + 28
+		if #earnedRewardCards == 1 and rowY + 24 <= y + h then
+			lg.setColor(colorText[1], colorText[2], colorText[3], 0.65 * alpha)
+			Text.printfShadow(reward.description, x + 16, rowY, w - 32, "left")
+			rowY = rowY + 38
+		end
+		if index < #earnedRewardCards then
+			lg.setColor(1, 1, 1, 0.06 * alpha)
+			lg.rectangle("fill", x + 16, rowY - 8, w - 32, 1)
+		end
+	end
+end
+
 function Screen.draw()
 	-- Reuse one geometry calculation for rendering and the interactive buttons.
 	layoutButtons()
@@ -651,12 +691,7 @@ function Screen.draw()
 	-- Damage and rewards.
 	drawDamagePanel(rightX, contentY, rightW, contentH * 0.66, alpha)
 	local rewardsY = contentY + contentH * 0.66 + gap
-	drawCard(rightX, rewardsY, rightW, contentH - contentH * 0.66 - gap, alpha)
-	Fonts.set("ui")
-	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-	Text.printShadow(L("victory.rewards"), rightX + 16, rewardsY + 14)
-	drawStatRow(L("victory.coinsEarned"), "+$" .. formatNumber(State.money), rightX + 16, rewardsY + 48, rightW - 32, alpha, Theme.ui.money)
-	drawStatRow(L("runRecap.score"), "+" .. formatNumber(State.score), rightX + 16, rewardsY + 84, rightW - 32, alpha, colorGood)
+	drawRewardsPanel(rightX, rewardsY, rightW, contentH - contentH * 0.66 - gap, alpha)
 
 	-- Buttons
 	Button.drawList(buttons)

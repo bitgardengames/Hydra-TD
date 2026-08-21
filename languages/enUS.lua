@@ -584,7 +584,7 @@ return {
 		moneyRemaining = "Money remaining",
 		towersPlaced = "Towers placed",
 		abilitiesUsed = "Abilities used",
-		coinsEarned = "Coins earned",
+		noRewardUnlocked = "No new reward unlocked",
 		finalCampaign = {
 			title = "Campaign Complete",
 			firstClear = "You completed the campaign on %s difficulty.",
