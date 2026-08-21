@@ -79,7 +79,7 @@ local rewardActionH = 34
 local difficultyOffset = 22
 
 -- Medal visuals
-local medalR = 16
+local medalR = 32
 local medalGap = 14
 local confettiColors = {
 	Theme.ui.good,
@@ -535,7 +535,7 @@ local function drawDamagePanel(x, y, w, h, alpha)
 		if damage > 0 then rows[#rows + 1] = {kind = kind, damage = damage} end
 	end
 	table.sort(rows, function(a, b) return a.damage > b.damage end)
-	local rowY, barW = y + 48, w - 128
+	local rowY, barW = y + 48, w - 140
 	for i = 1, min(6, #rows) do
 		local row = rows[i]
 		local c = Theme.tower[row.kind] or colorGood
@@ -634,11 +634,19 @@ function Screen.draw()
 	drawStatRow(L("victory.towersPlaced"), formatNumber(result.towersPlaced), centerX + 14, contentY + 166, centerW - 28, alpha)
 	drawStatRow(L("victory.abilitiesUsed"), formatNumber(result.abilitiesUsed), centerX + 14, contentY + 204, centerW - 28, alpha)
 	local medalsY = contentY + contentH * 0.64 + gap
-	drawCard(centerX, medalsY, centerW, contentH - contentH * 0.64 - gap, alpha)
+	local medalsH = contentH - contentH * 0.64 - gap
+	drawCard(centerX, medalsY, centerW, medalsH, alpha)
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
 	Text.printfShadow(L("victory.medalProgress"), centerX, medalsY + 14, centerW, "center")
-	Medals.drawReveal(centerX + (centerW - clusterW) * 0.5, medalsY + 48, medalR, medalGap, t)
+	local _, clusterH = Medals.getClusterSize(medalR, medalGap)
+	Medals.drawReveal(
+		centerX + (centerW - clusterW) * 0.5,
+		medalsY + (medalsH - clusterH) * 0.5,
+		medalR,
+		medalGap,
+		t
+	)
 
 	-- Damage and rewards.
 	drawDamagePanel(rightX, contentY, rightW, contentH * 0.66, alpha)
