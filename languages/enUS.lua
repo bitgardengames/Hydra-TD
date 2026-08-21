@@ -128,9 +128,9 @@ return {
 		clearReward = "Reward: %s",
 		pressure = "Pressure: %s",
 		rewards = {
-			cannon = "Cannon tower",
+			cannon = "Cannon Tower",
 			meteor = "Meteor active ability",
-			plasma = "Plasma tower",
+			plasma = "Plasma Tower",
 			secondAbilitySlot = "second active ability slot",
 		},
 		tacticalHint = "Tactical hint: %s",
@@ -585,6 +585,9 @@ return {
 		towersPlaced = "Towers placed",
 		abilitiesUsed = "Abilities used",
 		noRewardUnlocked = "No new reward unlocked",
+		noMapReward = "No reward associated with this map",
+		rewardNew = "NEW - Unlocked!",
+		rewardAlreadyUnlocked = "Already unlocked",
 		finalCampaign = {
 			title = "Campaign Complete",
 			firstClear = "You completed the campaign on %s difficulty.",
