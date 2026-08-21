@@ -7,6 +7,7 @@ package.loaded["core.localization"] = function(key) return key end
 
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local AbilityDefs = require("systems.ability_defs")
+local Constants = require("core.constants")
 local Maps = require("world.map_defs")
 local languageFile = assert(io.open("languages/enUS.lua", "r"))
 local enUSSource = languageFile:read("*a")
@@ -19,20 +20,25 @@ end
 check(CampaignUnlocks.getUnlockedAbilitySlots() == 0,
 	"profiles without active abilities must not display ability slots")
 
--- Arsenal unlocks must be paced one per clear and packed at the front of the
--- campaign. The campaign-completion reward is the sole exception: it belongs
--- on the final map, after the intentionally bare maps in the finale.
-local reachedBareMap = false
+-- Every tower is part of the baseline arsenal, even on a brand-new profile.
+for _, towerId in ipairs(Constants.TOWER_LIST) do
+	check(CampaignUnlocks.isTowerUnlocked(towerId), towerId .. " was locked on a fresh profile")
+	check(CampaignUnlocks.getRequiredMap(towerId) == 1, towerId .. " requires campaign progress")
+end
+check(#CampaignUnlocks.getUnlockedTowers() == #Constants.TOWER_LIST,
+	"fresh profiles must have the complete tower roster")
+check(#CampaignUnlocks.getNewlyUnlockedTowers(1, #Maps + 1) == 0,
+	"campaign progress must never award towers")
+
+-- Campaign unlocks are paced at no more than one per clear. Maps that formerly
+-- awarded towers now intentionally have no authored reward.
 local rewardCount = 0
 for _, map in ipairs(Maps) do
 	local rewards = CampaignUnlocks.getRewardsForMap(map)
 	check(#rewards <= 1, map.id .. " grants more than one campaign reward")
-	if #rewards == 0 then
-		reachedBareMap = true
-	else
-		check(not reachedBareMap or rewards[1].type == "campaign_complete",
-			map.id .. " grants a non-completion unlock after a bare campaign map")
+	if #rewards > 0 then
 		check(rewards[1].type ~= "map", map.id .. " uses route progression as an unlock")
+		check(rewards[1].type ~= "tower", map.id .. " awards a baseline tower")
 		rewardCount = rewardCount + 1
 	end
 end
