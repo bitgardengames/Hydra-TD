@@ -153,11 +153,8 @@ function Messages.presentationEvent(kind, payload)
 	}
 	local text
 	if kind == "wave_cleared" then
-		if payload.perfectWaveBonus then
-			text = L("messages.perfectWaveCleared", payload.wave, payload.perfectWaveBonus)
-		else
-			text = L("messages.waveComplete")
-		end
+		if not payload.perfectWaveBonus then return end
+		text = L("messages.perfectWaveCleared", payload.wave, payload.perfectWaveBonus)
 	elseif keys[kind] then
 		text = L(keys[kind], payload.wave)
 	else
