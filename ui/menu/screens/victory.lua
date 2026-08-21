@@ -21,6 +21,7 @@ local AbilityIcons = require("ui.ability_icons")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local TowerVictoryDance = require("render.tower_victory_dance")
 local MapPreviewCache = require("world.map_preview_cache")
+local CampaignUnlocks = require("systems.campaign_unlocks")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -46,6 +47,7 @@ local layout = nil
 local rewardCardT = 0
 local rewardCards = {}
 local earnedRewardCards = {}
+local mapRewardCards = {}
 local rewardCardIndex = 1
 local rewardClosePressed = false
 local rewardActionPressed = nil
@@ -99,8 +101,30 @@ end
 
 local function buildRewardCards()
 	earnedRewardCards = {}
+	mapRewardCards = {}
 	local function add(card)
 		earnedRewardCards[#earnedRewardCards + 1] = card
+	end
+	local function rewardWasEarned(reward)
+		for _, earned in ipairs(State.unlockedRewardsThisVictory or {}) do
+			if earned.type == reward.type and earned.id == reward.id then return true end
+		end
+		return false
+	end
+	local function makeCard(reward, isNew)
+		local def = reward.type == "tower" and TowerDefs[reward.id]
+			or reward.type == "ability" and AbilityDefs[reward.id]
+		local fallbackKey = reward.type == "tower" and ("tower." .. reward.id)
+			or ("ability." .. reward.id .. ".name")
+		return {
+			type = reward.type,
+			id = reward.id,
+			name = reward.labelKey and L(reward.labelKey) or reward.label
+				or (def and L(def.nameKey)) or L(fallbackKey),
+			description = L(reward.descriptionKey or ("victory.rewardDescriptions." .. reward.type)),
+			color = (def and def.color) or (reward.type == "ability" and Theme.ui.selected) or Theme.ui.good,
+			isNew = isNew,
+		}
 	end
 
 	for _, kind in ipairs(State.unlockedTowersThisVictory or {}) do
@@ -135,6 +159,13 @@ local function buildRewardCards()
 				color = Theme.ui.good,
 			})
 		end
+	end
+
+	-- The summary always describes the completed map's authored reward. Its
+	-- state distinguishes a first-clear unlock from a reward earned previously.
+	local map = Maps[State.worldMapIndex]
+	for _, reward in ipairs(CampaignUnlocks.getRewardsForMap(map)) do
+		mapRewardCards[#mapRewardCards + 1] = makeCard(reward, rewardWasEarned(reward))
 	end
 	-- The unlock overlay is dismissible, but the Victory screen must continue
 	-- to show what this clear actually earned after the overlay is closed.
@@ -565,26 +596,39 @@ local function drawRewardsPanel(x, y, w, h, alpha)
 	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
 	Text.printShadow(L("victory.rewards"), x + 16, y + 14)
 
-	if #earnedRewardCards == 0 then
+	if #mapRewardCards == 0 then
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.7 * alpha)
-		Text.printfShadow(L("victory.noRewardUnlocked"), x + 16, y + 58, w - 32, "center")
+		Text.printfShadow(L("victory.noMapReward"), x + 16, y + 58, w - 32, "center")
 		return
 	end
 
 	local rowY = y + 48
-	for index, reward in ipairs(earnedRewardCards) do
-		if rowY + 30 > y + h then break end
-		lg.setColor(reward.color[1], reward.color[2], reward.color[3], alpha)
-		lg.circle("fill", x + 22, rowY + 8, 5)
-		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-		Text.printfShadow(reward.name, x + 34, rowY, w - 50, "left")
-		rowY = rowY + 28
-		if #earnedRewardCards == 1 and rowY + 24 <= y + h then
-			lg.setColor(colorText[1], colorText[2], colorText[3], 0.65 * alpha)
-			Text.printfShadow(reward.description, x + 16, rowY, w - 32, "left")
-			rowY = rowY + 38
+	for index, reward in ipairs(mapRewardCards) do
+		if rowY + 54 > y + h then break end
+		local iconX, iconY = x + 42, rowY + 25
+		if reward.type == "tower" then
+			lg.push("all")
+			lg.translate(iconX, iconY)
+			lg.scale(0.82, 0.82)
+			DrawEntities.drawTowerBase(reward.id, 0, 5, alpha)
+			DrawEntities.drawTowerCore(reward.id, 0, 5, -math.pi * 0.5, 0, alpha)
+			lg.pop()
+		elseif reward.type == "ability" then
+			AbilityIcons.draw(reward.id, iconX, iconY, 0.9, alpha,
+				reward.isNew and "newly-unlocked" or nil)
+		else
+			lg.setColor(reward.color[1], reward.color[2], reward.color[3], alpha)
+			lg.circle("fill", iconX, iconY, 8)
 		end
-		if index < #earnedRewardCards then
+
+		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
+		Text.printfShadow(reward.name, x + 74, rowY + 4, w - 90, "left")
+		local stateColor = reward.isNew and Theme.ui.good or colorText
+		lg.setColor(stateColor[1], stateColor[2], stateColor[3], (reward.isNew and 1 or 0.65) * alpha)
+		Text.printfShadow(L(reward.isNew and "victory.rewardNew" or "victory.rewardAlreadyUnlocked"),
+			x + 74, rowY + 29, w - 90, "left")
+		rowY = rowY + 62
+		if index < #mapRewardCards then
 			lg.setColor(1, 1, 1, 0.06 * alpha)
 			lg.rectangle("fill", x + 16, rowY - 8, w - 32, 1)
 		end
