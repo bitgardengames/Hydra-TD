@@ -11,6 +11,7 @@ local L = require("core.localization")
 local Difficulty = require("systems.difficulty")
 local Save = require("core.save")
 local ConfirmationDialog = require("ui.confirmation_dialog")
+local PausePresentation = require("ui.pause_presentation")
 
 
 local floor = math.floor
@@ -50,11 +51,15 @@ local contextCardH = 72
 local contextCardMargin = 24
 local contextCardPadding = 14
 
-local function drawDifficultyCard(sw)
-	local cardX = sw - contextCardW - contextCardMargin
+local function setColorAlpha(color, alpha)
+	lg.setColor(color[1], color[2], color[3], (color[4] or 1) * alpha)
+end
+
+local function drawDifficultyCard(sw, pose)
+	local cardX = sw - contextCardW - contextCardMargin + pose.contextSlide
 	local cardY = contextCardMargin
 
-	lg.setColor(colorOutline)
+	setColorAlpha(colorOutline, pose.contextAlpha)
 	lg.rectangle(
 		"fill",
 		cardX - outlineW,
@@ -64,11 +69,11 @@ local function drawDifficultyCard(sw)
 		outerRadius
 	)
 
-	lg.setColor(colorBackdrop)
+	setColorAlpha(colorBackdrop, pose.contextAlpha)
 	lg.rectangle("fill", cardX, cardY, contextCardW, contextCardH, innerRadius)
 
 	Fonts.set("ui")
-	lg.setColor(Theme.ui.text)
+	setColorAlpha(Theme.ui.text, pose.contextAlpha)
 	lg.printf(
 		L("settings.difficulty"),
 		cardX + contextCardPadding,
@@ -78,7 +83,7 @@ local function drawDifficultyCard(sw)
 	)
 
 	Fonts.set("menu")
-	lg.setColor(Theme.ui.selected)
+	setColorAlpha(Theme.ui.selected, pose.contextAlpha)
 	lg.printf(
 		L("difficulty." .. Difficulty.key()),
 		cardX + contextCardPadding,
@@ -169,6 +174,7 @@ end
 
 function Page.draw()
 	local sw, sh = lg.getDimensions()
+	local pose = PausePresentation.pose(State.pauseT, Save.data.settings.cameraMotion == false)
 
 	local cx = floor(sw * 0.5)
 	local startY = floor(sh * 0.5 - 20)
@@ -189,15 +195,20 @@ function Page.draw()
 	local boxX = cx - boxW * 0.5
 	local boxY = startY - paddingY - headerHeight - headerSpacing
 
+	-- Animate only drawing: button coordinates stay in their final positions for input.
+	local panelCenterX = boxX + boxW * 0.5
+	local panelCenterY = boxY + boxH * 0.5
+	lg.push()
+	lg.translate(panelCenterX, panelCenterY - pose.panelRise)
+	lg.scale(pose.panelScale, pose.panelScale)
+	lg.translate(-panelCenterX, -panelCenterY)
+
 	-- Panel
 	lg.setColor(colorOutline)
 	lg.rectangle("fill", boxX - outlineW, boxY - outlineW, boxW + outlineW * 2, boxH + outlineW * 2, outerRadius)
 
 	lg.setColor(colorBackdrop)
 	lg.rectangle("fill", boxX, boxY, boxW, boxH, innerRadius)
-
-	-- Keep the current run context visible without crowding the pause actions.
-	drawDifficultyCard(sw)
 
 	-- Draw header
 	lg.setColor(1, 1, 1, 1)
@@ -207,6 +218,12 @@ function Page.draw()
 
 	-- Draw buttons
 	Button.drawList(buttons)
+	lg.pop()
+
+	-- The run context has its own stagger and does not inherit the panel transform.
+	drawDifficultyCard(sw, pose)
+
+	-- Dialogs remain screen-anchored rather than inheriting either entrance transform.
 	confirmation:draw()
 end
 
