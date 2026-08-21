@@ -25,10 +25,13 @@ local state = {
 	gameOver = false,
 	victory = false,
 	runMode = "campaign",
+	-- Opt-in run rules are separate from the selected run mode. In particular,
+	-- endless/replay runs use ordinary stat upgrades unless a module experiment
+	-- explicitly enables the specialization system.
+	runRules = {
+		experimentalModules = false,
+	},
 	buildSeed = nil,
-	-- Experimental run systems are intentionally limited to replay modes.  Keep
-	-- these flags independent from save data so old module discoveries remain
-	-- compatible without changing the standard campaign rules.
 	activeBoss = nil,
 	activeBossKind = nil,
 	speed = 1,
@@ -100,7 +103,7 @@ local state = {
 }
 
 function state.isReplayMode()
-	return not require("systems.run_modes").isCampaign(state)
+	return require("systems.run_modes").isReplay(state)
 end
 
 function state.addDamage(kind, dmg, isBoss)

@@ -417,8 +417,8 @@ return {
 	},
 
 	modulePicker = {
-		upgradeTitle = "%s Specialization",
-		upgradeSubtitle = "Choose an upgrade • $%d",
+		upgradeTitle = "%s Level Upgrade",
+		upgradeSubtitle = "Choose an experimental module • $%d",
 		hint = "Press 1, 2, or 3 • Click a card",
 		selectCta = "Click to Upgrade",
 		purchaseTitle = "Module Market",
@@ -427,8 +427,8 @@ return {
 		applyTitle = "Apply Module to %s",
 		applySubtitle = "Choose an owned module",
 		applyCta = "Click to Apply",
-		noSpec = "No specialization selected yet.",
-		currentSpec = "Current: %s",
+		noSpec = "No experimental module selected.",
+		currentSpec = "Experimental module: %s",
 		changes = "CHANGES",
 	},
 

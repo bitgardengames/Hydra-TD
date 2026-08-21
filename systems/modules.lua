@@ -7,7 +7,7 @@ local BehaviorContext = require("systems.behavior_context")
 local Modules = {}
 
 function Modules.isEnabled()
-	return State.isReplayMode()
+	return require("systems.run_modes").experimentalModulesEnabled(State)
 end
 
 Modules.active = {
