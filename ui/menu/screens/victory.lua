@@ -21,6 +21,7 @@ local AbilityIcons = require("ui.ability_icons")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local MapPreviewCache = require("world.map_preview_cache")
 local CampaignUnlocks = require("systems.campaign_unlocks")
+local RewardReveal = require("ui.reward_reveal")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -44,6 +45,8 @@ local panelT = 0
 local recapScroll = ScrollView.new()
 local layout = nil
 local mapRewardCards = {}
+local rewardRevealElapsed = 0
+local rewardRevealStarted = false
 local isFinalCampaignMap = false
 local runStats = AnimatedRunStats.new(Theme.ui.good)
 
@@ -101,6 +104,8 @@ local function buildRewardCards()
 			description = L(reward.descriptionKey or ("victory.rewardDescriptions." .. reward.type)),
 			color = (def and def.color) or (reward.type == "ability" and Theme.ui.selected) or Theme.ui.good,
 			isNew = isNew,
+			revealDelay = 0,
+			revealProgress = isNew and 0 or 1,
 		}
 	end
 
@@ -238,6 +243,15 @@ function Screen.enter()
 	panelT = 0
 	recapScroll:reset()
 	buildRewardCards()
+	rewardRevealElapsed = 0
+	rewardRevealStarted = false
+	local revealIndex = 0
+	for _, reward in ipairs(mapRewardCards) do
+		if reward.isNew then
+			revealIndex = revealIndex + 1
+			reward.revealDelay = RewardReveal.delayFor(revealIndex)
+		end
+	end
 	local map = Maps[State.worldMapIndex]
 	runStats:setRows({})
 	resetConfetti()
@@ -267,7 +281,19 @@ function Screen.update(dt)
 	layoutButtons()
 
 	runStats:update(dt)
-	if runStats:isComplete() then Medals.update(dt) end
+	if runStats:isComplete() then
+		Medals.update(dt)
+		if Medals.isRevealComplete() then
+			rewardRevealStarted = true
+			rewardRevealElapsed = rewardRevealElapsed + dt
+			for _, reward in ipairs(mapRewardCards) do
+				if reward.isNew then
+					reward.revealProgress = RewardReveal.sample(rewardRevealElapsed,
+						reward.revealDelay, Save.data.settings.cameraMotion == false).progress
+				end
+			end
+		end
+	end
 	local sw, sh = lg.getDimensions()
 
 	for _, p in ipairs(confetti) do
@@ -361,28 +387,46 @@ local function drawRewardsPanel(x, y, w, h, alpha)
 	local rowY = y + 48
 	for index, reward in ipairs(mapRewardCards) do
 		if rowY + 54 > y + h then break end
-		local iconX, iconY = x + 42, rowY + 25
+		local reveal = reward.isNew and RewardReveal.sample(
+			rewardRevealElapsed, reward.revealDelay, Save.data.settings.cameraMotion == false)
+			or {alpha = 1, lift = 0, scale = 1, glint = 1, complete = true}
+		local rowAlpha = alpha * reveal.alpha
+		local drawnRowY = rowY - reveal.lift
+		local iconX, iconY = x + 42, drawnRowY + 25
+		lg.push("all")
+		lg.translate(iconX, iconY)
+		lg.scale(reveal.scale, reveal.scale)
+		lg.translate(-iconX, -iconY)
 		if reward.type == "tower" then
 			lg.push("all")
 			lg.translate(iconX, iconY)
 			lg.scale(0.82, 0.82)
-			DrawEntities.drawTowerBase(reward.id, 0, 5, alpha)
-			DrawEntities.drawTowerCore(reward.id, 0, 5, -math.pi * 0.5, 0, alpha)
+			DrawEntities.drawTowerBase(reward.id, 0, 5, rowAlpha)
+			DrawEntities.drawTowerCore(reward.id, 0, 5, -math.pi * 0.5, 0, rowAlpha)
 			lg.pop()
 		elseif reward.type == "ability" then
-			AbilityIcons.draw(reward.id, iconX, iconY, 0.9, alpha,
+			AbilityIcons.draw(reward.id, iconX, iconY, 0.9, rowAlpha,
 				reward.isNew and "newly-unlocked" or nil)
 		else
-			lg.setColor(reward.color[1], reward.color[2], reward.color[3], alpha)
+			lg.setColor(reward.color[1], reward.color[2], reward.color[3], rowAlpha)
 			lg.circle("fill", iconX, iconY, 8)
 		end
+		lg.pop()
 
-		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-		Text.printfShadow(reward.name, x + 74, rowY + 4, w - 90, "left")
+		if reward.isNew and reveal.glint < 1 then
+			local sweep = reveal.glint * math.pi * 2
+			lg.setLineWidth(2)
+			lg.setColor(reward.color[1], reward.color[2], reward.color[3],
+				math.sin(reveal.glint * math.pi) * 0.9 * alpha)
+			lg.arc("line", "open", iconX, iconY, 27, -math.pi * 0.5, -math.pi * 0.5 + sweep)
+		end
+
+		lg.setColor(colorText[1], colorText[2], colorText[3], rowAlpha)
+		Text.printfShadow(reward.name, x + 74, drawnRowY + 4, w - 90, "left")
 		local stateColor = reward.isNew and Theme.ui.good or colorText
-		lg.setColor(stateColor[1], stateColor[2], stateColor[3], (reward.isNew and 1 or 0.65) * alpha)
+		lg.setColor(stateColor[1], stateColor[2], stateColor[3], (reward.isNew and 1 or 0.65) * rowAlpha)
 		Text.printfShadow(L(reward.isNew and "victory.rewardNew" or "victory.rewardAlreadyUnlocked"),
-			x + 74, rowY + 29, w - 90, "left")
+			x + 74, drawnRowY + 29, w - 90, "left")
 		rowY = rowY + 62
 		if index < #mapRewardCards then
 			lg.setColor(1, 1, 1, 0.06 * alpha)
@@ -506,8 +550,8 @@ function Screen.wheelmoved(_, y)
 end
 
 function Screen.mousepressed(x, y, button)
-	if button == 1 and not runStats:isComplete() then
-		runStats:finish()
+	if button == 1 and not Screen.animationsComplete() then
+		Screen.finishAnimations()
 		return true
 	end
 
@@ -519,8 +563,8 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.keypressed(key)
-	if (key == "return" or key == "kpenter" or key == "space") and not runStats:isComplete() then
-		runStats:finish()
+	if (key == "return" or key == "kpenter" or key == "space") and not Screen.animationsComplete() then
+		Screen.finishAnimations()
 		return true
 	end
 
@@ -531,6 +575,28 @@ function Screen.keypressed(key)
 				btn.onClick()
 				return true
 			end
+		end
+	end
+end
+
+function Screen.animationsComplete()
+	if not runStats:isComplete() or not Medals.isRevealComplete() then return false end
+	for _, reward in ipairs(mapRewardCards) do
+		if reward.isNew and not RewardReveal.sample(rewardRevealElapsed,
+			reward.revealDelay, Save.data.settings.cameraMotion == false).complete then return false end
+	end
+	return true
+end
+
+function Screen.finishAnimations()
+	runStats:finish()
+	Medals.finishReveal()
+	rewardRevealStarted = true
+	for _, reward in ipairs(mapRewardCards) do
+		if reward.isNew then
+			rewardRevealElapsed = max(rewardRevealElapsed,
+				reward.revealDelay + RewardReveal.GLINT_DURATION)
+			reward.revealProgress = 1
 		end
 	end
 end
