@@ -543,16 +543,16 @@ local function drawDamagePanel(x, y, w, h, alpha)
 		if damage > 0 then rows[#rows + 1] = {kind = kind, damage = damage} end
 	end
 	table.sort(rows, function(a, b) return a.damage > b.damage end)
-	local rowY, barW = y + 48, w - 140
+	local rowY, barW, barH = y + 48, w - 160, 9
 	for i = 1, min(6, #rows) do
 		local row = rows[i]
 		local c = Theme.tower[row.kind] or colorGood
 		lg.setColor(c[1], c[2], c[3], alpha)
 		Text.printShadow(L("tower." .. row.kind), x + 16, rowY)
 		lg.setColor(1, 1, 1, 0.07 * alpha)
-		lg.rectangle("fill", x + 86, rowY + 6, barW, 7, 3, 3)
+		lg.rectangle("fill", x + 86, rowY + 6, barW, barH, 3, 3)
 		lg.setColor(c[1], c[2], c[3], 0.9 * alpha)
-		lg.rectangle("fill", x + 86, rowY + 6, barW * row.damage / total, 7, 3, 3)
+		lg.rectangle("fill", x + 86, rowY + 6, barW * row.damage / total, barH, 3, 3)
 		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
 		Text.printfShadow(format("%s (%d%%)", formatNumber(row.damage), floor(row.damage / total * 100 + 0.5)), x + 12, rowY, w - 28, "right")
 		rowY = rowY + 34
