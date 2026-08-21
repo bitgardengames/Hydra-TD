@@ -11,37 +11,24 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 -- single unlock source; map_defs owns only the playable map ordering/layouts.
 -- Rewards intentionally avoid mandatory stat power and instead emphasize new
 -- verbs, optional build utilities, and information that teaches counters.
+-- Towers are the player's baseline arsenal and are never campaign rewards.
 local rewardsByMapId = {
-	-- Meteor gives the first clear an immediate burst-damage payoff; Cannon then
-	-- reinforces the overlapping splash lanes taught on Switchback.
+	-- Meteor gives the first clear an immediate burst-damage payoff.
 	riverbend = {{type = "ability", id = "meteor", labelKey = "campaign.rewards.meteor"}},
-	switchback = {{type = "tower", id = "cannon", labelKey = "campaign.rewards.cannon"}},
-	highpass = {
-		{type = "tower", id = "poison", label = "Poison tower"},
-	},
 	roundabout = {{type = "ability", id = "overdrive", labelKey = "campaign.rewards.overdrive"}},
-	-- Gauntlet is the fundamentals test; Shock joins the arsenal only after it is cleared.
-	gauntlet = {
-		{type = "tower", id = "shock", label = "Shock tower"},
-	},
 	-- Snake Trail's formation-control reward prepares players for denser mixed waves.
 	snaketrail = {{type = "ability", id = "gravity_well", labelKey = "campaign.rewards.gravityWell"}},
 	-- Frost Nova is earned before Backtrack introduces runners.
 	backtrack = {{type = "ability", id = "frost_nova", labelKey = "campaign.rewards.frostNova"}},
 	lowvalley = {{type = "ability", id = "gold_rush", labelKey = "campaign.rewards.goldRush"}},
-	circuit = {
-		{type = "tower", id = "plasma", labelKey = "campaign.rewards.plasma"},
-	},
 	outerloop = {{type = "ability", id = "last_stand", labelKey = "campaign.rewards.lastStand"}},
 	-- There are fewer meaningful unlocks than campaign maps. Keep the real
 	-- rewards contiguous at the front rather than using route progression as a
 	-- placeholder reward or leaving gaps between unlocks.
 }
 
-local requiredMapByTower = {
-	lancer = 1,
-	slow = 1,
-}
+local requiredMapByTower = {}
+for _, kind in ipairs(Constants.TOWER_LIST) do requiredMapByTower[kind] = 1 end
 
 local requiredMapByFeature = {}
 local requiredMapByAbilitySlot = {}
@@ -65,6 +52,7 @@ local function validateRewards()
 		for _, reward in ipairs(rewards) do
 			if reward.type == "tower" then
 				assert(knownTowers[reward.id], "campaign reward uses unknown tower ID: " .. tostring(reward.id))
+				error("towers cannot be campaign rewards: " .. tostring(reward.id))
 			elseif reward.type == "ability" then
 				assert(knownAbilities[reward.id], "campaign reward uses unknown ability ID: " .. tostring(reward.id))
 			elseif reward.type == "map" then
@@ -85,22 +73,13 @@ for mapIndex, map in ipairs(Maps) do
 	local requiredMap = mapIndex + 1
 	for _, reward in ipairs(rewardsByMapId[map.id] or {}) do
 		requiredMapByFeature[featureKey(reward.type, reward.id)] = requiredMap
-		if reward.type == "tower" then
-			-- A map's tower reward is earned after clearing that map, so the tower
-			-- becomes usable starting on the next campaign map.
-			requiredMapByTower[reward.id] = requiredMap
-		elseif reward.type == "ability_slot" then
+		if reward.type == "ability_slot" then
 			for slot = 2, reward.slots or 1 do
 				requiredMapByAbilitySlot[slot] = math.min(requiredMapByAbilitySlot[slot] or UNKNOWN_REQUIRED_MAP, requiredMap)
 			end
 		end
 	end
 
-	for _, kind in ipairs(map.rewardTowers or {}) do
-		-- Compatibility for older map data or mods that still author tower rewards
-		-- directly on map definitions.
-		requiredMapByTower[kind] = mapIndex + 1
-	end
 end
 
 local function normalizeProgressIndex(progressIndex)
@@ -207,7 +186,7 @@ function CampaignUnlocks.isModuleCategoryUnlocked(category)
 end
 
 function CampaignUnlocks.isTowerUnlocked(kind)
-	return getProgressIndex() >= CampaignUnlocks.getRequiredMap(kind)
+	return requiredMapByTower[kind] ~= nil
 end
 
 function CampaignUnlocks.getUnlockedTowers()
