@@ -47,9 +47,9 @@ local scrollbarDragging = false
 local scrollbarGrabY = 0
 
 local LIST_ROW_H = 76
-local LIST_PREVIEW_W = 128
+local LIST_PREVIEW_W = 96
 local LIST_PREVIEW_H = 60
-local MAIN_PREVIEW_HEIGHT_RATIO = 0.48
+local MAIN_PREVIEW_HEIGHT_RATIO = 0.45
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -85,11 +85,6 @@ local function panel(x, y, w, h, selected)
 	lg.rectangle("fill", x, y, w, h, 8)
 end
 
-local function divider(x, y, w)
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.12)
-	lg.rectangle("fill", x, y, w, 1)
-end
-
 local function drawRewardIcon(reward, cx, cy)
 	if reward.type == "tower" then
 		lg.push("all")
@@ -105,26 +100,28 @@ end
 local function layout()
 	local sw, sh = lg.getDimensions()
 	local margin = max(18, floor(sw * 0.022))
-	local headerH = max(78, floor(sh * 0.12))
-	local footerH = max(62, floor(sh * 0.09))
-	local gap = max(10, floor(sw * 0.009))
+	local headerH = max(92, floor(sh * 0.144))
+	local footerH = max(54, floor(sh * 0.098))
+	local gap = 0
 	local contentY = headerH
-	local contentH = sh - headerH - footerH
-	local leftW = floor(sw * 0.27)
-	local rightW = floor(sw * 0.245)
-	local centerW = sw - margin * 2 - gap * 2 - leftW - rightW
+	local contentH = min(716, sh - headerH - footerH)
+	local contentW = min(1380, sw - margin * 2)
+	local contentX = floor((sw - contentW) * 0.5)
+	local leftW = floor(contentW * 0.29)
+	local rightW = floor(contentW * 0.255)
+	local centerW = contentW - gap * 2 - leftW - rightW
 	return {
 		sw = sw, sh = sh, margin = margin, headerH = headerH, footerH = footerH,
 		gap = gap, contentY = contentY, contentH = contentH,
-		left = {x = margin, y = contentY, w = leftW, h = contentH},
-		center = {x = margin + leftW + gap, y = contentY, w = centerW, h = contentH},
-		right = {x = sw - margin - rightW, y = contentY, w = rightW, h = contentH},
+		left = {x = contentX, y = contentY, w = leftW, h = contentH},
+		center = {x = contentX + leftW + gap, y = contentY, w = centerW, h = contentH},
+		right = {x = contentX + contentW - rightW, y = contentY, w = rightW, h = contentH},
 	}
 end
 
 local function visibleRows(l)
 	local rowH = LIST_ROW_H
-	return rowH, max(1, floor((l.left.h - 18) / rowH))
+	return rowH, max(1, floor((l.left.h - 88) / rowH))
 end
 
 local function scrollbarGeometry(l)
@@ -132,7 +129,7 @@ local function scrollbarGeometry(l)
 	if #Maps <= count then return nil end
 	local trackX = l.left.x + l.left.w - 13
 	local trackY = l.left.y + 10
-	local trackH = l.left.h - 20
+	local trackH = l.left.h - 90
 	local thumbH = max(32, trackH * count / #Maps)
 	local maxOffset = #Maps - count
 	local thumbY = trackY + (trackH - thumbH) * listOffset / maxOffset
@@ -277,15 +274,6 @@ local function drawMapList(l)
 	end
 end
 
-local function recordValue(record, key, fallback)
-	local value = record and record[key]
-	if value == nil then return fallback end
-	if key == "fastestClear" and type(value) == "number" then
-		return format("%d:%02d", floor(value / 60), floor(value % 60))
-	end
-	return tostring(value)
-end
-
 local function drawCenter(l, map, entry)
 	panel(l.center.x, l.center.y, l.center.w, l.center.h)
 	local pad = 20
@@ -324,14 +312,16 @@ local function drawCenter(l, map, entry)
 	lg.setColor(Theme.ui.text)
 	lg.printf(L("campaign.hints." .. map.id), x + 12, infoY + 8, w - 24, "left")
 
-	local record = Save.getMapRecords(map.id, RunModes.get(State), Save.data.settings.difficulty or "normal")
 	local statY = infoY + 64
-	local cellGap = 8
-	local cellW = (w - cellGap * 2) / 3
+	local cellGap = 3
+	local cellW = (w - cellGap * 4) / 5
+	local def = Difficulty.defs[Save.data.settings.difficulty or "normal"] or Difficulty.defs.normal
 	local values = {
 		{L("campaign.waves"), tostring(CampaignWaveDefs.getFinalWave(map) or "—")},
 		{L("campaign.enemies"), tostring(CampaignWaveDefs.getTotalEnemyCount(map) or "—")},
-		{L("campaign.bestTime"), recordValue(record, "fastestClear", "—")},
+		{L("campaign.lives"), tostring(def.startLives)},
+		{L("campaign.startingMoney"), format("$%d", def.startMoney)},
+		{L("campaign.sellRefund"), format("%d%%", floor(def.sellRefund * 100 + 0.5))},
 	}
 	for i, item in ipairs(values) do
 		local cellX = x + (i - 1) * (cellW + cellGap)
@@ -404,30 +394,6 @@ local function drawRight(l, map)
 		lg.print(L(DIFFICULTY_HINTS[key]), x + 40, cy + 30)
 	end
 
-	local resourcesY = cardY + 3 * 67 + 10
-	divider(x, resourcesY, w)
-	Fonts.set("menu")
-	lg.setColor(Theme.ui.text)
-	lg.print(L("campaign.startingResources"), x, resourcesY + 15)
-	local def = Difficulty.defs[selected] or Difficulty.defs.normal
-	local resourceY = resourcesY + 55
-	local resourceW = (w - 8) / 3
-	local resources = {
-		{format("$%d", def.startMoney), L("campaign.startingMoney"), Theme.ui.money},
-		{tostring(def.startLives), L("campaign.lives"), Theme.ui.lives},
-		{format("%d%%", floor(def.sellRefund * 100 + 0.5)), L("campaign.sellRefund"), Theme.ui.wave},
-	}
-	for i, resource in ipairs(resources) do
-		local rx = x + (i - 1) * (resourceW + 4)
-		lg.setColor(Theme.ui.panel)
-		lg.rectangle("fill", rx, resourceY, resourceW, 57, 7)
-		Fonts.set("ui")
-		lg.setColor(resource[3])
-		lg.printf(resource[1], rx, resourceY + 8, resourceW, "center")
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
-		lg.printf(resource[2], rx, resourceY + 31, resourceW, "center")
-	end
-
 	local play = buttons.play
 	play.x, play.y, play.w, play.h = x, l.right.y + l.right.h - 74, w, 52
 	play.label = L("campaign.playMap") .. "  •  " .. L(map.nameKey) .. " - " .. L("difficulty." .. selected)
@@ -456,7 +422,8 @@ function Screen.update(dt)
 			scrollbarDragging = false
 		end
 	end
-	buttons.back.x, buttons.back.y = l.margin, l.sh - l.footerH + 10
+	buttons.back.x, buttons.back.y = l.left.x + 14, l.left.y + l.left.h - 56
+	buttons.back.w = l.left.w - 28
 	local rightPad = 20
 	buttons.play.x = l.right.x + rightPad
 	buttons.play.y = l.right.y + l.right.h - 74
@@ -502,7 +469,8 @@ function Screen.draw()
 	if entry then drawCenter(l, map, entry) end
 	drawRight(l, map)
 
-	buttons.back.x, buttons.back.y = l.margin, l.sh - l.footerH + 10
+	buttons.back.x, buttons.back.y = l.left.x + 14, l.left.y + l.left.h - 56
+	buttons.back.w = l.left.w - 28
 	Fonts.set("ui")
 	Button.draw(buttons.back)
 end
