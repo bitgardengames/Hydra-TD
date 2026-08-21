@@ -1,3 +1,5 @@
+-- EXPERIMENTAL: specialization branches are retained for internal module
+-- playtests and must not be used by normal campaign or replay setup.
 local TowerDefs = require("world.tower_defs")
 local ModuleDefs = require("systems.module_defs")
 

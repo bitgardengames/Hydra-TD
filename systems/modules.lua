@@ -6,6 +6,14 @@ local BehaviorContext = require("systems.behavior_context")
 
 local Modules = {}
 
+-- EXPERIMENTAL: this is the single, explicit opt-in entry point for internal
+-- module playtests. Campaign and replay/endless setup deliberately never call
+-- it; selecting a run mode therefore always leaves the stat-only game intact.
+function Modules.enableExperimentalPlaytest()
+	require("systems.run_modes")._setExperimentalModulesForPlaytest(State, true)
+	return true
+end
+
 function Modules.isEnabled()
 	return require("systems.run_modes").experimentalModulesEnabled(State)
 end
@@ -498,6 +506,9 @@ function Modules.getTowerStatModifiers(towerOrKind)
 end
 
 function Modules.rollTowerUpgradeChoices(tower)
+	if not Modules.isEnabled() then
+		return {}
+	end
 	if not tower or not tower.kind then
 		return {}
 	end

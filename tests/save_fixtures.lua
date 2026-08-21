@@ -61,6 +61,15 @@ check(Save.data.version == 6, "old version was not migrated")
 check(Save.data.unknownFutureField.enabled, "unknown field was discarded")
 check(files["saves/save.bak.lua"], "pre-migration save was not backed up")
 
+-- Experimental module discovery is inert in normal runs, but remains persisted
+-- so disabling the experiment never makes an older save unloadable or lossy.
+reset({["saves/save.lua"] = "return { version = 6, meta = { discoveredModules = { move_wave = true, retired_test_module = true } } }"})
+Save.load()
+check(Save.data.meta.discoveredModules.move_wave == true,
+	"known module discovery was discarded while the experiment was disabled")
+check(Save.data.meta.discoveredModules.retired_test_module == true,
+	"unknown legacy module discovery was reinterpreted or discarded")
+
 -- An interrupted temporary write never supersedes a known-good primary.
 reset({
 	["saves/save.lua"] = "return { version = 6, sentinel = 'primary' }",

@@ -1,3 +1,5 @@
+-- EXPERIMENTAL: this picker remains available only when an internal module
+-- playtest has been enabled explicitly through systems.modules.
 local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local State = require("core.state")

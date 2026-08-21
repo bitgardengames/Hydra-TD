@@ -1,3 +1,5 @@
+-- EXPERIMENTAL: retained for explicit internal module playtests. These
+-- definitions are not part of normal campaign or replay/endless balance.
 local ModuleDefs = {}
 
 --[[

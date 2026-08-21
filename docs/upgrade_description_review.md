@@ -1,29 +1,42 @@
 # Upgrade description balance review
 
-Run this review whenever an active tower upgrade's behavior data changes.
+## Mandatory stat-only release review
 
-1. List active IDs from `world/tower_branch_defs.lua` and confirm each has a
-   `moduleDesc` entry in `languages/enUS.lua`.
-2. Compare each active ID's `addSpec` behavior data in `systems/module_defs.lua`
-   with its English description. Search the corresponding handler in
-   `world/projectile_behaviors.lua` before interpreting a field.
-3. Record every damage multiplier, conditional bonus, follow-up projectile or
-   burst multiplier, tick interval, and meaningful stack/damage cap. Keep the
-   result to one or two short clauses.
-4. Convert values according to their handler semantics:
-   - A multiplier replacing total damage, such as `mult = 0.88`, is
-     **−12% damage**.
-   - A separately emitted bonus, such as `bonusDmgMult = 0.55`, is
-     **+55% damage**.
-   - Chain `falloff` is the damage retained on every successive jump.
-   - Poison `rampPerTick` adds to its total-damage multiplier each poison tick;
-     `rampMax` is the maximum total multiplier.
-   - Plasma `tick_damage.rate` is seconds between full projectile-damage ticks;
-     endpoint `dmgMult` values are total burst damage, not bonus damage.
-5. Check the copy at the narrowest supported card width in
-   `ui/module_picker.lua`; prefer compact clauses over smaller text.
+The shipped campaign and replay/endless setup uses stat-only tower upgrades. For
+every change to `world/tower_defs.lua`, verify the maximum-level interpolation
+for damage, fire rate, range, and tower-specific status fields against the
+upgrade preview and in-game result. This review is release-gating and must not
+assume a specialization or module is selected.
 
 Useful review commands:
+
+```sh
+rg -n "upgrade =" world/tower_defs.lua
+sed -n '190,225p' world/towers.lua
+sed -n '400,535p' world/towers.lua
+```
+
+## Experimental module description QA
+
+The files `world/tower_branch_defs.lua`, `systems/module_defs.lua`, and
+`ui/module_picker.lua` are retained for explicitly enabled internal module
+playtests. Their copy review is separate, non-release-gating experimental QA:
+enable one deliberately with
+`require("systems.modules").enableExperimentalPlaytest()` before starting it.
+
+1. List experimental IDs from `world/tower_branch_defs.lua` and confirm each has
+   a `moduleDesc` entry in `languages/enUS.lua`.
+2. Compare each ID's behavior data in `systems/module_defs.lua` with its English
+   description and the corresponding handler in `world/projectile_behaviors.lua`.
+3. Record every damage multiplier, conditional bonus, follow-up projectile or
+   burst multiplier, tick interval, and meaningful stack/damage cap in one or
+   two short clauses.
+4. Treat replacement multipliers as total damage, separately emitted bonuses as
+   bonus damage, chain `falloff` as retained damage per jump, poison
+   `rampPerTick` as an increment toward `rampMax`, and `tick_damage.rate` as
+   seconds between full projectile-damage ticks.
+5. Check copy at the narrowest supported picker width; prefer compact clauses
+   over smaller text.
 
 ```sh
 sed -n '30,75p' world/tower_branch_defs.lua

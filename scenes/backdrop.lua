@@ -3,7 +3,6 @@ local State = require("core.state")
 local Camera = require("core.camera")
 local Draw = require("render.draw")
 local Towers = require("world.towers")
-local TowerBranchDefs = require("world.tower_branch_defs")
 local Sound = require("systems.sound")
 local Waves = require("systems.waves")
 local Constants = require("core.constants")
@@ -178,15 +177,8 @@ function Backdrop.start(index)
 			local tower = Towers.towers[#Towers.towers]
 
 			if tower then
-				for i = 1, (t.level - 1) do
-					local nextLevel = (tower.level or 1) + 1
-					local choices = TowerBranchDefs.getChoices(tower.kind, nextLevel) or {}
-					local choiceCount = #choices
-					local choiceId = choiceCount > 0 and choices[((i - 1) % choiceCount) + 1] or nil
-
-					if choiceId then
-						Towers.upgradeTower(tower, choiceId)
-					end
+				for _ = 1, (t.level - 1) do
+					Towers.upgradeTower(tower)
 				end
 			end
 		end

@@ -2,6 +2,11 @@ local Constants = require("core.constants")
 local Spatial = require("world.spatial_grid")
 local BehaviorContext = require("systems.behavior_context")
 
+-- EXPERIMENTAL MODULE SUPPORT: module-authored movement, proc, conversion, and
+-- tower-specialization behaviors remain implemented here for internal module
+-- playtests. Normal campaign and replay/endless runs do not attach them through
+-- module definitions; core projectile behaviors in this registry remain live.
+
 --[[
 	NOTE; ALL SYSTEMS MUST WORK TOGETHER FLUIDLY. This rule cannot be broken.
 
