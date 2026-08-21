@@ -1,5 +1,4 @@
 local State = require("core.state")
-local Save = require("core.save")
 local Theme = require("core.theme")
 local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
@@ -45,21 +44,13 @@ local panelInnerRadius = 18 - outlineW * 0.25
 
 local function getDisplayedAbilities()
 	local displayed = {}
-	local included = {}
-
-	local function appendUnique(abilityIds)
-		for _, abilityId in ipairs(abilityIds or {}) do
-			if not included[abilityId] then
-				displayed[#displayed + 1] = abilityId
-				included[abilityId] = true
-			end
+	local unlockedSlots = CampaignUnlocks.getUnlockedAbilitySlots()
+	for _, abilityId in ipairs(State.equippedAbilities or {}) do
+		if #displayed >= unlockedSlots then break end
+		if CampaignUnlocks.isAbilityUnlocked(abilityId) then
+			displayed[#displayed + 1] = abilityId
 		end
 	end
-
-	-- Runtime equipment includes progression fallbacks. Saved equipment is kept
-	-- afterward so locked selections can still preview their requirements.
-	appendUnique(State.equippedAbilities)
-	appendUnique(Save.data and Save.data.equippedAbilities)
 
 	return displayed
 end
@@ -148,7 +139,6 @@ local function drawButton(button, def, activeTime)
 	elseif not available then
 		lg.setColor(1, 1 - 0.55 * errorEase, 1 - 0.55 * errorEase, 0.95)
 		Text.printfShadow("🔒", fx, fy + 6, SIZE, "center")
-		Text.printfShadow(button.lockMessage, fx + 3, fy + SIZE - 25, SIZE - 6, "center")
 	elseif not ready then
 		local ratio = min(1, charge / def.chargeRequired)
 		local barY = fy + SIZE + CHARGE_BAR_GAP

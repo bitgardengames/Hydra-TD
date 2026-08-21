@@ -16,6 +16,9 @@ local function check(value, message)
 	assert(value, message)
 end
 
+check(CampaignUnlocks.getUnlockedAbilitySlots() == 0,
+	"profiles without active abilities must not display ability slots")
+
 -- Arsenal unlocks must be paced one per clear and packed at the front of the
 -- campaign. The campaign-completion reward is the sole exception: it belongs
 -- on the final map, after the intentionally bare maps in the finale.
@@ -71,5 +74,10 @@ end
 save.data.mapStats = {riverbend = {completedDifficulty = "easy"}}
 check(CampaignUnlocks.isAbilityUnlocked("meteor"), "completed map did not unlock its ability")
 check(not CampaignUnlocks.isAbilityUnlocked("overdrive"), "uncompleted map unlocked its ability")
+check(CampaignUnlocks.getUnlockedAbilitySlots() == 1,
+	"the first earned active ability must unlock exactly one slot")
+save.data.mapStats.roundabout = {completedDifficulty = "easy"}
+check(CampaignUnlocks.getUnlockedAbilitySlots() == 2,
+	"the second earned active ability must unlock the second slot")
 
 print("campaign unlock fixtures passed")

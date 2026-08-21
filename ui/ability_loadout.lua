@@ -14,12 +14,11 @@ local Theme = require("core.theme")
 local Loadout = {}
 local lg = love.graphics
 
-local SLOT_COUNT = 2
+local MAX_SLOTS = 2
 -- Match the in-game ability bar so loadout choices are just as easy to scan.
 local ICON_SIZE = 52
 local GAP = 8
 local PAD = 14
-local COLLAPSED_W = PAD * 2 + ICON_SIZE * SLOT_COUNT + GAP
 local SLOT_BOTTOM_INSET = 15
 local TITLE_GAP = 8
 local TITLE_H = 22
@@ -32,6 +31,10 @@ local equipped = {}
 local selectedSlot
 local feedbackText
 local feedbackTimer = 0
+
+local function slotCount()
+	return math.min(MAX_SLOTS, CampaignUnlocks.getUnlockedAbilitySlots())
+end
 
 local function unlockedAbilities()
 	local result = {}
@@ -99,7 +102,7 @@ end
 
 rebuildButtons = function()
 	buttons = {}
-	for slot = 1, SLOT_COUNT do
+	for slot = 1, slotCount() do
 		buttons[#buttons + 1] = {kind = "slot", slot = slot, anim = Button.newAnimation()}
 	end
 	if selectedSlot then
@@ -121,14 +124,15 @@ function Loadout.refresh()
 	local saved = Save.data and Save.data.equippedAbilities or {}
 	equipped = {}
 
-	for i = 1, SLOT_COUNT do
+	local unlockedSlots = slotCount()
+	for i = 1, unlockedSlots do
 		local abilityId = saved[i]
 		if contains(available, abilityId) and not contains(equipped, abilityId) then
 			equipped[#equipped + 1] = abilityId
 		end
 	end
 	for _, abilityId in ipairs(available) do
-		if #equipped >= SLOT_COUNT then break end
+		if #equipped >= unlockedSlots then break end
 		if not contains(equipped, abilityId) then equipped[#equipped + 1] = abilityId end
 	end
 
@@ -141,8 +145,11 @@ end
 
 local function layout()
 	local _, sh = lg.getDimensions()
+	local unlockedSlots = slotCount()
 	local abilityCount = selectedSlot and #unlockedAbilities() or 0
-	local panelW = math.max(COLLAPSED_W, PAD * 2 + ICON_SIZE * abilityCount + GAP * math.max(0, abilityCount - 1))
+	local collapsedW = PAD * 2 + ICON_SIZE * unlockedSlots + GAP * math.max(0, unlockedSlots - 1)
+	local panelW = math.max(collapsedW,
+		PAD * 2 + ICON_SIZE * abilityCount + GAP * math.max(0, abilityCount - 1))
 	local panelBottom = sh - 22
 	-- Anchor the slots to the bottom of the screen so opening the picker does not
 	-- make the controls jump. The picker grows upward above the title and slots.
@@ -209,6 +216,7 @@ local function drawSlotLabel(button)
 end
 
 function Loadout.draw()
+	if slotCount() == 0 then return end
 	local x, y, panelW, panelH, titleY, poolY = layout()
 	lg.setColor(Theme.outline.color)
 	lg.rectangle("fill", x - 2, y - 2, panelW + 4, panelH + 4, 9)
@@ -283,7 +291,9 @@ function Loadout.mousereleased(x, y, mouseButton)
 end
 
 function Loadout.getEquipped()
-	return {equipped[1], equipped[2]}
+	local result = {}
+	for i = 1, slotCount() do result[i] = equipped[i] end
+	return result
 end
 
 return Loadout

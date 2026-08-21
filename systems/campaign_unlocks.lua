@@ -162,7 +162,14 @@ function CampaignUnlocks.isAbilitySlotUnlocked(slotIndex)
 end
 
 function CampaignUnlocks.getUnlockedAbilitySlots()
-	return 2
+	local unlockedAbilities = 0
+	local AbilityDefs = require("systems.ability_defs")
+	for _, abilityId in ipairs(AbilityDefs.order) do
+		if CampaignUnlocks.isAbilityUnlocked(abilityId) then
+			unlockedAbilities = unlockedAbilities + 1
+		end
+	end
+	return math.min(2, unlockedAbilities)
 end
 
 
