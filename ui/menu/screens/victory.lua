@@ -366,6 +366,7 @@ local function calculateLayout()
 	local boxX = cx - boxW * 0.5
 	local padX = compact and 16 or 22
 	local padY = compact and 12 or 20
+	local buttonBottomPadding = compact and 18 or 28
 	local buttonGap = compact and 8 or 16
 	local buttonHeight = compact and 36 or btnH
 	local buttonsHeight = buttonHeight
@@ -373,7 +374,7 @@ local function calculateLayout()
 	local sectionGap = 14
 	local boxH = min(compact and 620 or 680, sh - edge * 2)
 	local boxY = floor((sh - boxH) * 0.5)
-	local buttonsStartY = boxY + boxH - padY - buttonsHeight
+	local buttonsStartY = boxY + boxH - buttonBottomPadding - buttonsHeight
 	local recapY = boxY + padY + titleHeight
 	local recapBottom = buttonsStartY - sectionGap
 	local viewportH = max(0, recapBottom - recapY)
@@ -445,8 +446,8 @@ function Screen.load()
 
 
 	buttons[#buttons + 1] = {
-		id = "menu",
-		label = L("menu.mainMenu"),
+		id = "map_select",
+		label = L("menu.mapSelect"),
 		w = btnW,
 		h = btnH,
 		onClick = function()
@@ -454,7 +455,7 @@ function Screen.load()
 			Backdrop.start()
 			Steam.setRichPresence(L("presence.menu"))
 			Save.flush()
-			State.mode = "menu"
+			require("ui.menu.menu").set("campaign")
 		end
 	}
 
