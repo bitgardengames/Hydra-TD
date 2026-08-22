@@ -118,6 +118,12 @@ function Button.draw(btn)
 		return
 	end
 
+	-- Optional one-shot presentation offsets let screens stage a button without
+	-- interfering with the shared hover/press animation state.
+	local drawAlpha = btn.drawAlpha or 1
+	local drawOffsetY = btn.drawOffsetY or 0
+	y = y + drawOffsetY
+
 	local anim = btn.anim
 	local t = anim and anim.t or 0
 
@@ -131,28 +137,29 @@ function Button.draw(btn)
 	local r, g, b, a = lerpColor(colorBase, colorHover, ease)
 
 	-- Button base
-	lg.setColor(colorOutline)
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], (colorOutline[4] or 1) * drawAlpha)
 	lg.rectangle("fill", x - outlineW, y - outlineW, w + outlineW * 2, h + outlineW * 2, outerRadius)
 
-	lg.setColor(r * 0.4, g * 0.4, b * 0.4, a)
+	lg.setColor(r * 0.4, g * 0.4, b * 0.4, a * drawAlpha)
 	lg.rectangle("fill", x, y, w, h, innerRadius)
 
 	-- Button face
 	local fy = y - lift
 
-	lg.setColor(colorOutline)
+	lg.setColor(colorOutline[1], colorOutline[2], colorOutline[3], (colorOutline[4] or 1) * drawAlpha)
 	lg.rectangle("fill", x - outlineW, fy - outlineW, w + outlineW * 2, h + outlineW * 2, outerRadius)
 
-	lg.setColor(r, g, b, a)
+	lg.setColor(r, g, b, a * drawAlpha)
 	lg.rectangle("fill", x, fy, w, h, innerRadius)
 
 	-- Label
 	local ty = fy + (h - lg.getFont():getHeight()) * 0.5
 
 	if btn.enabled == false then
-		lg.setColor(cdR, cdG, cdB)
+		lg.setColor(cdR, cdG, cdB, drawAlpha)
 	else
-		lg.setColor(btn.textColor or colorText)
+		local textColor = btn.textColor or colorText
+		lg.setColor(textColor[1], textColor[2], textColor[3], (textColor[4] or 1) * drawAlpha)
 	end
 
 	Text.printfShadow(btn.label, x, ty, w, "center")

@@ -12,6 +12,7 @@ local Save = require("core.save")
 local Difficulty = require("systems.difficulty")
 local ConfirmationDialog = require("ui.confirmation_dialog")
 local RunModes = require("systems.run_modes")
+local Presentation = require("ui.main_menu_presentation")
 
 local Screen = {}
 
@@ -33,6 +34,8 @@ local innerRadius = baseRadius - outlineW * 0.25
 local buttons = nil
 local storeButton = nil
 local confirmation = ConfirmationDialog.new()
+local entranceClock = 0
+local hasLoadedEntrance = false
 
 local function confirmQuit()
 	confirmation:show({
@@ -65,8 +68,9 @@ local panelPaddingX = 24
 local panelPaddingY = 24
 
 function Screen.load()
-
 	Backdrop.start()
+	entranceClock = 0
+	hasLoadedEntrance = true
 
 	buttons = {
 		{
@@ -133,8 +137,15 @@ function Screen.load()
 
 end
 
+-- Loading owns the full first-launch reveal. Later visits start partway through
+-- the same timeline so returning to the menu remains quick and familiar.
+function Screen.enter()
+	entranceClock = hasLoadedEntrance and 0.14 or 0
+end
+
 function Screen.update(dt)
 	Backdrop.update(dt)
+	entranceClock = entranceClock + dt
 
 	local sw, sh = love.graphics.getDimensions()
 	local t = getTime()
@@ -188,14 +199,36 @@ function Screen.update(dt)
 		end
 	end
 
-	if confirmation:isOpen() then confirmation:update(dt) else Button.updateList(buttons, dt) end
+	if confirmation:isOpen() then
+		confirmation:update(dt)
+	else
+		local reducedMotion = Save.data.settings.cameraMotion == false
+		local mx, my = love.mouse.getPosition()
+		for i, btn in ipairs(buttons) do
+			local pose = Presentation.pose(entranceClock, i, reducedMotion)
+			if pose.buttonPointerReady then
+				Button.update(btn, mx, my, dt)
+			elseif btn.anim then
+				Button.updateAnimation(btn.anim, false, dt)
+				btn.pointerHovered = false
+				btn.hovered = false
+			end
+		end
+	end
 
 	if storeButton then
 		storeButton.x = 24
 		storeButton.y = sh - storeButton.h - 24
 
-		local mx, my = love.mouse.getPosition()
-		Button.update(storeButton, mx, my, dt)
+		local storePose = Presentation.pose(entranceClock, #buttons, Save.data.settings.cameraMotion == false)
+		if storePose.buttonPointerReady then
+			local mx, my = love.mouse.getPosition()
+			Button.update(storeButton, mx, my, dt)
+		elseif storeButton.anim then
+			Button.updateAnimation(storeButton.anim, false, dt)
+			storeButton.pointerHovered = false
+			storeButton.hovered = false
+		end
 	end
 end
 
@@ -205,12 +238,14 @@ function Screen.draw()
 	local sw, sh = love.graphics.getDimensions()
 	local cx = floor(sw * 0.5)
 	local titleY = floor(sh * 0.41)
+	local reducedMotion = Save.data.settings.cameraMotion == false
+	local firstPose = Presentation.pose(entranceClock, 1, reducedMotion)
 
 	-- Background scene
 	Backdrop.draw()
 
 	-- Title
-	Title.draw(sw * 0.5, titleY, 1, 3.0, lancerIdle.angle, 1, 26)
+	Title.draw(sw * 0.5, titleY + firstPose.titleLift, 1, 3.0, lancerIdle.angle, firstPose.titleAlpha, 26)
 
 	-- Calculate button block size
 	local totalHeight = (#buttons - 1) * gap + btnH + idleLift
@@ -222,18 +257,27 @@ function Screen.draw()
 	local panelY = buttons[1].y - panelPaddingY - idleLift
 
 	-- Panel
-	love.graphics.setColor(colorOutline)
+	panelY = panelY + firstPose.panelLift
+	love.graphics.setColor(colorOutline[1], colorOutline[2], colorOutline[3], (colorOutline[4] or 1) * firstPose.panelAlpha)
 	love.graphics.rectangle("fill", panelX - outlineW, panelY - outlineW, panelW + outlineW * 2, panelH + outlineW * 2, outerRadius)
 
-	love.graphics.setColor(colorBackdrop)
+	love.graphics.setColor(colorBackdrop[1], colorBackdrop[2], colorBackdrop[3], (colorBackdrop[4] or 1) * firstPose.panelAlpha)
 	love.graphics.rectangle("fill", panelX, panelY, panelW, panelH, innerRadius)
 
 	Fonts.set("menu")
 
 	-- Draw buttons
-	Button.drawList(buttons)
+	for i, btn in ipairs(buttons) do
+		local pose = Presentation.pose(entranceClock, i, reducedMotion)
+		btn.drawAlpha = pose.buttonAlpha
+		btn.drawOffsetY = pose.buttonLift
+		Button.draw(btn)
+	end
 
 	if storeButton then
+		local pose = Presentation.pose(entranceClock, #buttons, reducedMotion)
+		storeButton.drawAlpha = pose.buttonAlpha
+		storeButton.drawOffsetY = pose.buttonLift
 		Button.draw(storeButton)
 	end
 
@@ -242,22 +286,28 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
-	if Button.mousepressedList(buttons, x, y, button) then
-		return true
+	local reducedMotion = Save.data.settings.cameraMotion == false
+	for i, btn in ipairs(buttons) do
+		if Presentation.pose(entranceClock, i, reducedMotion).buttonPointerReady
+			and Button.mousepressed(btn, x, y, button) then return true end
 	end
 
-	if storeButton and Button.mousepressed(storeButton, x, y, button) then
+	if storeButton and Presentation.pose(entranceClock, #buttons, reducedMotion).buttonPointerReady
+		and Button.mousepressed(storeButton, x, y, button) then
 		return true
 	end
 end
 
 function Screen.mousereleased(x, y, button)
 	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
-	if Button.mousereleasedList(buttons, x, y, button) then
-		return true
+	local reducedMotion = Save.data.settings.cameraMotion == false
+	for i, btn in ipairs(buttons) do
+		if Presentation.pose(entranceClock, i, reducedMotion).buttonPointerReady
+			and Button.mousereleased(btn, x, y, button) then return true end
 	end
 
-	if storeButton and Button.mousereleased(storeButton, x, y, button) then
+	if storeButton and Presentation.pose(entranceClock, #buttons, reducedMotion).buttonPointerReady
+		and Button.mousereleased(storeButton, x, y, button) then
 		return true
 	end
 end
