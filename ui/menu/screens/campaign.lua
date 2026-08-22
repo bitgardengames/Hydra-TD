@@ -165,8 +165,6 @@ end
 
 local function selectMap(index)
 	if index == State.mapIndex then return end
-	-- A repeated input safely promotes the prior destination to the new origin;
-	-- this avoids stale previews while preserving both indices for the crossfade.
 	selection.fromIndex = State.mapIndex
 	selection.toIndex = index
 	selection.elapsed = reducedMotion() and SelectionTransition.DURATION or 0
@@ -353,24 +351,22 @@ local function drawUnlockRewards(l, event, pose)
 	end
 end
 
-local function drawCenter(l, map, mapIndex, entry, alpha, offset)
-	lg.push()
-	lg.translate(offset or 0, 0)
+local function drawCenter(l, map, mapIndex, entry)
 	local pad = 20
 	local x, y, w = l.center.x + pad, l.center.y + 18, l.center.w - pad * 2
 	Fonts.set("title")
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
+	lg.setColor(Theme.ui.text)
 	lg.print(L(map.nameKey), x, y)
 	Fonts.set("ui")
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75 * alpha)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75)
 	lg.print(L("campaign.mapOf", mapIndex, #Maps), x, y + 43)
 
 	local stats = statsFor(map.id)
 	local earned = stats and Medals.getCount(stats.completedDifficulty) or 0
 	local clusterW = Medals.getClusterSize(13, 9)
-	if alpha > 0.5 then Medals.draw(x + w - clusterW, y + 5, earned, 13, 9, pulseTime) end
+	Medals.draw(x + w - clusterW, y + 5, earned, 13, 9, pulseTime)
 	Fonts.set("ui")
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65 * alpha)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
 	lg.printf(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
 	local previewY = y + 70
@@ -378,18 +374,18 @@ local function drawCenter(l, map, mapIndex, entry, alpha, offset)
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
 	local previewX = x + (w - previewW) * 0.5
-	lg.setColor(1, 1, 1, alpha * (isMapLocked(mapIndex) and 0.35 or 1))
+	lg.setColor(1, 1, 1, isMapLocked(mapIndex) and 0.35 or 1)
 	lg.draw(entry.canvas, previewX, previewY, 0, scale, scale)
-	lg.setColor(Theme.outline.color[1], Theme.outline.color[2], Theme.outline.color[3], alpha)
+	lg.setColor(Theme.outline.color)
 	lg.setLineWidth(3)
 	lg.rectangle("line", previewX, previewY, previewW, previewH, 7)
 	lg.setLineWidth(1)
 
 	local infoY = previewY + previewH + 12
-	lg.setColor(Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], alpha)
+	lg.setColor(Theme.ui.panel)
 	lg.rectangle("fill", x, infoY, w, 52, 7)
 	Fonts.set("ui")
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
+	lg.setColor(Theme.ui.text)
 	lg.printf(L("campaign.hints." .. map.id), x + 12, infoY + 8, w - 24, "left")
 
 	local statY = infoY + 64
@@ -405,26 +401,26 @@ local function drawCenter(l, map, mapIndex, entry, alpha, offset)
 	}
 	for i, item in ipairs(values) do
 		local cellX = x + (i - 1) * (cellW + cellGap)
-		lg.setColor(Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], alpha)
+		lg.setColor(Theme.ui.panel)
 		lg.rectangle("fill", cellX, statY, cellW, 55, 7)
 		Fonts.set("ui")
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65 * alpha)
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
 		lg.printf(item[1], cellX, statY + 5, cellW, "center")
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
+		lg.setColor(Theme.ui.text)
 		lg.printf(item[2], cellX, statY + 27, cellW, "center")
 	end
 
 	local rewardsY = statY + 67
 	if rewardsY + 62 < l.center.y + l.center.h then
-		lg.setColor(Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], alpha)
+		lg.setColor(Theme.ui.panel)
 		lg.rectangle("fill", x, rewardsY, w, 62, 7)
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
+		lg.setColor(Theme.ui.text)
 		lg.print(L("campaign.completionRewards"), x + 10, rewardsY + 5)
 
 		local rewardCellY = rewardsY + 31
 		local rewards = CampaignUnlocks.getRewardsForMap(map)
 		if #rewards == 0 then
-			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72 * alpha)
+			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
 			lg.printf(L("campaign.noUnlockReward"), x + 10, rewardCellY - 2, w - 20, "center")
 		else
 			Fonts.set("ui")
@@ -437,13 +433,12 @@ local function drawCenter(l, map, mapIndex, entry, alpha, offset)
 				local contentW = min(rewardCellW - 12, iconSize + textW)
 				local iconX = cellX + (rewardCellW - contentW) * 0.5 + iconSize * 0.5
 				drawRewardIcon(reward, iconX, rewardCellY + 7)
-				lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
+				lg.setColor(Theme.ui.text)
 				lg.printf(rewardText, iconX + iconSize * 0.5, rewardCellY - 2,
 					max(0, cellX + rewardCellW - 6 - (iconX + iconSize * 0.5)), "left")
 			end
 		end
 	end
-	lg.pop()
 end
 
 local function drawRight(l, map)
@@ -553,12 +548,7 @@ function Screen.draw()
 	panel(l.center.x, l.center.y, l.center.w, l.center.h)
 	local map = Maps[State.mapIndex]
 	local entry = MapPreviewCache.get(map.id)
-	if not pose.complete then
-		local oldMap = Maps[selection.fromIndex]
-		local oldEntry = MapPreviewCache.get(oldMap.id)
-		if oldEntry then drawCenter(l, oldMap, selection.fromIndex, oldEntry, pose.outgoingAlpha, 0) end
-	end
-	if entry then drawCenter(l, map, State.mapIndex, entry, pose.incomingAlpha, pose.incomingOffset) end
+	if entry then drawCenter(l, map, State.mapIndex, entry) end
 	drawRight(l, map)
 	drawUnlockRewards(l, unlockEvent, unlockPose)
 
