@@ -11,7 +11,7 @@ Experimental branch/module coverage remains isolated in
 
 ## Applied tuning
 
-Upgrade prices are **0.45x / 0.65x / 0.90x / 1.20x** base cost. The maximum-level
+Upgrade prices are **0.5625x / 0.8125x / 1.125x / 1.50x** base cost. The maximum-level
 stat multipliers and per-tier range additions are:
 
 | Tower | Damage | Fire rate | Range/tier |
@@ -31,7 +31,7 @@ exponentiating `fireMult`.
 
 Each of the 24 upgrade purchases is priced against equal spending on another
 base tower. Open legal placement compares marginal raw DPS and accepts ratios of
-**0.30–1.15**. The constrained comparison accounts for the next legal tile's
+**0.24–1.15**. The constrained comparison accounts for the next legal tile's
 coverage (72% useful uptime), switching and overkill (88% realization), retained
 range, and bounded role utility (1.05–1.28), accepting **0.60–1.85**. The gate
 also requires at least one open-board expansion win and at least one

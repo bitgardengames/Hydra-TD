@@ -37,9 +37,9 @@ early-call income is `$0` throughout. Full per-wave values are in JSON output.
 ## Representative affordability
 
 The `$110` Slow plus Lancer entry pair remains affordable before wave 1. Stat-only
-upgrade probes use the runtime 0.45/0.65/0.90/1.20 curve: a Lancer's first upgrade
-is `$27` (`$87` including its base), a Cannon through tier 3 is `$189`, and a
-complete Plasma is `$504`. On Hard, complete towers become affordable across
+upgrade probes use the runtime 0.5625/0.8125/1.125/1.50 curve: a Lancer's first upgrade
+is `$34` (`$94` including its base), a Cannon through tier 3 is `$214`, and a
+complete Plasma is `$600`. On Hard, complete towers become affordable across
 maps in waves 1–2 (Slow), 2–3 (Lancer), 2–4 (Poison), 3–4 (Cannon), 3–5
 (Shock), and 4–6 (Plasma). These are independent unspent-purchasing-power probes,
 not a build sequence; canonical scenarios contain no specialization or inventory modules.
