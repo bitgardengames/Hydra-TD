@@ -205,8 +205,8 @@ function Screen.update(dt)
 	else
 		local reducedMotion = Save.data.settings.cameraMotion == false
 		local mx, my = love.mouse.getPosition()
-		for i, btn in ipairs(buttons) do
-			local pose = Presentation.pose(entranceClock, i, reducedMotion)
+		for _, btn in ipairs(buttons) do
+			local pose = Presentation.pose(entranceClock, reducedMotion)
 			if pose.buttonPointerReady then
 				Button.update(btn, mx, my, dt)
 			elseif btn.anim then
@@ -221,7 +221,7 @@ function Screen.update(dt)
 		storeButton.x = 24
 		storeButton.y = sh - storeButton.h - 24
 
-		local storePose = Presentation.pose(entranceClock, #buttons, Save.data.settings.cameraMotion == false)
+		local storePose = Presentation.pose(entranceClock, Save.data.settings.cameraMotion == false)
 		if storePose.buttonPointerReady then
 			local mx, my = love.mouse.getPosition()
 			Button.update(storeButton, mx, my, dt)
@@ -240,7 +240,7 @@ function Screen.draw()
 	local cx = floor(sw * 0.5)
 	local titleY = floor(sh * 0.41)
 	local reducedMotion = Save.data.settings.cameraMotion == false
-	local firstPose = Presentation.pose(entranceClock, 1, reducedMotion)
+	local firstPose = Presentation.pose(entranceClock, reducedMotion)
 
 	-- Background scene
 	Backdrop.draw()
@@ -268,15 +268,15 @@ function Screen.draw()
 	Fonts.set("menu")
 
 	-- Draw buttons
-	for i, btn in ipairs(buttons) do
-		local pose = Presentation.pose(entranceClock, i, reducedMotion)
+	for _, btn in ipairs(buttons) do
+		local pose = Presentation.pose(entranceClock, reducedMotion)
 		btn.drawAlpha = pose.buttonAlpha
 		btn.drawOffsetY = pose.buttonLift
 		Button.draw(btn)
 	end
 
 	if storeButton then
-		local pose = Presentation.pose(entranceClock, #buttons, reducedMotion)
+		local pose = Presentation.pose(entranceClock, reducedMotion)
 		storeButton.drawAlpha = pose.buttonAlpha
 		storeButton.drawOffsetY = pose.buttonLift
 		Button.draw(storeButton)
@@ -288,12 +288,12 @@ end
 function Screen.mousepressed(x, y, button)
 	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
 	local reducedMotion = Save.data.settings.cameraMotion == false
-	for i, btn in ipairs(buttons) do
-		if Presentation.pose(entranceClock, i, reducedMotion).buttonPointerReady
+	for _, btn in ipairs(buttons) do
+		if Presentation.pose(entranceClock, reducedMotion).buttonPointerReady
 			and Button.mousepressed(btn, x, y, button) then return true end
 	end
 
-	if storeButton and Presentation.pose(entranceClock, #buttons, reducedMotion).buttonPointerReady
+	if storeButton and Presentation.pose(entranceClock, reducedMotion).buttonPointerReady
 		and Button.mousepressed(storeButton, x, y, button) then
 		return true
 	end
@@ -302,12 +302,12 @@ end
 function Screen.mousereleased(x, y, button)
 	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
 	local reducedMotion = Save.data.settings.cameraMotion == false
-	for i, btn in ipairs(buttons) do
-		if Presentation.pose(entranceClock, i, reducedMotion).buttonPointerReady
+	for _, btn in ipairs(buttons) do
+		if Presentation.pose(entranceClock, reducedMotion).buttonPointerReady
 			and Button.mousereleased(btn, x, y, button) then return true end
 	end
 
-	if storeButton and Presentation.pose(entranceClock, #buttons, reducedMotion).buttonPointerReady
+	if storeButton and Presentation.pose(entranceClock, reducedMotion).buttonPointerReady
 		and Button.mousereleased(storeButton, x, y, button) then
 		return true
 	end
