@@ -19,6 +19,7 @@ local RunModes = require("systems.run_modes")
 local DrawEntities = require("render.draw_entities")
 local AbilityIcons = require("ui.ability_icons")
 local SelectionTransition = require("ui.campaign_selection_transition")
+local UnlockPresentation = require("ui.campaign_unlock_presentation")
 
 local lg = love.graphics
 local floor = math.floor
@@ -47,6 +48,7 @@ local listOffset = 0
 local scrollbarDragging = false
 local scrollbarGrabY = 0
 local selection = {fromIndex = State.mapIndex, toIndex = State.mapIndex, elapsed = SelectionTransition.DURATION}
+local unlockSequence = UnlockPresentation.new()
 
 local LIST_ROW_H = 76
 local LIST_PREVIEW_W = 96
@@ -205,7 +207,7 @@ local function goBack()
 	Sound.play("uiBack")
 end
 
-local function drawHeader(l, pose)
+local function drawHeader(l, pose, unlockPose)
 	Fonts.set("title")
 	lg.setColor(Theme.ui.text)
 	Text.printShadow(L("campaign.title"), l.margin, 20)
@@ -222,6 +224,12 @@ local function drawHeader(l, pose)
 		lg.setColor(i < pose.markerIndex and Theme.ui.good or Theme.ui.panel)
 		lg.line(startX + (i - 1) * step, y, startX + i * step, y)
 	end
+	if unlockPose and unlockPose.sourceIndex < unlockPose.targetIndex then
+		local fromX = startX + (unlockPose.sourceIndex - 1) * step
+		local toX = startX + (unlockPose.targetIndex - 1) * step
+		lg.setColor(Theme.ui.good)
+		lg.line(fromX, y, fromX + (toX - fromX) * unlockPose.line, y)
+	end
 	for i = 1, #Maps do
 		local x = startX + (i - 1) * step
 		local locked = isMapLocked(i)
@@ -232,6 +240,12 @@ local function drawHeader(l, pose)
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text)
 		lg.printf(locked and "•" or tostring(i), x - 12, y - 9, 24, "center")
+	end
+	if unlockPose and unlockPose.stamp > 0 then
+		local x = startX + (unlockPose.targetIndex - 1) * step
+		lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], 0.8 * unlockPose.stamp)
+		lg.setLineWidth(3)
+		lg.circle("line", x, y, 18 + 13 * unlockPose.stamp)
 	end
 	local markerX = startX + (pose.markerIndex - 1) * step
 	lg.setColor(Theme.ui.warn)
@@ -259,7 +273,7 @@ local function drawHeader(l, pose)
 	lg.printf(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 68, 26, 62, "center")
 end
 
-local function drawMapList(l, pose)
+local function drawMapList(l, pose, unlockPose)
 	panel(l.left.x, l.left.y, l.left.w, l.left.h)
 	local rowH, count = visibleRows(l)
 	local rowX = l.left.x + 10
@@ -273,6 +287,10 @@ local function drawMapList(l, pose)
 		local locked = isMapLocked(index)
 		lg.setColor(selected and {Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], 0.35} or Theme.ui.panel)
 		lg.rectangle("fill", rowX, y, rowW, rowH - 7, 7)
+		if unlockPose and index == unlockPose.targetIndex and unlockPose.row > 0 then
+			lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], 0.32 * unlockPose.row)
+			lg.rectangle("fill", rowX, y, rowW, rowH - 7, 7)
+		end
 		local entry = MapPreviewCache.get(map.id)
 		if entry then
 			local scale = min(1, LIST_PREVIEW_W / entry.canvas:getWidth(), LIST_PREVIEW_H / entry.canvas:getHeight())
@@ -305,6 +323,33 @@ local function drawMapList(l, pose)
 		lg.rectangle("fill", trackX, trackY, trackW, trackH, 3)
 		lg.setColor(scrollbarDragging and Theme.ui.warn or Theme.ui.selected)
 		lg.rectangle("fill", trackX, thumbY, trackW, thumbH, 3)
+	end
+end
+
+local function rewardDestination(l, count, index)
+	local pad, w = 20, l.center.w - 40
+	local cellW = w / math.max(1, count)
+	return l.center.x + pad + (index - 0.5) * cellW, l.center.y + l.center.h - 48
+end
+
+local function drawUnlockRewards(l, event, pose)
+	if not event then return end
+	for index, reward in ipairs(event.rewards) do
+		local rewardPose = pose.rewards[index]
+		if rewardPose and rewardPose.visible then
+			local targetX, targetY = rewardDestination(l, #event.rewards, index)
+			local startX = l.left.x + l.left.w + 20
+			local startY = l.headerH - 18
+			local p = rewardPose.progress
+			local x = startX + (targetX - startX) * p
+			local y = startY + (targetY - startY) * p - math.sin(math.pi * p) * 54
+			local scale = 1.35 - 0.35 * p
+			lg.push("all")
+			lg.translate(x, y)
+			lg.scale(scale, scale)
+			drawRewardIcon(reward, 0, 0)
+			lg.pop()
+		end
 	end
 end
 
@@ -450,6 +495,7 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 	Medals.update(dt)
 	selection.elapsed = min(SelectionTransition.DURATION, selection.elapsed + dt)
+	UnlockPresentation.update(unlockSequence, dt)
 	local l = layout()
 	if scrollbarDragging then
 		if love.mouse.isDown(1) then
@@ -500,8 +546,10 @@ function Screen.draw()
 	lg.setColor(Theme.ui.screenDim)
 	lg.rectangle("fill", 0, 0, l.sw, l.sh)
 	local pose = selectionPose()
-	drawHeader(l, pose)
-	drawMapList(l, pose)
+	local unlockEvent = unlockSequence.active
+	local unlockPose = UnlockPresentation.sample(unlockEvent)
+	drawHeader(l, pose, unlockEvent and unlockPose)
+	drawMapList(l, pose, unlockEvent and unlockPose)
 	panel(l.center.x, l.center.y, l.center.w, l.center.h)
 	local map = Maps[State.mapIndex]
 	local entry = MapPreviewCache.get(map.id)
@@ -512,6 +560,7 @@ function Screen.draw()
 	end
 	if entry then drawCenter(l, map, State.mapIndex, entry, pose.incomingAlpha, pose.incomingOffset) end
 	drawRight(l, map)
+	drawUnlockRewards(l, unlockEvent, unlockPose)
 
 	buttons.back.x, buttons.back.y = l.left.x + 14, l.left.y + l.left.h - 56
 	buttons.back.w = l.left.w - 28
@@ -592,6 +641,12 @@ function Screen.resize()
 end
 
 function Screen.enter()
+	local captured = UnlockPresentation.capture(unlockSequence, State, #Maps, reducedMotion())
+	if captured then
+		-- Keep the cleared map selected so earned reward icons settle into that
+		-- map's authored reward detail while the route itself reveals the next map.
+		State.mapIndex = State.resolveMapIndex(captured.sourceIndex)
+	end
 	selection.fromIndex, selection.toIndex = State.mapIndex, State.mapIndex
 	selection.elapsed = SelectionTransition.DURATION
 	keepSelectedVisible(layout())
