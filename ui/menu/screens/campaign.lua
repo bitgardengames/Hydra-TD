@@ -18,6 +18,7 @@ local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local RunModes = require("systems.run_modes")
 local DrawEntities = require("render.draw_entities")
 local AbilityIcons = require("ui.ability_icons")
+local SelectionTransition = require("ui.campaign_selection_transition")
 
 local lg = love.graphics
 local floor = math.floor
@@ -45,6 +46,7 @@ local hoveredMedal
 local listOffset = 0
 local scrollbarDragging = false
 local scrollbarGrabY = 0
+local selection = {fromIndex = State.mapIndex, toIndex = State.mapIndex, elapsed = SelectionTransition.DURATION}
 
 local LIST_ROW_H = 76
 local LIST_PREVIEW_W = 96
@@ -151,6 +153,24 @@ local function keepSelectedVisible(l)
 	listOffset = max(0, min(listOffset, max(0, #Maps - count)))
 end
 
+local function reducedMotion()
+	return Save.data.settings.cameraMotion == false
+end
+
+local function selectionPose()
+	return SelectionTransition.sample(selection.fromIndex, selection.toIndex, selection.elapsed, reducedMotion())
+end
+
+local function selectMap(index)
+	if index == State.mapIndex then return end
+	-- A repeated input safely promotes the prior destination to the new origin;
+	-- this avoids stale previews while preserving both indices for the crossfade.
+	selection.fromIndex = State.mapIndex
+	selection.toIndex = index
+	selection.elapsed = reducedMotion() and SelectionTransition.DURATION or 0
+	State.mapIndex = index
+end
+
 local function navigate(direction)
 	local nextIndex = State.mapIndex + direction
 	if nextIndex < 1 or nextIndex > #Maps or (direction > 0 and isMapLocked(nextIndex)) then
@@ -158,7 +178,7 @@ local function navigate(direction)
 		return
 	end
 	Tooltip.hide()
-	State.mapIndex = State.resolveMapIndex(nextIndex)
+	selectMap(State.resolveMapIndex(nextIndex))
 	keepSelectedVisible(layout())
 	Sound.play("uiMove")
 end
@@ -185,7 +205,7 @@ local function goBack()
 	Sound.play("uiBack")
 end
 
-local function drawHeader(l)
+local function drawHeader(l, pose)
 	Fonts.set("title")
 	lg.setColor(Theme.ui.text)
 	Text.printShadow(L("campaign.title"), l.margin, 20)
@@ -199,21 +219,28 @@ local function drawHeader(l)
 	local y = 49
 	lg.setLineWidth(4)
 	for i = 1, #Maps - 1 do
-		lg.setColor(i < State.mapIndex and Theme.ui.good or Theme.ui.panel)
+		lg.setColor(i < pose.markerIndex and Theme.ui.good or Theme.ui.panel)
 		lg.line(startX + (i - 1) * step, y, startX + i * step, y)
 	end
 	for i = 1, #Maps do
 		local x = startX + (i - 1) * step
 		local locked = isMapLocked(i)
-		local selected = i == State.mapIndex
-		lg.setColor(selected and Theme.ui.warn or (locked and Theme.ui.panel or Theme.ui.good))
-		lg.circle("fill", x, y, selected and 19 or 15)
+		lg.setColor(locked and Theme.ui.panel or Theme.ui.good)
+		lg.circle("fill", x, y, 15)
 		lg.setColor(Theme.outline.color)
-		lg.circle("line", x, y, selected and 19 or 15)
+		lg.circle("line", x, y, 15)
 		Fonts.set("ui")
-		lg.setColor(selected and Theme.outline.color or Theme.ui.text)
+		lg.setColor(Theme.ui.text)
 		lg.printf(locked and "•" or tostring(i), x - 12, y - 9, 24, "center")
 	end
+	local markerX = startX + (pose.markerIndex - 1) * step
+	lg.setColor(Theme.ui.warn)
+	lg.circle("fill", markerX, y, 19)
+	lg.setColor(Theme.outline.color)
+	lg.circle("line", markerX, y, 19)
+	Fonts.set("ui")
+	lg.setColor(Theme.outline.color)
+	lg.printf(tostring(State.mapIndex), markerX - 12, y - 9, 24, "center")
 	lg.setLineWidth(1)
 
 	local total = 0
@@ -232,7 +259,7 @@ local function drawHeader(l)
 	lg.printf(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 68, 26, 62, "center")
 end
 
-local function drawMapList(l)
+local function drawMapList(l, pose)
 	panel(l.left.x, l.left.y, l.left.w, l.left.h)
 	local rowH, count = visibleRows(l)
 	local rowX = l.left.x + 10
@@ -244,7 +271,7 @@ local function drawMapList(l)
 		local y = l.left.y + 10 + (visible - 1) * rowH
 		local selected = index == State.mapIndex
 		local locked = isMapLocked(index)
-		lg.setColor(selected and Theme.ui.selected or Theme.ui.panel)
+		lg.setColor(selected and {Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], 0.35} or Theme.ui.panel)
 		lg.rectangle("fill", rowX, y, rowW, rowH - 7, 7)
 		local entry = MapPreviewCache.get(map.id)
 		if entry then
@@ -264,6 +291,13 @@ local function drawMapList(l)
 			Medals.draw(textX, y + 31, stats and Medals.getCount(stats.completedDifficulty) or 0, 7, 6, pulseTime)
 		end
 	end
+	-- The highlight travels independently of listOffset, so selecting a visible
+	-- row never nudges the scroll viewport just to create the animation.
+	local highlightY = l.left.y + 10 + (pose.rowIndex - listOffset - 1) * rowH
+	lg.setColor(Theme.ui.selected)
+	lg.setLineWidth(3)
+	lg.rectangle("line", rowX, highlightY, rowW, rowH - 7, 7)
+	lg.setLineWidth(1)
 
 	local trackX, trackY, trackW, trackH, thumbY, thumbH = scrollbarGeometry(l)
 	if trackX then
@@ -274,23 +308,24 @@ local function drawMapList(l)
 	end
 end
 
-local function drawCenter(l, map, entry)
-	panel(l.center.x, l.center.y, l.center.w, l.center.h)
+local function drawCenter(l, map, mapIndex, entry, alpha, offset)
+	lg.push()
+	lg.translate(offset or 0, 0)
 	local pad = 20
 	local x, y, w = l.center.x + pad, l.center.y + 18, l.center.w - pad * 2
 	Fonts.set("title")
-	lg.setColor(Theme.ui.text)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
 	lg.print(L(map.nameKey), x, y)
 	Fonts.set("ui")
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75)
-	lg.print(L("campaign.mapOf", State.mapIndex, #Maps), x, y + 43)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75 * alpha)
+	lg.print(L("campaign.mapOf", mapIndex, #Maps), x, y + 43)
 
 	local stats = statsFor(map.id)
 	local earned = stats and Medals.getCount(stats.completedDifficulty) or 0
 	local clusterW = Medals.getClusterSize(13, 9)
-	Medals.draw(x + w - clusterW, y + 5, earned, 13, 9, pulseTime)
+	if alpha > 0.5 then Medals.draw(x + w - clusterW, y + 5, earned, 13, 9, pulseTime) end
 	Fonts.set("ui")
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65 * alpha)
 	lg.printf(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
 	local previewY = y + 70
@@ -298,18 +333,18 @@ local function drawCenter(l, map, entry)
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
 	local previewX = x + (w - previewW) * 0.5
-	lg.setColor(1, 1, 1, isMapLocked(State.mapIndex) and 0.35 or 1)
+	lg.setColor(1, 1, 1, alpha * (isMapLocked(mapIndex) and 0.35 or 1))
 	lg.draw(entry.canvas, previewX, previewY, 0, scale, scale)
-	lg.setColor(Theme.outline.color)
+	lg.setColor(Theme.outline.color[1], Theme.outline.color[2], Theme.outline.color[3], alpha)
 	lg.setLineWidth(3)
 	lg.rectangle("line", previewX, previewY, previewW, previewH, 7)
 	lg.setLineWidth(1)
 
 	local infoY = previewY + previewH + 12
-	lg.setColor(Theme.ui.panel)
+	lg.setColor(Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], alpha)
 	lg.rectangle("fill", x, infoY, w, 52, 7)
 	Fonts.set("ui")
-	lg.setColor(Theme.ui.text)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
 	lg.printf(L("campaign.hints." .. map.id), x + 12, infoY + 8, w - 24, "left")
 
 	local statY = infoY + 64
@@ -325,26 +360,26 @@ local function drawCenter(l, map, entry)
 	}
 	for i, item in ipairs(values) do
 		local cellX = x + (i - 1) * (cellW + cellGap)
-		lg.setColor(Theme.ui.panel)
+		lg.setColor(Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], alpha)
 		lg.rectangle("fill", cellX, statY, cellW, 55, 7)
 		Fonts.set("ui")
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65 * alpha)
 		lg.printf(item[1], cellX, statY + 5, cellW, "center")
-		lg.setColor(Theme.ui.text)
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
 		lg.printf(item[2], cellX, statY + 27, cellW, "center")
 	end
 
 	local rewardsY = statY + 67
 	if rewardsY + 62 < l.center.y + l.center.h then
-		lg.setColor(Theme.ui.panel)
+		lg.setColor(Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], alpha)
 		lg.rectangle("fill", x, rewardsY, w, 62, 7)
-		lg.setColor(Theme.ui.text)
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
 		lg.print(L("campaign.completionRewards"), x + 10, rewardsY + 5)
 
 		local rewardCellY = rewardsY + 31
 		local rewards = CampaignUnlocks.getRewardsForMap(map)
 		if #rewards == 0 then
-			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
+			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72 * alpha)
 			lg.printf(L("campaign.noUnlockReward"), x + 10, rewardCellY - 2, w - 20, "center")
 		else
 			Fonts.set("ui")
@@ -357,12 +392,13 @@ local function drawCenter(l, map, entry)
 				local contentW = min(rewardCellW - 12, iconSize + textW)
 				local iconX = cellX + (rewardCellW - contentW) * 0.5 + iconSize * 0.5
 				drawRewardIcon(reward, iconX, rewardCellY + 7)
-				lg.setColor(Theme.ui.text)
+				lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
 				lg.printf(rewardText, iconX + iconSize * 0.5, rewardCellY - 2,
 					max(0, cellX + rewardCellW - 6 - (iconX + iconSize * 0.5)), "left")
 			end
 		end
 	end
+	lg.pop()
 end
 
 local function drawRight(l, map)
@@ -413,6 +449,7 @@ function Screen.update(dt)
 	pulseTime = pulseTime + dt
 	Backdrop.update(dt)
 	Medals.update(dt)
+	selection.elapsed = min(SelectionTransition.DURATION, selection.elapsed + dt)
 	local l = layout()
 	if scrollbarDragging then
 		if love.mouse.isDown(1) then
@@ -462,11 +499,18 @@ function Screen.draw()
 	local l = layout()
 	lg.setColor(Theme.ui.screenDim)
 	lg.rectangle("fill", 0, 0, l.sw, l.sh)
-	drawHeader(l)
-	drawMapList(l)
+	local pose = selectionPose()
+	drawHeader(l, pose)
+	drawMapList(l, pose)
+	panel(l.center.x, l.center.y, l.center.w, l.center.h)
 	local map = Maps[State.mapIndex]
 	local entry = MapPreviewCache.get(map.id)
-	if entry then drawCenter(l, map, entry) end
+	if not pose.complete then
+		local oldMap = Maps[selection.fromIndex]
+		local oldEntry = MapPreviewCache.get(oldMap.id)
+		if oldEntry then drawCenter(l, oldMap, selection.fromIndex, oldEntry, pose.outgoingAlpha, 0) end
+	end
+	if entry then drawCenter(l, map, State.mapIndex, entry, pose.incomingAlpha, pose.incomingOffset) end
 	drawRight(l, map)
 
 	buttons.back.x, buttons.back.y = l.left.x + 14, l.left.y + l.left.h - 56
@@ -511,7 +555,7 @@ function Screen.mousepressed(x, y, button)
 		local row = floor((y - l.left.y - 10) / rowH) + 1
 		if row >= 1 and row <= count then
 			local index = listOffset + row
-			if Maps[index] and not isMapLocked(index) then State.mapIndex = index; Sound.play("uiMove"); return true end
+			if Maps[index] and not isMapLocked(index) then selectMap(index); Sound.play("uiMove"); return true end
 		end
 	end
 	local dx, dy, dw = l.right.x + 20, l.right.y + 79, l.right.w - 40
@@ -547,7 +591,11 @@ function Screen.resize()
 	keepSelectedVisible(layout())
 end
 
-function Screen.enter() keepSelectedVisible(layout()) end
+function Screen.enter()
+	selection.fromIndex, selection.toIndex = State.mapIndex, State.mapIndex
+	selection.elapsed = SelectionTransition.DURATION
+	keepSelectedVisible(layout())
+end
 function Screen.leave() Tooltip.hide() end
 
 return Screen
