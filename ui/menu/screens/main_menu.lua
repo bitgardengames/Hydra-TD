@@ -39,6 +39,7 @@ local hasLoadedEntrance = false
 
 local function confirmQuit()
 	confirmation:show({
+		reducedMotion = Save.data.settings.cameraMotion == false,
 		title = L("confirmation.quitTitle"),
 		description = L("confirmation.quitDescription"),
 		confirmLabel = L("confirmation.confirm"),
