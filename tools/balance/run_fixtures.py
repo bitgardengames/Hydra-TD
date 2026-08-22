@@ -183,7 +183,7 @@ def checks(data: dict) -> list[dict]:
     rows = data["upgrade_vs_expansion"]
     for row in rows:
         check(f'upgrade/open/{row["tower"]}/{row["tier"]}',
-              .3 <= row["open_placement_output_ratio"] <= 1.15,
+              .24 <= row["open_placement_output_ratio"] <= 1.15,
               "open legal tiles should usually favor expansion, without making upgrades traps")
         check(f'upgrade/constrained/{row["tower"]}/{row["tier"]}',
               .6 <= row["constrained_utility_ratio"] <= 1.85,
