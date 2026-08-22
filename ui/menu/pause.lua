@@ -31,6 +31,7 @@ local confirmation = ConfirmationDialog.new()
 
 local function confirmAction(titleKey, descriptionKey, action)
 	confirmation:show({
+		reducedMotion = Save.data.settings.cameraMotion == false,
 		title = L(titleKey), description = L(descriptionKey),
 		confirmLabel = L("confirmation.confirm"), cancelLabel = L("confirmation.cancel"),
 		onConfirm = action,
