@@ -22,7 +22,7 @@ function Presentation.pose(elapsed, reducedMotion)
 		titleLift = 7 * (1 - title),
 		panelAlpha = panel,
 		panelLift = 5 * (1 - panel),
-		buttonAlpha = button,
+		buttonAlpha = 1,
 		buttonLift = 6 * (1 - button),
 		buttonPointerReady = button >= 0.72,
 	}
