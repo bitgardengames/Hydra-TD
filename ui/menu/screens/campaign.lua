@@ -18,6 +18,7 @@ local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local RunModes = require("systems.run_modes")
 local DrawEntities = require("render.draw_entities")
 local AbilityIcons = require("ui.ability_icons")
+local AbilityTooltip = require("ui.ability_tooltip")
 local SelectionTransition = require("ui.campaign_selection_transition")
 local UnlockPresentation = require("ui.campaign_unlock_presentation")
 
@@ -99,6 +100,29 @@ local function drawRewardIcon(reward, cx, cy)
 	elseif reward.type == "ability" then
 		AbilityIcons.draw(reward.id, cx, cy, 1, 1)
 	end
+end
+
+local function hoveredMapReward(l, map, entry, mx, my)
+	if not entry then return nil end
+
+	local pad = 20
+	local x, y, w = l.center.x + pad, l.center.y + 18, l.center.w - pad * 2
+	local previewY = y + 70
+	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
+	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
+	local previewH = entry.canvas:getHeight() * scale
+	local statY = previewY + previewH + 12 + 64
+	local rewardsY = statY + 67
+	if rewardsY + 62 >= l.center.y + l.center.h then return nil end
+
+	local rewards = CampaignUnlocks.getRewardsForMap(map)
+	-- The heading describes the section; only the reward cells themselves expose
+	-- item-specific details.
+	if #rewards == 0 or mx < x or mx > x + w or my < rewardsY + 25 or my > rewardsY + 62 then
+		return nil
+	end
+	local index = min(#rewards, floor((mx - x) / (w / #rewards)) + 1)
+	return rewards[index]
 end
 
 local function layout()
@@ -512,6 +536,7 @@ function Screen.update(dt)
 	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
 
 	local map = Maps[State.mapIndex]
+	local hoveredReward = hoveredMapReward(l, map, MapPreviewCache.get(map.id), mx, my)
 	local stats = statsFor(map.id)
 	local count = stats and Medals.getCount(stats.completedDifficulty) or 0
 	hoveredMedal = nil
@@ -526,7 +551,9 @@ function Screen.update(dt)
 				and my >= lcenter.y + 23 and my <= lcenter.y + 49 then hoveredMedal = tier end
 		end
 	end
-	if hoveredMedal then
+	if hoveredReward and hoveredReward.type == "ability" then
+		AbilityTooltip.show(hoveredReward.id)
+	elseif hoveredMedal then
 		local key = DIFFICULTIES[hoveredMedal]
 		local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[key]
 		local date = type(timestamp) == "number" and os.date(L("campaign.medalDateFormat"), timestamp)
