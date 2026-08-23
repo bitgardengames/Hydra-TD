@@ -44,9 +44,9 @@ The generator must honor these current assumptions:
   sites.
 - Water entries retain the existing `{x, y, size}` representation and may not
   overlap or visually obscure the route.
-- A route may revisit a control point only when an intentionally supported loop
-  is introduced. The MVP rejects all repeated path tiles, avoiding ambiguous
-  progress and accidental self-intersections.
+- A route may revisit path tiles. Crossings and overlaps create intentional
+  loops like those in the authored map set; each visit remains a distinct point
+  in enemy route progress while the tile stays unavailable for tower placement.
 - `world/map.lua` derives path length, world-space samples, last-second range,
   and the placement-based coverage multiplier. Generated definitions should go
   through that same runtime path rather than duplicating those calculations.
@@ -99,12 +99,12 @@ Use constrained randomized backtracking rather than free-form noise:
 2. Alternate horizontal and vertical segments. Select endpoints from the
    remaining grid while respecting the target segment and turn counts.
 3. Favor net progress toward `x = 30`, but permit controlled backtracking to
-   create switchbacks. Put a hard budget on leftward distance.
+   create switchbacks, crossings, and overlapping loops.
 4. Reserve a minimum Manhattan clearance around non-adjacent segments. A small
    number of close approaches may be allowed by the profile, but long parallel
    overlaps are rejected.
-5. Reject repeated tiles, crossings, zero-length segments, adjacent immediate
-   reversals, and any segment outside the safe band as soon as they occur.
+5. Allow repeated tiles and crossings, but reject zero-length segments,
+   adjacent immediate reversals, and any segment outside the safe band.
 6. Connect the final control point to an exit at `x = 30`. Backtrack if that
    connection violates any constraint.
 
@@ -152,7 +152,8 @@ Validation has three layers:
 
 - in-bounds integer points and orthogonal, non-zero segments;
 - correct entrance and exit columns;
-- continuous route with no repeated tiles or self-intersections;
+- continuous route whose repeated tiles and self-intersections preserve route
+  order;
 - minimum/maximum route, segment, and turn counts;
 - terrain does not block the route; and
 - runtime map construction completes with finite, non-zero derived metrics.

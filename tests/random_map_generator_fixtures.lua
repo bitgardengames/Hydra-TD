@@ -18,6 +18,18 @@ assert(valid, "generated map was invalid: " .. tostring(reason))
 assert(not first.generation.fallback and first.generation.attempt > 0,
 	"random runs must use generated geometry, not an authored-map fallback")
 
+local looped = {
+	path = {
+		{5, 7}, {20, 7}, {20, 3}, {10, 3}, {10, 10},
+		{24, 10}, {24, 5}, {15, 5}, {15, 7}, {30, 7},
+	},
+}
+local loopValid, loopReason = Generator.validate(looped, {
+	id = "loop-fixture", minLength = 1, maxLength = 200,
+	minPoints = 7, maxPoints = 12, minSegment = 2,
+})
+assert(loopValid, "routes may intentionally revisit a path tile: " .. tostring(loopReason))
+
 local authored = require("world.map_defs")
 local function samePath(a, b)
 	if #a ~= #b then return false end
