@@ -3,7 +3,7 @@
 -- must not perturb combat/decorative random streams.
 local MapDefs = require("world.map_defs")
 
-local Generator = { VERSION = 1, PROFILE_ID = "standard_v1" }
+local Generator = { VERSION = 2, PROFILE_ID = "standard_v1" }
 local WIDTH, HEIGHT, ENTRANCE_X, EXIT_X = 32, 14, 5, 30
 local MIN_Y, MAX_Y = 3, 11
 local MODULUS, MULTIPLIER = 2147483647, 48271
@@ -74,7 +74,7 @@ function Generator.authoredProfile()
 		id = Generator.PROFILE_ID,
 		minLength = percentile(lengths, 0.20),
 		maxLength = percentile(lengths, 0.80),
-		minPoints = 7, maxPoints = 11,
+		minPoints = 7, maxPoints = 12,
 		minSegment = 2,
 	}
 end
@@ -135,13 +135,13 @@ end
 
 local function partitionHorizontal(rng)
 	local widths, remaining = {}, EXIT_X - ENTRANCE_X
-	for i = 1, 4 do
-		local maxWidth = remaining - (5 - i) * 2
+	for i = 1, 5 do
+		local maxWidth = remaining - (6 - i) * 2
 		widths[i] = rng:nextInt(2, math.min(7, maxWidth))
 		remaining = remaining - widths[i]
 	end
-	widths[5] = remaining
-	if widths[5] < 2 then return nil end
+	widths[6] = remaining
+	if widths[6] < 2 then return nil end
 	return widths
 end
 
@@ -151,15 +151,17 @@ local function candidate(seed, attempt, profile)
 	if not widths then return nil end
 	local x, y = ENTRANCE_X, rng:nextInt(MIN_Y, MAX_Y)
 	local points = {{x, y}}
-	for i = 1, 5 do
+	for i = 1, 6 do
 		x = x + widths[i]
 		points[#points + 1] = {x, y}
-		if i < 5 then
-			local choices = {}
-			for row = MIN_Y, MAX_Y do
-				if math.abs(row - y) >= 2 then choices[#choices + 1] = row end
-			end
-			y = choices[rng:nextInt(1, #choices)]
+		if i < 6 then
+			-- Alternate between separated halves of the battlefield. Five vertical
+			-- legs are needed to reach the authored route-length envelope; the old
+			-- four-leg route could never be long enough and therefore always fell
+			-- back to selecting an authored map.
+			local low, high = MIN_Y, 4
+			if y <= 7 then low, high = 10, MAX_Y end
+			y = rng:nextInt(low, high)
 			points[#points + 1] = {x, y}
 		end
 	end
@@ -197,19 +199,16 @@ function Generator.generate(runSeed, options)
 			if not bestScore or score > bestScore then best, bestReport, bestAttempt, bestScore = def, report, attempt, score end
 		end
 	end
-	-- This authored fallback is structurally prevalidated and remains deterministic.
-	if not best then
-		local choices = {}
-		for _, def in ipairs(MapDefs) do if Generator.validate(def, profile) then choices[#choices + 1] = def end end
-		best = choices[(seed % #choices) + 1]
-		bestReport, bestAttempt = metrics(best), 0
-	end
+	-- Never disguise an authored map-pool selection as a generated map. The
+	-- standard profile has valid candidates by construction; a caller supplying
+	-- an impossible custom profile receives an actionable failure instead.
+	if not best then error("random map generation failed for profile " .. tostring(profile.id)) end
 	local result = {id = options.id or ((options.mode == "daily" and "daily-" or "random-") .. readable),
 		nameKey = options.nameKey or "map.random", biome = best.biome, path = {}, water = {}}
 	for i, p in ipairs(best.path) do result.path[i] = {p[1], p[2]} end
 	for i, w in ipairs(best.water or {}) do result.water[i] = {w[1], w[2], w[3]} end
 	result.generation = {version = Generator.VERSION, profile = profile.id, seed = seed,
-		attempt = bestAttempt, tuple = tuple, fallback = bestAttempt == 0, metrics = bestReport}
+		attempt = bestAttempt, tuple = tuple, fallback = false, metrics = bestReport}
 	return result
 end
 
