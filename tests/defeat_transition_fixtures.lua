@@ -59,6 +59,7 @@ end
 module("core.state", state)
 module("core.save", {
 	data = {mapStats = {riverbend = {completedDifficulty = "normal"}}},
+	recordRun = function() return {} end,
 	recordMapResult = function(mapId, difficulty, completed)
 		recordCalls = recordCalls + 1
 		assert(mapId == "riverbend" and difficulty == "hard" and completed == false,
@@ -67,7 +68,13 @@ module("core.save", {
 })
 module("world.map_defs", {{id = "riverbend"}})
 module("systems.difficulty", {key = function() return "hard" end})
-module("systems.achievements", {onGameOver = function() achievementCalls = achievementCalls + 1 end})
+module("systems.achievements", {checkCampaignCompletion = function() achievementCalls = achievementCalls + 1 end})
+module("systems.run_stats", {
+	finish = function(outcome)
+		return {outcome = outcome}
+	end,
+	commitTowerHistory = function() return true end,
+})
 module("systems.sound", {
 	play = function(name) playedSounds[#playedSounds + 1] = name end,
 	playMusic = function(name) playedMusic[#playedMusic + 1] = name end,

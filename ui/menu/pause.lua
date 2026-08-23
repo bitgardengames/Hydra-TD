@@ -1,6 +1,5 @@
 local Button = require("ui.button")
 local State = require("core.state")
-local Achievements = require("systems.achievements")
 local Sound = require("systems.sound")
 local Hotkeys = require("core.hotkeys")
 local Backdrop = require("scenes.backdrop")
@@ -117,7 +116,7 @@ function Page.load()
 			onClick = function()
 				confirmAction("confirmation.restartTitle", "confirmation.restartDescription", function()
 					State.paused = false
-					Achievements.onGameOver()
+					require("systems.gameplay_outcome").cancel("restart")
 					State.mode = "game"
 					resetGame()
 					Sound.exitPause()
@@ -146,7 +145,6 @@ function Page.load()
 				confirmAction("confirmation.mainMenuTitle", "confirmation.mainMenuDescription", function()
 					require("systems.gameplay_outcome").cancel("abandon")
 					State.paused = false
-					Achievements.onGameOver()
 					Save.flush()
 					Backdrop.start()
 					State.mode = "menu"

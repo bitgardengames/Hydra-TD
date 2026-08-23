@@ -261,7 +261,6 @@ local function updateGameplayOutcome()
 				end
 			end
 
-			Achievements.onGameOver()
 			State.speed = 0.35
 			State.gameOver = true
 			State.victory = true
@@ -539,7 +538,11 @@ function love.visible(visible)
 end
 
 function love.quit()
-	Achievements.onGameOver()
+	-- Quitting an active run abandons it; it is not eligible for completed-run
+	-- tower history. Already-finalized runs remain untouched.
+	if RunStats.data and not RunStats.final and (State.mode == "game" or State.mode == "pause") then
+		GameplayOutcome.cancel("quit")
+	end
 	Save.flush()
 	Steam.shutdown()
 end

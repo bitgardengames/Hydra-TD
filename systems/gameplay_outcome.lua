@@ -30,11 +30,16 @@ function GameplayOutcome.recordCurrentRun(completed)
 	if RunModes.awardsCampaignProgress(State) then
 		Save.recordMapResult(map.id, difficulty, completed == true)
 	end
+	-- Completed victories and defeats are the only runs eligible for cumulative
+	-- tower history. RunStats owns the one-time guard for repeated transitions.
+	RunStats.commitTowerHistory()
+	Achievements.checkCampaignCompletion()
 	return true
 end
 
 function GameplayOutcome.cancel(reason)
-	State.runResult = RunStats.finish(reason == "restart" and "restarted" or "abandoned", State)
+	local outcomes = {restart = "restarted", abandon = "abandoned", quit = "quit"}
+	State.runResult = RunStats.finish(outcomes[reason] or "abandoned", State)
 	State.newRecords = {}
 	return State.runResult
 end
@@ -54,7 +59,6 @@ function GameplayOutcome.defeat(reason)
 	State.endTitle = L("game.gameOver")
 	State.endReason = reason or L("game.outOfLives")
 
-	Achievements.onGameOver()
 	GameplayOutcome.recordCurrentRun(false)
 	Sound.play("gameOver")
 	Sound.playMusic("gameOver")

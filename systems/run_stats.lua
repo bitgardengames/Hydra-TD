@@ -17,6 +17,7 @@ function RunStats.reset()
 	RunStats.nextTowerId = 0
 	RunStats.elapsed = 0
 	RunStats.final = nil
+	RunStats.towerHistoryCommitted = false
 end
 
 function RunStats.update(dt)
@@ -68,6 +69,15 @@ function RunStats.recordKill(tower)
 end
 
 function RunStats.commitTowerHistory()
+	-- Tower history represents played-out runs, not every way gameplay can end.
+	-- This guard also makes terminal UI navigation and shutdown harmless.
+	local eligible = RunStats.final
+		and (RunStats.final.outcome == "completed" or RunStats.final.outcome == "failed")
+	if RunStats.towerHistoryCommitted or not eligible then
+		return false
+	end
+	RunStats.towerHistoryCommitted = true
+
 	local Save = require("core.save")
 	local data = getData()
 	local totals = {}
@@ -81,6 +91,7 @@ function RunStats.commitTowerHistory()
 		Save.recordTowerRun(kind, total.damage, total.kills)
 	end
 	Save.flush()
+	return true
 end
 
 RunStats.reset()
