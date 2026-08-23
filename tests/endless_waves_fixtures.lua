@@ -9,7 +9,8 @@ package.loaded["systems.difficulty"] = {get = function() return {
 package.loaded["systems.campaign_wave_defs"] = {}
 package.loaded["core.steam"] = {}
 package.loaded["core.localization"] = setmetatable({}, {__call = function(_, key) return key end})
-package.loaded["world.enemy_defs"] = {}
+local EnemyDefs = require("world.enemy_defs")
+package.loaded["world.enemy_defs"] = EnemyDefs
 package.loaded["world.enemy_traits"] = {get = function() end}
 package.loaded["world.spatial_grid"] = {}
 package.loaded["world.effects"] = {}
@@ -41,6 +42,9 @@ for wave = 21, 10000 do
 	local generated = Waves.generateEndlessWave(wave, 12345)
 	assert(generated.count <= 96, "composition exceeded the bounded density budget")
 	assert(#generated.groups <= 4, "composition exceeded the bounded group budget")
+	for _, group in ipairs(generated.groups) do
+		assert(EnemyDefs[group.kind], "composition uses unknown enemy " .. tostring(group.kind))
+	end
 end
 
 print("endless wave fixtures passed")
