@@ -13,8 +13,6 @@ local Difficulty = require("systems.difficulty")
 local ConfirmationDialog = require("ui.confirmation_dialog")
 local RunModes = require("systems.run_modes")
 local Presentation = require("ui.main_menu_presentation")
-local Maps = require("world.map_defs")
-local RandomMapGenerator = require("world.random_map_generator")
 
 local Screen = {}
 
@@ -38,39 +36,6 @@ local storeButton = nil
 local confirmation = ConfirmationDialog.new()
 local entranceClock = 0
 local hasLoadedEntrance = false
-local generatedMapIndex = nil
-
-local RANDOM_MODIFIERS = {"swarm", "blitz", "fortified"}
-
-local function removeGeneratedMap()
-	if generatedMapIndex and generatedMapIndex == #Maps then
-		table.remove(Maps, generatedMapIndex)
-	end
-	generatedMapIndex = nil
-end
-
-local function startRandomMap()
-	removeGeneratedMap()
-	local runSeed = tostring(os.time()) .. "-" .. tostring(love.timer.getTime())
-	local seed = RandomMapGenerator.hashSeed(runSeed)
-	local modifier = RANDOM_MODIFIERS[(seed % #RANDOM_MODIFIERS) + 1]
-	local map = RandomMapGenerator.generate(runSeed, {mode = "random", modifierSet = modifier})
-	Maps[#Maps + 1] = map
-	generatedMapIndex = #Maps
-
-	State.mapIndex = generatedMapIndex
-	State.worldMapIndex = generatedMapIndex
-	State.buildSeed = seed
-	State.runRules = {modifiers = {modifier}, randomMap = true}
-	State.ignoreStats = true
-	RunModes.set(State, RunModes.ENDLESS)
-	Difficulty.set(Save.data.settings.difficulty)
-	State.mode = "game"
-	Backdrop.stop()
-	resetGame()
-	Sound.play("uiConfirm")
-	Sound.playMusic("gameplay")
-end
 
 local function confirmQuit()
 	confirmation:show({
@@ -115,7 +80,6 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				removeGeneratedMap()
 				State.ignoreStats = false
 				State.runRules = {experimentalModules = false}
 				RunModes.set(State, RunModes.CAMPAIGN)
@@ -130,7 +94,6 @@ function Screen.load()
 			w = btnW,
 			h = btnH,
 			onClick = function()
-				removeGeneratedMap()
 				State.ignoreStats = false
 				State.buildSeed = nil
 				State.runRules = {experimentalModules = false}
@@ -139,14 +102,6 @@ function Screen.load()
 				Sound.play("uiConfirm")
 			end
 		},
-		{
-			id = "random_map",
-			label = L("menu.randomMap"),
-			w = btnW,
-			h = btnH,
-			onClick = startRandomMap,
-		},
-
 		{
 			id = "settings",
 			label = L("menu.settings"),
