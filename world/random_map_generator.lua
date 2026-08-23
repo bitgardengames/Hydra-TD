@@ -3,7 +3,7 @@
 -- must not perturb combat/decorative random streams.
 local MapDefs = require("world.map_defs")
 
-local Generator = { VERSION = 2, PROFILE_ID = "standard_v1" }
+local Generator = { VERSION = 3, PROFILE_ID = "standard_v2" }
 local WIDTH, HEIGHT, ENTRANCE_X, EXIT_X = 32, 14, 5, 30
 local MIN_Y, MAX_Y = 3, 11
 local MODULUS, MULTIPLIER = 2147483647, 48271
@@ -42,7 +42,9 @@ local function expandPath(points)
 		while x ~= b[1] or y ~= b[2] do
 			x, y = x + dx, y + dy
 			local key = x .. "," .. y
-			if occupied[key] then return nil, "repeated_path_tile" end
+			-- Revisited tiles are intentional route geometry, just like crossings and
+			-- loops in the authored maps. Keep every visit in route order for path
+			-- length/third metrics, while occupied remains a set for placement checks.
 			tiles[#tiles + 1], occupied[key] = {x, y}, true
 		end
 	end
@@ -63,12 +65,13 @@ local function percentile(values, fraction)
 	return values[math.max(1, math.floor((#values - 1) * fraction + 1.5))]
 end
 
--- The envelope follows the shipped content rather than duplicating balance
--- constants. Looped legacy maps are ignored because the MVP forbids repeats.
+-- The envelope follows all shipped content rather than duplicating balance
+-- constants. Revisited tiles are valid route distance in both authored and
+-- generated maps.
 function Generator.authoredProfile()
 	local lengths = {}
 	for _, def in ipairs(MapDefs) do
-		if expandPath(def.path) then lengths[#lengths + 1] = pathLength(def.path) end
+		lengths[#lengths + 1] = pathLength(def.path)
 	end
 	return {
 		id = Generator.PROFILE_ID,
@@ -133,26 +136,23 @@ function Generator.validate(def, profile)
 	return true, nil, report
 end
 
-local function partitionHorizontal(rng)
-	local widths, remaining = {}, EXIT_X - ENTRANCE_X
-	for i = 1, 5 do
-		local maxWidth = remaining - (6 - i) * 2
-		widths[i] = rng:nextInt(2, math.min(7, maxWidth))
-		remaining = remaining - widths[i]
-	end
-	widths[6] = remaining
-	if widths[6] < 2 then return nil end
-	return widths
-end
-
 local function candidate(seed, attempt, profile)
 	local rng = newRng((seed + attempt * 104729) % MODULUS)
-	local widths = partitionHorizontal(rng)
-	if not widths then return nil end
 	local x, y = ENTRANCE_X, rng:nextInt(MIN_Y, MAX_Y)
 	local points = {{x, y}}
 	for i = 1, 6 do
-		x = x + widths[i]
+		if i == 6 then
+			x = EXIT_X
+		elseif i % 2 == 1 then
+			-- Advance, then deliberately backtrack on the following horizontal
+			-- leg. Combined with the alternating vertical lanes, this permits the
+			-- crossings and overlapping tiles that give authored maps their loops.
+			if x > 26 then return nil end
+			x = rng:nextInt(x + 2, 28)
+		else
+			if x < 9 then return nil end
+			x = rng:nextInt(7, x - 2)
+		end
 		points[#points + 1] = {x, y}
 		if i < 6 then
 			-- Alternate between separated halves of the battlefield. Five vertical
