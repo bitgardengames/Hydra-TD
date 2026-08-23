@@ -436,7 +436,7 @@ return {
 	upgradePreview = {
 		damage = "Damage",
 		fireRate = "Attack speed (per min)",
-		range = "Range (px)",
+		range = "Range",
 		splash = "Splash radius",
 		slowStrength = "Slow strength",
 		poisonStrength = "Poison strength",
@@ -516,7 +516,7 @@ return {
 	stats = {
 		damage = "Damage",
 		fireRate = "Attack Speed (per min)",
-		range = "Range (px)",
+		range = "Range",
 	},
 
 	actions = {
