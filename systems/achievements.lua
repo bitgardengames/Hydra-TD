@@ -2,7 +2,6 @@ local State = require("core.state")
 local Steam = require("core.steam")
 local Save = require("core.save")
 local AchievementDefs = require("systems.achievement_defs")
-local RunStats = require("systems.run_stats")
 
 local Achievements = {}
 
@@ -117,12 +116,6 @@ function Achievements.increment(stat, amount)
 			end
 		end
 	end
-end
-
-function Achievements.onGameOver()
-	Achievements.checkCampaignCompletion()
-	RunStats.commitTowerHistory()
-	Save.flush()
 end
 
 function Achievements.unlock(id)
