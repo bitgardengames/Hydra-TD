@@ -55,6 +55,8 @@ local LIST_ROW_H = 76
 local LIST_PREVIEW_W = 96
 local LIST_PREVIEW_H = 60
 local MAIN_PREVIEW_HEIGHT_RATIO = 0.45
+local DIFFICULTY_CARD_H = 80
+local DIFFICULTY_CARD_STEP = 98
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -237,8 +239,12 @@ local function drawHeader(l, pose, unlockPose)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
 	Text.printShadow(L("campaign.selectMap"), l.margin, 66)
 
-	local startX = l.left.x + l.left.w + 18
-	local available = l.right.x - startX - 14
+	-- Let the route read as a page-level campaign progress bar. Starting it
+	-- above the map list (rather than above the detail column) matches the wide
+	-- visual rhythm of the campaign header while leaving the title unobstructed.
+	local startX = max(l.margin + 390, l.left.x + floor(l.left.w * 0.68))
+	local endX = min(l.sw - l.margin - 190, l.right.x + 74)
+	local available = endX - startX
 	local step = available / (#Maps - 1)
 	local y = 49
 	lg.setLineWidth(4)
@@ -307,7 +313,7 @@ local function drawMapList(l, pose, unlockPose)
 		local y = l.left.y + 10 + (visible - 1) * rowH
 		local selected = index == State.mapIndex
 		local locked = isMapLocked(index)
-		lg.setColor(selected and {Theme.ui.panel[1], Theme.ui.panel[2], Theme.ui.panel[3], 0.35} or Theme.ui.panel)
+		lg.setColor(selected and Theme.ui.selected or Theme.ui.panel)
 		lg.rectangle("fill", rowX, y, rowW, rowH - 7, 7)
 		if unlockPose and index == unlockPose.targetIndex and unlockPose.row > 0 then
 			lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], 0.32 * unlockPose.row)
@@ -321,7 +327,7 @@ local function drawMapList(l, pose, unlockPose)
 		end
 		local textX = rowX + LIST_PREVIEW_W + 12
 		Fonts.set("ui")
-		lg.setColor(Theme.ui.text)
+		lg.setColor(selected and Theme.outline.color or Theme.ui.text)
 		lg.print(index .. "  " .. L(map.nameKey), textX, y + 7)
 		if locked then
 			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.55)
@@ -334,7 +340,7 @@ local function drawMapList(l, pose, unlockPose)
 	-- The highlight travels independently of listOffset, so selecting a visible
 	-- row never nudges the scroll viewport just to create the animation.
 	local highlightY = l.left.y + 10 + (pose.rowIndex - listOffset - 1) * rowH
-	lg.setColor(Theme.ui.selected)
+	lg.setColor(Theme.outline.color)
 	lg.setLineWidth(3)
 	lg.rectangle("line", rowX, highlightY, rowW, rowH - 7, 7)
 	lg.setLineWidth(1)
@@ -468,7 +474,7 @@ end
 local function drawRight(l, map)
 	panel(l.right.x, l.right.y, l.right.w, l.right.h)
 	local pad = 20
-	local x, y, w = l.right.x + pad, l.right.y + 18, l.right.w - pad * 2
+	local x, y, w = l.right.x + pad, l.right.y + 38, l.right.w - pad * 2
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
 	lg.print(L("settings.difficulty"), x, y)
@@ -476,26 +482,26 @@ local function drawRight(l, map)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
 	lg.print(L("campaign.difficultyDescription"), x, y + 31)
 	local selected = Save.data.settings.difficulty or "normal"
-	local cardY = y + 61
+	local cardY = y + 66
 	for i, key in ipairs(DIFFICULTIES) do
-		local cy = cardY + (i - 1) * 67
+		local cy = cardY + (i - 1) * DIFFICULTY_CARD_STEP
 		local active = key == selected
 		lg.setColor(active and Theme.ui.buttonSelected or Theme.ui.panel)
-		lg.rectangle("fill", x, cy, w, 57, 7)
+		lg.rectangle("fill", x, cy, w, DIFFICULTY_CARD_H, 10)
 		lg.setColor(DIFFICULTY_COLORS[key])
-		lg.circle("fill", x + 20, cy + 20, 10)
+		lg.circle("fill", x + 20, cy + 28, 10)
 		lg.setColor(Theme.outline.color)
-		lg.circle("fill", x + 17, cy + 18, 2)
-		lg.circle("fill", x + 23, cy + 18, 2)
+		lg.circle("fill", x + 17, cy + 26, 2)
+		lg.circle("fill", x + 23, cy + 26, 2)
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text)
-		lg.print(L("difficulty." .. key), x + 40, cy + 8)
+		lg.print(L("difficulty." .. key), x + 40, cy + 16)
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-		lg.print(L(DIFFICULTY_HINTS[key]), x + 40, cy + 30)
+		lg.print(L(DIFFICULTY_HINTS[key]), x + 40, cy + 42)
 	end
 
 	local play = buttons.play
-	play.x, play.y, play.w, play.h = x, l.right.y + l.right.h - 74, w, 52
+	play.x, play.y, play.w, play.h = x, l.right.y + l.right.h - 110, w, 82
 	play.label = L("campaign.playMap") .. "  •  " .. L(map.nameKey) .. " - " .. L("difficulty." .. selected)
 	play.enabled = not isMapLocked(State.mapIndex)
 	Fonts.set("ui")
@@ -528,9 +534,9 @@ function Screen.update(dt)
 	buttons.back.w = l.left.w - 28
 	local rightPad = 20
 	buttons.play.x = l.right.x + rightPad
-	buttons.play.y = l.right.y + l.right.h - 74
+	buttons.play.y = l.right.y + l.right.h - 110
 	buttons.play.w = l.right.w - rightPad * 2
-	buttons.play.h = 52
+	buttons.play.h = 82
 	buttons.play.enabled = not isMapLocked(State.mapIndex)
 	local mx, my = love.mouse.getPosition()
 	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
@@ -624,10 +630,10 @@ function Screen.mousepressed(x, y, button)
 			if Maps[index] and not isMapLocked(index) then selectMap(index); Sound.play("uiMove"); return true end
 		end
 	end
-	local dx, dy, dw = l.right.x + 20, l.right.y + 79, l.right.w - 40
+	local dx, dy, dw = l.right.x + 20, l.right.y + 104, l.right.w - 40
 	for i, key in ipairs(DIFFICULTIES) do
-		local cy = dy + (i - 1) * 67
-		if x >= dx and x <= dx + dw and y >= cy and y <= cy + 57 then selectDifficulty(key); return true end
+		local cy = dy + (i - 1) * DIFFICULTY_CARD_STEP
+		if x >= dx and x <= dx + dw and y >= cy and y <= cy + DIFFICULTY_CARD_H then selectDifficulty(key); return true end
 	end
 	for _, item in pairs(buttons) do if Button.mousepressed(item, x, y, button) then return true end end
 end
