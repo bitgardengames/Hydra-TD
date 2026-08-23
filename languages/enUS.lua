@@ -8,6 +8,7 @@ return {
 	menu = {
 		play = "Play",
 		endless = "Endless",
+		randomMap = "Random Map",
 		settings = "Settings",
 		quit = "Quit",
 		back = "Back",
@@ -607,6 +608,7 @@ return {
 	},
 
 	map = {
+		random = "Random Map",
 		riverbend = "Riverbend",
 		switchback = "Switchback",
 		highpass = "High Pass",

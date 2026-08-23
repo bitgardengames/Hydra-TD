@@ -27,6 +27,7 @@ local MAX_SPAWN_CATCHUP_PER_FRAME = 12
 local SPAWN_BACKPRESSURE_DELAY = 0.10
 
 local endlessRoster = {"grunt", "runner", "tank", "shield", "regenerator", "warcaller"}
+local DailyModifiers = require("systems.daily_modifiers")
 
 local function seededValue(seed, wave, slot)
 	-- Integer-only hash remains identical across Lua/LuaJIT and save reloads.
@@ -66,6 +67,20 @@ function Waves.generateEndlessWave(waveNumber, seed)
 end
 
 local function getWave(map, waveNumber)
+	if map and map.generation then
+		local wave = Waves.generateEndlessWave(waveNumber, State.buildSeed)
+		local resolved = DailyModifiers.resolve(State.runRules)
+		local count = 0
+		for i, group in ipairs(wave.groups or {}) do
+			group = DailyModifiers.applyToGroup(group, State.runRules)
+			group.hpMult = (group.hpMult or 1) * resolved.health
+			group.spdMult = (group.spdMult or 1) * resolved.speed
+			wave.groups[i] = group
+			count = count + group.count
+		end
+		wave.count = count
+		return wave
+	end
 	if RunModes.isEndless(State) and waveNumber > DifficultyCurve.campaignEnd then
 		return Waves.generateEndlessWave(waveNumber, State.buildSeed)
 	end
