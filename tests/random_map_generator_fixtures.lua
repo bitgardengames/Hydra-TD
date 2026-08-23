@@ -15,6 +15,26 @@ assert(signature(first) ~= signature(Generator.generate("2026-08-24", {mode = "d
 	"different dates should produce different definitions")
 local valid, reason = Generator.validate(first)
 assert(valid, "generated map was invalid: " .. tostring(reason))
+assert(not first.generation.fallback and first.generation.attempt > 0,
+	"random runs must use generated geometry, not an authored-map fallback")
+
+local authored = require("world.map_defs")
+local function samePath(a, b)
+	if #a ~= #b then return false end
+	for i = 1, #a do
+		if a[i][1] ~= b[i][1] or a[i][2] ~= b[i][2] then return false end
+	end
+	return true
+end
+for seed = 1, 250 do
+	local generated = Generator.generate("fixture-" .. seed)
+	local seedValid, seedReason = Generator.validate(generated)
+	assert(seedValid, "seed " .. seed .. " generated an invalid map: " .. tostring(seedReason))
+	assert(not generated.generation.fallback, "seed " .. seed .. " selected from the map pool")
+	for _, map in ipairs(authored) do
+		assert(not samePath(generated.path, map.path), "seed " .. seed .. " copied an authored map")
+	end
+end
 
 math.randomseed(918273)
 local globalBefore = math.random()
