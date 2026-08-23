@@ -26,7 +26,7 @@ local BASE_ACTIVE_ENEMY_CAP = 140
 local MAX_SPAWN_CATCHUP_PER_FRAME = 12
 local SPAWN_BACKPRESSURE_DELAY = 0.10
 
-local endlessRoster = {"grunt", "runner", "tank", "shield", "regenerator", "warcaller"}
+local endlessRoster = {"grunt", "runner", "tank", "bulwark", "regenerator", "warcaller"}
 local DailyModifiers = require("systems.daily_modifiers")
 
 local function seededValue(seed, wave, slot)
