@@ -452,7 +452,7 @@ function ModulePicker.draw()
 					lg.setColor(1, 1, 1, 0.72 * alpha)
 					lg.print(L(row.labelKey), drawX + 18, rowY)
 					local currentText = row.current .. "  "
-					local nextText = "→ " .. row.next
+					local nextText = row.next
 					local rightX = drawX + drawW - 18
 					local nextW = Fonts.get("tooltip"):getWidth(nextText)
 					local currentW = Fonts.get("tooltip"):getWidth(currentText)

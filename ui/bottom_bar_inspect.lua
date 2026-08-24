@@ -353,7 +353,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 					local row = preview.rows[i]
 					rows[#rows + 1] = {
 						label = L(row.labelKey),
-						value = row.current .. "  →",
+						value = row.current,
 						delta = row.next,
 						deltaColor = row.direction == "bad" and colorBad or colorGood,
 					}
