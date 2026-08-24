@@ -52,10 +52,10 @@ local AIM_RECOMPUTE_STALE_FRAMES = 6
 local SPLASH_LEAD_SPEED_THRESHOLD = 20
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_BRANCH_UPGRADES = 4
--- Each entry is the cost of the next level as a multiple of the
--- tower's purchase price. Keeping this curve explicit prevents a base-cost
--- balance pass from being amplified by an opaque exponential formula.
-local UPGRADE_COST_MULTIPLIERS = {0.5625, 0.8125, 1.125, 1.5}
+-- Each entry is the cost of the next level as a multiple of the tower's
+-- purchase price. Every upgrade costs more than placing the base tower, and
+-- later power tiers carry an increasingly large premium.
+local UPGRADE_COST_MULTIPLIERS = {1.25, 1.5, 1.75, 2.0}
 local RETARGET_JITTER = 0.10
 local RETARGET_MIN_FACTOR = 0.5
 local RETARGET_MAX_FACTOR = 1.5

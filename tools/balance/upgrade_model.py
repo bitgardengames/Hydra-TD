@@ -39,6 +39,8 @@ def progression() -> tuple[tuple[float, ...], dict[str, dict[str, float]]]:
     costs = tuple(float(value) for value in re.findall(r"[0-9.]+", raw_costs))
     if len(costs) != 4:
         raise ValueError("expected four runtime upgrade cost multipliers")
+    if costs[0] <= 1 or any(current <= previous for previous, current in zip(costs, costs[1:])):
+        raise ValueError("upgrade costs must exceed the base tower cost and increase each tier")
 
     definitions = (ROOT / "world/tower_defs.lua").read_text()
     towers = {}
