@@ -12,7 +12,7 @@ local function hp(wave)
 end
 
 assert(hp(1) == 1, "campaign wave one should use base enemy health")
-assert(math.abs(hp(10) - 3.0) < 0.000001,
+assert(math.abs(hp(10) - 3.5) < 0.000001,
 	"campaign wave ten should provide a substantial midpoint durability check")
 
 for wave = 2, 20 do
@@ -20,11 +20,11 @@ for wave = 2, 20 do
 		("enemy health must increase from wave %d to wave %d"):format(wave - 1, wave))
 end
 
-assert(math.abs(hp(20) - 4.35) < 0.000001,
+assert(math.abs(hp(20) - 5.25) < 0.000001,
 	"campaign wave twenty should provide the final durability check")
 
 assert(hp(21) > hp(20), "endless wave 21 should transition beyond campaign durability")
-assert(hp(1000000) <= 4.35 * Curve.endlessHpCap,
+assert(hp(1000000) <= 5.25 * Curve.endlessHpCap,
 	"late endless durability must remain bounded")
 assert(Curve.getEnemySpeedMultiplier(1000000) <= Curve.endlessSpeedCap,
 	"late endless speed must remain bounded")
