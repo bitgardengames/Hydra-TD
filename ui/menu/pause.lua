@@ -194,14 +194,6 @@ function Page.draw()
 	local boxX = cx - boxW * 0.5
 	local boxY = startY - paddingY - headerHeight - headerSpacing
 
-	-- Animate only drawing: button coordinates stay in their final positions for input.
-	local panelCenterX = boxX + boxW * 0.5
-	local panelCenterY = boxY + boxH * 0.5
-	lg.push()
-	lg.translate(panelCenterX, panelCenterY - pose.panelRise)
-	lg.scale(pose.panelScale, pose.panelScale)
-	lg.translate(-panelCenterX, -panelCenterY)
-
 	-- Panel
 	lg.setColor(colorOutline)
 	lg.rectangle("fill", boxX - outlineW, boxY - outlineW, boxW + outlineW * 2, boxH + outlineW * 2, outerRadius)
@@ -217,9 +209,8 @@ function Page.draw()
 
 	-- Draw buttons
 	Button.drawList(buttons)
-	lg.pop()
 
-	-- The run context has its own stagger and does not inherit the panel transform.
+	-- The run context keeps its own stagger while the primary controls stay still.
 	drawDifficultyCard(sw, pose)
 
 	-- Dialogs remain screen-anchored rather than inheriting either entrance transform.

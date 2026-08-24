@@ -204,33 +204,15 @@ function Screen.update(dt)
 	if confirmation:isOpen() then
 		confirmation:update(dt)
 	else
-		local reducedMotion = Save.data.settings.cameraMotion == false
-		local mx, my = love.mouse.getPosition()
-		for _, btn in ipairs(buttons) do
-			local pose = Presentation.pose(entranceClock, reducedMotion)
-			if pose.buttonPointerReady then
-				Button.update(btn, mx, my, dt)
-			elseif btn.anim then
-				Button.updateAnimation(btn.anim, false, dt)
-				btn.pointerHovered = false
-				btn.hovered = false
-			end
-		end
+		Button.updateList(buttons, dt)
 	end
 
 	if storeButton then
 		storeButton.x = 24
 		storeButton.y = sh - storeButton.h - 24
 
-		local storePose = Presentation.pose(entranceClock, Save.data.settings.cameraMotion == false)
-		if storePose.buttonPointerReady then
-			local mx, my = love.mouse.getPosition()
-			Button.update(storeButton, mx, my, dt)
-		elseif storeButton.anim then
-			Button.updateAnimation(storeButton.anim, false, dt)
-			storeButton.pointerHovered = false
-			storeButton.hovered = false
-		end
+		local mx, my = love.mouse.getPosition()
+		Button.update(storeButton, mx, my, dt)
 	end
 end
 
@@ -259,27 +241,18 @@ function Screen.draw()
 	local panelY = buttons[1].y - panelPaddingY - idleLift
 
 	-- Panel
-	panelY = panelY + firstPose.panelLift
-	love.graphics.setColor(colorOutline[1], colorOutline[2], colorOutline[3], (colorOutline[4] or 1) * firstPose.panelAlpha)
+	love.graphics.setColor(colorOutline)
 	love.graphics.rectangle("fill", panelX - outlineW, panelY - outlineW, panelW + outlineW * 2, panelH + outlineW * 2, outerRadius)
 
-	love.graphics.setColor(colorBackdrop[1], colorBackdrop[2], colorBackdrop[3], (colorBackdrop[4] or 1) * firstPose.panelAlpha)
+	love.graphics.setColor(colorBackdrop)
 	love.graphics.rectangle("fill", panelX, panelY, panelW, panelH, innerRadius)
 
 	Fonts.set("menu")
 
 	-- Draw buttons
-	for _, btn in ipairs(buttons) do
-		local pose = Presentation.pose(entranceClock, reducedMotion)
-		btn.drawAlpha = pose.buttonAlpha
-		btn.drawOffsetY = pose.buttonLift
-		Button.draw(btn)
-	end
+	Button.drawList(buttons)
 
 	if storeButton then
-		local pose = Presentation.pose(entranceClock, reducedMotion)
-		storeButton.drawAlpha = pose.buttonAlpha
-		storeButton.drawOffsetY = pose.buttonLift
 		Button.draw(storeButton)
 	end
 
@@ -288,28 +261,22 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
-	local reducedMotion = Save.data.settings.cameraMotion == false
 	for _, btn in ipairs(buttons) do
-		if Presentation.pose(entranceClock, reducedMotion).buttonPointerReady
-			and Button.mousepressed(btn, x, y, button) then return true end
+		if Button.mousepressed(btn, x, y, button) then return true end
 	end
 
-	if storeButton and Presentation.pose(entranceClock, reducedMotion).buttonPointerReady
-		and Button.mousepressed(storeButton, x, y, button) then
+	if storeButton and Button.mousepressed(storeButton, x, y, button) then
 		return true
 	end
 end
 
 function Screen.mousereleased(x, y, button)
 	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
-	local reducedMotion = Save.data.settings.cameraMotion == false
 	for _, btn in ipairs(buttons) do
-		if Presentation.pose(entranceClock, reducedMotion).buttonPointerReady
-			and Button.mousereleased(btn, x, y, button) then return true end
+		if Button.mousereleased(btn, x, y, button) then return true end
 	end
 
-	if storeButton and Presentation.pose(entranceClock, reducedMotion).buttonPointerReady
-		and Button.mousereleased(storeButton, x, y, button) then
+	if storeButton and Button.mousereleased(storeButton, x, y, button) then
 		return true
 	end
 end
