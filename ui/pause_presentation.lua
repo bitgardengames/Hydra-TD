@@ -13,13 +13,10 @@ end
 function Presentation.pose(progress, reducedMotion)
 	if reducedMotion then progress = 1 end
 
-	local panelProgress = smoothstep(progress)
 	-- Let the context arrive just behind the primary pause controls.
 	local contextProgress = smoothstep((clamp01(progress) - 0.15) / 0.85)
 
 	return {
-		panelScale = 0.96 + 0.04 * panelProgress,
-		panelRise = 16 * (1 - panelProgress),
 		contextAlpha = contextProgress,
 		contextSlide = 12 * (1 - contextProgress),
 	}
