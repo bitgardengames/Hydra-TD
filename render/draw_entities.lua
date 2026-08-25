@@ -1206,6 +1206,21 @@ local function drawTowers()
 	end
 end
 
+local function drawSuppressionProjectiles()
+	local projectiles = Towers.suppressionProjectiles
+	local clock = State.abilityClock or 0
+	for i = 1, #projectiles do
+		local p = projectiles[i]
+		local pulse = 1 + 0.16 * sin(clock * 12 + i)
+		lg.setColor(0.42, 0.04, 0.12, 0.28)
+		lg.circle("fill", p.x, p.y, 10 * pulse)
+		lg.setColor(1, 0.12, 0.3, 0.95)
+		lg.circle("fill", p.x, p.y, 5 * pulse)
+		lg.setColor(1, 0.72, 0.78, 0.9)
+		lg.circle("fill", p.x - 1.5, p.y - 1.5, 1.8 * pulse)
+	end
+end
+
 return {
 	drawEnemy = drawEnemy,
 	newEnemyPortrait = newEnemyPortrait,
@@ -1218,4 +1233,5 @@ return {
 	drawTowerVisual = drawTowerVisual,
 	drawTowerFX = drawTowerFX,
 	drawTowers = drawTowers,
+	drawSuppressionProjectiles = drawSuppressionProjectiles,
 }

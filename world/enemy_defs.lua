@@ -121,7 +121,13 @@ return {
 		boss = true,
 		mechanicWeight = 1.65,
 		mechanicPackage = "suppression_aura",
-		suppression = { period = 20.0, duration = 5.0, initialDelay = 10.0 },
+		suppression = {
+			period = 20.0,
+			duration = 5.0,
+			initialDelay = 10.0,
+			range = 240,
+			projectileSpeed = 360,
+		},
 		traits = {"boss_suppression"},
 	},
 

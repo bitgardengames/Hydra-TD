@@ -21,6 +21,7 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 
 local towers = {}
 local towersByCell = {}
+local suppressionProjectiles = {}
 
 local pi = math.pi
 local TWO_PI = pi * 2
@@ -31,6 +32,7 @@ local atan2 = math.atan2
 local min = math.min
 local max = math.max
 local floor = math.floor
+local sqrt = math.sqrt
 local format = string.format
 
 local colorGood = Theme.ui.good
@@ -617,11 +619,67 @@ local function updateTowerVisuals(t, dt)
 	end
 end
 
+local function isTowerActive(t)
+	return t and towersByCell[t.gx] and towersByCell[t.gx][t.gy] == t
+end
+
+local function applySuppression(target, duration)
+	if not isTowerActive(target) then return end
+	target.suppressedTimer = duration
+	target.target = nil
+	target.windUp = 0
+end
+
+local function updateSuppressionProjectiles(dt)
+	for i = #suppressionProjectiles, 1, -1 do
+		local p = suppressionProjectiles[i]
+		local target = p.target
+		if not isTowerActive(target) then
+			swapRemove(suppressionProjectiles, i)
+		else
+			local tx, ty = target.x, target.renderY or target.y
+			local dx, dy = tx - p.x, ty - p.y
+			local distance2 = dx * dx + dy * dy
+			local step = p.speed * dt
+			if distance2 <= step * step then
+				applySuppression(target, p.duration)
+				swapRemove(suppressionProjectiles, i)
+			else
+				local scale = step / sqrt(distance2)
+				p.x = p.x + dx * scale
+				p.y = p.y + dy * scale
+			end
+		end
+	end
+end
+
+local function findSuppressionTarget(boss, suppression)
+	local range2 = suppression.range * suppression.range
+	local target, targetDistance2
+	for i = 1, #towers do
+		local candidate = towers[i]
+		local dx, dy = candidate.x - boss.x, candidate.y - boss.y
+		local distance2 = dx * dx + dy * dy
+		if distance2 <= range2 and (candidate.suppressedTimer or 0) <= 0 then
+			-- Grid coordinates provide an explicit, stable tie-break independent of
+			-- tower array order (which can change when a tower is sold).
+			local winsTie = target and distance2 == targetDistance2
+				and (candidate.gy < target.gy
+					or (candidate.gy == target.gy and candidate.gx < target.gx))
+			if not target or distance2 < targetDistance2 or winsTie then
+				target, targetDistance2 = candidate, distance2
+			end
+		end
+	end
+	return target
+end
+
 local function updateSuppression(dt)
 	for i = 1, #towers do
 		local t = towers[i]
 		t.suppressedTimer = max(0, (t.suppressedTimer or 0) - dt)
 	end
+	updateSuppressionProjectiles(dt)
 
 	local boss = State.activeBoss
 	local suppression = boss and boss.suppression
@@ -630,21 +688,15 @@ local function updateSuppression(dt)
 	boss.suppressionTimer = (boss.suppressionTimer or suppression.period) - dt
 	if boss.suppressionTimer > 0 or #towers == 0 then return end
 
-	-- Rotate deterministically through the player's build. Prefer a tower that is
-	-- currently operational so every cast visibly disables exactly one tower.
-	local start = ((boss.suppressionCasts or 0) % #towers) + 1
-	local target
-	for offset = 0, #towers - 1 do
-		local candidate = towers[((start + offset - 1) % #towers) + 1]
-		if (candidate.suppressedTimer or 0) <= 0 then
-			target = candidate
-			break
-		end
-	end
-	target = target or towers[start]
-	target.suppressedTimer = suppression.duration
-	target.target = nil
-	target.windUp = 0
+	local target = findSuppressionTarget(boss, suppression)
+	if not target then return end
+	suppressionProjectiles[#suppressionProjectiles + 1] = {
+		x = boss.x,
+		y = boss.y,
+		target = target,
+		duration = suppression.duration,
+		speed = suppression.projectileSpeed,
+	}
 	boss.suppressionCasts = (boss.suppressionCasts or 0) + 1
 	boss.suppressionTimer = suppression.period
 end
@@ -833,6 +885,10 @@ local function clear()
 	for gx in pairs(towersByCell) do
 		towersByCell[gx] = nil
 	end
+
+	for i = #suppressionProjectiles, 1, -1 do
+		suppressionProjectiles[i] = nil
+	end
 end
 
 return {
@@ -840,6 +896,7 @@ return {
 	TowerDefs = TowerDefs,
 	PLACEMENT_FAILURE = PLACEMENT_FAILURE,
 	towersByCell = towersByCell,
+	suppressionProjectiles = suppressionProjectiles,
 	addTower = addTower,
 	getUpgradeCost = getUpgradeCost,
 	upgradeTower = upgradeTower,
