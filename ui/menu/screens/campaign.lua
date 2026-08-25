@@ -62,12 +62,12 @@ local unlockSequence = UnlockPresentation.new()
 local SPACE = 12
 local PANEL_PAD = 24
 local SECTION_INSET = 32
-local LIST_ROW_H = 81
+local LIST_ROW_H = 73
 local LIST_ROW_STEP = LIST_ROW_H + SPACE
 local LIST_PREVIEW_W = 96
 local LIST_PREVIEW_H = 60
 local MAIN_PREVIEW_HEIGHT_RATIO = 0.70
-local DIFFICULTY_CARD_H = 98
+local DIFFICULTY_CARD_H = 78
 local DIFFICULTY_CARD_STEP = DIFFICULTY_CARD_H + SPACE
 local ABILITY_SLOT_COUNT = 2
 local ABILITY_CARD_GAP = 18
@@ -80,7 +80,7 @@ local CAMPAIGN_CARD_MAX_W = 1268
 local CAMPAIGN_CARD_MAX_H = 676
 local BUTTON_BOTTOM_GAP = 24
 local BACK_BUTTON_H = 54
-local PLAY_BUTTON_H = 108
+local PLAY_BUTTON_H = 78
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
