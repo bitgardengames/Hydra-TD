@@ -15,8 +15,15 @@ assert(not campaignSource:find('lg.rectangle("line", rowX, highlightY', 1, true)
 	"map selection rows must not draw an animated outline")
 assert(campaignSource:find("local CAMPAIGN_CARD_MAX_H = 680", 1, true),
 	"campaign card must use the compact height")
-assert(campaignSource:find("local BUTTON_BOTTOM_GAP = 31", 1, true),
-	"campaign actions must share a consistent bottom gap")
+assert(campaignSource:find("local SPACE = 12", 1, true)
+	and campaignSource:find("local PANEL_PAD = 24", 1, true)
+	and campaignSource:find("local SECTION_INSET = 32", 1, true),
+	"campaign columns must derive their geometry from shared spacing tokens")
+assert(campaignSource:find("local LIST_ROW_STEP = LIST_ROW_H + SPACE", 1, true)
+	and campaignSource:find("local DIFFICULTY_CARD_STEP = DIFFICULTY_CARD_H + SPACE", 1, true),
+	"campaign lists and difficulty cards must use the shared gap")
+assert(campaignSource:find("local BUTTON_BOTTOM_GAP = 24", 1, true),
+	"campaign actions must align to the shared panel padding")
 
 local buttonFile = assert(io.open("ui/button.lua", "r"))
 local buttonSource = buttonFile:read("*a")
