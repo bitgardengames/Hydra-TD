@@ -28,7 +28,6 @@ local formatInt = Util.formatInt
 local MONEY_X = 12
 local LIVES_X = 90
 local CONTROL_PAD = 8
-local CONTROL_GAP = 8
 
 -- Text caches (no per-frame string rebuilding)
 local hudCache = {
@@ -158,16 +157,9 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 	local speedKey = Hotkeys.getDisplay("fastForward")
 	local speedLabel = speedKey and (speedCache.text .. " [" .. speedKey .. "]") or speedCache.text
 
-	local startLabel = L("hud.startWaveButton")
-	local startKey = Hotkeys.getDisplay("skipPrep")
-	startLabel = startKey and (startLabel .. " [" .. startKey .. "]") or startLabel
-
-	-- These controls remain available through their hotkeys, but are presented as
-	-- simple status/action labels rather than clickable HUD buttons.
+	-- Keep the bottom bar focused on persistent run status. Starting a wave remains
+	-- available through its hotkey and the wave preview control.
 	local right = infoX + infoW - CONTROL_PAD
-	lg.setColor(ct1, ct2, ct3, State.inPrep and 1 or 0.45)
-	Text.printShadow(startLabel, right - font:getWidth(startLabel), y)
-	right = right - font:getWidth(startLabel) - CONTROL_GAP
 	lg.setColor(ct1, ct2, ct3, 1)
 	Text.printShadow(speedLabel, right - font:getWidth(speedLabel), y)
 end
