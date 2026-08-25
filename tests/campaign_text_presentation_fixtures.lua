@@ -13,8 +13,8 @@ assert(campaignSource:find("lg.setColor(Theme.ui.text)\n\t\tText.printShadow(ind
 	"selected and unselected map names must use the same text color")
 assert(not campaignSource:find('lg.rectangle("line", rowX, highlightY', 1, true),
 	"map selection rows must not draw an animated outline")
-assert(campaignSource:find("local CAMPAIGN_CARD_MAX_H = 680", 1, true),
-	"campaign card must use the compact height")
+assert(campaignSource:find("local CAMPAIGN_CARD_MAX_H = 676", 1, true),
+	"campaign card must match the reference layout height")
 assert(campaignSource:find("local SPACE = 12", 1, true)
 	and campaignSource:find("local PANEL_PAD = 24", 1, true)
 	and campaignSource:find("local SECTION_INSET = 32", 1, true),
@@ -24,6 +24,9 @@ assert(campaignSource:find("local LIST_ROW_STEP = LIST_ROW_H + SPACE", 1, true)
 	"campaign lists and difficulty cards must use the shared gap")
 assert(campaignSource:find("local BUTTON_BOTTOM_GAP = 24", 1, true),
 	"campaign actions must align to the shared panel padding")
+assert(campaignSource:find("local BACK_BUTTON_H = 54", 1, true)
+	and campaignSource:find("local PLAY_BUTTON_H = 108", 1, true),
+	"campaign action geometry must use shared height tokens")
 
 local buttonFile = assert(io.open("ui/button.lua", "r"))
 local buttonSource = buttonFile:read("*a")

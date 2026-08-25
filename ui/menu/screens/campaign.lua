@@ -77,8 +77,10 @@ local ABILITY_PICKER_PAD = 20
 local ABILITY_PICKER_ITEM_H = 72
 local ABILITY_PICKER_GAP = 10
 local CAMPAIGN_CARD_MAX_W = 1268
-local CAMPAIGN_CARD_MAX_H = 680
+local CAMPAIGN_CARD_MAX_H = 676
 local BUTTON_BOTTOM_GAP = 24
+local BACK_BUTTON_H = 54
+local PLAY_BUTTON_H = 108
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -573,7 +575,7 @@ local function difficultyGeometry(l)
 	local w = l.right.w - SECTION_INSET * 2
 	local cardY = titleY + 82
 	local playY = min(cardY + DIFFICULTY_CARD_STEP * #DIFFICULTIES + SPACE * 2,
-		l.right.y + l.right.h - BUTTON_BOTTOM_GAP - 108)
+		l.right.y + l.right.h - BUTTON_BOTTOM_GAP - PLAY_BUTTON_H)
 	return x, titleY, w, cardY, playY
 end
 
@@ -600,7 +602,7 @@ local function drawRight(l, map)
 	end
 
 	local play = buttons.play
-	play.x, play.y, play.w, play.h = x, playY, w, 108
+	play.x, play.y, play.w, play.h = x, playY, w, PLAY_BUTTON_H
 	play.label = L("campaign.playMap") .. "\n" .. L(map.nameKey) .. "  •  " .. L("difficulty." .. selected)
 	play.enabled = not isMapLocked(State.mapIndex)
 	Fonts.set("ui")
@@ -610,7 +612,7 @@ end
 function Screen.load()
 	buttons = {
 		play = {id = "play", label = L("campaign.playMap"), onClick = playMap},
-		back = {id = "back", label = L("menu.back"), w = 140, h = 54, onClick = goBack},
+		back = {id = "back", label = L("menu.back"), w = 140, h = BACK_BUTTON_H, onClick = goBack},
 	}
 end
 
@@ -629,11 +631,12 @@ function Screen.update(dt)
 			scrollbarDragging = false
 		end
 	end
-	buttons.back.x, buttons.back.y = l.left.x + PANEL_PAD, l.left.y + l.left.h - BUTTON_BOTTOM_GAP - 54
+	buttons.back.x, buttons.back.y = l.left.x + PANEL_PAD,
+		l.left.y + l.left.h - BUTTON_BOTTOM_GAP - BACK_BUTTON_H
 	buttons.back.w = l.left.w - PANEL_PAD * 2
 	local playX, _titleY, playW, _cardY, playY = difficultyGeometry(l)
 	buttons.play.x, buttons.play.y, buttons.play.w = playX, playY, playW
-	buttons.play.h = 108
+	buttons.play.h = PLAY_BUTTON_H
 	buttons.play.enabled = not isMapLocked(State.mapIndex)
 	local mx, my = love.mouse.getPosition()
 	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
@@ -692,7 +695,8 @@ function Screen.draw()
 	drawRight(l, map)
 	drawUnlockRewards(l, unlockEvent, unlockPose)
 
-	buttons.back.x, buttons.back.y = l.left.x + PANEL_PAD, l.left.y + l.left.h - BUTTON_BOTTOM_GAP - 54
+	buttons.back.x, buttons.back.y = l.left.x + PANEL_PAD,
+		l.left.y + l.left.h - BUTTON_BOTTOM_GAP - BACK_BUTTON_H
 	buttons.back.w = l.left.w - PANEL_PAD * 2
 	Fonts.set("ui")
 	Button.draw(buttons.back)
