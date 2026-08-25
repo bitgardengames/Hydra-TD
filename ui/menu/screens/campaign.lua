@@ -273,7 +273,7 @@ local function drawHeader(l, pose, unlockPose)
 		lg.circle("line", x, y, 15)
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text)
-		lg.printf(locked and "•" or tostring(i), x - 12, y - 9, 24, "center")
+		Text.printfShadow(locked and "•" or tostring(i), x - 12, y - 9, 24, "center")
 	end
 	if unlockPose and unlockPose.stamp > 0 then
 		local x = startX + (unlockPose.targetIndex - 1) * step
@@ -288,7 +288,7 @@ local function drawHeader(l, pose, unlockPose)
 	lg.circle("line", markerX, y, 19)
 	Fonts.set("ui")
 	lg.setColor(Theme.outline.color)
-	lg.printf(tostring(State.mapIndex), markerX - 12, y - 9, 24, "center")
+	Text.printfShadow(tostring(State.mapIndex), markerX - 12, y - 9, 24, "center")
 	lg.setLineWidth(1)
 
 	local total = 0
@@ -304,7 +304,7 @@ local function drawHeader(l, pose, unlockPose)
 	Medals.draw(l.sw - l.margin - badgeW + 10, 31, 3, 9, 5)
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
-	lg.printf(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 68, 26, 62, "center")
+	Text.printfShadow(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 68, 26, 62, "center")
 end
 
 local function drawMapList(l, pose, unlockPose)
@@ -333,10 +333,10 @@ local function drawMapList(l, pose, unlockPose)
 		local textX = rowX + LIST_PREVIEW_W + 12
 		Fonts.set("ui")
 		lg.setColor(selected and Theme.outline.color or Theme.ui.text)
-		lg.print(index .. "  " .. L(map.nameKey), textX, y + 7)
+		Text.printShadow(index .. "  " .. L(map.nameKey), textX, y + 7)
 		if locked then
 			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.55)
-			lg.print(L("campaign.locked"), textX, y + 31)
+			Text.printShadow(L("campaign.locked"), textX, y + 31)
 		else
 			local stats = statsFor(map.id)
 			Medals.draw(textX, y + 31, stats and Medals.getCount(stats.completedDifficulty) or 0, 7, 6, pulseTime)
@@ -402,18 +402,18 @@ local function drawAbilityCard(x, y, w, h, slot, abilityId, unlocked, hovered)
 			lg.rectangle("fill", x + 12, y + 10, 34, 34, 5)
 			Fonts.set("ui")
 			lg.setColor(Theme.ui.text)
-			lg.printf(binding, x + 12, y + 17, 34, "center")
+			Text.printfShadow(binding, x + 12, y + 17, 34, "center")
 		end
 		AbilityIcons.draw(abilityId, x + w * 0.5, y + 63, hovered and 1.34 or 1.25, 1)
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text)
-		lg.printf(L(AbilityDefs[abilityId].nameKey), x + 8, y + h - 34, w - 16, "center")
+		Text.printfShadow(L(AbilityDefs[abilityId].nameKey), x + 8, y + h - 34, w - 16, "center")
 	else
 		Fonts.set("title")
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-		lg.printf(unlocked and "+" or "-", x, y + 30, w, "center")
+		Text.printfShadow(unlocked and "+" or "-", x, y + 30, w, "center")
 		Fonts.set("ui")
-		lg.printf(L(unlocked and "campaign.selectAbility" or "campaign.locked"),
+		Text.printfShadow(L(unlocked and "campaign.selectAbility" or "campaign.locked"),
 			x + 8, y + h - 39, w - 16, "center")
 	end
 end
@@ -452,10 +452,10 @@ local function drawCenter(l, map, mapIndex, entry)
 	local x, y, w = l.center.x + pad, l.center.y + 30, l.center.w - pad * 2
 	Fonts.set("title")
 	lg.setColor(Theme.ui.text)
-	lg.print(L(map.nameKey), x, y)
+	Text.printShadow(L(map.nameKey), x, y)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75)
-	lg.print(L("campaign.mapOf", mapIndex, #Maps), x, y + 43)
+	Text.printShadow(L("campaign.mapOf", mapIndex, #Maps), x, y + 43)
 
 	local stats = statsFor(map.id)
 	local earned = stats and Medals.getCount(stats.completedDifficulty) or 0
@@ -463,7 +463,7 @@ local function drawCenter(l, map, mapIndex, entry)
 	Medals.draw(x + w - clusterW, y + 5, earned, 13, 9, pulseTime)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
-	lg.printf(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
+	Text.printfShadow(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
 	local previewY = y + 77
 	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
@@ -480,7 +480,7 @@ local function drawCenter(l, map, mapIndex, entry)
 	local abilitiesY = previewY + previewH + 21
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
-	lg.print(L("campaign.abilityLoadout"), x, abilitiesY)
+	Text.printShadow(L("campaign.abilityLoadout"), x, abilitiesY)
 	local cardY, cardGap = abilitiesY + 36, 14
 	local cardW = (w - cardGap * 2) / 3
 	local equipped = CampaignUnlocks.getEquippedAbilities()
@@ -500,10 +500,10 @@ local function drawRight(l, map)
 	local x, y, w = l.right.x + pad + 7, l.right.y + 53, l.right.w - pad * 2 - 14
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
-	lg.print(L("settings.difficulty"), x, y)
+	Text.printShadow(L("settings.difficulty"), x, y)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
-	lg.print(L("campaign.difficultyDescription"), x, y + 31)
+	Text.printShadow(L("campaign.difficultyDescription"), x, y + 31)
 	local selected = Save.data.settings.difficulty or "normal"
 	local cardY = y + 74
 	for i, key in ipairs(DIFFICULTIES) do
@@ -514,9 +514,9 @@ local function drawRight(l, map)
 		lg.rectangle("fill", x, cy, w, DIFFICULTY_CARD_H, 10)
 		Fonts.set("ui")
 		lg.setColor(DIFFICULTY_COLORS[key])
-		lg.print(L("difficulty." .. key), textX, cy + 16)
+		Text.printShadow(L("difficulty." .. key), textX, cy + 16)
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-		lg.print(L(DIFFICULTY_HINTS[key]), textX, cy + 42)
+		Text.printShadow(L(DIFFICULTY_HINTS[key]), textX, cy + 42)
 	end
 
 	local play = buttons.play

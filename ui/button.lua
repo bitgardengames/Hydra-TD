@@ -153,7 +153,15 @@ function Button.draw(btn)
 	lg.rectangle("fill", x, fy, w, h, innerRadius)
 
 	-- Label
-	local ty = fy + (h - lg.getFont():getHeight()) * 0.5
+	local font = lg.getFont()
+	local lineCount = 1
+	if type(btn.label) == "string" then
+		local _, breaks = btn.label:gsub("\n", "")
+		lineCount = breaks + 1
+	end
+	local labelHeight = font:getHeight()
+		+ (lineCount - 1) * font:getHeight() * font:getLineHeight()
+	local ty = fy + (h - labelHeight) * 0.5
 
 	if btn.enabled == false then
 		lg.setColor(cdR, cdG, cdB, drawAlpha)
