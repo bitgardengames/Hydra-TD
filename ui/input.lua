@@ -301,8 +301,6 @@ local function mousereleased(x, y, button)
 end
 
 local gameplayActions = {
-	abilitySlot1 = function() activateAbilitySlot(1) end,
-	abilitySlot2 = function() activateAbilitySlot(2) end,
 	fastForward = function()
 		GameSpeed.cycle()
 	end,
