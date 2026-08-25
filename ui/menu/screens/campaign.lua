@@ -59,7 +59,7 @@ local unlockSequence = UnlockPresentation.new()
 local LIST_ROW_H = 81
 local LIST_PREVIEW_W = 96
 local LIST_PREVIEW_H = 60
-local MAIN_PREVIEW_HEIGHT_RATIO = 0.43
+local MAIN_PREVIEW_HEIGHT_RATIO = 0.70
 local DIFFICULTY_CARD_H = 80
 local DIFFICULTY_CARD_STEP = 98
 local ABILITY_SLOT_COUNT = 2
@@ -558,19 +558,6 @@ local function drawCenter(l, map, mapIndex, entry)
 	lg.rectangle("line", previewX, previewY, previewW, previewH, 7)
 	lg.setLineWidth(1)
 
-	local abilitiesY = previewY + previewH + 21
-	Fonts.set("menu")
-	lg.setColor(Theme.ui.text)
-	Text.printShadow(L("campaign.abilityLoadout"), x, abilitiesY)
-	local cardY = abilitiesY + 36
-	local cardsW = ABILITY_CARD_SIZE * ABILITY_SLOT_COUNT + ABILITY_CARD_GAP * (ABILITY_SLOT_COUNT - 1)
-	local cardsX = x + (w - cardsW) * 0.5
-	local equipped = CampaignUnlocks.getEquippedAbilities()
-	for slot = 1, ABILITY_SLOT_COUNT do
-		drawAbilityCard(cardsX + (slot - 1) * (ABILITY_CARD_SIZE + ABILITY_CARD_GAP), cardY,
-			ABILITY_CARD_SIZE, ABILITY_CARD_SIZE, slot,
-			equipped[slot], CampaignUnlocks.isAbilitySlotUnlocked(slot), hoveredAbilitySlot == slot)
-	end
 end
 
 local function drawRight(l, map)
@@ -641,27 +628,9 @@ function Screen.update(dt)
 	local map = Maps[State.mapIndex]
 	local entry = MapPreviewCache.get(map.id)
 	local hoveredReward = hoveredMapReward(l, map, entry, mx, my)
-	local equipped = CampaignUnlocks.getEquippedAbilities()
 	hoveredAbilitySlot = nil
 	hoveredAbilityChoice = nil
-	if selectedAbilitySlot then
-		local _, _, _, _, abilities = abilityPickerGeometry(l)
-		for index = 1, #abilities do
-			local x, y, w, h = abilityChoiceGeometry(l, index)
-			if mx >= x and mx <= x + w and my >= y and my <= y + h then
-				hoveredAbilityChoice = index
-				break
-			end
-		end
-	else
-		for slot = 1, ABILITY_SLOT_COUNT do
-			local x, y, w, h = abilityCardGeometry(l, entry, slot)
-			if x and mx >= x and mx <= x + w and my >= y and my <= y + h then
-				hoveredAbilitySlot = slot
-				break
-			end
-		end
-	end
+	selectedAbilitySlot = nil
 	local stats = statsFor(map.id)
 	local count = stats and Medals.getCount(stats.completedDifficulty) or 0
 	hoveredMedal = nil
@@ -676,13 +645,8 @@ function Screen.update(dt)
 				and my >= lcenter.y + 23 and my <= lcenter.y + 49 then hoveredMedal = tier end
 		end
 	end
-	if selectedAbilitySlot and hoveredAbilityChoice then
-		local abilities = availableAbilities()
-		AbilityTooltip.show(abilities[hoveredAbilityChoice])
-	elseif hoveredReward and hoveredReward.type == "ability" then
+	if hoveredReward and hoveredReward.type == "ability" then
 		AbilityTooltip.show(hoveredReward.id)
-	elseif hoveredAbilitySlot then
-		showAbilitySlotTooltip(hoveredAbilitySlot, equipped[hoveredAbilitySlot])
 	elseif hoveredMedal then
 		local key = DIFFICULTIES[hoveredMedal]
 		local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[key]
@@ -719,7 +683,6 @@ function Screen.draw()
 	buttons.back.w = 164
 	Fonts.set("ui")
 	Button.draw(buttons.back)
-	drawAbilityPicker(l)
 end
 
 function Screen.keypressed(key)
@@ -762,20 +725,6 @@ function Screen.mousepressed(x, y, button)
 			Sound.play("uiBack")
 		end
 		return true
-	end
-	local map = Maps[State.mapIndex]
-	local entry = MapPreviewCache.get(map.id)
-	for slot = 1, ABILITY_SLOT_COUNT do
-		local ax, ay, aw, ah = abilityCardGeometry(l, entry, slot)
-		if ax and x >= ax and x <= ax + aw and y >= ay and y <= ay + ah then
-			if CampaignUnlocks.isAbilitySlotUnlocked(slot) then
-				selectedAbilitySlot = slot
-				Sound.play("uiMove")
-			else
-				Sound.play("uiError")
-			end
-			return true
-		end
 	end
 	local trackX, trackY, trackW, trackH, thumbY, thumbH = scrollbarGeometry(l)
 	if trackX and x >= trackX - 4 and x <= trackX + trackW + 4

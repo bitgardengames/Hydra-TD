@@ -4,7 +4,6 @@ local Theme = require("core.theme")
 local Hud = require("ui.bottom_bar_hud")
 local Shop = require("ui.bottom_bar_shop")
 local Inspect = require("ui.bottom_bar_inspect")
-local AbilityBar = require("ui.ability_bar")
 
 local lg = love.graphics
 local getTime = love.timer.getTime
@@ -45,7 +44,6 @@ function BottomBar.update(dt)
 	frameDt = dt
 	local mx, my = love.mouse.getPosition()
 	Hud.update(dt)
-	AbilityBar.update(dt, mx, my)
 end
 
 function BottomBar.draw()
@@ -92,7 +90,6 @@ function BottomBar.draw()
 	local inspectW = INSPECT_W + PAD * 2
 
 	Inspect.draw(outerX + outerW + PANEL_GAP, outerY, inspectW, outerH, dt, textH, now, mx, my)
-	AbilityBar.draw()
 end
 
 function BottomBar.getShopButtons()
@@ -104,13 +101,13 @@ function BottomBar.getInspectButtons()
 end
 
 function BottomBar.getAbilityButtons()
-	return AbilityBar.getButtons()
+	return {}
 end
 
 function BottomBar.resize(w, h)
 	-- Child panels derive positions from the current dimensions every draw. This
 	-- hook makes that contract explicit and lets cached children opt in later.
-	for _, panel in ipairs({Hud, Shop, Inspect, AbilityBar}) do
+	for _, panel in ipairs({Hud, Shop, Inspect}) do
 		if panel.resize then panel.resize(w, h) end
 	end
 end
