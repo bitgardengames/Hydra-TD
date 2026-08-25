@@ -62,6 +62,7 @@ local DIFFICULTY_CARD_H = 80
 local DIFFICULTY_CARD_STEP = 98
 local ABILITY_SLOT_COUNT = 2
 local ABILITY_CARD_GAP = 18
+local ABILITY_CARD_SIZE = 140
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -445,8 +446,10 @@ local function abilityCardGeometry(l, entry, slot)
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local abilitiesY = previewY + entry.canvas:getHeight() * scale + 21
 	local cardY = abilitiesY + 36
-	local cardW = (w - ABILITY_CARD_GAP * (ABILITY_SLOT_COUNT - 1)) / ABILITY_SLOT_COUNT
-	return x + (slot - 1) * (cardW + ABILITY_CARD_GAP), cardY, cardW, 155
+	local cardsW = ABILITY_CARD_SIZE * ABILITY_SLOT_COUNT + ABILITY_CARD_GAP * (ABILITY_SLOT_COUNT - 1)
+	local cardsX = x + (w - cardsW) * 0.5
+	return cardsX + (slot - 1) * (ABILITY_CARD_SIZE + ABILITY_CARD_GAP), cardY,
+		ABILITY_CARD_SIZE, ABILITY_CARD_SIZE
 end
 
 local function drawCenter(l, map, mapIndex, entry)
@@ -484,17 +487,14 @@ local function drawCenter(l, map, mapIndex, entry)
 	lg.setColor(Theme.ui.text)
 	Text.printShadow(L("campaign.abilityLoadout"), x, abilitiesY)
 	local cardY = abilitiesY + 36
-	local cardW = (w - ABILITY_CARD_GAP * (ABILITY_SLOT_COUNT - 1)) / ABILITY_SLOT_COUNT
+	local cardsW = ABILITY_CARD_SIZE * ABILITY_SLOT_COUNT + ABILITY_CARD_GAP * (ABILITY_SLOT_COUNT - 1)
+	local cardsX = x + (w - cardsW) * 0.5
 	local equipped = CampaignUnlocks.getEquippedAbilities()
 	for slot = 1, ABILITY_SLOT_COUNT do
-		drawAbilityCard(x + (slot - 1) * (cardW + ABILITY_CARD_GAP), cardY, cardW, 155, slot,
+		drawAbilityCard(cardsX + (slot - 1) * (ABILITY_CARD_SIZE + ABILITY_CARD_GAP), cardY,
+			ABILITY_CARD_SIZE, ABILITY_CARD_SIZE, slot,
 			equipped[slot], CampaignUnlocks.isAbilitySlotUnlocked(slot), hoveredAbilitySlot == slot)
 	end
-
-	local edit = buttons.editLoadout
-	edit.x, edit.y, edit.w, edit.h = x + w * 0.25, l.center.y + l.center.h - 68, w * 0.5, 46
-	Fonts.set("ui")
-	Button.draw(edit)
 end
 
 local function drawRight(l, map)
@@ -533,7 +533,6 @@ function Screen.load()
 	buttons = {
 		play = {id = "play", label = L("campaign.playMap"), onClick = playMap},
 		back = {id = "back", label = L("menu.back"), w = 140, h = 42, onClick = goBack},
-		editLoadout = {id = "editLoadout", label = L("campaign.editLoadout"), enabled = false},
 	}
 end
 
