@@ -47,6 +47,8 @@ local buttons = {}
 local pulseTime = 0
 local hoveredMedal
 local hoveredAbilitySlot
+local hoveredAbilityChoice
+local selectedAbilitySlot
 local abilitySlotTooltips = {}
 local listOffset = 0
 local scrollbarDragging = false
@@ -63,6 +65,10 @@ local DIFFICULTY_CARD_STEP = 98
 local ABILITY_SLOT_COUNT = 2
 local ABILITY_CARD_GAP = 18
 local ABILITY_CARD_SIZE = 140
+local ABILITY_PICKER_W = 520
+local ABILITY_PICKER_PAD = 20
+local ABILITY_PICKER_ITEM_H = 72
+local ABILITY_PICKER_GAP = 10
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -452,6 +458,83 @@ local function abilityCardGeometry(l, entry, slot)
 		ABILITY_CARD_SIZE, ABILITY_CARD_SIZE
 end
 
+local function availableAbilities()
+	local abilities = {}
+	for _, abilityId in ipairs(AbilityDefs.order) do
+		if CampaignUnlocks.isAbilityUnlocked(abilityId) then abilities[#abilities + 1] = abilityId end
+	end
+	return abilities
+end
+
+local function abilityPickerGeometry(l)
+	local abilities = availableAbilities()
+	local rows = math.max(1, math.ceil(#abilities / 2))
+	local h = 58 + rows * ABILITY_PICKER_ITEM_H + math.max(0, rows - 1) * ABILITY_PICKER_GAP + ABILITY_PICKER_PAD
+	return floor(l.center.x + (l.center.w - ABILITY_PICKER_W) * 0.5),
+		floor(l.center.y + (l.center.h - h) * 0.5), ABILITY_PICKER_W, h, abilities
+end
+
+local function abilityChoiceGeometry(l, index)
+	local x, y, w = abilityPickerGeometry(l)
+	local itemW = (w - ABILITY_PICKER_PAD * 2 - ABILITY_PICKER_GAP) * 0.5
+	local column = (index - 1) % 2
+	local row = floor((index - 1) / 2)
+	return x + ABILITY_PICKER_PAD + column * (itemW + ABILITY_PICKER_GAP),
+		y + 58 + row * (ABILITY_PICKER_ITEM_H + ABILITY_PICKER_GAP), itemW, ABILITY_PICKER_ITEM_H
+end
+
+local function equipAbility(abilityId)
+	if not selectedAbilitySlot or not CampaignUnlocks.isAbilityUnlocked(abilityId) then return end
+	local equipped = CampaignUnlocks.getEquippedAbilities()
+	for slot, equippedId in ipairs(equipped) do
+		if equippedId == abilityId and slot ~= selectedAbilitySlot then
+			Sound.play("uiError")
+			return
+		end
+	end
+	equipped[selectedAbilitySlot] = abilityId
+	Save.setEquippedAbilities(equipped)
+	selectedAbilitySlot = nil
+	hoveredAbilityChoice = nil
+	Sound.play("uiConfirm")
+end
+
+local function drawAbilityPicker(l)
+	if not selectedAbilitySlot then return end
+	local x, y, w, h, abilities = abilityPickerGeometry(l)
+	lg.setColor(Theme.ui.screenDim)
+	lg.rectangle("fill", l.center.x + 2, l.center.y + 2, l.center.w - 4, l.center.h - 4)
+	panel(x, y, w, h, true)
+	Fonts.set("menu")
+	lg.setColor(Theme.ui.text)
+	Text.printShadow(L("campaign.selectAbility"), x + ABILITY_PICKER_PAD, y + 17)
+
+	local equipped = CampaignUnlocks.getEquippedAbilities()
+	for index, abilityId in ipairs(abilities) do
+		local ix, iy, iw, ih = abilityChoiceGeometry(l, index)
+		local equippedSlot
+		for slot, equippedId in ipairs(equipped) do
+			if equippedId == abilityId then equippedSlot = slot; break end
+		end
+		local unavailable = equippedSlot and equippedSlot ~= selectedAbilitySlot
+		local hovered = hoveredAbilityChoice == index
+		lg.setColor(unavailable and Theme.ui.buttonDisabled or hovered and Theme.ui.buttonHover or Theme.ui.button)
+		lg.rectangle("fill", ix, iy, iw, ih, 8)
+		lg.setColor(hovered and Theme.ui.selected or Theme.outline.color)
+		lg.setLineWidth(hovered and 3 or 2)
+		lg.rectangle("line", ix, iy, iw, ih, 8)
+		lg.setLineWidth(1)
+		AbilityIcons.draw(abilityId, ix + 37, iy + ih * 0.5, hovered and 1.06 or 1, unavailable and 0.45 or 1)
+		Fonts.set("ui")
+		lg.setColor(unavailable and Theme.ui.warn or Theme.ui.text)
+		Text.printShadow(L(AbilityDefs[abilityId].nameKey), ix + 70, iy + 15)
+		if unavailable then
+			Fonts.set("version")
+			Text.printShadow(L("campaign.abilityEquippedInSlot", equippedSlot), ix + 70, iy + 42)
+		end
+	end
+end
+
 local function drawCenter(l, map, mapIndex, entry)
 	local pad = 20
 	local x, y, w = l.center.x + pad, l.center.y + 30, l.center.w - pad * 2
@@ -567,11 +650,23 @@ function Screen.update(dt)
 	local hoveredReward = hoveredMapReward(l, map, entry, mx, my)
 	local equipped = CampaignUnlocks.getEquippedAbilities()
 	hoveredAbilitySlot = nil
-	for slot = 1, ABILITY_SLOT_COUNT do
-		local x, y, w, h = abilityCardGeometry(l, entry, slot)
-		if x and mx >= x and mx <= x + w and my >= y and my <= y + h then
-			hoveredAbilitySlot = slot
-			break
+	hoveredAbilityChoice = nil
+	if selectedAbilitySlot then
+		local _, _, _, _, abilities = abilityPickerGeometry(l)
+		for index = 1, #abilities do
+			local x, y, w, h = abilityChoiceGeometry(l, index)
+			if mx >= x and mx <= x + w and my >= y and my <= y + h then
+				hoveredAbilityChoice = index
+				break
+			end
+		end
+	else
+		for slot = 1, ABILITY_SLOT_COUNT do
+			local x, y, w, h = abilityCardGeometry(l, entry, slot)
+			if x and mx >= x and mx <= x + w and my >= y and my <= y + h then
+				hoveredAbilitySlot = slot
+				break
+			end
 		end
 	end
 	local stats = statsFor(map.id)
@@ -588,7 +683,10 @@ function Screen.update(dt)
 				and my >= lcenter.y + 23 and my <= lcenter.y + 49 then hoveredMedal = tier end
 		end
 	end
-	if hoveredReward and hoveredReward.type == "ability" then
+	if selectedAbilitySlot and hoveredAbilityChoice then
+		local abilities = availableAbilities()
+		AbilityTooltip.show(abilities[hoveredAbilityChoice])
+	elseif hoveredReward and hoveredReward.type == "ability" then
 		AbilityTooltip.show(hoveredReward.id)
 	elseif hoveredAbilitySlot then
 		showAbilitySlotTooltip(hoveredAbilitySlot, equipped[hoveredAbilitySlot])
@@ -628,9 +726,17 @@ function Screen.draw()
 	buttons.back.w = 164
 	Fonts.set("ui")
 	Button.draw(buttons.back)
+	drawAbilityPicker(l)
 end
 
 function Screen.keypressed(key)
+	if selectedAbilitySlot then
+		if key == "escape" then
+			selectedAbilitySlot = nil
+			Sound.play("uiBack")
+		end
+		return
+	end
 	if key == "left" then navigate(-1)
 	elseif key == "right" then navigate(1)
 	elseif key == "up" or key == "down" then
@@ -649,6 +755,35 @@ end
 function Screen.mousepressed(x, y, button)
 	if button ~= 1 then return end
 	local l = layout()
+	if selectedAbilitySlot then
+		local px, py, pw, ph, abilities = abilityPickerGeometry(l)
+		for index, abilityId in ipairs(abilities) do
+			local ix, iy, iw, ih = abilityChoiceGeometry(l, index)
+			if x >= ix and x <= ix + iw and y >= iy and y <= iy + ih then
+				equipAbility(abilityId)
+				return true
+			end
+		end
+		if x < px or x > px + pw or y < py or y > py + ph then
+			selectedAbilitySlot = nil
+			Sound.play("uiBack")
+		end
+		return true
+	end
+	local map = Maps[State.mapIndex]
+	local entry = MapPreviewCache.get(map.id)
+	for slot = 1, ABILITY_SLOT_COUNT do
+		local ax, ay, aw, ah = abilityCardGeometry(l, entry, slot)
+		if ax and x >= ax and x <= ax + aw and y >= ay and y <= ay + ah then
+			if CampaignUnlocks.isAbilitySlotUnlocked(slot) then
+				selectedAbilitySlot = slot
+				Sound.play("uiMove")
+			else
+				Sound.play("uiError")
+			end
+			return true
+		end
+	end
 	local trackX, trackY, trackW, trackH, thumbY, thumbH = scrollbarGeometry(l)
 	if trackX and x >= trackX - 4 and x <= trackX + trackW + 4
 		and y >= trackY and y <= trackY + trackH then
@@ -713,6 +848,10 @@ function Screen.enter()
 	selection.elapsed = SelectionTransition.DURATION
 	keepSelectedVisible(layout())
 end
-function Screen.leave() Tooltip.hide() end
+function Screen.leave()
+	selectedAbilitySlot = nil
+	hoveredAbilityChoice = nil
+	Tooltip.hide()
+end
 
 return Screen

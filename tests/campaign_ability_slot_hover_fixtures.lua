@@ -25,5 +25,17 @@ assert(not source:find('L("campaign.abilityLevel"', 1, true),
 	"equipped campaign ability slots must not display a level label")
 assert(not source:find("editLoadout", 1, true),
 	"campaign map selection must not show an edit loadout button")
+assert(source:find("local selectedAbilitySlot", 1, true),
+	"campaign screen must track which active ability slot is being populated")
+assert(source:find("local function drawAbilityPicker", 1, true),
+	"clicking an active ability slot must open an ability selection card")
+assert(source:find("for _, abilityId in ipairs(AbilityDefs.order)", 1, true),
+	"the ability selection card must browse active abilities in their authored order")
+assert(source:find("CampaignUnlocks.isAbilityUnlocked(abilityId)", 1, true),
+	"the ability selection card must only include available active abilities")
+assert(source:find("Save.setEquippedAbilities(equipped)", 1, true),
+	"selecting an available active ability must populate and persist the chosen slot")
+assert(source:find("AbilityTooltip.show(abilities[hoveredAbilityChoice])", 1, true),
+	"available active abilities in the selection card must expose their tooltip information")
 
 print("campaign ability slot hover fixtures passed")
