@@ -96,7 +96,6 @@ local maps = {
 		-- intentionally dry battlefield
 		waves = {
 			encounters = {
-				boss_suppression = { flankBurst = 2, interval = 7.9, addHpMult = 1.35, maxAliveAdds = 12 },
 				boss_displacement = { flankKind = "grunt", flankBurst = 2, initialDelay = 2.0 },
 			},
 		},
@@ -240,7 +239,6 @@ local maps = {
 		waves = {
 			encounters = {
 				boss_summoner = { flankBurst = 4, interval = 6.5, maxTotalAdds = 40 },
-				boss_suppression = { interval = 6.4, maxAliveAdds = 13 },
 			},
 		},
 	},

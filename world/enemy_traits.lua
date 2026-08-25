@@ -53,10 +53,10 @@ local Traits = {
 	},
 	boss_suppression = {
 		tag = "Boss Mechanic",
-		mechanic = "Arrives with durable tank reinforcements.",
-		tell = "Tanks continue entering at intervals while the boss is alive.",
-		counter = "Use heavy or focused damage to clear the tanks while focusing the boss.",
-		answers = {"Heavy-damage specializations", "Focus-fire specializations"},
+		mechanic = "Suppresses one tower for five seconds about every twenty seconds.",
+		tell = "A red interference aura surrounds the disabled tower.",
+		counter = "Spread damage across several towers so one shutdown cannot halt your defense.",
+		answers = {"Several affordable towers", "Long-range towers with overlapping coverage"},
 	},
 	boss_aegis = {
 		tag = "Boss Mechanic",

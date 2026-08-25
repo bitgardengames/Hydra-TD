@@ -113,7 +113,7 @@ return {
 
 	boss_suppression = {
 		nameKey = "enemy.bossSuppression",
-		hp = 836,
+		hp = 430,
 		speed = 40,
 		reward = 140,
 		score = 500,
@@ -121,6 +121,7 @@ return {
 		boss = true,
 		mechanicWeight = 1.65,
 		mechanicPackage = "suppression_aura",
+		suppression = { period = 20.0, duration = 5.0, initialDelay = 10.0 },
 		traits = {"boss_suppression"},
 	},
 

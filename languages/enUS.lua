@@ -494,7 +494,7 @@ return {
 		fast = {tag = "FAST", counter = "Cover the route early with slows or rapid attacks."},
 		boss_summoner = {tag = "SUMMONER", counter = "Clear its escorts with area or chain damage while focusing the boss."},
 		boss_displacement = {tag = "FAST ESCORTS", counter = "Slow the runner escorts while maintaining damage on the boss."},
-		boss_suppression = {tag = "ARMORED ESCORTS", counter = "Use heavy focused hits on its tank escorts while burning down the boss."},
+		boss_suppression = {tag = "TOWER SUPPRESSION", counter = "Use overlapping tower coverage so each five-second shutdown leaves another tower firing."},
 		boss_aegis = {tag = "CYCLING SHIELD", counter = "Save burst damage for the clear gaps between its shield windows."},
 		boss_ravager = {tag = "FINAL SPRINT", counter = "Keep slows ready and burst it down before its low-health sprint."},
 	},

@@ -617,7 +617,40 @@ local function updateTowerVisuals(t, dt)
 	end
 end
 
+local function updateSuppression(dt)
+	for i = 1, #towers do
+		local t = towers[i]
+		t.suppressedTimer = max(0, (t.suppressedTimer or 0) - dt)
+	end
+
+	local boss = State.activeBoss
+	local suppression = boss and boss.suppression
+	if not suppression or boss.dying or (boss.hp or 0) <= 0 then return end
+
+	boss.suppressionTimer = (boss.suppressionTimer or suppression.period) - dt
+	if boss.suppressionTimer > 0 or #towers == 0 then return end
+
+	-- Rotate deterministically through the player's build. Prefer a tower that is
+	-- currently operational so every cast visibly disables exactly one tower.
+	local start = ((boss.suppressionCasts or 0) % #towers) + 1
+	local target
+	for offset = 0, #towers - 1 do
+		local candidate = towers[((start + offset - 1) % #towers) + 1]
+		if (candidate.suppressedTimer or 0) <= 0 then
+			target = candidate
+			break
+		end
+	end
+	target = target or towers[start]
+	target.suppressedTimer = suppression.duration
+	target.target = nil
+	target.windUp = 0
+	boss.suppressionCasts = (boss.suppressionCasts or 0) + 1
+	boss.suppressionTimer = suppression.period
+end
+
 local function updateTowers(dt)
+	updateSuppression(dt)
 
 	for i = 1, #towers do
 		local t = towers[i]
@@ -640,6 +673,11 @@ local function updateTowers(dt)
 		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
 
 		updateTowerVisuals(t, dt)
+		if (t.suppressedTimer or 0) > 0 then
+			t.target = nil
+			t.windUp = 0
+			goto continue_tower_update
+		end
 
 		if t.cooldown > 0
 			and not t.target
@@ -809,5 +847,6 @@ return {
 	sellTower = sellTower,
 	findTowerAt = findTowerAt,
 	updateTowers = updateTowers,
+	updateSuppression = updateSuppression,
 	clear = clear,
 }
