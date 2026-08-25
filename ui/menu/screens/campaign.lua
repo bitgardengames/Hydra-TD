@@ -59,16 +59,15 @@ local unlockSequence = UnlockPresentation.new()
 -- Campaign layout uses a small set of shared spacing tokens. Keeping the list,
 -- preview, difficulty cards, and actions on the same rhythm is especially
 -- important here because the three columns read as one surface.
-local SPACE = 12
-local PANEL_PAD = 24
-local SECTION_INSET = 32
-local LIST_ROW_H = 73
+local SPACE = 8
+local PANEL_PAD = 20
+local SECTION_INSET = 20
+local LIST_ROW_H = 60
 local LIST_ROW_STEP = LIST_ROW_H + SPACE
-local LIST_PREVIEW_W = 96
-local LIST_PREVIEW_H = 60
-local LIST_SCROLL_REDUCTION = 30
-local MAIN_PREVIEW_HEIGHT_RATIO = 0.70
-local DIFFICULTY_CARD_H = 78
+local LIST_PREVIEW_W = 84
+local LIST_PREVIEW_H = 50
+local MAIN_PREVIEW_HEIGHT_RATIO = 0.82
+local DIFFICULTY_CARD_H = 68
 local DIFFICULTY_CARD_STEP = DIFFICULTY_CARD_H + SPACE
 local ABILITY_SLOT_COUNT = 2
 local ABILITY_CARD_GAP = 18
@@ -78,10 +77,10 @@ local ABILITY_PICKER_PAD = 20
 local ABILITY_PICKER_ITEM_H = 72
 local ABILITY_PICKER_GAP = 10
 local CAMPAIGN_CARD_MAX_W = 1268
-local CAMPAIGN_CARD_MAX_H = 676
-local BUTTON_BOTTOM_GAP = 24
-local BACK_BUTTON_H = 54
-local PLAY_BUTTON_H = 78
+local CAMPAIGN_CARD_MAX_H = 500
+local BUTTON_BOTTOM_GAP = 18
+local BACK_BUTTON_H = 48
+local PLAY_BUTTON_H = 88
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -155,7 +154,7 @@ end
 local function layout()
 	local sw, sh = lg.getDimensions()
 	local margin = max(18, floor(sw * 0.024))
-	local headerH = max(104, floor(sh * 0.145))
+	local headerH = max(104, floor(sh * 0.13))
 	local footerH = max(46, floor(sh * 0.053))
 	local gap = 0
 	local contentY = headerH
@@ -177,7 +176,8 @@ local function layout()
 end
 
 local function visibleRows(l)
-	return LIST_ROW_STEP, max(1, floor((l.left.h - 110 - LIST_SCROLL_REDUCTION) / LIST_ROW_STEP))
+	local listH = l.left.h - SECTION_INSET - BUTTON_BOTTOM_GAP - BACK_BUTTON_H - SPACE
+	return LIST_ROW_STEP, max(1, floor((listH + SPACE) / LIST_ROW_STEP))
 end
 
 local function scrollbarGeometry(l)
@@ -185,7 +185,7 @@ local function scrollbarGeometry(l)
 	if #Maps <= count then return nil end
 	local trackX = l.left.x + l.left.w - 13
 	local trackY = l.left.y + SECTION_INSET
-	local trackH = l.left.h - 112 - LIST_SCROLL_REDUCTION
+	local trackH = l.left.h - SECTION_INSET - BUTTON_BOTTOM_GAP - BACK_BUTTON_H - SPACE
 	local thumbH = max(32, trackH * count / #Maps)
 	local maxOffset = #Maps - count
 	local thumbY = trackY + (trackH - thumbH) * listOffset / maxOffset
@@ -346,20 +346,21 @@ local function drawMapList(l, unlockPose)
 		end
 		local entry = MapPreviewCache.get(map.id)
 		if entry then
-			local scale = min(1, LIST_PREVIEW_W / entry.canvas:getWidth(), LIST_PREVIEW_H / entry.canvas:getHeight())
+			local scaleX = LIST_PREVIEW_W / entry.canvas:getWidth()
+			local scaleY = LIST_PREVIEW_H / entry.canvas:getHeight()
 			lg.setColor(1, 1, 1, locked and 0.28 or 0.9)
-			lg.draw(entry.canvas, rowX + 4, y + 5, 0, scale, scale)
+			lg.draw(entry.canvas, rowX + 4, y + 5, 0, scaleX, scaleY)
 		end
 		local textX = rowX + LIST_PREVIEW_W + 12
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text)
-		Text.printShadow(index .. "  " .. L(map.nameKey), textX, y + 7)
+		Text.printShadow(index .. "  " .. L(map.nameKey), textX, y + 4)
 		if locked then
 			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.55)
-			Text.printShadow(L("campaign.locked"), textX, y + 31)
+			Text.printShadow(L("campaign.locked"), textX, y + 27)
 		else
 			local stats = statsFor(map.id)
-			Medals.draw(textX, y + 31, stats and Medals.getCount(stats.completedDifficulty) or 0, 7, 6, pulseTime)
+			Medals.draw(textX, y + 27, stats and Medals.getCount(stats.completedDifficulty) or 0, 7, 6, pulseTime)
 		end
 	end
 	local trackX, trackY, trackW, trackH, thumbY, thumbH = scrollbarGeometry(l)
@@ -449,7 +450,7 @@ end
 local function abilityCardGeometry(l, entry, slot)
 	if not entry then return nil end
 	local pad = 20
-	local x, y, w = l.center.x + pad, l.center.y + 30, l.center.w - pad * 2
+	local x, y, w = l.center.x + pad, l.center.y + SECTION_INSET, l.center.w - pad * 2
 	local previewY = y + 77
 	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
@@ -546,7 +547,7 @@ local function drawCenter(l, map, mapIndex, entry)
 	Text.printShadow(L(map.nameKey), x, y)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75)
-	Text.printShadow(L("campaign.mapOf", mapIndex, #Maps), x, y + 43)
+	Text.printShadow(L("campaign.mapOf", mapIndex, #Maps), x, y + 38)
 
 	local stats = statsFor(map.id)
 	local earned = stats and Medals.getCount(stats.completedDifficulty) or 0
@@ -556,7 +557,7 @@ local function drawCenter(l, map, mapIndex, entry)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
 	Text.printfShadow(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
-	local previewY = y + 77
+	local previewY = y + 62
 	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
@@ -572,11 +573,10 @@ end
 
 local function difficultyGeometry(l)
 	local x = l.right.x + SECTION_INSET
-	local titleY = l.right.y + 42
+	local titleY = l.right.y + SECTION_INSET
 	local w = l.right.w - SECTION_INSET * 2
-	local cardY = titleY + 82
-	local playY = min(cardY + DIFFICULTY_CARD_STEP * #DIFFICULTIES + SPACE * 2,
-		l.right.y + l.right.h - BUTTON_BOTTOM_GAP - PLAY_BUTTON_H)
+	local cardY = titleY + 68
+	local playY = l.right.y + l.right.h - BUTTON_BOTTOM_GAP - PLAY_BUTTON_H
 	return x, titleY, w, cardY, playY
 end
 
@@ -597,9 +597,9 @@ local function drawRight(l, map)
 		lg.rectangle("fill", x, cy, w, DIFFICULTY_CARD_H, 10)
 		Fonts.set("ui")
 		lg.setColor(DIFFICULTY_COLORS[key])
-		Text.printShadow(L("difficulty." .. key), textX, cy + 16)
+		Text.printShadow(L("difficulty." .. key), textX, cy + 12)
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-		Text.printShadow(L(DIFFICULTY_HINTS[key]), textX, cy + 42)
+		Text.printShadow(L(DIFFICULTY_HINTS[key]), textX, cy + 36)
 	end
 
 	local play = buttons.play
@@ -795,7 +795,7 @@ end
 
 function Screen.resize()
 	Tooltip.hide()
-	MapPreviewCache.buildAll(520, 312)
+	MapPreviewCache.buildAll(520, 480)
 	Backdrop.start()
 	keepSelectedVisible(layout())
 end
