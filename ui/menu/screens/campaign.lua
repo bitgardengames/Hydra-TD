@@ -477,18 +477,14 @@ local function drawRight(l, map)
 	for i, key in ipairs(DIFFICULTIES) do
 		local cy = cardY + (i - 1) * DIFFICULTY_CARD_STEP
 		local active = key == selected
+		local textX = x + 16
 		lg.setColor(active and Theme.ui.buttonSelected or Theme.ui.panel)
 		lg.rectangle("fill", x, cy, w, DIFFICULTY_CARD_H, 10)
-		lg.setColor(DIFFICULTY_COLORS[key])
-		lg.circle("fill", x + 20, cy + 28, 10)
-		lg.setColor(Theme.outline.color)
-		lg.circle("fill", x + 17, cy + 26, 2)
-		lg.circle("fill", x + 23, cy + 26, 2)
 		Fonts.set("ui")
-		lg.setColor(Theme.ui.text)
-		lg.print(L("difficulty." .. key), x + 40, cy + 16)
+		lg.setColor(DIFFICULTY_COLORS[key])
+		lg.print(L("difficulty." .. key), textX, cy + 16)
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-		lg.print(L(DIFFICULTY_HINTS[key]), x + 40, cy + 42)
+		lg.print(L(DIFFICULTY_HINTS[key]), textX, cy + 42)
 	end
 
 	local play = buttons.play
