@@ -142,16 +142,6 @@ local bossEncounterTemplates = {
 		addHpMult = 0.95,
 		addSpdMult = 1.15,
 	},
-	boss_suppression = {
-		flankKind = "tank",
-		flankBurst = 1,
-		interval = 7.2,
-		initialDelay = 4.0,
-		maxAliveAdds = 10,
-		maxTotalAdds = 18,
-		addHpMult = 1.2,
-		addSpdMult = 0.9,
-	},
 	boss_summoner = {
 		flankKind = "grunt",
 		flankBurst = 4,
@@ -167,22 +157,18 @@ local bossEncounterTemplates = {
 local biomeTemplateOverrides = {
 	autumn = {
 		boss_displacement = { flankBurst = 3, interval = 5.7, addSpdMult = 1.2 },
-		boss_suppression = { interval = 6.6, maxAliveAdds = 11 },
 		boss_summoner = { flankBurst = 5, interval = 5.0, maxTotalAdds = 38 },
 	},
 	drylands = {
 		boss_displacement = { initialDelay = 2.3, maxAliveAdds = 12 },
-		boss_suppression = { flankBurst = 2, interval = 7.8, addHpMult = 1.3 },
 		boss_summoner = { flankKind = "runner", flankBurst = 3, interval = 6.8 },
 	},
 	winter = {
 		boss_displacement = { interval = 7.4, addSpdMult = 1.05 },
-		boss_suppression = { interval = 6.9, maxTotalAdds = 22 },
 		boss_summoner = { flankBurst = 4, interval = 6.2, addHpMult = 1.0 },
 	},
 	highlands = {
 		boss_displacement = { flankKind = "runner", flankBurst = 2, interval = 5.9 },
-		boss_suppression = { flankKind = "tank", flankBurst = 1, interval = 6.5, maxAliveAdds = 12 },
 		boss_summoner = { flankKind = "runner", flankBurst = 4, interval = 5.4 },
 	},
 }

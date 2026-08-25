@@ -287,6 +287,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.bossShield = def.bossShield
 	e.bossShieldTimer = def.bossShield and (def.bossShield.initialDelay or def.bossShield.period) or 0
 	e.bossShieldActive = false
+	e.suppression = def.suppression
+	e.suppressionTimer = def.suppression and (def.suppression.initialDelay or def.suppression.period) or 0
+	e.suppressionCasts = 0
 	e.enrage = def.enrage
 	e.enraged = false
 	e.supportBoost = 1

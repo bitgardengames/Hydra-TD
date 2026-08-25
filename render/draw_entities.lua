@@ -1180,6 +1180,16 @@ local function drawTowers()
 		-- Top
 		drawTowerInstance(t, cx, renderY, i)
 		drawTowerUpgradeFlash(t, cx, renderY)
+		if (t.suppressedTimer or 0) > 0 then
+			local clock = State.abilityClock or 0
+			local pulse = 0.65 + 0.2 * sin(clock * 8 + i)
+			lg.setColor(1, 0.16, 0.28, pulse)
+			lg.setLineWidth(3)
+			lg.circle("line", cx, groundY, size * (0.78 + 0.07 * sin(clock * 6)))
+			lg.setColor(0.75, 0.08, 0.2, 0.18)
+			lg.circle("fill", cx, groundY, size * 0.72)
+			lg.setLineWidth(1)
+		end
 		if (t.abilityAttackSpeed or 1) > 1 then
 			local pulse = .55 + .3 * sin((State.abilityClock or 0) * 7 + i)
 			lg.setColor(1, .7, 1, pulse)
