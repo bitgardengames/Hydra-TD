@@ -13,8 +13,10 @@ assert(campaignSource:find("lg.setColor(Theme.ui.text)\n\t\tText.printShadow(ind
 	"selected and unselected map names must use the same text color")
 assert(not campaignSource:find('lg.rectangle("line", rowX, highlightY', 1, true),
 	"map selection rows must not draw an animated outline")
-assert(campaignSource:find("local CAMPAIGN_CARD_MAX_H = 500", 1, true),
+assert(campaignSource:find("local CAMPAIGN_CARD_MAX_H = 420", 1, true),
 	"campaign card must match the reference layout height")
+assert(campaignSource:find("MapPreviewCache.buildAll(520, 312)", 1, true),
+	"campaign map preview must retain its wide landscape aspect ratio")
 assert(campaignSource:find("local SPACE = 8", 1, true)
 	and campaignSource:find("local PANEL_PAD = 20", 1, true)
 	and campaignSource:find("local SECTION_INSET = 20", 1, true),

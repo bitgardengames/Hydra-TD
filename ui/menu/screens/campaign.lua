@@ -77,7 +77,7 @@ local ABILITY_PICKER_PAD = 20
 local ABILITY_PICKER_ITEM_H = 72
 local ABILITY_PICKER_GAP = 10
 local CAMPAIGN_CARD_MAX_W = 1268
-local CAMPAIGN_CARD_MAX_H = 500
+local CAMPAIGN_CARD_MAX_H = 420
 local BUTTON_BOTTOM_GAP = 18
 local BACK_BUTTON_H = 48
 local PLAY_BUTTON_H = 88
@@ -795,7 +795,7 @@ end
 
 function Screen.resize()
 	Tooltip.hide()
-	MapPreviewCache.buildAll(520, 480)
+	MapPreviewCache.buildAll(520, 312)
 	Backdrop.start()
 	keepSelectedVisible(layout())
 end
