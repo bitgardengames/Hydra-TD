@@ -14,11 +14,12 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local CampaignUnlocks = require("systems.campaign_unlocks")
-local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local RunModes = require("systems.run_modes")
 local DrawEntities = require("render.draw_entities")
 local AbilityIcons = require("ui.ability_icons")
 local AbilityTooltip = require("ui.ability_tooltip")
+local AbilityDefs = require("systems.ability_defs")
+local Hotkeys = require("core.hotkeys")
 local SelectionTransition = require("ui.campaign_selection_transition")
 local UnlockPresentation = require("ui.campaign_unlock_presentation")
 
@@ -54,7 +55,7 @@ local unlockSequence = UnlockPresentation.new()
 local LIST_ROW_H = 81
 local LIST_PREVIEW_W = 96
 local LIST_PREVIEW_H = 60
-local MAIN_PREVIEW_HEIGHT_RATIO = 0.45
+local MAIN_PREVIEW_HEIGHT_RATIO = 0.43
 local DIFFICULTY_CARD_H = 80
 local DIFFICULTY_CARD_STEP = 98
 
@@ -134,8 +135,11 @@ local function layout()
 	local footerH = max(46, floor(sh * 0.053))
 	local gap = 0
 	local contentY = headerH
-	local contentH = min(772, sh - headerH - footerH)
-	local contentW = min(1350, sw - margin * 2)
+	-- The campaign card is deliberately capped to the mock-up's 16:9 footprint.
+	-- Keeping the cap, rather than independently stretching each column, preserves
+	-- the same outer edges and interior rhythm on larger windows.
+	local contentH = min(725, sh - headerH - footerH)
+	local contentW = min(1300, sw - margin * 2)
 	local contentX = floor((sw - contentW) * 0.5)
 	local leftW = floor(contentW * 0.29)
 	local rightW = floor(contentW * 0.27)
@@ -380,9 +384,41 @@ local function drawUnlockRewards(l, event, pose)
 	end
 end
 
+local function drawAbilityCard(x, y, w, h, slot, abilityId)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], abilityId and 0.18 or 0.10)
+	lg.rectangle(abilityId and "fill" or "line", x, y, w, h, 9)
+	lg.setColor(Theme.outline.color)
+	lg.setLineWidth(2)
+	lg.rectangle("line", x, y, w, h, 9)
+	lg.setLineWidth(1)
+
+	if abilityId and AbilityDefs[abilityId] then
+		local binding = Hotkeys.getDisplay("abilitySlot" .. slot)
+		if binding then
+			lg.setColor(Theme.ui.button)
+			lg.rectangle("fill", x + 12, y + 10, 34, 34, 5)
+			Fonts.set("ui")
+			lg.setColor(Theme.ui.text)
+			lg.printf(binding, x + 12, y + 17, 34, "center")
+		end
+		AbilityIcons.draw(abilityId, x + w * 0.5, y + 63, 1.25, 1)
+		Fonts.set("ui")
+		lg.setColor(Theme.ui.text)
+		lg.printf(L(AbilityDefs[abilityId].nameKey), x + 8, y + h - 46, w - 16, "center")
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.70)
+		lg.printf(L("campaign.abilityLevel", 1), x + 8, y + h - 23, w - 16, "center")
+	else
+		Fonts.set("title")
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
+		lg.printf("+", x, y + 30, w, "center")
+		Fonts.set("ui")
+		lg.printf(L("campaign.selectAbility"), x + 8, y + h - 39, w - 16, "center")
+	end
+end
+
 local function drawCenter(l, map, mapIndex, entry)
 	local pad = 20
-	local x, y, w = l.center.x + pad, l.center.y + 38, l.center.w - pad * 2
+	local x, y, w = l.center.x + pad, l.center.y + 30, l.center.w - pad * 2
 	Fonts.set("title")
 	lg.setColor(Theme.ui.text)
 	lg.print(L(map.nameKey), x, y)
@@ -398,7 +434,7 @@ local function drawCenter(l, map, mapIndex, entry)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
 	lg.printf(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
-	local previewY = y + 88
+	local previewY = y + 77
 	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
@@ -410,57 +446,21 @@ local function drawCenter(l, map, mapIndex, entry)
 	lg.rectangle("line", previewX, previewY, previewW, previewH, 7)
 	lg.setLineWidth(1)
 
-	local statY = previewY + previewH + 18
-	local cellGap = 3
-	local cellW = (w - cellGap * 4) / 5
-	local def = Difficulty.defs[Save.data.settings.difficulty or "normal"] or Difficulty.defs.normal
-	local values = {
-		{L("campaign.waves"), tostring(CampaignWaveDefs.getFinalWave(map) or "—")},
-		{L("campaign.enemies"), tostring(CampaignWaveDefs.getTotalEnemyCount(map) or "—")},
-		{L("campaign.lives"), tostring(def.startLives)},
-		{L("campaign.startingMoney"), format("$%d", def.startMoney)},
-		{L("campaign.sellRefund"), format("%d%%", floor(def.sellRefund * 100 + 0.5))},
-	}
-	for i, item in ipairs(values) do
-		local cellX = x + (i - 1) * (cellW + cellGap)
-		lg.setColor(Theme.ui.panel)
-		lg.rectangle("fill", cellX, statY, cellW, 55, 7)
-		Fonts.set("ui")
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
-		lg.printf(item[1], cellX, statY + 5, cellW, "center")
-		lg.setColor(Theme.ui.text)
-		lg.printf(item[2], cellX, statY + 27, cellW, "center")
+	local abilitiesY = previewY + previewH + 21
+	Fonts.set("menu")
+	lg.setColor(Theme.ui.text)
+	lg.print(L("campaign.abilityLoadout"), x, abilitiesY)
+	local cardY, cardGap = abilitiesY + 36, 14
+	local cardW = (w - cardGap * 2) / 3
+	local equipped = CampaignUnlocks.getEquippedAbilities()
+	for slot = 1, 3 do
+		drawAbilityCard(x + (slot - 1) * (cardW + cardGap), cardY, cardW, 155, slot, equipped[slot])
 	end
 
-	local rewardsY = statY + 67
-	if rewardsY + 62 < l.center.y + l.center.h then
-		lg.setColor(Theme.ui.panel)
-		lg.rectangle("fill", x, rewardsY, w, 62, 7)
-		lg.setColor(Theme.ui.text)
-		lg.print(L("campaign.completionRewards"), x + 10, rewardsY + 5)
-
-		local rewardCellY = rewardsY + 31
-		local rewards = CampaignUnlocks.getRewardsForMap(map)
-		if #rewards == 0 then
-			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
-			lg.printf(L("campaign.noUnlockReward"), x + 10, rewardCellY - 2, w - 20, "center")
-		else
-			Fonts.set("ui")
-			local rewardCellW = w / #rewards
-			for i, reward in ipairs(rewards) do
-				local cellX = x + (i - 1) * rewardCellW
-				local rewardText = reward.labelKey and L(reward.labelKey) or reward.label or reward.id
-				local iconSize = 34
-				local textW = Fonts.get():getWidth(rewardText)
-				local contentW = min(rewardCellW - 12, iconSize + textW)
-				local iconX = cellX + (rewardCellW - contentW) * 0.5 + iconSize * 0.5
-				drawRewardIcon(reward, iconX, rewardCellY + 7)
-				lg.setColor(Theme.ui.text)
-				lg.printf(rewardText, iconX + iconSize * 0.5, rewardCellY - 2,
-					max(0, cellX + rewardCellW - 6 - (iconX + iconSize * 0.5)), "left")
-			end
-		end
-	end
+	local edit = buttons.editLoadout
+	edit.x, edit.y, edit.w, edit.h = x + w * 0.25, l.center.y + l.center.h - 68, w * 0.5, 46
+	Fonts.set("ui")
+	Button.draw(edit)
 end
 
 local function drawRight(l, map)
@@ -492,7 +492,7 @@ local function drawRight(l, map)
 	end
 
 	local play = buttons.play
-	play.x, play.y, play.w, play.h = x, l.right.y + l.right.h - 191, w, 120
+	play.x, play.y, play.w, play.h = x, l.right.y + l.right.h - 131, w, 100
 	play.label = L("campaign.playMap") .. "\n" .. L(map.nameKey) .. "  •  " .. L("difficulty." .. selected)
 	play.enabled = not isMapLocked(State.mapIndex)
 	Fonts.set("ui")
@@ -503,6 +503,7 @@ function Screen.load()
 	buttons = {
 		play = {id = "play", label = L("campaign.playMap"), onClick = playMap},
 		back = {id = "back", label = L("menu.back"), w = 140, h = 42, onClick = goBack},
+		editLoadout = {id = "editLoadout", label = L("campaign.editLoadout"), enabled = false},
 	}
 end
 
@@ -525,9 +526,9 @@ function Screen.update(dt)
 	buttons.back.w = 164
 	local rightPad = 20
 	buttons.play.x = l.right.x + rightPad + 7
-	buttons.play.y = l.right.y + l.right.h - 191
+	buttons.play.y = l.right.y + l.right.h - 131
 	buttons.play.w = l.right.w - rightPad * 2 - 14
-	buttons.play.h = 120
+	buttons.play.h = 100
 	buttons.play.enabled = not isMapLocked(State.mapIndex)
 	local mx, my = love.mouse.getPosition()
 	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
