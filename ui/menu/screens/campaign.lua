@@ -47,6 +47,7 @@ local buttons = {}
 local pulseTime = 0
 local hoveredMedal
 local hoveredAbilitySlot
+local abilitySlotTooltips = {}
 local listOffset = 0
 local scrollbarDragging = false
 local scrollbarGrabY = 0
@@ -385,7 +386,7 @@ local function drawUnlockRewards(l, event, pose)
 	end
 end
 
-local function drawAbilityCard(x, y, w, h, slot, abilityId, hovered)
+local function drawAbilityCard(x, y, w, h, slot, abilityId, unlocked, hovered)
 	local alpha = abilityId and (hovered and 0.28 or 0.18) or 0.10
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
 	lg.rectangle(abilityId and "fill" or "line", x, y, w, h, 9)
@@ -410,10 +411,27 @@ local function drawAbilityCard(x, y, w, h, slot, abilityId, hovered)
 	else
 		Fonts.set("title")
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-		lg.printf("+", x, y + 30, w, "center")
+		lg.printf(unlocked and "+" or "-", x, y + 30, w, "center")
 		Fonts.set("ui")
-		lg.printf(L("campaign.selectAbility"), x + 8, y + h - 39, w - 16, "center")
+		lg.printf(L(unlocked and "campaign.selectAbility" or "campaign.locked"),
+			x + 8, y + h - 39, w - 16, "center")
 	end
+end
+
+local function showAbilitySlotTooltip(slot, abilityId)
+	if abilityId then
+		AbilityTooltip.show(abilityId)
+		return
+	end
+
+	local unlocked = CampaignUnlocks.isAbilitySlotUnlocked(slot)
+	local title = L(unlocked and "campaign.selectAbility" or "abilityUnlock.slotLocked")
+	local tooltip = abilitySlotTooltips[slot]
+	if not tooltip or tooltip.title ~= title then
+		tooltip = {title = title, rows = {}}
+		abilitySlotTooltips[slot] = tooltip
+	end
+	Tooltip.show(tooltip)
 end
 
 local function abilityCardGeometry(l, entry, slot)
@@ -468,7 +486,7 @@ local function drawCenter(l, map, mapIndex, entry)
 	local equipped = CampaignUnlocks.getEquippedAbilities()
 	for slot = 1, 3 do
 		drawAbilityCard(x + (slot - 1) * (cardW + cardGap), cardY, cardW, 155, slot,
-			equipped[slot], hoveredAbilitySlot == slot)
+			equipped[slot], CampaignUnlocks.isAbilitySlotUnlocked(slot), hoveredAbilitySlot == slot)
 	end
 
 	local edit = buttons.editLoadout
@@ -550,7 +568,7 @@ function Screen.update(dt)
 	hoveredAbilitySlot = nil
 	for slot = 1, 3 do
 		local x, y, w, h = abilityCardGeometry(l, entry, slot)
-		if equipped[slot] and x and mx >= x and mx <= x + w and my >= y and my <= y + h then
+		if x and mx >= x and mx <= x + w and my >= y and my <= y + h then
 			hoveredAbilitySlot = slot
 			break
 		end
@@ -572,7 +590,7 @@ function Screen.update(dt)
 	if hoveredReward and hoveredReward.type == "ability" then
 		AbilityTooltip.show(hoveredReward.id)
 	elseif hoveredAbilitySlot then
-		AbilityTooltip.show(equipped[hoveredAbilitySlot])
+		showAbilitySlotTooltip(hoveredAbilitySlot, equipped[hoveredAbilitySlot])
 	elseif hoveredMedal then
 		local key = DIFFICULTIES[hoveredMedal]
 		local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[key]
