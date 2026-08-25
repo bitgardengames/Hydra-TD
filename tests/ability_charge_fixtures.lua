@@ -26,6 +26,10 @@ local expectedChargeCosts = {meteor = 56, frost_nova = 44, overdrive = 64, gravi
 for abilityId, expectedCost in pairs(expectedChargeCosts) do
 	assert(Defs[abilityId].chargeRequired == expectedCost, abilityId .. " has the wrong charge cost")
 end
+assert(Defs.overdrive.target.entities == "towers" and Defs.overdrive.target.requireAffected,
+	"overdrive must highlight affected towers while targeting")
+assert(Defs.overdrive.sustained and not Defs.overdrive.sustained.entityMarker,
+	"overdrive must hand off from targeting highlights to its dedicated tower pulse after activation")
 State.mode = "game"
 State.modulePicker.active = false
 State.equippedAbilities = {"meteor"}
