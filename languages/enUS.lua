@@ -483,20 +483,19 @@ return {
 		incomingGroup = "INCOMING",
 		compositionEntry = "%d %s",
 		threatTags = "Threats: %s",
-		counterHint = "Counter: %s",
 	},
 
 
 	enemyTrait = {
-		armored = {tag = "ARMORED", counter = "Use heavy Cannon or Lancer hits to punch through its plates."},
-		regenerates = {tag = "REGENERATING", counter = "Keep damage or poison on it so its healing cannot restart."},
-		support = {tag = "SUPPORT", counter = "Focus the Warcaller first to remove its speed aura."},
-		fast = {tag = "FAST", counter = "Cover the route early with slows or rapid attacks."},
-		boss_summoner = {tag = "SUMMONER", counter = "Clear its escorts with area or chain damage while focusing the boss."},
-		boss_displacement = {tag = "FAST ESCORTS", counter = "Slow the runner escorts while maintaining damage on the boss."},
-		boss_suppression = {tag = "TOWER SUPPRESSION", counter = "Use overlapping tower coverage so each five-second shutdown leaves another tower firing."},
-		boss_aegis = {tag = "CYCLING SHIELD", counter = "Save burst damage for the clear gaps between its shield windows."},
-		boss_ravager = {tag = "FINAL SPRINT", counter = "Keep slows ready and burst it down before its low-health sprint."},
+		armored = {tag = "ARMORED"},
+		regenerates = {tag = "REGENERATING"},
+		support = {tag = "SUPPORT"},
+		fast = {tag = "FAST"},
+		boss_summoner = {tag = "SUMMONER"},
+		boss_displacement = {tag = "FAST ESCORTS"},
+		boss_suppression = {tag = "TOWER SUPPRESSION"},
+		boss_aegis = {tag = "CYCLING SHIELD"},
+		boss_ravager = {tag = "FINAL SPRINT"},
 	},
 
 	messages = {
