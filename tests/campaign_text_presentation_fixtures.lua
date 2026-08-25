@@ -25,6 +25,9 @@ assert(campaignSource:find("local LIST_ROW_STEP = LIST_ROW_H + SPACE", 1, true)
 assert(campaignSource:find("local LIST_ROW_H = 73", 1, true)
 	and campaignSource:find("local DIFFICULTY_CARD_H = 78", 1, true),
 	"campaign selection controls must use the compact heights")
+assert(campaignSource:find("local LIST_SCROLL_REDUCTION = 30", 1, true)
+	and campaignSource:find("l.left.h - 112 - LIST_SCROLL_REDUCTION", 1, true),
+	"campaign map list and scrollbar must use the shortened scroll area")
 assert(campaignSource:find("local BUTTON_BOTTOM_GAP = 24", 1, true),
 	"campaign actions must align to the shared panel padding")
 assert(campaignSource:find("local BACK_BUTTON_H = 54", 1, true)
