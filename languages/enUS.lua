@@ -115,7 +115,6 @@ return {
 		perfectBonus = "$%g perfect",
 		noUnlockReward = "Medal upgrade",
 		abilityLoadout = "Active Abilities",
-		abilityLevel = "Level %d",
 		selectAbility = "Select an ability",
 		editLoadout = "Edit Loadout",
 		abilityEquippedInSlot = "Equipped in slot %d",

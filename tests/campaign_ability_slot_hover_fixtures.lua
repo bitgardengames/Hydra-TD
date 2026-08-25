@@ -9,5 +9,7 @@ assert(source:find("hoveredAbilitySlot == slot", 1, true),
 	"campaign ability cards must receive their hovered presentation state")
 assert(source:find("AbilityTooltip.show(equipped[hoveredAbilitySlot])", 1, true),
 	"hovering an equipped campaign ability slot must expose its tooltip data")
+assert(not source:find('L("campaign.abilityLevel"', 1, true),
+	"equipped campaign ability slots must not display a level label")
 
 print("campaign ability slot hover fixtures passed")
