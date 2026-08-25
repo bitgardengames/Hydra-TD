@@ -22,10 +22,13 @@ assert(campaignSource:find("local SPACE = 12", 1, true)
 assert(campaignSource:find("local LIST_ROW_STEP = LIST_ROW_H + SPACE", 1, true)
 	and campaignSource:find("local DIFFICULTY_CARD_STEP = DIFFICULTY_CARD_H + SPACE", 1, true),
 	"campaign lists and difficulty cards must use the shared gap")
+assert(campaignSource:find("local LIST_ROW_H = 73", 1, true)
+	and campaignSource:find("local DIFFICULTY_CARD_H = 78", 1, true),
+	"campaign selection controls must use the compact heights")
 assert(campaignSource:find("local BUTTON_BOTTOM_GAP = 24", 1, true),
 	"campaign actions must align to the shared panel padding")
 assert(campaignSource:find("local BACK_BUTTON_H = 54", 1, true)
-	and campaignSource:find("local PLAY_BUTTON_H = 108", 1, true),
+	and campaignSource:find("local PLAY_BUTTON_H = 78", 1, true),
 	"campaign action geometry must use shared height tokens")
 
 local buttonFile = assert(io.open("ui/button.lua", "r"))
