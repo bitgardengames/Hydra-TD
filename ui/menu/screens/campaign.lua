@@ -60,6 +60,8 @@ local LIST_PREVIEW_H = 60
 local MAIN_PREVIEW_HEIGHT_RATIO = 0.43
 local DIFFICULTY_CARD_H = 80
 local DIFFICULTY_CARD_STEP = 98
+local ABILITY_SLOT_COUNT = 2
+local ABILITY_CARD_GAP = 18
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -442,9 +444,9 @@ local function abilityCardGeometry(l, entry, slot)
 	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local abilitiesY = previewY + entry.canvas:getHeight() * scale + 21
-	local cardY, cardGap = abilitiesY + 36, 14
-	local cardW = (w - cardGap * 2) / 3
-	return x + (slot - 1) * (cardW + cardGap), cardY, cardW, 155
+	local cardY = abilitiesY + 36
+	local cardW = (w - ABILITY_CARD_GAP * (ABILITY_SLOT_COUNT - 1)) / ABILITY_SLOT_COUNT
+	return x + (slot - 1) * (cardW + ABILITY_CARD_GAP), cardY, cardW, 155
 end
 
 local function drawCenter(l, map, mapIndex, entry)
@@ -481,11 +483,11 @@ local function drawCenter(l, map, mapIndex, entry)
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
 	Text.printShadow(L("campaign.abilityLoadout"), x, abilitiesY)
-	local cardY, cardGap = abilitiesY + 36, 14
-	local cardW = (w - cardGap * 2) / 3
+	local cardY = abilitiesY + 36
+	local cardW = (w - ABILITY_CARD_GAP * (ABILITY_SLOT_COUNT - 1)) / ABILITY_SLOT_COUNT
 	local equipped = CampaignUnlocks.getEquippedAbilities()
-	for slot = 1, 3 do
-		drawAbilityCard(x + (slot - 1) * (cardW + cardGap), cardY, cardW, 155, slot,
+	for slot = 1, ABILITY_SLOT_COUNT do
+		drawAbilityCard(x + (slot - 1) * (cardW + ABILITY_CARD_GAP), cardY, cardW, 155, slot,
 			equipped[slot], CampaignUnlocks.isAbilitySlotUnlocked(slot), hoveredAbilitySlot == slot)
 	end
 
@@ -566,7 +568,7 @@ function Screen.update(dt)
 	local hoveredReward = hoveredMapReward(l, map, entry, mx, my)
 	local equipped = CampaignUnlocks.getEquippedAbilities()
 	hoveredAbilitySlot = nil
-	for slot = 1, 3 do
+	for slot = 1, ABILITY_SLOT_COUNT do
 		local x, y, w, h = abilityCardGeometry(l, entry, slot)
 		if x and mx >= x and mx <= x + w and my >= y and my <= y + h then
 			hoveredAbilitySlot = slot
