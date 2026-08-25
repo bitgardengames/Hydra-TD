@@ -69,6 +69,8 @@ local ABILITY_PICKER_W = 520
 local ABILITY_PICKER_PAD = 20
 local ABILITY_PICKER_ITEM_H = 72
 local ABILITY_PICKER_GAP = 10
+local CAMPAIGN_CARD_MAX_H = 680
+local BUTTON_BOTTOM_GAP = 31
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -146,10 +148,9 @@ local function layout()
 	local footerH = max(46, floor(sh * 0.053))
 	local gap = 0
 	local contentY = headerH
-	-- The campaign card is deliberately capped to the mock-up's 16:9 footprint.
-	-- Keeping the cap, rather than independently stretching each column, preserves
-	-- the same outer edges and interior rhythm on larger windows.
-	local contentH = min(725, sh - headerH - footerH)
+	-- Cap the campaign card so its controls stay grouped instead of leaving an
+	-- empty strip beneath the map selection content on taller windows.
+	local contentH = min(CAMPAIGN_CARD_MAX_H, sh - headerH - footerH)
 	local contentW = min(1300, sw - margin * 2)
 	local contentX = floor((sw - contentW) * 0.5)
 	local leftW = floor(contentW * 0.29)
@@ -316,7 +317,7 @@ local function drawHeader(l, pose, unlockPose)
 	Text.printfShadow(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 68, 26, 62, "center")
 end
 
-local function drawMapList(l, pose, unlockPose)
+local function drawMapList(l, unlockPose)
 	local rowH, count = visibleRows(l)
 	local rowX = l.left.x + 26
 	local rowW = l.left.w - 46
@@ -341,7 +342,7 @@ local function drawMapList(l, pose, unlockPose)
 		end
 		local textX = rowX + LIST_PREVIEW_W + 12
 		Fonts.set("ui")
-		lg.setColor(selected and Theme.outline.color or Theme.ui.text)
+		lg.setColor(Theme.ui.text)
 		Text.printShadow(index .. "  " .. L(map.nameKey), textX, y + 7)
 		if locked then
 			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.55)
@@ -351,14 +352,6 @@ local function drawMapList(l, pose, unlockPose)
 			Medals.draw(textX, y + 31, stats and Medals.getCount(stats.completedDifficulty) or 0, 7, 6, pulseTime)
 		end
 	end
-	-- The highlight travels independently of listOffset, so selecting a visible
-	-- row never nudges the scroll viewport just to create the animation.
-	local highlightY = l.left.y + 30 + (pose.rowIndex - listOffset - 1) * rowH
-	lg.setColor(Theme.outline.color)
-	lg.setLineWidth(3)
-	lg.rectangle("line", rowX, highlightY, rowW, rowH - 7, 7)
-	lg.setLineWidth(1)
-
 	local trackX, trackY, trackW, trackH, thumbY, thumbH = scrollbarGeometry(l)
 	if trackX then
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.14)
@@ -605,7 +598,7 @@ local function drawRight(l, map)
 	end
 
 	local play = buttons.play
-	play.x, play.y, play.w, play.h = x, l.right.y + l.right.h - 131, w, 100
+	play.x, play.y, play.w, play.h = x, l.right.y + l.right.h - BUTTON_BOTTOM_GAP - 100, w, 100
 	play.label = L("campaign.playMap") .. "\n" .. L(map.nameKey) .. "  •  " .. L("difficulty." .. selected)
 	play.enabled = not isMapLocked(State.mapIndex)
 	Fonts.set("ui")
@@ -634,11 +627,11 @@ function Screen.update(dt)
 			scrollbarDragging = false
 		end
 	end
-	buttons.back.x, buttons.back.y = l.left.x + 26, l.left.y + l.left.h - 75
+	buttons.back.x, buttons.back.y = l.left.x + 26, l.left.y + l.left.h - BUTTON_BOTTOM_GAP - 42
 	buttons.back.w = 164
 	local rightPad = 20
 	buttons.play.x = l.right.x + rightPad + 7
-	buttons.play.y = l.right.y + l.right.h - 131
+	buttons.play.y = l.right.y + l.right.h - BUTTON_BOTTOM_GAP - 100
 	buttons.play.w = l.right.w - rightPad * 2 - 14
 	buttons.play.h = 100
 	buttons.play.enabled = not isMapLocked(State.mapIndex)
@@ -715,14 +708,14 @@ function Screen.draw()
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.10)
 	lg.rectangle("fill", l.center.x, l.contentY + 28, 2, l.contentH - 56)
 	lg.rectangle("fill", l.right.x, l.contentY + 28, 2, l.contentH - 56)
-	drawMapList(l, pose, unlockEvent and unlockPose)
+	drawMapList(l, unlockEvent and unlockPose)
 	local map = Maps[State.mapIndex]
 	local entry = MapPreviewCache.get(map.id)
 	if entry then drawCenter(l, map, State.mapIndex, entry) end
 	drawRight(l, map)
 	drawUnlockRewards(l, unlockEvent, unlockPose)
 
-	buttons.back.x, buttons.back.y = l.left.x + 26, l.left.y + l.left.h - 75
+	buttons.back.x, buttons.back.y = l.left.x + 26, l.left.y + l.left.h - BUTTON_BOTTOM_GAP - 42
 	buttons.back.w = 164
 	Fonts.set("ui")
 	Button.draw(buttons.back)

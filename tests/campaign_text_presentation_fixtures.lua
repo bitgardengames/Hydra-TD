@@ -9,6 +9,14 @@ assert(campaignSource:find("Text.printShadow", 1, true),
 	"campaign screen must render unaligned text with a shadow")
 assert(campaignSource:find("Text.printfShadow", 1, true),
 	"campaign screen must render aligned text with a shadow")
+assert(campaignSource:find("lg.setColor(Theme.ui.text)\n\t\tText.printShadow(index", 1, true),
+	"selected and unselected map names must use the same text color")
+assert(not campaignSource:find('lg.rectangle("line", rowX, highlightY', 1, true),
+	"map selection rows must not draw an animated outline")
+assert(campaignSource:find("local CAMPAIGN_CARD_MAX_H = 680", 1, true),
+	"campaign card must use the compact height")
+assert(campaignSource:find("local BUTTON_BOTTOM_GAP = 31", 1, true),
+	"campaign actions must share a consistent bottom gap")
 
 local buttonFile = assert(io.open("ui/button.lua", "r"))
 local buttonSource = buttonFile:read("*a")
