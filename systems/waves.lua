@@ -307,7 +307,6 @@ local function describeEnemyGroup(kind, count, spacing, delay)
 		spacing = spacing or 0,
 		delay = delay or 0,
 		tags = {},
-		counterHints = {},
 		traitIds = {},
 	}
 
@@ -316,7 +315,6 @@ local function describeEnemyGroup(kind, count, spacing, delay)
 		if trait then
 			group.traitIds[#group.traitIds + 1] = traitId
 			group.tags[#group.tags + 1] = L("enemyTrait." .. traitId .. ".tag")
-			group.counterHints[#group.counterHints + 1] = L("enemyTrait." .. traitId .. ".counter")
 		end
 	end
 

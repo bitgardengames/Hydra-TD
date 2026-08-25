@@ -79,9 +79,6 @@ local function buildEnemyTooltip(group)
 	if #group.tags > 0 then
 		rows[#rows + 1] = {kind = "text", text = L("hud.threatTags", table.concat(group.tags, ", "))}
 	end
-	for _, hint in ipairs(group.counterHints) do
-		rows[#rows + 1] = {kind = "text", text = L("hud.counterHint", hint), padAfter = 4}
-	end
 	return {title = group.name, rows = rows}
 end
 
