@@ -66,6 +66,7 @@ local LIST_ROW_H = 73
 local LIST_ROW_STEP = LIST_ROW_H + SPACE
 local LIST_PREVIEW_W = 96
 local LIST_PREVIEW_H = 60
+local LIST_SCROLL_REDUCTION = 30
 local MAIN_PREVIEW_HEIGHT_RATIO = 0.70
 local DIFFICULTY_CARD_H = 78
 local DIFFICULTY_CARD_STEP = DIFFICULTY_CARD_H + SPACE
@@ -176,7 +177,7 @@ local function layout()
 end
 
 local function visibleRows(l)
-	return LIST_ROW_STEP, max(1, floor((l.left.h - 110) / LIST_ROW_STEP))
+	return LIST_ROW_STEP, max(1, floor((l.left.h - 110 - LIST_SCROLL_REDUCTION) / LIST_ROW_STEP))
 end
 
 local function scrollbarGeometry(l)
@@ -184,7 +185,7 @@ local function scrollbarGeometry(l)
 	if #Maps <= count then return nil end
 	local trackX = l.left.x + l.left.w - 13
 	local trackY = l.left.y + SECTION_INSET
-	local trackH = l.left.h - 112
+	local trackH = l.left.h - 112 - LIST_SCROLL_REDUCTION
 	local thumbH = max(32, trackH * count / #Maps)
 	local maxOffset = #Maps - count
 	local thumbY = trackY + (trackH - thumbH) * listOffset / maxOffset
