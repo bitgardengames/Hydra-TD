@@ -46,6 +46,7 @@ local DIFFICULTY_HINTS = {
 local buttons = {}
 local pulseTime = 0
 local hoveredMedal
+local hoveredAbilitySlot
 local listOffset = 0
 local scrollbarDragging = false
 local scrollbarGrabY = 0
@@ -384,11 +385,12 @@ local function drawUnlockRewards(l, event, pose)
 	end
 end
 
-local function drawAbilityCard(x, y, w, h, slot, abilityId)
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], abilityId and 0.18 or 0.10)
+local function drawAbilityCard(x, y, w, h, slot, abilityId, hovered)
+	local alpha = abilityId and (hovered and 0.28 or 0.18) or 0.10
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], alpha)
 	lg.rectangle(abilityId and "fill" or "line", x, y, w, h, 9)
-	lg.setColor(Theme.outline.color)
-	lg.setLineWidth(2)
+	lg.setColor(hovered and Theme.ui.selected or Theme.outline.color)
+	lg.setLineWidth(hovered and 3 or 2)
 	lg.rectangle("line", x, y, w, h, 9)
 	lg.setLineWidth(1)
 
@@ -401,7 +403,7 @@ local function drawAbilityCard(x, y, w, h, slot, abilityId)
 			lg.setColor(Theme.ui.text)
 			lg.printf(binding, x + 12, y + 17, 34, "center")
 		end
-		AbilityIcons.draw(abilityId, x + w * 0.5, y + 63, 1.25, 1)
+		AbilityIcons.draw(abilityId, x + w * 0.5, y + 63, hovered and 1.34 or 1.25, 1)
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text)
 		lg.printf(L(AbilityDefs[abilityId].nameKey), x + 8, y + h - 46, w - 16, "center")
@@ -414,6 +416,19 @@ local function drawAbilityCard(x, y, w, h, slot, abilityId)
 		Fonts.set("ui")
 		lg.printf(L("campaign.selectAbility"), x + 8, y + h - 39, w - 16, "center")
 	end
+end
+
+local function abilityCardGeometry(l, entry, slot)
+	if not entry then return nil end
+	local pad = 20
+	local x, y, w = l.center.x + pad, l.center.y + 30, l.center.w - pad * 2
+	local previewY = y + 77
+	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
+	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
+	local abilitiesY = previewY + entry.canvas:getHeight() * scale + 21
+	local cardY, cardGap = abilitiesY + 36, 14
+	local cardW = (w - cardGap * 2) / 3
+	return x + (slot - 1) * (cardW + cardGap), cardY, cardW, 155
 end
 
 local function drawCenter(l, map, mapIndex, entry)
@@ -454,7 +469,8 @@ local function drawCenter(l, map, mapIndex, entry)
 	local cardW = (w - cardGap * 2) / 3
 	local equipped = CampaignUnlocks.getEquippedAbilities()
 	for slot = 1, 3 do
-		drawAbilityCard(x + (slot - 1) * (cardW + cardGap), cardY, cardW, 155, slot, equipped[slot])
+		drawAbilityCard(x + (slot - 1) * (cardW + cardGap), cardY, cardW, 155, slot,
+			equipped[slot], hoveredAbilitySlot == slot)
 	end
 
 	local edit = buttons.editLoadout
@@ -530,7 +546,17 @@ function Screen.update(dt)
 	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
 
 	local map = Maps[State.mapIndex]
-	local hoveredReward = hoveredMapReward(l, map, MapPreviewCache.get(map.id), mx, my)
+	local entry = MapPreviewCache.get(map.id)
+	local hoveredReward = hoveredMapReward(l, map, entry, mx, my)
+	local equipped = CampaignUnlocks.getEquippedAbilities()
+	hoveredAbilitySlot = nil
+	for slot = 1, 3 do
+		local x, y, w, h = abilityCardGeometry(l, entry, slot)
+		if equipped[slot] and x and mx >= x and mx <= x + w and my >= y and my <= y + h then
+			hoveredAbilitySlot = slot
+			break
+		end
+	end
 	local stats = statsFor(map.id)
 	local count = stats and Medals.getCount(stats.completedDifficulty) or 0
 	hoveredMedal = nil
@@ -547,6 +573,8 @@ function Screen.update(dt)
 	end
 	if hoveredReward and hoveredReward.type == "ability" then
 		AbilityTooltip.show(hoveredReward.id)
+	elseif hoveredAbilitySlot then
+		AbilityTooltip.show(equipped[hoveredAbilitySlot])
 	elseif hoveredMedal then
 		local key = DIFFICULTIES[hoveredMedal]
 		local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[key]
