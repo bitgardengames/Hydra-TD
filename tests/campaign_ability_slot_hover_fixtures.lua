@@ -13,6 +13,12 @@ assert(source:find('L(unlocked and "campaign.selectAbility" or "abilityUnlock.sl
 	"empty campaign slots must distinguish unlocked selection prompts from locked slots")
 assert(source:find("if x and mx >= x", 1, true),
 	"empty and locked campaign ability cards must participate in hover detection")
+assert(source:find("local ABILITY_SLOT_COUNT = 2", 1, true),
+	"campaign map selection must only present two active ability slots")
+assert(source:find("/ ABILITY_SLOT_COUNT", 1, true),
+	"campaign map selection must rebalance card widths across the available slots")
+assert(not source:find("for slot = 1, 3", 1, true),
+	"campaign map selection must not draw or inspect a third active ability slot")
 assert(not source:find('L("campaign.abilityLevel"', 1, true),
 	"equipped campaign ability slots must not display a level label")
 
