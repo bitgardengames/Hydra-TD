@@ -1,6 +1,5 @@
 local DrawWorld = require("render.draw_world")
 local Constants = require("core.constants")
-local Camera = require("core.camera")
 local MapMod = require("world.map")
 
 local MapRender = {}
@@ -9,6 +8,32 @@ local lg = love.graphics
 
 local MAP_W = Constants.GRID_W * Constants.TILE
 local MAP_H = Constants.GRID_H * Constants.TILE
+
+-- Menu previews reproduce the authored gameplay composition, independently of
+-- the window that happens to be active while the cache is being built.
+local PREVIEW_VIEWPORT_W = 1920
+local PREVIEW_VIEWPORT_H = 1080
+local PREVIEW_CAMERA_SCALE = 1.6
+
+function MapRender.gameplayPreviewTransform(destinationW, destinationH)
+	local destinationScale = math.min(
+		destinationW / PREVIEW_VIEWPORT_W,
+		destinationH / PREVIEW_VIEWPORT_H
+	)
+	local renderedW = PREVIEW_VIEWPORT_W * destinationScale
+	local renderedH = PREVIEW_VIEWPORT_H * destinationScale
+
+	return {
+		viewportW = PREVIEW_VIEWPORT_W,
+		viewportH = PREVIEW_VIEWPORT_H,
+		cameraScale = PREVIEW_CAMERA_SCALE,
+		destinationScale = destinationScale,
+		offsetX = (destinationW - renderedW) * 0.5,
+		offsetY = (destinationH - renderedH) * 0.5,
+		cameraX = MAP_W * 0.5 - PREVIEW_VIEWPORT_W / (2 * PREVIEW_CAMERA_SCALE),
+		cameraY = MAP_H * 0.5 - PREVIEW_VIEWPORT_H / (2 * PREVIEW_CAMERA_SCALE),
+	}
+end
 
 local function withRenderContext(context, fn)
 	if not context or not context.map then
@@ -42,20 +67,9 @@ function MapRender.renderWorldToCanvas(canvas, scale)
 	lg.setCanvas()
 end
 
-function MapRender.renderGameplayFramedToCanvas(canvas, context)
+function MapRender.renderGameplayFramedToCanvas(canvas, context, transform)
 	local canvasW, canvasH = canvas:getDimensions()
-	local winW, winH = love.graphics.getDimensions()
-
-	local z = Camera.wscale
-
-	local mapCX = MAP_W * 0.5
-	local mapCY = MAP_H * 0.5
-
-	local camWX = mapCX - (winW / (2 * z))
-	local camWY = mapCY - (winH / (2 * z))
-
-	local sx = canvasW / winW
-	local sy = canvasH / winH
+	transform = transform or MapRender.gameplayPreviewTransform(canvasW, canvasH)
 
 	lg.setCanvas(canvas)
 	lg.clear(0, 0, 0, 0)
@@ -63,9 +77,10 @@ function MapRender.renderGameplayFramedToCanvas(canvas, context)
 	lg.push()
 	lg.origin()
 
-	lg.scale(sx, sy)
-	lg.scale(z, z)
-	lg.translate(-camWX, -camWY)
+	lg.translate(transform.offsetX, transform.offsetY)
+	local scale = transform.cameraScale * transform.destinationScale
+	lg.scale(scale, scale)
+	lg.translate(-transform.cameraX, -transform.cameraY)
 
 	withRenderContext(context, function()
 		DrawWorld.drawGrass()

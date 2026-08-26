@@ -74,12 +74,16 @@ assert(cacheSource:find('local key = w .. "x" .. h', 1, true),
 	"map previews must be cached separately for every native destination size")
 assert(cacheSource:find('canvas:setFilter("nearest", "nearest")', 1, true),
 	"map preview canvases must retain the game's pixel-art texture filtering")
-assert(cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas)", 1, true)
+assert(cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas, nil, previewTransform)", 1, true)
 	and not cacheSource:find("MapRender.renderFullMapToCanvas(canvas)", 1, true),
 	"map previews must use the same framing as the gameplay camera")
-assert(cacheSource:find("(worldPoint[1] - cameraX) * cameraScale * scaleX", 1, true)
-	and cacheSource:find("(worldPoint[2] - cameraY) * cameraScale * scaleY", 1, true),
+assert(cacheSource:find("buildPreviewPath(context.map.pathWorld, previewTransform)", 1, true)
+	and cacheSource:find("local scale = transform.cameraScale * transform.destinationScale", 1, true)
+	and cacheSource:find("(worldPoint[1] - transform.cameraX) * scale", 1, true)
+	and cacheSource:find("(worldPoint[2] - transform.cameraY) * scale", 1, true),
 	"map preview paths must use the same gameplay camera transform as their images")
+assert(not cacheSource:find("scaleX", 1, true) and not cacheSource:find("scaleY", 1, true),
+	"map preview paths must not use independent axis scaling")
 assert(cacheSource:find("Trees.list = previousScatter.trees", 1, true)
 	and cacheSource:find("Trees.occupied = previousScatter.treeOccupied", 1, true)
 	and cacheSource:find("Cacti.list = previousScatter.cacti", 1, true)
@@ -90,9 +94,14 @@ assert(cacheSource:find("Trees.list = previousScatter.trees", 1, true)
 local renderFile = assert(io.open("world/map_render.lua", "r"))
 local renderSource = renderFile:read("*a")
 renderFile:close()
-assert(renderSource:find("lg.scale(sx, sy)", 1, true)
-	and renderSource:find("lg.scale(z, z)", 1, true)
-	and renderSource:find("lg.translate(-camWX, -camWY)", 1, true),
-	"gameplay-framed previews must reproduce the centered gameplay camera transform")
+assert(renderSource:find("local PREVIEW_VIEWPORT_W = 1920", 1, true)
+	and renderSource:find("local PREVIEW_VIEWPORT_H = 1080", 1, true)
+	and renderSource:find("destinationScale = math.min", 1, true),
+	"gameplay-framed previews must derive framing from the authored 16:9 viewport")
+assert(renderSource:find("local scale = transform.cameraScale * transform.destinationScale", 1, true)
+	and renderSource:find("lg.scale(scale, scale)", 1, true)
+	and not renderSource:find("lg.scale(sx, sy)", 1, true)
+	and not renderSource:find("love.graphics.getDimensions()", 1, true),
+	"gameplay-framed previews must use one uniform, window-independent transform")
 
 print("campaign text presentation fixtures passed")

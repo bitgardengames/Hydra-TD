@@ -2,9 +2,7 @@ local MapPreviewCache = {}
 
 local Maps = require("world.map_defs")
 local MapMod = require("world.map")
-local Constants = require("core.constants")
 local MapRender = require("world.map_render")
-local Camera = require("core.camera")
 local State = require("core.state")
 local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
@@ -13,32 +11,26 @@ local Mushrooms = require("world.scatter_mushrooms")
 
 local lg = love.graphics
 
-local mapW = Constants.GRID_W * Constants.TILE
-local mapH = Constants.GRID_H * Constants.TILE
-
 -- Previews are keyed by both map and destination size.  A single 16:9 canvas
 -- used to be shared by every UI presentation, which meant at least one of the
 -- presentations would resample it.  Keeping each native-sized render here is
 -- deliberately a memory-for-image-quality tradeoff.
 local cache = {}
 
-local function buildPreviewPath(pathWorld, previewW, previewH, winW, winH, cameraScale)
+local function buildPreviewPath(pathWorld, transform)
 	if not pathWorld or #pathWorld < 2 then
 		return nil
 	end
 
 	-- Apply the same centered viewport transform used to render the preview so
 	-- callers that animate along this path remain aligned with the map image.
-	local cameraX = mapW * 0.5 - winW / (2 * cameraScale)
-	local cameraY = mapH * 0.5 - winH / (2 * cameraScale)
-	local scaleX = previewW / winW
-	local scaleY = previewH / winH
+	local scale = transform.cameraScale * transform.destinationScale
 	local points = {}
 	local totalLength = 0
 
 	for i, worldPoint in ipairs(pathWorld) do
-		local x = (worldPoint[1] - cameraX) * cameraScale * scaleX
-		local y = (worldPoint[2] - cameraY) * cameraScale * scaleY
+		local x = transform.offsetX + (worldPoint[1] - transform.cameraX) * scale
+		local y = transform.offsetY + (worldPoint[2] - transform.cameraY) * scale
 		if i > 1 then
 			local previous = points[i - 1]
 			local dx, dy = x - previous.x, y - previous.y
@@ -81,7 +73,6 @@ local function withMapContext(context, previousMap, fn)
 end
 
 local function build(mapIndex, mapDef, w, h)
-	local winW, winH = lg.getDimensions()
 	local previousMapIndex = State.worldMapIndex
 	local previousMap = {}
 	local previousScatter = {
@@ -93,6 +84,7 @@ local function build(mapIndex, mapDef, w, h)
 	}
 	local context = MapMod.createRenderContext(mapDef)
 	local canvas = lg.newCanvas(w, h, {msaa = 8})
+	local previewTransform = MapRender.gameplayPreviewTransform(w, h)
 	local scatter = context.map.biome and context.map.biome.scatter
 
 	-- Hydra TD's world art uses nearest-neighbour filtering.  The preview is
@@ -134,7 +126,7 @@ local function build(mapIndex, mapDef, w, h)
 			Mushrooms.clear()
 		end
 
-		MapRender.renderGameplayFramedToCanvas(canvas)
+		MapRender.renderGameplayFramedToCanvas(canvas, nil, previewTransform)
 	end)
 
 	-- Preview generation uses the live scatter modules as scratch space. Restore
@@ -153,7 +145,7 @@ local function build(mapIndex, mapDef, w, h)
 
 	return {
 		canvas = canvas,
-		previewPath = buildPreviewPath(context.map.pathWorld, w, h, winW, winH, Camera.wscale),
+		previewPath = buildPreviewPath(context.map.pathWorld, previewTransform),
 	}
 end
 
