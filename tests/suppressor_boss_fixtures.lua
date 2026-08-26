@@ -5,8 +5,10 @@ local suppressor = assert(defs.boss_suppression)
 
 assert(suppressor.hp >= 400 and suppressor.hp <= 500,
 	"Suppressor health must remain in line with the other specialist bosses")
-assert(suppressor.suppression.period == 20 and suppressor.suppression.duration == 5,
-	"Suppressor must disable one tower for five seconds on a twenty-second cadence")
+assert(suppressor.suppression.period == 16 and suppressor.suppression.duration == 4,
+	"Suppressor must disable one tower for four seconds on a sixteen-second cadence")
+assert(suppressor.suppression.initialDelay == 8,
+	"Suppressor must wait eight seconds before its opening cast")
 assert(suppressor.suppression.range == 240 and suppressor.suppression.projectileSpeed > 0,
 	"Suppressor casts must have a finite vicinity and a visible travel time")
 

@@ -125,9 +125,9 @@ return {
 		mechanicWeight = 1.65,
 		mechanicPackage = "suppression_aura",
 		suppression = {
-			period = 20.0,
-			duration = 5.0,
-			initialDelay = 10.0,
+			period = 16.0,
+			duration = 4.0,
+			initialDelay = 8.0,
 			range = 240,
 			projectileSpeed = 360,
 		},
