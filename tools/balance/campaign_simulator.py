@@ -44,7 +44,7 @@ POLICIES = {
     "competent": {"placement_candidates": 10, "placement_noise": .13,
         "counter_knowledge": .72, "lookahead_waves": 1, "upgrade_preference": .48,
         "ability_accuracy": .76, "ability_delay": 1.6, "retries": 2, "search_budget": 12},
-    "expert": {"placement_candidates": 24, "placement_noise": .02,
+    "hard": {"placement_candidates": 24, "placement_noise": .02,
         "counter_knowledge": 1.0, "lookahead_waves": 2, "upgrade_preference": .55,
         "ability_accuracy": .94, "ability_delay": .35, "retries": 1, "search_budget": 32},
 }
@@ -121,7 +121,7 @@ def choose_kind(policy, composition, towers, key):
     # Deliberately bounded and imperfect repertoires; novice overbuys cheap Lancers.
     pools = {"novice": ("lancer","lancer","slow","cannon"),
              "competent": ("lancer","cannon","shock","poison","slow"),
-             "expert": ("lancer","cannon","shock","poison","slow","plasma")}
+             "hard": ("lancer","cannon","shock","poison","slow","plasma")}
     pool = pools[key[0]]
     return pool[int(stable_unit(*key, "kind") * len(pool)) % len(pool)]
 
