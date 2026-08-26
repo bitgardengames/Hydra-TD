@@ -37,12 +37,6 @@ local DIFFICULTY_COLORS = {
 	normal = Theme.ui.warn,
 	hard = Theme.ui.bad,
 }
-local DIFFICULTY_HINTS = {
-	easy = "campaign.difficultyEasy",
-	normal = "campaign.difficultyNormal",
-	hard = "campaign.difficultyHard",
-}
-
 local buttons = {}
 local pulseTime = 0
 local hoveredMedal
@@ -58,17 +52,17 @@ local unlockSequence = UnlockPresentation.new()
 
 -- Campaign layout uses a small set of shared spacing tokens. Keeping the list,
 -- preview, difficulty cards, and actions on the same rhythm is especially
--- important here because the three columns read as one surface.
+-- important here because both columns read as one surface.
 local SPACE = 8
 local PANEL_PAD = 20
 local SECTION_INSET = 20
 local LIST_ROW_H = 60
 local LIST_ROW_STEP = LIST_ROW_H + SPACE
+local LIST_HEADER_H = 48
 local LIST_PREVIEW_W = 84
 local LIST_PREVIEW_H = 50
 local MAIN_PREVIEW_HEIGHT_RATIO = 0.82
-local DIFFICULTY_CARD_H = 68
-local DIFFICULTY_CARD_STEP = DIFFICULTY_CARD_H + SPACE
+local DIFFICULTY_CARD_H = 48
 local ABILITY_SLOT_COUNT = 2
 local ABILITY_CARD_GAP = 18
 local ABILITY_CARD_SIZE = 140
@@ -77,10 +71,10 @@ local ABILITY_PICKER_PAD = 20
 local ABILITY_PICKER_ITEM_H = 72
 local ABILITY_PICKER_GAP = 10
 local CAMPAIGN_CARD_MAX_W = 1268
-local CAMPAIGN_CARD_MAX_H = 420
+local CAMPAIGN_CARD_MAX_H = 720
 local BUTTON_BOTTOM_GAP = 18
 local BACK_BUTTON_H = 48
-local PLAY_BUTTON_H = 88
+local PLAY_BUTTON_H = 78
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -154,8 +148,8 @@ end
 local function layout()
 	local sw, sh = lg.getDimensions()
 	local margin = max(18, floor(sw * 0.024))
-	local headerH = max(104, floor(sh * 0.13))
-	local footerH = max(46, floor(sh * 0.053))
+	local headerH = max(96, floor(sh * 0.115))
+	local footerH = max(46, floor(sh * 0.06))
 	local gap = 0
 	local contentY = headerH
 	-- Cap the campaign card so its controls stay grouped instead of leaving an
@@ -163,20 +157,18 @@ local function layout()
 	local contentH = min(CAMPAIGN_CARD_MAX_H, sh - headerH - footerH)
 	local contentW = min(CAMPAIGN_CARD_MAX_W, sw - margin * 2)
 	local contentX = floor((sw - contentW) * 0.5)
-	local leftW = floor(contentW * 0.297)
-	local rightW = floor(contentW * 0.276)
-	local centerW = contentW - gap * 2 - leftW - rightW
+	local leftW = floor(contentW * 0.325)
+	local centerW = contentW - gap - leftW
 	return {
 		sw = sw, sh = sh, margin = margin, headerH = headerH, footerH = footerH,
 		gap = gap, contentY = contentY, contentH = contentH,
 		left = {x = contentX, y = contentY, w = leftW, h = contentH},
 		center = {x = contentX + leftW + gap, y = contentY, w = centerW, h = contentH},
-		right = {x = contentX + contentW - rightW, y = contentY, w = rightW, h = contentH},
 	}
 end
 
 local function visibleRows(l)
-	local listH = l.left.h - SECTION_INSET - BUTTON_BOTTOM_GAP - BACK_BUTTON_H - SPACE
+	local listH = l.left.h - SECTION_INSET - LIST_HEADER_H - BUTTON_BOTTOM_GAP - BACK_BUTTON_H - SPACE
 	return LIST_ROW_STEP, max(1, floor((listH + SPACE) / LIST_ROW_STEP))
 end
 
@@ -184,8 +176,8 @@ local function scrollbarGeometry(l)
 	local _, count = visibleRows(l)
 	if #Maps <= count then return nil end
 	local trackX = l.left.x + l.left.w - 13
-	local trackY = l.left.y + SECTION_INSET
-	local trackH = l.left.h - SECTION_INSET - BUTTON_BOTTOM_GAP - BACK_BUTTON_H - SPACE
+	local trackY = l.left.y + SECTION_INSET + LIST_HEADER_H
+	local trackH = l.left.h - SECTION_INSET - LIST_HEADER_H - BUTTON_BOTTOM_GAP - BACK_BUTTON_H - SPACE
 	local thumbH = max(32, trackH * count / #Maps)
 	local maxOffset = #Maps - count
 	local thumbY = trackY + (trackH - thumbH) * listOffset / maxOffset
@@ -269,7 +261,7 @@ local function drawHeader(l, pose, unlockPose)
 	-- above the map list (rather than above the detail column) matches the wide
 	-- visual rhythm of the campaign header while leaving the title unobstructed.
 	local startX = max(l.margin + 390, l.left.x + 284)
-	local endX = min(l.sw - l.margin - 190, l.right.x + 81)
+	local endX = min(l.sw - l.margin - 190, l.center.x + l.center.w - 210)
 	local available = endX - startX
 	local step = available / (#Maps - 1)
 	local y = 49
@@ -331,11 +323,14 @@ local function drawMapList(l, unlockPose)
 	local rowH, count = visibleRows(l)
 	local rowX = l.left.x + PANEL_PAD
 	local rowW = l.left.w - PANEL_PAD * 2
+	Fonts.set("menu")
+	lg.setColor(Theme.ui.text)
+	Text.printShadow(L("campaign.maps"), rowX, l.left.y + SECTION_INSET - 4)
 	for visible = 1, count do
 		local index = listOffset + visible
 		local map = Maps[index]
 		if not map then break end
-		local y = l.left.y + SECTION_INSET + (visible - 1) * rowH
+		local y = l.left.y + SECTION_INSET + LIST_HEADER_H + (visible - 1) * rowH
 		local selected = index == State.mapIndex
 		local locked = isMapLocked(index)
 		lg.setColor(selected and Theme.ui.selected or Theme.ui.panel)
@@ -541,7 +536,7 @@ end
 
 local function drawCenter(l, map, mapIndex, entry)
 	local pad = PANEL_PAD
-	local x, y, w = l.center.x + pad, l.center.y + 30, l.center.w - pad * 2
+	local x, y, w = l.center.x + pad + 8, l.center.y + SECTION_INSET, l.center.w - pad * 2 - 8
 	Fonts.set("title")
 	lg.setColor(Theme.ui.text)
 	Text.printShadow(L(map.nameKey), x, y)
@@ -557,8 +552,8 @@ local function drawCenter(l, map, mapIndex, entry)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
 	Text.printfShadow(L("campaign.bestMedals"), x + w - clusterW - 82, y + 12, 72, "right")
 
-	local previewY = y + 62
-	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
+	local previewY = y + 70
+	local maxPreviewH = max(120, l.center.h - (previewY - l.center.y) - 190)
 	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
 	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
 	local previewX = x + (w - previewW) * 0.5
@@ -572,34 +567,38 @@ local function drawCenter(l, map, mapIndex, entry)
 end
 
 local function difficultyGeometry(l)
-	local x = l.right.x + SECTION_INSET
-	local titleY = l.right.y + SECTION_INSET
-	local w = l.right.w - SECTION_INSET * 2
-	local cardY = titleY + 68
-	local playY = l.right.y + l.right.h - BUTTON_BOTTOM_GAP - PLAY_BUTTON_H
-	return x, titleY, w, cardY, playY
+	local x = l.center.x + PANEL_PAD + 8
+	local w = l.center.w - PANEL_PAD * 2 - 8
+	local playY = l.center.y + l.center.h - BUTTON_BOTTOM_GAP - PLAY_BUTTON_H
+	local cardY = playY - SPACE - DIFFICULTY_CARD_H
+	local labelW = 118
+	return x, cardY, w, labelW, playY
 end
 
 local function drawRight(l, map)
-	local x, y, w, cardY, playY = difficultyGeometry(l)
+	local x, cardY, w, labelW, playY = difficultyGeometry(l)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.12)
+	lg.rectangle("fill", x, cardY - 18, w, 2)
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
-	Text.printShadow(L("settings.difficulty"), x, y)
-	Fonts.set("ui")
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.65)
-	Text.printShadow(L("campaign.difficultyDescription"), x, y + 31)
+	Text.printShadow(L("settings.difficulty"), x, cardY + 10)
 	local selected = Save.data.settings.difficulty or "normal"
+	local choicesX = x + labelW
+	local cardW = (w - labelW - SPACE * 2) / 3
 	for i, key in ipairs(DIFFICULTIES) do
-		local cy = cardY + (i - 1) * DIFFICULTY_CARD_STEP
+		local cx = choicesX + (i - 1) * (cardW + SPACE)
 		local active = key == selected
-		local textX = x + 16
 		lg.setColor(active and Theme.ui.buttonSelected or Theme.ui.panel)
-		lg.rectangle("fill", x, cy, w, DIFFICULTY_CARD_H, 10)
+		lg.rectangle("fill", cx, cardY, cardW, DIFFICULTY_CARD_H, 8)
+		if active then
+			lg.setColor(Theme.ui.selected)
+			lg.setLineWidth(3)
+			lg.rectangle("line", cx, cardY, cardW, DIFFICULTY_CARD_H, 8)
+			lg.setLineWidth(1)
+		end
 		Fonts.set("ui")
-		lg.setColor(DIFFICULTY_COLORS[key])
-		Text.printShadow(L("difficulty." .. key), textX, cy + 12)
-		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-		Text.printShadow(L(DIFFICULTY_HINTS[key]), textX, cy + 36)
+		lg.setColor(active and Theme.ui.text or DIFFICULTY_COLORS[key])
+		Text.printfShadow(L("difficulty." .. key), cx, cardY + 14, cardW, "center")
 	end
 
 	local play = buttons.play
@@ -635,7 +634,7 @@ function Screen.update(dt)
 	buttons.back.x, buttons.back.y = l.left.x + PANEL_PAD,
 		l.left.y + l.left.h - BUTTON_BOTTOM_GAP - BACK_BUTTON_H
 	buttons.back.w = l.left.w - PANEL_PAD * 2
-	local playX, _titleY, playW, _cardY, playY = difficultyGeometry(l)
+	local playX, _cardY, playW, _labelW, playY = difficultyGeometry(l)
 	buttons.play.x, buttons.play.y, buttons.play.w = playX, playY, playW
 	buttons.play.h = PLAY_BUTTON_H
 	buttons.play.enabled = not isMapLocked(State.mapIndex)
@@ -682,13 +681,12 @@ function Screen.draw()
 	local unlockEvent = unlockSequence.active
 	local unlockPose = UnlockPresentation.sample(unlockEvent)
 	drawHeader(l, pose, unlockEvent and unlockPose)
-	-- One continuous campaign surface keeps all three columns aligned. Subtle
-	-- dividers establish the list, map details, and difficulty hierarchy without
-	-- introducing competing nested panel outlines.
-	panel(l.left.x, l.left.y, l.left.w + l.center.w + l.right.w, l.left.h)
+	-- One continuous campaign surface keeps the list and map detail aligned. A
+	-- subtle divider establishes the two-column hierarchy without introducing
+	-- competing nested panel outlines.
+	panel(l.left.x, l.left.y, l.left.w + l.center.w, l.left.h)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.10)
 	lg.rectangle("fill", l.center.x, l.contentY + SECTION_INSET, 2, l.contentH - SECTION_INSET * 2)
-	lg.rectangle("fill", l.right.x, l.contentY + SECTION_INSET, 2, l.contentH - SECTION_INSET * 2)
 	drawMapList(l, unlockEvent and unlockPose)
 	local map = Maps[State.mapIndex]
 	local entry = MapPreviewCache.get(map.id)
@@ -757,20 +755,22 @@ function Screen.mousepressed(x, y, button)
 		return true
 	end
 	local rowH, count = visibleRows(l)
-	if x >= l.left.x + PANEL_PAD and x <= l.left.x + l.left.w - PANEL_PAD and y >= l.left.y + SECTION_INSET then
-		local row = floor((y - l.left.y - SECTION_INSET) / rowH) + 1
+	if x >= l.left.x + PANEL_PAD and x <= l.left.x + l.left.w - PANEL_PAD and y >= l.left.y + SECTION_INSET + LIST_HEADER_H then
+		local row = floor((y - l.left.y - SECTION_INSET - LIST_HEADER_H) / rowH) + 1
 		if row >= 1 and row <= count then
 			local index = listOffset + row
-			local rowY = l.left.y + SECTION_INSET + (row - 1) * rowH
+			local rowY = l.left.y + SECTION_INSET + LIST_HEADER_H + (row - 1) * rowH
 			if y <= rowY + LIST_ROW_H and Maps[index] and not isMapLocked(index) then
 				selectMap(index); Sound.play("uiMove"); return true
 			end
 		end
 	end
-	local dx, _titleY, dw, dy = difficultyGeometry(l)
+	local dx, dy, dw, labelW = difficultyGeometry(l)
+	local choicesX = dx + labelW
+	local cardW = (dw - labelW - SPACE * 2) / 3
 	for i, key in ipairs(DIFFICULTIES) do
-		local cy = dy + (i - 1) * DIFFICULTY_CARD_STEP
-		if x >= dx and x <= dx + dw and y >= cy and y <= cy + DIFFICULTY_CARD_H then selectDifficulty(key); return true end
+		local cx = choicesX + (i - 1) * (cardW + SPACE)
+		if x >= cx and x <= cx + cardW and y >= dy and y <= dy + DIFFICULTY_CARD_H then selectDifficulty(key); return true end
 	end
 	for _, item in pairs(buttons) do if Button.mousepressed(item, x, y, button) then return true end end
 end
