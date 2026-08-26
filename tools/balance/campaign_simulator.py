@@ -117,7 +117,13 @@ def choose_kind(policy, composition, towers, key):
     if any(k in composition for k in ("bulwark",)): counter = "cannon"
     elif any(k in composition for k in ("regenerator",)): counter = "poison"
     elif any(k in composition for k in ("runner", "warcaller")): counter = "slow"
-    if counter and stable_unit(*key, "counter") < policy["counter_knowledge"]: return counter
+    # Counter knowledge should produce a rounded defense, not fill every legal
+    # tile with the wave's specialist. Keep roughly one counter per three towers
+    # before returning to the policy's broader repertoire.
+    specialist_cap = max(1, math.ceil((len(towers) + 1) / 3))
+    if (counter and sum(t.kind == counter for t in towers) < specialist_cap
+            and stable_unit(*key, "counter") < policy["counter_knowledge"]):
+        return counter
     # Deliberately bounded and imperfect repertoires; novice overbuys cheap Lancers.
     pools = {"novice": ("lancer","lancer","slow","cannon"),
              "competent": ("lancer","cannon","shock","poison","slow"),
@@ -163,9 +169,19 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 target = max(upgradable, key=lambda t: (t.level, -abs(t.center-.55)))
                 cost = round(detail_towers[target.kind]["cost"] * upgrade_cost[target.level-1])
                 if money >= cost: money -= cost; target.level += 1; continue
-            kind = choose_kind(policy, preview, detail_towers, (policy_name,map_id,diff_name,variant,wave_no,actions))
+            kind = choose_kind(policy, preview, towers, (policy_name,map_id,diff_name,variant,wave_no,actions))
             cost = detail_towers[kind]["cost"]
-            if money < cost: break
+            if money < cost:
+                # A capable player does not end preparation merely because the
+                # first desired specialist is unaffordable. Fall back to the
+                # cheapest useful member of that policy's repertoire.
+                affordable = [candidate for candidate in ("slow", "lancer", "poison", "cannon", "shock", "plasma")
+                              if candidate in detail_towers and detail_towers[candidate]["cost"] <= money]
+                if not affordable:
+                    break
+                kind = "lancer" if "lancer" in affordable else min(
+                    affordable, key=lambda candidate: detail_towers[candidate]["cost"])
+                cost = detail_towers[kind]["cost"]
             center = placement(policy_name, policy, path_len, len(towers), variant)
             coverage = min(.22, detail_towers[kind]["range"] * 2 / max(12, path_len))
             towers.append(Tower(kind, center, coverage)); money -= cost

@@ -1,5 +1,22 @@
 # Stat-only tower progression outcome
 
+## August 2026 campaign pass
+
+The full headless campaign matrix evaluates three deterministic variants for
+each novice, competent, and hard policy: 405 complete campaign runs across all
+15 maps and all three difficulties. Policy purchasing now preserves a mixed
+defense by limiting repeated wave counters and buying an affordable Lancer (or
+the cheapest remaining entry tower) rather than abandoning preparation when a
+preferred specialist is too expensive.
+
+To keep health values small and whole, standard enemy health was reduced to
+15/40/12 for Grunts, Tanks, and Runners, and to 54/38/38/50 for Bulwarks,
+Regenerators, Warcallers, and Summoners. Hard retains its tighter life, reward,
+sell-refund, and boss contracts, but standard enemies use the readable baseline
+health values and bosses use a 1.2 multiplier. The resulting required-policy
+matrix clears every map while still exercising imperfect placement, counter
+selection, upgrades, active-ability timing, and real leaks.
+
 ## Canonical assumptions
 
 Canonical campaign, combat, replay-policy, economy, and polish fixtures model no
