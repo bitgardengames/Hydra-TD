@@ -25,8 +25,8 @@ assert(not campaignSource:find('lg.rectangle("line", cx, cardY, cardW, DIFFICULT
 assert(campaignSource:find("local CAMPAIGN_CARD_MAX_W = 1168", 1, true)
 	and campaignSource:find("local CAMPAIGN_CARD_MAX_H = 734", 1, true),
 	"campaign card must use the tall reference layout")
-assert(campaignSource:find("MapPreviewCache.buildAll(660, 312)", 1, true),
-	"campaign map preview must retain its wide landscape aspect ratio")
+assert(campaignSource:find("MapPreviewCache.buildAll(960, 540)", 1, true),
+	"campaign map preview must render at a crisp 16:9 resolution")
 assert(campaignSource:find("local previewScale = min(LIST_PREVIEW_W / canvasW, LIST_PREVIEW_H / canvasH)", 1, true)
 	and campaignSource:find("lg.draw(entry.canvas, previewX, previewY, 0, previewScale, previewScale)", 1, true),
 	"campaign map list previews must preserve their source aspect ratio")
@@ -64,7 +64,7 @@ assert(buttonSource:find("(h - labelHeight) * 0.5", 1, true),
 local bootstrapFile = assert(io.open("core/bootstrap.lua", "r"))
 local bootstrapSource = bootstrapFile:read("*a")
 bootstrapFile:close()
-assert(bootstrapSource:find("MapPreviewCache.buildAll(660, 312)", 1, true),
-	"campaign previews must use the reference aspect ratio on initial load")
+assert(bootstrapSource:find("MapPreviewCache.buildAll(960, 540)", 1, true),
+	"campaign previews must use the crisp 16:9 resolution on initial load")
 
 print("campaign text presentation fixtures passed")
