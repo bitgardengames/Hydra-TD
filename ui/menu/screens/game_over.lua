@@ -21,7 +21,6 @@ local floor = math.floor
 local Screen = {}
 local selectedHeadline = nil
 local selectedSubheadline = nil
-local shortcutsText = nil
 
 -- animation
 local t = 0
@@ -51,7 +50,6 @@ local headerHeight = 36
 local subtitleSpacing = 28
 local highlightOffset = 22
 local difficultyOffset = 18
-local tipOffset = 16
 local buttonsOffset = 34
 
 local contentStartY = 0
@@ -59,18 +57,9 @@ local titleY = 0
 local reasonY = 0
 local highlightsY = 0
 local difficultyY = 0
-local tipY = 0
-local panelW = 560
+local panelW = 480
 local panelX = 0
 local runStats = AnimatedRunStats.new(Theme.ui.bad or Theme.ui.warn)
-
-local function buildShortcutsText()
-	local unbound = L("settings.controlUnbound")
-	local restartKey = Hotkeys.getDisplay("restartRun") or unbound
-	local menuKey = Hotkeys.getDisplay("returnToMenu") or unbound
-
-	shortcutsText = L("gameOver.shortcuts", restartKey, menuKey)
-end
 
 local function restartRun()
 	Sound.play("uiConfirm")
@@ -120,19 +109,23 @@ local function selectGameOverMessage()
 		return L("gameOver.headline.hardFight"), L("gameOver.subheadline.hardFight")
 	end
 
-	return State.endTitle or L("game.gameOver"), State.endReason or L("gameOver.recapMid")
+	local reason = State.endReason
+	if reason == L("game.outOfLives") then
+		reason = nil
+	elseif not reason then
+		reason = L("gameOver.recapMid")
+	end
+	return State.endTitle or L("game.gameOver"), reason
 end
 
 function Screen.enter()
 	t = 0
 	panelT = 0
-	buildShortcutsText()
 	buildRunSummary()
 	selectedHeadline, selectedSubheadline = selectGameOverMessage()
 end
 
 function Screen.load()
-	buildShortcutsText()
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 	local startY = floor(sh * 0.5 + 40)
@@ -172,21 +165,21 @@ function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 
-	panelW = math.min(560, sw - 64)
+	panelW = math.min(480, sw - 64)
 	panelX = cx - panelW * 0.5
 
 	local buttonsHeight = (#buttons - 1) * gap + btnH
-	local contentHeight = headerHeight + subtitleSpacing + highlightOffset
-		+ runStats:getHeight() + difficultyOffset + tipOffset + 24 + buttonsOffset + buttonsHeight
+	local subheadlineHeight = selectedSubheadline and subtitleSpacing or 0
+	local contentHeight = headerHeight + subheadlineHeight + highlightOffset
+		+ runStats:getHeight() + difficultyOffset + 24 + buttonsOffset + buttonsHeight
 	contentStartY = floor((sh - contentHeight) * 0.5)
 
 	titleY = contentStartY
 	reasonY = titleY + headerHeight + subtitleSpacing
-	highlightsY = reasonY + highlightOffset
+	highlightsY = titleY + headerHeight + subheadlineHeight + highlightOffset
 	difficultyY = highlightsY + runStats:getHeight() + difficultyOffset
-	tipY = difficultyY + tipOffset + 24
 
-	local buttonsStartY = tipY + buttonsOffset
+	local buttonsStartY = difficultyY + 24 + buttonsOffset
 
 	local mx, my = love.mouse.getPosition()
 	for i, btn in ipairs(buttons) do
@@ -203,12 +196,12 @@ function Screen.draw()
 	local buttonsHeight = (count - 1) * gap + btnH
 
 	local highlightsHeight = runStats:getHeight()
+	local subheadlineHeight = selectedSubheadline and subtitleSpacing or 0
 	local contentHeight = headerHeight
-		+ subtitleSpacing
+		+ subheadlineHeight
 		+ highlightOffset
 		+ highlightsHeight
 		+ difficultyOffset
-		+ tipOffset
 		+ 24
 		+ buttonsOffset
 		+ buttonsHeight
@@ -268,8 +261,6 @@ function Screen.draw()
 		RunRecap.getDifficultyLabel() or "--"
 	)
 	Text.printfShadow(contextLine, boxX + paddingX, difficultyY, boxW - paddingX * 2, "center")
-	lg.setColor(colorText[1], colorText[2], colorText[3], 0.6 * alpha)
-	Text.printfShadow(shortcutsText, boxX + paddingX, tipY, boxW - paddingX * 2, "center")
 
 	-- Buttons
 	for _, btn in ipairs(buttons) do
