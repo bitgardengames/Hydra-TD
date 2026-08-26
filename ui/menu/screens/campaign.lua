@@ -20,7 +20,6 @@ local AbilityIcons = require("ui.ability_icons")
 local AbilityTooltip = require("ui.ability_tooltip")
 local AbilityDefs = require("systems.ability_defs")
 local Hotkeys = require("core.hotkeys")
-local SelectionTransition = require("ui.campaign_selection_transition")
 local UnlockPresentation = require("ui.campaign_unlock_presentation")
 
 local lg = love.graphics
@@ -47,7 +46,6 @@ local abilitySlotTooltips = {}
 local listOffset = 0
 local scrollbarDragging = false
 local scrollbarGrabY = 0
-local selection = {fromIndex = State.mapIndex, toIndex = State.mapIndex, elapsed = SelectionTransition.DURATION}
 local unlockSequence = UnlockPresentation.new()
 
 -- Campaign layout uses a small set of shared spacing tokens. Keeping the list,
@@ -204,15 +202,8 @@ local function reducedMotion()
 	return Save.data.settings.cameraMotion == false
 end
 
-local function selectionPose()
-	return SelectionTransition.sample(selection.fromIndex, selection.toIndex, selection.elapsed, reducedMotion())
-end
-
 local function selectMap(index)
 	if index == State.mapIndex then return end
-	selection.fromIndex = State.mapIndex
-	selection.toIndex = index
-	selection.elapsed = reducedMotion() and SelectionTransition.DURATION or 0
 	State.mapIndex = index
 end
 
@@ -250,59 +241,13 @@ local function goBack()
 	Sound.play("uiBack")
 end
 
-local function drawHeader(l, pose, unlockPose)
+local function drawHeader(l)
 	Fonts.set("title")
 	lg.setColor(Theme.ui.text)
 	Text.printShadow(L("campaign.title"), l.margin, 20)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
 	Text.printShadow(L("campaign.selectMap"), l.margin, 66)
-
-	-- Let the route read as a page-level campaign progress bar. Starting it
-	-- above the map list (rather than above the detail column) matches the wide
-	-- visual rhythm of the campaign header while leaving the title unobstructed.
-	local startX = max(l.margin + 390, l.left.x + 284)
-	local endX = min(l.sw - l.margin - 190, l.center.x + l.center.w - 210)
-	local available = endX - startX
-	local step = available / (#Maps - 1)
-	local y = 49
-	lg.setLineWidth(4)
-	for i = 1, #Maps - 1 do
-		lg.setColor(i < pose.markerIndex and Theme.ui.good or Theme.ui.panel)
-		lg.line(startX + (i - 1) * step, y, startX + i * step, y)
-	end
-	if unlockPose and unlockPose.sourceIndex < unlockPose.targetIndex then
-		local fromX = startX + (unlockPose.sourceIndex - 1) * step
-		local toX = startX + (unlockPose.targetIndex - 1) * step
-		lg.setColor(Theme.ui.good)
-		lg.line(fromX, y, fromX + (toX - fromX) * unlockPose.line, y)
-	end
-	for i = 1, #Maps do
-		local x = startX + (i - 1) * step
-		local locked = isMapLocked(i)
-		lg.setColor(locked and Theme.ui.panel or Theme.ui.good)
-		lg.circle("fill", x, y, 15)
-		lg.setColor(Theme.outline.color)
-		lg.circle("line", x, y, 15)
-		Fonts.set("ui")
-		lg.setColor(Theme.ui.text)
-		Text.printfShadow(locked and "•" or tostring(i), x - 12, y - 9, 24, "center")
-	end
-	if unlockPose and unlockPose.stamp > 0 then
-		local x = startX + (unlockPose.targetIndex - 1) * step
-		lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], 0.8 * unlockPose.stamp)
-		lg.setLineWidth(3)
-		lg.circle("line", x, y, 18 + 13 * unlockPose.stamp)
-	end
-	local markerX = startX + (pose.markerIndex - 1) * step
-	lg.setColor(Theme.ui.buttonHover)
-	lg.circle("fill", markerX, y, 19)
-	lg.setColor(Theme.outline.color)
-	lg.circle("line", markerX, y, 19)
-	Fonts.set("ui")
-	lg.setColor(Theme.outline.color)
-	Text.printfShadow(tostring(State.mapIndex), markerX - 12, y - 9, 24, "center")
-	lg.setLineWidth(1)
 
 	local total = 0
 	for _, map in ipairs(Maps) do
@@ -615,7 +560,6 @@ function Screen.update(dt)
 	pulseTime = pulseTime + dt
 	Backdrop.update(dt)
 	Medals.update(dt)
-	selection.elapsed = min(SelectionTransition.DURATION, selection.elapsed + dt)
 	UnlockPresentation.update(unlockSequence, dt)
 	local l = layout()
 	if scrollbarDragging then
@@ -672,10 +616,9 @@ function Screen.draw()
 	local l = layout()
 	lg.setColor(Theme.ui.screenDim)
 	lg.rectangle("fill", 0, 0, l.sw, l.sh)
-	local pose = selectionPose()
 	local unlockEvent = unlockSequence.active
 	local unlockPose = UnlockPresentation.sample(unlockEvent)
-	drawHeader(l, pose, unlockEvent and unlockPose)
+	drawHeader(l)
 	-- One continuous campaign surface keeps the list and map detail aligned. A
 	-- subtle divider establishes the two-column hierarchy without introducing
 	-- competing nested panel outlines.
@@ -799,11 +742,9 @@ function Screen.enter()
 	local captured = UnlockPresentation.capture(unlockSequence, State, #Maps, reducedMotion())
 	if captured then
 		-- Keep the cleared map selected so earned reward icons settle into that
-		-- map's authored reward detail while the route itself reveals the next map.
+		-- map's authored reward detail while the newly unlocked row is highlighted.
 		State.mapIndex = State.resolveMapIndex(captured.sourceIndex)
 	end
-	selection.fromIndex, selection.toIndex = State.mapIndex, State.mapIndex
-	selection.elapsed = SelectionTransition.DURATION
 	keepSelectedVisible(layout())
 end
 function Screen.leave()
