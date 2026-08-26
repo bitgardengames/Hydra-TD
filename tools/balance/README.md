@@ -215,8 +215,9 @@ damage and money are not silently multiplied by a handicap.
 Stable JSON records each variant's victory, lives, failed wave, unused money,
 tower composition, rebuilds, ability uses/utilization, and the victory-rate margin
 between the strongest and weakest policy. `campaign_acceptance_bands.json` owns
-the reviewed expectations: novice for Easy, competent for Normal, and hard for
-Hard, while allowing several builds and deterministic retries.  The report also
+the reviewed expectations: novice for Easy, competent for Normal, and a maximum
+success rate for the deliberately punishing Hard stress policy, while allowing
+several builds and deterministic retries.  The report also
 fingerprints every runtime definition or implementation file it consumes/mirrors,
 so combat-rule changes cannot silently retain an old result.
 

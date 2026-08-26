@@ -8,7 +8,7 @@
 return {
 	grunt = {
 		nameKey = "enemy.grunt",
-		hp = 16,
+		hp = 17,
 		speed = 70,
 		reward = 5,
 		score = 10,
@@ -17,7 +17,7 @@ return {
 
 	tank = {
 		nameKey = "enemy.tank",
-		hp = 42,
+		hp = 43,
 		speed = 45,
 		reward = 8,
 		score = 22,
@@ -26,7 +26,7 @@ return {
 
 	runner = {
 		nameKey = "enemy.runner",
-		hp = 13,
+		hp = 14,
 		speed = 95,
 		reward = 4,
 		score = 12,
@@ -37,7 +37,7 @@ return {
 	bulwark = {
 		nameKey = "enemy.bulwark",
 		descriptionKey = "enemy.bulwarkDescription",
-		hp = 56, speed = 40, reward = 16, score = 30, radius = 14,
+		hp = 57, speed = 40, reward = 16, score = 30, radius = 14,
 		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
 		traits = {"armored"},
 	},
@@ -45,7 +45,7 @@ return {
 	regenerator = {
 		nameKey = "enemy.regenerator",
 		descriptionKey = "enemy.regeneratorDescription",
-		hp = 40, speed = 53, reward = 10, score = 28, radius = 12,
+		hp = 41, speed = 53, reward = 10, score = 28, radius = 12,
 		regeneration = { hpPerSecond = 2.5, delay = 1.25 },
 		modifiers = { poison = 1.25 },
 		traits = {"regenerates"},
@@ -54,7 +54,7 @@ return {
 	warcaller = {
 		nameKey = "enemy.warcaller",
 		descriptionKey = "enemy.warcallerDescription",
-		hp = 40, speed = 48, reward = 10, score = 38, radius = 13,
+		hp = 41, speed = 48, reward = 10, score = 38, radius = 13,
 		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
 		targetPriority = 34,
 		traits = {"support"},
@@ -63,7 +63,7 @@ return {
 	summoner = {
 		nameKey = "enemy.summoner",
 		descriptionKey = "enemy.summonerDescription",
-		hp = 52, speed = 42, reward = 12, score = 44, radius = 14,
+		hp = 53, speed = 42, reward = 12, score = 44, radius = 14,
 		summon = { kind = "runner", count = 2, period = 6.0, initialDelay = 2.5, spacing = 9 },
 		targetPriority = 38,
 		traits = {"summons"},
