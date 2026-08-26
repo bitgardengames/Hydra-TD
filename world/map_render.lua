@@ -77,10 +77,9 @@ function MapRender.renderGameplayFramedToCanvas(canvas, context)
 	lg.setCanvas()
 end
 
--- Preview canvases represent the authored map rather than the gameplay camera.
--- The gameplay camera can crop the map when its aspect ratio differs from the
--- window (at the reference resolution that crop is roughly one tile tall).
--- Scaling each map axis to the preview bounds keeps every authored tile visible.
+-- Full-map rendering is retained for exports and tools that need the complete
+-- authored grid. Menu previews use renderGameplayFramedToCanvas above so their
+-- composition matches what the player sees after entering the map.
 function MapRender.renderFullMapToCanvas(canvas, context)
 	local canvasW, canvasH = canvas:getDimensions()
 
