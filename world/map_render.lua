@@ -77,4 +77,28 @@ function MapRender.renderGameplayFramedToCanvas(canvas, context)
 	lg.setCanvas()
 end
 
+-- Preview canvases represent the authored map rather than the gameplay camera.
+-- The gameplay camera can crop the map when its aspect ratio differs from the
+-- window (at the reference resolution that crop is roughly one tile tall).
+-- Scaling each map axis to the preview bounds keeps every authored tile visible.
+function MapRender.renderFullMapToCanvas(canvas, context)
+	local canvasW, canvasH = canvas:getDimensions()
+
+	lg.setCanvas(canvas)
+	lg.clear(0, 0, 0, 0)
+
+	lg.push()
+	lg.origin()
+	lg.scale(canvasW / MAP_W, canvasH / MAP_H)
+
+	withRenderContext(context, function()
+		DrawWorld.drawGrass()
+		DrawWorld.drawPath()
+		DrawWorld.drawScatter()
+	end)
+
+	lg.pop()
+	lg.setCanvas()
+end
+
 return MapRender

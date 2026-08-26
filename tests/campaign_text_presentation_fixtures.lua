@@ -74,5 +74,14 @@ assert(cacheSource:find('local key = w .. "x" .. h', 1, true),
 	"map previews must be cached separately for every native destination size")
 assert(cacheSource:find('canvas:setFilter("nearest", "nearest")', 1, true),
 	"map preview canvases must retain the game's pixel-art texture filtering")
+assert(cacheSource:find("MapRender.renderFullMapToCanvas(canvas)", 1, true)
+	and not cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas)", 1, true),
+	"map previews must show every tile instead of inheriting the gameplay camera crop")
+
+local renderFile = assert(io.open("world/map_render.lua", "r"))
+local renderSource = renderFile:read("*a")
+renderFile:close()
+assert(renderSource:find("lg.scale(canvasW / MAP_W, canvasH / MAP_H)", 1, true),
+	"full-map previews must scale the complete authored grid into their canvas")
 
 print("campaign text presentation fixtures passed")
