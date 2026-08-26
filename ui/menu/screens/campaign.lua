@@ -75,17 +75,6 @@ local BACK_BUTTON_H = 68
 local PLAY_BUTTON_H = 108
 local DIFFICULTY_PLAY_GAP = 26
 
-local function nativePreview(mapId, maxW, maxH)
-	-- The old preview was 16:9 and fitted uniformly inside these bounds. Round
-	-- that final rectangle once, then render a canvas for those exact pixels.
-	-- Drawing it 1:1 at integer coordinates avoids both texture resampling and
-	-- half-pixel sampling while preserving the established framing.
-	local scale = min(maxW / 16, maxH / 9)
-	local w = max(1, floor(16 * scale + 0.5))
-	local h = max(1, floor(9 * scale + 0.5))
-	return MapPreviewCache.get(mapId, w, h), w, h
-end
-
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
 end
@@ -293,7 +282,7 @@ local function drawMapList(l, unlockPose)
 			lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], 0.32 * unlockPose.row)
 			lg.rectangle("fill", rowX, y, rowW, LIST_ROW_H, 7)
 		end
-		local entry, previewW, previewH = nativePreview(map.id, LIST_PREVIEW_W, LIST_PREVIEW_H)
+		local entry, previewW, previewH = MapPreviewCache.getFitted(map.id, LIST_PREVIEW_W, LIST_PREVIEW_H)
 		if entry then
 			local previewX = floor(rowX + 4 + (LIST_PREVIEW_W - previewW) * 0.5 + 0.5)
 			local previewY = floor(y + (LIST_ROW_H - previewH) * 0.5 + 0.5)
@@ -508,7 +497,7 @@ local function drawCenter(l, map, mapIndex)
 
 	local previewY = y + 70
 	local maxPreviewH = max(120, l.center.h - (previewY - l.center.y) - 190)
-	local entry, previewW, previewH = nativePreview(map.id, w, maxPreviewH)
+	local entry, previewW, previewH = MapPreviewCache.getFitted(map.id, w, maxPreviewH)
 	if not entry then return end
 	local previewX = floor(x + (w - previewW) * 0.5 + 0.5)
 	previewY = floor(previewY + 0.5)

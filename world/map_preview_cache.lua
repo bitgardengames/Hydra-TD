@@ -17,6 +17,17 @@ local lg = love.graphics
 -- deliberately a memory-for-image-quality tradeoff.
 local cache = {}
 
+-- Fit the authored 16:9 preview into destination bounds and keep the result
+-- integral so its canvas can be drawn 1:1 on pixel boundaries. Integer sizes
+-- such as 118×66 are necessarily rounded approximations of the exact 16:9
+-- ratio, rather than dimensions that should be stretched to fill the bounds.
+function MapPreviewCache.fitDimensions(maxW, maxH)
+	local scale = math.min(maxW / 16, maxH / 9)
+	local w = math.max(1, math.floor(16 * scale + 0.5))
+	local h = math.max(1, math.floor(9 * scale + 0.5))
+	return w, h
+end
+
 local function buildPreviewPath(pathWorld, transform)
 	if not pathWorld or #pathWorld < 2 then
 		return nil
@@ -175,6 +186,11 @@ function MapPreviewCache.get(mapId, w, h)
 			return sizes[key]
 		end
 	end
+end
+
+function MapPreviewCache.getFitted(mapId, maxW, maxH)
+	local w, h = MapPreviewCache.fitDimensions(maxW, maxH)
+	return MapPreviewCache.get(mapId, w, h), w, h
 end
 
 function MapPreviewCache.clear()
