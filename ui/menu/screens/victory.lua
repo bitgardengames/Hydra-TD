@@ -500,15 +500,22 @@ function Screen.draw()
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.7 * alpha)
 	Text.printShadow(format(L("victory.mapNumber"), State.worldMapIndex, #Maps), contentX + 14, contentY + 40)
-	local previewY, previewH = floor(contentY + 68 + 0.5), floor(min(188, contentH * 0.42) + 0.5)
-	local previewW = floor(leftW - 24 + 0.5)
-	local preview = map and MapPreviewCache.get(map.id, previewW, previewH)
+	local previewBoundsY = floor(contentY + 68 + 0.5)
+	local previewBoundsH = floor(min(188, contentH * 0.42) + 0.5)
+	local previewBoundsW = floor(leftW - 24 + 0.5)
+	local preview, previewW, previewH
+	if map then
+		preview, previewW, previewH = MapPreviewCache.getFitted(map.id, previewBoundsW, previewBoundsH)
+	end
+	local previewX = floor(contentX + 12 + (previewBoundsW - (previewW or 0)) * 0.5 + 0.5)
+	local previewY = floor(previewBoundsY + (previewBoundsH - (previewH or 0)) * 0.5 + 0.5)
 	if preview and preview.canvas then
 		lg.setColor(1, 1, 1, alpha)
-		lg.draw(preview.canvas, floor(contentX + 12 + 0.5), previewY)
+		lg.draw(preview.canvas, previewX, previewY)
 	end
-	drawStatRow(L("settings.difficulty"), RunRecap.getDifficultyLabel(), contentX + 14, previewY + previewH + 18, leftW - 28, alpha, colorGood)
-	drawStatRow(L("victory.gameTime"), format("%d:%02d", floor((result.duration or 0) / 60), floor((result.duration or 0) % 60)), contentX + 14, previewY + previewH + 52, leftW - 28, alpha)
+	local previewBottom = previewY + (previewH or 0)
+	drawStatRow(L("settings.difficulty"), RunRecap.getDifficultyLabel(), contentX + 14, previewBottom + 18, leftW - 28, alpha, colorGood)
+	drawStatRow(L("victory.gameTime"), format("%d:%02d", floor((result.duration or 0) / 60), floor((result.duration or 0) % 60)), contentX + 14, previewBottom + 52, leftW - 28, alpha)
 
 	-- Run summary.
 	drawCard(centerX, contentY, centerW, contentH * 0.64, alpha)

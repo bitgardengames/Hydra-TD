@@ -25,10 +25,10 @@ assert(not campaignSource:find('lg.rectangle("line", cx, cardY, cardW, DIFFICULT
 assert(campaignSource:find("local CAMPAIGN_CARD_MAX_W = 1168", 1, true)
 	and campaignSource:find("local CAMPAIGN_CARD_MAX_H = 734", 1, true),
 	"campaign card must use the tall reference layout")
-assert(campaignSource:find("nativePreview(map.id, LIST_PREVIEW_W, LIST_PREVIEW_H)", 1, true)
+assert(campaignSource:find("MapPreviewCache.getFitted(map.id, LIST_PREVIEW_W, LIST_PREVIEW_H)", 1, true)
 	and campaignSource:find("lg.draw(entry.canvas, previewX, previewY)", 1, true),
 	"campaign map list previews must render and draw at their native pixel size")
-assert(campaignSource:find("nativePreview(map.id, w, maxPreviewH)", 1, true),
+assert(campaignSource:find("MapPreviewCache.getFitted(map.id, w, maxPreviewH)", 1, true),
 	"campaign selected-map previews must have a separate native-sized render target")
 assert(campaignSource:find("local SPACE = 12", 1, true)
 	and campaignSource:find("local PANEL_PAD = 28", 1, true)
