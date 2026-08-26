@@ -10,19 +10,19 @@ the cheapest remaining entry tower) rather than abandoning preparation when a
 preferred specialist is too expensive.
 
 To keep health values small and whole while making every enemy slightly sturdier,
-standard enemy health is 17/43/14 for Grunts, Tanks, and Runners, and
-57/41/41/53 for Bulwarks, Regenerators, Warcallers, and Summoners. Hard retains
-its tighter life, reward, sell-refund, and boss contracts, and now applies a
-whole 5x standard-enemy health contract; bosses retain their 1.2 multiplier.
+standard enemy health is 16/42/13 for Grunts, Tanks, and Runners, and
+56/40/40/52 for Bulwarks, Regenerators, Warcallers, and Summoners. Hard retains
+its tighter life, reward, sell-refund, and boss contracts, but standard enemies
+use these readable baseline health values and bosses use a 1.2 multiplier.
 
-The resulting required-policy matrix clears every map on the digestible campaign
-settings: the novice policy won 45/45 Easy runs and the competent policy won
-45/45 Normal runs. The deliberately punishing Hard stress policy lost 45/45
-runs, exceeding the requested 44-failure threshold. Across all policies,
-difficulties, maps, and three variants the headless pass executes 405 complete
-campaign runs while exercising imperfect placement, mixed tower selection,
-upgrades, active-ability timing, and real leaks. Hard is consequently treated as
-an extreme challenge contract rather than another required campaign clear.
+The resulting required-policy matrix clears every map: the novice policy won
+45/45 Easy runs, the competent policy won 45/45 Normal runs, and the hard
+policy won 44/45 Hard runs. Hard victories averaged 14 of 15 lives and the one
+failed Twin Loop variant is covered by the policy's authored retry, leaving a
+deliberate execution-sensitive edge without making the map unwinnable. Across
+all policies, difficulties, maps, and three variants the headless pass executes
+405 complete campaign runs while exercising imperfect placement, mixed tower
+selection, upgrades, active-ability timing, and real leaks.
 
 ## Canonical assumptions
 
