@@ -64,7 +64,10 @@ return {
 		nameKey = "enemy.summoner",
 		descriptionKey = "enemy.summonerDescription",
 		hp = 53, speed = 42, reward = 12, score = 44, radius = 14,
-		summon = { kind = "runner", count = 2, period = 6.0, initialDelay = 2.5, spacing = 9 },
+		summon = {
+			kind = "runner", count = 2, period = 6.0, initialDelay = 2.5,
+			stagger = 0.18, spacing = 9,
+		},
 		targetPriority = 38,
 		traits = {"summons"},
 	},
