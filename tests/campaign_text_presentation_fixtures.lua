@@ -74,9 +74,12 @@ assert(cacheSource:find('local key = w .. "x" .. h', 1, true),
 	"map previews must be cached separately for every native destination size")
 assert(cacheSource:find('canvas:setFilter("nearest", "nearest")', 1, true),
 	"map preview canvases must retain the game's pixel-art texture filtering")
-assert(cacheSource:find("MapRender.renderFullMapToCanvas(canvas)", 1, true)
-	and not cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas)", 1, true),
-	"map previews must show every tile instead of inheriting the gameplay camera crop")
+assert(cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas)", 1, true)
+	and not cacheSource:find("MapRender.renderFullMapToCanvas(canvas)", 1, true),
+	"map previews must use the same framing as the gameplay camera")
+assert(cacheSource:find("(worldPoint[1] - cameraX) * cameraScale * scaleX", 1, true)
+	and cacheSource:find("(worldPoint[2] - cameraY) * cameraScale * scaleY", 1, true),
+	"map preview paths must use the same gameplay camera transform as their images")
 assert(cacheSource:find("Trees.list = previousScatter.trees", 1, true)
 	and cacheSource:find("Trees.occupied = previousScatter.treeOccupied", 1, true)
 	and cacheSource:find("Cacti.list = previousScatter.cacti", 1, true)
@@ -87,7 +90,9 @@ assert(cacheSource:find("Trees.list = previousScatter.trees", 1, true)
 local renderFile = assert(io.open("world/map_render.lua", "r"))
 local renderSource = renderFile:read("*a")
 renderFile:close()
-assert(renderSource:find("lg.scale(canvasW / MAP_W, canvasH / MAP_H)", 1, true),
-	"full-map previews must scale the complete authored grid into their canvas")
+assert(renderSource:find("lg.scale(sx, sy)", 1, true)
+	and renderSource:find("lg.scale(z, z)", 1, true)
+	and renderSource:find("lg.translate(-camWX, -camWY)", 1, true),
+	"gameplay-framed previews must reproduce the centered gameplay camera transform")
 
 print("campaign text presentation fixtures passed")

@@ -4,6 +4,7 @@ local Maps = require("world.map_defs")
 local MapMod = require("world.map")
 local Constants = require("core.constants")
 local MapRender = require("world.map_render")
+local Camera = require("core.camera")
 local State = require("core.state")
 local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
@@ -21,19 +22,23 @@ local mapH = Constants.GRID_H * Constants.TILE
 -- deliberately a memory-for-image-quality tradeoff.
 local cache = {}
 
-local function buildPreviewPath(pathWorld, previewW, previewH)
+local function buildPreviewPath(pathWorld, previewW, previewH, winW, winH, cameraScale)
 	if not pathWorld or #pathWorld < 2 then
 		return nil
 	end
 
-	local scaleX = previewW / mapW
-	local scaleY = previewH / mapH
+	-- Apply the same centered viewport transform used to render the preview so
+	-- callers that animate along this path remain aligned with the map image.
+	local cameraX = mapW * 0.5 - winW / (2 * cameraScale)
+	local cameraY = mapH * 0.5 - winH / (2 * cameraScale)
+	local scaleX = previewW / winW
+	local scaleY = previewH / winH
 	local points = {}
 	local totalLength = 0
 
 	for i, worldPoint in ipairs(pathWorld) do
-		local x = worldPoint[1] * scaleX
-		local y = worldPoint[2] * scaleY
+		local x = (worldPoint[1] - cameraX) * cameraScale * scaleX
+		local y = (worldPoint[2] - cameraY) * cameraScale * scaleY
 		if i > 1 then
 			local previous = points[i - 1]
 			local dx, dy = x - previous.x, y - previous.y
@@ -76,6 +81,7 @@ local function withMapContext(context, previousMap, fn)
 end
 
 local function build(mapIndex, mapDef, w, h)
+	local winW, winH = lg.getDimensions()
 	local previousMapIndex = State.worldMapIndex
 	local previousMap = {}
 	local previousScatter = {
@@ -128,7 +134,7 @@ local function build(mapIndex, mapDef, w, h)
 			Mushrooms.clear()
 		end
 
-		MapRender.renderFullMapToCanvas(canvas)
+		MapRender.renderGameplayFramedToCanvas(canvas)
 	end)
 
 	-- Preview generation uses the live scatter modules as scratch space. Restore
@@ -147,7 +153,7 @@ local function build(mapIndex, mapDef, w, h)
 
 	return {
 		canvas = canvas,
-		previewPath = buildPreviewPath(context.map.pathWorld, w, h),
+		previewPath = buildPreviewPath(context.map.pathWorld, w, h, winW, winH, Camera.wscale),
 	}
 end
 
