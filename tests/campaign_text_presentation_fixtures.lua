@@ -27,6 +27,9 @@ assert(campaignSource:find("local CAMPAIGN_CARD_MAX_W = 1168", 1, true)
 	"campaign card must use the tall reference layout")
 assert(campaignSource:find("MapPreviewCache.buildAll(660, 312)", 1, true),
 	"campaign map preview must retain its wide landscape aspect ratio")
+assert(campaignSource:find("local previewScale = min(LIST_PREVIEW_W / canvasW, LIST_PREVIEW_H / canvasH)", 1, true)
+	and campaignSource:find("lg.draw(entry.canvas, previewX, previewY, 0, previewScale, previewScale)", 1, true),
+	"campaign map list previews must preserve their source aspect ratio")
 assert(campaignSource:find("local SPACE = 12", 1, true)
 	and campaignSource:find("local PANEL_PAD = 28", 1, true)
 	and campaignSource:find("local SECTION_INSET = 28", 1, true),
