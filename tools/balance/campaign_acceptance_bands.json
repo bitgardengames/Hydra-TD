@@ -4,7 +4,7 @@
   "required_policy_by_difficulty": {
     "easy": {"policy": "novice", "minimum_victory_rate": 0.66},
     "normal": {"policy": "competent", "minimum_victory_rate": 0.66},
-    "hard": {"policy": "hard", "maximum_victory_rate": 0.02}
+    "hard": {"policy": "hard", "minimum_victory_rate": 0.66}
   },
   "metric_bands": {
     "minimum_policy_margin": 0.0,
