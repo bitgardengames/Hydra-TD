@@ -78,6 +78,13 @@ end
 local function build(mapIndex, mapDef, w, h)
 	local previousMapIndex = State.worldMapIndex
 	local previousMap = {}
+	local previousScatter = {
+		trees = Trees.list,
+		treeOccupied = Trees.occupied,
+		cacti = Cacti.list,
+		rocks = Rocks.list,
+		mushrooms = Mushrooms.list,
+	}
 	local context = MapMod.createRenderContext(mapDef)
 	local canvas = lg.newCanvas(w, h, {msaa = 8})
 	local scatter = context.map.biome and context.map.biome.scatter
@@ -87,7 +94,7 @@ local function build(mapIndex, mapDef, w, h)
 	-- a caller ever draws the canvas through a transformed parent.
 	canvas:setFilter("nearest", "nearest")
 	State.worldMapIndex = mapIndex
-	withMapContext(context, previousMap, function()
+	local ok, err = pcall(withMapContext, context, previousMap, function()
 		MapMod.clearBlocked()
 
 		if scatter then
@@ -124,7 +131,20 @@ local function build(mapIndex, mapDef, w, h)
 		MapRender.renderFullMapToCanvas(canvas)
 	end)
 
+	-- Preview generation uses the live scatter modules as scratch space. Restore
+	-- their original tables so a preview for another biome cannot replace the
+	-- menu backdrop (or an active game's world) with incompatible style indexes.
+	Trees.list = previousScatter.trees
+	Trees.occupied = previousScatter.treeOccupied
+	Cacti.list = previousScatter.cacti
+	Rocks.list = previousScatter.rocks
+	Mushrooms.list = previousScatter.mushrooms
 	State.worldMapIndex = previousMapIndex
+
+	if not ok then
+		error(err)
+	end
+
 	return {
 		canvas = canvas,
 		previewPath = buildPreviewPath(context.map.pathWorld, w, h),

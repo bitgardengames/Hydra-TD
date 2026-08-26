@@ -77,6 +77,12 @@ assert(cacheSource:find('canvas:setFilter("nearest", "nearest")', 1, true),
 assert(cacheSource:find("MapRender.renderFullMapToCanvas(canvas)", 1, true)
 	and not cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas)", 1, true),
 	"map previews must show every tile instead of inheriting the gameplay camera crop")
+assert(cacheSource:find("Trees.list = previousScatter.trees", 1, true)
+	and cacheSource:find("Trees.occupied = previousScatter.treeOccupied", 1, true)
+	and cacheSource:find("Cacti.list = previousScatter.cacti", 1, true)
+	and cacheSource:find("Rocks.list = previousScatter.rocks", 1, true)
+	and cacheSource:find("Mushrooms.list = previousScatter.mushrooms", 1, true),
+	"map preview rendering must restore the live world's scatter state")
 
 local renderFile = assert(io.open("world/map_render.lua", "r"))
 local renderSource = renderFile:read("*a")
