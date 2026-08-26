@@ -284,6 +284,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.support = def.support
 	e.summon = def.summon
 	e.summonTimer = def.summon and (def.summon.initialDelay or def.summon.period) or 0
+	e.summonPending = 0
+	e.summonStaggerTimer = 0
+	e.summonChildIndex = 0
 	e.bossShield = def.bossShield
 	e.bossShieldTimer = def.bossShield and (def.bossShield.initialDelay or def.bossShield.period) or 0
 	e.bossShieldActive = false
@@ -632,27 +635,38 @@ local function updateEnemies(dt)
 		end
 
 		-- Summoned runners join at the caster's current path progress rather than at
-		-- the map entrance. One cast is resolved per simulation tick, so catch-up cannot
-		-- create an unbounded catch-up burst.
+		-- the map entrance. Release a cast's children over a short interval so they
+		-- separate along the path instead of occupying exactly the same position.
 		if e.summon then
 			e.summonTimer = e.summonTimer - dt
 			if e.summonTimer <= 0 then
 				local summon = e.summon
 				e.summonTimer = summon.period
-				local availableSlots = max(0, MAX_ACTIVE_ENEMIES - #enemies)
-				for n = 1, min(summon.count, availableSlots) do
+				local availableSlots = max(0, MAX_ACTIVE_ENEMIES - #enemies - e.summonPending)
+				local queued = min(summon.count, availableSlots)
+				if e.summonPending == 0 and queued > 0 then
+					e.summonStaggerTimer = 0
+				end
+				e.summonPending = e.summonPending + queued
+				Effects.shake(2.4)
+			end
+
+			if e.summonPending > 0 then
+				e.summonStaggerTimer = e.summonStaggerTimer - dt
+				if e.summonStaggerTimer <= 0 and #enemies < MAX_ACTIVE_ENEMIES then
+					local summon = e.summon
 					local child = spawnEnemy(summon.kind, e.hpScale, e.spdScale, e.x, e.y, e.pathSeg, {
 						pathDistance = e.dist,
 						pathT = e.pathT,
 						summoned = true,
 					})
-					-- Opposing visual offsets make the pair readable without changing
-					-- their shared gameplay position on the path.
-					local side = n % 2 == 0 and 1 or -1
+					e.summonChildIndex = e.summonChildIndex + 1
+					local side = e.summonChildIndex % 2 == 0 and 1 or -1
 					child.nudgeTargetY = side * (summon.spacing or 0)
 					child.nudgeY = child.nudgeTargetY
+					e.summonPending = e.summonPending - 1
+					e.summonStaggerTimer = e.summonStaggerTimer + (summon.stagger or 0)
 				end
-				Effects.shake(2.4)
 			end
 		end
 
