@@ -1,7 +1,5 @@
 local Presentation = {}
 
-Presentation.LINE_DURATION = 0.65
-Presentation.STAMP_DURATION = 0.48
 Presentation.ROW_DURATION = 0.62
 Presentation.REWARD_DURATION = 0.72
 Presentation.REWARD_STAGGER = 0.16
@@ -74,33 +72,27 @@ function Presentation.update(controller, dt)
 end
 
 function Presentation.sample(event)
-	if not event then return {complete = true, line = 1, stamp = 0, row = 0, rewards = {}} end
+	if not event then return {complete = true, row = 0, rewards = {}} end
 	local elapsed = event.elapsed
-	local line, stamp, row
-	local rewardStart
+	local row
 	if event.reducedMotion then
-		line, stamp = 1, 0
 		row = 1 - clamp01(elapsed / Presentation.REDUCED_HIGHLIGHT_DURATION)
-		rewardStart = 0
 	else
-		line = smoothstep(elapsed / Presentation.LINE_DURATION)
-		stamp = math.sin(math.pi * clamp01((elapsed - Presentation.LINE_DURATION) / Presentation.STAMP_DURATION))
-		row = math.sin(math.pi * clamp01((elapsed - Presentation.LINE_DURATION * 0.72) / Presentation.ROW_DURATION))
-		rewardStart = Presentation.LINE_DURATION + Presentation.STAMP_DURATION * 0.45
+		row = math.sin(math.pi * clamp01(elapsed / Presentation.ROW_DURATION))
 	end
 
 	local rewardPoses, lastComplete = {}, true
 	for index = 1, #event.rewards do
 		local progress = event.reducedMotion and 1 or
-			clamp01((elapsed - rewardStart - (index - 1) * Presentation.REWARD_STAGGER)
+			clamp01((elapsed - (index - 1) * Presentation.REWARD_STAGGER)
 				/ Presentation.REWARD_DURATION)
 		rewardPoses[index] = {progress = smoothstep(progress), visible = progress > 0 and progress < 1}
 		lastComplete = lastComplete and progress >= 1
 	end
 	local baseComplete = event.reducedMotion
 		and elapsed >= Presentation.REDUCED_HIGHLIGHT_DURATION
-		or elapsed >= Presentation.LINE_DURATION + Presentation.STAMP_DURATION + Presentation.ROW_DURATION * 0.35
-	return {complete = baseComplete and lastComplete, line = line, stamp = stamp, row = row,
+		or elapsed >= Presentation.ROW_DURATION
+	return {complete = baseComplete and lastComplete, row = row,
 		rewards = rewardPoses, sourceIndex = event.sourceIndex, targetIndex = event.targetIndex}
 end
 
