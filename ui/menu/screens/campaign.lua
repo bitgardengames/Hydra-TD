@@ -295,7 +295,7 @@ local function drawHeader(l, pose, unlockPose)
 		lg.circle("line", x, y, 18 + 13 * unlockPose.stamp)
 	end
 	local markerX = startX + (pose.markerIndex - 1) * step
-	lg.setColor(Theme.ui.buttonSelected)
+	lg.setColor(Theme.ui.buttonHover)
 	lg.circle("fill", markerX, y, 19)
 	lg.setColor(Theme.outline.color)
 	lg.circle("line", markerX, y, 19)
@@ -334,7 +334,7 @@ local function drawMapList(l, unlockPose)
 		local y = l.left.y + SECTION_INSET + LIST_HEADER_H + (visible - 1) * rowH
 		local selected = index == State.mapIndex
 		local locked = isMapLocked(index)
-		lg.setColor(selected and Theme.ui.buttonSelected or Theme.ui.panel)
+		lg.setColor(selected and Theme.ui.buttonHover or Theme.ui.panel)
 		lg.rectangle("fill", rowX, y, rowW, LIST_ROW_H, 7)
 		if unlockPose and index == unlockPose.targetIndex and unlockPose.row > 0 then
 			lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], 0.32 * unlockPose.row)
@@ -589,7 +589,7 @@ local function drawRight(l, map)
 	for i, key in ipairs(DIFFICULTIES) do
 		local cx = choicesX + (i - 1) * (cardW + SPACE)
 		local active = key == selected
-		lg.setColor(active and Theme.ui.buttonSelected or Theme.ui.panel)
+		lg.setColor(active and Theme.ui.buttonHover or Theme.ui.panel)
 		lg.rectangle("fill", cx, cardY, cardW, DIFFICULTY_CARD_H, 8)
 		Fonts.set("ui")
 		lg.setColor(active and Theme.ui.text or DIFFICULTY_COLORS[key])
