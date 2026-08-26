@@ -201,7 +201,7 @@ python3 tools/balance/campaign_simulator.py --check
 python3 tools/balance/campaign_simulator.py --summary
 ```
 
-The simulator runs novice, competent, and expert policies across every campaign
+The simulator runs novice, competent, and hard policies across every campaign
 map and difficulty with three deterministic variants.  Unlike the aggregate
 challenge estimates, it advances individual enemies along authored route lengths
 on fixed ticks and executes acquisition, cooldowns, attacks, splash/chain hits,
@@ -215,7 +215,7 @@ damage and money are not silently multiplied by a handicap.
 Stable JSON records each variant's victory, lives, failed wave, unused money,
 tower composition, rebuilds, ability uses/utilization, and the victory-rate margin
 between the strongest and weakest policy. `campaign_acceptance_bands.json` owns
-the reviewed expectations: novice for Easy, competent for Normal, and expert for
+the reviewed expectations: novice for Easy, competent for Normal, and hard for
 Hard, while allowing several builds and deterministic retries.  The report also
 fingerprints every runtime definition or implementation file it consumes/mirrors,
 so combat-rule changes cannot silently retain an old result.
