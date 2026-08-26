@@ -53,16 +53,16 @@ local unlockSequence = UnlockPresentation.new()
 -- Campaign layout uses a small set of shared spacing tokens. Keeping the list,
 -- preview, difficulty cards, and actions on the same rhythm is especially
 -- important here because both columns read as one surface.
-local SPACE = 8
-local PANEL_PAD = 20
-local SECTION_INSET = 20
-local LIST_ROW_H = 60
+local SPACE = 12
+local PANEL_PAD = 28
+local SECTION_INSET = 28
+local LIST_ROW_H = 80
 local LIST_ROW_STEP = LIST_ROW_H + SPACE
-local LIST_HEADER_H = 48
-local LIST_PREVIEW_W = 84
-local LIST_PREVIEW_H = 50
+local LIST_HEADER_H = 49
+local LIST_PREVIEW_W = 118
+local LIST_PREVIEW_H = 68
 local MAIN_PREVIEW_HEIGHT_RATIO = 0.82
-local DIFFICULTY_CARD_H = 48
+local DIFFICULTY_CARD_H = 52
 local ABILITY_SLOT_COUNT = 2
 local ABILITY_CARD_GAP = 18
 local ABILITY_CARD_SIZE = 140
@@ -70,11 +70,12 @@ local ABILITY_PICKER_W = 520
 local ABILITY_PICKER_PAD = 20
 local ABILITY_PICKER_ITEM_H = 72
 local ABILITY_PICKER_GAP = 10
-local CAMPAIGN_CARD_MAX_W = 1268
-local CAMPAIGN_CARD_MAX_H = 720
-local BUTTON_BOTTOM_GAP = 18
-local BACK_BUTTON_H = 48
-local PLAY_BUTTON_H = 78
+local CAMPAIGN_CARD_MAX_W = 1168
+local CAMPAIGN_CARD_MAX_H = 734
+local BUTTON_BOTTOM_GAP = 30
+local BACK_BUTTON_H = 68
+local PLAY_BUTTON_H = 108
+local DIFFICULTY_PLAY_GAP = 26
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -157,7 +158,7 @@ local function layout()
 	local contentH = min(CAMPAIGN_CARD_MAX_H, sh - headerH - footerH)
 	local contentW = min(CAMPAIGN_CARD_MAX_W, sw - margin * 2)
 	local contentX = floor((sw - contentW) * 0.5)
-	local leftW = floor(contentW * 0.325)
+	local leftW = floor(contentW * 0.347)
 	local centerW = contentW - gap - leftW
 	return {
 		sw = sw, sh = sh, margin = margin, headerH = headerH, footerH = footerH,
@@ -570,7 +571,7 @@ local function difficultyGeometry(l)
 	local x = l.center.x + PANEL_PAD + 8
 	local w = l.center.w - PANEL_PAD * 2 - 8
 	local playY = l.center.y + l.center.h - BUTTON_BOTTOM_GAP - PLAY_BUTTON_H
-	local cardY = playY - SPACE - DIFFICULTY_CARD_H
+	local cardY = playY - DIFFICULTY_PLAY_GAP - DIFFICULTY_CARD_H
 	local labelW = 118
 	return x, cardY, w, labelW, playY
 end
@@ -795,7 +796,7 @@ end
 
 function Screen.resize()
 	Tooltip.hide()
-	MapPreviewCache.buildAll(520, 312)
+	MapPreviewCache.buildAll(660, 312)
 	Backdrop.start()
 	keepSelectedVisible(layout())
 end

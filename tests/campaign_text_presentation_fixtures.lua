@@ -13,28 +13,30 @@ assert(campaignSource:find("lg.setColor(Theme.ui.text)\n\t\tText.printShadow(ind
 	"selected and unselected map names must use the same text color")
 assert(not campaignSource:find('lg.rectangle("line", rowX, highlightY', 1, true),
 	"map selection rows must not draw an animated outline")
-assert(campaignSource:find("local CAMPAIGN_CARD_MAX_H = 720", 1, true),
+assert(campaignSource:find("local CAMPAIGN_CARD_MAX_W = 1168", 1, true)
+	and campaignSource:find("local CAMPAIGN_CARD_MAX_H = 734", 1, true),
 	"campaign card must use the tall reference layout")
-assert(campaignSource:find("MapPreviewCache.buildAll(520, 312)", 1, true),
+assert(campaignSource:find("MapPreviewCache.buildAll(660, 312)", 1, true),
 	"campaign map preview must retain its wide landscape aspect ratio")
-assert(campaignSource:find("local SPACE = 8", 1, true)
-	and campaignSource:find("local PANEL_PAD = 20", 1, true)
-	and campaignSource:find("local SECTION_INSET = 20", 1, true),
+assert(campaignSource:find("local SPACE = 12", 1, true)
+	and campaignSource:find("local PANEL_PAD = 28", 1, true)
+	and campaignSource:find("local SECTION_INSET = 28", 1, true),
 	"campaign columns must derive their geometry from shared spacing tokens")
 assert(campaignSource:find("local LIST_ROW_STEP = LIST_ROW_H + SPACE", 1, true)
 	and campaignSource:find("local cardW = (w - labelW - SPACE * 2) / 3", 1, true),
 	"campaign lists and horizontal difficulty cards must use the shared gap")
-assert(campaignSource:find("local LIST_ROW_H = 60", 1, true)
-	and campaignSource:find("local DIFFICULTY_CARD_H = 48", 1, true),
-	"campaign selection controls must use the compact heights")
+assert(campaignSource:find("local LIST_ROW_H = 80", 1, true)
+	and campaignSource:find("local DIFFICULTY_CARD_H = 52", 1, true),
+	"campaign selection controls must use the reference heights")
 assert(campaignSource:find("local listH = l.left.h - SECTION_INSET - LIST_HEADER_H - BUTTON_BOTTOM_GAP - BACK_BUTTON_H - SPACE", 1, true),
 	"campaign map list must derive its height from the action geometry")
-assert(campaignSource:find("local BUTTON_BOTTOM_GAP = 18", 1, true),
+assert(campaignSource:find("local BUTTON_BOTTOM_GAP = 30", 1, true),
 	"campaign actions must align to the shared panel padding")
-assert(campaignSource:find("local BACK_BUTTON_H = 48", 1, true)
-	and campaignSource:find("local PLAY_BUTTON_H = 78", 1, true),
+assert(campaignSource:find("local BACK_BUTTON_H = 68", 1, true)
+	and campaignSource:find("local PLAY_BUTTON_H = 108", 1, true)
+	and campaignSource:find("local DIFFICULTY_PLAY_GAP = 26", 1, true),
 	"campaign action geometry must use shared height tokens")
-assert(campaignSource:find("local leftW = floor(contentW * 0.325)", 1, true)
+assert(campaignSource:find("local leftW = floor(contentW * 0.347)", 1, true)
 	and campaignSource:find("local centerW = contentW - gap - leftW", 1, true),
 	"campaign card must use a narrow map list and wide detail column")
 
@@ -46,5 +48,11 @@ assert(buttonSource:find('btn.label:gsub("\\n", "")', 1, true),
 	"button labels must account for every line when vertically centered")
 assert(buttonSource:find("(h - labelHeight) * 0.5", 1, true),
 	"button label blocks must be vertically centered")
+
+local bootstrapFile = assert(io.open("core/bootstrap.lua", "r"))
+local bootstrapSource = bootstrapFile:read("*a")
+bootstrapFile:close()
+assert(bootstrapSource:find("MapPreviewCache.buildAll(660, 312)", 1, true),
+	"campaign previews must use the reference aspect ratio on initial load")
 
 print("campaign text presentation fixtures passed")
