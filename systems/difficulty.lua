@@ -44,8 +44,8 @@ Difficulty.defs = {
 		key = "hard",
 
 		enemySpeedBias = 1.0,
-		enemyHpBias = 1.2,
-		bossHpBias = 1.35,
+		enemyHpBias = 1.0,
+		bossHpBias = 1.2,
 
 		rewardBias = 0.95,
 		perfectWaveBonus = 1.25,
