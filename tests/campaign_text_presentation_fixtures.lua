@@ -13,6 +13,13 @@ assert(campaignSource:find("lg.setColor(Theme.ui.text)\n\t\tText.printShadow(ind
 	"selected and unselected map names must use the same text color")
 assert(not campaignSource:find('lg.rectangle("line", rowX, highlightY', 1, true),
 	"map selection rows must not draw an animated outline")
+assert(campaignSource:find("lg.setColor(Theme.ui.buttonSelected)\n\tlg.circle(\"fill\", markerX", 1, true)
+	and campaignSource:find("lg.setColor(selected and Theme.ui.buttonSelected or Theme.ui.panel)", 1, true),
+	"selected map indicators must use the shared selected button color")
+assert(campaignSource:find("lg.setColor(active and Theme.ui.buttonSelected or Theme.ui.panel)", 1, true),
+	"selected difficulty buttons must use the shared selected button color")
+assert(not campaignSource:find('lg.rectangle("line", cx, cardY, cardW, DIFFICULTY_CARD_H', 1, true),
+	"selected difficulty buttons must not draw an outline highlight")
 assert(campaignSource:find("local CAMPAIGN_CARD_MAX_W = 1168", 1, true)
 	and campaignSource:find("local CAMPAIGN_CARD_MAX_H = 734", 1, true),
 	"campaign card must use the tall reference layout")
