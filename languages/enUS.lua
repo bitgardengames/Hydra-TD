@@ -97,6 +97,7 @@ return {
 	campaign = {
 		title = "CAMPAIGN",
 		selectMap = "Select a map",
+		maps = "Maps",
 		playMap = "Play Map",
 		difficultyDescription = "Affects enemy health and rewards",
 		difficultyEasy = "Recommended for new players",
