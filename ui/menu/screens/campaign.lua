@@ -287,10 +287,13 @@ local function drawMapList(l, unlockPose)
 		end
 		local entry = MapPreviewCache.get(map.id)
 		if entry then
-			local scaleX = LIST_PREVIEW_W / entry.canvas:getWidth()
-			local scaleY = LIST_PREVIEW_H / entry.canvas:getHeight()
+			local canvasW, canvasH = entry.canvas:getWidth(), entry.canvas:getHeight()
+			local previewScale = min(LIST_PREVIEW_W / canvasW, LIST_PREVIEW_H / canvasH)
+			local previewW, previewH = canvasW * previewScale, canvasH * previewScale
+			local previewX = rowX + 4 + (LIST_PREVIEW_W - previewW) * 0.5
+			local previewY = y + (LIST_ROW_H - previewH) * 0.5
 			lg.setColor(1, 1, 1, locked and 0.28 or 0.9)
-			lg.draw(entry.canvas, rowX + 4, y + 5, 0, scaleX, scaleY)
+			lg.draw(entry.canvas, previewX, previewY, 0, previewScale, previewScale)
 		end
 		local textX = rowX + LIST_PREVIEW_W + 12
 		Fonts.set("ui")
