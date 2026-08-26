@@ -17,7 +17,6 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 local RunModes = require("systems.run_modes")
 local DrawEntities = require("render.draw_entities")
 local AbilityIcons = require("ui.ability_icons")
-local AbilityTooltip = require("ui.ability_tooltip")
 local AbilityDefs = require("systems.ability_defs")
 local Hotkeys = require("core.hotkeys")
 local UnlockPresentation = require("ui.campaign_unlock_presentation")
@@ -42,7 +41,6 @@ local hoveredMedal
 local hoveredAbilitySlot
 local hoveredAbilityChoice
 local selectedAbilitySlot
-local abilitySlotTooltips = {}
 local listOffset = 0
 local scrollbarDragging = false
 local scrollbarGrabY = 0
@@ -119,26 +117,6 @@ local function drawRewardIcon(reward, cx, cy)
 	elseif reward.type == "ability" then
 		AbilityIcons.draw(reward.id, cx, cy, 1, 1)
 	end
-end
-
-local function hoveredMapReward(l, map, mx, my)
-	local pad = 20
-	local x, y, w = l.center.x + pad, l.center.y + 38, l.center.w - pad * 2
-	local previewY = y + 88
-	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
-	local previewH = min(w * 9 / 16, maxPreviewH)
-	local statY = previewY + previewH + 18
-	local rewardsY = statY + 67
-	if rewardsY + 62 >= l.center.y + l.center.h then return nil end
-
-	local rewards = CampaignUnlocks.getRewardsForMap(map)
-	-- The heading describes the section; only the reward cells themselves expose
-	-- item-specific details.
-	if #rewards == 0 or mx < x or mx > x + w or my < rewardsY + 25 or my > rewardsY + 62 then
-		return nil
-	end
-	local index = min(#rewards, floor((mx - x) / (w / #rewards)) + 1)
-	return rewards[index]
 end
 
 local function layout()
@@ -369,22 +347,6 @@ local function drawAbilityCard(x, y, w, h, slot, abilityId, unlocked, hovered)
 	end
 end
 
-local function showAbilitySlotTooltip(slot, abilityId)
-	if abilityId then
-		AbilityTooltip.show(abilityId)
-		return
-	end
-
-	local unlocked = CampaignUnlocks.isAbilitySlotUnlocked(slot)
-	local title = L(unlocked and "campaign.selectAbility" or "abilityUnlock.slotLocked")
-	local tooltip = abilitySlotTooltips[slot]
-	if not tooltip or tooltip.title ~= title then
-		tooltip = {title = title, rows = {}}
-		abilitySlotTooltips[slot] = tooltip
-	end
-	Tooltip.show(tooltip)
-end
-
 local function abilityCardGeometry(l, entry, slot)
 	if not entry then return nil end
 	local pad = 20
@@ -579,7 +541,6 @@ function Screen.update(dt)
 	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
 
 	local map = Maps[State.mapIndex]
-	local hoveredReward = hoveredMapReward(l, map, mx, my)
 	hoveredAbilitySlot = nil
 	hoveredAbilityChoice = nil
 	selectedAbilitySlot = nil
@@ -597,9 +558,7 @@ function Screen.update(dt)
 				and my >= lcenter.y + 23 and my <= lcenter.y + 49 then hoveredMedal = tier end
 		end
 	end
-	if hoveredReward and hoveredReward.type == "ability" then
-		AbilityTooltip.show(hoveredReward.id)
-	elseif hoveredMedal then
+	if hoveredMedal then
 		local key = DIFFICULTIES[hoveredMedal]
 		local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[key]
 		local date = type(timestamp) == "number" and os.date(L("campaign.medalDateFormat"), timestamp)
