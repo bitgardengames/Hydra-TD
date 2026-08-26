@@ -18,6 +18,8 @@ assert(campaignSource:find("lg.setColor(Theme.ui.buttonHover)\n\tlg.circle(\"fil
 	"selected map indicators must use the highlighted UI button color")
 assert(campaignSource:find("lg.setColor(active and Theme.ui.buttonHover or Theme.ui.panel)", 1, true),
 	"selected difficulty buttons must use the highlighted UI button color")
+assert(campaignSource:find("lg.setColor(DIFFICULTY_COLORS[key])", 1, true),
+	"selected and unselected difficulty buttons must use the same text color")
 assert(not campaignSource:find('lg.rectangle("line", cx, cardY, cardW, DIFFICULTY_CARD_H', 1, true),
 	"selected difficulty buttons must not draw an outline highlight")
 assert(campaignSource:find("local CAMPAIGN_CARD_MAX_W = 1168", 1, true)

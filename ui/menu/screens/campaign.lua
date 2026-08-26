@@ -592,7 +592,7 @@ local function drawRight(l, map)
 		lg.setColor(active and Theme.ui.buttonHover or Theme.ui.panel)
 		lg.rectangle("fill", cx, cardY, cardW, DIFFICULTY_CARD_H, 8)
 		Fonts.set("ui")
-		lg.setColor(active and Theme.ui.text or DIFFICULTY_COLORS[key])
+		lg.setColor(DIFFICULTY_COLORS[key])
 		Text.printfShadow(L("difficulty." .. key), cx, cardY + 14, cardW, "center")
 	end
 
