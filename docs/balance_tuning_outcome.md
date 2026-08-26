@@ -9,12 +9,19 @@ defense by limiting repeated wave counters and buying an affordable Lancer (or
 the cheapest remaining entry tower) rather than abandoning preparation when a
 preferred specialist is too expensive.
 
-To keep health values small and whole, standard enemy health was reduced to
-15/40/12 for Grunts, Tanks, and Runners, and to 54/38/38/50 for Bulwarks,
-Regenerators, Warcallers, and Summoners. Hard retains its tighter life, reward,
-sell-refund, and boss contracts, but standard enemies use the readable baseline
-health values and bosses use a 1.2 multiplier. The resulting required-policy
-matrix clears every map while still exercising imperfect placement, counter
+To keep health values small and whole while making every enemy slightly sturdier,
+standard enemy health is 16/42/13 for Grunts, Tanks, and Runners, and
+56/40/40/52 for Bulwarks, Regenerators, Warcallers, and Summoners. Hard retains
+its tighter life, reward, sell-refund, and boss contracts, but standard enemies
+use these readable baseline health values and bosses use a 1.2 multiplier.
+
+The resulting required-policy matrix clears every map: the novice policy won
+45/45 Easy runs, the competent policy won 45/45 Normal runs, and the hard
+policy won 44/45 Hard runs. Hard victories averaged 14 of 15 lives and the one
+failed Twin Loop variant is covered by the policy's authored retry, leaving a
+deliberate execution-sensitive edge without making the map unwinnable. Across
+all policies, difficulties, maps, and three variants the headless pass executes
+405 complete campaign runs while exercising imperfect placement, mixed tower
 selection, upgrades, active-ability timing, and real leaks.
 
 ## Canonical assumptions
