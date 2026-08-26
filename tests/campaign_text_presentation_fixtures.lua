@@ -25,11 +25,11 @@ assert(not campaignSource:find('lg.rectangle("line", cx, cardY, cardW, DIFFICULT
 assert(campaignSource:find("local CAMPAIGN_CARD_MAX_W = 1168", 1, true)
 	and campaignSource:find("local CAMPAIGN_CARD_MAX_H = 734", 1, true),
 	"campaign card must use the tall reference layout")
-assert(campaignSource:find("MapPreviewCache.buildAll(960, 540)", 1, true),
-	"campaign map preview must render at a crisp 16:9 resolution")
-assert(campaignSource:find("local previewScale = min(LIST_PREVIEW_W / canvasW, LIST_PREVIEW_H / canvasH)", 1, true)
-	and campaignSource:find("lg.draw(entry.canvas, previewX, previewY, 0, previewScale, previewScale)", 1, true),
-	"campaign map list previews must preserve their source aspect ratio")
+assert(campaignSource:find("nativePreview(map.id, LIST_PREVIEW_W, LIST_PREVIEW_H)", 1, true)
+	and campaignSource:find("lg.draw(entry.canvas, previewX, previewY)", 1, true),
+	"campaign map list previews must render and draw at their native pixel size")
+assert(campaignSource:find("nativePreview(map.id, w, maxPreviewH)", 1, true),
+	"campaign selected-map previews must have a separate native-sized render target")
 assert(campaignSource:find("local SPACE = 12", 1, true)
 	and campaignSource:find("local PANEL_PAD = 28", 1, true)
 	and campaignSource:find("local SECTION_INSET = 28", 1, true),
@@ -64,7 +64,15 @@ assert(buttonSource:find("(h - labelHeight) * 0.5", 1, true),
 local bootstrapFile = assert(io.open("core/bootstrap.lua", "r"))
 local bootstrapSource = bootstrapFile:read("*a")
 bootstrapFile:close()
-assert(bootstrapSource:find("MapPreviewCache.buildAll(960, 540)", 1, true),
-	"campaign previews must use the crisp 16:9 resolution on initial load")
+assert(bootstrapSource:find("MapPreviewCache.buildAll(118, 66)", 1, true),
+	"campaign list thumbnails must be warmed at their native resolution")
+
+local cacheFile = assert(io.open("world/map_preview_cache.lua", "r"))
+local cacheSource = cacheFile:read("*a")
+cacheFile:close()
+assert(cacheSource:find('local key = w .. "x" .. h', 1, true),
+	"map previews must be cached separately for every native destination size")
+assert(cacheSource:find('canvas:setFilter("nearest", "nearest")', 1, true),
+	"map preview canvases must retain the game's pixel-art texture filtering")
 
 print("campaign text presentation fixtures passed")

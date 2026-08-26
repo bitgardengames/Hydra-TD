@@ -75,6 +75,17 @@ local BACK_BUTTON_H = 68
 local PLAY_BUTTON_H = 108
 local DIFFICULTY_PLAY_GAP = 26
 
+local function nativePreview(mapId, maxW, maxH)
+	-- The old preview was 16:9 and fitted uniformly inside these bounds. Round
+	-- that final rectangle once, then render a canvas for those exact pixels.
+	-- Drawing it 1:1 at integer coordinates avoids both texture resampling and
+	-- half-pixel sampling while preserving the established framing.
+	local scale = min(maxW / 16, maxH / 9)
+	local w = max(1, floor(16 * scale + 0.5))
+	local h = max(1, floor(9 * scale + 0.5))
+	return MapPreviewCache.get(mapId, w, h), w, h
+end
+
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
 end
@@ -121,15 +132,12 @@ local function drawRewardIcon(reward, cx, cy)
 	end
 end
 
-local function hoveredMapReward(l, map, entry, mx, my)
-	if not entry then return nil end
-
+local function hoveredMapReward(l, map, mx, my)
 	local pad = 20
 	local x, y, w = l.center.x + pad, l.center.y + 38, l.center.w - pad * 2
 	local previewY = y + 88
 	local maxPreviewH = max(120, floor(l.center.h * MAIN_PREVIEW_HEIGHT_RATIO))
-	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
-	local previewH = entry.canvas:getHeight() * scale
+	local previewH = min(w * 9 / 16, maxPreviewH)
 	local statY = previewY + previewH + 18
 	local rewardsY = statY + 67
 	if rewardsY + 62 >= l.center.y + l.center.h then return nil end
@@ -285,15 +293,12 @@ local function drawMapList(l, unlockPose)
 			lg.setColor(Theme.ui.good[1], Theme.ui.good[2], Theme.ui.good[3], 0.32 * unlockPose.row)
 			lg.rectangle("fill", rowX, y, rowW, LIST_ROW_H, 7)
 		end
-		local entry = MapPreviewCache.get(map.id)
+		local entry, previewW, previewH = nativePreview(map.id, LIST_PREVIEW_W, LIST_PREVIEW_H)
 		if entry then
-			local canvasW, canvasH = entry.canvas:getWidth(), entry.canvas:getHeight()
-			local previewScale = min(LIST_PREVIEW_W / canvasW, LIST_PREVIEW_H / canvasH)
-			local previewW, previewH = canvasW * previewScale, canvasH * previewScale
-			local previewX = rowX + 4 + (LIST_PREVIEW_W - previewW) * 0.5
-			local previewY = y + (LIST_ROW_H - previewH) * 0.5
+			local previewX = floor(rowX + 4 + (LIST_PREVIEW_W - previewW) * 0.5 + 0.5)
+			local previewY = floor(y + (LIST_ROW_H - previewH) * 0.5 + 0.5)
 			lg.setColor(1, 1, 1, locked and 0.28 or 0.9)
-			lg.draw(entry.canvas, previewX, previewY, 0, previewScale, previewScale)
+			lg.draw(entry.canvas, previewX, previewY)
 		end
 		local textX = rowX + LIST_PREVIEW_W + 12
 		Fonts.set("ui")
@@ -483,7 +488,7 @@ local function drawAbilityPicker(l)
 	end
 end
 
-local function drawCenter(l, map, mapIndex, entry)
+local function drawCenter(l, map, mapIndex)
 	local pad = PANEL_PAD
 	local x, y, w = l.center.x + pad + 8, l.center.y + SECTION_INSET, l.center.w - pad * 2 - 8
 	Fonts.set("title")
@@ -503,11 +508,12 @@ local function drawCenter(l, map, mapIndex, entry)
 
 	local previewY = y + 70
 	local maxPreviewH = max(120, l.center.h - (previewY - l.center.y) - 190)
-	local scale = min(w / entry.canvas:getWidth(), maxPreviewH / entry.canvas:getHeight())
-	local previewW, previewH = entry.canvas:getWidth() * scale, entry.canvas:getHeight() * scale
-	local previewX = x + (w - previewW) * 0.5
+	local entry, previewW, previewH = nativePreview(map.id, w, maxPreviewH)
+	if not entry then return end
+	local previewX = floor(x + (w - previewW) * 0.5 + 0.5)
+	previewY = floor(previewY + 0.5)
 	lg.setColor(1, 1, 1, isMapLocked(mapIndex) and 0.35 or 1)
-	lg.draw(entry.canvas, previewX, previewY, 0, scale, scale)
+	lg.draw(entry.canvas, previewX, previewY)
 	lg.setColor(Theme.outline.color)
 	lg.setLineWidth(3)
 	lg.rectangle("line", previewX, previewY, previewW, previewH, 7)
@@ -584,8 +590,7 @@ function Screen.update(dt)
 	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
 
 	local map = Maps[State.mapIndex]
-	local entry = MapPreviewCache.get(map.id)
-	local hoveredReward = hoveredMapReward(l, map, entry, mx, my)
+	local hoveredReward = hoveredMapReward(l, map, mx, my)
 	hoveredAbilitySlot = nil
 	hoveredAbilityChoice = nil
 	selectedAbilitySlot = nil
@@ -630,8 +635,7 @@ function Screen.draw()
 	lg.rectangle("fill", l.center.x, l.contentY + SECTION_INSET, 2, l.contentH - SECTION_INSET * 2)
 	drawMapList(l, unlockEvent and unlockPose)
 	local map = Maps[State.mapIndex]
-	local entry = MapPreviewCache.get(map.id)
-	if entry then drawCenter(l, map, State.mapIndex, entry) end
+	drawCenter(l, map, State.mapIndex)
 	drawRight(l, map)
 	drawUnlockRewards(l, unlockEvent, unlockPose)
 
@@ -736,7 +740,7 @@ end
 
 function Screen.resize()
 	Tooltip.hide()
-	MapPreviewCache.buildAll(960, 540)
+	MapPreviewCache.clear()
 	Backdrop.start()
 	keepSelectedVisible(layout())
 end

@@ -22,7 +22,9 @@ function Bootstrap.initFull()
 	Steam.load()
 	Sound.load()
 	Sound.playMusic("menu")
-	MapPreviewCache.buildAll(960, 540)
+	-- Warm the campaign's native list thumbnails. Larger previews are generated
+	-- lazily once their final layout size is known.
+	MapPreviewCache.buildAll(118, 66)
 	Menu.load()
 	Effects.load()
 	Projectiles.load()

@@ -16,6 +16,10 @@ local lg = love.graphics
 local mapW = Constants.GRID_W * Constants.TILE
 local mapH = Constants.GRID_H * Constants.TILE
 
+-- Previews are keyed by both map and destination size.  A single 16:9 canvas
+-- used to be shared by every UI presentation, which meant at least one of the
+-- presentations would resample it.  Keeping each native-sized render here is
+-- deliberately a memory-for-image-quality tradeoff.
 local cache = {}
 
 local function buildPreviewPath(pathWorld, previewW, previewH, winW, winH, cameraScale)
@@ -75,65 +79,98 @@ local function withMapContext(context, previousMap, fn)
 	end
 end
 
-function MapPreviewCache.buildAll(w, h)
+local function build(mapIndex, mapDef, w, h)
 	local winW, winH = lg.getDimensions()
 	local previousMapIndex = State.worldMapIndex
 	local previousMap = {}
+	local context = MapMod.createRenderContext(mapDef)
+	local canvas = lg.newCanvas(w, h, {msaa = 8})
+	local scatter = context.map.biome and context.map.biome.scatter
 
-	for mapIndex, mapDef in ipairs(Maps) do
-		local context = MapMod.createRenderContext(mapDef)
-		local canvas = lg.newCanvas(w, h, {msaa = 8})
-		local scatter = context.map.biome and context.map.biome.scatter
+	-- Hydra TD's world art uses nearest-neighbour filtering.  The preview is
+	-- still rendered at native size; this only prevents accidental smoothing if
+	-- a caller ever draws the canvas through a transformed parent.
+	canvas:setFilter("nearest", "nearest")
+	State.worldMapIndex = mapIndex
+	withMapContext(context, previousMap, function()
+		MapMod.clearBlocked()
 
-		State.worldMapIndex = mapIndex
-		withMapContext(context, previousMap, function()
-			MapMod.clearBlocked()
-
-			if scatter then
-				if scatter.rocks and scatter.rocks.enabled then
-					Rocks.generate(scatter.rocks)
-				else
-					Rocks.clear()
-				end
-
-				if scatter.trees and scatter.trees.enabled then
-					Trees.generate(scatter.trees)
-				else
-					Trees.clear()
-				end
-
-				if scatter.cactus and scatter.cactus.enabled then
-					Cacti.generate(scatter.cactus)
-				else
-					Cacti.clear()
-				end
-
-				if scatter.mushrooms and scatter.mushrooms.enabled then
-					Mushrooms.generate()
-				else
-					Mushrooms.clear()
-				end
+		if scatter then
+			if scatter.rocks and scatter.rocks.enabled then
+				Rocks.generate(scatter.rocks)
 			else
 				Rocks.clear()
-				Trees.clear()
-				Cacti.clear()
-				Mushrooms.clear()
 			end
 
-			MapRender.renderGameplayFramedToCanvas(canvas)
-		end)
+			if scatter.trees and scatter.trees.enabled then
+				Trees.generate(scatter.trees)
+			else
+				Trees.clear()
+			end
 
-		cache[mapDef.id] = {
-			canvas = canvas,
-			previewPath = buildPreviewPath(context.map.pathWorld, w, h, winW, winH, Camera.wscale),
-		}
-	end
+			if scatter.cactus and scatter.cactus.enabled then
+				Cacti.generate(scatter.cactus)
+			else
+				Cacti.clear()
+			end
+
+			if scatter.mushrooms and scatter.mushrooms.enabled then
+				Mushrooms.generate()
+			else
+				Mushrooms.clear()
+			end
+		else
+			Rocks.clear()
+			Trees.clear()
+			Cacti.clear()
+			Mushrooms.clear()
+		end
+
+		MapRender.renderGameplayFramedToCanvas(canvas)
+	end)
 
 	State.worldMapIndex = previousMapIndex
+	return {
+		canvas = canvas,
+		previewPath = buildPreviewPath(context.map.pathWorld, w, h, winW, winH, Camera.wscale),
+	}
 end
 
-function MapPreviewCache.get(mapId)
-	return cache[mapId]
+function MapPreviewCache.buildAll(w, h)
+	w, h = math.max(1, math.floor(w + 0.5)), math.max(1, math.floor(h + 0.5))
+	for mapIndex, mapDef in ipairs(Maps) do
+		local sizes = cache[mapDef.id] or {}
+		cache[mapDef.id] = sizes
+		local key = w .. "x" .. h
+		if not sizes[key] then sizes[key] = build(mapIndex, mapDef, w, h) end
+	end
+end
+
+function MapPreviewCache.get(mapId, w, h)
+	local sizes = cache[mapId]
+	if not w or not h then return nil end
+
+	w, h = math.max(1, math.floor(w + 0.5)), math.max(1, math.floor(h + 0.5))
+	local key = w .. "x" .. h
+	if sizes and sizes[key] then return sizes[key] end
+
+	for mapIndex, mapDef in ipairs(Maps) do
+		if mapDef.id == mapId then
+			sizes = sizes or {}
+			cache[mapId] = sizes
+			sizes[key] = build(mapIndex, mapDef, w, h)
+			return sizes[key]
+		end
+	end
+end
+
+function MapPreviewCache.clear()
+	for _, sizes in pairs(cache) do
+		for _, entry in pairs(sizes) do
+			if entry.canvas then entry.canvas:release() end
+		end
+	end
+	cache = {}
 end
 
 return MapPreviewCache
