@@ -53,7 +53,7 @@ local Traits = {
 	},
 	boss_suppression = {
 		tag = "Boss Mechanic",
-		mechanic = "Suppresses one tower for five seconds about every twenty seconds.",
+		mechanic = "Suppresses one tower for five seconds every eight seconds.",
 		tell = "A red interference aura surrounds the disabled tower.",
 		counter = "Spread damage across several towers so one shutdown cannot halt your defense.",
 		answers = {"Several affordable towers", "Long-range towers with overlapping coverage"},
