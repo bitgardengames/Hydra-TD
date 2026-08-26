@@ -10,6 +10,8 @@ local minimumSpawnSpacing = 0.5
 
 for _, map in ipairs(Maps) do
 	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
+	local introducedEnemyAppearances = {}
+	local lateWaveCompositions = {}
 
 	assert(CampaignWaveDefs.getFinalWave(map) == 20, map.id .. " must author exactly twenty waves")
 	local authoredTotal = 0
@@ -19,6 +21,7 @@ for _, map in ipairs(Maps) do
 		assert(wave.boss == (waveIndex == 10 or waveIndex == 20),
 			map.id .. " must reserve bosses for waves 10 and 20")
 		local counted = 0
+		local composition = {}
 		for _, group in ipairs(wave.groups) do
 			authoredTotal = authoredTotal + group.count
 			counted = counted + group.count
@@ -26,6 +29,16 @@ for _, map in ipairs(Maps) do
 			assert(available[group.kind], map.id .. " uses unavailable enemy " .. group.kind)
 			assert(group.count == 1 or group.spacing >= minimumSpawnSpacing,
 				map.id .. " places consecutive enemies too close together")
+			if group.kind ~= "boss" then composition[group.kind] = true end
+		end
+		if waveIndex >= 4 then
+			local kinds = {}
+			for kind in pairs(composition) do
+				kinds[#kinds + 1] = kind
+				introducedEnemyAppearances[kind] = (introducedEnemyAppearances[kind] or 0) + 1
+			end
+			table.sort(kinds)
+			lateWaveCompositions[table.concat(kinds, "+")] = true
 		end
 		assert(wave.count == counted, map.id .. " wave count must match its groups")
 	end
@@ -41,6 +54,16 @@ for _, map in ipairs(Maps) do
 	local final = CampaignWaveDefs.get(map, 20)
 	assert(final.boss and EnemyDefs[final.bossArchetype],
 		map.id .. " final exam has no legal explicit boss selection")
+
+	for _, kind in ipairs(map.introducesEnemies or {}) do
+		assert((introducedEnemyAppearances[kind] or 0) >= 4,
+			map.id .. " must revisit introduced enemy " .. kind .. " throughout later waves")
+	end
+	if map.campaignStage > 1 then
+		local compositionCount = 0
+		for _ in pairs(lateWaveCompositions) do compositionCount = compositionCount + 1 end
+		assert(compositionCount >= 3, map.id .. " needs at least three distinct late-wave compositions")
+	end
 end
 
 print("campaign wave definition fixtures passed")

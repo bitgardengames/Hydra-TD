@@ -510,27 +510,28 @@ local wavesByMapId = {
 		-- practice
 		[4] = { g("bulwark", 6, 0.50), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.50) },
 		-- practice
-		[5] = { g("warcaller", 11, 0.52), g("bulwark", 4, 0.50, 0.43), g("runner", 4, 0.50, 0.73) },
+		-- summoners recur as single priority targets inside otherwise familiar formations
+		[5] = { g("summoner", 1, 0.00), g("warcaller", 10, 0.52, 0.52), g("bulwark", 4, 0.50, 0.43), g("runner", 4, 0.50, 0.73) },
 		-- practice
 		[6] = { g("bulwark", 6, 0.50), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.50, 0.31), g("regenerator", 13, 0.54, 0.62) },
 		-- mixed check
 		[7] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.19), g("regenerator", 7, 0.50, 0.43), g("bulwark", 8, 0.52, 0.62) },
 		-- mixed check
-		[8] = { g("tank", 8, 0.50), g("runner", 7, 0.50, 0.19), g("bulwark", 8, 0.50, 0.37), g("regenerator", 10, 0.50, 0.56) },
+		[8] = { g("summoner", 1, 0.00), g("tank", 7, 0.50, 0.50), g("runner", 7, 0.50, 0.19), g("bulwark", 8, 0.50, 0.37), g("regenerator", 10, 0.50, 0.56) },
 		-- mixed check
 		[9] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.12), g("regenerator", 8, 0.50, 0.31), g("bulwark", 8, 0.50, 0.50), g("runner", 9, 0.50, 0.62) },
 		-- final exam
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 1.12), g("runner", 4, 0.50, 1.42), g("warcaller", 7, 0.50, 1.24), g("regenerator", 8, 0.50, 1.43), g("bulwark", 7, 0.50, 1.55) },
-		[11] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.50, 0.21), g("regenerator", 8, 0.50, 0.47), g("bulwark", 9, 0.52, 0.68) },
+		[11] = { g("summoner", 1, 0.00), g("bulwark", 2, 0.50, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.50, 0.21), g("regenerator", 8, 0.50, 0.47), g("bulwark", 9, 0.52, 0.68) },
 		[12] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.50, 0.33), g("regenerator", 15, 0.54, 0.65) },
 		[13] = { g("tank", 9, 0.50), g("runner", 8, 0.50, 0.19), g("bulwark", 9, 0.50, 0.37), g("regenerator", 11, 0.50, 0.56) },
-		[14] = { g("bulwark", 3, 0.50), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.50, 0.18), g("regenerator", 8, 0.50, 0.41), g("bulwark", 9, 0.52, 0.59) },
+		[14] = { g("summoner", 1, 0.00), g("bulwark", 2, 0.50, 0.50), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.50, 0.18), g("regenerator", 8, 0.50, 0.41), g("bulwark", 9, 0.52, 0.59) },
 		[15] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 8, 0.50, 0.13), g("regenerator", 9, 0.50, 0.33), g("bulwark", 9, 0.50, 0.53), g("runner", 10, 0.50, 0.65) },
 		[16] = { g("bulwark", 7, 0.50), g("runner", 9, 0.50, 0.27), g("warcaller", 12, 0.50, 0.28), g("regenerator", 16, 0.54, 0.56) },
-		[17] = { g("tank", 10, 0.50), g("runner", 8, 0.50, 0.17), g("bulwark", 10, 0.50, 0.33), g("regenerator", 12, 0.50, 0.50) },
+		[17] = { g("summoner", 1, 0.00), g("tank", 9, 0.50, 0.50), g("runner", 8, 0.50, 0.17), g("bulwark", 10, 0.50, 0.33), g("regenerator", 12, 0.50, 0.50) },
 		[18] = { g("bulwark", 4, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.50, 0.16), g("regenerator", 9, 0.50, 0.37), g("bulwark", 10, 0.52, 0.53) },
-		[19] = { g("bulwark", 4, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.50, 0.10), g("regenerator", 10, 0.50, 0.26), g("bulwark", 10, 0.50, 0.42), g("runner", 11, 0.50, 0.53) },
-		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 1.01), g("runner", 5, 0.50, 1.28), g("warcaller", 9, 0.50, 1.12), g("regenerator", 10, 0.50, 1.29), g("bulwark", 9, 0.50, 1.40) },
+		[19] = { g("summoner", 1, 0.00), g("bulwark", 3, 0.50, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.50, 0.10), g("regenerator", 10, 0.50, 0.26), g("bulwark", 10, 0.50, 0.42), g("runner", 11, 0.50, 0.53) },
+		[20] = { g("boss", 1, 0.00), g("summoner", 1, 0.00, 1.01), g("bulwark", 4, 0.50, 0.50), g("runner", 5, 0.50, 1.28), g("warcaller", 9, 0.50, 1.12), g("regenerator", 10, 0.50, 1.29), g("bulwark", 9, 0.50, 1.40) },
 	},
 }
 
