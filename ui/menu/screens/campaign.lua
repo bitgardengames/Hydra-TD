@@ -736,7 +736,7 @@ end
 
 function Screen.resize()
 	Tooltip.hide()
-	MapPreviewCache.buildAll(660, 312)
+	MapPreviewCache.buildAll(960, 540)
 	Backdrop.start()
 	keepSelectedVisible(layout())
 end
