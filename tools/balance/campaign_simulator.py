@@ -270,7 +270,10 @@ def check(report):
     for row in report["results"]:
         req=bands["required_policy_by_difficulty"][row["difficulty"]]
         selected=row["policies"][req["policy"]]; rate=selected["victory_rate"]
-        if rate < req["minimum_victory_rate"]: errors.append(f'{row["difficulty"]}/{row["map"]}: {req["policy"]} victory rate {rate}')
+        if "minimum_victory_rate" in req and rate < req["minimum_victory_rate"]:
+            errors.append(f'{row["difficulty"]}/{row["map"]}: {req["policy"]} victory rate {rate}')
+        if "maximum_victory_rate" in req and rate > req["maximum_victory_rate"]:
+            errors.append(f'{row["difficulty"]}/{row["map"]}: {req["policy"]} victory rate {rate}')
         metric=bands["metric_bands"]
         if row["success_failure_margin"] < metric["minimum_policy_margin"]:
             errors.append(f'{row["difficulty"]}/{row["map"]}: policy margin {row["success_failure_margin"]}')
