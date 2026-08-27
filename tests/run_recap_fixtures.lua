@@ -94,9 +94,14 @@ assert(enemySource:find("if e.scheduledWaveEnemy then", 1, true),
 	"only scheduled wave enemies may increment recap kills")
 assert(enemySource:find("State.spawnedKills = (State.spawnedKills or 0) + 1", 1, true),
 	"scheduled enemy death must increment recap kills")
+assert(victorySource:find('{label = L("runRecap.score"), value = State.score or 0}', 1, true),
+	"victory recap must display the final score")
+assert(not gameOverSource:find('L("runRecap.score")', 1, true),
+	"defeat recap must not display the final score")
+assert(gameOverSource:find("local panelW = 420", 1, true)
+		and gameOverSource:find("panelW = math.min(420, sw - 64)", 1, true),
+	"defeat panel must use its narrow layout")
 for name, screenSource in pairs({victory = victorySource, defeat = gameOverSource}) do
-	assert(screenSource:find('{label = L("runRecap.score"), value = State.score or 0}', 1, true),
-		name .. " recap must display the final score")
 	assert(not screenSource:find('L("runRecap.enemiesDefeated")', 1, true),
 		name .. " recap must not display kill stats")
 	assert(not screenSource:find("RecordRows.build", 1, true),
