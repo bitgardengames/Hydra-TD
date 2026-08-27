@@ -13,6 +13,8 @@ local Hotkeys = require("core.hotkeys")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local RecordRows = require("ui.record_rows")
 local RunModes = require("systems.run_modes")
+local DefeatPresentation = require("ui.defeat_presentation")
+local EdgeVignette = require("ui.edge_vignette")
 
 local lg = love.graphics
 
@@ -33,6 +35,7 @@ local colorText = Theme.ui.text
 local colorBackdrop = Theme.ui.backdrop
 local colorDim = Theme.ui.screenDim
 local colorOutline = Theme.outline.color
+local colorVignette = Theme.effects.colors.danger or Theme.ui.bad
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -211,6 +214,11 @@ function Screen.draw()
 	-- Dim (keep static, subtle)
 	lg.setColor(colorDim)
 	lg.rectangle("fill", 0, 0, sw, sh)
+
+	-- Defeat-only atmosphere stays behind the recap so its content remains crisp.
+	local reducedMotion = Save.data.settings.cameraMotion == false
+	local vignetteAlpha = DefeatPresentation.vignetteAlpha(t, reducedMotion)
+	EdgeVignette.draw(sw, sh, boxW + paddingX * 2, boxH + paddingY * 2, colorVignette, vignetteAlpha)
 
 	-- PANEL TRANSFORM
 	local panelCX = boxX + boxW * 0.5
