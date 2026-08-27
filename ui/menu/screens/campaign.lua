@@ -76,7 +76,8 @@ local PLAY_BUTTON_H = 108
 local DIFFICULTY_PLAY_GAP = 26
 local PREVIEW_RUNNER_SPEED = 58
 local PREVIEW_RUNNER_FADE_DURATION = 0.6
-local PREVIEW_RUNNER_TRIM_TILES = 2
+local PREVIEW_RUNNER_ENTRY_TRIM_TILES = 2
+local PREVIEW_RUNNER_EXIT_TRIM_TILES = 2
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -213,14 +214,17 @@ local function drawPreviewRunner(entry, previewX, previewY, locked)
 	local path = entry.previewPath
 	if locked or not path or path.totalLength <= 0 then return end
 
-	local trimDistance = PREVIEW_RUNNER_TRIM_TILES * path.tileLength
-	local travelLength = max(0, path.totalLength - trimDistance * 2)
+	-- Keep the runner inside the route at both ends so its appearance and
+	-- disappearance happen over path tiles instead of beyond the map entrances.
+	local startDistance = PREVIEW_RUNNER_ENTRY_TRIM_TILES * path.tileLength
+	local endDistance = path.totalLength - PREVIEW_RUNNER_EXIT_TRIM_TILES * path.tileLength
+	local travelLength = max(0, endDistance - startDistance)
 	if travelLength <= 0 then return end
 
 	local travelDuration = travelLength / PREVIEW_RUNNER_SPEED
 	local cycleDuration = travelDuration + PREVIEW_RUNNER_FADE_DURATION
 	local cycleTime = previewRunnerTime % cycleDuration
-	local distance = trimDistance + min(cycleTime, travelDuration) * PREVIEW_RUNNER_SPEED
+	local distance = startDistance + min(cycleTime, travelDuration) * PREVIEW_RUNNER_SPEED
 	local x, y = pointAlongPreviewPath(path, distance)
 	if not x then return end
 
