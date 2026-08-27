@@ -351,7 +351,7 @@ end
 ProjectileBehaviors.canProcTarget = canProcTarget
 
 -- visual stuff
-local function getProjectileColor(p, fallback)
+local function getProjectileColor(p, fallbackR, fallbackG, fallbackB)
 	local t = p.sourceTower
 	local c = t and t.color
 
@@ -359,7 +359,7 @@ local function getProjectileColor(p, fallback)
 		return c[1], c[2], c[3]
 	end
 
-	return fallback[1], fallback[2], fallback[3]
+	return fallbackR, fallbackG, fallbackB
 end
 
 local function colorMul(r, g, b, mul)
@@ -2776,7 +2776,7 @@ B.draw_lancer = {
 		if p._overdriveRound then
 			r, g, b = 1.0, 0.58, 0.14
 		else
-			r, g, b = getProjectileColor(p, {0.97, 0.97, 0.97})
+			r, g, b = getProjectileColor(p, 0.97, 0.97, 0.97)
 		end
 		local hr, hg, hb = colorMul(r, g, b, 1.15)
 
@@ -2793,7 +2793,7 @@ B.draw_slow = {
 		local size = p.r * (8 / 4.5)
 		local r = p.r * (2 / 4.5)
 
-		local cr, cg, cb = getProjectileColor(p, {0.7, 0.85, 1.0})
+		local cr, cg, cb = getProjectileColor(p, 0.7, 0.85, 1.0)
 		local hr, hg, hb = colorMul(cr, cg, cb, 1.15)
 
 		lg.setColor(cr, cg, cb, a)
@@ -2816,7 +2816,7 @@ B.draw_poison = {
 		local wy = cos(p.t * 8) * 1.5
 		local outer = p.r * ((p.baseR + 1.5) / p.baseR)
 
-		local cr, cg, cb = getProjectileColor(p, {0.55, 0.85, 0.45})
+		local cr, cg, cb = getProjectileColor(p, 0.55, 0.85, 0.45)
 		local hr, hg, hb = colorMul(cr, cg, cb, 1.2)
 
 		lg.push()
@@ -2838,7 +2838,7 @@ B.draw_cannon = {
 		local h = p.r * (8 / 4.5)
 		local r = p.r * (4 / 4.5)
 
-		local cr, cg, cb = getProjectileColor(p, {1.0, 0.8, 0.4})
+		local cr, cg, cb = getProjectileColor(p, 1.0, 0.8, 0.4)
 		local hr, hg, hb = colorMul(cr, cg, cb, 1.15)
 
 		lg.setColor(cr, cg, cb, a)
@@ -2857,7 +2857,7 @@ B.draw_plasma = {
 		local outer = displayR * (8 / 4.5) + pulse * (1.2 / 4.5) * displayR
 		local inner = displayR * (4.5 / 4.5) + pulse * (0.6 / 4.5) * displayR
 
-		local cr, cg, cb = getProjectileColor(p, {0.85, 0.55, 1.0})
+		local cr, cg, cb = getProjectileColor(p, 0.85, 0.55, 1.0)
 		local hr, hg, hb = colorMul(cr, cg, cb, 1.2)
 
 		lg.setColor(cr, cg, cb, a)
@@ -2874,7 +2874,7 @@ B.draw_shock_orb = {
 		local outer = p.r * (10 / 4.5)
 		local inner = p.r * (5 / 4.5)
 
-		local cr, cg, cb = getProjectileColor(p, {0.6, 0.9, 1.0})
+		local cr, cg, cb = getProjectileColor(p, 0.6, 0.9, 1.0)
 		local hr, hg, hb = colorMul(cr, cg, cb, 1.2)
 
 		lg.setColor(cr, cg, cb, a * 0.4)
