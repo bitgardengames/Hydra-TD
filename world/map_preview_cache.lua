@@ -1,5 +1,6 @@
 local MapPreviewCache = {}
 
+local Constants = require("core.constants")
 local Maps = require("world.map_defs")
 local MapMod = require("world.map")
 local MapRender = require("world.map_render")
@@ -50,7 +51,11 @@ local function buildPreviewPath(pathWorld, transform)
 		points[i] = {x = x, y = y, distance = totalLength}
 	end
 
-	return {points = points, totalLength = totalLength}
+	return {
+		points = points,
+		totalLength = totalLength,
+		tileLength = Constants.TILE * scale,
+	}
 end
 
 local function clearTable(t)
