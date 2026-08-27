@@ -37,6 +37,8 @@ local DIFFICULTY_COLORS = {
 }
 local buttons = {}
 local pulseTime = 0
+local previewRunnerTime = 0
+local previewRunnerMapId
 local hoveredMedal
 local hoveredAbilitySlot
 local hoveredAbilityChoice
@@ -72,6 +74,8 @@ local BUTTON_BOTTOM_GAP = 30
 local BACK_BUTTON_H = 68
 local PLAY_BUTTON_H = 108
 local DIFFICULTY_PLAY_GAP = 26
+local PREVIEW_RUNNER_SPEED = 52
+local PREVIEW_RUNNER_FADE_DURATION = 0.6
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -180,6 +184,57 @@ end
 local function selectMap(index)
 	if index == State.mapIndex then return end
 	State.mapIndex = index
+	previewRunnerTime = 0
+	previewRunnerMapId = Maps[index].id
+end
+
+local function pointAlongPreviewPath(path, distance)
+	local points = path and path.points
+	if not points or #points == 0 then return nil end
+	if distance <= 0 then return points[1].x, points[1].y end
+
+	for i = 2, #points do
+		local point = points[i]
+		if distance <= point.distance then
+			local previous = points[i - 1]
+			local segmentLength = point.distance - previous.distance
+			local t = segmentLength > 0 and (distance - previous.distance) / segmentLength or 0
+			return previous.x + (point.x - previous.x) * t,
+				previous.y + (point.y - previous.y) * t
+		end
+	end
+
+	local last = points[#points]
+	return last.x, last.y
+end
+
+local function drawPreviewRunner(entry, previewX, previewY, locked)
+	local path = entry.previewPath
+	if locked or not path or path.totalLength <= 0 then return end
+
+	local travelDuration = path.totalLength / PREVIEW_RUNNER_SPEED
+	local cycleDuration = travelDuration + PREVIEW_RUNNER_FADE_DURATION
+	local cycleTime = previewRunnerTime % cycleDuration
+	local distance = min(cycleTime, travelDuration) * PREVIEW_RUNNER_SPEED
+	local x, y = pointAlongPreviewPath(path, distance)
+	if not x then return end
+
+	local alpha = cycleTime <= travelDuration and 1
+		or max(0, 1 - (cycleTime - travelDuration) / PREVIEW_RUNNER_FADE_DURATION)
+	local radius = max(5, min(9, entry.canvas:getHeight() * 0.022))
+	x, y = previewX + x, previewY + y
+
+	-- A tiny version of the game's round enemy silhouette is more readable than
+	-- a plain marker while remaining unobtrusive over the map artwork.
+	lg.setColor(Theme.enemy.shadow[1], Theme.enemy.shadow[2], Theme.enemy.shadow[3], 0.5 * alpha)
+	lg.ellipse("fill", x, y + radius * 0.9, radius * 1.25, radius * 0.42)
+	lg.setColor(Theme.outline.color[1], Theme.outline.color[2], Theme.outline.color[3], alpha)
+	lg.circle("fill", x, y, radius + 2)
+	lg.setColor(Theme.enemy.body[1], Theme.enemy.body[2], Theme.enemy.body[3], alpha)
+	lg.circle("fill", x, y, radius)
+	lg.setColor(Theme.enemy.face[1], Theme.enemy.face[2], Theme.enemy.face[3], alpha)
+	lg.circle("fill", x - radius * 0.34, y - radius * 0.12, max(1, radius * 0.16))
+	lg.circle("fill", x + radius * 0.34, y - radius * 0.12, max(1, radius * 0.16))
 end
 
 local function navigate(direction)
@@ -465,6 +520,7 @@ local function drawCenter(l, map, mapIndex)
 	previewY = floor(previewY + 0.5)
 	lg.setColor(1, 1, 1, isMapLocked(mapIndex) and 0.35 or 1)
 	lg.draw(entry.canvas, previewX, previewY)
+	drawPreviewRunner(entry, previewX, previewY, isMapLocked(mapIndex))
 	lg.setColor(Theme.outline.color)
 	lg.setLineWidth(3)
 	lg.rectangle("line", previewX, previewY, previewW, previewH, 7)
@@ -518,6 +574,13 @@ end
 
 function Screen.update(dt)
 	pulseTime = pulseTime + dt
+	local selectedMap = Maps[State.mapIndex]
+	if selectedMap and previewRunnerMapId ~= selectedMap.id then
+		previewRunnerMapId = selectedMap.id
+		previewRunnerTime = 0
+	else
+		previewRunnerTime = previewRunnerTime + dt
+	end
 	Backdrop.update(dt)
 	Medals.update(dt)
 	UnlockPresentation.update(unlockSequence, dt)
@@ -694,6 +757,8 @@ function Screen.resize()
 end
 
 function Screen.enter()
+	previewRunnerTime = 0
+	previewRunnerMapId = Maps[State.mapIndex] and Maps[State.mapIndex].id
 	local captured = UnlockPresentation.capture(unlockSequence, State, #Maps, reducedMotion())
 	if captured then
 		-- Keep the cleared map selected so earned reward icons settle into that
