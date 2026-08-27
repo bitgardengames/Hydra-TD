@@ -10,8 +10,9 @@ assert(source:find("local PREVIEW_RUNNER_SPEED = 64", 1, true),
 assert(source:find("local cycleDuration = travelDuration + PREVIEW_RUNNER_FADE_DURATION", 1, true)
 	and source:find("local cycleTime = previewRunnerTime % cycleDuration", 1, true),
 	"campaign preview runner must restart after each travel-and-fade cycle")
-assert(source:find("1 - (cycleTime - travelDuration) / PREVIEW_RUNNER_FADE_DURATION", 1, true),
-	"campaign preview runner must fade after reaching the path end")
+assert(source:find("local fadeOutStart = max(0, travelDuration - PREVIEW_RUNNER_FADE_DURATION)", 1, true)
+	and source:find("(travelDuration - cycleTime) / PREVIEW_RUNNER_FADE_DURATION", 1, true),
+	"campaign preview runner must fade before reaching its trimmed endpoint")
 assert(source:find("local PREVIEW_RUNNER_ENTRY_TRIM_TILES = 2", 1, true)
 	and source:find("local PREVIEW_RUNNER_EXIT_TRIM_TILES = 2", 1, true)
 	and source:find("local endDistance = path.totalLength - PREVIEW_RUNNER_EXIT_TRIM_TILES * path.tileLength", 1, true)

@@ -222,15 +222,20 @@ local function drawPreviewRunner(entry, previewX, previewY, locked)
 	if travelLength <= 0 then return end
 
 	local travelDuration = travelLength / PREVIEW_RUNNER_SPEED
+	-- Fade during the final part of the trip, rather than parking an opaque
+	-- runner at the trimmed endpoint. The hidden tail also keeps the next runner
+	-- from popping in on the same frame that this one disappears.
+	local fadeOutStart = max(0, travelDuration - PREVIEW_RUNNER_FADE_DURATION)
 	local cycleDuration = travelDuration + PREVIEW_RUNNER_FADE_DURATION
 	local cycleTime = previewRunnerTime % cycleDuration
 	local distance = startDistance + min(cycleTime, travelDuration) * PREVIEW_RUNNER_SPEED
 	local x, y = pointAlongPreviewPath(path, distance)
 	if not x then return end
 
-	local alpha = cycleTime <= travelDuration
-		and min(1, cycleTime / PREVIEW_RUNNER_FADE_DURATION)
-		or max(0, 1 - (cycleTime - travelDuration) / PREVIEW_RUNNER_FADE_DURATION)
+	local alpha = min(1, cycleTime / PREVIEW_RUNNER_FADE_DURATION)
+	if cycleTime >= fadeOutStart then
+		alpha = min(alpha, max(0, (travelDuration - cycleTime) / PREVIEW_RUNNER_FADE_DURATION))
+	end
 	local radius = max(5, min(9, entry.canvas:getHeight() * 0.022))
 	x, y = previewX + x, previewY + y
 
