@@ -57,7 +57,7 @@ local titleY = 0
 local reasonY = 0
 local highlightsY = 0
 local difficultyY = 0
-local panelW = 480
+local panelW = 420
 local panelX = 0
 local runStats = AnimatedRunStats.new(Theme.ui.bad or Theme.ui.warn)
 
@@ -81,9 +81,7 @@ local function returnToMenu(playSound)
 end
 
 local function buildRunSummary()
-	local rows = {
-		{label = L("runRecap.score"), value = State.score or 0},
-	}
+	local rows = {}
 	if RunModes.isEndless(State) then
 		rows[#rows + 1] = {label = "Wave", value = RunRecap.getReachedWave()}
 		rows[#rows + 1] = {label = "Kills", value = State.totalKills or 0}
@@ -165,7 +163,7 @@ function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 	local cx = floor(sw * 0.5)
 
-	panelW = math.min(480, sw - 64)
+	panelW = math.min(420, sw - 64)
 	panelX = cx - panelW * 0.5
 
 	local buttonsHeight = (#buttons - 1) * gap + btnH
