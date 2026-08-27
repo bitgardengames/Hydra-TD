@@ -409,6 +409,7 @@ function love.draw()
 
 		if State.mode == "settings_gameplay" then
 			Menu.draw()
+			Tooltip.draw()
 		end
 
 		if State.mode == "game_over" or State.mode == "victory" then

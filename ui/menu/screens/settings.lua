@@ -12,6 +12,7 @@ local Steam = require("core.steam")
 local L = require("core.localization")
 local KeybindCapture = require("ui.keybind_capture")
 local ScrollView = require("ui.scroll_view")
+local Tooltip = require("ui.tooltip")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -44,8 +45,6 @@ local controlsLineH = 40
 local headerHeight = 36
 local headerSpacing = 30
 local footerSpacing = 22
-local helpSpacing = 14
-local helpHeight = 58
 local tabGap = 10
 local tabH = 36
 local tabW = 132
@@ -68,7 +67,6 @@ local maxPanelHeight = 0
 local rowsViewportY = 0
 local rowsViewportH = 0
 local rowsContentH = 0
-local helpY = 0
 local rowsScroll = ScrollView.new()
 
 local LABEL_W = 180
@@ -418,13 +416,13 @@ function Screen.load()
 					function(v)
 						Save.data.settings.musicVolume = v
 						Sound.setMusicVolume(v)
-					end, L("settings.sliderKeyboardDesc"), formatPercent),
+					end, nil, formatPercent),
 				sliderRow("sfx", L("settings.sfx"), Theme.tower.cannon,
 					function() return Save.data.settings.sfxVolume end,
 					function(v)
 						Save.data.settings.sfxVolume = v
 						Sound.setSFXVolume(v)
-					end, L("settings.sliderKeyboardDesc"), formatPercent),
+					end, nil, formatPercent),
 			},
 		},
 		{
@@ -491,9 +489,7 @@ local function updatePanelLayout()
 	local minRowsBlockH = max((minRowsVisible - 1) * activeLineH + ROW_H, ROW_H)
 	local btnBlockH = buttons[1] and buttons[1].h or 0
 
-	-- The help area is always reserved, even when the selected row has no
-	-- description, so changing focus never changes the panel's dimensions.
-	local staticContentH = headerHeight + headerSpacing + helpSpacing + helpHeight + footerSpacing + btnBlockH
+	local staticContentH = headerHeight + headerSpacing + footerSpacing + btnBlockH
 	local desiredContentH = staticContentH + max(minRowsBlockH, rowsContentH)
 	maxPanelHeight = floor(sh - paddingY * 2)
 	local maxContentH = max(ROW_H, maxPanelHeight - paddingY * 2)
@@ -510,8 +506,6 @@ local function updatePanelLayout()
 	rowsViewportY = rowsStartY
 	rowsViewportH = rowsBlockH
 	rowsScroll:update(rowsContentH, rowsViewportH)
-	helpY = rowsViewportY + rowsViewportH + helpSpacing
-
 	-- Center the row block inside the panel width
 	local rowRectX = cx - (ROW_W * 0.5)
 	listX = rowRectX
@@ -582,6 +576,7 @@ end
 function Screen.draw()
 	local sw, sh = lg.getDimensions()
 	local mouseX, mouseY = lm.getPosition()
+	Tooltip.hide()
 
 	if State.mode ~= "settings_gameplay" then
 		Backdrop.draw()
@@ -616,7 +611,7 @@ function Screen.draw()
 	end
 	lg.setScissor()
 
-	local describedRow = focusedRow and rows[focusedRow] or nil
+	local describedRow
 	for i, rect in pairs(rowRects) do
 		if contains(rect, mouseX, mouseY) then
 			describedRow = rows[i]
@@ -624,8 +619,10 @@ function Screen.draw()
 		end
 	end
 	if describedRow and describedRow.description then
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.78)
-		Text.printfShadow(describedRow.description, listX, helpY, ROW_W, "left")
+		Tooltip.show({
+			title = describedRow.label,
+			rows = {{kind = "text", text = describedRow.description}},
+		})
 	end
 
 	if rowsScroll:canScroll() then
