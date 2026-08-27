@@ -48,7 +48,6 @@ return {
 		music = "Music Volume",
 		sfx = "SFX Volume",
 		percentValue = "%d%%",
-		sliderKeyboardDesc = "Use Left / Right to make small adjustments.",
 		difficulty = "Difficulty",
 		fullscreen = "Fullscreen",
 		screenShake = "Screen shake",
