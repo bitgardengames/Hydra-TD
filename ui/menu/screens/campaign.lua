@@ -76,6 +76,7 @@ local PLAY_BUTTON_H = 108
 local DIFFICULTY_PLAY_GAP = 26
 local PREVIEW_RUNNER_SPEED = 52
 local PREVIEW_RUNNER_FADE_DURATION = 0.6
+local PREVIEW_RUNNER_TRIM_TILES = 2
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
@@ -212,14 +213,19 @@ local function drawPreviewRunner(entry, previewX, previewY, locked)
 	local path = entry.previewPath
 	if locked or not path or path.totalLength <= 0 then return end
 
-	local travelDuration = path.totalLength / PREVIEW_RUNNER_SPEED
+	local trimDistance = PREVIEW_RUNNER_TRIM_TILES * path.tileLength
+	local travelLength = max(0, path.totalLength - trimDistance * 2)
+	if travelLength <= 0 then return end
+
+	local travelDuration = travelLength / PREVIEW_RUNNER_SPEED
 	local cycleDuration = travelDuration + PREVIEW_RUNNER_FADE_DURATION
 	local cycleTime = previewRunnerTime % cycleDuration
-	local distance = min(cycleTime, travelDuration) * PREVIEW_RUNNER_SPEED
+	local distance = trimDistance + min(cycleTime, travelDuration) * PREVIEW_RUNNER_SPEED
 	local x, y = pointAlongPreviewPath(path, distance)
 	if not x then return end
 
-	local alpha = cycleTime <= travelDuration and 1
+	local alpha = cycleTime <= travelDuration
+		and min(1, cycleTime / PREVIEW_RUNNER_FADE_DURATION)
 		or max(0, 1 - (cycleTime - travelDuration) / PREVIEW_RUNNER_FADE_DURATION)
 	local radius = max(5, min(9, entry.canvas:getHeight() * 0.022))
 	x, y = previewX + x, previewY + y

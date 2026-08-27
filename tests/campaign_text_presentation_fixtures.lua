@@ -80,7 +80,8 @@ assert(cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas, nil, pre
 assert(cacheSource:find("buildPreviewPath(context.map.pathWorld, previewTransform)", 1, true)
 	and cacheSource:find("local scale = transform.cameraScale * transform.destinationScale", 1, true)
 	and cacheSource:find("(worldPoint[1] - transform.cameraX) * scale", 1, true)
-	and cacheSource:find("(worldPoint[2] - transform.cameraY) * scale", 1, true),
+	and cacheSource:find("(worldPoint[2] - transform.cameraY) * scale", 1, true)
+	and cacheSource:find("tileLength = Constants.TILE * scale", 1, true),
 	"map preview paths must use the same gameplay camera transform as their images")
 assert(not cacheSource:find("scaleX", 1, true) and not cacheSource:find("scaleY", 1, true),
 	"map preview paths must not use independent axis scaling")
