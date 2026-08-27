@@ -32,6 +32,7 @@ local floor = math.floor
 local max = math.max
 local format = string.format
 local sin = math.sin
+local cos = math.cos
 local random = love.math.random
 
 local Screen = {}
@@ -80,7 +81,10 @@ local confettiColors = {
 	Theme.ui.money,
 	Theme.medal.gold,
 	Theme.medal.silver,
+	Theme.ui.selected,
 }
+
+local confettiShapes = {"paper", "diamond", "ribbon", "dot"}
 
 
 local function buildRewardCards()
@@ -175,17 +179,30 @@ end
 
 local function resetConfetti()
 	local sw, sh = lg.getDimensions()
+	local reducedMotion = Save.data.settings.cameraMotion == false
+	local count = reducedMotion and 36 or 84
 	confetti = {}
 
-	for i = 1, 64 do
+	for i = 1, count do
+		-- Most pieces drift down from above, while an opening volley fires in
+		-- from both bottom corners. The latter makes the celebration feel tied to
+		-- the moment of victory instead of looking like a looping screensaver.
+		local burst = not reducedMotion and i <= 36
+		local fromLeft = i % 2 == 0
+		local size = random(4, 10)
 		confetti[i] = {
-			x = random(0, sw),
-			y = random(-sh * 0.6, -20),
-			vx = random(-18, 18),
-			vy = random(44, 120),
-			size = random(4, 9),
+			x = burst and (fromLeft and -12 or sw + 12) or random(0, sw),
+			y = burst and (sh - random(20, 90)) or random(-sh * 0.75, -20),
+			vx = burst and (fromLeft and random(105, 230) or random(-230, -105)) or random(-22, 22),
+			vy = burst and random(-330, -190) or random(42, 112),
+			gravity = burst and random(115, 175) or random(6, 20),
+			size = size,
+			length = size * random(14, 23) * 0.1,
 			spin = random() * 6.28,
-			spinRate = random(-4, 4),
+			spinRate = reducedMotion and random(-1, 1) or random(-6, 6),
+			flutter = random() * 6.28,
+			flutterRate = random(20, 45) * 0.1,
+			shape = confettiShapes[random(1, #confettiShapes)],
 			color = confettiColors[random(1, #confettiColors)],
 			alpha = random(50, 95) * 0.01,
 		}
@@ -297,14 +314,18 @@ function Screen.update(dt)
 	local sw, sh = lg.getDimensions()
 
 	for _, p in ipairs(confetti) do
-		p.x = p.x + p.vx * dt
+		p.flutter = p.flutter + p.flutterRate * dt
+		p.vy = p.vy + p.gravity * dt
+		p.x = p.x + (p.vx + sin(p.flutter) * 18) * dt
 		p.y = p.y + p.vy * dt
 		p.spin = p.spin + p.spinRate * dt
 
 		if p.y > sh + 16 then
 			p.y = random(-sh * 0.45, -24)
 			p.x = random(0, sw)
+			p.vx = random(-22, 22)
 			p.vy = random(44, 120)
+			p.gravity = random(6, 20)
 		end
 		if p.x < -20 then
 			p.x = sw + 20
@@ -447,12 +468,24 @@ function Screen.draw()
 	lg.rectangle("fill", 0, 0, sw, sh)
 
 	for _, p in ipairs(confetti) do
-		local wobble = sin(t * 3 + p.spin) * 0.35
+		local wobble = sin(t * 3 + p.flutter) * 0.35
+		local flip = 0.3 + 0.7 * math.abs(cos(p.spin))
 		lg.setColor(p.color[1], p.color[2], p.color[3], p.alpha * panelT)
 		lg.push()
 		lg.translate(p.x, p.y)
 		lg.rotate(p.spin + wobble)
-		lg.rectangle("fill", -p.size * 0.5, -p.size * 0.35, p.size, p.size * 0.7, 2, 2)
+		if p.shape == "dot" then
+			lg.circle("fill", 0, 0, p.size * 0.42)
+		elseif p.shape == "ribbon" then
+			lg.setLineWidth(max(1, p.size * 0.3))
+			lg.line(-p.length * 0.5, -p.size * 0.35, 0, p.size * 0.35, p.length * 0.5, -p.size * 0.35)
+			lg.setLineWidth(1)
+		elseif p.shape == "diamond" then
+			lg.rotate(0.785)
+			lg.rectangle("fill", -p.size * 0.4 * flip, -p.size * 0.4, p.size * 0.8 * flip, p.size * 0.8, 1, 1)
+		else
+			lg.rectangle("fill", -p.size * 0.5 * flip, -p.size * 0.35, p.size * flip, p.size * 0.7, 2, 2)
+		end
 		lg.pop()
 	end
 
