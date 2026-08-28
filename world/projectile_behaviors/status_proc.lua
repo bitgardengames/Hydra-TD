@@ -12,6 +12,21 @@ local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.proj
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
 local SHARED_BEHAVIORS_LANCER_RICOCHET = ctx.SHARED_BEHAVIORS_LANCER_RICOCHET
 local SHARED_BEHAVIORS_FROST_SHATTER = ctx.SHARED_BEHAVIORS_FROST_SHATTER
+local radiusVisitContext = {}
+local function statusRadiusVisitor(e, c)
+	if e == c.exclude or (c.limit and c.hits >= c.limit) then return end
+	if c.op == "poison" then
+		e.poisonStacks = min((e.poisonStacks or 0) + c.stacks, e.poisonMaxStacks or math.huge)
+		e.poisonDPS = max(e.poisonDPS or 0, c.source.poisonDPS or 0)
+		e.poisonTimer = max(e.poisonTimer or 0, c.duration)
+		e.poisonDuration = max(e.poisonDuration or 0, c.duration)
+		e.poisonSource = c.projectile.sourceTower; c.hits = c.hits + 1
+	else
+		if not e.slowFactor or c.factor < e.slowFactor then e.slowFactor = c.factor end
+		e.slowTimer = max(e.slowTimer or 0, c.duration)
+		e.slowDuration = max(e.slowDuration or 0, c.duration)
+	end
+end
 B.cannon_long_fuse = {
 	onHit = function(p, _, data)
 		if p.hitOrigin == "long_fuse_payload" then
@@ -338,27 +353,14 @@ B.poison_corrupt_strong = {
 			return
 		end
 
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, data.radius or 64, spatialQueryContext)
-		local maxTargets = 2
-		local hits = 0
-		local spreadStacks = max(1, floor(data.spreadStacks or 2))
-		local spreadDur = data.spreadDur or 1.4
-
-		for i = 1, nearbyCount do
-			if hits >= maxTargets then
-				break
-			end
-
-			local other = nearby[i]
-			if other ~= e and other.hp > 0 then
-				other.poisonStacks = min((other.poisonStacks or 0) + spreadStacks, other.poisonMaxStacks or math.huge)
-				other.poisonDPS = max(other.poisonDPS or 0, e.poisonDPS or 0)
-				other.poisonTimer = max(other.poisonTimer or 0, spreadDur)
-				other.poisonDuration = max(other.poisonDuration or 0, spreadDur)
-				other.poisonSource = p.sourceTower
-				hits = hits + 1
-			end
-		end
+		local radius = data.radius or 64
+		radiusVisitContext.op, radiusVisitContext.exclude = "poison", e
+		radiusVisitContext.limit, radiusVisitContext.hits = 2, 0
+		radiusVisitContext.stacks = max(1, floor(data.spreadStacks or 2))
+		radiusVisitContext.duration, radiusVisitContext.source = data.spreadDur or 1.4, e
+		radiusVisitContext.projectile = p
+		Spatial.visitRadius(e.x, e.y, radius, statusRadiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
 	end
 }
 
@@ -469,22 +471,11 @@ B.slow_aura = {
 		local slowFactor = min(data.factor or 0.22, 0.9)
 		local newFactor = 1 - slowFactor
 
-		local nearby, nearbyCount = Spatial.queryCells(cx, cy, radius, spatialQueryContext)
-		for i = 1, nearbyCount do
-			local e = nearby[i]
-			if e and e.hp > 0 then
-				local dx = e.x - cx
-				local dy = e.y - cy
-				local rr = radius + (e.radius or 0)
-				if dx * dx + dy * dy <= rr * rr then
-					if not e.slowFactor or newFactor < e.slowFactor then
-						e.slowFactor = newFactor
-					end
-					e.slowTimer = max(e.slowTimer or 0, slowDur)
-					e.slowDuration = max(e.slowDuration or 0, slowDur)
-				end
-			end
-		end
+		radiusVisitContext.op, radiusVisitContext.factor = "slow", newFactor
+		radiusVisitContext.duration, radiusVisitContext.exclude = slowDur, nil
+		radiusVisitContext.limit = nil
+		Spatial.visitRadius(cx, cy, radius, statusRadiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.livingCollision)
 
 		local evt = emitFX(p, "frost_burst")
 		evt.x = cx

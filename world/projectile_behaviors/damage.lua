@@ -12,6 +12,33 @@ local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.proj
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
 local SHARED_BEHAVIORS_LANCER_RICOCHET = ctx.SHARED_BEHAVIORS_LANCER_RICOCHET
 local SHARED_BEHAVIORS_FROST_SHATTER = ctx.SHARED_BEHAVIORS_FROST_SHATTER
+local radiusVisitContext = {}
+local function radiusVisitor(e, c, d2)
+	local p, op = c.p, c.op
+	if op == "aoe" then
+		local t = 1 - d2 / c.r2
+		emitDamage(p, e, p.damage * (c.falloff + (1 - c.falloff) * t)); emitImpulse(p, e, p.x, p.y, 3.2)
+	elseif op == "shock" then
+		local t = 1 - d2 / c.r2
+		emitDamage(p, e, (p.damage or 0) * c.mult * (c.falloff + (1-c.falloff)*t)); emitImpulse(p,e,p.x,p.y,c.impulse)
+	elseif op == "slow_pop" then emitDamage(p,e,(p.damage or 0)*0.5)
+	elseif op == "supernova" or op == "endpoint" then emitDamage(p,e,c.damage)
+	elseif op == "nearest" then
+		if (not c.visited or not c.visited[e]) and d2 < c.bestDistance then c.best, c.bestDistance = e, d2 end
+	elseif op == "delayed" then
+		local b=c.b; local core=(p.damage or 0)*b.damageMult*(b.falloff+(1-b.falloff)*(1-d2/c.r2)); local bonus=0
+		if d2>=c.inner2 and d2<=c.outer2 then bonus=(p.damage or 0)*b.ringDamageMult end
+		if bonus>0 then bonus=min(bonus,core*b.ringOverlapCapMult) end
+		local total=core+bonus; if p.longFuseHitSet and p.longFuseHitSet[e.id] then total=total*b.repeatHitMult end
+		emitDamage(p,e,total); emitImpulse(p,e,p.x,p.y,4.2)
+	elseif op == "tick" then
+		emitDamage(p,e,p.damage or 0)
+		if c.data and c.data.impulse and c.data.impulse > 0 then emitImpulse(p,e,p.x,p.y,c.data.impulse) end
+		local id=e.id or e; local active=p.getHitCooldownExpiry and p.getHitCooldownExpiry(p,id)
+		if not active then local evt=emitEvent(p,"hit"); evt.target=e; evt.origin=p.hitOrigin or "primary"; if p.setHitCooldownExpiry then p.setHitCooldownExpiry(p,id,c.data.hitRate or .35) else p.hitCooldowns[id]=c.data.hitRate or .35 end end
+		local fx=emitFX(p,"plasma_hit"); fx.x=p.x; fx.y=p.y; fx.vx=p.vx or 0; fx.vy=p.vy or 0; fx.color=p.sourceTower and p.sourceTower.color
+	end
+end
 B.hit_damage = {
 	onHit = function(p, e)
 		if not e or e.hp <= 0 then
@@ -33,22 +60,9 @@ B.aoe_damage = {
 		local radius = baseRadius * scale
 
 		local r2 = radius * radius
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
-
-		for i = 1, nearbyCount do
-			local other = nearby[i]
-			local dx = other.x - p.x
-			local dy = other.y - p.y
-			local d2 = dx*dx + dy*dy
-
-			if d2 <= r2 then
-				local t = 1 - (d2 / r2)
-				local dmg = p.damage * (falloff + (1 - falloff) * t)
-
-				emitDamage(p, other, dmg)
-				emitImpulse(p, other, p.x, p.y, 3.2)
-			end
-		end
+		radiusVisitContext.p, radiusVisitContext.op = p, "aoe"
+		radiusVisitContext.r2, radiusVisitContext.falloff = r2, falloff
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext, spatialQueryContext, Spatial.radiusOptions.default)
 
 		local evt = emitFX(p, "cannon_impact")
 		evt.x = p.x
@@ -66,22 +80,11 @@ B.cannon_shockwave = {
 		local minFalloff = data.minFalloff or 0.35
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
-
-		for i = 1, nearbyCount do
-			local other = nearby[i]
-			if other.hp > 0 then
-				local dx = other.x - p.x
-				local dy = other.y - p.y
-				local d2 = dx * dx + dy * dy
-				if d2 <= r2 then
-					local t = 1 - (d2 / r2)
-					local dmg = (p.damage or 0) * damageMult * (minFalloff + (1 - minFalloff) * t)
-					emitDamage(p, other, dmg)
-					emitImpulse(p, other, p.x, p.y, impulse)
-				end
-			end
-		end
+		radiusVisitContext.p, radiusVisitContext.op = p, "shock"
+		radiusVisitContext.r2, radiusVisitContext.mult = r2, damageMult
+		radiusVisitContext.falloff, radiusVisitContext.impulse = minFalloff, impulse
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
 	end
 }
 
@@ -128,38 +131,10 @@ B.cannon_delayed_blast = {
 		local ringInner2 = ringInner * ringInner
 		local ringOuter2 = ringOuter * ringOuter
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
-
-		for i = 1, nearbyCount do
-			local other = nearby[i]
-			if other.hp > 0 then
-				local dx = other.x - p.x
-				local dy = other.y - p.y
-				local d2 = dx * dx + dy * dy
-				if d2 <= r2 then
-					local t = 1 - (d2 / r2)
-					local coreDmg = (p.damage or 0) * b.damageMult * (b.falloff + (1 - b.falloff) * t)
-					local ringBonus = 0
-					if d2 >= ringInner2 and d2 <= ringOuter2 then
-						ringBonus = (p.damage or 0) * b.ringDamageMult
-					end
-
-					if ringBonus > 0 then
-						local ringCap = coreDmg * b.ringOverlapCapMult
-						ringBonus = min(ringBonus, ringCap)
-					end
-
-					local totalDmg = coreDmg + ringBonus
-					local priorHits = p.longFuseHitSet
-					if priorHits and priorHits[other.id] then
-						totalDmg = totalDmg * b.repeatHitMult
-					end
-
-					emitDamage(p, other, totalDmg)
-					emitImpulse(p, other, p.x, p.y, 4.2)
-				end
-			end
-		end
+		radiusVisitContext.p, radiusVisitContext.op, radiusVisitContext.b = p, "delayed", b
+		radiusVisitContext.r2, radiusVisitContext.inner2, radiusVisitContext.outer2 = r2, ringInner2, ringOuter2
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
 
 		local evt = emitFX(p, "cannon_impact")
 		evt.x = p.x
@@ -252,22 +227,11 @@ B.hit_chain = {
 			local nextTarget = nil
 			local bestDist = radius * radius
 
-			local nearby, nearbyCount = Spatial.queryCells(current.x, current.y, radius, spatialQueryContext)
-
-			for j = 1, nearbyCount do
-				local other = nearby[j]
-
-				if not visited[other] and other.hp > 0 then
-					local dx = other.x - current.x
-					local dy = other.y - current.y
-					local d2 = dx*dx + dy*dy
-
-					if d2 < bestDist then
-						bestDist = d2
-						nextTarget = other
-					end
-				end
-			end
+			radiusVisitContext.op, radiusVisitContext.visited = "nearest", visited
+			radiusVisitContext.best, radiusVisitContext.bestDistance = nil, bestDist
+			Spatial.visitRadius(current.x, current.y, radius, radiusVisitor, radiusVisitContext,
+				spatialQueryContext, Spatial.radiusOptions.living)
+			nextTarget = radiusVisitContext.best
 
 			current = nextTarget
 
@@ -376,18 +340,10 @@ B.chain_endpoint_burst = {
 			if target and target.hp > 0 and not hasOutgoing[target] and not endpoints[target] then
 				endpoints[target] = true
 
-				local nearby, nearbyCount = Spatial.queryCells(target.x, target.y, radius, spatialQueryContext)
-
-				for j = 1, nearbyCount do
-					local other = nearby[j]
-					if other.hp > 0 then
-						local dx = other.x - target.x
-						local dy = other.y - target.y
-						if dx * dx + dy * dy <= radius2 then
-							emitDamage(p, other, (p.damage or 0) * dmgMult)
-						end
-					end
-				end
+				radiusVisitContext.p, radiusVisitContext.op = p, "endpoint"
+				radiusVisitContext.damage = (p.damage or 0) * dmgMult
+				Spatial.visitRadius(target.x, target.y, radius, radiusVisitor, radiusVisitContext,
+					spatialQueryContext, Spatial.radiusOptions.living)
 			end
 		end
 	end
@@ -412,25 +368,11 @@ B.tick_zap = {
 		local radius = z.radius
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
-
-		local best = nil
-		local bestDist = r2
-
-		for i = 1, nearbyCount do
-			local e = nearby[i]
-
-			if e.hp > 0 then
-				local dx = e.x - p.x
-				local dy = e.y - p.y
-				local d2 = dx*dx + dy*dy
-
-				if d2 <= bestDist then
-					bestDist = d2
-					best = e
-				end
-			end
-		end
+		radiusVisitContext.op, radiusVisitContext.visited = "nearest", nil
+		radiusVisitContext.best, radiusVisitContext.bestDistance = nil, r2
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
+		local best = radiusVisitContext.best
 
 		if best then
 			emitDamage(p, best, p.damage or 0)
@@ -468,18 +410,8 @@ B.slow_pop = {
 
 		if e.slowTimer and e.slowTimer > 0 then
 			local radius = 28
-			local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius, spatialQueryContext)
-
-			for i = 1, nearbyCount do
-				local other = nearby[i]
-
-				local dx = other.x - e.x
-				local dy = other.y - e.y
-
-				if dx * dx + dy * dy <= radius * radius then
-					emitDamage(p, other, (p.damage or 0) * 0.5)
-				end
-			end
+			radiusVisitContext.p, radiusVisitContext.op = p, "slow_pop"
+			Spatial.visitRadius(e.x, e.y, radius, radiusVisitor, radiusVisitContext, spatialQueryContext, Spatial.radiusOptions.default)
 
 			local evt = emitFX(p, "frost_burst")
 			evt.x = e.x
@@ -552,20 +484,8 @@ B.plasma_supernova_burst = {
 		local radius = data.radius or 36
 		local dmg = (p.damage or 0) * (data.dmgMult or 2.0)
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
-
-		for i = 1, nearbyCount do
-			local e = nearby[i]
-			if e.hp > 0 then
-				local dx = e.x - p.x
-				local dy = e.y - p.y
-				local r = radius + (e.radius or 0)
-
-				if dx * dx + dy * dy <= r * r then
-					emitDamage(p, e, dmg)
-				end
-			end
-		end
+		radiusVisitContext.p, radiusVisitContext.op, radiusVisitContext.damage = p, "supernova", dmg
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext, spatialQueryContext, Spatial.radiusOptions.livingCollision)
 
 		local evt = emitFX(p, "plasma_hit")
 		evt.x = p.x
@@ -611,48 +531,10 @@ B.tick_damage = {
 		end
 
 		local radius = data.radius or t.radius or p.hitRadius or 12
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
-
-		for i = 1, nearbyCount do
-			local e = nearby[i]
-
-			if e.hp > 0 then
-				local dx = e.x - p.x
-				local dy = e.y - p.y
-				local rr = radius + (e.radius or 0)
-
-				if dx*dx + dy*dy <= rr*rr then
-					emitDamage(p, e, p.damage or 0)
-					if data and data.impulse and data.impulse > 0 then
-						emitImpulse(p, e, p.x, p.y, data.impulse)
-					end
-
-					local id = e.id or e
-
-					-- only fire "hit" occasionally
-					local cooldownActive = p.getHitCooldownExpiry and p.getHitCooldownExpiry(p, id)
-
-					if not cooldownActive then
-						local hitEvt = emitEvent(p, "hit")
-						hitEvt.target = e
-						hitEvt.origin = p.hitOrigin or "primary"
-
-						if p.setHitCooldownExpiry then
-							p.setHitCooldownExpiry(p, id, data.hitRate or 0.35) -- tweak this
-						else
-							p.hitCooldowns[id] = data.hitRate or 0.35 -- tweak this
-						end
-					end
-
-					local fxEvt = emitFX(p, "plasma_hit")
-					fxEvt.x = p.x
-					fxEvt.y = p.y
-					fxEvt.vx = p.vx or 0
-					fxEvt.vy = p.vy or 0
-					fxEvt.color = p.sourceTower and p.sourceTower.color
-				end
-			end
-		end
+		radiusVisitContext.p, radiusVisitContext.op = p, "tick"
+		radiusVisitContext.data = data
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.livingCollision)
 
 		t.timer = t.rate
 	end

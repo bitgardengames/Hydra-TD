@@ -11,6 +11,7 @@ local INV_CELL = 1 / CELL_SIZE
 
 local grid = {}
 Spatial.grid = grid
+local maxEnemyRadius = 0
 
 local enemyCellChangedHook
 local enemyRemovedHook
@@ -149,6 +150,61 @@ local function traverseQueryCellsCallback(x, y, radius, fn, context, queryContex
 	return count
 end
 
+-- Retained option records for the common hot paths. Callers may also retain
+-- their own record with the same stable boolean fields.
+Spatial.radiusOptions = {
+	default = {livingOnly = false, dedupeById = false, renderedPosition = false, includeCollisionRadius = false},
+	living = {livingOnly = true, dedupeById = false, renderedPosition = false, includeCollisionRadius = false},
+	livingDedupe = {livingOnly = true, dedupeById = true, renderedPosition = false, includeCollisionRadius = false},
+	livingRendered = {livingOnly = true, dedupeById = false, renderedPosition = true, includeCollisionRadius = false},
+	livingRenderedDedupe = {livingOnly = true, dedupeById = true, renderedPosition = true, includeCollisionRadius = false},
+	livingCollision = {livingOnly = true, dedupeById = false, renderedPosition = false, includeCollisionRadius = true},
+}
+
+local function traverseRadius(x, y, radius, visitor, visitorContext, queryContext, options)
+	local cx = floor(x * INV_CELL)
+	local cy = floor(y * INV_CELL)
+	local cellRadius = queryCellFootprint(radius + (options.includeCollisionRadius and maxEnemyRadius or 0))
+	local dedupe = options.dedupeById
+	local seen, stamp
+	if dedupe then
+		stamp = nextStamp(queryContext)
+		seen = queryContext.seen
+	end
+	local radiusSquared = radius * radius
+	local count = 0
+	for dx = -cellRadius, cellRadius do
+		local col = grid[cx + dx]
+		if col then
+			for dy = -cellRadius, cellRadius do
+				local cell = col[cy + dy]
+				if cell then
+					for i = 1, #cell do
+						local enemy = cell[i]
+						local id = enemy.id
+						if not (dedupe and id and seen[id] == stamp) then
+							if dedupe and id then seen[id] = stamp end
+							if not options.livingOnly or enemy.hp > 0 then
+								local ex = options.renderedPosition and (enemy.rx or enemy.x) or enemy.x
+								local ey = options.renderedPosition and (enemy.ry or enemy.y) or enemy.y
+								local ddx, ddy = ex - x, ey - y
+								local distanceSquared = ddx * ddx + ddy * ddy
+								local exactRadius = radius
+								if options.includeCollisionRadius then exactRadius = exactRadius + (enemy.radius or 0) end
+								if distanceSquared <= (options.includeCollisionRadius and exactRadius * exactRadius or radiusSquared) then
+									count = count + 1
+									if visitor(enemy, visitorContext, distanceSquared) == false then return count end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	return count
+end
+
 local function removeFromCell(e)
 	local cell = e.cell
 
@@ -215,6 +271,7 @@ local function insertIntoCell(e, cx, cy)
 end
 
 function Spatial.updateEnemy(e)
+	maxEnemyRadius = math.max(maxEnemyRadius, e.radius or 0)
 	local cx = floor(e.x * INV_CELL)
 	local cy = floor(e.y * INV_CELL)
 
@@ -245,6 +302,7 @@ end
 
 function Spatial.clear()
 	clearTable(grid)
+	maxEnemyRadius = 0
 	frameStats.localQueryCount = 0
 	frameStats.localCandidateTotal = 0
 end
@@ -305,6 +363,15 @@ end
 function Spatial.visitCells(x, y, radius, fn, context, queryContext)
 	assert(queryContext, "visitCells requires a caller-owned query context")
 	return traverseQueryCellsCallback(x, y, radius, fn, context, queryContext)
+end
+
+-- Visits exact-radius matches directly from grid cells, without materializing
+-- a candidate array. A query context cannot be active in a nested traversal;
+-- retain a distinct context at every nesting level.
+function Spatial.visitRadius(x, y, radius, visitor, visitorContext, queryContext, options)
+	assert(queryContext and queryContext.seen, "visitRadius requires a caller-owned query context")
+	assert(options, "visitRadius requires retained options")
+	return traverseRadius(x, y, radius, visitor, visitorContext, queryContext, options)
 end
 
 return Spatial

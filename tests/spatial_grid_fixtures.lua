@@ -98,6 +98,29 @@ assert(outerCount == 2 and outerSeen[nestedA] == 1 and outerSeen[nestedB] == 1,
 	"nested query lost or duplicated an outer visitor candidate")
 clear()
 
+-- Radius visitation filters in place and honors its retained hot-path options.
+local radiusCenter = add(0, 0)
+local renderedOnly = add(CELL_SIZE, 0)
+renderedOnly.rx, renderedOnly.ry = 3, 4
+local collisionOnly = add(13, 0)
+collisionOnly.radius = 4
+local dead = add(1, 0)
+dead.hp = 0
+local radiusVisited = {}
+local radiusContext = Spatial.newQueryContext(true)
+local function rememberRadiusEnemy(enemy, context, distanceSquared)
+	context[enemy] = distanceSquared
+end
+Spatial.visitRadius(0, 0, 5, rememberRadiusEnemy, radiusVisited, radiusContext,
+	Spatial.radiusOptions.livingRenderedDedupe)
+assert(radiusVisited[radiusCenter] == 0 and radiusVisited[renderedOnly] == 25 and not radiusVisited[dead],
+	"rendered/living radius options did not apply exact filtering")
+radiusVisited = {}
+Spatial.visitRadius(0, 0, 10, rememberRadiusEnemy, radiusVisited, radiusContext,
+	Spatial.radiusOptions.livingCollision)
+assert(radiusVisited[collisionOnly] == 169, "collision radius was not included in exact filtering")
+clear()
+
 -- A center close to either cell edge must traverse far enough in that direction.
 local radius = CELL_SIZE * 2 + 1
 local leftCenter = CELL_SIZE + 0.01
