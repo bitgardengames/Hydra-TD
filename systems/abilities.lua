@@ -2,6 +2,7 @@ local AbilityDefs = require("systems.ability_defs")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local Enemies = require("world.enemies")
 local Towers = require("world.towers")
+local Targeting = require("world.targeting")
 local Effects = require("world.effects")
 local Spatial = require("world.spatial_grid")
 local spatialQueryContext = Spatial.newQueryContext(true)
@@ -181,6 +182,7 @@ local function activateTowerArea(effect, x, y, abilityId)
 		volleys = effect.volleys,
 		lastVolley = -math.huge,
 		inside = {},
+		previousInside = {},
 	})
 end
 
@@ -335,7 +337,15 @@ function Abilities.activate(x, y)
 	return true
 end
 
+local function isLiveEnemy(enemy)
+	return Targeting.isTargetEntityValid(enemy) and enemy.hp > 0 and not enemy.dying
+end
+
 local function triggerVolley(effect, enemy)
+	if not isLiveEnemy(enemy) then
+		return false
+	end
+
 	for _, tower in ipairs(effect.towers) do
 		local dx, dy = enemy.x - tower.x, enemy.y - tower.y
 		local range = tower.range * (tower.abilityRangeMultiplier or 1)
@@ -347,6 +357,7 @@ local function triggerVolley(effect, enemy)
 	end
 	effect.volleys = effect.volleys - 1
 	effect.lastVolley = clock
+	return true
 end
 
 local function updateGravityWell(effect, dt)
@@ -355,32 +366,39 @@ local function updateGravityWell(effect, dt)
 end
 
 local function updateLastStand(effect)
-	if effect.volleys <= 0 then
-		return
+	local radiusSquared = effect.radius * effect.radius
+	local previousInside = effect.inside
+	local currentInside = effect.previousInside or {}
+	-- The scratch set was emptied after the preceding comparison. Clear it
+	-- defensively as effects created before this two-buffer lifecycle may still
+	-- carry membership keys here.
+	for enemy in pairs(currentInside) do
+		currentInside[enemy] = nil
 	end
 
-	local radiusSquared = effect.radius * effect.radius
 	local candidates, candidateCount = Spatial.queryCells(effect.x, effect.y, effect.radius, spatialQueryContext)
-	for enemy, wasInside in pairs(effect.inside) do
-		if wasInside then
+	for i = 1, candidateCount do
+		local enemy = candidates[i]
+		if isLiveEnemy(enemy) then
 			local dx, dy = enemy.x - effect.x, enemy.y - effect.y
-			if dx * dx + dy * dy > radiusSquared then
-				if clock - effect.lastVolley >= 1.5 then
-					triggerVolley(effect, enemy)
-				end
-				effect.inside[enemy] = false
+			if dx * dx + dy * dy <= radiusSquared then
+				currentInside[enemy] = true
 			end
 		end
 	end
-	for i = 1, candidateCount do
-		local enemy = candidates[i]
-		local dx, dy = enemy.x - effect.x, enemy.y - effect.y
-		local inside = dx * dx + dy * dy <= radiusSquared
-		if effect.inside[enemy] and not inside and clock - effect.lastVolley >= 1.5 then
+
+	for enemy in pairs(previousInside) do
+		if not currentInside[enemy] and isLiveEnemy(enemy)
+			and effect.volleys > 0 and clock - effect.lastVolley >= 1.5 then
 			triggerVolley(effect, enemy)
 		end
-		effect.inside[enemy] = inside
+		-- This table becomes next tick's empty scratch set. In particular, an
+		-- enemy that exited or died cannot remain as a false-valued stale key.
+		previousInside[enemy] = nil
 	end
+
+	effect.inside = currentInside
+	effect.previousInside = previousInside
 end
 
 local function expireGravityWell(effect)
