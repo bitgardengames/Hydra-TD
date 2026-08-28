@@ -1,5 +1,6 @@
 local DrawWorld = require("render.draw_world")
-local DrawEntities = require("render.draw_entities")
+local EnemyRenderer = require("render.enemy_renderer")
+local TowerRenderer = require("render.tower_renderer")
 local EnemyDefs = require("world.enemy_defs")
 local Title = require("ui.title")
 
@@ -116,9 +117,9 @@ local function drawObject(obj, w, h)
 	lg.scale(obj.scale * baseScale, obj.scale * baseScale)
 
 	if obj.type == "tower" then
-		DrawEntities.drawTowerBase(obj.kind, 0, 0, 1,1,1,1,0)
+		TowerRenderer.drawTowerBase(obj.kind, 0, 0, 1,1,1,1,0)
 
-		DrawEntities.drawTowerCore(
+		TowerRenderer.drawTowerCore(
 			obj.kind,
 			0,
 			0,
@@ -174,7 +175,7 @@ local function drawObject(obj, w, h)
 			poisonDPS = 0,
 		}
 
-		DrawEntities.drawEnemy(enemy)
+		EnemyRenderer.drawEnemy(enemy)
 	end
 
 	lg.pop()

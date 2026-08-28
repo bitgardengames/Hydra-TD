@@ -8,7 +8,8 @@ local Projectiles = require("world.projectiles")
 local Effects = require("world.effects")
 local DrawWorld = require("render.draw_world")
 local Spatial = require("world.spatial_grid")
-local DrawEntities = require("render.draw_entities")
+local EnemyRenderer = require("render.enemy_renderer")
+local TowerRenderer = require("render.tower_renderer")
 local Camera = require("core.camera")
 local Constants = require("core.constants")
 local Title = require("ui.title")
@@ -143,7 +144,7 @@ function Export.exportTowers()
 				lg.scale(scale, scale)
 
 				-- Single source of truth
-				DrawEntities.drawTowerVisual(kind, 0, 0, angle, 0, 1)
+				TowerRenderer.drawTowerVisual(kind, 0, 0, angle, 0, 1)
 
 				lg.pop()
 				lg.setCanvas()
@@ -210,7 +211,7 @@ function Export.exportEnemies()
 					poisonDPS = 0,
 				}
 
-				DrawEntities.drawEnemy(enemy)
+				EnemyRenderer.drawEnemy(enemy)
 
 				lg.pop()
 				lg.setCanvas()
@@ -342,9 +343,9 @@ function Export.exportAppIcons()
 			lg.translate(size * 0.5, size * 0.5)
 			lg.scale(scale, scale)
 
-			DrawEntities.drawTowerBase(towerId, 0, 0, {alpha  = 1, shadow = false})
+			TowerRenderer.drawTowerBase(towerId, 0, 0, {alpha  = 1, shadow = false})
 
-			DrawEntities.drawTowerCore(towerId, 0, 0, {angle  = -math.pi / 4, alpha  = 1, shadow = false})
+			TowerRenderer.drawTowerCore(towerId, 0, 0, {angle  = -math.pi / 4, alpha  = 1, shadow = false})
 
 			lg.pop()
 			lg.setCanvas()
@@ -1078,8 +1079,8 @@ local function exportTowerFiringFrame(tower, towerDir, frame)
 	lg.translate(TOWER_FIRING_SIZE * 0.5, TOWER_FIRING_SIZE * 0.5)
 	lg.scale(TOWER_FIRING_SCALE, TOWER_FIRING_SCALE)
 
-	DrawEntities.drawTowerVisual(tower.kind, 0, 0, tower.angle, tower.recoil, 1)
-	DrawEntities.drawTowerFX(tower)
+	TowerRenderer.drawTowerVisual(tower.kind, 0, 0, tower.angle, tower.recoil, 1)
+	TowerRenderer.drawTowerFX(tower)
 	Projectiles.draw()
 	Effects.draw()
 

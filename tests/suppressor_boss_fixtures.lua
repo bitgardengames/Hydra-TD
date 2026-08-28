@@ -27,7 +27,7 @@ assert(towersSource:find("applySuppression(target, p.duration)", 1, true),
 assert(towersSource:find("if (t.suppressedTimer or 0) > 0 then", 1, true),
 	"suppressed towers must be gated out of the firing update")
 
-local renderSource = assert(io.open("render/draw_entities.lua", "r")):read("*a")
+local renderSource = assert(io.open("render/tower_renderer.lua", "r")):read("*a")
 assert(renderSource:find("local function drawSuppressionProjectiles()", 1, true),
 	"Suppressor casts must have a dedicated visible projectile")
 
