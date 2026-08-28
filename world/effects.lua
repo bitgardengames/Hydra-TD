@@ -1106,26 +1106,35 @@ function Effects.clear()
 	end
 end
 
-function Effects.spawnFX(fx)
-	if not fx or not fx.id then
-		return
-	end
-
-	if fx.id == "zap" then
+local fxHandlers = {
+	zap = function(fx)
 		Effects.spawnZapEffect(fx.x, fx.y, fx.chain)
-	elseif fx.id == "cannon_impact" then
+	end,
+	cannon_impact = function(fx)
 		Effects.spawnCannonImpact(fx.x, fx.y, fx.r)
-	elseif fx.id == "frost_burst" then
+	end,
+	frost_burst = function(fx)
 		Effects.spawnFrostBurst(fx.x, fx.y)
-	elseif fx.id == "poison_splash" then
+	end,
+	poison_splash = function(fx)
 		Effects.spawnPoisonSplash(fx.x, fx.y)
-	elseif fx.id == "lancer_hit" then
+	end,
+	lancer_hit = function(fx)
 		Effects.spawnLancerHit(fx.x, fx.y)
-	elseif fx.id == "plasma_hit" then
+	end,
+	plasma_hit = function(fx)
 		Effects.spawnPlasmaHit(fx.x, fx.y, fx.vx or 0, fx.vy or 0)
-	elseif fx.id == "zap_line" then
+	end,
+	zap_line = function(fx)
 		Effects.spawnZapLine(fx.x1, fx.y1, fx.x2, fx.y2)
-	end
+	end,
+}
+
+function Effects.spawnFX(fx)
+	if not fx or not fx.id then return end
+
+	local handler = fxHandlers[fx.id]
+	if handler then handler(fx) end
 end
 
 return Effects
