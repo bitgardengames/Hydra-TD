@@ -3,6 +3,8 @@ local Fonts = require("core.fonts")
 local Theme = require("core.theme")
 local State = require("core.state")
 local Util = require("core.util")
+local SettingsModel = require("ui.menu.settings_model")
+local SettingsControls = require("ui.menu.settings_controls")
 local Save = require("core.save")
 local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
@@ -91,7 +93,7 @@ local rowRects = {}
 local tabRects = {}
 local draggingSlider = nil
 local focusedRow = nil
-local rowPressHandlers
+local controlContext
 
 local tabs = {}
 local activeTab = 1
@@ -99,80 +101,12 @@ local tabAnim = {}
 local tabTime = 0
 local keybindCapture = KeybindCapture.new()
 
-local keyboardControlsLayout = {
-	{kind = "action", id = "escape", label = "settings.controlPause"},
-	{kind = "action", id = "restartRun", label = "settings.controlRestartRun"},
-	{kind = "action", id = "returnToMenu", label = "settings.controlReturnToMenu"},
-	{kind = "action", id = "fastForward", label = "settings.controlSpeed"},
-	{kind = "action", id = "skipPrep", label = "settings.controlStartWave"},
-	{kind = "action", id = "upgrade", label = "settings.controlUpgrade"},
-	{kind = "action", id = "sell", label = "settings.controlSell"},
-	{kind = "shop", id = "slow", label = "settings.controlPlaceSlow"},
-	{kind = "shop", id = "lancer", label = "settings.controlPlaceLancer"},
-	{kind = "shop", id = "poison", label = "settings.controlPlacePoison"},
-	{kind = "shop", id = "cannon", label = "settings.controlPlaceCannon"},
-	{kind = "shop", id = "shock", label = "settings.controlPlaceShock"},
-	{kind = "shop", id = "plasma", label = "settings.controlPlacePlasma"},
-	{kind = "action", id = "toggleMeter", label = "settings.controlDamageMeter"},
-}
-
-local function restoreDefaultKeybinds()
-	keybindCapture:restoreDefaults()
-end
-
-local function keybindText(row)
-	return keybindCapture:text(row)
-end
-
 local function flushSettingsNow()
 	Save.flush()
 end
 
 local function settingsChanged()
 	Save.markDirty()
-end
-
-local function sliderRow(id, label, color, get, set, description, valueFormatter)
-	return {
-		id = id,
-		label = label,
-		description = description,
-		type = "slider",
-		color = color,
-		get = get,
-		set = set,
-		valueFormatter = valueFormatter,
-	}
-end
-
-local function formatPercent(value)
-	return L("settings.percentValue", floor(Util.clamp(value, 0, 1) * 100 + 0.5))
-end
-
-local function toggleRow(id, label, setting, set, description)
-	return {
-		id = id,
-		label = label,
-		description = description,
-		type = "toggle",
-		get = function() return Save.data.settings[setting] end,
-		set = set or function(value) Save.data.settings[setting] = value end,
-	}
-end
-
-local function choiceRow(id, label, setting, choices, valueLabels, apply, description)
-	return {
-		id = id, label = label, description = description, type = "action",
-		valueLabel = function() return valueLabels[Save.data.settings[setting]] or tostring(Save.data.settings[setting]) end,
-		onClick = function()
-			local current = Save.data.settings[setting]
-			local index = 1
-			for i, value in ipairs(choices) do if value == current then index = i break end end
-			Save.data.settings[setting] = choices[index % #choices + 1]
-			if apply then apply(Save.data.settings[setting]) end
-			Sound.play("uiConfirm")
-		end,
-	}
 end
 
 local function exitToMenu()
@@ -187,72 +121,6 @@ local function exitToMenu()
 	end
 
 	Sound.play("uiBack")
-end
-
-local rebuildControlsRows
-
-local function requestLayoutMeasurement()
-	layoutDirty = true
-	layoutMeasurementDirty = true
-end
-
-local function requestRowLayout()
-	layoutDirty = true
-end
-
-local function switchTab(nextTab)
-	local clamped = Util.clamp(nextTab, 1, #tabs)
-
-	if clamped ~= activeTab then
-		if draggingSlider then
-			flushSettingsNow()
-		end
-		activeTab = clamped
-		local tabId = tabs[activeTab] and tabs[activeTab].id
-		if tabId == "controls_keyboard" then
-			rebuildControlsRows()
-		end
-		draggingSlider = nil
-		keybindCapture:close()
-		focusedRow = nil
-		requestLayoutMeasurement()
-		Sound.play("uiMove")
-	end
-end
-
-local function isControlsTab(index)
-	local tab = tabs[index]
-	return tab and tab.id == "controls_keyboard"
-end
-
-rebuildControlsRows = function()
-	local controlsRows = {}
-	local sourceLayout = keyboardControlsLayout
-
-	for _, def in ipairs(sourceLayout) do
-		controlsRows[#controlsRows + 1] = {
-			id = string.format("bind_%s_%s", def.kind, def.id),
-			label = L(def.label),
-			type = "keybind",
-			bindingKind = def.kind,
-			bindingId = def.id,
-		}
-	end
-
-	controlsRows[#controlsRows + 1] = {
-		id = "restore_defaults_controls",
-		label = L("settings.controlsRestoreDefaults"),
-		type = "action",
-		onClick = restoreDefaultKeybinds,
-	}
-
-	for _, tab in ipairs(tabs) do
-		if tab.id == "controls_keyboard" then
-			tab.rows = controlsRows
-		end
-	end
-
-	requestLayoutMeasurement()
 end
 
 local function getActiveRows()
@@ -332,7 +200,7 @@ end
 
 local function drawKeybindRow(row, x, yTop)
 	Text.printShadow(row.label, x, rowTextY(yTop))
-	Text.printfShadow(keybindText(row), x + LABEL_W, rowTextY(yTop), SLIDER_W + 20, "right")
+	Text.printfShadow(row.valueFormatter(row), x + LABEL_W, rowTextY(yTop), SLIDER_W + 20, "right")
 end
 
 local function drawActionRow(row, x, yTop)
@@ -361,23 +229,10 @@ local function drawActionRow(row, x, yTop)
 	end
 end
 
-local rowRenderers = {
-	slider = drawSliderRow,
-	toggle = drawToggleRow,
-	keybind = drawKeybindRow,
-	action = drawActionRow,
-	info = drawInfoRow,
-}
-
 local function drawRow(row, hovered, x, yTop, index)
 	drawRowHighlight(index, hovered)
-
 	lg.setColor(colorText)
-
-	local render = rowRenderers[row.type]
-	if render then
-		render(row, x, yTop, hovered, index)
-	end
+	SettingsControls.dispatch(row, "draw", x, yTop, hovered, index, controlContext)
 end
 
 local function contains(rect, x, y)
@@ -425,50 +280,7 @@ function Screen.load()
 	activeTab = 1
 	tabTime = 0
 
-	tabs = {
-		{
-			id = "audio",
-			label = L("settings.tabAudio"),
-			rows = {
-				sliderRow("music", L("settings.music"), Theme.tower.shock,
-					function() return Save.data.settings.musicVolume end,
-					function(v)
-						Save.data.settings.musicVolume = v
-						Sound.setMusicVolume(v)
-					end, nil, formatPercent),
-				sliderRow("sfx", L("settings.sfx"), Theme.tower.cannon,
-					function() return Save.data.settings.sfxVolume end,
-					function(v)
-						Save.data.settings.sfxVolume = v
-						Sound.setSFXVolume(v)
-					end, nil, formatPercent),
-			},
-		},
-		{
-			id = "video",
-			label = L("settings.tabVideo"),
-			rows = {
-				toggleRow("camera_motion", L("settings.cameraMotion"), "cameraMotion", nil,
-					L("settings.cameraMotionDesc")),
-				toggleRow("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers", nil,
-					L("settings.damageNumbersDesc")),
-				toggleRow("dense_particles", L("settings.highDensityParticles"), "highDensityParticles", nil,
-					L("settings.highDensityParticlesDesc")),
-				toggleRow("fullscreen", L("settings.fullscreen"), "fullscreen",
-					function(v)
-						Save.data.settings.fullscreen = v
-						require("core.window").apply(Save.data.settings, v)
-					end),
-			},
-		},
-		{
-			id = "controls_keyboard",
-			label = L("settings.tabControlsKeybinds"),
-			rows = {},
-		},
-	}
-
-	rebuildControlsRows()
+	tabs = SettingsModel.build(keybindCapture)
 
 	buttons = {
 		{
@@ -572,10 +384,8 @@ local function updateDraggedSlider()
 		local rect = sliderRects[draggingSlider]
 
 		if rect then
-			local t = Util.clamp((lm.getX() - rect.x) / rect.w, 0, 1)
-
-			rows[draggingSlider].set(t)
-			settingsChanged()
+			SettingsControls.dispatch(rows[draggingSlider], "setFromPointer",
+				draggingSlider, lm.getX(), controlContext)
 		end
 	end
 end
@@ -617,7 +427,7 @@ end
 function Screen.localizationChanged()
 	-- Localized row collections are rebuilt by their owner before this hook.
 	-- Widths and counts may both have changed, requiring a complete pass.
-	rebuildControlsRows()
+	tabs = SettingsModel.build(keybindCapture)
 	requestLayoutMeasurement()
 end
 
@@ -762,33 +572,12 @@ function Screen.keypressed(key)
 	end
 
 	if (key == "left" or key == "right") and focusedRow then
-		local row = rows[focusedRow]
-		if row and row.type == "slider" then
-			local direction = key == "left" and -1 or 1
-			local previous = row.get()
-			local adjusted = Util.clamp(previous + direction * SLIDER_KEY_STEP, 0, 1)
-			if adjusted ~= previous then
-				row.set(adjusted)
-				settingsChanged()
-				Sound.play("uiMove")
-				-- A keyboard press is a discrete adjustment, unlike a mouse drag.
-				flushSettingsNow()
-			end
-		end
+		SettingsControls.dispatch(rows[focusedRow], "adjust", key == "left" and -1 or 1, controlContext)
 		return
 	end
 
 	if (key == "return" or key == "space") and focusedRow then
-		local row = rows[focusedRow]
-		-- Sliders are adjusted exclusively with Left/Right. In particular, do
-		-- not route keyboard activation through mouse-coordinate handling.
-		if row and row.type == "slider" then
-			return
-		end
-		local handlePress = row and rowPressHandlers[row.type]
-		if handlePress then
-			handlePress(row, focusedRow, rowRects[focusedRow] and rowRects[focusedRow].x or listX)
-		end
+		SettingsControls.dispatch(rows[focusedRow], "activate", focusedRow, controlContext)
 		return
 	end
 
@@ -828,42 +617,18 @@ local function findRectAt(rects, x, y)
 	end
 end
 
-local function setSliderFromMouse(index, x)
-	local slider = sliderRects[index]
-	if not slider or x < slider.x or x > slider.x + slider.w then
-		return
-	end
-
-	rows[index].set(Util.clamp((x - slider.x) / slider.w, 0, 1))
-	settingsChanged()
-	draggingSlider = index
-	return true
-end
-
-rowPressHandlers = {
-	slider = function(row, index, x)
-		return setSliderFromMouse(index, x)
-	end,
-	toggle = function(row)
-		row.set(not row.get())
-		settingsChanged()
-		Sound.play("uiConfirm")
-		return true
-	end,
-	keybind = function(row)
-		keybindCapture:start(row)
-		return true
-	end,
-	action = function(row)
-		if row.onClick then
-			row.onClick()
-		end
-		return true
-	end,
-	info = function()
-		Sound.play("uiMove")
-		return true
-	end,
+controlContext = {
+	drawSlider = drawSliderRow,
+	drawToggle = drawToggleRow,
+	drawKeybind = drawKeybindRow,
+	drawAction = drawActionRow,
+	drawInfo = drawInfoRow,
+	sliderRects = sliderRects,
+	sliderKeyStep = SLIDER_KEY_STEP,
+	capture = keybindCapture,
+	changed = settingsChanged,
+	flush = flushSettingsNow,
+	beginDrag = function(index) draggingSlider = index end,
 }
 
 function Screen.mousepressed(x, y, button)
@@ -877,9 +642,10 @@ function Screen.mousepressed(x, y, button)
 		local rowIndex = findRectAt(rowRects, x, y)
 		if rowIndex then
 			local row = rows[rowIndex]
-			local handlePress = row and rowPressHandlers[row.type]
-			if handlePress then
-				handlePress(row, rowIndex, x)
+			if contains(sliderRects[rowIndex], x, y) then
+				SettingsControls.dispatch(row, "setFromPointer", rowIndex, x, controlContext)
+			else
+				SettingsControls.dispatch(row, "activate", rowIndex, controlContext)
 			end
 			return true
 		end
