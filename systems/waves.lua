@@ -563,11 +563,16 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 end
 
 local function countNearbyBossAdds(boss)
-	local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, 320, true)
+	local radius = 320
+	local radius2 = radius * radius
+	local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, radius, true)
 	local aliveAdds = 0
 	for i = 1, nearbyCount do
 		local enemy = nearbyAdds[i]
-		if not enemy.boss and enemy.kind == bossAdds.kind and enemy.hp > 0 then
+		local dx = enemy.x - boss.x
+		local dy = enemy.y - boss.y
+		if dx * dx + dy * dy <= radius2
+			and not enemy.boss and enemy.kind == bossAdds.kind and enemy.hp > 0 then
 			aliveAdds = aliveAdds + 1
 		end
 	end

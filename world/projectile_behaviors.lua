@@ -2461,7 +2461,7 @@ B.beam = {
 			local sy = y1 + vy * dist
 
 			if b.timer <= 0 then
-				local nearby, nearbyCount = Spatial.queryCells(sx, sy)
+				local nearby, nearbyCount = Spatial.queryCells(sx, sy, width)
 
 				for i = 1, nearbyCount do
 					local e2 = nearby[i]
