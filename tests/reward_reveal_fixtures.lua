@@ -21,14 +21,12 @@ assert(reduced.glint > 0 and reduced.glint < 1,
 local file = assert(io.open("ui/menu/screens/victory.lua", "r"))
 local victorySource = file:read("*a")
 file:close()
-assert(victorySource:find("if Medals.isRevealComplete() then", 1, true),
-	"reward timing must follow the stat and medal sequences")
 assert(victorySource:find("Screen.finishAnimations()", 1, true),
 	"keyboard and pointer skip paths must share one completion operation")
 assert(victorySource:find("Medals.finishReveal()", 1, true)
 	and victorySource:find("runStats:finish()", 1, true),
 	"skip must complete both preceding animation stages")
-assert(victorySource:find("or {alpha = 1, lift = 0, scale = 1", 1, true),
-	"already-unlocked rewards must be immediately stable")
+assert(not victorySource:find('require("ui.reward_reveal")', 1, true),
+	"the victory screen must not retain reward reveal state after removing rewards")
 
 print("reward reveal fixtures passed")
