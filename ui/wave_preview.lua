@@ -59,6 +59,10 @@ local combatProgress = {
 	count = "",
 }
 
+-- Waves.getProgress updates this table in place so the combat HUD does not
+-- allocate a progress snapshot (or authored-group table) every frame.
+local waveProgressSnapshot = {_currentAuthoredGroup = {}}
+
 local panel = {
 	mode = nil,
 	height = nil,
@@ -119,7 +123,7 @@ local function getPreviewHeight()
 end
 
 local function updateCombatProgress(now)
-	local progress = Waves.getProgress()
+	local progress = Waves.getProgress(waveProgressSnapshot)
 	local total = progress.totalScheduled
 	if total <= 0 then return nil end
 	local cleared = math.min(total, progress.clearedCount)
