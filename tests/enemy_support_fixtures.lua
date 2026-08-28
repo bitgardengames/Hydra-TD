@@ -5,10 +5,19 @@ local queryCounts = {}
 local floor, ceil = math.floor, math.ceil
 
 package.loaded["world.spatial_grid"] = {
-	queryCells = function(x)
+	newQueryContext = function() return {} end,
+	radiusOptions = {living = {}},
+	visitRadius = function(x, y, radius, visitor, context)
 		queryCounts[x] = (queryCounts[x] or 0) + 1
 		local result = nearby[x] or {}
-		return result, #result
+		local radius2 = radius * radius
+		for i = 1, #result do
+			local target = result[i]
+			local dx, dy = target.x - x, target.y - y
+			if target.hp > 0 and dx * dx + dy * dy <= radius2 then
+				visitor(target, context, dx * dx + dy * dy)
+			end
+		end
 	end,
 	forEachQueryCell = function(x, y, radius, fn, context)
 		local cx, cy = floor(x / 100), floor(y / 100)

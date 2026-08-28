@@ -7,7 +7,7 @@ package.loaded["core.state"] = {frameId = 10}
 package.loaded["world.spatial_grid"] = {
 	pointToCell = function(x, y) return math.floor(x / 100), math.floor(y / 100) end,
 	localQueryFootprintKey = function(range) return math.ceil(range / 100) end,
-	queryCellsLocal = function()
+	querySquareCandidatesLocal = function()
 		queryCount = queryCount + 1
 		return candidates, #candidates
 	end,

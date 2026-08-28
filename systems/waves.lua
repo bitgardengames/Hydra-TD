@@ -10,6 +10,7 @@ local EnemyDefs = require("world.enemy_defs")
 local EnemyTraits = require("world.enemy_traits")
 local Spatial = require("world.spatial_grid")
 local spatialQueryContext = Spatial.newQueryContext(true)
+local nearbyBossAddsContext = {count = 0, cap = 0, kind = nil}
 local Effects = require("world.effects")
 local Messages = require("ui.messages")
 local BossHP = require("ui.boss_hp")
@@ -568,21 +569,21 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 	return spawnLoops, not sequenceValid
 end
 
+local function countBossAddVisitor(enemy, context)
+	if not enemy.boss and enemy.kind == context.kind then
+		context.count = context.count + 1
+		if context.count >= context.cap then return false end
+	end
+end
+
 local function countNearbyBossAdds(boss)
 	local radius = 320
-	local radius2 = radius * radius
-	local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, radius, spatialQueryContext)
-	local aliveAdds = 0
-	for i = 1, nearbyCount do
-		local enemy = nearbyAdds[i]
-		local dx = enemy.x - boss.x
-		local dy = enemy.y - boss.y
-		if dx * dx + dy * dy <= radius2
-			and not enemy.boss and enemy.kind == bossAdds.kind and enemy.hp > 0 then
-			aliveAdds = aliveAdds + 1
-		end
-	end
-	return aliveAdds
+	nearbyBossAddsContext.count = 0
+	nearbyBossAddsContext.cap = bossAdds.maxAlive
+	nearbyBossAddsContext.kind = bossAdds.kind
+	Spatial.visitRadius(boss.x, boss.y, radius, countBossAddVisitor,
+		nearbyBossAddsContext, spatialQueryContext, Spatial.radiusOptions.living)
+	return nearbyBossAddsContext.count
 end
 
 local function queueBossReinforcements(boss, activeCap)

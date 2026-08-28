@@ -33,10 +33,10 @@ local function contains(results, count, expected)
 end
 
 local function assertBothQueriesFind(x, radius, enemy, label)
-	local results, count = Spatial.queryCells(x, 0, radius, queryContext)
-	assert(contains(results, count, enemy), label .. " (queryCells)")
-	results, count = Spatial.queryCellsLocal(x, 0, radius, localQueryContext)
-	assert(contains(results, count, enemy), label .. " (queryCellsLocal)")
+	local results, count = Spatial.querySquareCandidates(x, 0, radius, queryContext)
+	assert(contains(results, count, enemy), label .. " (querySquareCandidates)")
+	results, count = Spatial.querySquareCandidatesLocal(x, 0, radius, localQueryContext)
+	assert(contains(results, count, enemy), label .. " (querySquareCandidatesLocal)")
 	assert(Spatial.localQueryFootprintKey(radius) == math.ceil(radius / CELL_SIZE),
 		label .. " (cache footprint)")
 end
@@ -97,18 +97,18 @@ inserted = {}
 -- A map reset clears occupancy and reusable query state in place.
 local priorGrid = Spatial.grid
 local priorEnemy = add(4, 4)
-local priorResults, priorCount = Spatial.queryCells(4, 4, 1, queryContext)
+local priorResults, priorCount = Spatial.querySquareCandidates(4, 4, 1, queryContext)
 assert(priorCount == 1 and priorResults[1] == priorEnemy, "reset fixture did not populate query state")
-Spatial.queryCellsLocal(4, 4, 1, localQueryContext)
+Spatial.querySquareCandidatesLocal(4, 4, 1, localQueryContext)
 Spatial.clear()
 assert(currentMaxEnemyRadius() == 0, "Spatial.clear did not reset radius metadata")
 assert(Spatial.grid == priorGrid and next(priorGrid) == nil,
 	"Spatial.clear replaced or failed to empty the exposed grid")
 local queryCount, candidateTotal = Spatial.getLocalQueryFrameStats()
 assert(queryCount == 0 and candidateTotal == 0, "Spatial.clear did not reset query frame counters")
-local resetResults, resetCount = Spatial.queryCells(4, 4, 1, queryContext)
+local resetResults, resetCount = Spatial.querySquareCandidates(4, 4, 1, queryContext)
 assert(resetCount == 0 and resetResults[1] == nil, "map reset retained a stale query result")
-local localResults, localCount = Spatial.queryCellsLocal(4, 4, 1, localQueryContext)
+local localResults, localCount = Spatial.querySquareCandidatesLocal(4, 4, 1, localQueryContext)
 assert(localCount == 0 and localResults[1] == nil, "map reset retained a stale local query result")
 inserted = {}
 

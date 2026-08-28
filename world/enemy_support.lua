@@ -1,5 +1,6 @@
 local Spatial = require("world.spatial_grid")
 local spatialQueryContext = Spatial.newQueryContext(false)
+local refreshVisitContext = {}
 
 local Support = {}
 
@@ -158,6 +159,27 @@ function Support.detachDead(source)
 	end
 end
 
+local function refreshTargetVisitor(target, context)
+	local source, aura = context.source, context.aura
+	if target == source then return end
+	local affected = source.supportAffected
+	affected[target] = true
+	local contributions = target.supportContributions
+	if not contributions then
+		contributions = {}
+		target.supportContributions = contributions
+	end
+	local contribution = contributions[source.id]
+	if not contribution then
+		contribution = {source = source}
+		contributions[source.id] = contribution
+		markTargetChanged(target)
+	elseif contribution.multiplier ~= aura.speedMultiplier then
+		markTargetChanged(target)
+	end
+	contribution.multiplier = aura.speedMultiplier
+end
+
 local function refreshSource(source)
 	local aura = source.support
 	if not aura or source.hp <= 0 or source._supportRemoved then
@@ -170,27 +192,10 @@ local function refreshSource(source)
 		affected[target] = false
 	end
 
-	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius, spatialQueryContext)
-	for i = 1, count do
-		local target = nearby[i]
-		if target ~= source and target.hp > 0 then
-			affected[target] = true
-			local contributions = target.supportContributions
-			if not contributions then
-				contributions = {}
-				target.supportContributions = contributions
-			end
-			local contribution = contributions[source.id]
-			if not contribution then
-				contribution = {source = source}
-				contributions[source.id] = contribution
-				markTargetChanged(target)
-			elseif contribution.multiplier ~= aura.speedMultiplier then
-				markTargetChanged(target)
-			end
-			contribution.multiplier = aura.speedMultiplier
-		end
-	end
+	refreshVisitContext.source = source
+	refreshVisitContext.aura = aura
+	Spatial.visitRadius(source.x, source.y, aura.radius, refreshTargetVisitor,
+		refreshVisitContext, spatialQueryContext, Spatial.radiusOptions.living)
 
 	for target, present in pairs(affected) do
 		if not present then

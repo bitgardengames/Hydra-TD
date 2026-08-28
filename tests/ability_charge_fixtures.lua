@@ -17,7 +17,7 @@ package.loaded["systems.campaign_unlocks"] = {
 package.loaded["world.enemies"] = {enemies = {}, applyDamage = function() end, applySlow = function() end}
 package.loaded["world.towers"] = {towers = {}}
 package.loaded["world.effects"] = {shake = function() end, expirationPulse = function() return 0 end}
-package.loaded["world.spatial_grid"] = {queryCells = function() return {}, 0 end}
+package.loaded["world.spatial_grid"] = {querySquareCandidates = function() return {}, 0 end}
 
 local State = require("core.state")
 local Defs = require("systems.ability_defs")

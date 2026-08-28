@@ -83,12 +83,40 @@ end
 
 -- Towers can share a local-query candidate list when this footprint and their
 -- center cell match. Keep the key tied directly to the traversal policy so
--- cache callers cannot drift from queryCellsLocal's CELL_SIZE boundaries.
+-- cache callers cannot drift from querySquareCandidatesLocal's boundaries.
 function Spatial.localQueryFootprintKey(radius)
 	return queryCellFootprint(radius)
 end
 
-local function traverseQueryCellsCollect(x, y, radius, collectContext)
+local function walkCells(centerX, centerY, cellRadius, visitCell, context)
+	for dx = -cellRadius, cellRadius do
+		local col = grid[centerX + dx]
+		if col then
+			for dy = -cellRadius, cellRadius do
+				local cell = col[centerY + dy]
+				if cell and visitCell(cell, context) == false then return false end
+			end
+		end
+	end
+	return true
+end
+
+local function collectCell(cell, ctx)
+	local results, count = ctx.results, ctx.count
+	local useDedupe, seen, stamp = ctx.dedupeById, ctx.seen, ctx.stamp
+	for i = 1, #cell do
+		local enemy = cell[i]
+		local id = enemy.id
+		if not (useDedupe and id and seen[id] == stamp) then
+			if useDedupe and id then seen[id] = stamp end
+			count = count + 1
+			results[count] = enemy
+		end
+	end
+	ctx.count = count
+end
+
+local function traverseSquareCandidatesCollect(x, y, radius, collectContext)
 	local ctx = collectContext
 	local previousCount = ctx.count
 	ctx.count = 0
@@ -101,49 +129,8 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext)
 	local cy = floor(y * INV_CELL)
 	local cellRadius = queryCellFootprint(radius)
 	local results = ctx.results
-	local count = 0
-	if useDedupe then
-		local seen = ctx.seen
-		local stamp = ctx.stamp
-		for dx = -cellRadius, cellRadius do
-			local col = grid[cx + dx]
-			if col then
-				for dy = -cellRadius, cellRadius do
-					local cell = col[cy + dy]
-					if cell then
-						for i = 1, #cell do
-							local enemy = cell[i]
-							local id = enemy.id
-							if id and seen[id] == stamp then
-								goto continue_enemy
-							end
-							if id then
-								seen[id] = stamp
-							end
-							count = count + 1
-							results[count] = enemy
-							::continue_enemy::
-						end
-					end
-				end
-			end
-		end
-	else
-		for dx = -cellRadius, cellRadius do
-			local col = grid[cx + dx]
-			if col then
-				for dy = -cellRadius, cellRadius do
-					local cell = col[cy + dy]
-					if cell then
-						for i = 1, #cell do
-							count = count + 1
-							results[count] = cell[i]
-						end
-					end
-				end
-			end
-		end
-	end
+	walkCells(cx, cy, cellRadius, collectCell, ctx)
+	local count = ctx.count
 	for i = count + 1, previousCount do
 		results[i] = nil
 	end
@@ -151,37 +138,29 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext)
 	return results, count
 end
 
-local function traverseQueryCellsCallback(x, y, radius, fn, context, queryContext)
+local function callbackCell(cell, ctx)
+	local useDedupe, seen, stamp = ctx.dedupeById, ctx.seen, ctx.stamp
+	for i = 1, #cell do
+		local enemy = cell[i]
+		local id = enemy.id
+		if not (useDedupe and id and seen[id] == stamp) then
+			if useDedupe and id then seen[id] = stamp end
+			ctx.count = ctx.count + 1
+			if ctx.callback(enemy, ctx.callbackContext) == false then return false end
+		end
+	end
+end
+
+local function traverseSquareCandidatesCallback(x, y, radius, fn, context, queryContext)
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
 	local cellRadius = queryCellFootprint(radius)
-	local useDedupe = queryContext.dedupeById
-	local seen, stamp
-	if useDedupe then
-		stamp = nextStamp(queryContext)
-		seen = queryContext.seen
-	end
-	local count = 0
-	for dx = -cellRadius, cellRadius do
-		local col = grid[cx + dx]
-		if col then
-			for dy = -cellRadius, cellRadius do
-				local cell = col[cy + dy]
-				if cell then
-					for i = 1, #cell do
-						local enemy = cell[i]
-						local id = enemy.id
-						if not (useDedupe and id and seen[id] == stamp) then
-							if useDedupe and id then seen[id] = stamp end
-							count = count + 1
-							fn(enemy, context)
-						end
-					end
-				end
-			end
-		end
-	end
-	return count
+	if queryContext.dedupeById then nextStamp(queryContext) end
+	queryContext.callback = fn
+	queryContext.callbackContext = context
+	queryContext.count = 0
+	walkCells(cx, cy, cellRadius, callbackCell, queryContext)
+	return queryContext.count
 end
 
 -- Retained option records for the common hot paths. Callers may also retain
@@ -195,48 +174,41 @@ Spatial.radiusOptions = {
 	livingCollision = {livingOnly = true, dedupeById = false, renderedPosition = false, includeCollisionRadius = true},
 }
 
-local function traverseRadius(x, y, radius, visitor, visitorContext, queryContext, options)
-	local cx = floor(x * INV_CELL)
-	local cy = floor(y * INV_CELL)
-	local cellRadius = queryCellFootprint(radius + (options.includeCollisionRadius and maxEnemyRadius or 0))
-	local dedupe = options.dedupeById
-	local seen, stamp
-	if dedupe then
-		stamp = nextStamp(queryContext)
-		seen = queryContext.seen
-	end
-	local radiusSquared = radius * radius
-	local count = 0
-	for dx = -cellRadius, cellRadius do
-		local col = grid[cx + dx]
-		if col then
-			for dy = -cellRadius, cellRadius do
-				local cell = col[cy + dy]
-				if cell then
-					for i = 1, #cell do
-						local enemy = cell[i]
-						local id = enemy.id
-						if not (dedupe and id and seen[id] == stamp) then
-							if dedupe and id then seen[id] = stamp end
-							if not options.livingOnly or enemy.hp > 0 then
-								local ex = options.renderedPosition and (enemy.rx or enemy.x) or enemy.x
-								local ey = options.renderedPosition and (enemy.ry or enemy.y) or enemy.y
-								local ddx, ddy = ex - x, ey - y
-								local distanceSquared = ddx * ddx + ddy * ddy
-								local exactRadius = radius
-								if options.includeCollisionRadius then exactRadius = exactRadius + (enemy.radius or 0) end
-								if distanceSquared <= (options.includeCollisionRadius and exactRadius * exactRadius or radiusSquared) then
-									count = count + 1
-									if visitor(enemy, visitorContext, distanceSquared) == false then return count end
-								end
-							end
-						end
-					end
+local function radiusCell(cell, ctx)
+	local options, x, y = ctx.radiusOptions, ctx.queryX, ctx.queryY
+	local dedupe, seen, stamp = options.dedupeById, ctx.seen, ctx.stamp
+	for i = 1, #cell do
+		local enemy = cell[i]
+		local id = enemy.id
+		if not (dedupe and id and seen[id] == stamp) then
+			if dedupe and id then seen[id] = stamp end
+			if not options.livingOnly or enemy.hp > 0 then
+				local ex = options.renderedPosition and (enemy.rx or enemy.x) or enemy.x
+				local ey = options.renderedPosition and (enemy.ry or enemy.y) or enemy.y
+				local ddx, ddy = ex - x, ey - y
+				local distanceSquared = ddx * ddx + ddy * ddy
+				local exactRadius = ctx.queryRadius
+				if options.includeCollisionRadius then exactRadius = exactRadius + (enemy.radius or 0) end
+				if distanceSquared <= (options.includeCollisionRadius and exactRadius * exactRadius or ctx.radiusSquared) then
+					ctx.count = ctx.count + 1
+					if ctx.radiusVisitor(enemy, ctx.radiusVisitorContext, distanceSquared) == false then return false end
 				end
 			end
 		end
 	end
-	return count
+end
+
+local function traverseRadius(x, y, radius, visitor, visitorContext, queryContext, options)
+	local cx = floor(x * INV_CELL)
+	local cy = floor(y * INV_CELL)
+	local cellRadius = queryCellFootprint(radius + (options.includeCollisionRadius and maxEnemyRadius or 0))
+	if options.dedupeById then nextStamp(queryContext) end
+	queryContext.queryX, queryContext.queryY = x, y
+	queryContext.queryRadius, queryContext.radiusSquared = radius, radius * radius
+	queryContext.radiusVisitor, queryContext.radiusVisitorContext = visitor, visitorContext
+	queryContext.radiusOptions, queryContext.count = options, 0
+	walkCells(cx, cy, cellRadius, radiusCell, queryContext)
+	return queryContext.count
 end
 
 local function removeFromCell(e)
@@ -362,13 +334,13 @@ end
 -- Collection and visitation both require caller-owned state. A caller that can
 -- nest queries must use a distinct context for every simultaneously active
 -- traversal; contexts may otherwise be retained and reused without allocation.
-function Spatial.queryCells(x, y, radius, queryContext)
-	assert(queryContext and queryContext.results, "queryCells requires a caller-owned query context")
-	return traverseQueryCellsCollect(x, y, radius, queryContext)
+function Spatial.querySquareCandidates(x, y, radius, queryContext)
+	assert(queryContext and queryContext.results, "querySquareCandidates requires a caller-owned query context")
+	return traverseSquareCandidatesCollect(x, y, radius, queryContext)
 end
 
-function Spatial.queryCellsLocal(x, y, radius, queryContext)
-	local results, count = Spatial.queryCells(x, y, radius, queryContext)
+function Spatial.querySquareCandidatesLocal(x, y, radius, queryContext)
+	local results, count = Spatial.querySquareCandidates(x, y, radius, queryContext)
 	frameStats.localQueryCount = frameStats.localQueryCount + 1
 	frameStats.localCandidateTotal = frameStats.localCandidateTotal + count
 	return results, count
@@ -389,7 +361,7 @@ function Spatial.queryIncludesCell(x, y, radius, cx, cy)
 	return math.abs(centerX - cx) <= cellRadius and math.abs(centerY - cy) <= cellRadius
 end
 
--- Visit the exact square cell footprint used by queryCells. Systems which
+-- Visit the exact square cell footprint used by querySquareCandidates. Systems which
 -- maintain secondary spatial indexes can therefore share this module's cell
 -- sizing and radius-rounding policy without duplicating coordinate math.
 function Spatial.forEachQueryCell(x, y, radius, fn, context)
@@ -405,7 +377,7 @@ end
 
 function Spatial.visitCells(x, y, radius, fn, context, queryContext)
 	assert(queryContext, "visitCells requires a caller-owned query context")
-	return traverseQueryCellsCallback(x, y, radius, fn, context, queryContext)
+	return traverseSquareCandidatesCallback(x, y, radius, fn, context, queryContext)
 end
 
 -- Visits exact-radius matches directly from grid cells, without materializing

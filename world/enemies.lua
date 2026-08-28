@@ -6,6 +6,7 @@ local MapMod = require("world.map")
 local Spatial = require("world.spatial_grid")
 local hitQueryContext = Spatial.newQueryContext(true)
 local enemyQueryContext = Spatial.newQueryContext(false)
+local infectionVisitContext = {}
 local EnemySupport = require("world.enemy_support")
 local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
@@ -165,7 +166,7 @@ local function advanceEnemyAlongPath(e, moveDist, pathWorld, pathSegLen, totalLe
 end
 
 local function findEnemyAt(x, y)
-	local candidates, candidateCount = Spatial.queryCellsLocal(x, y, MAX_HIT_QUERY_RADIUS, hitQueryContext)
+	local candidates, candidateCount = Spatial.querySquareCandidatesLocal(x, y, MAX_HIT_QUERY_RADIUS, hitQueryContext)
 
 	if candidateCount == 0 then
 		return nil
@@ -459,6 +460,29 @@ local function updatePoison(e, dt)
 	end
 end
 
+local function spreadInfectionVisitor(other, context)
+	local source, infect = context.source, context.infect
+	if other ~= source then
+		other.poisonStacks = (other.poisonStacks or 0) + context.spreadStacks
+		other.poisonDPS = max(other.poisonDPS or 0, source.poisonDPS or 0)
+		other.poisonTimer = max(other.poisonTimer or 0, source.poisonTimer or 0)
+		other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, source.poisonMissingHpMult or 0)
+		other.poisonRamp = max(other.poisonRamp or 1, source.poisonRamp or 1)
+		other.poisonRampPerTick = max(other.poisonRampPerTick or 0, source.poisonRampPerTick or 0)
+		other.poisonRampMax = max(other.poisonRampMax or 1, source.poisonRampMax or 1)
+		other.poisonSource = source.poisonSource
+
+		if infect.loop == true then
+			other._infectSpread = other._infectSpread or {}
+			other._infectSpread.radius = infect.radius
+			other._infectSpread.stackMult = infect.stackMult
+			other._infectSpread.loop = true
+			other._infectSpread.source = source.poisonSource
+			other._infectDidSpread = false
+		end
+	end
+end
+
 local function spreadInfection(e)
 	if not (e._infectSpread and not e._infectDidSpread and e.hp <= 0 and e.poisonStacks and e.poisonStacks > 0) then
 		return
@@ -468,31 +492,11 @@ local function spreadInfection(e)
 	local infect = e._infectSpread
 	local spreadStacks = floor(e.poisonStacks * infect.stackMult)
 	if spreadStacks > 0 then
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, infect.radius, enemyQueryContext)
-		local radius2 = infect.radius * infect.radius
-		for i = 1, nearbyCount do
-			local other = nearby[i]
-			local dx, dy = other.x - e.x, other.y - e.y
-			if other ~= e and other.hp > 0 and dx * dx + dy * dy <= radius2 then
-				other.poisonStacks = (other.poisonStacks or 0) + spreadStacks
-				other.poisonDPS = max(other.poisonDPS or 0, e.poisonDPS or 0)
-				other.poisonTimer = max(other.poisonTimer or 0, e.poisonTimer or 0)
-				other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, e.poisonMissingHpMult or 0)
-				other.poisonRamp = max(other.poisonRamp or 1, e.poisonRamp or 1)
-				other.poisonRampPerTick = max(other.poisonRampPerTick or 0, e.poisonRampPerTick or 0)
-				other.poisonRampMax = max(other.poisonRampMax or 1, e.poisonRampMax or 1)
-				other.poisonSource = e.poisonSource
-
-				if infect.loop == true then
-					other._infectSpread = other._infectSpread or {}
-					other._infectSpread.radius = infect.radius
-					other._infectSpread.stackMult = infect.stackMult
-					other._infectSpread.loop = true
-					other._infectSpread.source = e.poisonSource
-					other._infectDidSpread = false
-				end
-			end
-		end
+		infectionVisitContext.source = e
+		infectionVisitContext.infect = infect
+		infectionVisitContext.spreadStacks = spreadStacks
+		Spatial.visitRadius(e.x, e.y, infect.radius, spreadInfectionVisitor,
+			infectionVisitContext, enemyQueryContext, Spatial.radiusOptions.living)
 	end
 	Effects.spawnPoisonSplash(e.x, e.y)
 end

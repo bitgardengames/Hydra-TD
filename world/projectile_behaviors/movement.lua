@@ -20,7 +20,7 @@ B.retarget_on_spawn = {
 		local best = nil
 		local bestDist = r2
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
+		local nearby, nearbyCount = Spatial.querySquareCandidates(p.x, p.y, radius, spatialQueryContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]

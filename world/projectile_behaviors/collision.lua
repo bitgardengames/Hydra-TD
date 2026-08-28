@@ -21,7 +21,7 @@ B.hit_circle = {
 			radius = p.hitRadius or p.r or 10
 		end
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
+		local nearby, nearbyCount = Spatial.querySquareCandidates(p.x, p.y, radius, spatialQueryContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]
