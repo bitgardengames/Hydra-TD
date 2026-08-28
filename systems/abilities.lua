@@ -9,6 +9,8 @@ local State = require("core.state")
 local Constants = require("core.constants")
 
 local Abilities = {}
+-- Active effects are an unordered simulation set. Consumers aggregate by
+-- ability or render each effect independently, so removal may change indices.
 local active = {}
 local clock = 0
 local previewAffected = {}
@@ -417,7 +419,11 @@ function Abilities.update(dt)
 			if handlers and handlers.expire then
 				handlers.expire(effect)
 			end
-			table.remove(active, i)
+			local finalIndex = #active
+			if i ~= finalIndex then
+				active[i] = active[finalIndex]
+			end
+			active[finalIndex] = nil
 		end
 	end
 end
