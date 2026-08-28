@@ -877,6 +877,7 @@ local function updateTowers(dt)
 end
 
 local function clear()
+	Targeting.clearFrameCache()
 	for i = #towers, 1, -1 do
 		clearTowerIndex(towers[i])
 		towers[i] = nil
