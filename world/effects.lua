@@ -516,206 +516,69 @@ function Effects.spawnEnemyDeath(x, y, r)
 	Effects.death[#Effects.death + 1] = d
 end
 
-function Effects.update(dt)
-	local frameExponent = dt * 60
-	local drag96 = 0.96 ^ frameExponent
-	local drag92 = 0.92 ^ frameExponent
-	for i = #Effects.presentation, 1, -1 do
-		local e = Effects.presentation[i]
-		e.t = e.t + dt
-		if e.t >= e.life then
-			swapRemove(Effects.presentation, i)
-			release(presentationPool, e)
-		end
-	end
+local families
 
-	local transformations = Effects.towerTransformations
-	for i = #transformations, 1, -1 do
-		local e = transformations[i]
-		e.t = e.t + dt
-		if e.t >= e.life then
-			swapRemove(transformations, i)
-			release(towerTransformationPool, e)
-		end
-	end
-
-	local splashes = Effects.splashes
-
-	for i = #splashes, 1, -1 do
-		local s = splashes[i]
-		s.t = s.t + dt
-
-		if s.t >= s.life then
-			swapRemove(splashes, i)
-			release(splashPool, s)
-		end
-	end
-
-	local explosions = Effects.explosions
-
-	for i = #explosions, 1, -1 do
-		local e = explosions[i]
-		e.t = e.t + dt
-
-		if e.type == "particle" then
-			e.x = e.x + e.vx * dt
-			e.y = e.y + e.vy * dt
-
-			e.vx = e.vx * drag96
-			e.vy = e.vy * drag96
-		end
-
-		if e.t >= e.life then
-			swapRemove(explosions, i)
-			release(explosionPool, e)
-		end
-	end
-
-	local zaps = Effects.zaps
-
-	for i = #zaps, 1, -1 do
-		local z = zaps[i]
-		z.t = z.t + dt
-
-		if z.t >= z.life then
-			swapRemove(zaps, i)
-			releaseZap(z)
-		end
-	end
-
-	local zapLines = Effects.zapLines
-
-	for i = #zapLines, 1, -1 do
-		local z = zapLines[i]
-
-		z.t = z.t + dt
-
-		if z.t >= z.life then
-			zapLines[i] = zapLines[#zapLines]
-			zapLines[#zapLines] = nil
-			releaseZapLine(z)
-		end
-	end
-
-	local frost = Effects.frost
-
-	for i = #frost, 1, -1 do
-		local f = frost[i]
-
-		f.t = f.t + dt
-
-		f.x = f.x + f.vx * dt
-		f.y = f.y + f.vy * dt
-
-		f.vx = f.vx * drag96
-		f.vy = f.vy * drag96
-
-		f.rot = f.rot + f.vr * dt
-
-		if f.t >= f.life then
-			swapRemove(frost, i)
-			release(frostPool, f)
-		end
-	end
-
-	local poison = Effects.poison
-
-	for i = #poison, 1, -1 do
-		local p = poison[i]
-
-		p.t = p.t + dt
-
-		p.x = p.x + p.vx * dt
-		p.y = p.y + p.vy * dt
-
-		-- Simulation normally uses the fixed-step multiplier computed at spawn.
-		-- Direct callers using a nonstandard delta retain frame-rate-independent
-		-- decay by recalculating for that exceptional update only.
-		local drag = p.dragMultiplier
-		if dt ~= SimulationClock.step then
-			drag = p.drag ^ frameExponent
-		end
-		p.vx = p.vx * drag
-		p.vy = p.vy * drag
-
-		if p.t >= p.life then
-			swapRemove(poison, i)
-			release(poisonPool, p)
-		end
-	end
-
-	local lancer = Effects.lancer
-
-	for i = #lancer, 1, -1 do
-		local l = lancer[i]
-
-		l.t = l.t + dt
-
-		l.x = l.x + l.vx * dt
-		l.y = l.y + l.vy * dt
-
-		l.vx = l.vx * drag92
-		l.vy = l.vy * drag92
-
-		if l.t >= l.life then
-			swapRemove(lancer, i)
-			release(lancerPool, l)
-		end
-	end
-
-	local plasmaParticles = Effects.plasmaParticles
-
-	for i = #plasmaParticles, 1, -1 do
-		local p = plasmaParticles[i]
-
-		p.t = p.t + dt
-
-		p.x = p.x + p.vx * dt
-		p.y = p.y + p.vy * dt
-
-		if p.t >= p.life then
-			local dead = plasmaParticles[i]
-
-			plasmaParticles[i] = plasmaParticles[#plasmaParticles]
-			plasmaParticles[#plasmaParticles] = nil
-			release(plasmaParticlePool, dead)
-		end
-	end
-
-	local placePuffs = Effects.placePuffs
-
-	for i = #placePuffs, 1, -1 do
-		local p = placePuffs[i]
-
-		p.t = p.t + dt
-
-		p.x = p.x + p.vx * dt
-		p.y = p.y + p.vy * dt
-
-		p.vx = p.vx * drag92
-		p.vy = p.vy * drag92
-
-		if p.t >= p.life then
-			swapRemove(placePuffs, i)
-			release(placePuffPool, p)
-		end
-	end
-
-	local death = Effects.death
-
-	for i = #death, 1, -1 do
-		local d = death[i]
-
-		d.t = d.t + dt
-
-		if d.t >= d.life then
-			swapRemove(death, i)
-			release(deathPool, d)
+-- Advance one effect family without allocating iterators, closures, or scratch
+-- tables in the frame loop. Expired entries are swap-removed before their
+-- family release callback returns them to the matching pool.
+local function advanceFamily(family, dt, frameExponent, drag96, drag92)
+	local list = family.list
+	local update = family.update
+	for i = #list, 1, -1 do
+		local object = list[i]
+		object.t = object.t + dt
+		if update then update(object, dt, frameExponent, drag96, drag92) end
+		if object.t >= object.life then
+			swapRemove(list, i)
+			family.release(object)
 		end
 	end
 end
 
-function Effects.draw()
+local function integrate(object, dt)
+	object.x = object.x + object.vx * dt
+	object.y = object.y + object.vy * dt
+end
+
+local function updateDrag96(object, dt, _, drag96)
+	if object.type ~= "ring" then
+		integrate(object, dt)
+		object.vx = object.vx * drag96
+		object.vy = object.vy * drag96
+	end
+end
+
+local function updateDrag92(object, dt, _, _, drag92)
+	integrate(object, dt)
+	object.vx = object.vx * drag92
+	object.vy = object.vy * drag92
+end
+
+local function updateRotatingDrag96(object, dt, frameExponent, drag96)
+	updateDrag96(object, dt, frameExponent, drag96)
+	object.rot = object.rot + object.vr * dt
+end
+
+local function updatePoison(object, dt, frameExponent)
+	integrate(object, dt)
+	-- Fixed-step updates use the multiplier precomputed at spawn. Exceptional
+	-- deltas calculate their rate-independent fallback without allocating state.
+	local drag = object.dragMultiplier
+	if dt ~= SimulationClock.step then drag = object.drag ^ frameExponent end
+	object.vx = object.vx * drag
+	object.vy = object.vy * drag
+end
+
+function Effects.update(dt)
+	local frameExponent = dt * 60
+	local drag96 = 0.96 ^ frameExponent
+	local drag92 = 0.92 ^ frameExponent
+	for i = 1, #families do
+		advanceFamily(families[i], dt, frameExponent, drag96, drag92)
+	end
+end
+
+local function drawAllFamilies()
 	for i = 1, #Effects.presentation do
 		local e = Effects.presentation[i]
 		local u = min(1, e.t / e.life)
@@ -1140,7 +1003,7 @@ end
 
 -- Screen-space companion to presentationEvent. Kept out of Camera.begin so
 -- the accessibility-safe vignette remains stable when camera motion is off.
-function Effects.drawOverlay()
+local function drawPresentationOverlay()
 	for i = 1, #Effects.presentation do
 		local e = Effects.presentation[i]
 		if e.kind == "boss_incoming" or e.kind == "boss_spawn" then
@@ -1152,6 +1015,53 @@ function Effects.drawOverlay()
 		end
 	end
 	lg.setLineWidth(1)
+end
+
+local function noDraw() end
+local function releaseSplash(object) release(splashPool, object) end
+local function releaseExplosion(object) release(explosionPool, object) end
+local function releaseFrost(object) release(frostPool, object) end
+local function releasePoison(object) release(poisonPool, object) end
+local function releaseLancer(object) release(lancerPool, object) end
+local function releaseDeath(object) release(deathPool, object) end
+local function releasePlacePuff(object) release(placePuffPool, object) end
+local function releasePlasma(object) release(plasmaParticlePool, object) end
+local function releaseTransformation(object) release(towerTransformationPool, object) end
+local function releasePresentation(object) release(presentationPool, object) end
+
+-- Descriptors are constructed once and are deliberately ordered to preserve
+-- the established update, rendering, and clear order. Presentation owns the
+-- combined world renderer and its explicit screen-space overlay callback;
+-- zaps own their segment-aware release callback.
+families = {
+	{name = "presentation", list = Effects.presentation, pool = presentationPool, update = nil,
+		draw = drawAllFamilies, drawOverlay = drawPresentationOverlay, release = releasePresentation},
+	{name = "towerTransformations", list = Effects.towerTransformations, pool = towerTransformationPool,
+		update = nil, draw = noDraw, release = releaseTransformation},
+	{name = "splashes", list = Effects.splashes, pool = splashPool, update = nil, draw = noDraw, release = releaseSplash},
+	{name = "explosions", list = Effects.explosions, pool = explosionPool, update = updateDrag96,
+		draw = noDraw, release = releaseExplosion},
+	{name = "zaps", list = Effects.zaps, pool = zapPool, update = nil, draw = noDraw, release = releaseZap},
+	{name = "zapLines", list = Effects.zapLines, pool = zapLinePool, update = nil, draw = noDraw, release = releaseZapLine},
+	{name = "frost", list = Effects.frost, pool = frostPool, update = updateRotatingDrag96, draw = noDraw, release = releaseFrost},
+	{name = "poison", list = Effects.poison, pool = poisonPool, update = updatePoison, draw = noDraw, release = releasePoison},
+	{name = "lancer", list = Effects.lancer, pool = lancerPool, update = updateDrag92, draw = noDraw, release = releaseLancer},
+	{name = "plasmaParticles", list = Effects.plasmaParticles, pool = plasmaParticlePool, update = integrate,
+		draw = noDraw, release = releasePlasma},
+	{name = "placePuffs", list = Effects.placePuffs, pool = placePuffPool, update = updateDrag92,
+		draw = noDraw, release = releasePlacePuff},
+	{name = "death", list = Effects.death, pool = deathPool, update = nil, draw = noDraw, release = releaseDeath},
+}
+
+function Effects.draw()
+	for i = 1, #families do families[i].draw(families[i].list) end
+end
+
+function Effects.drawOverlay()
+	for i = 1, #families do
+		local drawOverlay = families[i].drawOverlay
+		if drawOverlay then drawOverlay(families[i].list) end
+	end
 end
 
 function Effects.load()
@@ -1185,72 +1095,14 @@ function Effects.load()
 	Effects.clear()
 end
 function Effects.clear()
-	for i = #Effects.presentation, 1, -1 do
-		local e = Effects.presentation[i]
-		Effects.presentation[i] = nil
-		release(presentationPool, e)
-	end
-	-- Splashes
-	for i = #Effects.splashes, 1, -1 do
-		local s = Effects.splashes[i]
-		Effects.splashes[i] = nil
-		release(splashPool, s)
-	end
-
-	-- Explosions (particles + rings)
-	for i = #Effects.explosions, 1, -1 do
-		local e = Effects.explosions[i]
-		Effects.explosions[i] = nil
-		release(explosionPool, e)
-	end
-
-	-- Zaps (already correct, keep this)
-	for i = #Effects.zaps, 1, -1 do
-		local z = Effects.zaps[i]
-		Effects.zaps[i] = nil
-		releaseZap(z)
-	end
-
-	-- Frost
-	for i = #Effects.frost, 1, -1 do
-		local f = Effects.frost[i]
-		Effects.frost[i] = nil
-		release(frostPool, f)
-	end
-
-	-- Poison
-	for i = #Effects.poison, 1, -1 do
-		local p = Effects.poison[i]
-		Effects.poison[i] = nil
-		release(poisonPool, p)
-	end
-
-	-- Lancer
-	for i = #Effects.lancer, 1, -1 do
-		local l = Effects.lancer[i]
-		Effects.lancer[i] = nil
-		release(lancerPool, l)
-	end
-
-	-- Plasma particles
-	for i = #Effects.plasmaParticles, 1, -1 do
-		local p = Effects.plasmaParticles[i]
-		Effects.plasmaParticles[i] = nil
-		release(plasmaParticlePool, p)
-	end
-
-	-- Place puffs
-	for i = #Effects.placePuffs, 1, -1 do
-		local p = Effects.placePuffs[i]
-		Effects.placePuffs[i] = nil
-		release(placePuffPool, p)
-	end
-
-	-- Enemy death
-	for i = #Effects.death, 1, -1 do
-		local d = Effects.death[i]
-		Effects.death[i] = nil
-		release(deathPool, d)
+	for familyIndex = 1, #families do
+		local family = families[familyIndex]
+		local list = family.list
+		for i = #list, 1, -1 do
+			local object = list[i]
+			list[i] = nil
+			family.release(object)
+		end
 	end
 end
 
