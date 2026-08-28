@@ -103,23 +103,21 @@ function Context:removeByType(role)
 end
 
 function Context:restoreRequiredBehaviors(base)
-	local missing = {}
-	for i = 1, #base do
-		local role = getRole(base[i].id)
-		if role then
-			missing[role] = missing[role] or base[i]
-		end
-	end
-
+	local present = {}
 	for i = 1, #self.behaviors do
 		local role = getRole(self.behaviors[i].id)
 		if role then
-			missing[role] = nil
+			present[role] = true
 		end
 	end
 
-	for _, behavior in pairs(missing) do
-		self:addBehavior(cloneBehavior(behavior))
+	for i = 1, #base do
+		local behavior = base[i]
+		local role = getRole(behavior.id)
+		if role and not present[role] then
+			self:addBehavior(cloneBehavior(behavior))
+			present[role] = true
+		end
 	end
 end
 
