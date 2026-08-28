@@ -12,16 +12,10 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local Save = require("core.save")
 local L = require("core.localization")
-local TowerDefs = require("world.tower_defs")
-local AbilityDefs = require("systems.ability_defs")
-local DrawEntities = require("render.tower_renderer")
 local RunRecap = require("ui.run_recap")
 local ScrollView = require("ui.scroll_view")
-local AbilityIcons = require("ui.ability_icons")
 local AnimatedRunStats = require("ui.animated_run_stats")
 local MapPreviewCache = require("world.map_preview_cache")
-local CampaignUnlocks = require("systems.campaign_unlocks")
-local RewardReveal = require("ui.reward_reveal")
 
 local Overlay = require("ui.overlay")
 local DemoComplete = require("ui.overlays.demo_complete")
@@ -45,9 +39,6 @@ local t = 0
 local panelT = 0
 local recapScroll = ScrollView.new()
 local layout = nil
-local mapRewardCards = {}
-local rewardRevealElapsed = 0
-local rewardRevealStarted = false
 local isFinalCampaignMap = false
 local runStats = AnimatedRunStats.new(Theme.ui.good)
 local damageRows = {}
@@ -109,40 +100,6 @@ local function buildDamageRows(combatStats)
 	table.sort(damageRows, function(a, b) return a.damage > b.damage end)
 end
 
-
-local function buildRewardCards()
-	mapRewardCards = {}
-	local function rewardWasEarned(reward)
-		for _, earned in ipairs(State.unlockedRewardsThisVictory or {}) do
-			if earned.type == reward.type and earned.id == reward.id then return true end
-		end
-		return false
-	end
-	local function makeCard(reward, isNew)
-		local def = reward.type == "tower" and TowerDefs[reward.id]
-			or reward.type == "ability" and AbilityDefs[reward.id]
-		local fallbackKey = reward.type == "tower" and ("tower." .. reward.id)
-			or ("ability." .. reward.id .. ".name")
-		return {
-			type = reward.type,
-			id = reward.id,
-			name = reward.labelKey and L(reward.labelKey) or reward.label
-				or (def and L(def.nameKey)) or L(fallbackKey),
-			description = L(reward.descriptionKey or ("victory.rewardDescriptions." .. reward.type)),
-			color = (def and def.color) or (reward.type == "ability" and Theme.ui.selected) or Theme.ui.good,
-			isNew = isNew,
-			revealDelay = 0,
-			revealProgress = isNew and 0 or 1,
-		}
-	end
-
-	-- The summary always describes the completed map's authored reward. Its
-	-- state distinguishes a first-clear unlock from a reward earned previously.
-	local map = Maps[State.worldMapIndex]
-	for _, reward in ipairs(CampaignUnlocks.getRewardsForMap(map)) do
-		mapRewardCards[#mapRewardCards + 1] = makeCard(reward, rewardWasEarned(reward))
-	end
-end
 
 local function recordFirstClear()
 	local map = Maps[State.worldMapIndex]
@@ -283,18 +240,7 @@ function Screen.enter()
 	t = 0
 	panelT = 0
 	recapScroll:reset()
-	buildRewardCards()
 	buildDamageRows(State.combatStats)
-	rewardRevealElapsed = 0
-	rewardRevealStarted = false
-	local revealIndex = 0
-	for _, reward in ipairs(mapRewardCards) do
-		if reward.isNew then
-			revealIndex = revealIndex + 1
-			reward.revealDelay = RewardReveal.delayFor(revealIndex)
-		end
-	end
-	local map = Maps[State.worldMapIndex]
 	runStats:setRows({})
 	resetConfetti()
 	Medals.resetAnimations()
@@ -325,16 +271,6 @@ function Screen.update(dt)
 	runStats:update(dt)
 	if runStats:isComplete() then
 		Medals.update(dt)
-		if Medals.isRevealComplete() then
-			rewardRevealStarted = true
-			rewardRevealElapsed = rewardRevealElapsed + dt
-			for _, reward in ipairs(mapRewardCards) do
-				if reward.isNew then
-					reward.revealProgress = RewardReveal.sample(rewardRevealElapsed,
-						reward.revealDelay, Save.data.settings.cameraMotion == false).progress
-				end
-			end
-		end
 	end
 	local sw, sh = lg.getDimensions()
 
@@ -407,69 +343,6 @@ local function drawDamagePanel(x, y, w, h, alpha)
 		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
 		Text.printfShadow(format("%s (%d%%)", formatNumber(row.damage), row.percentage), x + 12, rowY, w - 28, "right")
 		rowY = rowY + 34
-	end
-end
-
-local function drawRewardsPanel(x, y, w, h, alpha)
-	drawCard(x, y, w, h, alpha)
-	Fonts.set("ui")
-	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-	Text.printShadow(L("victory.rewards"), x + 16, y + 14)
-
-	if #mapRewardCards == 0 then
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.7 * alpha)
-		Text.printfShadow(L("victory.noMapReward"), x + 16, y + 58, w - 32, "center")
-		return
-	end
-
-	local rowY = y + 48
-	for index, reward in ipairs(mapRewardCards) do
-		if rowY + 54 > y + h then break end
-		local reveal = reward.isNew and RewardReveal.sample(
-			rewardRevealElapsed, reward.revealDelay, Save.data.settings.cameraMotion == false)
-			or {alpha = 1, lift = 0, scale = 1, glint = 1, complete = true}
-		local rowAlpha = alpha * reveal.alpha
-		local drawnRowY = rowY - reveal.lift
-		local iconX, iconY = x + 42, drawnRowY + 25
-		lg.push("all")
-		lg.translate(iconX, iconY)
-		lg.scale(reveal.scale, reveal.scale)
-		lg.translate(-iconX, -iconY)
-		if reward.type == "tower" then
-			lg.push("all")
-			lg.translate(iconX, iconY)
-			lg.scale(0.82, 0.82)
-			DrawEntities.drawTowerBase(reward.id, 0, 5, rowAlpha)
-			DrawEntities.drawTowerCore(reward.id, 0, 5, -math.pi * 0.5, 0, rowAlpha)
-			lg.pop()
-		elseif reward.type == "ability" then
-			AbilityIcons.draw(reward.id, iconX, iconY, 0.9, rowAlpha,
-				reward.isNew and "newly-unlocked" or nil)
-		else
-			lg.setColor(reward.color[1], reward.color[2], reward.color[3], rowAlpha)
-			lg.circle("fill", iconX, iconY, 8)
-		end
-		lg.pop()
-
-		if reward.isNew and reveal.glint < 1 then
-			local sweep = reveal.glint * math.pi * 2
-			lg.setLineWidth(2)
-			lg.setColor(reward.color[1], reward.color[2], reward.color[3],
-				math.sin(reveal.glint * math.pi) * 0.9 * alpha)
-			lg.arc("line", "open", iconX, iconY, 27, -math.pi * 0.5, -math.pi * 0.5 + sweep)
-		end
-
-		lg.setColor(colorText[1], colorText[2], colorText[3], rowAlpha)
-		Text.printfShadow(reward.name, x + 74, drawnRowY + 4, w - 90, "left")
-		local stateColor = reward.isNew and Theme.ui.good or colorText
-		lg.setColor(stateColor[1], stateColor[2], stateColor[3], (reward.isNew and 1 or 0.65) * rowAlpha)
-		Text.printfShadow(L(reward.isNew and "victory.rewardNew" or "victory.rewardAlreadyUnlocked"),
-			x + 74, drawnRowY + 29, w - 90, "left")
-		rowY = rowY + 62
-		if index < #mapRewardCards then
-			lg.setColor(1, 1, 1, 0.06 * alpha)
-			lg.rectangle("fill", x + 16, rowY - 8, w - 32, 1)
-		end
 	end
 end
 
@@ -568,15 +441,15 @@ function Screen.draw()
 	drawStatRow(L("victory.gameTime"), format("%d:%02d", floor((result.duration or 0) / 60), floor((result.duration or 0) % 60)), contentX + 14, previewBottom + 52, leftW - 28, alpha)
 
 	-- Run summary.
-	drawCard(centerX, contentY, centerW, contentH * 0.64, alpha)
+	local summaryH = contentH * 0.56
+	drawCard(centerX, contentY, centerW, summaryH, alpha)
 	drawStatRow(L("runRecap.score"), formatNumber(State.score), centerX + 14, contentY + 14, centerW - 28, alpha, colorGood)
 	drawStatRow(L("runRecap.enemiesDefeated"), formatNumber(State.totalKills), centerX + 14, contentY + 52, centerW - 28, alpha)
 	drawStatRow(L("runRecap.livesRemaining"), formatNumber(State.lives), centerX + 14, contentY + 90, centerW - 28, alpha, State.totalLeaks == 0 and colorGood or colorText)
 	drawStatRow(L("victory.moneyRemaining"), "$" .. formatNumber(State.money), centerX + 14, contentY + 128, centerW - 28, alpha, Theme.ui.money)
 	drawStatRow(L("victory.towersPlaced"), formatNumber(result.towersPlaced), centerX + 14, contentY + 166, centerW - 28, alpha)
-	drawStatRow(L("victory.abilitiesUsed"), formatNumber(result.abilitiesUsed), centerX + 14, contentY + 204, centerW - 28, alpha)
-	local medalsY = contentY + contentH * 0.64 + gap
-	local medalsH = contentH - contentH * 0.64 - gap
+	local medalsY = contentY + summaryH + gap
+	local medalsH = contentH - summaryH - gap
 	drawCard(centerX, medalsY, centerW, medalsH, alpha)
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
@@ -590,10 +463,8 @@ function Screen.draw()
 		t
 	)
 
-	-- Damage and rewards.
-	drawDamagePanel(rightX, contentY, rightW, contentH * 0.66, alpha)
-	local rewardsY = contentY + contentH * 0.66 + gap
-	drawRewardsPanel(rightX, rewardsY, rightW, contentH - contentH * 0.66 - gap, alpha)
+	-- Damage occupies the full right column; unlocks are presented on the campaign screen.
+	drawDamagePanel(rightX, contentY, rightW, contentH, alpha)
 
 	-- Buttons
 	Button.drawList(buttons)
@@ -638,25 +509,12 @@ function Screen.keypressed(key)
 end
 
 function Screen.animationsComplete()
-	if not runStats:isComplete() or not Medals.isRevealComplete() then return false end
-	for _, reward in ipairs(mapRewardCards) do
-		if reward.isNew and not RewardReveal.sample(rewardRevealElapsed,
-			reward.revealDelay, Save.data.settings.cameraMotion == false).complete then return false end
-	end
-	return true
+	return runStats:isComplete() and Medals.isRevealComplete()
 end
 
 function Screen.finishAnimations()
 	runStats:finish()
 	Medals.finishReveal()
-	rewardRevealStarted = true
-	for _, reward in ipairs(mapRewardCards) do
-		if reward.isNew then
-			rewardRevealElapsed = max(rewardRevealElapsed,
-				reward.revealDelay + RewardReveal.GLINT_DURATION)
-			reward.revealProgress = 1
-		end
-	end
 end
 
 return Screen
