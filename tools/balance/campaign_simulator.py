@@ -19,8 +19,9 @@ from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 
-from challenge_fixtures import (BP, block, curve_multiplier_bp, decimal_bp,
-                                definitions, half_up, named_blocks, number)
+from challenge_fixtures import (BP, curve_multiplier_bp, definitions, half_up,
+                                number)
+from lua_source import named_entries, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 BANDS = ROOT / "tools/balance/campaign_acceptance_bands.json"
@@ -68,7 +69,9 @@ def parse_detail():
     tower_text = (ROOT / "world/tower_defs.lua").read_text()
     enemy_text = (ROOT / "world/enemy_defs.lua").read_text()
     towers = {}
-    for kind, body in named_blocks(block(tower_text, r"return")).items():
+    tower_root = table_body(tower_text, "return", ROOT / "world/tower_defs.lua")
+    for kind, body in named_entries(
+            tower_root, "return", ROOT / "world/tower_defs.lua").items():
         if "cost" not in body: continue
         def n(key, default): return float(number(body, key, str(default)))
         towers[kind] = {"cost": int(n("cost", 1)), "damage": n("damage", 1),
@@ -80,7 +83,9 @@ def parse_detail():
         if kind == "shock": towers[kind]["chain"] = 4.0
         if kind == "plasma": towers[kind]["tick"] = .14
     enemies = {}
-    for kind, body in named_blocks(block(enemy_text, r"return")).items():
+    enemy_root = table_body(enemy_text, "return", ROOT / "world/enemy_defs.lua")
+    for kind, body in named_entries(
+            enemy_root, "return", ROOT / "world/enemy_defs.lua").items():
         if "hp" not in body: continue
         def n(key, default): return float(number(body, key, str(default)))
         enemies[kind] = {"hp": n("hp", 1), "speed": n("speed", 50),
