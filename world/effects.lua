@@ -85,6 +85,20 @@ local towerTransformationPool = {}
 local presentationPool = {}
 local acquire
 
+local function emptyEffect()
+	return {}
+end
+
+local function zapEffect()
+	return {segs = {}}
+end
+
+local function reservePool(pool, count, factory)
+	for _ = 1, count do
+		pool[#pool + 1] = factory()
+	end
+end
+
 local poisonDragBase = 0.94
 local poisonFixedStepMultiplier = poisonDragBase ^ (SimulationClock.step * 60)
 
@@ -197,10 +211,9 @@ end
 
 local function releaseZap(z)
 	clearZapSegs(z.segs)
-	z.x = nil
-	z.y = nil
-	z.t = nil
-	z.life = nil
+	for key in pairs(z) do
+		if key ~= "segs" then z[key] = nil end
+	end
 
 	zapPool[#zapPool + 1] = z
 end
@@ -1072,34 +1085,16 @@ function Effects.drawOverlay()
 end
 
 function Effects.load()
-	for i = 1, 12 do
-		Effects.spawnZapEffect(0, 0, {
-			{from = {x = 0, y = 0}, to = {x = 10, y = 10}},
-			{from = {x = 10, y = 10}, to = {x = 20, y = 5}},
-		})
-	end
-
-	for i = 1, 32 do
-		Effects.spawnPlasmaHit(0, 0, 1, 0)
-		Effects.spawnCannonImpact(0, 0, 48)
-		Effects.spawnFrostBurst(0, 0)
-		Effects.spawnPoisonSplash(0, 0)
-		Effects.spawnLancerHit(0, 0)
-		Effects.spawnEnemyDeath(0, 0, 10)
-		Effects.spawnPlacePuff(0, 0)
-
-		-- Can't I simplify this? Shouldn't require special cases
-		local z = acquireZapLine()
-		z.x1, z.y1, z.x2, z.y2 = 0, 0, 0, 0
-		z.life = 0
-		releaseZapLine(z)
-	end
-
-	Effects.spawnBossDeathExplosion(0, 0, 20)
-
-	Effects.spawnPlacePuff(0, 0)
-
-	Effects.clear()
+	reservePool(splashPool, 32, emptyEffect)
+	reservePool(explosionPool, 349, emptyEffect)
+	reservePool(zapPool, 12, zapEffect)
+	reservePool(zapLinePool, 32, emptyEffect)
+	reservePool(frostPool, 288, emptyEffect)
+	reservePool(poisonPool, 224, emptyEffect)
+	reservePool(lancerPool, 192, emptyEffect)
+	reservePool(deathPool, 32, emptyEffect)
+	reservePool(placePuffPool, 330, emptyEffect)
+	reservePool(plasmaParticlePool, 256, emptyEffect)
 end
 function Effects.clear()
 	for familyIndex = 1, #families do
