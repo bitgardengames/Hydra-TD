@@ -10,14 +10,11 @@ local queryCellsLocal = Spatial.queryCellsLocal
 local localQueryFootprintKey = Spatial.localQueryFootprintKey
 local simpleCtx = {}
 -- Frame cache uses nested integer-keyed tables to reduce temporary string
--- allocations and GC spikes from composed cache keys.
+-- allocations and GC spikes from composed cache keys. These entries persist
+-- across frames and refresh their candidate lists lazily.
 local frameCache = {
-	frameId = -1,
 	entries = {},
-	touched = {},
-	listPool = {},
 }
-local MAX_POOLED_LISTS = 16
 local function updateBest(e, c, score)
 	local diff = score - c.bestScore
 	if diff > EPS or (diff >= -EPS and (not c.best or e.id < c.best.id)) then
@@ -41,38 +38,20 @@ local function evaluateCandidate(e, c)
 	updateBest(e, c, e.dist)
 end
 
-local function clearFrameCache(cache, frameId)
-	local pool = cache.listPool
-	for i = 1, #cache.touched do
-		local entry = cache.touched[i]
-		local list = entry.list
-		for candidateIndex = 1, entry.count do
-			list[candidateIndex] = nil
-		end
-		if #pool < MAX_POOLED_LISTS then
-			pool[#pool + 1] = list
-		end
-		cache.touched[i] = nil
-	end
-
-	-- Drop every coordinate level. In particular, cells belonging to sold
-	-- towers or to a previous map must not keep growing this index forever.
+local function clearFrameCache(cache)
+	-- Explicit invalidation releases the complete persistent index. Normal
+	-- frame changes are handled lazily by each entry's frame stamp instead.
 	for cx in pairs(cache.entries) do
 		cache.entries[cx] = nil
 	end
-	cache.frameId = frameId
 end
 
 function Targeting.clearFrameCache()
-	clearFrameCache(frameCache, -1)
+	clearFrameCache(frameCache)
 end
 
 local function getCandidatesForTower(tower)
 	local frameId = State.frameId or 0
-	if frameCache.frameId ~= frameId then
-		clearFrameCache(frameCache, frameId)
-	end
-
 	local cx, cy = pointToCell(tower.x, tower.y)
 	local footprintKey = localQueryFootprintKey(tower.range)
 	local entriesByX = frameCache.entries
@@ -87,21 +66,27 @@ local function getCandidatesForTower(tower)
 		entriesByY[cy] = entriesByFootprint
 	end
 	local entry = entriesByFootprint[footprintKey]
-	if entry then
+	if entry and entry.frameId == frameId then
 		return entry.list, entry.count
 	end
 
-	local pool = frameCache.listPool
-	entry = {
-		list = pool[#pool] or {},
-		count = 0,
-	}
-	pool[#pool] = nil
-	entriesByFootprint[footprintKey] = entry
-	frameCache.touched[#frameCache.touched + 1] = entry
+	if not entry then
+		entry = {
+			list = {},
+			count = 0,
+			frameId = -1,
+		}
+		entriesByFootprint[footprintKey] = entry
+	end
+
+	local list = entry.list
+	for i = 1, entry.count do
+		list[i] = nil
+	end
+	entry.count = 0
+	entry.frameId = frameId
 
 	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, false)
-	local list = entry.list
 	local count = 0
 	for i = 1, candidateCount do
 		local e = candidates[i]
