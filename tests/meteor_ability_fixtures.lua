@@ -78,4 +78,17 @@ active = Abilities.getActive()
 assert(#active == 1 and active[1].abilityId == "meteor", "scripted meteor did not use the authored meteor effect")
 assert(active[1].x == 320 and active[1].y == 240, "scripted meteor did not preserve its scene coordinates")
 
+-- Simultaneous expiries exercise unordered swap removal: every effect must
+-- expire once, and a subsequent update must not repeat any callback.
+Abilities.reset()
+local impactsBeforeBatch = impacts
+assert(Abilities.launchMeteor(240, 240), "first batched meteor did not launch")
+assert(Abilities.launchMeteor(320, 240), "second batched meteor did not launch")
+assert(Abilities.launchMeteor(400, 240), "third batched meteor did not launch")
+Abilities.update(1)
+assert(#Abilities.getActive() == 0, "swap removal skipped a simultaneous meteor expiry")
+assert(impacts == impactsBeforeBatch + 3, "simultaneous meteor callbacks did not each run exactly once")
+Abilities.update(1)
+assert(impacts == impactsBeforeBatch + 3, "an expired meteor callback ran more than once")
+
 print("meteor ability fixtures passed")
