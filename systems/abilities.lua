@@ -5,7 +5,6 @@ local Towers = require("world.towers")
 local Effects = require("world.effects")
 local Spatial = require("world.spatial_grid")
 local spatialQueryContext = Spatial.newQueryContext(true)
-local spatialVisitContext = Spatial.newQueryContext(false)
 local State = require("core.state")
 local Constants = require("core.constants")
 
@@ -22,16 +21,46 @@ local function clearBuffer(buffer, count)
 	end
 end
 
-local function forEachEnemyInRadius(x, y, radius, callback, useRenderedPosition)
-	local radiusSquared = radius * radius
-	Spatial.visitCells(x, y, radius, function(enemy)
-		local enemyX = useRenderedPosition and (enemy.rx or enemy.x) or enemy.x
-		local enemyY = useRenderedPosition and (enemy.ry or enemy.y) or enemy.y
-		local dx, dy = enemyX - x, enemyY - y
-		if enemy.hp > 0 and dx * dx + dy * dy <= radiusSquared then
-			callback(enemy)
-		end
-	end, nil, spatialVisitContext)
+local function newRadiusVisitContext()
+	return {spatial = Spatial.newQueryContext(false)}
+end
+
+local slowVisitContext = newRadiusVisitContext()
+local gravityPullVisitContext = newRadiusVisitContext()
+local gravityDamageVisitContext = newRadiusVisitContext()
+local meteorDamageVisitContext = newRadiusVisitContext()
+local abilityDamageSource = {sourceKind = "ability"}
+
+local function visitEnemyInRadius(enemy, context)
+	local enemyX = context.useRenderedPosition and (enemy.rx or enemy.x) or enemy.x
+	local enemyY = context.useRenderedPosition and (enemy.ry or enemy.y) or enemy.y
+	local dx, dy = enemyX - context.x, enemyY - context.y
+	if enemy.hp > 0 and dx * dx + dy * dy <= context.radiusSquared then
+		context.visitor(enemy, context)
+	end
+end
+
+local function forEachEnemyInRadius(x, y, radius, visitor, context, useRenderedPosition)
+	context.x = x
+	context.y = y
+	context.radiusSquared = radius * radius
+	context.visitor = visitor
+	context.useRenderedPosition = useRenderedPosition or false
+	Spatial.visitCells(x, y, radius, visitEnemyInRadius, context, context.spatial)
+end
+
+local function slowEnemy(enemy, context)
+	Enemies.applySlow(enemy, context.factor, context.duration)
+end
+
+local function pullEnemy(enemy, context)
+	local resistsPull = enemy.def and (enemy.def.boss or enemy.def.heavy)
+	local resistance = resistsPull and 0.2 or 1
+	Enemies.setPathDistance(enemy, enemy.dist - context.pullDistance * resistance)
+end
+
+local function damageEnemy(enemy, context)
+	Enemies.applyDamage(enemy, context.damage, abilityDamageSource)
 end
 
 local function addActive(effect)
@@ -180,9 +209,9 @@ local function activateDamageArea(effect, x, y, abilityId)
 end
 
 local function activateSlowArea(effect, x, y)
-	forEachEnemyInRadius(x, y, effect.radius, function(enemy)
-		Enemies.applySlow(enemy, effect.factor, effect.duration)
-	end, true)
+	slowVisitContext.factor = effect.factor
+	slowVisitContext.duration = effect.duration
+	forEachEnemyInRadius(x, y, effect.radius, slowEnemy, slowVisitContext, true)
 end
 
 local effectActivators = {
@@ -319,11 +348,8 @@ local function triggerVolley(effect, enemy)
 end
 
 local function updateGravityWell(effect, dt)
-	forEachEnemyInRadius(effect.x, effect.y, effect.radius, function(enemy)
-		local resistsPull = enemy.def and (enemy.def.boss or enemy.def.heavy)
-		local resistance = resistsPull and 0.2 or 1
-		Enemies.setPathDistance(enemy, enemy.dist - effect.pullSpeed * resistance * dt)
-	end)
+	gravityPullVisitContext.pullDistance = effect.pullSpeed * dt
+	forEachEnemyInRadius(effect.x, effect.y, effect.radius, pullEnemy, gravityPullVisitContext)
 end
 
 local function updateLastStand(effect)
@@ -356,16 +382,14 @@ local function updateLastStand(effect)
 end
 
 local function expireGravityWell(effect)
-	forEachEnemyInRadius(effect.x, effect.y, effect.radius, function(enemy)
-		Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
-	end)
+	gravityDamageVisitContext.damage = effect.damage
+	forEachEnemyInRadius(effect.x, effect.y, effect.radius, damageEnemy, gravityDamageVisitContext)
 	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius)
 end
 
 local function expireMeteor(effect)
-	forEachEnemyInRadius(effect.x, effect.y, effect.radius, function(enemy)
-		Enemies.applyDamage(enemy, effect.damage, { sourceKind = "ability" })
-	end, true)
+	meteorDamageVisitContext.damage = effect.damage
+	forEachEnemyInRadius(effect.x, effect.y, effect.radius, damageEnemy, meteorDamageVisitContext, true)
 	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius * 1.2)
 	Effects.spawnMeteorDust(effect.x, effect.y, effect.radius)
 	Effects.shake(10, .4)
