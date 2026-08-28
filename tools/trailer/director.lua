@@ -45,6 +45,7 @@ local FONT_FLOATERS = lg.newFont(FONT, FLOATER_FONT_SIZE) -- Make floaters sligh
 
 local FPS = 60
 local STEP_DT = 1 / FPS
+local Director
 
 local function drawTrailerWorld()
 	DrawWorld.drawGrass()
@@ -55,15 +56,17 @@ local function drawTrailerWorld()
 
 	TowerRenderer.drawTowerGhost()
 	TowerRenderer.drawTowers()
-	EnemyRenderState.prepare()
+	EnemyRenderState.prepare(nil, nil, Director.presentationDt, Director.presentationFrameId)
 	EnemyRenderer.drawEnemies()
 
 	Projectiles.draw()
 	Effects.draw()
 end
 
-local Director = {
+Director = {
 	t = 0,
+	presentationDt = 0,
+	presentationFrameId = 0,
 	shot = nil,
 	nextShot = nil,
 	activeCamera = nil,
@@ -305,6 +308,8 @@ function Director.load(name)
 end
 
 function Director.update(dt)
+	Director.presentationDt = dt
+	Director.presentationFrameId = Director.presentationFrameId + 1
 	-- Scrub mode takes over time
 	if Director.scrub.enabled then
 		if Director.scrub.playing then

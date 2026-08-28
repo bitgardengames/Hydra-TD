@@ -100,6 +100,8 @@ local state = {
 	},
 
 	frameId = 0,
+	presentationFrameId = 0,
+	presentationDt = 0,
 }
 
 function state.isReplayMode()

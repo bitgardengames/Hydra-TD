@@ -7,8 +7,13 @@ local enemy = {
 package.loaded["core.state"] = { renderAlpha = 0.5 }
 package.loaded["world.enemies"] = { enemies = { enemy } }
 local state = dofile("render/enemy_render_state.lua")
-state.prepare()
+state.prepare(nil, nil, 1 / 60, 1)
 local prepared = { enemy.rx, enemy.ry, enemy.prevRX, enemy.prevRY, enemy.eyeDX, enemy.eyeDY, enemy.rAnimT }
+
+-- A second render pass with the same presentation timestamp must be inert.
+state.prepare(nil, 1, 1 / 60, 1)
+assert(enemy.rx == prepared[1] and enemy.prevRX == prepared[3] and enemy.eyeDX == prepared[5],
+	"same-frame preparation advanced render smoothing twice")
 
 -- Drawing is deliberately not involved in state preparation. Repeated calls to a
 -- renderer cannot advance interpolation now that it has no prepare dependency.

@@ -283,6 +283,8 @@ end
 
 -- What is this name? lol "maybeDoSomething"
 function love.update(dt)
+	State.presentationFrameId = (State.presentationFrameId or 0) + 1
+	State.presentationDt = dt
 	Save.update(dt)
 	Camera.update(dt)
 
