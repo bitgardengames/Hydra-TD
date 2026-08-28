@@ -47,6 +47,8 @@ local listOffset = 0
 local scrollbarDragging = false
 local scrollbarGrabY = 0
 local unlockSequence = UnlockPresentation.new()
+local campaignMedalsEarned = 0
+local campaignMedalsMaximum = #Maps * 3
 
 -- Campaign layout uses a small set of shared spacing tokens. Keeping the list,
 -- preview, difficulty cards, and actions on the same rhythm is especially
@@ -81,6 +83,22 @@ local PREVIEW_RUNNER_EXIT_TRIM_TILES = 2
 
 local function statsFor(mapId)
 	return Save.data.mapStats and Save.data.mapStats[mapId]
+end
+
+local function refreshCampaignProgress()
+	local earned = 0
+	for _, map in ipairs(Maps) do
+		local stats = statsFor(map.id)
+		earned = earned + (stats and Medals.getCount(stats.completedDifficulty) or 0)
+	end
+	campaignMedalsEarned = earned
+end
+
+-- Completion is recorded outside this screen. Keep a narrow hook for those
+-- transitions so presentation state can be synchronized without putting a
+-- campaign-wide traversal back in the draw path.
+function Screen.invalidateCampaignProgress()
+	refreshCampaignProgress()
 end
 
 local function isMapLocked(index)
@@ -294,11 +312,6 @@ local function drawHeader(l)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
 	Text.printShadow(L("campaign.selectMap"), l.margin, 66)
 
-	local total = 0
-	for _, map in ipairs(Maps) do
-		local stats = statsFor(map.id)
-		total = total + (stats and Medals.getCount(stats.completedDifficulty) or 0)
-	end
 	local badgeW = 150
 	panel(l.sw - l.margin - badgeW, 15, badgeW, 51)
 	-- The campaign total is medal progress, not a generic score. Show all three
@@ -307,7 +320,8 @@ local function drawHeader(l)
 	Medals.draw(l.sw - l.margin - badgeW + 10, 31, 3, 9, 5)
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
-	Text.printfShadow(format("%d/%d", total, #Maps * 3), l.sw - l.margin - 68, 26, 62, "center")
+	Text.printfShadow(format("%d/%d", campaignMedalsEarned, campaignMedalsMaximum),
+		l.sw - l.margin - 68, 26, 62, "center")
 end
 
 local function drawMapList(l, unlockPose)
@@ -780,6 +794,7 @@ function Screen.enter()
 		-- map's authored reward detail while the newly unlocked row is highlighted.
 		State.mapIndex = State.resolveMapIndex(captured.sourceIndex)
 	end
+	refreshCampaignProgress()
 	keepSelectedVisible(layout())
 end
 function Screen.leave()

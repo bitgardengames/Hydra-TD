@@ -268,6 +268,7 @@ function Screen.load()
 			Backdrop.start()
 			Steam.setRichPresence(L("presence.menu"))
 			Save.flush()
+			require("ui.menu.screens.campaign").invalidateCampaignProgress()
 			require("ui.menu.menu").set("campaign")
 		end
 	}
