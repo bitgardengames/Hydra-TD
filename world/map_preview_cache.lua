@@ -4,11 +4,6 @@ local Constants = require("core.constants")
 local Maps = require("world.map_defs")
 local MapMod = require("world.map")
 local MapRender = require("world.map_render")
-local State = require("core.state")
-local Trees = require("world.scatter_trees")
-local Cacti = require("world.scatter_cactus")
-local Rocks = require("world.scatter_rocks")
-local Mushrooms = require("world.scatter_mushrooms")
 local Scatter = require("world.scatter")
 
 local lg = love.graphics
@@ -59,47 +54,10 @@ local function buildPreviewPath(pathWorld, transform)
 	}
 end
 
-local function clearTable(t)
-	for k in pairs(t) do
-		t[k] = nil
-	end
-end
-
-local function copyTable(dst, src)
-	clearTable(dst)
-
-	for k, v in pairs(src) do
-		dst[k] = v
-	end
-
-	return dst
-end
-
-local function withMapContext(context, previousMap, fn)
-	local activeMap = MapMod.map
-	copyTable(previousMap, activeMap)
-	copyTable(activeMap, context.map)
-
-	local ok, err = pcall(fn)
-
-	copyTable(activeMap, previousMap)
-
-	if not ok then
-		error(err)
-	end
-end
-
 local function build(mapIndex, mapDef, w, h)
-	local previousMapIndex = State.worldMapIndex
-	local previousMap = {}
-	local previousScatter = {
-		trees = Trees.list,
-		treeOccupied = Trees.occupied,
-		cacti = Cacti.list,
-		rocks = Rocks.list,
-		mushrooms = Mushrooms.list,
-	}
 	local context = MapMod.createRenderContext(mapDef)
+	context.mapIndex = mapIndex
+	context.decorations = Scatter.generate(context.map, mapIndex)
 	local canvas = lg.newCanvas(w, h, {msaa = 8})
 	local previewTransform = MapRender.gameplayPreviewTransform(w, h)
 
@@ -107,28 +65,7 @@ local function build(mapIndex, mapDef, w, h)
 	-- still rendered at native size; this only prevents accidental smoothing if
 	-- a caller ever draws the canvas through a transformed parent.
 	canvas:setFilter("nearest", "nearest")
-	State.worldMapIndex = mapIndex
-	local ok, err = pcall(withMapContext, context, previousMap, function()
-		MapMod.clearBlocked()
-
-		Scatter.generateForBiome(context.map.biome)
-
-		MapRender.renderGameplayFramedToCanvas(canvas, nil, previewTransform)
-	end)
-
-	-- Preview generation uses the live scatter modules as scratch space. Restore
-	-- their original tables so a preview for another biome cannot replace the
-	-- menu backdrop (or an active game's world) with incompatible style indexes.
-	Trees.list = previousScatter.trees
-	Trees.occupied = previousScatter.treeOccupied
-	Cacti.list = previousScatter.cacti
-	Rocks.list = previousScatter.rocks
-	Mushrooms.list = previousScatter.mushrooms
-	State.worldMapIndex = previousMapIndex
-
-	if not ok then
-		error(err)
-	end
+	MapRender.renderGameplayFramedToCanvas(canvas, context, previewTransform)
 
 	return {
 		canvas = canvas,

@@ -9,7 +9,7 @@ local Rocks = {}
 
 local lg = love.graphics
 local floor = math.floor
-local treeAt = Trees.hasTreeAt
+
 
 local outlineW = Theme.outline.width
 local lighting = Theme.lighting
@@ -21,8 +21,8 @@ local TILE = Constants.TILE
 local GRID_W = Constants.GRID_W
 local GRID_H = Constants.GRID_H
 
-local function getRockStyles()
-	local world = Map.getWorld()
+local function getRockStyles(targetMap)
+	local world = targetMap and targetMap.biome and targetMap.biome.world
 	local rock = world and world.rock
 
 	return (rock and rock.styles) or Theme.world.rockStyles
@@ -40,18 +40,20 @@ function Rocks.clear()
 	Rocks.list = {}
 end
 
-function Rocks.generate()
-	Rocks.clear()
+function Rocks.generate(targetMap, mapIndex, list, treeOccupied)
+	targetMap = targetMap or Map.map
+	mapIndex = mapIndex or State.worldMapIndex
+	list = list or {}
 
-	local seed = 4321 + State.worldMapIndex * 977
+	local seed = 4321 + mapIndex * 977
 	rng:setSeed(seed + 2)
 
 	local count = 28 -- Should be able to modify this per biome
 
-	local styles = getRockStyles()
+	local styles = getRockStyles(targetMap)
 
 	local function canPlace(gx, gy)
-		return not ScatterCommon.isNearPath(Map.map.isPath, gx, gy) and not treeAt(gx, gy)
+		return not ScatterCommon.isNearPath(targetMap.isPath, gx, gy) and not (treeOccupied and treeOccupied[gx] and treeOccupied[gx][gy])
 	end
 
 	local function create(gx, gy)
@@ -73,17 +75,18 @@ function Rocks.generate()
 		return rock
 	end
 
-	ScatterCommon.populate(Rocks.list, count, random, GRID_W, GRID_H, canPlace, create)
+	ScatterCommon.populate(list, count, random, GRID_W, GRID_H, canPlace, create)
+	return list
 end
 
-function Rocks.draw()
-	local rocks = Rocks.list
+function Rocks.draw(list, targetMap)
+	local rocks = list or Rocks.list
 
 	if #rocks == 0 then
 		return
 	end
 
-	local styles = getRockStyles()
+	local styles = getRockStyles(targetMap or Map.map)
 
 	for i = 1, #rocks do
 		local r = rocks[i]
