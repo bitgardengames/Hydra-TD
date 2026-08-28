@@ -291,6 +291,20 @@ function Spatial.queryIncludesCell(x, y, radius, cx, cy)
 	return math.abs(centerX - cx) <= cellRadius and math.abs(centerY - cy) <= cellRadius
 end
 
+-- Visit the exact square cell footprint used by queryCells. Systems which
+-- maintain secondary spatial indexes can therefore share this module's cell
+-- sizing and radius-rounding policy without duplicating coordinate math.
+function Spatial.forEachQueryCell(x, y, radius, fn, context)
+	local centerX = floor(x * INV_CELL)
+	local centerY = floor(y * INV_CELL)
+	local cellRadius = queryCellFootprint(radius)
+	for dx = -cellRadius, cellRadius do
+		for dy = -cellRadius, cellRadius do
+			fn(centerX + dx, centerY + dy, context)
+		end
+	end
+end
+
 function Spatial.queryOccupancy(cx, cy, radiusCells, out)
 	local counts = out or occupancyBuffer
 	local sum = 0
