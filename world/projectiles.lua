@@ -371,28 +371,12 @@ local function resolveImpulse(evt)
 end
 
 local function resolveFX(evt)
-	local kind = evt.kind
-
-	if kind == "zap" then
-		Effects.spawnZapEffect(evt.x, evt.y, evt.chain)
-	elseif kind == "cannon_impact" then
-		Effects.spawnCannonImpact(evt.x, evt.y, evt.r)
-	elseif kind == "frost_burst" then
-		Effects.spawnFrostBurst(evt.x, evt.y)
-	elseif kind == "poison_splash" then
-		Effects.spawnPoisonSplash(evt.x, evt.y)
-	elseif kind == "lancer_hit" then
-		Effects.spawnLancerHit(evt.x, evt.y)
-	elseif kind == "plasma_hit" then
-		Effects.spawnPlasmaHit(evt.x, evt.y, evt.vx or 0, evt.vy or 0)
-	elseif kind == "zap_line" then
-		Effects.spawnZapLine(evt.x1, evt.y1, evt.x2, evt.y2)
-	else
-		-- Fallback for custom effect ids without allocating a transient table.
-		evt.id = kind
-		Effects.spawnFX(evt)
-		evt.id = nil
-	end
+	-- Reuse the pooled event as the FX payload while preserving the id needed by
+	-- the event dispatcher until this event is returned to its pool.
+	local eventID = evt.id
+	evt.id = evt.kind
+	Effects.spawnFX(evt)
+	evt.id = eventID
 end
 
 local function resolveHit(p, evt)
