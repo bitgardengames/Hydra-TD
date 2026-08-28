@@ -5,7 +5,8 @@ local Towers = require("world.towers")
 local Targeting = require("world.targeting")
 local Effects = require("world.effects")
 local Spatial = require("world.spatial_grid")
-local spatialQueryContext = Spatial.newQueryContext(true)
+local affectedQueryContext = Spatial.newQueryContext(true)
+local lastStandQueryContext = Spatial.newQueryContext(true)
 local State = require("core.state")
 local Constants = require("core.constants")
 
@@ -35,21 +36,18 @@ local meteorDamageVisitContext = newRadiusVisitContext()
 local abilityDamageSource = {sourceKind = "ability"}
 
 local function visitEnemyInRadius(enemy, context)
-	local enemyX = context.useRenderedPosition and (enemy.rx or enemy.x) or enemy.x
-	local enemyY = context.useRenderedPosition and (enemy.ry or enemy.y) or enemy.y
-	local dx, dy = enemyX - context.x, enemyY - context.y
-	if enemy.hp > 0 and dx * dx + dy * dy <= context.radiusSquared then
-		context.visitor(enemy, context)
-	end
+	context.visitor(enemy, context)
+end
+
+local function appendAffectedEnemy(enemy, context)
+	context.count = context.count + 1
+	context.affected[context.count] = enemy
 end
 
 local function forEachEnemyInRadius(x, y, radius, visitor, context, useRenderedPosition)
-	context.x = x
-	context.y = y
-	context.radiusSquared = radius * radius
 	context.visitor = visitor
-	context.useRenderedPosition = useRenderedPosition or false
-	Spatial.visitCells(x, y, radius, visitEnemyInRadius, context, context.spatial)
+	local options = useRenderedPosition and Spatial.radiusOptions.livingRendered or Spatial.radiusOptions.living
+	Spatial.visitRadius(x, y, radius, visitEnemyInRadius, context, context.spatial, options)
 end
 
 local function slowEnemy(enemy, context)
@@ -264,17 +262,11 @@ local function collectAffected(entityKind, effect, x, y, affected, occupied)
 	if not entityKind or not effect.radius or not x or not y then return 0 end
 	local count = 0
 	if entityKind == "enemies" then
-		local radiusSquared = effect.radius * effect.radius
-		local candidates, candidateCount = Spatial.queryCells(x, y, effect.radius, spatialQueryContext)
-		for i = 1, candidateCount do
-			local enemy = candidates[i]
-			local dx = (enemy.rx or enemy.x) - x
-			local dy = (enemy.ry or enemy.y) - y
-			if enemy.hp > 0 and dx * dx + dy * dy <= radiusSquared then
-				count = count + 1
-				affected[count] = enemy
-			end
-		end
+		local context = affectedQueryContext
+		context.affected, context.count = affected, 0
+		Spatial.visitRadius(x, y, effect.radius, appendAffectedEnemy,
+			context, context, Spatial.radiusOptions.livingRenderedDedupe)
+		count = context.count
 	elseif entityKind == "towers" then
 		local radiusSquared = effect.radius * effect.radius
 		for _, tower in ipairs(Towers.towers) do
@@ -341,6 +333,10 @@ local function isLiveEnemy(enemy)
 	return Targeting.isTargetEntityValid(enemy) and enemy.hp > 0 and not enemy.dying
 end
 
+local function markLastStandEnemy(enemy, context)
+	if isLiveEnemy(enemy) then context.inside[enemy] = true end
+end
+
 local function triggerVolley(effect, enemy)
 	if not isLiveEnemy(enemy) then
 		return false
@@ -366,7 +362,6 @@ local function updateGravityWell(effect, dt)
 end
 
 local function updateLastStand(effect)
-	local radiusSquared = effect.radius * effect.radius
 	local previousInside = effect.inside
 	local currentInside = effect.previousInside or {}
 	-- The scratch set was emptied after the preceding comparison. Clear it
@@ -376,16 +371,9 @@ local function updateLastStand(effect)
 		currentInside[enemy] = nil
 	end
 
-	local candidates, candidateCount = Spatial.queryCells(effect.x, effect.y, effect.radius, spatialQueryContext)
-	for i = 1, candidateCount do
-		local enemy = candidates[i]
-		if isLiveEnemy(enemy) then
-			local dx, dy = enemy.x - effect.x, enemy.y - effect.y
-			if dx * dx + dy * dy <= radiusSquared then
-				currentInside[enemy] = true
-			end
-		end
-	end
+	lastStandQueryContext.inside = currentInside
+	Spatial.visitRadius(effect.x, effect.y, effect.radius, markLastStandEnemy,
+		lastStandQueryContext, lastStandQueryContext, Spatial.radiusOptions.livingDedupe)
 
 	for enemy in pairs(previousInside) do
 		if not currentInside[enemy] and isLiveEnemy(enemy)

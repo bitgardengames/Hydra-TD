@@ -12,6 +12,24 @@ local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.proj
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
 local SHARED_BEHAVIORS_LANCER_RICOCHET = ctx.SHARED_BEHAVIORS_LANCER_RICOCHET
 local SHARED_BEHAVIORS_FROST_SHATTER = ctx.SHARED_BEHAVIORS_FROST_SHATTER
+local radiusVisitContext = {}
+local beamVisitContext = {}
+local function emissionRadiusVisitor(e, c, d2)
+	if c.op == "nearest" then
+		if e ~= c.exclude and d2 <= c.bestDistance then c.best, c.bestDistance = e, d2 end
+	elseif c.op == "fork" then
+		if e ~= c.from and not c.claimed[e] then
+			local fork = c.forks[#c.forks + 1] or {}; fork.from, fork.to = c.from, e; c.forks[#c.forks + 1] = fork
+			c.claimed[e] = true; local dmg=consumeChainDamageBudget(c.p,(c.p.damage or 0)*c.mult); if dmg>0 then emitDamage(c.p,e,dmg) end
+			c.added=c.added+1; if c.added >= c.limit then return false end
+		end
+	elseif c.op == "poison" and e ~= c.exclude then
+		e.poisonStacks=(e.poisonStacks or 0)+c.stacks; e.poisonTimer=max(e.poisonTimer or 0,1.5)
+	elseif c.op == "beam" then
+		local id=e.id or e
+		if not c.cooldowns[id] then local evt=emitEvent(c.p,"hit"); evt.target=e; evt.origin="beam"; evt.hitX=c.x; evt.hitY=c.y; c.cooldowns[id]=c.rate end
+	end
+end
 B.emit_on_target = {
 	type = "emission",
 
@@ -133,34 +151,12 @@ B.fork_chain = {
 			local link = p._chain[i]
 
 			if link.to and link.to.hp > 0 then
-				local nearby, nearbyCount = Spatial.queryCells(link.to.x, link.to.y, radius, spatialQueryContext)
-
-				local forksAdded = 0
-
-				for j = 1, nearbyCount do
-					local other = nearby[j]
-					local dx = other.x - link.to.x
-					local dy = other.y - link.to.y
-					local d2 = dx * dx + dy * dy
-
-					if other ~= link.to and other.hp > 0 and d2 <= radius2 and not claimed[other] then
-						local nextFork = #forks + 1
-						local fork = forks[nextFork] or {}
-						fork.from = link.to
-						fork.to = other
-						forks[nextFork] = fork
-						claimed[other] = true
-						local forkDmg = consumeChainDamageBudget(p, (p.damage or 0) * dmgMult)
-						if forkDmg > 0 then
-							emitDamage(p, other, forkDmg)
-						end
-						forksAdded = forksAdded + 1
-
-						if forksAdded >= forksPerLink then
-							break
-						end
-					end
-				end
+				radiusVisitContext.op, radiusVisitContext.p = "fork", p
+				radiusVisitContext.from, radiusVisitContext.claimed = link.to, claimed
+				radiusVisitContext.forks, radiusVisitContext.added = forks, 0
+				radiusVisitContext.limit, radiusVisitContext.mult = forksPerLink, dmgMult
+				Spatial.visitRadius(link.to.x, link.to.y, radius, emissionRadiusVisitor, radiusVisitContext,
+					spatialQueryContext, Spatial.radiusOptions.living)
 			end
 		end
 
@@ -270,25 +266,11 @@ B.lancer_ricochet = {
 		local radius = data.radius or 90
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius, spatialQueryContext)
-
-		local best = nil
-		local bestDist = r2
-
-		for i = 1, nearbyCount do
-			local other = nearby[i]
-
-			if other ~= e and other.hp > 0 then
-				local dx = other.x - e.x
-				local dy = other.y - e.y
-				local d2 = dx*dx + dy*dy
-
-				if d2 <= bestDist then
-					bestDist = d2
-					best = other
-				end
-			end
-		end
+		radiusVisitContext.op, radiusVisitContext.exclude = "nearest", e
+		radiusVisitContext.best, radiusVisitContext.bestDistance = nil, r2
+		Spatial.visitRadius(e.x, e.y, radius, emissionRadiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
+		local best = radiusVisitContext.best
 
 		if best then
 			local dx = best.x - e.x
@@ -435,24 +417,10 @@ B.poison_burst_on_death = {
 		local spread = e._infectSpread
 		if not spread then return end
 
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, spread.radius, spatialQueryContext)
-		local radius = spread.radius
-		local r2 = radius * radius
-
-		for i = 1, nearbyCount do
-			local other = nearby[i]
-
-			if other ~= e and other.hp > 0 then
-				local dx = other.x - e.x
-				local dy = other.y - e.y
-
-				if dx*dx + dy*dy <= r2 then
-					-- APPLY POISON (not damage)
-					other.poisonStacks = (other.poisonStacks or 0) + (e.poisonStacks or 0)
-					other.poisonTimer = max(other.poisonTimer or 0, 1.5)
-				end
-			end
-		end
+		radiusVisitContext.op, radiusVisitContext.exclude = "poison", e
+		radiusVisitContext.stacks = e.poisonStacks or 0
+		Spatial.visitRadius(e.x, e.y, spread.radius, emissionRadiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
 
 		e._infectSpread = nil -- VERY IMPORTANT (prevents re-trigger)
 	end
@@ -529,32 +497,11 @@ B.beam = {
 			local sy = y1 + vy * dist
 
 			if b.timer <= 0 then
-				local nearby, nearbyCount = Spatial.queryCells(sx, sy, width, spatialQueryContext)
-
-				for i = 1, nearbyCount do
-					local e2 = nearby[i]
-
-					if e2.hp > 0 then
-						local dx = e2.x - sx
-						local dy = e2.y - sy
-						local dist2 = dx*dx + dy*dy
-						local rr = width + (e2.radius or 0)
-
-						if dist2 <= rr*rr then
-							local id = e2.id or e2
-
-							if not hitCooldown[id] then
-								local evt = emitEvent(p, "hit")
-								evt.target = e2
-								evt.origin = "beam"
-								evt.hitX = sx
-								evt.hitY = sy
-
-								hitCooldown[id] = b.rate
-							end
-						end
-					end
-				end
+				beamVisitContext.op, beamVisitContext.p = "beam", p
+				beamVisitContext.cooldowns, beamVisitContext.rate = hitCooldown, b.rate
+				beamVisitContext.x, beamVisitContext.y = sx, sy
+				Spatial.visitRadius(sx, sy, width, emissionRadiusVisitor, beamVisitContext,
+					spatialQueryContext, Spatial.radiusOptions.livingCollision)
 			end
 		end
 
