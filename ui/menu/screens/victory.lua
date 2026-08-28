@@ -50,6 +50,8 @@ local rewardRevealElapsed = 0
 local rewardRevealStarted = false
 local isFinalCampaignMap = false
 local runStats = AnimatedRunStats.new(Theme.ui.good)
+local damageRows = {}
+local damageTotal = 1
 
 -- Colors
 local colorGood = Theme.ui.good
@@ -85,6 +87,27 @@ local confettiColors = {
 }
 
 local confettiShapes = {"paper", "diamond", "ribbon", "dot"}
+
+local function buildDamageRows(combatStats)
+	damageRows = {}
+	combatStats = combatStats or {}
+	damageTotal = max(1, combatStats.totalDamage or 0)
+	local damageByTower = combatStats.damageByTower or {}
+
+	for _, kind in ipairs(Constants.TOWER_LIST) do
+		local damage = damageByTower[kind] or 0
+		if damage > 0 then
+			damageRows[#damageRows + 1] = {
+				kind = kind,
+				damage = damage,
+				fraction = damage / damageTotal,
+				percentage = floor(damage / damageTotal * 100 + 0.5),
+			}
+		end
+	end
+
+	table.sort(damageRows, function(a, b) return a.damage > b.damage end)
+end
 
 
 local function buildRewardCards()
@@ -260,6 +283,7 @@ function Screen.enter()
 	panelT = 0
 	recapScroll:reset()
 	buildRewardCards()
+	buildDamageRows(State.combatStats)
 	rewardRevealElapsed = 0
 	rewardRevealStarted = false
 	local revealIndex = 0
@@ -369,26 +393,18 @@ local function drawDamagePanel(x, y, w, h, alpha)
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
 	Text.printShadow(L("victory.damageDealt"), x + 16, y + 14)
-	local stats = State.combatStats or {}
-	local total = max(1, stats.totalDamage or 0)
-	local rows = {}
-	for _, kind in ipairs(Constants.TOWER_LIST) do
-		local damage = (stats.damageByTower or {})[kind] or 0
-		if damage > 0 then rows[#rows + 1] = {kind = kind, damage = damage} end
-	end
-	table.sort(rows, function(a, b) return a.damage > b.damage end)
 	local rowY, barW, barH = y + 48, w - 198, 9
-	for i = 1, min(6, #rows) do
-		local row = rows[i]
+	for i = 1, min(6, #damageRows) do
+		local row = damageRows[i]
 		local c = Theme.tower[row.kind] or colorGood
 		lg.setColor(c[1], c[2], c[3], alpha)
 		Text.printShadow(L("tower." .. row.kind), x + 16, rowY)
 		lg.setColor(1, 1, 1, 0.07 * alpha)
 		lg.rectangle("fill", x + 86, rowY + 6, barW, barH, 3, 3)
 		lg.setColor(c[1], c[2], c[3], 0.9 * alpha)
-		lg.rectangle("fill", x + 86, rowY + 6, barW * row.damage / total, barH, 3, 3)
+		lg.rectangle("fill", x + 86, rowY + 6, barW * row.fraction, barH, 3, 3)
 		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-		Text.printfShadow(format("%s (%d%%)", formatNumber(row.damage), floor(row.damage / total * 100 + 0.5)), x + 12, rowY, w - 28, "right")
+		Text.printfShadow(format("%s (%d%%)", formatNumber(row.damage), row.percentage), x + 12, rowY, w - 28, "right")
 		rowY = rowY + 34
 	end
 end
