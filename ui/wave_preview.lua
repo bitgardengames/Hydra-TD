@@ -3,7 +3,7 @@ local Theme = require("core.theme")
 local Waves = require("systems.waves")
 local EnemyDefs = require("world.enemy_defs")
 local Hotkeys = require("core.hotkeys")
-local DrawEntities = require("render.draw_entities")
+local EnemyRenderer = require("render.enemy_renderer")
 local Text = require("ui.text")
 local Tooltip = require("ui.tooltip")
 local L = require("core.localization")
@@ -100,7 +100,7 @@ local function refreshPreview()
 		local group = preview.composition[i]
 		entries[i] = {
 			name = L("hud.compositionEntry", group.count, group.name),
-			portrait = DrawEntities.newEnemyPortrait(group.kind),
+			portrait = EnemyRenderer.newEnemyPortrait(group.kind),
 			tooltip = buildEnemyTooltip(group),
 		}
 	end
@@ -217,7 +217,7 @@ local function drawPreview()
 		local entry = previewCache.entries[i]
 		local textX = innerX + PORTRAIT_W + TEXT_GAP
 		local textY = rowY + floor((entry.rowH - textH) * 0.5)
-		DrawEntities.drawEnemyPortrait(entry.portrait,
+		EnemyRenderer.drawEnemyPortrait(entry.portrait,
 			innerX + PORTRAIT_W * 0.5, rowY + entry.rowH * 0.5, animT)
 		lg.setColor(colorText)
 		Text.printShadow(entry.name, textX, textY)

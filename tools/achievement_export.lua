@@ -1,5 +1,6 @@
 local EnemyDefs = require("world.enemy_defs")
-local DrawEntities = require("render.draw_entities")
+local EnemyRenderer = require("render.enemy_renderer")
+local TowerRenderer = require("render.tower_renderer")
 local Medals = require("ui.medals")
 local Theme = require("core.theme")
 local Fonts = require("core.fonts")
@@ -276,7 +277,7 @@ end
 
 local function drawTower(kind)
 	centerAndScale(function()
-		DrawEntities.drawTowerVisual(kind, 0, 0, -pi / 4, 0, 1)
+		TowerRenderer.drawTowerVisual(kind, 0, 0, -pi / 4, 0, 1)
 	end, TOWER_SCALE)
 end
 
@@ -381,8 +382,8 @@ local function drawTowerAction(kind)
 
 	-- === DRAW ===
 	centerAndScale(function()
-		DrawEntities.drawTowerVisual(t.kind, 0, 0, t.angle, t.recoil, 1)
-		DrawEntities.drawTowerFX(t)
+		TowerRenderer.drawTowerVisual(t.kind, 0, 0, t.angle, t.recoil, 1)
+		TowerRenderer.drawTowerFX(t)
 		--Projectiles.draw()
 
 		if t.chain then
@@ -534,7 +535,7 @@ local function drawEnemy(kind, isDead, fakeEyes, popped)
     }
 
     centerAndScale(function()
-        DrawEntities.drawEnemy(enemy)
+        EnemyRenderer.drawEnemy(enemy)
 
 		if fakeEyes then
 			drawDeadEyes(enemy.radius)
@@ -596,9 +597,9 @@ local function drawTowerUpgradeIcon(kind, level)
 		local height = (level - 1) * 4
 
 		-- Dark extruded base
-		DrawEntities.drawTowerBase(kind, cx, cy, 1, 0.2, 0.2, 0.2, height)
+		TowerRenderer.drawTowerBase(kind, cx, cy, 1, 0.2, 0.2, 0.2, height)
 
-		DrawEntities.drawTowerVisual(kind, cx, cy - height, 1)
+		TowerRenderer.drawTowerVisual(kind, cx, cy - height, 1)
 
 		-- Arrow
 		local arrowH = REF_SIZE * 1.2

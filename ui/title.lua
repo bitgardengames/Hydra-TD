@@ -1,5 +1,5 @@
 local Theme = require("core.theme")
-local Entities = require("render.draw_entities")
+local Entities = require("render.tower_renderer")
 
 local Title = {}
 
