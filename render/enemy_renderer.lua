@@ -7,6 +7,7 @@ local sin, min, max, abs, cos = math.sin, math.min, math.max, math.abs, math.cos
 local pi, HALF_PI = math.pi, math.pi / 2
 local outlineColor = Theme.outline.color
 local enemyShadow, enemyBody, enemyFace = Theme.enemy.shadow, Theme.enemy.body, Theme.enemy.face
+local colorSlow = Theme.projectiles.slow
 local colorSelected = Theme.ui.selected
 local lighting = Theme.lighting
 local darkMul, highlightOffset, highlightScale = lighting.shadowMul, lighting.highlightOffset, lighting.highlightScale
@@ -14,6 +15,7 @@ local outR, outG, outB = outlineColor[1], outlineColor[2], outlineColor[3]
 local eR, eG, eB = enemyBody[1], enemyBody[2], enemyBody[3]
 local esR, esG, esB, esA = enemyShadow[1], enemyShadow[2], enemyShadow[3], enemyShadow[4]
 local efR, efG, efB = enemyFace[1], enemyFace[2], enemyFace[3]
+local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]
 local selR, selG, selB = colorSelected[1], colorSelected[2], colorSelected[3]
 local outlineWidth, EYE_DEADZONE, HIT_SQUASH_DUR = Theme.outline.width, 0.03, 0.12
 local function drawEnemy(e)

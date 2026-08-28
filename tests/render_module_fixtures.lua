@@ -15,6 +15,8 @@ local prepared = { enemy.rx, enemy.ry, enemy.prevRX, enemy.prevRY, enemy.eyeDX, 
 local rendererSource = assert(io.open("render/enemy_renderer.lua", "r")):read("*a")
 assert(not rendererSource:find("prepareEnemyRenderData", 1, true))
 assert(not rendererSource:find("EnemyRenderState.prepare", 1, true))
+assert(rendererSource:find("local colorSlow = Theme.projectiles.slow", 1, true))
+assert(rendererSource:find("local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]", 1, true))
 for i, value in ipairs(prepared) do
 	assert(({ enemy.rx, enemy.ry, enemy.prevRX, enemy.prevRY, enemy.eyeDX, enemy.eyeDY, enemy.rAnimT })[i] == value)
 end
