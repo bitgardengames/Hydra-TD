@@ -143,7 +143,7 @@ local function addAbilityBuff(t, buff)
 		activeAbilityBuffTowers[#activeAbilityBuffTowers + 1] = t
 		t._activeAbilityBuffIndex = #activeAbilityBuffTowers
 	end
-	recomputeAbilityModifiers(t)
+	t.range2 = t.range * t.range
 	return true
 end
 
@@ -634,7 +634,6 @@ local function sellTower(t)
 	end
 
 	clearTowerIndex(t)
-	clearAbilityBuffs(t)
 
 	for i = #towers, 1, -1 do
 		if towers[i] == t then
@@ -778,14 +777,12 @@ local function updateTowers(dt)
 	-- Retire last frame's targeting keys even when no tower needs to retarget.
 	beginTargetingFrame(State.frameId)
 	updateSuppression(dt)
-	expireAbilityBuffs(State.abilityClock or 0)
 
 	for i = 1, #towers do
 		local t = towers[i]
-		local attackSpeed = t.abilityAttackSpeed or 1
 		local prevWindUp = t.windUp or 0
-		t.cooldown = max(0, (t.cooldown or 0) - dt * attackSpeed)
-		t.windUp = max(0, prevWindUp - dt * attackSpeed)
+		t.cooldown = max(0, (t.cooldown or 0) - dt)
+		t.windUp = max(0, prevWindUp - dt)
 		t.retargetT = max(0, (t.retargetT or 0) - dt)
 		t.suppressedTimer = max(0, (t.suppressedTimer or 0) - dt)
 		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
@@ -945,7 +942,6 @@ end
 local function clear()
 	Targeting.clearFrameCache()
 	for i = #towers, 1, -1 do
-		clearAbilityBuffs(towers[i])
 		clearTowerIndex(towers[i])
 		towers[i] = nil
 	end

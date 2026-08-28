@@ -6,7 +6,6 @@ local Waves = require("systems.waves")
 local State = require("core.state")
 local Effects = require("world.effects")
 local Spatial = require("world.spatial_grid")
-local Abilities = require("systems.abilities")
 local EnemySupport = require("world.enemy_support")
 
 local Sim = {}
@@ -18,7 +17,6 @@ function Sim.update(dt)
 	end
 
 	Spatial.beginFrame()
-	Abilities.update(dt)
 	-- Targeting caches use this identifier, so it advances once per simulation
 	-- tick rather than once per rendered frame.
 	State.frameId = (State.frameId or 0) + 1

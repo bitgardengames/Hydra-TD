@@ -21,8 +21,6 @@ local function drawWorld()
 	DrawWorld.drawAnimatedScatter()
 
 	DrawWorld.drawGrid()
-	DrawWorld.drawAbilityPreview()
-
 	TowerRenderer.drawTowerGhost()
 	TowerRenderer.drawTowers()
 	EnemyRenderState.prepare(nil, nil, State.presentationDt, State.presentationFrameId)

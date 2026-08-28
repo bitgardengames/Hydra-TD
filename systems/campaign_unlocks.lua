@@ -12,20 +12,9 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 -- Rewards intentionally avoid mandatory stat power and instead emphasize new
 -- verbs, optional build utilities, and information that teaches counters.
 -- Towers are the player's baseline arsenal and are never campaign rewards.
-local rewardsByMapId = {
-	-- Meteor gives the first clear an immediate burst-damage payoff.
-	riverbend = {{type = "ability", id = "meteor", labelKey = "campaign.rewards.meteor"}},
-	roundabout = {{type = "ability", id = "overdrive", labelKey = "campaign.rewards.overdrive"}},
-	-- Snake Trail's formation-control reward prepares players for denser mixed waves.
-	snaketrail = {{type = "ability", id = "gravity_well", labelKey = "campaign.rewards.gravityWell"}},
-	-- Frost Nova is earned before Backtrack introduces runners.
-	backtrack = {{type = "ability", id = "frost_nova", labelKey = "campaign.rewards.frostNova"}},
-	lowvalley = {{type = "ability", id = "gold_rush", labelKey = "campaign.rewards.goldRush"}},
-	outerloop = {{type = "ability", id = "last_stand", labelKey = "campaign.rewards.lastStand"}},
-	-- There are fewer meaningful unlocks than campaign maps. Keep the real
-	-- rewards contiguous at the front rather than using route progression as a
-	-- placeholder reward or leaving gaps between unlocks.
-}
+-- Active abilities remain experimental and therefore are not campaign rewards.
+-- Keep this table ready for unrelated, production-ready rewards.
+local rewardsByMapId = {}
 
 local requiredMapByTower = {}
 for _, kind in ipairs(Constants.TOWER_LIST) do requiredMapByTower[kind] = 1 end

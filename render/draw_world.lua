@@ -2,9 +2,6 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 local MapMod = require("world.map")
 local State = require("core.state")
-local AbilityDefs = require("systems.ability_defs")
-local Abilities = require("systems.abilities")
-local Effects = require("world.effects")
 local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
@@ -23,9 +20,6 @@ local gridH = Constants.GRID_H
 
 local colorGrid = Theme.grid
 local outlineW = Theme.outline.width
-local COLOR_ACTIVE_FALLBACK = {1, .7, .25}
-local COLOR_PREVIEW_FALLBACK = {1, 1, 1}
-local COLOR_PREVIEW_INVALID = {1, .2, .2}
 
 local gridToCenter = MapMod.gridToCenter
 
@@ -424,108 +418,6 @@ local function drawWorld()
 	drawScatter()
 end
 
-local function drawEntityMarker(entity, color, alpha, radius)
-	local x, y = entity.rx or entity.x, entity.ry or entity.renderY or entity.y
-	lg.setColor(color[1], color[2], color[3], .18 * alpha)
-	lg.circle("fill", x, y, radius)
-	lg.setColor(color[1], color[2], color[3], .95 * alpha)
-	lg.setLineWidth(2)
-	lg.circle("line", x, y, radius)
-end
-
-local function drawIncomingMeteor(effect, clock)
-	local duration = effect.expires - effect.started
-	local progress = duration > 0 and math.min(1, (clock - effect.started) / duration) or 1
-	-- Begin above the battlefield so the strike has an observable approach rather
-	-- than appearing at the cursor. The side is chosen once when the meteor is
-	-- launched, keeping its angle consistent while allowing either approach.
-	local direction = effect.approachDirection or -1
-	local startX = effect.x + direction * 270
-	local startY = -110
-	local meteorX = startX + (effect.x - startX) * progress
-	local meteorY = startY + (effect.y - startY) * progress
-	local trailX = meteorX - (effect.x - startX) * .15
-	local trailY = meteorY - (effect.y - startY) * .15
-	local pulse = .8 + .2 * sin(clock * 18)
-	local flightX, flightY = effect.x - startX, effect.y - startY
-	local flightLength = sqrt(flightX * flightX + flightY * flightY)
-	local unitX, unitY = flightX / flightLength, flightY / flightLength
-	local perpendicularX, perpendicularY = -unitY, unitX
-
-	lg.setColor(1, .22, .04, .22)
-	lg.setLineWidth(41)
-	lg.line(trailX, trailY, meteorX, meteorY)
-	lg.setColor(1, .62, .12, .7)
-	lg.setLineWidth(17)
-	lg.line(trailX, trailY, meteorX, meteorY)
-	-- Loose embers make the trail feel like burning debris rather than a static
-	-- beam. Hash noise gives each ember its own stable sideways drift.
-	for i = 1, 9 do
-		local distance = 24 + i * 10 + (clock * 75 + i * 7) % 12
-		local drift = (hashNoise(i, effect.started, 17) * 2 - 1) * (5 + i * .7)
-		local emberX = meteorX - unitX * distance + perpendicularX * drift
-		local emberY = meteorY - unitY * distance + perpendicularY * drift
-		local emberRadius = 2 + hashNoise(i, effect.started, 29) * 3
-		lg.setColor(1, .25, .03, .45)
-		lg.circle("fill", emberX, emberY, emberRadius * 1.8)
-		lg.setColor(1, .78, .18, .9)
-		lg.circle("fill", emberX, emberY, emberRadius)
-	end
-	lg.setColor(1, .9, .48, .95)
-	lg.circle("fill", meteorX, meteorY, 30 * pulse)
-	lg.setColor(.24, .12, .1, 1)
-	lg.circle("fill", meteorX, meteorY, 18)
-
-	lg.setColor(1, .28, .08, .14 + progress * .14)
-	lg.circle("fill", effect.x, effect.y, effect.radius * (.84 + .08 * pulse))
-	lg.setColor(1, .5, .12, .72)
-	lg.setLineWidth(2)
-	lg.circle("line", effect.x, effect.y, effect.radius)
-end
-
-local function drawAbilityPreview()
-	local active, clock = Abilities.getActive()
-	for _, activeEffect in ipairs(active) do
-		if activeEffect.kind == "meteor_incoming" then
-			drawIncomingMeteor(activeEffect, clock)
-		end
-		local def = activeEffect.abilityId and AbilityDefs[activeEffect.abilityId]
-		local sustained = def and def.sustained
-		local remaining = activeEffect.expires - clock
-		local alpha = Effects.expirationPulse(remaining, clock)
-		local color = (def and def.target and def.target.color) or COLOR_ACTIVE_FALLBACK
-		if sustained and sustained.area and activeEffect.x then
-			lg.setColor(color[1], color[2], color[3], .16 * alpha)
-			lg.circle("fill", activeEffect.x, activeEffect.y, activeEffect.radius)
-			lg.setColor(color[1], color[2], color[3], .8 * alpha)
-			lg.setLineWidth(2)
-			lg.circle("line", activeEffect.x, activeEffect.y, activeEffect.radius)
-		end
-		if sustained and sustained.entityMarker then
-			local entities, entityCount = activeEffect.towers, activeEffect.towers and #activeEffect.towers or 0
-			if not entities and def.target and def.target.entities == "enemies" then
-				entities, entityCount = Abilities.getEntitiesInActiveArea(activeEffect, "enemies")
-			end
-			for i = 1, entityCount do drawEntityMarker(entities[i], color, alpha, 21) end
-		end
-	end
-
-	local targeting = State.abilityTargeting
-	if not (targeting and targeting.x) then return end
-	local preview = Abilities.getTargetPreview(targeting.x, targeting.y)
-	if not preview then return end
-	local effect, target = preview.effect, preview.def.target
-	local color = preview.valid and (target and target.color or COLOR_PREVIEW_FALLBACK) or COLOR_PREVIEW_INVALID
-	if effect.radius then
-		lg.setColor(color[1], color[2], color[3], .2)
-		lg.circle("fill", targeting.x, targeting.y, effect.radius)
-		lg.setColor(color[1], color[2], color[3], 1)
-		lg.setLineWidth(2)
-		lg.circle("line", targeting.x, targeting.y, effect.radius)
-	end
-	for i = 1, preview.count do drawEntityMarker(preview.affected[i], color, 1, 23) end
-end
-
 local function drawGrid()
 	local fade = State.placingFade or 0
 	if fade == 0 then return end
@@ -549,7 +441,6 @@ return {
 	drawAnimatedScatter = drawAnimatedScatter,
 	drawGrid = drawGrid,
 	drawWorld = drawWorld,
-	drawAbilityPreview = drawAbilityPreview,
 	updatePathColor = updatePathColor,
 	updateGrassColor = updateGrassColor,
 	updateWaterColor = updateWaterColor,
