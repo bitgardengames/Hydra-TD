@@ -3,33 +3,10 @@
 -- keeps the module inventory system independent from projectile internals.
 local BehaviorContext = {}
 
-local roles = {
-	move_homing = "movement",
-	move_linear = "movement",
-	move_boomerang = "movement",
-	move_wave = "movement",
-	move_spiral = "movement",
-	move_orbit = "movement",
-	move_suspend = "movement",
-	hit_circle = "hit",
-	hit_line = "hit",
-	instant_hit = "hit",
-	emit_on_target = "hit",
-	move_to_target_point = "hit",
-	hit_damage = "damage",
-	aoe_damage = "damage",
-	tick_damage = "damage",
-	hit_chain = "damage",
-	chain_zap_fx = "impact_fx",
-	lancer_hit_fx = "impact_fx",
-}
+local ProjectileBehaviorRegistry = require("world.projectile_behaviors.registry")
 
 local function getRole(id)
-	if id and id:sub(1, 5) == "draw_" then
-		return "draw"
-	end
-
-	return roles[id]
+	return ProjectileBehaviorRegistry.getRole(id)
 end
 
 local function cloneBehavior(behavior)
