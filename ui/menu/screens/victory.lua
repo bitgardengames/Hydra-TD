@@ -66,8 +66,8 @@ local panelW = 1120
 local difficultyOffset = 22
 
 -- Medal visuals
-local medalR = 32
-local medalGap = 14
+local medalR = 26
+local medalGap = 10
 local confettiColors = {
 	Theme.ui.good,
 	Theme.ui.wave,
@@ -128,7 +128,12 @@ local function calculateLayout()
 	local buttonsHeight = buttonHeight
 	local titleHeight = compact and 48 or 66
 	local sectionGap = 14
-	local boxH = min(compact and 620 or 680, sh - edge * 2)
+	-- Size the panel around its contents instead of stretching the three recap
+	-- columns to the old, mostly empty 680px container.
+	local desiredContentH = 320
+	local desiredBoxH = padY + titleHeight + desiredContentH + sectionGap
+		+ buttonsHeight + buttonBottomPadding
+	local boxH = min(desiredBoxH, sh - edge * 2)
 	local boxY = floor((sh - boxH) * 0.5)
 	local buttonsStartY = boxY + boxH - buttonBottomPadding - buttonsHeight
 	local recapY = boxY + padY + titleHeight
@@ -416,16 +421,18 @@ function Screen.draw()
 	local result = State.runResult or {}
 
 	-- Map card.
-	drawCard(contentX, contentY, leftW, contentH, alpha)
+	local previewBoundsY = floor(contentY + 68 + 0.5)
+	local previewBoundsH = floor(min(150, max(92, contentH - 160)) + 0.5)
+	local previewBoundsW = floor(leftW - 24 + 0.5)
+	local previewBottom = previewBoundsY + previewBoundsH
+	local mapCardH = min(contentH, previewBottom - contentY + 80)
+	drawCard(contentX, contentY, leftW, mapCardH, alpha)
 	Fonts.set("menu")
 	lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
 	Text.printShadow(RunRecap.getMapName(), contentX + 14, contentY + 12)
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.7 * alpha)
 	Text.printShadow(format(L("victory.mapNumber"), State.worldMapIndex, #Maps), contentX + 14, contentY + 40)
-	local previewBoundsY = floor(contentY + 68 + 0.5)
-	local previewBoundsH = floor(min(188, contentH * 0.42) + 0.5)
-	local previewBoundsW = floor(leftW - 24 + 0.5)
 	local preview, previewW, previewH
 	if map then
 		preview, previewW, previewH = MapPreviewCache.getFitted(map.id, previewBoundsW, previewBoundsH)
@@ -436,12 +443,11 @@ function Screen.draw()
 		lg.setColor(1, 1, 1, alpha)
 		lg.draw(preview.canvas, previewX, previewY)
 	end
-	local previewBottom = previewY + (previewH or 0)
-	drawStatRow(L("settings.difficulty"), RunRecap.getDifficultyLabel(), contentX + 14, previewBottom + 18, leftW - 28, alpha, colorGood)
-	drawStatRow(L("victory.gameTime"), format("%d:%02d", floor((result.duration or 0) / 60), floor((result.duration or 0) % 60)), contentX + 14, previewBottom + 52, leftW - 28, alpha)
+	drawStatRow(L("settings.difficulty"), RunRecap.getDifficultyLabel(), contentX + 14, previewBottom + 12, leftW - 28, alpha, colorGood)
+	drawStatRow(L("victory.gameTime"), format("%d:%02d", floor((result.duration or 0) / 60), floor((result.duration or 0) % 60)), contentX + 14, previewBottom + 46, leftW - 28, alpha)
 
 	-- Run summary.
-	local summaryH = contentH * 0.56
+	local summaryH = min(208, contentH)
 	drawCard(centerX, contentY, centerW, summaryH, alpha)
 	drawStatRow(L("runRecap.score"), formatNumber(State.score), centerX + 14, contentY + 14, centerW - 28, alpha, colorGood)
 	drawStatRow(L("runRecap.enemiesDefeated"), formatNumber(State.totalKills), centerX + 14, contentY + 52, centerW - 28, alpha)
@@ -449,7 +455,7 @@ function Screen.draw()
 	drawStatRow(L("victory.moneyRemaining"), "$" .. formatNumber(State.money), centerX + 14, contentY + 128, centerW - 28, alpha, Theme.ui.money)
 	drawStatRow(L("victory.towersPlaced"), formatNumber(result.towersPlaced), centerX + 14, contentY + 166, centerW - 28, alpha)
 	local medalsY = contentY + summaryH + gap
-	local medalsH = contentH - summaryH - gap
+	local medalsH = min(98, contentH - summaryH - gap)
 	drawCard(centerX, medalsY, centerW, medalsH, alpha)
 	Fonts.set("ui")
 	lg.setColor(colorText[1], colorText[2], colorText[3], 0.75 * alpha)
@@ -463,8 +469,11 @@ function Screen.draw()
 		t
 	)
 
-	-- Damage occupies the full right column; unlocks are presented on the campaign screen.
-	drawDamagePanel(rightX, contentY, rightW, contentH, alpha)
+	-- The damage card ends after its final visible bar rather than filling the
+	-- entire column. Unlocks are presented on the campaign screen.
+	local visibleDamageRows = min(6, #damageRows)
+	local damageH = min(contentH, visibleDamageRows > 0 and (42 + visibleDamageRows * 34) or 72)
+	drawDamagePanel(rightX, contentY, rightW, damageH, alpha)
 
 	-- Buttons
 	Button.drawList(buttons)
