@@ -8,6 +8,8 @@ import re
 import sys
 from pathlib import Path
 
+from lua_source import named_entries, numeric_fields, table_body
+
 ROOT = Path(__file__).resolve().parents[2]
 CAPTURE = Path(__file__).with_name("interaction_fixtures.json")
 SOURCES = ("world/tower_defs.lua", "world/enemy_defs.lua", "world/tower_branch_defs.lua",
@@ -19,32 +21,15 @@ FORMATIONS = {"single_target": (1, 1, 0), "packed_targets": (16, 1, 0),
               "fast_enemies": (12, .82, 3), "boss_targets": (1, .72, 0)}
 
 
-def table(text, name):
-    match = re.search(r"(?:^|\n)\s*(?:local\s+)?" + re.escape(name) + r"\s*=\s*\{", text)
-    if not match:
-        raise ValueError("missing Lua table " + name)
-    depth = 1
-    for pos in range(match.end(), len(text)):
-        depth += (text[pos] == "{") - (text[pos] == "}")
-        if depth == 0:
-            return text[match.end():pos]
-    raise ValueError("unterminated Lua table " + name)
+def table(text, name, source="interaction source"):
+    return table_body(text, name, source)
 
 
-def entries(value):
-    found = {}
-    for match in re.finditer(r"(?:^|\n)\s*([a-z][a-z0-9_]*)\s*=\s*\{", value):
-        depth = 1
-        for pos in range(match.end(), len(value)):
-            depth += (value[pos] == "{") - (value[pos] == "}")
-            if not depth:
-                found[match.group(1)] = value[match.end():pos]
-                break
-    return found
+def entries(value, declaration="entry table", source="interaction source"):
+    return named_entries(value, declaration, source)
 
 
-def nums(value):
-    return {k: float(v) for k, v in re.findall(r"\b(\w+)\s*=\s*([0-9]+(?:\.[0-9]+)?)", value)}
+nums = numeric_fields
 
 
 def abilities(text):

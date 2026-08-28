@@ -9,6 +9,8 @@ import re
 import sys
 from pathlib import Path
 
+from lua_source import named_entries, numeric_field, table_body
+
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 SUPPORTED_DISPLAYS = ((1280, 720), (1280, 800), (1920, 1080), (2560, 1440))
@@ -26,30 +28,6 @@ LAYOUT = {"screen_pad": 16, "wave_w": 320, "damage_inner_w": 210,
           "ability_inset": 16, "bottom_w": 432, "bottom_h": 264,
           "bottom_inset": 16, "bottom_lift": 16, "inspect_w": 284,
           "panel_gap": 16}
-
-
-def lua_table(text: str, name: str) -> str:
-    match = re.search(r"(?:^|\n)\s*(?:local\s+)?" + re.escape(name) + r"\s*=\s*\{", text)
-    if not match:
-        raise ValueError("missing Lua table " + name)
-    depth = 1
-    for pos in range(match.end(), len(text)):
-        depth += (text[pos] == "{") - (text[pos] == "}")
-        if not depth:
-            return text[match.end():pos]
-    raise ValueError("unterminated Lua table " + name)
-
-
-def named_tables(block: str) -> dict[str, str]:
-    out = {}
-    for match in re.finditer(r"(?:^|\n)\s*([a-z][a-z0-9_]*)\s*=\s*\{", block):
-        depth = 1
-        for pos in range(match.end(), len(block)):
-            depth += (block[pos] == "{") - (block[pos] == "}")
-            if not depth:
-                out[match.group(1)] = block[match.end():pos]
-                break
-    return out
 
 
 def wave_metrics() -> dict:
@@ -81,14 +59,8 @@ def event_rates() -> dict:
     text = (ROOT / "world/tower_defs.lua").read_text()
     rates = {}
     for kind in ("slow", "lancer", "poison", "cannon", "shock", "plasma"):
-        match = re.search(r"\n\s*" + kind + r"\s*=\s*\{", text)
-        depth = 1
-        for pos in range(match.end(), len(text)):
-            depth += (text[pos] == "{") - (text[pos] == "}")
-            if not depth:
-                raw = text[match.end():pos]
-                break
-        rate = float(re.search(r"\bfireRate\s*=\s*([0-9.]+)", raw).group(1))
+        raw = table_body(text, kind, ROOT / "world/tower_defs.lua")
+        rate = numeric_field(raw, "fireRate", ROOT / "world/tower_defs.lua", kind)
         _, towers = progression()
         rates[kind] = {"base": rate, "tier_5": round(level_stats(towers[kind], 5)["fireRate"], 4)}
     base = sum(x["base"] for x in rates.values())
@@ -102,7 +74,8 @@ def event_rates() -> dict:
 
 def ability_metrics() -> dict:
     text = (ROOT / "systems/ability_defs.lua").read_text()
-    root = named_tables(lua_table(text, "AbilityDefs"))
+    root = named_entries(table_body(text, "AbilityDefs", ROOT / "systems/ability_defs.lua"),
+                         "AbilityDefs", ROOT / "systems/ability_defs.lua")
     rows = []
     for ability, raw in root.items():
         effects = re.findall(r"\beffect\s*=\s*\{([^}]+)", raw)

@@ -8,34 +8,15 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from lua_source import numeric_field, table_body
+
 ROOT = Path(__file__).resolve().parents[2]
 TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
 
 
-def _block(text: str, name: str) -> str:
-    match = re.search(r"(?:^|\n)\s*(?:local\s+)?" + re.escape(name) + r"\s*=\s*\{", text)
-    if not match:
-        raise ValueError(f"missing Lua table {name}")
-    depth = 1
-    for pos in range(match.end(), len(text)):
-        depth += (text[pos] == "{") - (text[pos] == "}")
-        if depth == 0:
-            return text[match.end():pos]
-    raise ValueError(f"unterminated Lua table {name}")
-
-
-def _number(text: str, key: str, default: float | None = None) -> float:
-    match = re.search(r"\b" + re.escape(key) + r"\s*=\s*([0-9.]+)", text)
-    if match:
-        return float(match.group(1))
-    if default is not None:
-        return default
-    raise ValueError(f"missing numeric field {key}")
-
-
 def progression() -> tuple[tuple[float, ...], dict[str, dict[str, float]]]:
     runtime = (ROOT / "world/towers.lua").read_text()
-    raw_costs = _block(runtime, "UPGRADE_COST_MULTIPLIERS")
+    raw_costs = table_body(runtime, "UPGRADE_COST_MULTIPLIERS", ROOT / "world/towers.lua")
     costs = tuple(float(value) for value in re.findall(r"[0-9.]+", raw_costs))
     if len(costs) != 4:
         raise ValueError("expected four runtime upgrade cost multipliers")
@@ -45,16 +26,16 @@ def progression() -> tuple[tuple[float, ...], dict[str, dict[str, float]]]:
     definitions = (ROOT / "world/tower_defs.lua").read_text()
     towers = {}
     for kind in TOWERS:
-        raw = _block(definitions, kind)
-        upgrade = _block(raw, "upgrade")
+        raw = table_body(definitions, kind, ROOT / "world/tower_defs.lua")
+        upgrade = table_body(raw, "upgrade", ROOT / "world/tower_defs.lua")
+        number = lambda body, key, default=None: numeric_field(
+            body, key, ROOT / "world/tower_defs.lua", kind, default)
         towers[kind] = {
-            "cost": _number(raw, "cost"),
-            "damage": _number(raw, "damage"),
-            "fireRate": _number(raw, "fireRate"),
-            "range": _number(raw, "range"),
-            "dmgMult": _number(upgrade, "dmgMult", 1),
-            "fireMult": _number(upgrade, "fireMult", 1),
-            "rangeAdd": _number(upgrade, "rangeAdd", 0),
+            "cost": number(raw, "cost"), "damage": number(raw, "damage"),
+            "fireRate": number(raw, "fireRate"), "range": number(raw, "range"),
+            "dmgMult": number(upgrade, "dmgMult", 1),
+            "fireMult": number(upgrade, "fireMult", 1),
+            "rangeAdd": number(upgrade, "rangeAdd", 0),
         }
     return costs, towers
 
