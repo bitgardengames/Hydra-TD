@@ -1,4 +1,5 @@
 local Effects = require("world.effects")
+local State = require("core.state")
 local Projectiles = require("world.projectiles")
 local DrawWorld = require("render.draw_world")
 local EnemyRenderer = require("render.enemy_renderer")
@@ -24,7 +25,7 @@ local function drawWorld()
 
 	TowerRenderer.drawTowerGhost()
 	TowerRenderer.drawTowers()
-	EnemyRenderState.prepare()
+	EnemyRenderState.prepare(nil, nil, State.presentationDt, State.presentationFrameId)
 	EnemyRenderer.drawEnemies()
 	TowerRenderer.drawSuppressionProjectiles()
 
