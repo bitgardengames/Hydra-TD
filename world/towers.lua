@@ -22,6 +22,9 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 local towers = {}
 local towersByCell = {}
 local suppressionProjectiles = {}
+-- Only towers in this dense list can have a buff expire. Towers keep their
+-- current slot so removal is O(1) and does not leave holes.
+local activeAbilityBuffTowers = {}
 
 local pi = math.pi
 local TWO_PI = pi * 2
@@ -104,6 +107,72 @@ local function swapRemove(list, index)
 	local last = #list
 	list[index] = list[last]
 	list[last] = nil
+end
+
+local function recomputeAbilityModifiers(t)
+	local attackSpeed, rangeMult = 1, 1
+	for i = 1, #(t.abilityBuffs or {}) do
+		local buff = t.abilityBuffs[i]
+		attackSpeed = min(2.5, attackSpeed * (buff.attackSpeed or 1))
+		rangeMult = max(rangeMult, buff.range or 1)
+	end
+	t.abilityAttackSpeed = attackSpeed
+	t.abilityRangeMultiplier = rangeMult
+	local effectiveRange = (t.range or 0) * rangeMult
+	t.range2 = effectiveRange * effectiveRange
+end
+
+local function untrackAbilityBuffTower(t)
+	local index = t and t._activeAbilityBuffIndex
+	if not index then return end
+
+	local moved = activeAbilityBuffTowers[#activeAbilityBuffTowers]
+	swapRemove(activeAbilityBuffTowers, index)
+	if moved and moved ~= t then
+		moved._activeAbilityBuffIndex = index
+	end
+	t._activeAbilityBuffIndex = nil
+end
+
+local function addAbilityBuff(t, buff)
+	if not t or not buff then return false end
+	t.abilityBuffs = t.abilityBuffs or {}
+	t.abilityBuffs[#t.abilityBuffs + 1] = buff
+	if not t._activeAbilityBuffIndex then
+		activeAbilityBuffTowers[#activeAbilityBuffTowers + 1] = t
+		t._activeAbilityBuffIndex = #activeAbilityBuffTowers
+	end
+	recomputeAbilityModifiers(t)
+	return true
+end
+
+local function clearAbilityBuffs(t)
+	if not t then return end
+	untrackAbilityBuffTower(t)
+	t.abilityBuffs = nil
+	recomputeAbilityModifiers(t)
+end
+
+local function expireAbilityBuffs(now)
+	for activeIndex = #activeAbilityBuffTowers, 1, -1 do
+		local t = activeAbilityBuffTowers[activeIndex]
+		local buffs = t.abilityBuffs or {}
+		local write = 1
+		for read = 1, #buffs do
+			local buff = buffs[read]
+			if (buff.expires or 0) > now then
+				buffs[write] = buff
+				write = write + 1
+			end
+		end
+		local changed = write <= #buffs
+		for i = #buffs, write, -1 do buffs[i] = nil end
+		if #buffs == 0 then
+			untrackAbilityBuffTower(t)
+			t.abilityBuffs = nil
+		end
+		if changed then recomputeAbilityModifiers(t) end
+	end
 end
 
 local function hashString(s)
@@ -215,7 +284,7 @@ local function recomputeTowerStats(t)
 	t.fireRate = def.fireRate * scaledFireMult * moduleStats.fireRateMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
 	t.range = def.range + rangeAdd * upgrades + moduleStats.rangeAdd
-	t.range2 = t.range * t.range
+	recomputeAbilityModifiers(t)
 end
 
 local function addTower(kind, gx, gy)
@@ -564,6 +633,7 @@ local function sellTower(t)
 	end
 
 	clearTowerIndex(t)
+	clearAbilityBuffs(t)
 
 	for i = #towers, 1, -1 do
 		if towers[i] == t then
@@ -703,21 +773,11 @@ end
 
 local function updateTowers(dt)
 	updateSuppression(dt)
+	expireAbilityBuffs(State.abilityClock or 0)
 
 	for i = 1, #towers do
 		local t = towers[i]
-
-		local attackSpeed, rangeMult = 1, 1
-		local buffs = t.abilityBuffs
-		if buffs then
-			for bi = #buffs, 1, -1 do
-				local buff = buffs[bi]
-				if (buff.expires or 0) <= (State.abilityClock or 0) then table.remove(buffs, bi)
-				else attackSpeed = min(2.5, attackSpeed * (buff.attackSpeed or 1)); rangeMult = max(rangeMult, buff.range or 1) end
-			end
-		end
-		t.abilityAttackSpeed, t.abilityRangeMultiplier = attackSpeed, rangeMult
-		t.range2 = (t.range * rangeMult) ^ 2
+		local attackSpeed = t.abilityAttackSpeed or 1
 		local prevWindUp = t.windUp or 0
 		t.cooldown = max(0, (t.cooldown or 0) - dt * attackSpeed)
 		t.windUp = max(0, prevWindUp - dt * attackSpeed)
@@ -879,6 +939,7 @@ end
 local function clear()
 	Targeting.clearFrameCache()
 	for i = #towers, 1, -1 do
+		clearAbilityBuffs(towers[i])
 		clearTowerIndex(towers[i])
 		towers[i] = nil
 	end
@@ -898,6 +959,11 @@ return {
 	PLACEMENT_FAILURE = PLACEMENT_FAILURE,
 	towersByCell = towersByCell,
 	suppressionProjectiles = suppressionProjectiles,
+	activeAbilityBuffTowers = activeAbilityBuffTowers,
+	addAbilityBuff = addAbilityBuff,
+	expireAbilityBuffs = expireAbilityBuffs,
+	recomputeAbilityModifiers = recomputeAbilityModifiers,
+	clearAbilityBuffs = clearAbilityBuffs,
 	addTower = addTower,
 	getUpgradeCost = getUpgradeCost,
 	upgradeTower = upgradeTower,
