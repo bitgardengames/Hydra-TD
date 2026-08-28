@@ -3,6 +3,7 @@ return function(ctx, register)
 local B = {}
 local min, max, sin, cos, sqrt, atan2, floor, random, abs, pi = ctx.min, ctx.max, ctx.sin, ctx.cos, ctx.sqrt, ctx.atan2, ctx.floor, ctx.random, ctx.abs, ctx.pi
 local Constants, Spatial, lg = ctx.Constants, ctx.Spatial, ctx.lg
+local spatialQueryContext = Spatial.newQueryContext(false)
 local clearMap, clearArray = ctx.clearMap, ctx.clearArray
 local emitEvent, emitFX, emitSpawnProjectile = ctx.emitEvent, ctx.emitFX, ctx.emitSpawnProjectile
 local getStat, emitDamage, beginChainDamageBudget = ctx.getStat, ctx.emitDamage, ctx.beginChainDamageBudget
@@ -32,7 +33,7 @@ B.aoe_damage = {
 		local radius = baseRadius * scale
 
 		local r2 = radius * radius
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
 
 		for i = 1, nearbyCount do
 			local other = nearby[i]
@@ -65,7 +66,7 @@ B.cannon_shockwave = {
 		local minFalloff = data.minFalloff or 0.35
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
 
 		for i = 1, nearbyCount do
 			local other = nearby[i]
@@ -127,7 +128,7 @@ B.cannon_delayed_blast = {
 		local ringInner2 = ringInner * ringInner
 		local ringOuter2 = ringOuter * ringOuter
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
 
 		for i = 1, nearbyCount do
 			local other = nearby[i]
@@ -251,7 +252,7 @@ B.hit_chain = {
 			local nextTarget = nil
 			local bestDist = radius * radius
 
-			local nearby, nearbyCount = Spatial.queryCells(current.x, current.y, radius)
+			local nearby, nearbyCount = Spatial.queryCells(current.x, current.y, radius, spatialQueryContext)
 
 			for j = 1, nearbyCount do
 				local other = nearby[j]
@@ -375,7 +376,7 @@ B.chain_endpoint_burst = {
 			if target and target.hp > 0 and not hasOutgoing[target] and not endpoints[target] then
 				endpoints[target] = true
 
-				local nearby, nearbyCount = Spatial.queryCells(target.x, target.y, radius)
+				local nearby, nearbyCount = Spatial.queryCells(target.x, target.y, radius, spatialQueryContext)
 
 				for j = 1, nearbyCount do
 					local other = nearby[j]
@@ -411,7 +412,7 @@ B.tick_zap = {
 		local radius = z.radius
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
 
 		local best = nil
 		local bestDist = r2
@@ -467,7 +468,7 @@ B.slow_pop = {
 
 		if e.slowTimer and e.slowTimer > 0 then
 			local radius = 28
-			local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius)
+			local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius, spatialQueryContext)
 
 			for i = 1, nearbyCount do
 				local other = nearby[i]
@@ -551,7 +552,7 @@ B.plasma_supernova_burst = {
 		local radius = data.radius or 36
 		local dmg = (p.damage or 0) * (data.dmgMult or 2.0)
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]
@@ -610,7 +611,7 @@ B.tick_damage = {
 		end
 
 		local radius = data.radius or t.radius or p.hitRadius or 12
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]

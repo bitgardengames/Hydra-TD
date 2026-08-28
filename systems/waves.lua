@@ -9,6 +9,7 @@ local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
 local EnemyTraits = require("world.enemy_traits")
 local Spatial = require("world.spatial_grid")
+local spatialQueryContext = Spatial.newQueryContext(true)
 local Effects = require("world.effects")
 local Messages = require("ui.messages")
 local BossHP = require("ui.boss_hp")
@@ -565,7 +566,7 @@ end
 local function countNearbyBossAdds(boss)
 	local radius = 320
 	local radius2 = radius * radius
-	local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, radius, true)
+	local nearbyAdds, nearbyCount = Spatial.queryCells(boss.x, boss.y, radius, spatialQueryContext)
 	local aliveAdds = 0
 	for i = 1, nearbyCount do
 		local enemy = nearbyAdds[i]

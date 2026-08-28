@@ -7,6 +7,8 @@ local CELL_SIZE = Constants.TILE * 2
 
 local nextId = 0
 local inserted = {}
+local queryContext = Spatial.newQueryContext(true)
+local localQueryContext = Spatial.newQueryContext(true)
 
 local function add(x, y)
 	nextId = nextId + 1
@@ -31,9 +33,9 @@ local function contains(results, count, expected)
 end
 
 local function assertBothQueriesFind(x, radius, enemy, label)
-	local results, count = Spatial.queryCells(x, 0, radius, true)
+	local results, count = Spatial.queryCells(x, 0, radius, queryContext)
 	assert(contains(results, count, enemy), label .. " (queryCells)")
-	results, count = Spatial.queryCellsLocal(x, 0, radius, true)
+	results, count = Spatial.queryCellsLocal(x, 0, radius, localQueryContext)
 	assert(contains(results, count, enemy), label .. " (queryCellsLocal)")
 	assert(Spatial.localQueryFootprintKey(radius) == math.ceil(radius / CELL_SIZE),
 		label .. " (cache footprint)")
@@ -60,23 +62,45 @@ inserted = {}
 -- A map reset clears occupancy and reusable query state in place.
 local priorGrid = Spatial.grid
 local priorEnemy = add(4, 4)
-local priorResults, priorCount = Spatial.queryCells(4, 4, 1, true)
+local priorResults, priorCount = Spatial.queryCells(4, 4, 1, queryContext)
 assert(priorCount == 1 and priorResults[1] == priorEnemy, "reset fixture did not populate query state")
-Spatial.queryCellsLocal(4, 4, 1, true)
+Spatial.queryCellsLocal(4, 4, 1, localQueryContext)
 Spatial.queryOccupancy(0, 0, 1)
 Spatial.clear()
 assert(Spatial.grid == priorGrid and next(priorGrid) == nil,
 	"Spatial.clear replaced or failed to empty the exposed grid")
 local queryCount, candidateTotal = Spatial.getLocalQueryFrameStats()
 assert(queryCount == 0 and candidateTotal == 0, "Spatial.clear did not reset query frame counters")
-local resetResults, resetCount = Spatial.queryCells(4, 4, 1, true)
+local resetResults, resetCount = Spatial.queryCells(4, 4, 1, queryContext)
 assert(resetCount == 0 and resetResults[1] == nil, "map reset retained a stale query result")
-local localResults, localCount = Spatial.queryCellsLocal(4, 4, 1, true)
+local localResults, localCount = Spatial.queryCellsLocal(4, 4, 1, localQueryContext)
 assert(localCount == 0 and localResults[1] == nil, "map reset retained a stale local query result")
 local occupancy, occupancyCount, occupancySum = Spatial.queryOccupancy(0, 0, 1)
 assert(occupancyCount == 9 and occupancySum == 0 and #occupancy == 9,
 	"map reset retained stale occupancy state")
 inserted = {}
+
+-- Visitor state is entirely caller-owned, so a nested query cannot overwrite
+-- the outer traversal's callback or ID-deduplication stamp.
+local nestedA = add(1, 1)
+local nestedB = add(CELL_SIZE + 1, 1)
+local outerSeen, outerCount = {}, 0
+local outerContext = Spatial.newQueryContext(true)
+local innerContext = Spatial.newQueryContext(true)
+Spatial.visitCells(1, 1, CELL_SIZE * 2, function(enemy)
+	outerCount = outerCount + 1
+	outerSeen[enemy] = (outerSeen[enemy] or 0) + 1
+	if enemy == nestedA then
+		local innerCount = 0
+		Spatial.visitCells(nestedB.x, nestedB.y, 0, function()
+			innerCount = innerCount + 1
+		end, nil, innerContext)
+		assert(innerCount == 1, "nested visitor returned the wrong candidate count")
+	end
+end, nil, outerContext)
+assert(outerCount == 2 and outerSeen[nestedA] == 1 and outerSeen[nestedB] == 1,
+	"nested query lost or duplicated an outer visitor candidate")
+clear()
 
 -- A center close to either cell edge must traverse far enough in that direction.
 local radius = CELL_SIZE * 2 + 1

@@ -3,6 +3,7 @@ return function(ctx, register)
 local B = {}
 local min, max, sin, cos, sqrt, atan2, floor, random, abs, pi = ctx.min, ctx.max, ctx.sin, ctx.cos, ctx.sqrt, ctx.atan2, ctx.floor, ctx.random, ctx.abs, ctx.pi
 local Constants, Spatial, lg = ctx.Constants, ctx.Spatial, ctx.lg
+local spatialQueryContext = Spatial.newQueryContext(false)
 local clearMap, clearArray = ctx.clearMap, ctx.clearArray
 local emitEvent, emitFX, emitSpawnProjectile = ctx.emitEvent, ctx.emitFX, ctx.emitSpawnProjectile
 local getStat, emitDamage, beginChainDamageBudget = ctx.getStat, ctx.emitDamage, ctx.beginChainDamageBudget
@@ -19,7 +20,7 @@ B.retarget_on_spawn = {
 		local best = nil
 		local bestDist = r2
 
-		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(p.x, p.y, radius, spatialQueryContext)
 
 		for i = 1, nearbyCount do
 			local e = nearby[i]

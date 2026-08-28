@@ -12,8 +12,6 @@ local INV_CELL = 1 / CELL_SIZE
 local grid = {}
 Spatial.grid = grid
 
-local outerQueryBuffer = {}
-local nestedQueryBuffer = {}
 local occupancyBuffer = {}
 local enemyCellChangedHook
 local enemyRemovedHook
@@ -30,30 +28,9 @@ local function nextStamp(ctx)
 	return stamp
 end
 
-local outerCollectContext = {
-	results = outerQueryBuffer,
-	count = 0,
-	dedupeById = false,
-	seen = {},
-	stamp = 0,
-}
-
-local nestedCollectContext = {
-	results = nestedQueryBuffer,
-	count = 0,
-	dedupeById = false,
-	seen = {},
-	stamp = 0,
-}
-
 local frameStats = {
 	localQueryCount = 0,
 	localCandidateTotal = 0,
-}
-
-local forEachContext = {
-	fn = nil,
-	context = nil,
 }
 
 local function clearTable(t)
@@ -100,10 +77,10 @@ local function traverseOccupancy(cx, cy, radiusCells, onCell, context)
 	return eachNeighborInRange(cx, cy, radiusCells or 1, onCell, context)
 end
 
-local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById)
+local function traverseQueryCellsCollect(x, y, radius, collectContext)
 	local ctx = collectContext
+	local previousCount = ctx.count
 	ctx.count = 0
-	ctx.dedupeById = dedupeById == true
 	local useDedupe = ctx.dedupeById
 	if useDedupe then
 		nextStamp(ctx)
@@ -156,16 +133,24 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 			end
 		end
 	end
+	for i = count + 1, previousCount do
+		results[i] = nil
+	end
 	ctx.count = count
 	return results, count
 end
 
-local function traverseQueryCellsCallback(x, y, radius, callbackContext)
+local function traverseQueryCellsCallback(x, y, radius, fn, context, queryContext)
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
 	local cellRadius = queryCellFootprint(radius)
-	local fn = callbackContext.fn
-	local context = callbackContext.context
+	local useDedupe = queryContext.dedupeById
+	local seen, stamp
+	if useDedupe then
+		stamp = nextStamp(queryContext)
+		seen = queryContext.seen
+	end
+	local count = 0
 	for dx = -cellRadius, cellRadius do
 		local col = grid[cx + dx]
 		if col then
@@ -173,12 +158,19 @@ local function traverseQueryCellsCallback(x, y, radius, callbackContext)
 				local cell = col[cy + dy]
 				if cell then
 					for i = 1, #cell do
-						fn(cell[i], context)
+						local enemy = cell[i]
+						local id = enemy.id
+						if not (useDedupe and id and seen[id] == stamp) then
+							if useDedupe and id then seen[id] = stamp end
+							count = count + 1
+							fn(enemy, context)
+						end
 					end
 				end
 			end
 		end
 	end
+	return count
 end
 
 local function removeFromCell(e)
@@ -277,36 +269,30 @@ end
 
 function Spatial.clear()
 	clearTable(grid)
-	clearTable(outerQueryBuffer)
-	clearTable(nestedQueryBuffer)
 	clearTable(occupancyBuffer)
-	clearTable(outerCollectContext.seen)
-	clearTable(nestedCollectContext.seen)
-	outerCollectContext.count = 0
-	outerCollectContext.dedupeById = false
-	outerCollectContext.stamp = 0
-	nestedCollectContext.count = 0
-	nestedCollectContext.dedupeById = false
-	nestedCollectContext.stamp = 0
 	frameStats.localQueryCount = 0
 	frameStats.localCandidateTotal = 0
-	forEachContext.fn = nil
-	forEachContext.context = nil
 end
 
 function Spatial.beginFrame()
-	outerCollectContext.count = 0
-	nestedCollectContext.count = 0
 	frameStats.localQueryCount = 0
 	frameStats.localCandidateTotal = 0
 end
 
-function Spatial.queryCells(x, y, radius, dedupeById)
-	return traverseQueryCellsCollect(x, y, radius, outerCollectContext, dedupeById)
+function Spatial.newQueryContext(dedupeById, results)
+	return {results = results or {}, count = 0, dedupeById = dedupeById == true, seen = {}, stamp = 0}
 end
 
-function Spatial.queryCellsLocal(x, y, radius, dedupeById)
-	local results, count = traverseQueryCellsCollect(x, y, radius, nestedCollectContext, dedupeById)
+-- Collection and visitation both require caller-owned state. A caller that can
+-- nest queries must use a distinct context for every simultaneously active
+-- traversal; contexts may otherwise be retained and reused without allocation.
+function Spatial.queryCells(x, y, radius, queryContext)
+	assert(queryContext and queryContext.results, "queryCells requires a caller-owned query context")
+	return traverseQueryCellsCollect(x, y, radius, queryContext)
+end
+
+function Spatial.queryCellsLocal(x, y, radius, queryContext)
+	local results, count = Spatial.queryCells(x, y, radius, queryContext)
 	frameStats.localQueryCount = frameStats.localQueryCount + 1
 	frameStats.localCandidateTotal = frameStats.localCandidateTotal + count
 	return results, count
@@ -368,12 +354,9 @@ function Spatial.queryOccupancySum(cx, cy, radiusCells)
 	return sum
 end
 
-function Spatial.forEachInCells(x, y, radius, fn, context)
-	forEachContext.fn = fn
-	forEachContext.context = context
-	traverseQueryCellsCallback(x, y, radius, forEachContext)
-	forEachContext.fn = nil
-	forEachContext.context = nil
+function Spatial.visitCells(x, y, radius, fn, context, queryContext)
+	assert(queryContext, "visitCells requires a caller-owned query context")
+	return traverseQueryCellsCallback(x, y, radius, fn, context, queryContext)
 end
 
 return Spatial

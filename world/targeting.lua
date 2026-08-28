@@ -7,6 +7,7 @@ local EPS = 0.0001
 local HUGE_NEG = -math.huge
 local pointToCell = Spatial.pointToCell
 local queryCellsLocal = Spatial.queryCellsLocal
+local queryContext = Spatial.newQueryContext(false)
 local localQueryFootprintKey = Spatial.localQueryFootprintKey
 local simpleCtx = {}
 -- Frame cache uses nested integer-keyed tables to reduce temporary string
@@ -86,7 +87,7 @@ local function getCandidatesForTower(tower)
 	entry.count = 0
 	entry.frameId = frameId
 
-	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, false)
+	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, queryContext)
 	local count = 0
 	for i = 1, candidateCount do
 		local e = candidates[i]
