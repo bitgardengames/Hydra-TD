@@ -15,6 +15,8 @@ local simpleCtx = {}
 local MAX_POOLED_ENTRIES = 256
 local frameCache = {
 	entries = {},
+	activeEntries = {},
+	activeCount = 0,
 	frameId = nil,
 	pool = {},
 	poolCount = 0,
@@ -51,20 +53,20 @@ local function releaseCandidates(entry)
 end
 
 local function recycleCurrentEntries(cache)
-	for cx, entriesByY in pairs(cache.entries) do
-		for cy, entriesByFootprint in pairs(entriesByY) do
-			for footprintKey, entry in pairs(entriesByFootprint) do
-				releaseCandidates(entry)
-				entriesByFootprint[footprintKey] = nil
-				if cache.poolCount < MAX_POOLED_ENTRIES then
-					cache.poolCount = cache.poolCount + 1
-					cache.pool[cache.poolCount] = entry
-				end
-			end
-			entriesByY[cy] = nil
+	local entries = cache.entries
+	local activeEntries = cache.activeEntries
+	for i = 1, cache.activeCount do
+		local entry = activeEntries[i]
+		releaseCandidates(entry)
+		entries[entry.key] = nil
+		entry.key = nil
+		activeEntries[i] = nil
+		if cache.poolCount < MAX_POOLED_ENTRIES then
+			cache.poolCount = cache.poolCount + 1
+			cache.pool[cache.poolCount] = entry
 		end
-		cache.entries[cx] = nil
 	end
+	cache.activeCount = 0
 end
 
 function Targeting.beginFrame(frameId)
@@ -93,18 +95,10 @@ local function getCandidatesForTower(tower)
 	Targeting.beginFrame(frameId)
 	local cx, cy = pointToCell(tower.x, tower.y)
 	local footprintKey = localQueryFootprintKey(tower.range)
-	local entriesByX = frameCache.entries
-	local entriesByY = entriesByX[cx]
-	if not entriesByY then
-		entriesByY = {}
-		entriesByX[cx] = entriesByY
-	end
-	local entriesByFootprint = entriesByY[cy]
-	if not entriesByFootprint then
-		entriesByFootprint = {}
-		entriesByY[cy] = entriesByFootprint
-	end
-	local entry = entriesByFootprint[footprintKey]
+	-- Separators cannot occur in Lua's numeric representation, making this an
+	-- unambiguous tuple key even when either cell coordinate is negative.
+	local key = cx .. ":" .. cy .. ":" .. footprintKey
+	local entry = frameCache.entries[key]
 	if entry then
 		return entry.list, entry.count
 	end
@@ -116,7 +110,10 @@ local function getCandidatesForTower(tower)
 	else
 		entry = {list = {}, count = 0}
 	end
-	entriesByFootprint[footprintKey] = entry
+	entry.key = key
+	frameCache.entries[key] = entry
+	frameCache.activeCount = frameCache.activeCount + 1
+	frameCache.activeEntries[frameCache.activeCount] = entry
 
 	local list = entry.list
 
