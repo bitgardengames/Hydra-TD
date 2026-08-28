@@ -14,7 +14,10 @@ local simpleCtx = {}
 local frameCache = {
 	frameId = -1,
 	entries = {},
+	touched = {},
+	listPool = {},
 }
+local MAX_POOLED_LISTS = 16
 local function updateBest(e, c, score)
 	local diff = score - c.bestScore
 	if diff > EPS or (diff >= -EPS and (not c.best or e.id < c.best.id)) then
@@ -39,10 +42,29 @@ local function evaluateCandidate(e, c)
 end
 
 local function clearFrameCache(cache, frameId)
-	-- Entries own their frame stamps, so advancing the cache does not need to
-	-- discard its coordinate tables, entries, or candidate lists. An entry is
-	-- rebuilt lazily before it can be returned in the new frame.
+	local pool = cache.listPool
+	for i = 1, #cache.touched do
+		local entry = cache.touched[i]
+		local list = entry.list
+		for candidateIndex = 1, entry.count do
+			list[candidateIndex] = nil
+		end
+		if #pool < MAX_POOLED_LISTS then
+			pool[#pool + 1] = list
+		end
+		cache.touched[i] = nil
+	end
+
+	-- Drop every coordinate level. In particular, cells belonging to sold
+	-- towers or to a previous map must not keep growing this index forever.
+	for cx in pairs(cache.entries) do
+		cache.entries[cx] = nil
+	end
 	cache.frameId = frameId
+end
+
+function Targeting.clearFrameCache()
+	clearFrameCache(frameCache, -1)
 end
 
 local function getCandidatesForTower(tower)
@@ -65,22 +87,18 @@ local function getCandidatesForTower(tower)
 		entriesByY[cy] = entriesByFootprint
 	end
 	local entry = entriesByFootprint[footprintKey]
-	if entry and entry.frameId == frameId then
+	if entry then
 		return entry.list, entry.count
 	end
 
-	if not entry then
-		entry = {
-			list = {},
-			count = 0,
-			frameId = -1,
-		}
-		entriesByFootprint[footprintKey] = entry
-	end
-
-	local previousCount = entry.count
-	entry.count = 0
-	entry.frameId = frameId
+	local pool = frameCache.listPool
+	entry = {
+		list = pool[#pool] or {},
+		count = 0,
+	}
+	pool[#pool] = nil
+	entriesByFootprint[footprintKey] = entry
+	frameCache.touched[#frameCache.touched + 1] = entry
 
 	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, false)
 	local list = entry.list
@@ -91,9 +109,6 @@ local function getCandidatesForTower(tower)
 			count = count + 1
 			list[count] = e
 		end
-	end
-	for i = count + 1, previousCount do
-		list[i] = nil
 	end
 	entry.count = count
 
