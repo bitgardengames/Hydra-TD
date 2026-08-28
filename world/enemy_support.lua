@@ -8,8 +8,74 @@ local dirtySources = {}
 local dirtySourceSet = {}
 local changedTargets = {}
 local changedTargetSet = {}
+local coveredSources = {}
+local lifecycleStats = {sourceCandidatesExamined = 0}
+local markDirty
 
-local function markDirty(source)
+local function coveredCell(cx, cy)
+	local column = coveredSources[cx]
+	if not column then
+		column = {}
+		coveredSources[cx] = column
+	end
+	local cell = column[cy]
+	if not cell then
+		cell = {}
+		column[cy] = cell
+	end
+	return cell
+end
+
+local function insertCoveredCell(cx, cy, source)
+	local cell = coveredCell(cx, cy)
+	local entry = {source = source, cell = cell, index = #cell + 1, cx = cx, cy = cy}
+	cell[entry.index] = entry
+	local entries = source._supportCoveredCells
+	entries[#entries + 1] = entry
+end
+
+local function removeCoveredCells(source)
+	local entries = source._supportCoveredCells
+	if not entries then return end
+	for i = #entries, 1, -1 do
+		local entry = entries[i]
+		local cell = entry.cell
+		local last = cell[#cell]
+		cell[entry.index] = last
+		cell[#cell] = nil
+		if last and last ~= entry then
+			last.index = entry.index
+		end
+		if #cell == 0 then
+			local column = coveredSources[entry.cx]
+			column[entry.cy] = nil
+			if next(column) == nil then coveredSources[entry.cx] = nil end
+		end
+		entries[i] = nil
+	end
+end
+
+local function indexCoveredCells(source)
+	removeCoveredCells(source)
+	local aura = source.support
+	if not aura or source.hp <= 0 or source._supportRemoved then return end
+	source._supportCoveredCells = source._supportCoveredCells or {}
+	Spatial.forEachQueryCell(source.x, source.y, aura.radius, insertCoveredCell, source)
+end
+
+local function markCellSources(cx, cy, excluded)
+	if cx == nil then return end
+	local column = coveredSources[cx]
+	local cell = column and column[cy]
+	if not cell then return end
+	for i = 1, #cell do
+		local source = cell[i].source
+		lifecycleStats.sourceCandidatesExamined = lifecycleStats.sourceCandidatesExamined + 1
+		if source ~= excluded then markDirty(source) end
+	end
+end
+
+markDirty = function(source)
 	if source and source.supportSourceIndex and not dirtySourceSet[source] then
 		dirtySourceSet[source] = true
 		dirtySources[#dirtySources + 1] = source
@@ -68,6 +134,7 @@ end
 
 function Support.remove(source)
 	clearSource(source, true)
+	removeCoveredCells(source)
 	local index = source.supportSourceIndex
 	if not index then
 		return
@@ -147,16 +214,11 @@ local function syncDefinition(source)
 	local aura = source.def.support
 	if aura ~= source.support then
 		source.support = aura
+		indexCoveredCells(source)
 	end
 	if source.hp <= 0 then
 		Support.detachDead(source)
 	end
-end
-
-local function touchesCell(source, cx, cy)
-	local aura = source.support
-	return aura ~= nil and cx ~= nil
-		and Spatial.queryIncludesCell(source.x, source.y, aura.radius, cx, cy)
 end
 
 function Support.markSourceDirty(source)
@@ -164,18 +226,15 @@ function Support.markSourceDirty(source)
 end
 
 function Support.onEnemyCellChanged(enemy, oldCX, oldCY, newCX, newCY)
+	markCellSources(oldCX, oldCY, enemy)
+	if newCX ~= oldCX or newCY ~= oldCY then
+		markCellSources(newCX, newCY, enemy)
+	end
 	if enemy.supportSourceIndex then
 		-- A source can move within an unchanged cell neighborhood while its aura
 		-- membership changes, so its own movement always invalidates it.
 		markDirty(enemy)
-	end
-
-	for i = 1, #sources do
-		local source = sources[i]
-		if source.supportSourceIndex and source ~= enemy
-			and (touchesCell(source, oldCX, oldCY) or touchesCell(source, newCX, newCY)) then
-			markDirty(source)
-		end
+		indexCoveredCells(enemy)
 	end
 end
 
@@ -183,13 +242,7 @@ function Support.onEnemyRemoved(enemy, oldCX, oldCY)
 	if enemy.supportSourceIndex then
 		Support.remove(enemy)
 	end
-
-	for i = 1, #sources do
-		local source = sources[i]
-		if source.supportSourceIndex and touchesCell(source, oldCX, oldCY) then
-			markDirty(source)
-		end
-	end
+	markCellSources(oldCX, oldCY, enemy)
 
 	local contributions = enemy.supportContributions
 	if contributions then
@@ -213,6 +266,7 @@ function Support.register(source)
 	source._supportRemoved = false
 	sources[#sources + 1] = source
 	source.supportSourceIndex = #sources
+	indexCoveredCells(source)
 	markDirty(source)
 end
 
@@ -221,16 +275,21 @@ function Support.update(dt)
 	while i <= #sources do
 		local source = sources[i]
 		local aura = source.def.support
-		local definitionChanged = aura ~= source.support or aura ~= source._supportAura
-		if aura ~= source.support then
+		local supportChanged = aura ~= source.support
+		local definitionChanged = supportChanged or aura ~= source._supportAura
+		if supportChanged then
 			source.support = aura
+			indexCoveredCells(source)
 		end
 		if source.hp <= 0 then
 			Support.detachDead(source)
 		end
 		if source.supportSourceIndex and source.hp > 0
-			and (definitionChanged or (aura and (aura.radius ~= source._supportRadius
+		and (definitionChanged or (aura and (aura.radius ~= source._supportRadius
 			or aura.speedMultiplier ~= source._supportMultiplier))) then
+			if not supportChanged then
+				indexCoveredCells(source)
+			end
 			markDirty(source)
 		end
 		if aura and source.hp > 0 then
@@ -240,6 +299,14 @@ function Support.update(dt)
 			i = i + 1
 		end
 	end
+end
+
+function Support.resetLifecycleStats()
+	lifecycleStats.sourceCandidatesExamined = 0
+end
+
+function Support.getLifecycleStats()
+	return lifecycleStats.sourceCandidatesExamined
 end
 
 -- Called after all enemy Spatial.updateEnemy calls for the tick. Lifecycle
@@ -263,6 +330,7 @@ function Support.clear()
 	for i = #sources, 1, -1 do
 		local source = sources[i]
 		clearSource(source, true)
+		removeCoveredCells(source)
 		source.supportSourceIndex = nil
 		sources[i] = nil
 	end
