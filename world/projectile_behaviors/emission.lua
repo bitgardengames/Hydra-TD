@@ -3,6 +3,7 @@ return function(ctx, register)
 local B = {}
 local min, max, sin, cos, sqrt, atan2, floor, random, abs, pi = ctx.min, ctx.max, ctx.sin, ctx.cos, ctx.sqrt, ctx.atan2, ctx.floor, ctx.random, ctx.abs, ctx.pi
 local Constants, Spatial, lg = ctx.Constants, ctx.Spatial, ctx.lg
+local spatialQueryContext = Spatial.newQueryContext(false)
 local clearMap, clearArray = ctx.clearMap, ctx.clearArray
 local emitEvent, emitFX, emitSpawnProjectile = ctx.emitEvent, ctx.emitFX, ctx.emitSpawnProjectile
 local getStat, emitDamage, beginChainDamageBudget = ctx.getStat, ctx.emitDamage, ctx.beginChainDamageBudget
@@ -132,7 +133,7 @@ B.fork_chain = {
 			local link = p._chain[i]
 
 			if link.to and link.to.hp > 0 then
-				local nearby, nearbyCount = Spatial.queryCells(link.to.x, link.to.y, radius)
+				local nearby, nearbyCount = Spatial.queryCells(link.to.x, link.to.y, radius, spatialQueryContext)
 
 				local forksAdded = 0
 
@@ -269,7 +270,7 @@ B.lancer_ricochet = {
 		local radius = data.radius or 90
 		local r2 = radius * radius
 
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius)
+		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, radius, spatialQueryContext)
 
 		local best = nil
 		local bestDist = r2
@@ -434,7 +435,7 @@ B.poison_burst_on_death = {
 		local spread = e._infectSpread
 		if not spread then return end
 
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, spread.radius)
+		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, spread.radius, spatialQueryContext)
 		local radius = spread.radius
 		local r2 = radius * radius
 
@@ -528,7 +529,7 @@ B.beam = {
 			local sy = y1 + vy * dist
 
 			if b.timer <= 0 then
-				local nearby, nearbyCount = Spatial.queryCells(sx, sy, width)
+				local nearby, nearbyCount = Spatial.queryCells(sx, sy, width, spatialQueryContext)
 
 				for i = 1, nearbyCount do
 					local e2 = nearby[i]

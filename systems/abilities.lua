@@ -4,6 +4,8 @@ local Enemies = require("world.enemies")
 local Towers = require("world.towers")
 local Effects = require("world.effects")
 local Spatial = require("world.spatial_grid")
+local spatialQueryContext = Spatial.newQueryContext(true)
+local spatialVisitContext = Spatial.newQueryContext(false)
 local State = require("core.state")
 local Constants = require("core.constants")
 
@@ -22,16 +24,14 @@ end
 
 local function forEachEnemyInRadius(x, y, radius, callback, useRenderedPosition)
 	local radiusSquared = radius * radius
-	local candidates, candidateCount = Spatial.queryCells(x, y, radius, true)
-	for i = 1, candidateCount do
-		local enemy = candidates[i]
+	Spatial.visitCells(x, y, radius, function(enemy)
 		local enemyX = useRenderedPosition and (enemy.rx or enemy.x) or enemy.x
 		local enemyY = useRenderedPosition and (enemy.ry or enemy.y) or enemy.y
 		local dx, dy = enemyX - x, enemyY - y
 		if enemy.hp > 0 and dx * dx + dy * dy <= radiusSquared then
 			callback(enemy)
 		end
-	end
+	end, nil, spatialVisitContext)
 end
 
 local function addActive(effect)
@@ -232,7 +232,7 @@ local function collectAffected(entityKind, effect, x, y, affected, occupied)
 	local count = 0
 	if entityKind == "enemies" then
 		local radiusSquared = effect.radius * effect.radius
-		local candidates, candidateCount = Spatial.queryCells(x, y, effect.radius, true)
+		local candidates, candidateCount = Spatial.queryCells(x, y, effect.radius, spatialQueryContext)
 		for i = 1, candidateCount do
 			local enemy = candidates[i]
 			local dx = (enemy.rx or enemy.x) - x
@@ -332,7 +332,7 @@ local function updateLastStand(effect)
 	end
 
 	local radiusSquared = effect.radius * effect.radius
-	local candidates, candidateCount = Spatial.queryCells(effect.x, effect.y, effect.radius, true)
+	local candidates, candidateCount = Spatial.queryCells(effect.x, effect.y, effect.radius, spatialQueryContext)
 	for enemy, wasInside in pairs(effect.inside) do
 		if wasInside then
 			local dx, dy = enemy.x - effect.x, enemy.y - effect.y

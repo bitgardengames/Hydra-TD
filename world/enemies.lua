@@ -4,6 +4,8 @@ local State = require("core.state")
 local Effects = require("world.effects")
 local MapMod = require("world.map")
 local Spatial = require("world.spatial_grid")
+local hitQueryContext = Spatial.newQueryContext(true)
+local enemyQueryContext = Spatial.newQueryContext(false)
 local EnemySupport = require("world.enemy_support")
 local EnemyDefs = require("world.enemy_defs")
 local Floaters = require("ui.floaters")
@@ -166,7 +168,7 @@ local function advanceEnemyAlongPath(e, moveDist, pathWorld, pathSegLen, totalLe
 end
 
 local function findEnemyAt(x, y)
-	local candidates, candidateCount = Spatial.queryCellsLocal(x, y, MAX_HIT_QUERY_RADIUS, true)
+	local candidates, candidateCount = Spatial.queryCellsLocal(x, y, MAX_HIT_QUERY_RADIUS, hitQueryContext)
 
 	if candidateCount == 0 then
 		return nil
@@ -467,7 +469,7 @@ local function spreadInfection(e)
 	local infect = e._infectSpread
 	local spreadStacks = floor(e.poisonStacks * infect.stackMult)
 	if spreadStacks > 0 then
-		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, infect.radius)
+		local nearby, nearbyCount = Spatial.queryCells(e.x, e.y, infect.radius, enemyQueryContext)
 		local radius2 = infect.radius * infect.radius
 		for i = 1, nearbyCount do
 			local other = nearby[i]

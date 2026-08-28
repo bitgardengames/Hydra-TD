@@ -1,4 +1,5 @@
 local Spatial = require("world.spatial_grid")
+local spatialQueryContext = Spatial.newQueryContext(false)
 
 local Support = {}
 
@@ -169,7 +170,7 @@ local function refreshSource(source)
 		affected[target] = false
 	end
 
-	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius)
+	local nearby, count = Spatial.queryCells(source.x, source.y, aura.radius, spatialQueryContext)
 	for i = 1, count do
 		local target = nearby[i]
 		if target ~= source and target.hp > 0 then
