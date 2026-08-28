@@ -2,6 +2,9 @@
 -- definitions are not part of normal campaign or replay/endless balance.
 local ModuleDefs = {}
 local ProjectileBehaviorRegistry = require("world.projectile_behaviors.registry")
+local BehaviorContext = require("systems.behavior_context")
+local cloneBehavior = BehaviorContext.cloneBehavior
+local cloneBehaviors = BehaviorContext.cloneBehaviors
 
 --[[
 	Module authoring hook contract (projectile behavior trigger model):
@@ -520,63 +523,13 @@ add("beam_conversion", {
 -- TOWER SPECIALIZATIONS
 -- =========================
 
-local function cloneBehavior(src)
-	local copy = {id = src.id}
-
-	if src.noInherit then
-		copy.noInherit = true
-	end
-
-	if src.data then
-		local data = {}
-		for k, v in pairs(src.data) do
-			data[k] = v
-		end
-		copy.data = data
-	end
-
-	if src.hooks then
-		local hooks = {}
-		for i = 1, #src.hooks do
-			hooks[i] = src.hooks[i]
-		end
-		copy.hooks = hooks
-	end
-
-	return copy
-end
-
-local function cloneBehaviors(behaviors)
-	local out = {}
-
-	for i = 1, #behaviors do
-		out[#out + 1] = cloneBehavior(behaviors[i])
-	end
-
-	return out
-end
-
 local function copyBehaviorFields(target, source)
-	target.noInherit = source.noInherit or nil
-	target.hooks = nil
-
-	if source.hooks then
-		target.hooks = {}
-		for i = 1, #source.hooks do
-			target.hooks[i] = source.hooks[i]
-		end
+	local copy = cloneBehavior(source)
+	for key in pairs(target) do
+		target[key] = nil
 	end
-
-	if source.data then
-		target.data = target.data or {}
-		for k in pairs(target.data) do
-			target.data[k] = nil
-		end
-		for k, v in pairs(source.data) do
-			target.data[k] = v
-		end
-	else
-		target.data = nil
+	for key, value in pairs(copy) do
+		target[key] = value
 	end
 end
 
