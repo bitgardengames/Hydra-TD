@@ -268,6 +268,8 @@ local spawnerDefaults = {
 	groupRemaining = 0,
 	totalScheduled = 0,
 	spawned = 0,
+	livingScheduledEnemies = 0,
+	clearedScheduledEnemies = 0,
 	waitingGroupDelay = false,
 }
 
@@ -371,6 +373,8 @@ local function beginSpawner(count, hpMult, spdMult, groups)
 		groupRemaining = firstGroup and firstGroup.count or 0,
 		totalScheduled = count or 0,
 		spawned = 0,
+		livingScheduledEnemies = 0,
+		clearedScheduledEnemies = 0,
 		waitingGroupDelay = firstGroup ~= nil and (firstGroup.delay or 0) > 0,
 	})
 
@@ -548,6 +552,7 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 		if group and group.rewardMult then enemy.reward = math.min(1e6, enemy.reward * group.rewardMult) end
 		if group and group.eliteTrait then enemy.eliteTrait = group.eliteTrait end
 		enemy.scheduledWaveEnemy = true
+		spawner.livingScheduledEnemies = spawner.livingScheduledEnemies + 1
 		if enemy.boss and not bossSpawnPresented then
 			bossSpawnPresented = true
 			lastBossPosition = {x = enemy.x, y = enemy.y}
@@ -678,39 +683,48 @@ function Waves.getSpawner()
 	return spawner
 end
 
--- Return a snapshot rather than the mutable spawner table. Presentation and
--- diagnostics can observe combat pacing without being able to alter it.
-function Waves.getProgress()
+-- Scheduled enemies notify at their canonical kill/escape boundary. The flag
+-- check keeps boss summons and any other unscheduled enemies out of progress.
+function Waves.onScheduledEnemyRemoved(enemy)
+	if not enemy or not enemy.scheduledWaveEnemy then return end
+	enemy.scheduledWaveEnemy = false
+	spawner.livingScheduledEnemies = max(0, spawner.livingScheduledEnemies - 1)
+	spawner.clearedScheduledEnemies = spawner.clearedScheduledEnemies + 1
+end
+
+local progressSnapshot = {_currentAuthoredGroup = {}}
+
+-- Populate a retained presentation snapshot in O(1). Callers may supply their
+-- own table; its nested authored-group table is likewise allocated at most once.
+function Waves.getProgress(out)
+	out = out or progressSnapshot
 	local group = spawner.groups and spawner.groups[spawner.groupIndex] or nil
 	local living = #Enemies.enemies
-	local scheduledLiving = 0
-	for i = 1, living do
-		if Enemies.enemies[i].scheduledWaveEnemy then
-			scheduledLiving = scheduledLiving + 1
-		end
-	end
 	local queued = spawner.remaining
-	local currentGroup = nil
+	local currentGroup = out._currentAuthoredGroup
+	if not currentGroup then
+		currentGroup = {}
+		out._currentAuthoredGroup = currentGroup
+	end
 	if group then
-		currentGroup = {
-			index = spawner.groupIndex,
-			total = #spawner.groups,
-			kind = group.kind,
-			remaining = spawner.groupRemaining,
-		}
+		currentGroup.index = spawner.groupIndex
+		currentGroup.total = #spawner.groups
+		currentGroup.kind = group.kind
+		currentGroup.remaining = spawner.groupRemaining
+		out.currentAuthoredGroup = currentGroup
+	else
+		out.currentAuthoredGroup = nil
 	end
 
-	return {
-		totalScheduled = spawner.totalScheduled,
-		spawnedCount = spawner.spawned,
-		livingCount = living,
-		clearedCount = max(0, spawner.spawned - scheduledLiving),
-		remainingQueuedCount = queued,
-		currentAuthoredGroup = currentGroup,
-		waitingOnGroupDelay = spawner.active and spawner.waitingGroupDelay and spawner.timer > 0,
-		waitingOnPopulationBackpressure = spawner.active and queued > 0
-			and living >= getActiveEnemyCap(State.wave),
-	}
+	out.totalScheduled = spawner.totalScheduled
+	out.spawnedCount = spawner.spawned
+	out.livingCount = spawner.livingScheduledEnemies
+	out.clearedCount = spawner.clearedScheduledEnemies
+	out.remainingQueuedCount = queued
+	out.waitingOnGroupDelay = spawner.active and spawner.waitingGroupDelay and spawner.timer > 0
+	out.waitingOnPopulationBackpressure = spawner.active and queued > 0
+		and living >= getActiveEnemyCap(State.wave)
+	return out
 end
 
 function Waves.getActiveEnemyCap()

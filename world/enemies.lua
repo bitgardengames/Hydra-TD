@@ -362,6 +362,7 @@ local function handleEnemyKilled(e, i, isBoss)
 		Achievements.increment("BOSSES_KILLED")
 	end
 
+	require("systems.waves").onScheduledEnemyRemoved(e)
 	Spatial.removeEnemy(e)
 	releaseEnemy(e)
 	swapRemove(enemies, i)
@@ -384,6 +385,7 @@ local function beginGameOver(reason)
 end
 
 local function handleEnemyEscaped(e, i, isBoss)
+	require("systems.waves").onScheduledEnemyRemoved(e)
 	Save.recordEnemyResult(e.kind, "leak")
 	Effects.shake(isBoss and 12 or 5)
 	if isBoss then
