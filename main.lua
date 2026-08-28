@@ -21,10 +21,7 @@ local Sim = require("core.sim")
 local Tooltip = require("ui.tooltip")
 local Messages = require("ui.messages")
 local Draw = require("render.draw")
-local Trees = require("world.scatter_trees")
-local Cacti = require("world.scatter_cactus")
-local Rocks = require("world.scatter_rocks")
-local Mushrooms = require("world.scatter_mushrooms")
+local Scatter = require("world.scatter")
 local DamageMeter = require("ui.damage_meter")
 local BossHealthBar = require("ui.boss_hp")
 local BottomBar = require("ui.bottom_bar")
@@ -78,26 +75,7 @@ function resetGame()
 
 	love.math.setRandomSeed(123456 + State.worldMapIndex * 1009)
 
-	local biome = MapMod.map.biome
-	local scatter = biome and biome.scatter
-
-	if scatter then
-		if scatter.rocks and scatter.rocks.enabled then
-			Rocks.generate(scatter.rocks)
-		end
-
-		if scatter.trees and scatter.trees.enabled then
-			Trees.generate(scatter.trees)
-		end
-
-		if scatter.cactus and scatter.cactus.enabled then
-			Cacti.generate(scatter.cactus)
-		end
-
-		if biome.scatter.mushrooms and biome.scatter.mushrooms.enabled then
-			Mushrooms.generate()
-		end
-	end
+	Scatter.generateForBiome(MapMod.map.biome)
 
 	MapWorldCache.invalidate()
 
