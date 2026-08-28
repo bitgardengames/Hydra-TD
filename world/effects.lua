@@ -578,9 +578,9 @@ function Effects.update(dt)
 	end
 end
 
-local function drawAllFamilies()
-	for i = 1, #Effects.presentation do
-		local e = Effects.presentation[i]
+local function drawPresentation(presentation)
+	for i = 1, #presentation do
+		local e = presentation[i]
 		local u = min(1, e.t / e.life)
 		local alpha = sin(pi * u)
 		if e.kind == "boss_incoming" and e.path and #e.path > 1 then
@@ -600,10 +600,13 @@ local function drawAllFamilies()
 		end
 	end
 	lg.setLineWidth(1)
+end
+
+local function drawTowerTransformations(towerTransformations)
 	-- Short, low-opacity tower-local upgrade feedback, drawn beneath the louder
 	-- combat effects so enemies remain readable.
-	for i = 1, #Effects.towerTransformations do
-		local e = Effects.towerTransformations[i]
+	for i = 1, #towerTransformations do
+		local e = towerTransformations[i]
 		local u = min(1, e.t / e.life)
 		local fade = (1 - u) * 0.78
 		local c = e.color
@@ -639,10 +642,10 @@ local function drawAllFamilies()
 		end
 	end
 	lg.setLineWidth(1)
+end
 
+local function drawSplashes(splashes)
 	-- Cannon splash rings
-	local splashes = Effects.splashes
-
 	for i = 1, #splashes do
 		local s = splashes[i]
 		local t = s.t / s.life
@@ -680,10 +683,10 @@ local function drawAllFamilies()
 	end
 
 	lg.setLineWidth(1)
+end
 
+local function drawExplosions(explosions)
 	-- Explosions
-	local explosions = Effects.explosions
-
 	for i = 1, #explosions do
 		local e = explosions[i]
 		local t = e.t / e.life
@@ -701,10 +704,10 @@ local function drawAllFamilies()
 	end
 
 	lg.setLineWidth(1)
+end
 
+local function drawZaps(zaps)
 	-- Zaps
-	local zaps = Effects.zaps
-
 	for i = 1, #zaps do
 		local z = zaps[i]
 		local segs = z.segs
@@ -849,9 +852,10 @@ local function drawAllFamilies()
 			lg.setLineWidth(1)
 		end
 	end
+	lg.setLineWidth(1)
+end
 
-	local zapLines = Effects.zapLines
-
+local function drawZapLines(zapLines)
 	for i = 1, #zapLines do
 		local z = zapLines[i]
 
@@ -889,10 +893,10 @@ local function drawAllFamilies()
 	end
 
 	lg.setLineWidth(1)
+end
 
+local function drawFrost(frost)
 	-- Frost shards
-	local frost = Effects.frost
-
 	for i = 1, #frost do
 		local f = frost[i]
 		local t = f.t / f.life
@@ -910,10 +914,10 @@ local function drawAllFamilies()
 
 		lg.pop()
 	end
+end
 
+local function drawPoison(poison)
 	-- Poison splash
-	local poison = Effects.poison
-
 	for i = 1, #poison do
 		local p = poison[i]
 		local t = p.t / p.life
@@ -928,10 +932,10 @@ local function drawAllFamilies()
 		lg.setColor(0.55, 0.9, 0.55, alpha)
 		lg.circle("fill", p.x, p.y, r * 0.6)
 	end
+end
 
+local function drawLancer(lancer)
 	-- Lancer hit
-	local lancer = Effects.lancer
-
 	for i = 1, #lancer do
 		local l = lancer[i]
 
@@ -942,10 +946,11 @@ local function drawAllFamilies()
 
 		lg.line(l.x, l.y, l.x - l.vx * 0.02, l.y - l.vy * 0.02)
 	end
+	lg.setLineWidth(1)
+end
 
+local function drawPlasmaParticles(plasmaParticles)
 	-- Plasma Particles
-	local plasmaParticles = Effects.plasmaParticles
-
 	for i = 1, #plasmaParticles do
 		local p = plasmaParticles[i]
 
@@ -962,9 +967,9 @@ local function drawAllFamilies()
 		lg.setColor(0.95, 0.65, 1.0, a)
 		lg.circle("fill", p.x, p.y, r)
 	end
+end
 
-	local placePuffs = Effects.placePuffs
-
+local function drawPlacePuffs(placePuffs)
 	for i = 1, #placePuffs do
 		local p = placePuffs[i]
 		local t = p.t / p.life
@@ -975,10 +980,10 @@ local function drawAllFamilies()
 		lg.setColor(0.8, 0.75, 0.7, alpha * 0.5)
 		lg.circle("fill", p.x, p.y, r)
 	end
+end
 
+local function drawDeath(death)
 	-- Enemy death
-	local death = Effects.death
-
 	for i = 1, #death do
 		local fx = death[i]
 
@@ -1003,9 +1008,9 @@ end
 
 -- Screen-space companion to presentationEvent. Kept out of Camera.begin so
 -- the accessibility-safe vignette remains stable when camera motion is off.
-local function drawPresentationOverlay()
-	for i = 1, #Effects.presentation do
-		local e = Effects.presentation[i]
+local function drawPresentationOverlay(presentation)
+	for i = 1, #presentation do
+		local e = presentation[i]
 		if e.kind == "boss_incoming" or e.kind == "boss_spawn" then
 			local a = sin(pi * min(1, e.t / e.life)) * 0.16
 			local w, h = lg.getDimensions()
@@ -1017,7 +1022,6 @@ local function drawPresentationOverlay()
 	lg.setLineWidth(1)
 end
 
-local function noDraw() end
 local function releaseSplash(object) release(splashPool, object) end
 local function releaseExplosion(object) release(explosionPool, object) end
 local function releaseFrost(object) release(frostPool, object) end
@@ -1030,31 +1034,34 @@ local function releaseTransformation(object) release(towerTransformationPool, ob
 local function releasePresentation(object) release(presentationPool, object) end
 
 -- Descriptors are constructed once and are deliberately ordered to preserve
--- the established update, rendering, and clear order. Presentation owns the
--- combined world renderer and its explicit screen-space overlay callback;
+-- the established update, rendering, and clear order. Every family owns one
+-- focused world renderer; presentation alone owns a screen-space overlay, and
 -- zaps own their segment-aware release callback.
 families = {
 	{name = "presentation", list = Effects.presentation, pool = presentationPool, update = nil,
-		draw = drawAllFamilies, drawOverlay = drawPresentationOverlay, release = releasePresentation},
+		draw = drawPresentation, drawOverlay = drawPresentationOverlay, release = releasePresentation},
 	{name = "towerTransformations", list = Effects.towerTransformations, pool = towerTransformationPool,
-		update = nil, draw = noDraw, release = releaseTransformation},
-	{name = "splashes", list = Effects.splashes, pool = splashPool, update = nil, draw = noDraw, release = releaseSplash},
+		update = nil, draw = drawTowerTransformations, release = releaseTransformation},
+	{name = "splashes", list = Effects.splashes, pool = splashPool, update = nil, draw = drawSplashes, release = releaseSplash},
 	{name = "explosions", list = Effects.explosions, pool = explosionPool, update = updateDrag96,
-		draw = noDraw, release = releaseExplosion},
-	{name = "zaps", list = Effects.zaps, pool = zapPool, update = nil, draw = noDraw, release = releaseZap},
-	{name = "zapLines", list = Effects.zapLines, pool = zapLinePool, update = nil, draw = noDraw, release = releaseZapLine},
-	{name = "frost", list = Effects.frost, pool = frostPool, update = updateRotatingDrag96, draw = noDraw, release = releaseFrost},
-	{name = "poison", list = Effects.poison, pool = poisonPool, update = updatePoison, draw = noDraw, release = releasePoison},
-	{name = "lancer", list = Effects.lancer, pool = lancerPool, update = updateDrag92, draw = noDraw, release = releaseLancer},
+		draw = drawExplosions, release = releaseExplosion},
+	{name = "zaps", list = Effects.zaps, pool = zapPool, update = nil, draw = drawZaps, release = releaseZap},
+	{name = "zapLines", list = Effects.zapLines, pool = zapLinePool, update = nil, draw = drawZapLines, release = releaseZapLine},
+	{name = "frost", list = Effects.frost, pool = frostPool, update = updateRotatingDrag96, draw = drawFrost, release = releaseFrost},
+	{name = "poison", list = Effects.poison, pool = poisonPool, update = updatePoison, draw = drawPoison, release = releasePoison},
+	{name = "lancer", list = Effects.lancer, pool = lancerPool, update = updateDrag92, draw = drawLancer, release = releaseLancer},
 	{name = "plasmaParticles", list = Effects.plasmaParticles, pool = plasmaParticlePool, update = integrate,
-		draw = noDraw, release = releasePlasma},
+		draw = drawPlasmaParticles, release = releasePlasma},
 	{name = "placePuffs", list = Effects.placePuffs, pool = placePuffPool, update = updateDrag92,
-		draw = noDraw, release = releasePlacePuff},
-	{name = "death", list = Effects.death, pool = deathPool, update = nil, draw = noDraw, release = releaseDeath},
+		draw = drawPlacePuffs, release = releasePlacePuff},
+	{name = "death", list = Effects.death, pool = deathPool, update = nil, draw = drawDeath, release = releaseDeath},
 }
 
 function Effects.draw()
 	for i = 1, #families do families[i].draw(families[i].list) end
+	-- Keep the public draw boundary predictable even if a renderer is changed or
+	-- an empty family skips its usual state-restoration path.
+	lg.setLineWidth(1)
 end
 
 function Effects.drawOverlay()
