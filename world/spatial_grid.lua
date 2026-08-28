@@ -56,6 +56,12 @@ local forEachContext = {
 	context = nil,
 }
 
+local function clearTable(t)
+	for key in pairs(t) do
+		t[key] = nil
+	end
+end
+
 local function eachNeighborInRange(cx, cy, cellRadius, onCell, context)
 	local idx = 0
 	for dx = -cellRadius, cellRadius do
@@ -195,6 +201,17 @@ local function removeFromCell(e)
 		lastEnemy.cellIndex = idx
 	end
 
+	if last == 1 then
+		local cx, cy = e.cellX, e.cellY
+		local col = grid[cx]
+		if col and col[cy] == cell then
+			col[cy] = nil
+			if next(col) == nil then
+				grid[cx] = nil
+			end
+		end
+	end
+
 	e.cell = nil
 	e.cellIndex = nil
 end
@@ -256,6 +273,25 @@ end
 function Spatial.setEnemyLifecycleHooks(onCellChanged, onRemoved)
 	enemyCellChangedHook = onCellChanged
 	enemyRemovedHook = onRemoved
+end
+
+function Spatial.clear()
+	clearTable(grid)
+	clearTable(outerQueryBuffer)
+	clearTable(nestedQueryBuffer)
+	clearTable(occupancyBuffer)
+	clearTable(outerCollectContext.seen)
+	clearTable(nestedCollectContext.seen)
+	outerCollectContext.count = 0
+	outerCollectContext.dedupeById = false
+	outerCollectContext.stamp = 0
+	nestedCollectContext.count = 0
+	nestedCollectContext.dedupeById = false
+	nestedCollectContext.stamp = 0
+	frameStats.localQueryCount = 0
+	frameStats.localCandidateTotal = 0
+	forEachContext.fn = nil
+	forEachContext.context = nil
 end
 
 function Spatial.beginFrame()

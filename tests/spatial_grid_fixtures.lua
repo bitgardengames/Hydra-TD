@@ -39,6 +39,45 @@ local function assertBothQueriesFind(x, radius, enemy, label)
 		label .. " (cache footprint)")
 end
 
+-- Empty cells and columns are reclaimed without disturbing swap removal.
+local sharedA = add(1, 1)
+local sharedB = add(2, 2)
+local neighboringCell = add(1, CELL_SIZE + 1)
+local sharedCX, sharedCY = sharedA.cellX, sharedA.cellY
+local neighboringCY = neighboringCell.cellY
+local column = Spatial.grid[sharedCX]
+Spatial.removeEnemy(sharedA)
+assert(sharedB.cellIndex == 1 and column[sharedCY] ~= nil,
+	"swap removal did not update the remaining enemy index")
+Spatial.removeEnemy(sharedB)
+assert(column[sharedCY] == nil, "removing the final enemy did not reclaim its cell")
+assert(Spatial.grid[sharedCX] == column, "column was reclaimed while it still contained a cell")
+Spatial.removeEnemy(neighboringCell)
+assert(column[neighboringCY] == nil, "neighboring cell was not reclaimed")
+assert(Spatial.grid[sharedCX] == nil, "empty column was not reclaimed")
+inserted = {}
+
+-- A map reset clears occupancy and reusable query state in place.
+local priorGrid = Spatial.grid
+local priorEnemy = add(4, 4)
+local priorResults, priorCount = Spatial.queryCells(4, 4, 1, true)
+assert(priorCount == 1 and priorResults[1] == priorEnemy, "reset fixture did not populate query state")
+Spatial.queryCellsLocal(4, 4, 1, true)
+Spatial.queryOccupancy(0, 0, 1)
+Spatial.clear()
+assert(Spatial.grid == priorGrid and next(priorGrid) == nil,
+	"Spatial.clear replaced or failed to empty the exposed grid")
+local queryCount, candidateTotal = Spatial.getLocalQueryFrameStats()
+assert(queryCount == 0 and candidateTotal == 0, "Spatial.clear did not reset query frame counters")
+local resetResults, resetCount = Spatial.queryCells(4, 4, 1, true)
+assert(resetCount == 0 and resetResults[1] == nil, "map reset retained a stale query result")
+local localResults, localCount = Spatial.queryCellsLocal(4, 4, 1, true)
+assert(localCount == 0 and localResults[1] == nil, "map reset retained a stale local query result")
+local occupancy, occupancyCount, occupancySum = Spatial.queryOccupancy(0, 0, 1)
+assert(occupancyCount == 9 and occupancySum == 0 and #occupancy == 9,
+	"map reset retained stale occupancy state")
+inserted = {}
+
 -- A center close to either cell edge must traverse far enough in that direction.
 local radius = CELL_SIZE * 2 + 1
 local leftCenter = CELL_SIZE + 0.01
