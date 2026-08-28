@@ -10,6 +10,8 @@ import re
 import sys
 from pathlib import Path
 
+from lua_source import named_entries, numeric_fields, table_body
+
 ROOT = Path(__file__).resolve().parents[2]
 BANDS = Path(__file__).with_name("economy_bands.json")
 CURVES = {
@@ -24,35 +26,20 @@ TIER_ANCHORS = {"entry_pair": 110, "lancer_t2": 135,
 TARGET_DIFFICULTY = "hard"
 
 
-def lua_block(text: str, name: str) -> str:
-    match = re.search(r"\n\s*(?:local\s+)?" + re.escape(name) + r"\s*=\s*\{", "\n" + text)
-    if not match:
-        raise ValueError(f"definition {name!r} not found")
-    start, depth = match.end(), 1
-    for pos in range(start, len(text)):
-        depth += (text[pos] == "{") - (text[pos] == "}")
-        if depth == 0:
-            return text[start:pos]
-    raise ValueError(f"unterminated definition {name!r}")
-
-
-def fields(block: str) -> dict[str, float]:
-    return {key: float(value) for key, value in re.findall(
-        r"\b(\w+)\s*=\s*([0-9.]+)", block)}
-
-
 def definitions() -> tuple[dict, dict, dict]:
     difficulty_text = (ROOT / "systems/difficulty.lua").read_text()
     enemy_text = (ROOT / "world/enemy_defs.lua").read_text()
     wave_text = (ROOT / "systems/campaign_wave_defs.lua").read_text()
-    difficulties = {name: fields(lua_block(lua_block(difficulty_text, "Difficulty.defs"), name))
-                    for name in ("easy", "normal", "hard")}
-    kinds = set(re.findall(r'g\("([a-z_]+)"', lua_block(wave_text, "wavesByMapId")))
-    rewards = {kind: fields(lua_block(enemy_text, kind))["reward"] for kind in kinds}
+    difficulty_root = table_body(difficulty_text, "Difficulty.defs", ROOT / "systems/difficulty.lua")
+    difficulties = {name: numeric_fields(body) for name, body in
+                    named_entries(difficulty_root, "Difficulty.defs", ROOT / "systems/difficulty.lua").items()
+                    if name in ("easy", "normal", "hard")}
+    wave_root = table_body(wave_text, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua")
+    kinds = set(re.findall(r'g\("([a-z_]+)"', wave_root))
+    rewards = {kind: numeric_fields(table_body(enemy_text, kind, ROOT / "world/enemy_defs.lua"))["reward"] for kind in kinds}
     maps = {}
-    waves_root = lua_block(wave_text, "wavesByMapId")
-    for map_id in re.findall(r"^\s*([a-z]+)\s*=\s*\{", waves_root, re.M):
-        block = lua_block(waves_root, map_id)
+    waves_root = wave_root
+    for map_id, block in named_entries(waves_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua").items():
         maps[map_id] = []
         for wave in range(1, 11):
             match = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)", block)

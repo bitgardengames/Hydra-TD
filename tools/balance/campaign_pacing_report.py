@@ -9,6 +9,8 @@ import re
 import sys
 from pathlib import Path
 
+from lua_source import named_entries, numeric_field, table_body
+
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "systems/campaign_wave_defs.lua"
 WINDOW_SECONDS = 5.0
@@ -18,30 +20,9 @@ GROUP = re.compile(
 )
 
 
-def table_block(text: str, declaration: str) -> str:
-    start = text.index(declaration) + len(declaration)
-    depth = 1
-    for pos in range(start, len(text)):
-        depth += (text[pos] == "{") - (text[pos] == "}")
-        if depth == 0:
-            return text[start:pos]
-    raise ValueError(f"unterminated table after {declaration!r}")
-
-
-def named_blocks(block: str) -> dict[str, str]:
-    found: dict[str, str] = {}
-    for match in re.finditer(r"^\s*([a-z][a-z0-9_]*)\s*=\s*\{", block, re.M):
-        name, start, depth = match.group(1), match.end(), 1
-        for pos in range(start, len(block)):
-            depth += (block[pos] == "{") - (block[pos] == "}")
-            if depth == 0:
-                found[name] = block[start:pos]
-                break
-    return found
-
-
 def parse_waves(text: str) -> dict[str, list[list[dict]]]:
-    maps = named_blocks(table_block(text, "local wavesByMapId = {"))
+    declaration = "wavesByMapId"
+    maps = named_entries(table_body(text, declaration, SOURCE), declaration, SOURCE)
     result = {}
     for map_id, block in maps.items():
         waves = []
@@ -101,10 +82,11 @@ def summarize(waves: list[dict]) -> dict:
 
 
 def parse_targets(text: str) -> dict[str, dict]:
-    blocks = named_blocks(table_block(text, "local pacingTargetsByMapId = {"))
+    declaration = "pacingTargetsByMapId"
+    blocks = named_entries(table_body(text, declaration, SOURCE), declaration, SOURCE)
     targets = {}
     for map_id, block in blocks.items():
-        scalar = lambda name: float(re.search(rf"{name}\s*=\s*([0-9.]+)", block).group(1))
+        scalar = lambda name: numeric_field(block, name, SOURCE, map_id)
         pair = lambda name: [float(x) for x in re.search(
             rf"{name}\s*=\s*\{{\s*([0-9.]+),\s*([0-9.]+)\s*\}}", block).groups()]
         targets[map_id] = {

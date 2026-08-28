@@ -15,6 +15,8 @@ import re
 import sys
 from pathlib import Path
 
+from lua_source import named_entries, numeric_field, table_body
+
 ROOT = Path(__file__).resolve().parents[2]
 BP = 10_000
 WINDOW_MS = 5_000
@@ -40,37 +42,10 @@ def decimal_bp(value: str) -> int:
     return int(whole) * BP + int((fraction + "0000")[:4])
 
 
-def block(text: str, declaration: str) -> str:
-    match = re.search(declaration + r"\s*(?:=\s*)?\{", text)
-    if not match:
-        raise ValueError(f"missing Lua table {declaration!r}")
-    depth = 1
-    for pos in range(match.end(), len(text)):
-        depth += (text[pos] == "{") - (text[pos] == "}")
-        if depth == 0:
-            return text[match.end():pos]
-    raise ValueError(f"unterminated Lua table {declaration!r}")
-
-
-def named_blocks(text: str) -> dict[str, str]:
-    result = {}
-    for match in re.finditer(r"^\s*([a-z][a-z0-9_]*)\s*=\s*\{", text, re.M):
-        depth = 1
-        for pos in range(match.end(), len(text)):
-            depth += (text[pos] == "{") - (text[pos] == "}")
-            if depth == 0:
-                result[match.group(1)] = text[match.end():pos]
-                break
-    return result
-
-
 def number(body: str, key: str, default: str | None = None) -> str:
-    found = re.search(rf"\b{key}\s*=\s*([0-9.]+)", body)
-    if found:
-        return found.group(1)
-    if default is not None:
-        return default
-    raise ValueError(f"missing field {key!r}")
+    value = numeric_field(body, key, "balance definition", "anonymous",
+                          float(default) if default is not None else None)
+    return str(value)
 
 
 def definitions():
@@ -81,7 +56,7 @@ def definitions():
     curve_text = (ROOT / "systems/difficulty_curve.lua").read_text()
 
     towers = {}
-    for kind, body in named_blocks(block(towers_text, r"return")).items():
+    for kind, body in named_entries(table_body(towers_text, "return", ROOT / "world/tower_defs.lua"), "return", ROOT / "world/tower_defs.lua").items():
         if not re.search(r"\bcost\s*=", body):
             continue
         cost = int(float(number(body, "cost")))
@@ -97,7 +72,7 @@ def definitions():
         towers[kind] = {"cost": cost, "sustained_damage": max(1, dps)}
 
     enemies = {}
-    for kind, body in named_blocks(block(enemies_text, r"return")).items():
+    for kind, body in named_entries(table_body(enemies_text, "return", ROOT / "world/enemy_defs.lua"), "return", ROOT / "world/enemy_defs.lua").items():
         if not re.search(r"\bhp\s*=", body) or not re.search(r"\breward\s*=", body):
             continue
         traits_match = re.search(r"traits\s*=\s*\{([^}]*)", body)
@@ -106,21 +81,21 @@ def definitions():
                          "reward": decimal_bp(number(body, "reward")),
                          "traits": traits, "boss": "boss = true" in body}
 
-    diff_root = block(difficulty_text, r"Difficulty\.defs")
+    diff_root = table_body(difficulty_text, "Difficulty.defs", ROOT / "systems/difficulty.lua")
     diffs = {name: {"hp_bp": decimal_bp(number(body, "enemyHpBias")),
                     "boss_bp": decimal_bp(number(body, "bossHpBias")),
                     "reward_bp": decimal_bp(number(body, "rewardBias")),
                     "money": int(float(number(body, "startMoney")))}
-             for name, body in named_blocks(diff_root).items()}
+             for name, body in named_entries(diff_root, "Difficulty.defs", ROOT / "systems/difficulty.lua").items()}
     curve = {key: decimal_bp(number(curve_text, key)) for key in
              ("localStartHp", "localEndHp", "localExponent", "finalMapHp")}
 
     maps = {}
-    wave_root = block(waves_text, r"local wavesByMapId")
+    wave_root = table_body(waves_text, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua")
     # Match the schedule arguments, not the closing parenthesis: campaign
     # groups may append metadata that does not change this calculation.
     group_re = re.compile(r'g\("([a-z_]+)",\s*(\d+),\s*([0-9.]+)(?:,\s*([0-9.]+))?')
-    for map_id, body in named_blocks(wave_root).items():
+    for map_id, body in named_entries(wave_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua").items():
         maps[map_id] = []
         for wave in range(1, 11):
             row = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)", body)
