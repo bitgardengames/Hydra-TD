@@ -118,13 +118,12 @@ end
 
 local function buffTower(tower, effect)
 	-- Expiries and multipliers never rewrite the authored tower statistics.
-	tower.abilityBuffs = tower.abilityBuffs or {}
-	tower.abilityBuffs[#tower.abilityBuffs + 1] = {
+	Towers.addAbilityBuff(tower, {
 		kind = effect.kind,
 		expires = clock + effect.duration,
 		attackSpeed = effect.attackSpeed or 1,
 		range = effect.range or 1,
-	}
+	})
 end
 
 local function activateIncomeMultiplier(effect, _x, _y, abilityId)
