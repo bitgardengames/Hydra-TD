@@ -12,6 +12,8 @@ local INV_CELL = 1 / CELL_SIZE
 local grid = {}
 Spatial.grid = grid
 local maxEnemyRadius = 0
+local enemyRadiusCounts = {}
+local indexedEnemyRadii = {}
 
 local enemyCellChangedHook
 local enemyRemovedHook
@@ -45,6 +47,38 @@ local function queryCellFootprint(radius)
 	end
 
 	return ceil(radius * INV_CELL)
+end
+
+local function trackEnemyRadius(e)
+	local radius = e.radius or 0
+	indexedEnemyRadii[e] = radius
+	enemyRadiusCounts[radius] = (enemyRadiusCounts[radius] or 0) + 1
+	if radius > maxEnemyRadius then
+		maxEnemyRadius = radius
+	end
+end
+
+local function untrackEnemyRadius(e)
+	local radius = indexedEnemyRadii[e]
+	if radius == nil then
+		return
+	end
+
+	local radiusCount = enemyRadiusCounts[radius] - 1
+	if radiusCount == 0 then
+		enemyRadiusCounts[radius] = nil
+		if radius == maxEnemyRadius then
+			maxEnemyRadius = 0
+			for activeRadius in pairs(enemyRadiusCounts) do
+				if activeRadius > maxEnemyRadius then
+					maxEnemyRadius = activeRadius
+				end
+			end
+		end
+	else
+		enemyRadiusCounts[radius] = radiusCount
+	end
+	indexedEnemyRadii[e] = nil
 end
 
 -- Towers can share a local-query candidate list when this footprint and their
@@ -212,6 +246,8 @@ local function removeFromCell(e)
 		return
 	end
 
+	untrackEnemyRadius(e)
+
 	local list = cell
 	local idx = e.cellIndex
 
@@ -268,14 +304,19 @@ local function insertIntoCell(e, cx, cy)
 	e.cellIndex = idx
 	e.cellX = cx
 	e.cellY = cy
+
+	trackEnemyRadius(e)
 end
 
 function Spatial.updateEnemy(e)
-	maxEnemyRadius = math.max(maxEnemyRadius, e.radius or 0)
 	local cx = floor(e.x * INV_CELL)
 	local cy = floor(e.y * INV_CELL)
 
 	if e.cellX == cx and e.cellY == cy then
+		if indexedEnemyRadii[e] ~= (e.radius or 0) then
+			untrackEnemyRadius(e)
+			trackEnemyRadius(e)
+		end
 		return
 	end
 
@@ -302,6 +343,8 @@ end
 
 function Spatial.clear()
 	clearTable(grid)
+	clearTable(enemyRadiusCounts)
+	clearTable(indexedEnemyRadii)
 	maxEnemyRadius = 0
 	frameStats.localQueryCount = 0
 	frameStats.localCandidateTotal = 0

@@ -41,6 +41,41 @@ local function assertBothQueriesFind(x, radius, enemy, label)
 		label .. " (cache footprint)")
 end
 
+local function currentMaxEnemyRadius()
+	for outer = 1, 20 do
+		local outerName, traverse = debug.getupvalue(Spatial.visitRadius, outer)
+		if not outerName then break end
+		if type(traverse) == "function" then
+			for inner = 1, 20 do
+				local name, value = debug.getupvalue(traverse, inner)
+				if name == "maxEnemyRadius" then return value end
+				if not name then break end
+			end
+		end
+	end
+	error("could not inspect the tracked maximum enemy radius")
+end
+
+-- Collision-query expansion follows active radius buckets rather than retaining
+-- the largest radius ever inserted.
+local widestA = add(1, 1)
+widestA.radius = 20
+Spatial.updateEnemy(widestA)
+local widestB = add(2, 2)
+widestB.radius = 20
+Spatial.updateEnemy(widestB)
+local narrower = add(3, 3)
+narrower.radius = 8
+Spatial.updateEnemy(narrower)
+assert(currentMaxEnemyRadius() == 20, "active maximum radius was not tracked")
+Spatial.removeEnemy(widestA)
+assert(currentMaxEnemyRadius() == 20, "maximum radius dropped while its bucket remained active")
+Spatial.removeEnemy(widestB)
+assert(currentMaxEnemyRadius() == 8, "maximum radius did not fall back to the next active bucket")
+Spatial.removeEnemy(narrower)
+assert(currentMaxEnemyRadius() == 0, "maximum radius did not reset after the final removal")
+inserted = {}
+
 -- Empty cells and columns are reclaimed without disturbing swap removal.
 local sharedA = add(1, 1)
 local sharedB = add(2, 2)
@@ -66,6 +101,7 @@ local priorResults, priorCount = Spatial.queryCells(4, 4, 1, queryContext)
 assert(priorCount == 1 and priorResults[1] == priorEnemy, "reset fixture did not populate query state")
 Spatial.queryCellsLocal(4, 4, 1, localQueryContext)
 Spatial.clear()
+assert(currentMaxEnemyRadius() == 0, "Spatial.clear did not reset radius metadata")
 assert(Spatial.grid == priorGrid and next(priorGrid) == nil,
 	"Spatial.clear replaced or failed to empty the exposed grid")
 local queryCount, candidateTotal = Spatial.getLocalQueryFrameStats()
