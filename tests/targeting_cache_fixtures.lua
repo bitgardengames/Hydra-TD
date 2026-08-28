@@ -44,19 +44,32 @@ Targeting.findTarget(towerAtObsoleteCell)
 assert(queryCount == 2, "second cache key was not populated")
 local oldEntries = cache.entries
 assert(oldEntries[0] and oldEntries[2], "fixture did not populate distinct coordinate keys")
+local sharedEntry = oldEntries[0][0][2]
+local sharedList = sharedEntry.list
+local soldTowerEntry = oldEntries[2][0][1]
 
--- Advancing the frame clears candidate references and all nested coordinate maps.
+-- A new frame refreshes the same leaf and list in place. Moving enemies must
+-- affect the result even though the coordinate/footprint index stays alive.
 State.frameId = 11
-candidates[1], candidates[2] = nil, nil
-Targeting.findTarget(towerA)
+candidates[1], candidates[2] = enemyB, nil
+enemyB.x = 20
+assert(Targeting.findTarget(towerA) == enemyB, "new frame reused stale enemy positions")
 assert(queryCount == 3, "new frame reused a stale query")
-assert(next(oldEntries) == nil, "old coordinate keys survived the frame boundary")
-for i = 1, #cache.listPool do
-	assert(next(cache.listPool[i]) == nil, "pooled candidate list retained an enemy reference")
-end
+assert(cache.entries == oldEntries, "new frame replaced the coordinate index")
+assert(oldEntries[0][0][2] == sharedEntry, "new frame replaced a cache leaf")
+assert(sharedEntry.list == sharedList, "new frame replaced a candidate list")
+assert(sharedEntry.frameId == 11, "refreshed leaf did not record the new frame")
+assert(sharedList[1] == enemyB and sharedList[2] == nil,
+	"refreshed list retained stale candidates")
+
+-- A sold tower is no longer queried, but its persistent cache entry remains
+-- available until the map is explicitly reset.
+assert(oldEntries[2][0][1] == soldTowerEntry, "sold tower entry was discarded between frames")
+assert(soldTowerEntry.frameId == 10, "sold tower entry was unexpectedly refreshed")
+assert(queryCount == 3, "sold tower issued an unexpected spatial query")
 
 -- A run reset can occur without a frame-id change, so it must invalidate eagerly.
-candidates[1] = enemyB
+enemyB.x = 210
 Targeting.clearFrameCache()
 assert(next(cache.entries) == nil, "run reset retained coordinate keys")
 assert(Targeting.findTarget(towerAtObsoleteCell) == enemyB,
