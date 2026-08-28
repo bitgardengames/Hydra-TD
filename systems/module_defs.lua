@@ -1,12 +1,12 @@
 -- EXPERIMENTAL: retained for explicit internal module playtests. These
 -- definitions are not part of normal campaign or replay/endless balance.
 local ModuleDefs = {}
+local ProjectileBehaviorRegistry = require("world.projectile_behaviors.registry")
 
 --[[
 	Module authoring hook contract (projectile behavior trigger model):
 	- Behaviors may expose hook fns directly: on_shot, on_hit, on_kill, on_tick(dt), on_expire.
-	- Legacy names are still honored by runtime compatibility mapping:
-	  init -> on_shot, onHit -> on_hit, onKill -> on_kill, update -> on_tick, onExpire -> on_expire.
+	- Legacy hook names are normalized once by the shared behavior registry.
 	- Optional per-behavior hook gating may be declared via behavior.hooks = {"on_hit", ...}.
 	  If present, runtime executes only those hooks for that behavior.
 
@@ -391,7 +391,7 @@ add("pierce", {
 		local hasHitDetector = false
 		for i = 1, #ctx.behaviors do
 			local id = ctx.behaviors[i].id
-			if id == "hit_circle" or id == "hit_line" or id == "instant_hit" or id == "emit_on_target" then
+			if ProjectileBehaviorRegistry.getRole(id) == "collision" then
 				hasHitDetector = true
 				break
 			end
@@ -580,25 +580,6 @@ local function copyBehaviorFields(target, source)
 	end
 end
 
-local function behaviorRole(id)
-	if id == "move_homing" or id == "move_linear" or id == "move_to_target_point" or id == "move_boomerang" or id == "move_wave" or id == "move_spiral" or id == "move_orbit" or id == "move_suspend" then
-		return "movement"
-	end
-	if id == "hit_circle" or id == "hit_line" or id == "instant_hit" or id == "emit_on_target" then
-		return "hit"
-	end
-	if id == "hit_damage" or id == "aoe_damage" or id == "tick_damage" or id == "hit_chain" then
-		return "damage"
-	end
-	if id:sub(1, 5) == "draw_" then
-		return "draw"
-	end
-	if id == "chain_zap_fx" or id == "lancer_hit_fx" then
-		return "impact_fx"
-	end
-	return nil
-end
-
 local function addSpec(id, nameKey, descKey, behaviors, towerStats)
 	local operations = {}
 
@@ -607,7 +588,7 @@ local function addSpec(id, nameKey, descKey, behaviors, towerStats)
 		operations[#operations + 1] = {
 			op = "addOrModify",
 			behavior = behavior,
-			role = behaviorRole(behavior.id),
+			role = ProjectileBehaviorRegistry.getRole(behavior.id),
 		}
 	end
 
