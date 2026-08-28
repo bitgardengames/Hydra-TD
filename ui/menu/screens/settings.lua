@@ -68,6 +68,9 @@ local rowsViewportY = 0
 local rowsViewportH = 0
 local rowsContentH = 0
 local rowsScroll = ScrollView.new()
+local layoutDirty = true
+local layoutMeasurementDirty = true
+local cachedWindowW, cachedWindowH
 
 local LABEL_W = 180
 local SLIDER_W = 160
@@ -188,6 +191,15 @@ end
 
 local rebuildControlsRows
 
+local function requestLayoutMeasurement()
+	layoutDirty = true
+	layoutMeasurementDirty = true
+end
+
+local function requestRowLayout()
+	layoutDirty = true
+end
+
 local function switchTab(nextTab)
 	local clamped = Util.clamp(nextTab, 1, #tabs)
 
@@ -203,6 +215,7 @@ local function switchTab(nextTab)
 		draggingSlider = nil
 		keybindCapture:close()
 		focusedRow = nil
+		requestLayoutMeasurement()
 		Sound.play("uiMove")
 	end
 end
@@ -238,17 +251,14 @@ rebuildControlsRows = function()
 			tab.rows = controlsRows
 		end
 	end
+
+	requestLayoutMeasurement()
 end
 
 local function getActiveRows()
 	local tab = tabs[activeTab]
 
 	return tab and tab.rows or {}
-end
-
--- Layout helpers
-local function rowRectFor(x, yTop)
-	return {x = x, y = yTop, w = ROW_W, h = ROW_H}
 end
 
 local function rowTextY(yTop)
@@ -378,23 +388,32 @@ end
 -- Interaction geometry is layout state, not a side effect of rendering. Build
 -- it once so update, drawing, and input all operate on the same frame's rows.
 local function layoutRows()
-	rowRects = {}
-	sliderRects = {}
-
 	for i, row in ipairs(rows) do
 		local yTop = rowsStartY + (i - 1) * activeLineH - rowsScroll.offset
 		if yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH then
-			rowRects[i] = rowRectFor(listX, yTop)
+			local rowRect = rowRects[i] or {}
+			rowRect.x, rowRect.y, rowRect.w, rowRect.h = listX, yTop, ROW_W, ROW_H
+			rowRects[i] = rowRect
 			if row.type == "slider" then
-				sliderRects[i] = {
-					x = listX + LABEL_W,
-					y = rowSliderY(yTop),
-					w = SLIDER_W,
-					h = SLIDER_H,
-				}
+				local sliderRect = sliderRects[i] or {}
+				sliderRect.x, sliderRect.y = listX + LABEL_W, rowSliderY(yTop)
+				sliderRect.w, sliderRect.h = SLIDER_W, SLIDER_H
+				sliderRects[i] = sliderRect
+			else
+				sliderRects[i] = nil
 			end
+		else
+			rowRects[i] = nil
+			sliderRects[i] = nil
 		end
 	end
+	for i in pairs(rowRects) do
+		if i > #rows then rowRects[i] = nil end
+	end
+	for i in pairs(sliderRects) do
+		if i > #rows then sliderRects[i] = nil end
+	end
+	layoutDirty = false
 end
 
 
@@ -467,18 +486,20 @@ function Screen.load()
 	for i = 1, #tabs do
 		tabAnim[i] = (i == activeTab) and 1 or 0
 	end
+
+	cachedWindowW, cachedWindowH = nil, nil
+	requestLayoutMeasurement()
 end
 
-local function updatePanelLayout()
-	local sw, sh = lg.getDimensions()
+local function updatePanelLayout(sw, sh)
 	local cx = floor(sw * 0.5)
 	Fonts.set("menu")
+	rows = getActiveRows()
 	local widestLabel = 0
-	for _, row in ipairs(getActiveRows()) do widestLabel = max(widestLabel, lg.getFont():getWidth(row.label or "")) end
+	for _, row in ipairs(rows) do widestLabel = max(widestLabel, lg.getFont():getWidth(row.label or "")) end
 	LABEL_W = min(280, max(180, widestLabel + 24))
 	ROW_W = LABEL_W + SLIDER_W + SLIDER_VALUE_GAP + SLIDER_VALUE_W
 
-	rows = getActiveRows()
 	if not isControlsTab(activeTab) then
 		keybindCapture:close()
 	end
@@ -513,21 +534,23 @@ local function updatePanelLayout()
 
 	-- Buttons (layout in update, like pause)
 	buttonsStartY = boxY + boxH - paddingY - btnBlockH
+	for i, btn in ipairs(buttons) do
+		btn.x = cx - btn.w * 0.5
+		btn.y = buttonsStartY + (i - 1) * gap
+	end
 	local tabsTotalW = (#tabs * tabW) + (max(0, #tabs - 1) * tabGap)
 	local tabsStartX = cx - tabsTotalW * 0.5
 	local tabsY = boxY + boxH + 4
 
-	tabRects = {}
 	for i, tab in ipairs(tabs) do
-		tabRects[i] = {
-			x = tabsStartX + (i - 1) * (tabW + tabGap),
-			y = tabsY,
-			w = tabW,
-			h = tabH,
-		}
+		local rect = tabRects[i] or {}
+		rect.x, rect.y = tabsStartX + (i - 1) * (tabW + tabGap), tabsY
+		rect.w, rect.h = tabW, tabH
+		tabRects[i] = rect
 	end
+	for i = #tabs + 1, #tabRects do tabRects[i] = nil end
 
-	return cx
+	layoutMeasurementDirty = false
 end
 
 local function updateTabAnimations(dt)
@@ -540,11 +563,7 @@ local function updateTabAnimations(dt)
 	end
 end
 
-local function updateButtons(dt, centerX)
-	for i, btn in ipairs(buttons) do
-		btn.x = centerX - btn.w * 0.5
-		btn.y = buttonsStartY + (i - 1) * gap
-	end
+local function updateButtons(dt)
 	Button.updateList(buttons, dt)
 end
 
@@ -567,10 +586,39 @@ function Screen.update(dt)
 	end
 	tabTime = tabTime + dt
 
-	local centerX = updatePanelLayout()
+	local sw, sh = lg.getDimensions()
+	if sw ~= cachedWindowW or sh ~= cachedWindowH then
+		cachedWindowW, cachedWindowH = sw, sh
+		requestLayoutMeasurement()
+	end
+	if layoutMeasurementDirty then
+		updatePanelLayout(sw, sh)
+	elseif layoutDirty then
+		layoutRows()
+	end
 	updateTabAnimations(dt)
-	updateButtons(dt, centerX)
+	updateButtons(dt)
 	updateDraggedSlider()
+end
+
+function Screen.enter()
+	-- Opening can follow a locale or settings change while this shared screen was
+	-- inactive, so remeasure labels and row counts rather than only repositioning.
+	requestLayoutMeasurement()
+end
+
+function Screen.resize(w, h)
+	-- Keep the callback cheap; update owns layout recomputation and also verifies
+	-- these cached values against the graphics dimensions.
+	cachedWindowW, cachedWindowH = w, h
+	requestLayoutMeasurement()
+end
+
+function Screen.localizationChanged()
+	-- Localized row collections are rebuilt by their owner before this hook.
+	-- Widths and counts may both have changed, requiring a complete pass.
+	rebuildControlsRows()
+	requestLayoutMeasurement()
 end
 
 function Screen.draw()
@@ -700,9 +748,13 @@ function Screen.keypressed(key)
 			local rowTop = (focusedRow - 1) * activeLineH
 			local rowBottom = rowTop + ROW_H
 			if rowTop < rowsScroll.offset then
+				local previousOffset = rowsScroll.offset
 				rowsScroll:move(rowTop - rowsScroll.offset)
+				if rowsScroll.offset ~= previousOffset then requestRowLayout() end
 			elseif rowBottom > rowsScroll.offset + rowsViewportH then
+				local previousOffset = rowsScroll.offset
 				rowsScroll:move(rowBottom - rowsScroll.offset - rowsViewportH)
+				if rowsScroll.offset ~= previousOffset then requestRowLayout() end
 			end
 			Sound.play("uiMove")
 		end
@@ -854,7 +906,9 @@ function Screen.wheelmoved(_, y)
 		return
 	end
 
+	local previousOffset = rowsScroll.offset
 	rowsScroll:move(-y * activeLineH)
+	if rowsScroll.offset ~= previousOffset then requestRowLayout() end
 end
 
 return Screen
