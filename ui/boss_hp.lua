@@ -2,7 +2,6 @@ local Theme = require("core.theme")
 local State = require("core.state")
 local Save = require("core.save")
 local Text = require("ui.text")
-local Enemies = require("world.enemies")
 
 local lg = love.graphics
 local floor = math.floor
@@ -50,15 +49,9 @@ end
 
 local function resolveBoss()
 	local boss = State.activeBoss
-	if type(boss) == "string" then
-		for i = 1, #Enemies.enemies do
-			local enemy = Enemies.enemies[i]
-			if enemy.boss == true and enemy.kind == boss and enemy.hp and enemy.hp > 0 then
-				return enemy
-			end
-		end
-		return nil
-	end
+	if type(boss) ~= "table" then return nil end
+	if type(boss.hp) ~= "number" or type(boss.maxHp) ~= "number" then return nil end
+	if boss.hp <= 0 or boss.maxHp <= 0 then return nil end
 	return boss
 end
 
