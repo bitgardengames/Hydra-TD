@@ -101,8 +101,38 @@ local tabAnim = {}
 local tabTime = 0
 local keybindCapture = KeybindCapture.new()
 
+local function requestLayoutMeasurement()
+	layoutDirty = true
+	layoutMeasurementDirty = true
+end
+
+local function requestRowLayout()
+	layoutDirty = true
+end
+
+local function isControlsTab(index)
+	local tab = tabs[index]
+	return tab and tab.id == "controls_keyboard"
+end
+
 local function flushSettingsNow()
 	Save.flush()
+end
+
+local function switchTab(nextTab)
+	local clamped = Util.clamp(nextTab, 1, #tabs)
+
+	if clamped == activeTab then return end
+
+	if draggingSlider then
+		flushSettingsNow()
+	end
+	activeTab = clamped
+	draggingSlider = nil
+	keybindCapture:close()
+	focusedRow = nil
+	requestLayoutMeasurement()
+	Sound.play("uiMove")
 end
 
 local function settingsChanged()
