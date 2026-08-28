@@ -75,50 +75,26 @@ local function eachNeighborInRange(cx, cy, cellRadius, onCell, context)
 	return idx
 end
 
-local function queryCellRadius(radius)
-	local cellRadius = 2
-
-	if radius and radius > 0 then
-		-- Keep legacy upper bound for compatibility; shrink neighborhood for small-radius queries.
-		cellRadius = ceil(radius * INV_CELL)
-		if cellRadius < 1 then
-			cellRadius = 1
-		elseif cellRadius > 2 then
-			cellRadius = 2
-		end
+local function queryCellFootprint(radius)
+	if not radius or radius <= 0 then
+		return 0
 	end
 
-	return cellRadius
-end
-
-local function queryCellRadiusLocal(radius)
-	local cellRadius = 0
-
-	if radius and radius > 0 then
-		cellRadius = ceil(radius * INV_CELL)
-		if cellRadius < 0 then
-			cellRadius = 0
-		elseif cellRadius > 2 then
-			-- Preserve legacy local-query safety bound for compatibility.
-			cellRadius = 2
-		end
-	end
-
-	return cellRadius
+	return ceil(radius * INV_CELL)
 end
 
 -- Towers can share a local-query candidate list when this footprint and their
 -- center cell match. Keep the key tied directly to the traversal policy so
 -- cache callers cannot drift from queryCellsLocal's CELL_SIZE boundaries.
 function Spatial.localQueryFootprintKey(radius)
-	return queryCellRadiusLocal(radius)
+	return queryCellFootprint(radius)
 end
 
 local function traverseOccupancy(cx, cy, radiusCells, onCell, context)
 	return eachNeighborInRange(cx, cy, radiusCells or 1, onCell, context)
 end
 
-local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById, radiusPolicy)
+local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeById)
 	local ctx = collectContext
 	ctx.count = 0
 	ctx.dedupeById = dedupeById == true
@@ -129,7 +105,7 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
-	local cellRadius = (radiusPolicy or queryCellRadius)(radius)
+	local cellRadius = queryCellFootprint(radius)
 	local results = ctx.results
 	local count = 0
 	if useDedupe then
@@ -178,10 +154,10 @@ local function traverseQueryCellsCollect(x, y, radius, collectContext, dedupeByI
 	return results, count
 end
 
-local function traverseQueryCellsCallback(x, y, radius, callbackContext, radiusPolicy)
+local function traverseQueryCellsCallback(x, y, radius, callbackContext)
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
-	local cellRadius = (radiusPolicy or queryCellRadius)(radius)
+	local cellRadius = queryCellFootprint(radius)
 	local fn = callbackContext.fn
 	local context = callbackContext.context
 	for dx = -cellRadius, cellRadius do
@@ -290,12 +266,11 @@ function Spatial.beginFrame()
 end
 
 function Spatial.queryCells(x, y, radius, dedupeById)
-	return traverseQueryCellsCollect(x, y, radius, outerCollectContext, dedupeById, queryCellRadius)
+	return traverseQueryCellsCollect(x, y, radius, outerCollectContext, dedupeById)
 end
 
 function Spatial.queryCellsLocal(x, y, radius, dedupeById)
-	local results, count =
-		traverseQueryCellsCollect(x, y, radius, nestedCollectContext, dedupeById, queryCellRadiusLocal)
+	local results, count = traverseQueryCellsCollect(x, y, radius, nestedCollectContext, dedupeById)
 	frameStats.localQueryCount = frameStats.localQueryCount + 1
 	frameStats.localCandidateTotal = frameStats.localCandidateTotal + count
 	return results, count
@@ -312,7 +287,7 @@ end
 function Spatial.queryIncludesCell(x, y, radius, cx, cy)
 	local centerX = floor(x * INV_CELL)
 	local centerY = floor(y * INV_CELL)
-	local cellRadius = queryCellRadius(radius)
+	local cellRadius = queryCellFootprint(radius)
 	return math.abs(centerX - cx) <= cellRadius and math.abs(centerY - cy) <= cellRadius
 end
 
@@ -346,7 +321,7 @@ end
 function Spatial.forEachInCells(x, y, radius, fn, context)
 	forEachContext.fn = fn
 	forEachContext.context = context
-	traverseQueryCellsCallback(x, y, radius, forEachContext, queryCellRadius)
+	traverseQueryCellsCallback(x, y, radius, forEachContext)
 	forEachContext.fn = nil
 	forEachContext.context = nil
 end
