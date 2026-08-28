@@ -9,6 +9,12 @@ local MapWorldCache = {}
 local canvas = nil
 local cachedScale = nil
 
+local function releaseCanvas()
+	if canvas then canvas:release() end
+	canvas = nil
+	cachedScale = nil
+end
+
 local function getMapSize()
 	return Constants.GRID_W * Constants.TILE, Constants.GRID_H * Constants.TILE
 end
@@ -22,6 +28,7 @@ function MapWorldCache.build()
 
 	local mapW, mapH = getMapSize()
 
+	releaseCanvas()
 	canvas = lg.newCanvas(mapW * scale, mapH * scale, {msaa = 8})
 
 	cachedScale = scale
@@ -39,8 +46,7 @@ function MapWorldCache.draw()
 end
 
 function MapWorldCache.invalidate()
-	canvas = nil
-	cachedScale = nil
+	releaseCanvas()
 end
 
 return MapWorldCache
