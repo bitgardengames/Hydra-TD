@@ -9,31 +9,34 @@ local function getRole(id)
 	return ProjectileBehaviorRegistry.getRole(id)
 end
 
-local function cloneBehavior(behavior)
-	-- Behavior descriptors are open-ended. Preserve metadata such as noInherit
-	-- instead of silently dropping every field that this helper does not know.
+-- Cloning contract: a behavior is a plain descriptor table. Every table-valued
+-- field (including open-ended metadata, hooks, and data) is recursively copied
+-- to arbitrary depth. Shared references and cycles inside one descriptor remain
+-- shared/cyclic in its clone, but no cloned table is shared with the source.
+-- Scalar values and functions (including hook functions) are retained. Table
+-- keys and metatables are not cloned; behavior descriptors must not rely on
+-- mutable table keys or metatable state.
+local function cloneTable(source, seen)
+	local existing = seen[source]
+	if existing then
+		return existing
+	end
+
 	local copy = {}
-	for key, value in pairs(behavior) do
-		if key ~= "data" and key ~= "hooks" then
+	seen[source] = copy
+	for key, value in pairs(source) do
+		if type(value) == "table" then
+			copy[key] = cloneTable(value, seen)
+		else
 			copy[key] = value
 		end
 	end
-
-	if behavior.data and next(behavior.data) ~= nil then
-		copy.data = {}
-		for key, value in pairs(behavior.data) do
-			copy.data[key] = value
-		end
-	end
-
-	if behavior.hooks then
-		copy.hooks = {}
-		for i = 1, #behavior.hooks do
-			copy.hooks[i] = behavior.hooks[i]
-		end
-	end
-
 	return copy
+end
+
+local function cloneBehavior(behavior)
+	assert(type(behavior) == "table", "behavior must be a table")
+	return cloneTable(behavior, {})
 end
 
 local function cloneBehaviors(behaviors)
