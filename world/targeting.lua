@@ -58,8 +58,21 @@ local function recycleCurrentEntries(cache)
 	for i = 1, cache.activeCount do
 		local entry = activeEntries[i]
 		releaseCandidates(entry)
-		entries[entry.key] = nil
-		entry.key = nil
+		local cellX = entry.cellX
+		local cellY = entry.cellY
+		local footprintKey = entry.footprintKey
+		local xEntries = entries[cellX]
+		local yEntries = xEntries[cellY]
+		yEntries[footprintKey] = nil
+		if next(yEntries) == nil then
+			xEntries[cellY] = nil
+			if next(xEntries) == nil then
+				entries[cellX] = nil
+			end
+		end
+		entry.cellX = nil
+		entry.cellY = nil
+		entry.footprintKey = nil
 		activeEntries[i] = nil
 		if cache.poolCount < MAX_POOLED_ENTRIES then
 			cache.poolCount = cache.poolCount + 1
@@ -95,12 +108,20 @@ local function getCandidatesForTower(tower)
 	Targeting.beginFrame(frameId)
 	local cx, cy = pointToCell(tower.x, tower.y)
 	local footprintKey = localQueryFootprintKey(tower.range)
-	-- Separators cannot occur in Lua's numeric representation, making this an
-	-- unambiguous tuple key even when either cell coordinate is negative.
-	local key = cx .. ":" .. cy .. ":" .. footprintKey
-	local entry = frameCache.entries[key]
+	local xEntries = frameCache.entries[cx]
+	local yEntries = xEntries and xEntries[cy]
+	local entry = yEntries and yEntries[footprintKey]
 	if entry then
 		return entry.list, entry.count
+	end
+
+	if not xEntries then
+		xEntries = {}
+		frameCache.entries[cx] = xEntries
+	end
+	if not yEntries then
+		yEntries = {}
+		xEntries[cy] = yEntries
 	end
 
 	if frameCache.poolCount > 0 then
@@ -110,8 +131,10 @@ local function getCandidatesForTower(tower)
 	else
 		entry = {list = {}, count = 0}
 	end
-	entry.key = key
-	frameCache.entries[key] = entry
+	entry.cellX = cx
+	entry.cellY = cy
+	entry.footprintKey = footprintKey
+	yEntries[footprintKey] = entry
 	frameCache.activeCount = frameCache.activeCount + 1
 	frameCache.activeEntries[frameCache.activeCount] = entry
 
