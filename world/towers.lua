@@ -712,7 +712,11 @@ local function updateSuppressionProjectiles(dt)
 			local distance2 = dx * dx + dy * dy
 			local step = p.speed * dt
 			if distance2 <= step * step then
+				-- Tower timers are maintained later in this tick's main update. Add
+				-- back that decrement so a newly landed cast still starts at its
+				-- authored duration, as it did when timers were updated first.
 				applySuppression(target, p.duration)
+				target.suppressedTimer = target.suppressedTimer + dt
 				swapRemove(suppressionProjectiles, i)
 			else
 				local scale = step / sqrt(distance2)
@@ -723,14 +727,16 @@ local function updateSuppressionProjectiles(dt)
 	end
 end
 
-local function findSuppressionTarget(boss, suppression)
+local function findSuppressionTarget(boss, suppression, dt)
 	local range2 = suppression.range * suppression.range
 	local target, targetDistance2
 	for i = 1, #towers do
 		local candidate = towers[i]
 		local dx, dy = candidate.x - boss.x, candidate.y - boss.y
 		local distance2 = dx * dx + dy * dy
-		if distance2 <= range2 and (candidate.suppressedTimer or 0) <= 0 then
+		-- Target eligibility observes the timer value the main tower update
+		-- will produce later this tick.
+		if distance2 <= range2 and (candidate.suppressedTimer or 0) - dt <= 0 then
 			-- Grid coordinates provide an explicit, stable tie-break independent of
 			-- tower array order (which can change when a tower is sold).
 			local winsTie = target and distance2 == targetDistance2
@@ -745,10 +751,6 @@ local function findSuppressionTarget(boss, suppression)
 end
 
 local function updateSuppression(dt)
-	for i = 1, #towers do
-		local t = towers[i]
-		t.suppressedTimer = max(0, (t.suppressedTimer or 0) - dt)
-	end
 	updateSuppressionProjectiles(dt)
 
 	local boss = State.activeBoss
@@ -758,7 +760,7 @@ local function updateSuppression(dt)
 	boss.suppressionTimer = (boss.suppressionTimer or suppression.period) - dt
 	if boss.suppressionTimer > 0 or #towers == 0 then return end
 
-	local target = findSuppressionTarget(boss, suppression)
+	local target = findSuppressionTarget(boss, suppression, dt)
 	if not target then return end
 	suppressionProjectiles[#suppressionProjectiles + 1] = {
 		x = boss.x,
@@ -782,6 +784,7 @@ local function updateTowers(dt)
 		t.cooldown = max(0, (t.cooldown or 0) - dt * attackSpeed)
 		t.windUp = max(0, prevWindUp - dt * attackSpeed)
 		t.retargetT = max(0, (t.retargetT or 0) - dt)
+		t.suppressedTimer = max(0, (t.suppressedTimer or 0) - dt)
 		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
 
 		updateTowerVisuals(t, dt)
