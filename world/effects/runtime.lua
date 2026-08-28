@@ -1,0 +1,1059 @@
+local Sound = require("systems.sound")
+local Save = require("core.save")
+local Camera = require("core.camera")
+local Theme = require("core.theme")
+local SimulationClock = require("core.simulation_clock")
+
+local lg = love.graphics
+local random = love.math.random
+local sin = math.sin
+local cos = math.cos
+local min = math.min
+local max = math.max
+local sqrt = math.sqrt
+local atan2 = math.atan2
+local pi = math.pi
+
+
+
+local Effects = {}
+
+-- All sustained abilities use the same final-second warning curve. Renderers
+-- can apply the returned alpha to an area, HUD badge, or entity marker.
+function Effects.expirationPulse(remaining, clock)
+	if not remaining or remaining > 1 then return 1 end
+	local fade = math.max(0, remaining)
+	local pulse = 0.45 + 0.55 * math.abs(math.sin((clock or 0) * math.pi * 6))
+	return fade * pulse
+end
+
+local function settings()
+	return Save.data and Save.data.settings or {}
+end
+
+function Effects.particleCount(base, intensity, criticalTell)
+	if criticalTell then return math.max(1, base) end
+	if settings().highDensityParticles == false then base = base * 0.5 end
+	return math.max(intensity >= Theme.effects.intensity.strong and 1 or 0, math.floor(base + 0.5))
+end
+
+-- Apply impact-driven camera shake while respecting motion settings.
+function Effects.shake(amount, duration)
+	local s = settings()
+	local shakeScale = (s.screenShake == false or s.cameraMotion == false) and 0 or 1
+	Camera.shake((amount or 0.8) * shakeScale, duration or 0.14)
+end
+
+Effects.splashes = {}
+Effects.explosions = {}
+Effects.zaps = {}
+Effects.zapLines = {}
+Effects.frost = {}
+Effects.poison = {}
+Effects.lancer = {}
+Effects.death = {}
+Effects.placePuffs = {}
+Effects.plasmaParticles = {}
+Effects.towerTransformations = {}
+-- Short-lived, pooled presentation cues are separate from combat particles so
+-- they can never affect simulation state or collision timing.
+Effects.presentation = {}
+
+local zapJitter = 4
+local halfJitter = zapJitter * 0.5
+
+local function jitter(amount)
+	return (random() * 2 - 1) * amount
+end
+
+-- Pools
+local splashPool = {}
+local explosionPool = {}
+local zapPool = {}
+local zapLinePool = {}
+local frostPool = {}
+local poisonPool = {}
+local lancerPool = {}
+local deathPool = {}
+local placePuffPool = {}
+local plasmaParticlePool = {}
+local towerTransformationPool = {}
+local presentationPool = {}
+local acquire
+
+local function emptyEffect()
+	return {}
+end
+
+local function zapEffect()
+	return {segs = {}}
+end
+
+local function reservePool(pool, count, factory)
+	for _ = 1, count do
+		pool[#pool + 1] = factory()
+	end
+end
+
+local poisonDragBase = 0.94
+local poisonFixedStepMultiplier = poisonDragBase ^ (SimulationClock.step * 60)
+
+function Effects.spawnTowerTransformation(x, y, opts)
+	opts = opts or {}
+	local e = acquire(towerTransformationPool)
+	e.x, e.y = x, y
+	e.t = 0
+	e.life = opts.finalTier and 0.62 or 0.42
+	e.color = opts.color or Theme.ui.good
+	e.range = opts.range
+	e.cadencePulse = opts.cadencePulse
+	e.finalTier = opts.finalTier
+	e.particles = {}
+
+	local count = Effects.particleCount(opts.finalTier and 14 or 8, Theme.effects.intensity.normal)
+	for i = 1, count do
+		local angle = random() * pi * 2
+		e.particles[i] = {
+			angle = angle,
+			speed = random(22, opts.finalTier and 58 or 42),
+			radius = random() * 5,
+		}
+	end
+	Effects.towerTransformations[#Effects.towerTransformations + 1] = e
+end
+
+acquire = function(pool)
+	local obj = pool[#pool]
+
+	if obj then
+		pool[#pool] = nil
+
+		return obj
+	end
+
+	return {}
+end
+
+function Effects.presentationEvent(kind, opts)
+	opts = opts or {}
+	if kind == "boss_spawn" then
+		-- The incoming cue traces the route only until the boss is actually on the
+		-- field. Its lifetime can overlap the spawn event on fast frames, so stop
+		-- drawing the route immediately while allowing the remaining presentation
+		-- cues (such as the screen-edge warning) to finish normally.
+		for i = 1, #Effects.presentation do
+			local active = Effects.presentation[i]
+			if active.kind == "boss_incoming" then active.path = nil end
+		end
+	end
+	local e = acquire(presentationPool)
+	e.kind, e.t = kind, 0
+	e.life = opts.life or ((kind == "boss_incoming") and 0.8 or 0.45)
+	e.x, e.y = opts.x, opts.y
+	e.path = opts.path
+	e.particles = nil
+	if kind == "wave_cleared" or kind == "boss_defeated" then
+		e.particles = {}
+		local count = Effects.particleCount(kind == "boss_defeated" and 16 or 10,
+			Theme.effects.intensity.normal)
+		for i = 1, count do
+			e.particles[i] = {angle = random() * pi * 2, distance = random(24, 70)}
+		end
+	end
+	Effects.presentation[#Effects.presentation + 1] = e
+end
+
+local zapSegPool = {}
+
+local function acquireZapSeg()
+	local seg = zapSegPool[#zapSegPool]
+
+	if seg then
+		zapSegPool[#zapSegPool] = nil
+		return seg
+	end
+
+	return {}
+end
+
+local function releaseZapSeg(seg)
+	seg.x1 = nil
+	seg.y1 = nil
+	seg.x2 = nil
+	seg.y2 = nil
+
+	zapSegPool[#zapSegPool + 1] = seg
+end
+
+local function clearZapSegs(segs)
+	if not segs then
+		return
+	end
+
+	for i = #segs, 1, -1 do
+		local seg = segs[i]
+		segs[i] = nil
+		releaseZapSeg(seg)
+	end
+end
+
+local function releaseZap(z)
+	clearZapSegs(z.segs)
+	z.x = nil
+	z.y = nil
+	z.t = nil
+	z.life = nil
+
+	zapPool[#zapPool + 1] = z
+end
+
+-- Zaps
+function Effects.spawnZapEffect(x, y, chain)
+	local z = acquire(zapPool)
+	local segs = z.segs
+
+	if not segs then
+		segs = {}
+		z.segs = segs
+	else
+		clearZapSegs(segs)
+	end
+
+	if chain then
+		for i = 1, #chain do
+			local link = chain[i]
+			local from = link.from
+			local to = link.to
+
+			if to and to.x and to.y then
+				local seg = acquireZapSeg()
+
+				--[[if from then
+					seg.x1 = from.x
+					seg.y1 = from.renderY or from.y
+				else
+					seg.x1 = x
+					seg.y1 = y
+				end]]
+
+				if i == 1 then
+					-- First segment comes from the provided origin
+					seg.x1 = x
+					seg.y1 = y
+				elseif from then
+					-- Chained segments still use enemy positions
+					seg.x1 = from.rx or from.x
+					seg.y1 = from.renderY or from.ry or from.y
+					--seg.y1 = from.renderY or from.ry
+				else
+					seg.x1 = x
+					seg.y1 = y
+				end
+
+				seg.x2 = to.rx or to.x
+				seg.y2 = to.ry or to.y
+
+				segs[#segs + 1] = seg
+			end
+		end
+	end
+
+	if #segs == 0 then
+		local seg = acquireZapSeg()
+		seg.x1 = x
+		seg.y1 = y
+		seg.x2 = x
+		seg.y2 = y
+		segs[1] = seg
+	end
+
+	z.x = x
+	z.y = y
+	z.t = 0
+	z.life = 0.16
+
+	Effects.zaps[#Effects.zaps + 1] = z
+
+	Sound.play("shock")
+end
+
+local function acquireZapLine()
+	local z = zapLinePool[#zapLinePool]
+	if z then
+		zapLinePool[#zapLinePool] = nil
+		return z
+	end
+	return {}
+end
+
+
+
+function Effects.spawnZapLine(x1, y1, x2, y2)
+	local z = acquireZapLine()
+
+	z.x1 = x1
+	z.y1 = y1
+	z.x2 = x2
+	z.y2 = y2
+
+	z.t = 0
+	z.life = 0.12
+
+	Effects.zapLines[#Effects.zapLines + 1] = z
+end
+
+-- Boss Explosion
+function Effects.spawnBossDeathExplosion(x, y, radius)
+	local ring = acquire(explosionPool)
+
+	ring.x = x
+	ring.y = y
+	ring.r = radius
+	ring.t = 0
+	ring.life = 0.25
+	ring.type = "ring"
+
+	Effects.explosions[#Effects.explosions + 1] = ring
+
+	local count = Effects.particleCount(28, Theme.effects.intensity.critical)
+
+	for i = 1, count do
+		local a = (i / count) * pi * 2
+		local speed = random(120, 220)
+
+		local p = acquire(explosionPool)
+
+		p.x = x
+		p.y = y
+		p.vx = cos(a) * speed
+		p.vy = sin(a) * speed
+		p.r = random(2, 4)
+		p.t = 0
+		p.life = random() * 0.15 + 0.25
+		p.type = "particle"
+
+		Effects.explosions[#Effects.explosions + 1] = p
+	end
+end
+
+-- Cannon Impact
+function Effects.spawnCannonImpact(x, y, r)
+	local s = acquire(splashPool)
+
+	s.x = x
+	s.y = y
+	s.r = r
+	s.t = 0
+	s.life = 0.18
+
+	Effects.splashes[#Effects.splashes + 1] = s
+
+	for i = 1, Effects.particleCount(10, Theme.effects.intensity.strong) do
+		local a = random() * pi * 2
+		local sp = 130 + random() * 120
+
+		local p = acquire(explosionPool)
+
+		p.x = x
+		p.y = y
+		p.vx = cos(a) * sp
+		p.vy = sin(a) * sp
+		p.r = random(2, 3)
+		p.t = 0
+		p.life = 0.18 + random() * 0.2
+		p.type = "particle"
+
+		Effects.explosions[#Effects.explosions + 1] = p
+	end
+end
+
+-- Frost
+function Effects.spawnFrostBurst(x, y)
+	for i = 1, Effects.particleCount(9, Theme.effects.intensity.normal) do
+		local a = random() * pi * 2
+		local sp = 100 + random() * 100
+
+		local f = acquire(frostPool)
+
+		f.x = x
+		f.y = y
+		f.vx = cos(a) * sp
+		f.vy = sin(a) * sp
+		f.r = random(2,4)
+		f.rot = random() * pi
+		f.vr = (random() - 0.5) * 8
+		f.t = 0
+		f.life = 0.22
+
+		Effects.frost[#Effects.frost + 1] = f
+	end
+end
+
+-- Poison
+function Effects.spawnPoisonSplash(x, y)
+	for i = 1, Effects.particleCount(7, Theme.effects.intensity.normal) do
+		local a = random() * pi * 2
+		local sp = 90 + random() * 90
+
+		local p = acquire(poisonPool)
+
+		p.x = x
+		p.y = y
+		p.vx = cos(a) * sp
+		p.vy = sin(a) * sp
+		p.drag = poisonDragBase
+		p.dragMultiplier = poisonFixedStepMultiplier
+		p.r = random(2, 4)
+		p.t = 0
+		p.life = 0.24
+
+		Effects.poison[#Effects.poison + 1] = p
+	end
+end
+
+-- Lancer
+function Effects.spawnLancerHit(x, y)
+	for i = 1, Effects.particleCount(6, Theme.effects.intensity.normal) do
+		local a = random() * pi * 2
+		local sp = 150 + random() * 110
+
+		local l = acquire(lancerPool)
+
+		l.x = x
+		l.y = y
+		l.vx = cos(a) * sp
+		l.vy = sin(a) * sp
+		l.len = random(6, 9)
+		l.t = 0
+		l.life = 0.14
+
+		Effects.lancer[#Effects.lancer + 1] = l
+	end
+end
+
+-- Plasma
+function Effects.spawnPlasmaHit(x, y, vx, vy)
+	for i = 1, Effects.particleCount(8, Theme.effects.intensity.normal) do
+		local p = acquire(plasmaParticlePool)
+
+		local ang = random() * pi * 2
+		--local spd = 70 + random() * 90
+		local spd = 80 + random() * 120
+
+		p.x = x
+		p.y = y
+		p.vx = cos(ang) * spd
+		p.vy = sin(ang) * spd
+
+		p.drag = 0.92 + random() * 0.02
+		p.r = random(2, 4)
+
+		p.t = 0
+		p.life = 0.24
+
+		Effects.plasmaParticles[#Effects.plasmaParticles + 1] = p
+	end
+end
+
+-- Tower placement
+function Effects.spawnPlacePuff(x, y)
+	for i = 1, Effects.particleCount(10, Theme.effects.intensity.subtle) do
+		local a = random() * pi * 2
+		local sp = 110 + random() * 120
+
+		local spawnR = 3 + random() * 3
+
+		local p = acquire(placePuffPool)
+
+		p.x = x + cos(a) * spawnR
+		p.y = y + sin(a) * spawnR
+
+		p.vx = cos(a) * sp
+		p.vy = sin(a) * sp * 0.9 - 4
+
+		p.r = random(2, 4)
+		p.t = 0
+		p.life = 0.45 + random() * 0.2
+
+		Effects.placePuffs[#Effects.placePuffs + 1] = p
+	end
+end
+
+-- A meteor throws a wider, heavier cloud than tower placement while sharing
+-- the same subdued dust rendering so the impact does not obscure enemies.
+function Effects.spawnMeteorDust(x, y, radius)
+	local scale = max(1, (radius or 82) / 82)
+	for i = 1, Effects.particleCount(42, Theme.effects.intensity.strong) do
+		local a = random() * pi * 2
+		local sp = (135 + random() * 150) * scale
+		local spawnR = (8 + random() * 16) * scale
+		local p = acquire(placePuffPool)
+
+		p.x = x + cos(a) * spawnR
+		p.y = y + sin(a) * spawnR
+		p.vx = cos(a) * sp
+		p.vy = sin(a) * sp * 0.72 - 18
+		p.r = random(5, 9) * scale
+		p.t = 0
+		p.life = 0.65 + random() * 0.35
+
+		Effects.placePuffs[#Effects.placePuffs + 1] = p
+	end
+end
+
+function Effects.spawnEnemyDeath(x, y, r)
+	local d = acquire(deathPool)
+
+	d.x = x
+	d.y = y
+	d.r = r or 10
+	d.t = 0
+	d.life = 0.18
+
+	Effects.death[#Effects.death + 1] = d
+end
+
+
+local function integrate(object, dt)
+	object.x = object.x + object.vx * dt
+	object.y = object.y + object.vy * dt
+end
+
+local function updateDrag96(object, dt, _, drag96)
+	if object.type ~= "ring" then
+		integrate(object, dt)
+		object.vx = object.vx * drag96
+		object.vy = object.vy * drag96
+	end
+end
+
+local function updateDrag92(object, dt, _, _, drag92)
+	integrate(object, dt)
+	object.vx = object.vx * drag92
+	object.vy = object.vy * drag92
+end
+
+local function updateRotatingDrag96(object, dt, frameExponent, drag96)
+	updateDrag96(object, dt, frameExponent, drag96)
+	object.rot = object.rot + object.vr * dt
+end
+
+local function updatePoison(object, dt, frameExponent)
+	integrate(object, dt)
+	-- Fixed-step updates use the multiplier precomputed at spawn. Exceptional
+	-- deltas calculate their rate-independent fallback without allocating state.
+	local drag = object.dragMultiplier
+	if dt ~= SimulationClock.step then drag = object.drag ^ frameExponent end
+	object.vx = object.vx * drag
+	object.vy = object.vy * drag
+end
+
+
+
+local function drawPresentation(presentation)
+	for i = 1, #presentation do
+		local e = presentation[i]
+		local u = min(1, e.t / e.life)
+		local alpha = sin(pi * u)
+		if e.kind == "boss_incoming" and e.path and #e.path > 1 then
+			local upto = max(2, math.ceil(#e.path * min(1, u * 1.7)))
+			lg.setLineWidth(10 + 5 * alpha)
+			lg.setColor(Theme.ui.warn[1], Theme.ui.warn[2], Theme.ui.warn[3], 0.28 * alpha)
+			for p = 2, upto do lg.line(e.path[p - 1][1], e.path[p - 1][2], e.path[p][1], e.path[p][2]) end
+		elseif e.x and e.y then
+			local c = (e.kind == "wave_cleared" or e.kind == "boss_defeated") and Theme.ui.good or Theme.ui.warn
+			lg.setLineWidth(2 + 2 * (1 - u))
+			lg.setColor(c[1], c[2], c[3], 0.75 * (1 - u))
+			lg.circle("line", e.x, e.y, 12 + u * 55)
+			for _, p in ipairs(e.particles or {}) do
+				local d = p.distance * u
+				lg.circle("fill", e.x + cos(p.angle) * d, e.y + sin(p.angle) * d, 2)
+			end
+		end
+	end
+	lg.setLineWidth(1)
+end
+
+local function drawTowerTransformations(towerTransformations)
+	-- Short, low-opacity tower-local upgrade feedback, drawn beneath the louder
+	-- combat effects so enemies remain readable.
+	for i = 1, #towerTransformations do
+		local e = towerTransformations[i]
+		local u = min(1, e.t / e.life)
+		local fade = (1 - u) * 0.78
+		local c = e.color
+
+		lg.setLineWidth(1 + (1 - u) * 2)
+		lg.setColor(c[1], c[2], c[3], fade)
+		lg.circle("line", e.x, e.y, 13 + u * (e.finalTier and 31 or 19))
+
+		if e.range then
+			local rangeU = u * (2 - u)
+			lg.setLineWidth(1.5)
+			lg.setColor(c[1], c[2], c[3], fade * 0.42)
+			lg.circle("line", e.x, e.y, e.range * (0.86 + rangeU * 0.14))
+		end
+
+		for p = 1, #e.particles do
+			local particle = e.particles[p]
+			local distance = particle.radius + particle.speed * u
+			lg.setColor(c[1], c[2], c[3], fade * 0.72)
+			lg.circle("fill", e.x + cos(particle.angle) * distance,
+				e.y + sin(particle.angle) * distance, e.finalTier and 2 or 1.5)
+		end
+
+		if e.finalTier then
+			local spin = e.t * 8
+			lg.setLineWidth(2)
+			lg.setColor(c[1], c[2], c[3], fade * 0.8)
+			for arm = 0, 3 do
+				local a = spin + arm * pi * 0.5
+				lg.line(e.x + cos(a) * 17, e.y + sin(a) * 17,
+					e.x + cos(a) * (25 + 7 * u), e.y + sin(a) * (25 + 7 * u))
+			end
+		end
+	end
+	lg.setLineWidth(1)
+end
+
+local function drawSplashes(splashes)
+	-- Cannon splash rings
+	for i = 1, #splashes do
+		local s = splashes[i]
+		local t = s.t / s.life
+
+		local ease = t * (2 - t)
+		local radius = s.r * ease
+		radius = radius + sin(s.t * 40) * (1 - t) * 1.5
+
+		local alpha = (1 - t) * 0.85
+
+		if t < 0.15 then
+			alpha = 0.9
+		end
+
+		lg.setColor(1, 0.75, 0.45, alpha * 0.25)
+		lg.circle("fill", s.x, s.y, radius * 0.92)
+
+		lg.setLineWidth(3 * (1 - t) + 1)
+		lg.setColor(1.0, 0.85, 0.55, alpha)
+		lg.circle("line", s.x, s.y, radius)
+
+		lg.setLineWidth(2 * ease)
+		lg.setColor(1.0, 0.9, 0.7, alpha * 0.2)
+		lg.circle("line", s.x, s.y, radius * 0.8)
+
+		if t < 0.1 then
+			local flash = 1 - (t / 0.1)
+
+			lg.setColor(1, 1, 1, 0.9 * flash)
+			lg.circle("fill", s.x, s.y, radius * 0.45)
+
+			lg.setColor(1, 0.8, 0.6, 0.6 * flash)
+			lg.circle("fill", s.x, s.y, radius * 0.75)
+		end
+	end
+
+	lg.setLineWidth(1)
+end
+
+local function drawExplosions(explosions)
+	-- Explosions
+	for i = 1, #explosions do
+		local e = explosions[i]
+		local t = e.t / e.life
+
+		if e.type == "particle" then
+			lg.setColor(1, 0.85, 0.55, 1 - t)
+			lg.circle("fill", e.x, e.y, e.r * (1 - t * 0.4))
+		elseif e.type == "ring" then
+			local rr = e.r * (1.2 + t * 1.4)
+
+			lg.setLineWidth(3 * (1 - t) + 1)
+			lg.setColor(1, 0.9, 0.6, 0.7 * (1 - t))
+			lg.circle("line", e.x, e.y, rr)
+		end
+	end
+
+	lg.setLineWidth(1)
+end
+
+local function drawZaps(zaps)
+	-- Zaps
+	for i = 1, #zaps do
+		local z = zaps[i]
+		local segs = z.segs
+
+		if segs then
+			local count = #segs
+			local u = min(1, z.t / z.life)
+			local a = 1.0 - 0.3 * u
+			local d = max(1, count)
+
+			for s = 1, count do
+				local seg = segs[s]
+				local x1, y1 = seg.x1, seg.y1
+				local x2, y2 = seg.x2, seg.y2
+
+				local t = (s - 1) / d
+				local jumpA = 1.0 - 0.16 * (s - 1)
+
+				local jx = jitter(halfJitter)
+				local jy = jitter(halfJitter)
+
+				-- Spark
+				local radius = 2.5 * (1 - t) + 1
+				lg.setColor(0.7, 0.95, 1.0, 0.7 * a * jumpA)
+				lg.circle("fill", x2 + jx, y2 + jy, radius)
+
+				local w = (3 * (1 - t) + 1) * (0.9 - 0.35 * u)
+
+				-- Soft glow
+				lg.setLineWidth(w * 2.4)
+				lg.setColor(0.5, 0.85, 1.0, 0.18 * a * jumpA)
+				lg.line(x1, y1, x2, y2)
+
+				-- Main lightning strand
+				lg.setLineWidth(w)
+				lg.setColor(0.6, 0.9, 1.0, a * jumpA)
+
+				do
+					local bends = random(1, 2)
+					local px = x1
+					local py = y1
+
+					for b = 1, bends do
+						local bt = b / (bends + 1)
+
+						local bx = x1 + (x2 - x1) * bt + jitter(10)
+						local by = y1 + (y2 - y1) * bt + jitter(10)
+
+						lg.line(px, py, bx, by)
+
+						px = bx
+						py = by
+					end
+
+					lg.line(px, py, x2, y2)
+				end
+
+				-- Additional beam
+				lg.setLineWidth(w * 0.65)
+				lg.setColor(0.7, 0.95, 1.0, 0.55 * a * jumpA)
+
+				do
+					local offset = 2.5
+					local ox = jitter(offset)
+					local oy = jitter(offset)
+
+					local bends = random(1, 2)
+					local px = x1
+					local py = y1
+
+					for b = 1, bends do
+						local bt = b / (bends + 1)
+
+						local bx = x1 + (x2 - x1) * bt + ox + jitter(6)
+						local by = y1 + (y2 - y1) * bt + oy + jitter(6)
+
+						lg.line(px, py, bx, by)
+
+						px = bx
+						py = by
+					end
+
+					lg.line(px, py, x2, y2)
+				end
+
+				-- Core line
+				lg.setLineWidth(w * 0.4)
+				lg.setColor(1, 1, 1, 0.9 * a * jumpA)
+
+				do
+					local bends = 1
+					local px = x1
+					local py = y1
+
+					for b = 1, bends do
+						local bt = b / (bends + 1)
+
+						local bx = x1 + (x2 - x1) * bt + jitter(4)
+						local by = y1 + (y2 - y1) * bt + jitter(4)
+
+						lg.line(px, py, bx, by)
+
+						px = bx
+						py = by
+					end
+
+					lg.line(px, py, x2, y2)
+				end
+
+				-- Tiny fork
+				if random() < 0.45 then
+					local bx = (x1 + x2) * 0.5
+					local by = (y1 + y2) * 0.5
+
+					local dirx = x2 - x1
+					local diry = y2 - y1
+					local length = sqrt(dirx * dirx + diry * diry)
+
+					if length > 0 then
+						dirx = dirx / length
+						diry = diry / length
+					end
+
+					local angle = (random() * 0.9 + 0.35) * pi
+					local sign = random() < 0.5 and -1 or 1
+
+					local cosA = cos(angle * sign)
+					local sinA = sin(angle * sign)
+
+					local rx = dirx * cosA - diry * sinA
+					local ry = dirx * sinA + diry * cosA
+
+					local forkLen = 6 + random() * 10
+
+					lg.setLineWidth(w * 0.7)
+					lg.setColor(0.7, 0.95, 1.0, 0.45 * a * jumpA)
+
+					lg.line(bx, by, bx + rx * forkLen + jitter(3), by + ry * forkLen + jitter(3))
+				end
+			end
+
+			lg.setLineWidth(1)
+		end
+	end
+	lg.setLineWidth(1)
+end
+
+local function drawZapLines(zapLines)
+	for i = 1, #zapLines do
+		local z = zapLines[i]
+
+		local u = z.t / z.life
+		local a = 1.0 - u
+
+		local x1, y1 = z.x1, z.y1
+		local x2, y2 = z.x2, z.y2
+
+		local w = 3 * (0.9 - 0.35 * u)
+
+		-- glow
+		lg.setLineWidth(w * 2.2)
+		lg.setColor(0.5, 0.85, 1.0, 0.18 * a)
+		lg.line(x1, y1, x2, y2)
+
+		-- main bolt
+		lg.setLineWidth(w)
+		lg.setColor(0.6, 0.9, 1.0, a)
+
+		local mx = (x1 + x2) * 0.5 + (love.math.random() - 0.5) * 8
+		local my = (y1 + y2) * 0.5 + (love.math.random() - 0.5) * 8
+
+		lg.line(x1, y1, mx, my)
+		lg.line(mx, my, x2, y2)
+
+		-- core
+		lg.setLineWidth(w * 0.45)
+		lg.setColor(1, 1, 1, 0.9 * a)
+		lg.line(x1, y1, x2, y2)
+
+		-- hit spark
+		lg.setColor(0.7, 0.95, 1.0, 0.7 * a)
+		lg.circle("fill", x2, y2, 2.5)
+	end
+
+	lg.setLineWidth(1)
+end
+
+local function drawFrost(frost)
+	-- Frost shards
+	for i = 1, #frost do
+		local f = frost[i]
+		local t = f.t / f.life
+
+		local alpha = 1 - t
+		local size = f.r * (1 - t * 0.4)
+
+		lg.setColor(0.7, 0.9, 1.0, alpha)
+
+		lg.push()
+		lg.translate(f.x, f.y)
+		lg.rotate(f.rot)
+
+		lg.rectangle("fill", -size * 0.4, -size * 0.6, size * 0.8, size * 1.2)
+
+		lg.pop()
+	end
+end
+
+local function drawPoison(poison)
+	-- Poison splash
+	for i = 1, #poison do
+		local p = poison[i]
+		local t = p.t / p.life
+
+		local alpha = 1 - t
+		local r = p.r * (1 - t * 0.3)
+
+		lg.setColor(0.35, 0.75, 0.35, alpha)
+		lg.circle("fill", p.x, p.y, r)
+
+		-- Inner core
+		lg.setColor(0.55, 0.9, 0.55, alpha)
+		lg.circle("fill", p.x, p.y, r * 0.6)
+	end
+end
+
+local function drawLancer(lancer)
+	-- Lancer hit
+	for i = 1, #lancer do
+		local l = lancer[i]
+
+		local t = l.t / l.life
+		local a = 1 - t
+
+		lg.setColor(1, 1, 1, a)
+
+		lg.line(l.x, l.y, l.x - l.vx * 0.02, l.y - l.vy * 0.02)
+	end
+	lg.setLineWidth(1)
+end
+
+local function drawPlasmaParticles(plasmaParticles)
+	-- Plasma Particles
+	for i = 1, #plasmaParticles do
+		local p = plasmaParticles[i]
+
+		local t = p.t / p.life
+		local a = 1 - t
+
+		local r = (p.r or 3) * (1 - t * 0.4)
+
+		-- Outer glow
+		lg.setColor(0.8, 0.5, 1.0, a * 0.35)
+		lg.circle("fill", p.x, p.y, r * 1.8)
+
+		-- Core
+		lg.setColor(0.95, 0.65, 1.0, a)
+		lg.circle("fill", p.x, p.y, r)
+	end
+end
+
+local function drawPlacePuffs(placePuffs)
+	for i = 1, #placePuffs do
+		local p = placePuffs[i]
+		local t = p.t / p.life
+
+		local alpha = (1 - t)
+		local r = p.r * (1 + t * 0.6)
+
+		lg.setColor(0.8, 0.75, 0.7, alpha * 0.5)
+		lg.circle("fill", p.x, p.y, r)
+	end
+end
+
+local function drawDeath(death)
+	-- Enemy death
+	for i = 1, #death do
+		local fx = death[i]
+
+		local t = fx.t / fx.life
+		local te = 1 - (1 - t) * (1 - t)
+		local tf = t * t
+		local a = 1 - tf
+		local r = fx.r * (1 + te * 1.1)
+
+		-- Fill
+		lg.setColor(0.88, 0.83, 0.87, a * 0.22)
+		lg.circle("fill", fx.x, fx.y, r)
+
+		-- Ring
+		lg.setLineWidth(3 * (1 - t) + 1)
+		lg.setColor(0.88, 0.83, 0.87, a * 0.88)
+		lg.circle("line", fx.x, fx.y, r)
+	end
+
+	lg.setLineWidth(1)
+end
+
+-- Screen-space companion to presentationEvent. Kept out of Camera.begin so
+-- the accessibility-safe vignette remains stable when camera motion is off.
+local function drawPresentationOverlay(presentation)
+	for i = 1, #presentation do
+		local e = presentation[i]
+		if e.kind == "boss_incoming" or e.kind == "boss_spawn" then
+			local a = sin(pi * min(1, e.t / e.life)) * 0.16
+			local w, h = lg.getDimensions()
+			lg.setColor(Theme.ui.warn[1], Theme.ui.warn[2], Theme.ui.warn[3], a)
+			lg.setLineWidth(18)
+			lg.rectangle("line", 9, 9, w - 18, h - 18)
+		end
+	end
+	lg.setLineWidth(1)
+end
+
+local Registry = require("world.effects.registry")
+
+local function resetFields(object, fields)
+	for i = 1, #fields do object[fields[i]] = nil end
+end
+
+local runtime = {
+	Effects = Effects,
+	acquire = acquire,
+	reservePool = reservePool,
+	emptyEffect = emptyEffect,
+	zapEffect = zapEffect,
+	pools = {
+		presentation = presentationPool, towerTransformations = towerTransformationPool,
+		splashes = splashPool, explosions = explosionPool, zaps = zapPool,
+		zapLines = zapLinePool, frost = frostPool, poison = poisonPool,
+		lancer = lancerPool, plasmaParticles = plasmaParticlePool,
+		placePuffs = placePuffPool, death = deathPool,
+	},
+	draw = {
+		presentation = drawPresentation, towerTransformations = drawTowerTransformations,
+		splashes = drawSplashes, explosions = drawExplosions, zaps = drawZaps,
+		zapLines = drawZapLines, frost = drawFrost, poison = drawPoison,
+		lancer = drawLancer, plasmaParticles = drawPlasmaParticles,
+		placePuffs = drawPlacePuffs, death = drawDeath,
+	},
+	drawOverlay = {presentation = drawPresentationOverlay},
+	update = {
+		explosions = updateDrag96, frost = updateRotatingDrag96, poison = updatePoison,
+		lancer = updateDrag92, plasmaParticles = integrate, placePuffs = updateDrag92,
+	},
+	spawn = {
+		presentation = Effects.presentationEvent,
+		towerTransformations = Effects.spawnTowerTransformation,
+		zaps = Effects.spawnZapEffect, zapLines = Effects.spawnZapLine,
+		splashes = Effects.spawnCannonImpact, explosions = Effects.spawnBossDeathExplosion,
+		frost = Effects.spawnFrostBurst, poison = Effects.spawnPoisonSplash,
+		lancer = Effects.spawnLancerHit, plasmaParticles = Effects.spawnPlasmaHit,
+		placePuffs = Effects.spawnPlacePuff, death = Effects.spawnEnemyDeath,
+	},
+	resetFields = resetFields,
+	releaseZap = releaseZap,
+}
+
+local familyModules = {
+	"presentation", "tower_transformations", "splashes", "explosions", "zaps",
+	"zap_lines", "frost", "poison", "lancer", "plasma", "place_puffs", "death",
+}
+local records = {}
+for i = 1, #familyModules do
+	records[i] = require("world.effects." .. familyModules[i])(runtime)
+end
+
+local registry = Registry.new(records, lg)
+
+function Effects.update(dt) registry:update(dt) end
+function Effects.draw() registry:draw() end
+function Effects.drawOverlay() registry:drawOverlay() end
+function Effects.load() registry:load() end
+function Effects.clear() registry:clear() end
+Effects.spawnFX = registry.spawnFX
+
+return Effects
