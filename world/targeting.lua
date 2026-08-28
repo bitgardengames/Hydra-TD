@@ -10,11 +10,14 @@ local queryCellsLocal = Spatial.queryCellsLocal
 local queryContext = Spatial.newQueryContext(false)
 local localQueryFootprintKey = Spatial.localQueryFootprintKey
 local simpleCtx = {}
--- Frame cache uses nested integer-keyed tables to reduce temporary string
--- allocations and GC spikes from composed cache keys. These entries persist
--- across frames and refresh their candidate lists lazily.
+-- Keep only the current frame's keys. Entry objects own their candidate buffers,
+-- and a bounded pool lets common cell/footprint counts avoid per-frame garbage.
+local MAX_POOLED_ENTRIES = 256
 local frameCache = {
 	entries = {},
+	frameId = nil,
+	pool = {},
+	poolCount = 0,
 }
 local function updateBest(e, c, score)
 	local diff = score - c.bestScore
@@ -39,20 +42,55 @@ local function evaluateCandidate(e, c)
 	updateBest(e, c, e.dist)
 end
 
-local function clearFrameCache(cache)
-	-- Explicit invalidation releases the complete persistent index. Normal
-	-- frame changes are handled lazily by each entry's frame stamp instead.
-	for cx in pairs(cache.entries) do
+local function releaseCandidates(entry)
+	local list = entry.list
+	for i = 1, entry.count do
+		list[i] = nil
+	end
+	entry.count = 0
+end
+
+local function recycleCurrentEntries(cache)
+	for cx, entriesByY in pairs(cache.entries) do
+		for cy, entriesByFootprint in pairs(entriesByY) do
+			for footprintKey, entry in pairs(entriesByFootprint) do
+				releaseCandidates(entry)
+				entriesByFootprint[footprintKey] = nil
+				if cache.poolCount < MAX_POOLED_ENTRIES then
+					cache.poolCount = cache.poolCount + 1
+					cache.pool[cache.poolCount] = entry
+				end
+			end
+			entriesByY[cy] = nil
+		end
 		cache.entries[cx] = nil
 	end
 end
 
+function Targeting.beginFrame(frameId)
+	frameId = frameId or 0
+	if frameCache.frameId == frameId then
+		return
+	end
+
+	recycleCurrentEntries(frameCache)
+	frameCache.frameId = frameId
+end
+
 function Targeting.clearFrameCache()
-	clearFrameCache(frameCache)
+	recycleCurrentEntries(frameCache)
+	-- A run reset also drains the reuse pool. Lists were scrubbed above (and are
+	-- scrubbed before pooling), so neither active nor pooled buffers hold enemies.
+	for i = 1, frameCache.poolCount do
+		frameCache.pool[i] = nil
+	end
+	frameCache.poolCount = 0
+	frameCache.frameId = nil
 end
 
 local function getCandidatesForTower(tower)
 	local frameId = State.frameId or 0
+	Targeting.beginFrame(frameId)
 	local cx, cy = pointToCell(tower.x, tower.y)
 	local footprintKey = localQueryFootprintKey(tower.range)
 	local entriesByX = frameCache.entries
@@ -67,25 +105,20 @@ local function getCandidatesForTower(tower)
 		entriesByY[cy] = entriesByFootprint
 	end
 	local entry = entriesByFootprint[footprintKey]
-	if entry and entry.frameId == frameId then
+	if entry then
 		return entry.list, entry.count
 	end
 
-	if not entry then
-		entry = {
-			list = {},
-			count = 0,
-			frameId = -1,
-		}
-		entriesByFootprint[footprintKey] = entry
+	if frameCache.poolCount > 0 then
+		entry = frameCache.pool[frameCache.poolCount]
+		frameCache.pool[frameCache.poolCount] = nil
+		frameCache.poolCount = frameCache.poolCount - 1
+	else
+		entry = {list = {}, count = 0}
 	end
+	entriesByFootprint[footprintKey] = entry
 
 	local list = entry.list
-	for i = 1, entry.count do
-		list[i] = nil
-	end
-	entry.count = 0
-	entry.frameId = frameId
 
 	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, queryContext)
 	local count = 0

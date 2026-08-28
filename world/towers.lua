@@ -48,6 +48,7 @@ local enemies = Enemies.enemies
 
 local findTarget = Targeting.findTarget
 local isSemanticallyValidTarget = Targeting.isSemanticallyValidTarget
+local beginTargetingFrame = Targeting.beginFrame
 local sampleFast = MapMod.sampleFast
 
 local FIRE_ANGLE_EPS = math.rad(6)
@@ -774,6 +775,8 @@ local function updateSuppression(dt)
 end
 
 local function updateTowers(dt)
+	-- Retire last frame's targeting keys even when no tower needs to retarget.
+	beginTargetingFrame(State.frameId)
 	updateSuppression(dt)
 	expireAbilityBuffs(State.abilityClock or 0)
 

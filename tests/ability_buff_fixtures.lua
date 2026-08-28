@@ -9,6 +9,7 @@ package.loaded["systems.sound"] = {play = function() end}
 package.loaded["world.map"] = {map = {blocked = {}}, sampleFast = function() return 0, 0 end}
 package.loaded["ui.floaters"] = {add = function() end}
 package.loaded["world.targeting"] = {
+	beginFrame = function() end,
 	findTarget = function() return nil end,
 	isSemanticallyValidTarget = function() return false end,
 	clearFrameCache = function() end,
