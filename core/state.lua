@@ -46,7 +46,6 @@ local state = {
 	wasFirstClear = false,
 	unlockedTowersThisVictory = {},
 	unlockedRewardsThisVictory = {},
-	unlockedAbilitiesThisVictory = {},
 
 	carouselT = 1,
 	carouselDir = 0,
@@ -56,12 +55,6 @@ local state = {
 	placingFadeT = 0,
 	selectedTower = nil,
 	selectedEnemy = nil,
-	-- Up to four abilities can be equipped. Each independently earns kill charge.
-	-- New runs fill these values so the opening wave retains one immediate cast.
-	equippedAbilities = {"meteor", "frost_nova"},
-	abilityCharges = {},
-	abilityTargeting = nil,
-
 	hoverGX = nil,
 	hoverGY = nil,
 

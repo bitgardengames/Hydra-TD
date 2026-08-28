@@ -22,8 +22,6 @@ Hotkeys.defaultKb = {
 		fastForward = "tab",
 		skipPrep = "space",
 		toggleMeter = "d",
-		abilitySlot1 = "q",
-		abilitySlot2 = "w",
 	},
 }
 

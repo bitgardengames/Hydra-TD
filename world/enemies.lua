@@ -347,21 +347,14 @@ local function handleEnemyKilled(e, i, isBoss)
 		State.selectedEnemy = nil
 	end
 
-	-- Gold Rush affects kill income only; sales and wave bonuses are awarded in
-	-- their own systems and deliberately never pass through this calculation.
-	local incomeMultiplier = require("systems.abilities").getKillIncomeMultiplier(e)
-	local reward = floor(e.reward * incomeMultiplier + 0.5)
+	local reward = e.reward
 	State.money = State.money + reward
 	State.score = State.score + (e.score or 0)
 	State.totalKills = (State.totalKills or 0) + 1
-	-- Keep charge beside the canonical kill award so every actual death grants
-	-- at most once, including bosses after their delayed death animation.
-	require("systems.abilities").chargeFromKill(e, e.lastDamageSourceKind)
 	if e.scheduledWaveEnemy then
 		State.spawnedKills = (State.spawnedKills or 0) + 1
 	end
-	local rewardText = incomeMultiplier > 1 and L("floater.goldRushReward", reward, incomeMultiplier) or "+" .. reward
-	Floaters.add(e.x, e.y - 20, rewardText, cmR, cmG, cmB, true)
+	Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
 
 	Achievements.increment("ENEMIES_KILLED")
 

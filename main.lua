@@ -111,10 +111,6 @@ function resetGame()
     State.placing = nil
 	State.selectedTower = nil
 	State.selectedEnemy = nil
-	State.equippedAbilities = CampaignUnlocks.getEquippedAbilities()
-	State.abilityCharges = {}
-	State.abilityTargeting = nil
-	require("systems.abilities").reset()
     State.hoverGX = nil
     State.hoverGY = nil
 
@@ -129,7 +125,6 @@ function resetGame()
 	State.wasFirstClear = false
 	State.unlockedTowersThisVictory = {}
 	State.unlockedRewardsThisVictory = {}
-	State.unlockedAbilitiesThisVictory = {}
     State.activeBoss = nil
 	State.activeBossKind = nil
 
@@ -234,13 +229,6 @@ local function updateGameplayOutcome()
 			Save.data.furthestIndex = max(previousFurthestIndex, nextMapIndex)
 			State.unlockedTowersThisVictory = CampaignUnlocks.getNewlyUnlockedTowers(previousFurthestIndex, Save.data.furthestIndex)
 			State.unlockedRewardsThisVictory = CampaignUnlocks.getNewRewards(previousFurthestIndex, Save.data.furthestIndex)
-			State.unlockedAbilitiesThisVictory = {}
-			for _, reward in ipairs(State.unlockedRewardsThisVictory) do
-				if reward.type == "ability" then
-					State.unlockedAbilitiesThisVictory[#State.unlockedAbilitiesThisVictory + 1] = reward.id
-				end
-			end
-
 			State.speed = 0.35
 			State.gameOver = true
 			State.victory = true

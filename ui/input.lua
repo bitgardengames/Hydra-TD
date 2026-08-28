@@ -13,7 +13,6 @@ local Button = require("ui.button")
 local Sound = require("systems.sound")
 local L = require("core.localization")
 local ModulePicker = require("ui.module_picker")
-local Abilities = require("systems.abilities")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local GameSpeed = require("core.game_speed")
 local DamageMeter = require("ui.damage_meter")
@@ -54,9 +53,6 @@ local function beginTowerPlacement(kind)
 		return false, "locked"
 	end
 
-	-- Tower placement and ability targeting are mutually exclusive. Clear the
-	-- active target so its AoE preview does not linger behind the tower ghost.
-	Abilities.cancelTargeting()
 	State.placing = kind
 	State.selectedTower = nil
 
@@ -65,9 +61,6 @@ end
 
 local function updateHover()
 	State.hoverGX, State.hoverGY = screenToGrid(love.mouse.getPosition())
-	if State.abilityTargeting then
-		State.abilityTargeting.x, State.abilityTargeting.y = Camera.screenToWorld(love.mouse.getPosition())
-	end
 end
 
 local function showFloaterAtScreen(x, y, message)
@@ -77,53 +70,6 @@ end
 
 local function affordabilityMessage(cost)
 	return L("floater.placement.insufficientFunds", cost, State.money, math.max(0, cost - State.money))
-end
-
-local function rejectAbilityActivation(b, x, y)
-	Sound.play("uiError")
-	if b.anim then
-		b.anim.errorT = 1
-	end
-	showFloaterAtScreen(x, y, b.lockMessage or L("floater.abilityCoolingDown"))
-end
-
-local function releaseAbilityButton(b, x, y)
-	if b.enabled == true then
-		Abilities.beginTargeting(b.abilityId)
-		return
-	end
-
-	rejectAbilityActivation(b, x, y)
-end
-
-local function showAbilityError(abilityId)
-	for _, button in ipairs(BottomBar.getAbilityButtons()) do
-		if button.abilityId == abilityId then
-			rejectAbilityActivation(
-				button,
-				button.x + button.w * 0.5,
-				button.y + button.h * 0.5
-			)
-			return
-		end
-	end
-
-	Sound.play("uiError")
-end
-
-local function activateAbilitySlot(slotIndex)
-	local abilityId = State.equippedAbilities and State.equippedAbilities[slotIndex]
-
-	-- A second press of the slot currently being aimed always cancels it. This
-	-- keeps keyboard activation predictable and matches Escape/right-click.
-	if abilityId and State.abilityTargeting and State.abilityTargeting.abilityId == abilityId then
-		Abilities.cancelTargeting()
-		return
-	end
-
-	if not abilityId or not Abilities.beginTargeting(abilityId) then
-		showAbilityError(abilityId)
-	end
 end
 
 local function releaseShopButton(b, x, y)
@@ -152,7 +98,6 @@ end
 -- the same press/release contract. Keeping that routing in one ordered table
 -- makes adding a panel a data change instead of another pair of input branches.
 local bottomBarGroups = {
-	{ buttons = BottomBar.getAbilityButtons, release = releaseAbilityButton },
 	{ buttons = BottomBar.getShopButtons, release = releaseShopButton },
 	{ buttons = BottomBar.getInspectButtons, release = releaseInspectButton },
 }
@@ -240,7 +185,6 @@ local function pressWorld(x, y, button)
 	if button == 2 then
 		cancelPlacement()
 		deselect()
-		Abilities.cancelTargeting()
 		return
 	end
 	if button ~= 1 then
@@ -248,15 +192,7 @@ local function pressWorld(x, y, button)
 	end
 
 	local wx, wy = Camera.screenToWorld(x, y)
-	if State.abilityTargeting then
-		local ok, why = Abilities.activate(wx, wy)
-		if not ok then
-			Sound.play("uiError")
-			Floaters.add(wx, wy, L("floater.abilityInvalid." .. (why or "invalid")), colorBad[1], colorBad[2], colorBad[3])
-		end
-	else
-		selectWorldEntity(wx, wy)
-	end
+	selectWorldEntity(wx, wy)
 end
 
 local function mousepressed(x, y, button)
@@ -345,9 +281,7 @@ local function handleEscape()
 		return false
 	end
 
-	if State.abilityTargeting then
-		Abilities.cancelTargeting()
-	elseif State.placing then
+	if State.placing then
 		cancelPlacement()
 	elseif State.selectedTower or State.selectedEnemy then
 		deselect()
