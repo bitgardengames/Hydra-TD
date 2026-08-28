@@ -9,6 +9,7 @@ local Trees = require("world.scatter_trees")
 local Cacti = require("world.scatter_cactus")
 local Rocks = require("world.scatter_rocks")
 local Mushrooms = require("world.scatter_mushrooms")
+local Scatter = require("world.scatter")
 
 local lg = love.graphics
 
@@ -101,7 +102,6 @@ local function build(mapIndex, mapDef, w, h)
 	local context = MapMod.createRenderContext(mapDef)
 	local canvas = lg.newCanvas(w, h, {msaa = 8})
 	local previewTransform = MapRender.gameplayPreviewTransform(w, h)
-	local scatter = context.map.biome and context.map.biome.scatter
 
 	-- Hydra TD's world art uses nearest-neighbour filtering.  The preview is
 	-- still rendered at native size; this only prevents accidental smoothing if
@@ -111,36 +111,7 @@ local function build(mapIndex, mapDef, w, h)
 	local ok, err = pcall(withMapContext, context, previousMap, function()
 		MapMod.clearBlocked()
 
-		if scatter then
-			if scatter.rocks and scatter.rocks.enabled then
-				Rocks.generate(scatter.rocks)
-			else
-				Rocks.clear()
-			end
-
-			if scatter.trees and scatter.trees.enabled then
-				Trees.generate(scatter.trees)
-			else
-				Trees.clear()
-			end
-
-			if scatter.cactus and scatter.cactus.enabled then
-				Cacti.generate(scatter.cactus)
-			else
-				Cacti.clear()
-			end
-
-			if scatter.mushrooms and scatter.mushrooms.enabled then
-				Mushrooms.generate()
-			else
-				Mushrooms.clear()
-			end
-		else
-			Rocks.clear()
-			Trees.clear()
-			Cacti.clear()
-			Mushrooms.clear()
-		end
+		Scatter.generateForBiome(context.map.biome)
 
 		MapRender.renderGameplayFramedToCanvas(canvas, nil, previewTransform)
 	end)
