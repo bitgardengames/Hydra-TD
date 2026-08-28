@@ -32,7 +32,10 @@ local state = {
 		experimentalModules = false,
 	},
 	buildSeed = nil,
+	-- The currently spawned boss enemy entity, or nil. Boss identifiers belong
+	-- in activeBossKind so presentation code never has to resolve this value.
 	activeBoss = nil,
+	-- Identifier-only boss kind for wave rules and rewards.
 	activeBossKind = nil,
 	speed = 1,
 
