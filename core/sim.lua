@@ -23,9 +23,11 @@ function Sim.update(dt)
 	-- tick rather than once per rendered frame.
 	State.frameId = (State.frameId or 0) + 1
 	Waves.updateSpawner(dt)
+	-- Required enemy order: DOT/death, authored traits, effective speed, path and
+	-- spatial update, presentation handoff, then escape removal. Movement and
+	-- swap-removal queue aura work. This flush MUST stay after the complete enemy
+	-- pass and before towers/projectiles consume support boosts.
 	Enemies.updateEnemies(dt)
-	-- Enemy movement queues aura membership changes. Resolve them only after all
-	-- spatial positions are final, but before targeting and combat consume boosts.
 	EnemySupport.flushDirtySources()
 	Towers.updateTowers(dt)
 	Projectiles.update(dt)
