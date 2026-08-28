@@ -103,81 +103,67 @@ local function acquire()
 		return p
 	end
 
-	return {}
+	local retained = {
+		hitSet = {},
+		hitCooldowns = {},
+		events = {},
+		defaultHitCtx = {},
+		eventPool = {},
+		eventPoolCount = 0,
+	}
+
+	return { _retained = retained }
 end
 
+-- These are shot-owned values. Retained containers live in p._retained and are
+-- deliberately not mixed into this list.
+local reusableFields = {
+	"x", "y", "r", "baseR", "scale", "life", "t", "sourceTower", "sourceKind",
+	"speed", "damage", "hitOrigin", "target", "targetID", "ignoreTarget", "angle",
+	"rotation", "vx", "vy", "hitRadius", "hitRadius2", "lastTX", "lastTY",
+	"behaviors", "hit", "_consumed", "_hooks", "_drawHandlers", "_canHitPredicates",
+	"_didExpireHook",
+	"allowRepeatHits", "consumeOnHit", "pierce", "dead", "radius", "visualScale",
+	"cx", "cy", "orbitSpeed", "onEvent", "_baseDamage", "_beam", "_boom",
+	"_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
+	"_chainVisited", "_claimedScratch", "_conductRadius", "_delayedBlast",
+	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
+	"_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
+	"_slowAuraRadius", "_slowAuraTick", "_slowAuraTimer", "_snowballBaseDamage",
+	"_snowballHits", "_snowballStacks", "_spiral", "_supernovaBurstDone", "_suspend",
+	"_targetPointX", "_targetPointY", "_tickStates", "_wave", "_zap",
+}
+
 local function resetReusableState(p)
-	local hitSet = p.hitSet
-	if hitSet then
-		Util.clearTable(hitSet)
-	else
-		hitSet = {}
-		p.hitSet = hitSet
+	local retained = p._retained
+
+	-- Unresolved events are still owned by this projectile. Return each one to
+	-- its event pool before making the queue available to the next shot.
+	for i = p.eventRead or 1, p.eventCount or 0 do
+		local evt = retained.events[i]
+		retained.events[i] = nil
+		releaseEvent(p, evt)
 	end
 
-	local hitCooldowns = p.hitCooldowns
-	if hitCooldowns then
-		Util.clearTable(hitCooldowns)
-	else
-		hitCooldowns = {}
-		p.hitCooldowns = hitCooldowns
+	Util.clearTable(retained.hitCooldowns)
+	Util.clearTable(retained.defaultHitCtx)
+	retained.eventPoolCount = p._eventPoolCount or retained.eventPoolCount
+
+	for i = 1, #reusableFields do
+		p[reusableFields[i]] = nil
 	end
 
-	p.eventRead = 1
-	p.eventCount = 0
-	if p.events then
-		Util.clearTable(p.events)
-	end
-
-	p._consumed = false
-	p.hit = nil
-
-	p._hooks = nil
-	p._drawHandlers = nil
-	p._canHitPredicates = nil
-
-	p._defaultHitCtx = p._defaultHitCtx or {}
-	p._defaultHitCtx.origin = nil
-	p._defaultHitCtx.hitX = nil
-	p._defaultHitCtx.hitY = nil
-
-	p._eventPoolCount = p._eventPoolCount or 0
+	p.eventRead = nil
+	p.eventCount = nil
+	p.hitSet = nil
+	p.hitCooldowns = nil
+	p.events = nil
+	p._defaultHitCtx = nil
+	p._eventPool = nil
+	p._eventPoolCount = nil
 end
 
 local function release(p)
-	local hitSet = p.hitSet
-	local hitCooldowns = p.hitCooldowns
-	local events = p.events
-	local defaultHitCtx = p._defaultHitCtx
-	local eventPool = p._eventPool
-	local eventPoolCount = p._eventPoolCount or 0
-
-	for k in pairs(p) do
-		p[k] = nil
-	end
-
-	if hitSet then
-		p.hitSet = hitSet
-	end
-
-	if hitCooldowns then
-		p.hitCooldowns = hitCooldowns
-	end
-
-	if events then
-		p.events = events
-	end
-
-	if defaultHitCtx then
-		Util.clearTable(defaultHitCtx)
-		p._defaultHitCtx = defaultHitCtx
-	end
-
-	if eventPool then
-		p._eventPool = eventPool
-		p._eventPoolCount = eventPoolCount
-	end
-
 	resetReusableState(p)
 
 	pool[#pool + 1] = p
@@ -194,6 +180,16 @@ end
 
 local function initProjectile(p, source, opts)
 	opts = opts or {}
+	local retained = p._retained
+
+	p.hitSet = retained.hitSet
+	p.hitCooldowns = retained.hitCooldowns
+	p.events = retained.events
+	p.eventRead = 1
+	p.eventCount = 0
+	p._defaultHitCtx = retained.defaultHitCtx
+	p._eventPool = retained.eventPool
+	p._eventPoolCount = retained.eventPoolCount
 
 	p.x = opts.x or source.x
 	p.y = opts.y or source.renderY or source.y
@@ -223,7 +219,7 @@ local function initProjectile(p, source, opts)
 	p.vx = opts.vx
 	p.vy = opts.vy
 
-	resetReusableState(p)
+	p._consumed = false
 	p.hasHit = projectileHasHit
 	p.markHit = markProjectileHit
 	p.getHitCooldownExpiry = getHitCooldownExpiry
