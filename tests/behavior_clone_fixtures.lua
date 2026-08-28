@@ -49,4 +49,17 @@ local emptyContext = BehaviorContext.new({})
 emptyContext:restoreRequiredBehaviors({ source })
 verifyCopy(emptyContext.behaviors[1], "restoreRequiredBehaviors")
 
+local orderedContext = BehaviorContext.new({ { id = "cannon_long_fuse" } })
+orderedContext:restoreRequiredBehaviors({
+	{ id = "hit_damage", data = { order = "damage" } },
+	{ id = "move_linear", data = { order = "movement" } },
+	{ id = "aoe_damage", data = { order = "duplicate damage role" } },
+	{ id = "hit_circle", data = { order = "collision" } },
+})
+assert(#orderedContext.behaviors == 4, "restoreRequiredBehaviors did not retain one behavior per role")
+assert(orderedContext.behaviors[1].id == "cannon_long_fuse", "restoreRequiredBehaviors reordered existing behaviors")
+assert(orderedContext.behaviors[2].id == "hit_damage", "restoreRequiredBehaviors did not preserve base role order")
+assert(orderedContext.behaviors[3].id == "move_linear", "restoreRequiredBehaviors did not preserve base role order")
+assert(orderedContext.behaviors[4].id == "hit_circle", "restoreRequiredBehaviors did not preserve base role order")
+
 print("behavior clone fixtures passed")
