@@ -1025,260 +1025,89 @@ function Export.exportPatchCover(text, ver)
 	exportCanvas(canvas, string.format("%s/update_%s_%dx%d", PATCH_DIR, ver, w, h))
 end
 
-function Export.exportTowerFiringAnimations()
-	local SIZE = 256
-	local FRAMES = 30
-	local dt = 1 / 30
-	local scale = (SIZE / 64) * 1.5
+local TOWER_FIRING_SIZE = 256
+local TOWER_FIRING_FRAME_COUNT = 30
+-- Export one second of gameplay simulation. A 1/30 timestep keeps the output
+-- compact while matching the 30 FPS animation playback rate.
+local TOWER_FIRING_TIMESTEP = 1 / 30
+local TOWER_FIRING_SCALE = (TOWER_FIRING_SIZE / 64) * 1.5
 
-	local towerList = Constants.TOWER_LIST
+local function resetTowerFiringExportSystems()
+	Towers.clear()
+	Enemies.enemies = {}
+	Spatial.clear()
+	Projectiles.clear()
+	Effects.clear()
+end
 
-	for i = 1, #towerList do
-		local kind = towerList[i]
-		local def = TowerDefs[kind]
+local function createTowerFiringTarget()
+	local angle = -math.pi / 4
+	local dist = 80
+	local enemy = {
+		x = math.cos(angle) * dist,
+		y = math.sin(angle) * dist,
+		hp = 100,
+		maxHp = 100,
+		radius = 10,
+		dist = 100,
+		speed = 0,
+		dying = false,
+		alpha = 1,
+		hitFlash = 0,
+		hitVelX = 0,
+		hitVelY = 0,
+		slowTimer = 0,
+	}
 
-		local towerDir = ANIM_DIR .. "/" .. kind
-		love.filesystem.createDirectory(towerDir)
+	enemy.prevX = enemy.x
+	enemy.prevY = enemy.y
 
-		-- === Reset once per tower ===
-		Towers.clear()
-		Enemies.enemies = {}
-		Projectiles.clear()
-		Effects.clear()
+	-- Projectiles and chain effects use both the authoritative enemy list and
+	-- the spatial grid, so the export fixture must be registered with each.
+	Enemies.enemies = {enemy}
+	Spatial.updateEnemy(enemy)
+	return enemy
+end
 
-		-- Optional: same deterministic nudge used by achievement export for nicer shock variation
-		love.math.random()
+local function exportTowerFiringFrame(tower, towerDir, frame)
+	local canvas = lg.newCanvas(TOWER_FIRING_SIZE, TOWER_FIRING_SIZE, {msaa = 8})
+	lg.setCanvas(canvas)
+	lg.clear(0, 0, 0, 0)
 
-		-- === Create enemy ===
-		local angle = -math.pi / 4
-		local dist = 80
+	lg.push()
+	lg.translate(TOWER_FIRING_SIZE * 0.5, TOWER_FIRING_SIZE * 0.5)
+	lg.scale(TOWER_FIRING_SCALE, TOWER_FIRING_SCALE)
 
-		local enemy = {
-			x = math.cos(angle) * dist,
-			y = math.sin(angle) * dist,
-			prevX = 0,
-			prevY = 0,
+	DrawEntities.drawTowerVisual(tower.kind, 0, 0, tower.angle, tower.recoil, 1)
+	DrawEntities.drawTowerFX(tower)
+	Projectiles.draw()
+	Effects.draw()
 
-			hp = 100,
-			maxHp = 100,
-			radius = 10,
+	lg.pop()
+	lg.setCanvas()
 
-			dist = 100,
-			speed = 0,
-
-			dying = false,
-			alpha = 1,
-
-			hitFlash = 0,
-			hitVelX = 0,
-			hitVelY = 0,
-		}
-
-		enemy.prevX = enemy.x
-		enemy.prevY = enemy.y
-
-		Spatial.updateEnemy(enemy)
-		Enemies.enemies = {enemy}
-
-		-- === Create tower in "just fired" state ===
-		Towers.addTower(kind, 0, 0)
-
-		local t = Towers.towers[1]
-
-		-- === Force the actual shot once ===
-		--[[if t.chain then
-			local zapOrder = Shock.fire(t, enemy)
-
-			if zapOrder and #zapOrder > 0 then
-				local mx, my = getShockOrigin(t)
-				Effects.spawnZapEffect(mx, my, zapOrder)
-			end
-		else]]
-			Projectiles.spawn(t, enemy)
-		--end
-
-		-- === Export evolving frames ===
-		for frame = 1, FRAMES do
-			Towers.updateTowers(dt)
-			Projectiles.update(dt)
-			Effects.update(dt)
-
-			local canvas = lg.newCanvas(SIZE, SIZE, {msaa = 8})
-			lg.setCanvas(canvas)
-			lg.clear(0, 0, 0, 0)
-
-			lg.push()
-			lg.translate(SIZE * 0.5, SIZE * 0.5)
-			lg.scale(scale, scale)
-
-			DrawEntities.drawTowerVisual(t.kind, 0, 0, t.angle, t.recoil, 1)
-			DrawEntities.drawTowerFX(t)
-			Projectiles.draw()
-			Effects.draw()
-
-			lg.pop()
-			lg.setCanvas()
-
-			exportCanvas(canvas, string.format("%s/frame_%05d", towerDir, frame))
-		end
-	end
+	exportCanvas(canvas, string.format("%s/frame_%05d", towerDir, frame))
 end
 
 function Export.exportTowerFiringAnimations()
-	local SIZE = 256
-	local FRAMES = 30
-	local dt = 1 / 120
-	local scale = (SIZE / 64) * 1.5
-
-	local towerList = Constants.TOWER_LIST
-
-	for i = 1, #towerList do
-		local kind = towerList[i]
-		local def = TowerDefs[kind]
-
+	for _, kind in ipairs(Constants.TOWER_LIST) do
 		local towerDir = ANIM_DIR .. "/" .. kind
 		love.filesystem.createDirectory(towerDir)
 
-		-- reset systems
-		Towers.clear()
-		Projectiles.clear()
-		Effects.clear()
+		resetTowerFiringExportSystems()
+		local enemy = createTowerFiringTarget()
 
-		-- === enemy (for projectiles / chains) ===
-		local angle = -math.pi / 4
-		local dist = 80
+		-- Use the gameplay constructor rather than a render-only table so tower
+		-- defaults and future firing animation state stay in sync with the game.
+		Towers.addTower(kind, 0, 0)
+		local tower = Towers.towers[1]
+		Projectiles.spawn(tower, enemy)
 
-		local enemy = {
-			x = math.cos(angle) * dist,
-			y = math.sin(angle) * dist,
-			prevX = 0,
-			prevY = 0,
-
-			hp = 100,
-			maxHp = 100,
-			radius = 10,
-
-			dist = 100,
-			speed = 0,
-
-			dying = false,
-			alpha = 1,
-
-			hitFlash = 0,
-			hitVelX = 0,
-			hitVelY = 0,
-
-			slowTimer = 0,
-		}
-
-		enemy.prevX = enemy.x
-		enemy.prevY = enemy.y
-
-		-- === manual tower (no addTower) ===
-		local t = {
-			kind = kind,
-			def = def,
-
-			x = 0,
-			y = 0,
-			renderY = 0,
-
-			angle = angle,
-
-			-- animation state (WE CONTROL THIS)
-			fireAnim = 0,
-			recoil = 0,
-			windUp = 0,
-			charge = 0,
-
-			recoilStrength = def.recoilStrength or 0,
-			recoilDecay = def.recoilDecay or 18,
-
-			damage = def.damage,
-			projSpeed = def.projSpeed,
-
-			-- required for systems
-			damageDealt = 0,
-			kills = 0,
-
-			slow   = def.onHitSlow and {factor = def.onHitSlow.factor, dur = def.onHitSlow.dur} or nil,
-			splash = def.splash and {radius = def.splash.radius, falloff = def.splash.falloff} or nil,
-			chain  = def.chain and {jumps = def.chain.jumps, radius = def.chain.radius, falloff = def.chain.falloff} or nil,
-			poison = def.poison and {dps = def.poison.dps, dur = def.poison.dur, maxStacks = def.poison.maxStacks} or nil,
-			plasma = def.plasma and {radius = def.plasma.radius, tickRate = def.plasma.tickRate} or nil,
-		}
-
-		Towers.towers = {t}
-
-		-- === timing (normalized 0–1 across frames) ===
-		local function getPhase(f)
-			return f / FRAMES
-		end
-
-		for frame = 1, FRAMES do
-			local p = getPhase(frame)
-
-			-- =========================
-			-- WIND-UP (0.0 → 0.25)
-			-- =========================
-			if p < 0.25 then
-				local w = p / 0.25
-				t.windUp = w
-				t.charge = w
-
-			-- =========================
-			-- FIRE MOMENT (~0.25)
-			-- =========================
-			elseif p < 0.30 then
-				if t.fireAnim == 0 then
-					t.fireAnim = 1
-					t.recoil = t.recoilStrength
-
-					-- spawn actual shot ONCE
-					--[[if t.chain then
-						local zapOrder = Shock.fire(t, enemy)
-						if zapOrder and #zapOrder > 0 then
-							local mx, my = getShockOrigin(t)
-							Effects.spawnZapEffect(mx, my, zapOrder)
-						end
-					else]]
-						Projectiles.spawn(t, enemy)
-					--end
-				end
-
-			-- =========================
-			-- RECOIL + DECAY (0.30 → 1.0)
-			-- =========================
-			else
-				t.fireAnim = math.max(0, t.fireAnim - dt * 4)
-				t.recoil = math.max(0, t.recoil - t.recoilDecay * dt)
-			end
-
-			-- update real systems
-			Projectiles.update(dt)
-			Effects.update(dt)
-
-			-- === render ===
-			local canvas = lg.newCanvas(SIZE, SIZE, {msaa = 8})
-			lg.setCanvas(canvas)
-			lg.clear(0, 0, 0, 0)
-
-			lg.push()
-			lg.translate(SIZE * 0.5, SIZE * 0.5)
-			lg.scale(scale, scale)
-
-			DrawEntities.drawTowerVisual(t.kind, 0, 0, t.angle, t.recoil, 1)
-			DrawEntities.drawTowerFX(t)
-			Projectiles.draw()
-			
-			if kind == "shock" then
-				Effects.draw()
-			end
-
-			lg.pop()
-			lg.setCanvas()
-
-			exportCanvas(canvas, string.format("%s/frame_%05d", towerDir, frame))
+		for frame = 1, TOWER_FIRING_FRAME_COUNT do
+			Towers.updateTowers(TOWER_FIRING_TIMESTEP)
+			Projectiles.update(TOWER_FIRING_TIMESTEP)
+			Effects.update(TOWER_FIRING_TIMESTEP)
+			exportTowerFiringFrame(tower, towerDir, frame)
 		end
 	end
 end
