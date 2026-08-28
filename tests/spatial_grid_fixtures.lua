@@ -65,7 +65,6 @@ local priorEnemy = add(4, 4)
 local priorResults, priorCount = Spatial.queryCells(4, 4, 1, queryContext)
 assert(priorCount == 1 and priorResults[1] == priorEnemy, "reset fixture did not populate query state")
 Spatial.queryCellsLocal(4, 4, 1, localQueryContext)
-Spatial.queryOccupancy(0, 0, 1)
 Spatial.clear()
 assert(Spatial.grid == priorGrid and next(priorGrid) == nil,
 	"Spatial.clear replaced or failed to empty the exposed grid")
@@ -75,9 +74,6 @@ local resetResults, resetCount = Spatial.queryCells(4, 4, 1, queryContext)
 assert(resetCount == 0 and resetResults[1] == nil, "map reset retained a stale query result")
 local localResults, localCount = Spatial.queryCellsLocal(4, 4, 1, localQueryContext)
 assert(localCount == 0 and localResults[1] == nil, "map reset retained a stale local query result")
-local occupancy, occupancyCount, occupancySum = Spatial.queryOccupancy(0, 0, 1)
-assert(occupancyCount == 9 and occupancySum == 0 and #occupancy == 9,
-	"map reset retained stale occupancy state")
 inserted = {}
 
 -- Visitor state is entirely caller-owned, so a nested query cannot overwrite

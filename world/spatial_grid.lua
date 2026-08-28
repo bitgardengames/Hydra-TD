@@ -12,7 +12,6 @@ local INV_CELL = 1 / CELL_SIZE
 local grid = {}
 Spatial.grid = grid
 
-local occupancyBuffer = {}
 local enemyCellChangedHook
 local enemyRemovedHook
 
@@ -39,25 +38,6 @@ local function clearTable(t)
 	end
 end
 
-local function eachNeighborInRange(cx, cy, cellRadius, onCell, context)
-	local idx = 0
-	for dx = -cellRadius, cellRadius do
-		local col = grid[cx + dx]
-		if col then
-			for dy = -cellRadius, cellRadius do
-				idx = idx + 1
-				onCell(col[cy + dy], idx, context)
-			end
-		else
-			for _ = -cellRadius, cellRadius do
-				idx = idx + 1
-				onCell(nil, idx, context)
-			end
-		end
-	end
-	return idx
-end
-
 local function queryCellFootprint(radius)
 	if not radius or radius <= 0 then
 		return 0
@@ -71,10 +51,6 @@ end
 -- cache callers cannot drift from queryCellsLocal's CELL_SIZE boundaries.
 function Spatial.localQueryFootprintKey(radius)
 	return queryCellFootprint(radius)
-end
-
-local function traverseOccupancy(cx, cy, radiusCells, onCell, context)
-	return eachNeighborInRange(cx, cy, radiusCells or 1, onCell, context)
 end
 
 local function traverseQueryCellsCollect(x, y, radius, collectContext)
@@ -269,7 +245,6 @@ end
 
 function Spatial.clear()
 	clearTable(grid)
-	clearTable(occupancyBuffer)
 	frameStats.localQueryCount = 0
 	frameStats.localCandidateTotal = 0
 end
@@ -325,33 +300,6 @@ function Spatial.forEachQueryCell(x, y, radius, fn, context)
 			fn(centerX + dx, centerY + dy, context)
 		end
 	end
-end
-
-function Spatial.queryOccupancy(cx, cy, radiusCells, out)
-	local counts = out or occupancyBuffer
-	local sum = 0
-	local idx = traverseOccupancy(cx, cy, radiusCells, function(cell, cellIdx)
-		local count = cell and #cell or 0
-		counts[cellIdx] = count
-		sum = sum + count
-	end)
-
-	for i = idx + 1, #counts do
-		counts[i] = nil
-	end
-
-	return counts, idx, sum
-end
-
-function Spatial.queryOccupancySum(cx, cy, radiusCells)
-	local sum = 0
-	traverseOccupancy(cx, cy, radiusCells, function(cell)
-		if cell then
-			sum = sum + #cell
-		end
-	end)
-
-	return sum
 end
 
 function Spatial.visitCells(x, y, radius, fn, context, queryContext)
