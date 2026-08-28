@@ -31,26 +31,26 @@ local function random(a, b)
 	return rng:random(a, b)
 end
 
-local function getTreeWorld()
-	local world = Map.getWorld()
+local function getTreeWorld(targetMap)
+	local world = targetMap and targetMap.biome and targetMap.biome.world
 
 	return world and world.tree
 end
 
-local function getTreeTrunk()
-	local tree = getTreeWorld()
+local function getTreeTrunk(targetMap)
+	local tree = getTreeWorld(targetMap)
 
 	return (tree and tree.trunk) or Theme.world.treeTrunk
 end
 
-local function getTreeTrunkOutline()
-	local tree = getTreeWorld()
+local function getTreeTrunkOutline(targetMap)
+	local tree = getTreeWorld(targetMap)
 
 	return (tree and tree.trunkOutline) or Theme.world.treeTrunkOutline
 end
 
-local function getTreeStyles()
-	local tree = getTreeWorld()
+local function getTreeStyles(targetMap)
+	local tree = getTreeWorld(targetMap)
 
 	return (tree and tree.styles) or Theme.world.treeStyles
 end
@@ -63,12 +63,12 @@ function Trees.clear()
 	Trees.occupied = {}
 end
 
-local function setOccupied(gx, gy)
-	local col = Trees.occupied[gx]
+local function setOccupied(occupied, gx, gy)
+	local col = occupied[gx]
 
 	if not col then
 		col = {}
-		Trees.occupied[gx] = col
+		occupied[gx] = col
 	end
 
 	col[gy] = true
@@ -80,16 +80,18 @@ function Trees.hasTreeAt(gx, gy)
 	return col and col[gy] or false
 end
 
-function Trees.generate()
-	Trees.clear()
+function Trees.generate(targetMap, mapIndex, list, occupied)
+	targetMap = targetMap or Map.map
+	mapIndex = mapIndex or State.worldMapIndex
+	list, occupied = list or {}, occupied or {}
 
-	local seed = 65432 + State.worldMapIndex * 977
+	local seed = 65432 + mapIndex * 977
 	rng:setSeed(seed + 1)
 
 	local count = 54 -- Should be able to adjust this too, from biome definition
 
-	local styles = getTreeStyles()
-	local shapes = getTreeWorld().shapes or {"round", "square"}
+	local styles = getTreeStyles(targetMap)
+	local shapes = getTreeWorld(targetMap).shapes or {"round", "square"}
 
 	-- Primary clusters
 	local clusters = {}
@@ -145,7 +147,7 @@ function Trees.generate()
 		-- Individuals
 		if not isCluster and random() < 0.55 then return false end
 
-		return not ScatterCommon.isNearPath(Map.map.isPath, gx, gy) and not Map.isBlocked(gx, gy)
+		return not ScatterCommon.isNearPath(targetMap.isPath, gx, gy) and not Map.isBlockedForMap(targetMap, gx, gy)
 	end
 
 	local function create(gx, gy)
@@ -167,29 +169,31 @@ function Trees.generate()
 			swayPhase = random() * math.pi * 2,
 		}
 
-		setOccupied(gx, gy)
-		Map.setBlocked(gx, gy)
+		setOccupied(occupied, gx, gy)
+		Map.setBlockedForMap(targetMap, gx, gy)
 
 		return tree
 	end
 
-	ScatterCommon.populate(Trees.list, count, random, GRID_W, GRID_H, canPlace, create)
+	ScatterCommon.populate(list, count, random, GRID_W, GRID_H, canPlace, create)
 
-	table.sort(Trees.list, function(a, b)
+	table.sort(list, function(a, b)
 		return a.y < b.y
 	end)
+
+	return list, occupied
 end
 
-function Trees.draw(mode)
-	local trees = Trees.list
+function Trees.draw(mode, list, targetMap)
+	local trees = list or Trees.list
 
 	if #trees == 0 then
 		return
 	end
 
-	local styles = getTreeStyles()
-	local trunk = getTreeTrunk()
-	local trunkOutline = getTreeTrunkOutline()
+	local styles = getTreeStyles(targetMap or Map.map)
+	local trunk = getTreeTrunk(targetMap or Map.map)
+	local trunkOutline = getTreeTrunkOutline(targetMap or Map.map)
 	local swayTime = love.timer.getTime()
 
 	local function nextTree(_, index)

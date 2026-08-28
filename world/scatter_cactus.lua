@@ -31,8 +31,8 @@ local function rand(a, b)
 	return rng:random(a, b)
 end
 
-local function getCactusStyles()
-	local world = Map.getWorld()
+local function getCactusStyles(targetMap)
+	local world = targetMap and targetMap.biome and targetMap.biome.world
 	local cactus = world and world.cactus
 
 	return cactus and cactus.styles
@@ -91,19 +91,21 @@ local function drawFlower(x, y, scale, color)
 	lg.ellipse("fill", x, y - ry * highlightOffset, rx * highlightScale, ry * highlightScale)
 end
 
-function Cactus.generate()
-	Cactus.clear()
+function Cactus.generate(targetMap, mapIndex, list, treeOccupied)
+	targetMap = targetMap or Map.map
+	mapIndex = mapIndex or State.worldMapIndex
+	list = list or {}
 
-	local seed = 8888 + State.worldMapIndex * 977
+	local seed = 8888 + mapIndex * 977
 	rng:setSeed(seed)
 
 	local count = 10 + rand(0, 6)
-	local styles = getCactusStyles()
+	local styles = getCactusStyles(targetMap)
 
 	local function canPlace(gx, gy)
-		return not ScatterCommon.isNearPath(Map.map.isPath, gx, gy)
-			and not Map.isBlocked(gx, gy)
-			and not Trees.hasTreeAt(gx, gy)
+		return not ScatterCommon.isNearPath(targetMap.isPath, gx, gy)
+			and not Map.isBlockedForMap(targetMap, gx, gy)
+			and not (treeOccupied and treeOccupied[gx] and treeOccupied[gx][gy])
 	end
 
 	local function create(gx, gy)
@@ -151,18 +153,19 @@ function Cactus.generate()
 
 	end
 
-	ScatterCommon.populate(Cactus.list, count, rand, GRID_W, GRID_H, canPlace, create)
+	ScatterCommon.populate(list, count, rand, GRID_W, GRID_H, canPlace, create)
 
-	table.sort(Cactus.list, function(a, b)
+	table.sort(list, function(a, b)
 		return a.y < b.y
 	end)
+	return list
 end
 
-function Cactus.draw()
-	local list = Cactus.list
+function Cactus.draw(list, targetMap)
+	list = list or Cactus.list
 	if #list == 0 then return end
 
-	local styles = getCactusStyles()
+	local styles = getCactusStyles(targetMap or Map.map)
 	local flowerColor = {0.95, 0.45, 0.55}
 
 	for i = 1, #list do

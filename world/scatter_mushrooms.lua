@@ -30,8 +30,8 @@ local function rand(a, b)
 	return rng:random(a, b)
 end
 
-local function getMushroomStyles()
-	local world = Map.getWorld()
+local function getMushroomStyles(targetMap)
+	local world = targetMap and targetMap.biome and targetMap.biome.world
 	local mushroom = world and world.mushroom
 
 	return (mushroom and mushroom.styles) or {
@@ -48,16 +48,18 @@ function Mushrooms.clear()
 	Mushrooms.list = {}
 end
 
-function Mushrooms.generate()
-	Mushrooms.clear()
+function Mushrooms.generate(targetMap, mapIndex, list, treeOccupied)
+	targetMap = targetMap or Map.map
+	mapIndex = mapIndex or State.worldMapIndex
+	list = list or {}
 
-	local seed = 9999 + State.worldMapIndex * 977
+	local seed = 9999 + mapIndex * 977
 	rng:setSeed(seed)
 
-	local styles = getMushroomStyles()
+	local styles = getMushroomStyles(targetMap)
 	local count = 44
 	local function canPlace(gx, gy)
-		return not ScatterCommon.isNearPath(Map.map.isPath, gx, gy) and not Map.isBlocked(gx, gy)
+		return not ScatterCommon.isNearPath(targetMap.isPath, gx, gy) and not Map.isBlockedForMap(targetMap, gx, gy)
 	end
 
 	local function create(gx, gy)
@@ -88,18 +90,19 @@ function Mushrooms.generate()
 
 	end
 
-	ScatterCommon.populate(Mushrooms.list, count, rand, GRID_W, GRID_H, canPlace, create)
+	ScatterCommon.populate(list, count, rand, GRID_W, GRID_H, canPlace, create)
 
-	table.sort(Mushrooms.list, function(a, b)
+	table.sort(list, function(a, b)
 		return a.y < b.y
 	end)
+	return list
 end
 
-function Mushrooms.draw()
-	local list = Mushrooms.list
+function Mushrooms.draw(list, targetMap)
+	list = list or Mushrooms.list
 	if #list == 0 then return end
 
-	local styles = getMushroomStyles()
+	local styles = getMushroomStyles(targetMap or Map.map)
 
 	for i = 1, #list do
 		local m = list[i]

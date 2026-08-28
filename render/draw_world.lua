@@ -29,8 +29,9 @@ local COLOR_PREVIEW_INVALID = {1, .2, .2}
 
 local gridToCenter = MapMod.gridToCenter
 
-local function getTerrain()
-	local biome = MapMod.map and MapMod.map.biome
+local function getTerrain(targetMap)
+	targetMap = targetMap or MapMod.map
+	local biome = targetMap and targetMap.biome
 
 	if biome and biome.terrain then
 		return biome.terrain
@@ -52,8 +53,7 @@ local grassCacheW
 local grassCacheH
 local grassCacheR, grassCacheG, grassCacheB, grassCacheA
 
-local function buildGrassScatterCache(terrain)
-	local map = MapMod.map
+local function buildGrassScatterCache(terrain, map)
 
 	if not map or not map.isPath then
 		grassScatterCanvas = nil
@@ -120,11 +120,12 @@ local function buildGrassScatterCache(terrain)
 	lg.pop()
 end
 
-local function drawGrass()
-	local terrain = getTerrain()
+local function drawGrass(targetMap)
+	targetMap = targetMap or MapMod.map
+	local terrain = getTerrain(targetMap)
 	local grass = terrain.grass
 
-	buildGrassScatterCache(terrain)
+	buildGrassScatterCache(terrain, targetMap)
 
 	lg.setColor(grass)
 	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
@@ -222,8 +223,9 @@ local function updateWaterColor(color)
 end
 
 -- This system is already getting ready for a rework
-local function drawScatter(treeMode)
-	local biome = MapMod.map and MapMod.map.biome
+local function drawScatter(treeMode, targetMap, decorations)
+	targetMap = targetMap or MapMod.map
+	local biome = targetMap and targetMap.biome
 	local scatter = biome and biome.scatter
 
 	if not scatter then
@@ -231,19 +233,19 @@ local function drawScatter(treeMode)
 	end
 
 	if scatter.rocks and scatter.rocks.enabled then
-		Rocks.draw()
+		Rocks.draw(decorations and decorations.rocks, targetMap)
 	end
 
 	if scatter.trees and scatter.trees.enabled then
-		Trees.draw(treeMode)
+		Trees.draw(treeMode, decorations and decorations.trees, targetMap)
 	end
 
 	if scatter.cactus and scatter.cactus.enabled then
-		Cacti.draw()
+		Cacti.draw(decorations and decorations.cacti, targetMap)
 	end
 
 	if scatter.mushrooms and scatter.mushrooms.enabled then
-		Mushrooms.draw()
+		Mushrooms.draw(decorations and decorations.mushrooms, targetMap)
 	end
 end
 
@@ -256,9 +258,10 @@ local function drawAnimatedScatter()
 	end
 end
 
-local function drawPath()
+local function drawPath(targetMap)
+	targetMap = targetMap or MapMod.map
 	local pathThickness = tile
-	local path = MapMod.map.path
+	local path = targetMap.path
 	local pathLen = #path
 
 	local outlineThickness = pathThickness
@@ -267,7 +270,7 @@ local function drawPath()
 	local fillThickness = pathThickness - outlineW * 2
 	local halfFill = fillThickness * 0.5
 
-	local terrain = getTerrain()
+	local terrain = getTerrain(targetMap)
 
 	-- Outline
 	lg.setColor(terrain.pathOutline)

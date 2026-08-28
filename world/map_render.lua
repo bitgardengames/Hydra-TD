@@ -1,6 +1,5 @@
 local DrawWorld = require("render.draw_world")
 local Constants = require("core.constants")
-local MapMod = require("world.map")
 
 local MapRender = {}
 
@@ -35,22 +34,7 @@ function MapRender.gameplayPreviewTransform(destinationW, destinationH)
 	}
 end
 
-local function withRenderContext(context, fn)
-	if not context or not context.map then
-		return fn()
-	end
-
-	local previousMap = MapMod.map
-	MapMod.map = context.map
-	local ok, err = pcall(fn)
-	MapMod.map = previousMap
-
-	if not ok then
-		error(err)
-	end
-end
-
-function MapRender.renderWorldToCanvas(canvas, scale)
+function MapRender.renderWorldToCanvas(canvas, scale, context)
 	lg.setCanvas(canvas)
 	lg.clear(0, 0, 0, 0)
 
@@ -58,10 +42,12 @@ function MapRender.renderWorldToCanvas(canvas, scale)
 	lg.origin()
 	lg.scale(scale, scale)
 
-	DrawWorld.drawGrass()
-	DrawWorld.drawPath()
+	local map = context and context.map
+	local decorations = context and context.decorations
+	DrawWorld.drawGrass(map)
+	DrawWorld.drawPath(map)
 	-- Tree canopies are animated separately so the rest of the world can stay cached.
-	DrawWorld.drawScatter("static")
+	DrawWorld.drawScatter("static", map, decorations)
 
 	lg.pop()
 	lg.setCanvas()
@@ -82,11 +68,11 @@ function MapRender.renderGameplayFramedToCanvas(canvas, context, transform)
 	lg.scale(scale, scale)
 	lg.translate(-transform.cameraX, -transform.cameraY)
 
-	withRenderContext(context, function()
-		DrawWorld.drawGrass()
-		DrawWorld.drawPath()
-		DrawWorld.drawScatter()
-	end)
+	local map = context and context.map
+	local decorations = context and context.decorations
+	DrawWorld.drawGrass(map)
+	DrawWorld.drawPath(map)
+	DrawWorld.drawScatter(nil, map, decorations)
 
 	lg.pop()
 	lg.setCanvas()
@@ -105,11 +91,11 @@ function MapRender.renderFullMapToCanvas(canvas, context)
 	lg.origin()
 	lg.scale(canvasW / MAP_W, canvasH / MAP_H)
 
-	withRenderContext(context, function()
-		DrawWorld.drawGrass()
-		DrawWorld.drawPath()
-		DrawWorld.drawScatter()
-	end)
+	local map = context and context.map
+	local decorations = context and context.decorations
+	DrawWorld.drawGrass(map)
+	DrawWorld.drawPath(map)
+	DrawWorld.drawScatter(nil, map, decorations)
 
 	lg.pop()
 	lg.setCanvas()

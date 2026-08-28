@@ -74,7 +74,7 @@ assert(cacheSource:find('local key = w .. "x" .. h', 1, true),
 	"map previews must be cached separately for every native destination size")
 assert(cacheSource:find('canvas:setFilter("nearest", "nearest")', 1, true),
 	"map preview canvases must retain the game's pixel-art texture filtering")
-assert(cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas, nil, previewTransform)", 1, true)
+assert(cacheSource:find("MapRender.renderGameplayFramedToCanvas(canvas, context, previewTransform)", 1, true)
 	and not cacheSource:find("MapRender.renderFullMapToCanvas(canvas)", 1, true),
 	"map previews must use the same framing as the gameplay camera")
 assert(cacheSource:find("buildPreviewPath(context.map.pathWorld, previewTransform)", 1, true)

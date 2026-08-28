@@ -55,6 +55,17 @@ local function clearBlocked()
 	map.water = {}
 end
 
+local function setBlockedForMap(targetMap, gx, gy)
+	local col = targetMap.blocked[gx]
+	if not col then col = {}; targetMap.blocked[gx] = col end
+	col[gy] = true
+end
+
+local function isBlockedForMap(targetMap, gx, gy)
+	local col = targetMap.blocked[gx]
+	return col and col[gy]
+end
+
 local function canPlaceAtForMap(targetMap, gx, gy)
 	if not gx then
 		return false
@@ -313,7 +324,9 @@ return {
 	canPlaceAt = canPlaceAt,
 	gridToCenter = gridToCenter,
 	setBlocked = setBlocked,
+	setBlockedForMap = setBlockedForMap,
 	isBlocked = isBlocked,
+	isBlockedForMap = isBlockedForMap,
 	clearBlocked = clearBlocked,
 	sampleFast = sampleFast,
 }
