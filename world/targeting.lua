@@ -6,7 +6,7 @@ local Targeting = {}
 local EPS = 0.0001
 local HUGE_NEG = -math.huge
 local pointToCell = Spatial.pointToCell
-local queryCellsLocal = Spatial.queryCellsLocal
+local querySquareCandidatesLocal = Spatial.querySquareCandidatesLocal
 local queryContext = Spatial.newQueryContext(false)
 local localQueryFootprintKey = Spatial.localQueryFootprintKey
 local simpleCtx = {}
@@ -140,7 +140,7 @@ local function getCandidatesForTower(tower)
 
 	local list = entry.list
 
-	local candidates, candidateCount = queryCellsLocal(tower.x, tower.y, tower.range, queryContext)
+	local candidates, candidateCount = querySquareCandidatesLocal(tower.x, tower.y, tower.range, queryContext)
 	local count = 0
 	for i = 1, candidateCount do
 		local e = candidates[i]
