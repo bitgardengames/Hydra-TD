@@ -43,10 +43,12 @@ local towerAtObsoleteCell = {x = 205, y = 5, range = 50, range2 = 50 * 50}
 Targeting.findTarget(towerAtObsoleteCell)
 assert(queryCount == 2, "second cache key was not populated")
 local oldEntries = cache.entries
-assert(oldEntries[0] and oldEntries[2], "fixture did not populate distinct coordinate keys")
-local sharedEntry = oldEntries[0][0][2]
+assert(oldEntries["0:0:2"] and oldEntries["2:0:1"], "fixture did not populate flat coordinate keys")
+assert(cache.activeCount == 2 and #cache.activeEntries == 2,
+	"active cache entries were not retained densely")
+local sharedEntry = oldEntries["0:0:2"]
 local sharedList = sharedEntry.list
-local soldTowerEntry = oldEntries[2][0][1]
+local soldTowerEntry = oldEntries["2:0:1"]
 
 -- A new frame retires every old key, but reuses the bounded entry/list pool.
 -- Moving enemies must affect the result and stale references must be released.
@@ -56,8 +58,10 @@ enemyB.x = 20
 assert(Targeting.findTarget(towerA) == enemyB, "new frame reused stale enemy positions")
 assert(queryCount == 3, "new frame reused a stale query")
 assert(cache.entries == oldEntries, "new frame replaced the coordinate index")
-assert(oldEntries[2] == nil, "new frame retained an obsolete coordinate key")
-local recycledEntry = oldEntries[0][0][2]
+assert(oldEntries["2:0:1"] == nil, "new frame retained an obsolete coordinate key")
+assert(cache.activeCount == 1 and #cache.activeEntries == 1,
+	"new frame did not compact its active-entry list")
+local recycledEntry = oldEntries["0:0:2"]
 assert(recycledEntry == sharedEntry or recycledEntry == soldTowerEntry,
 	"new frame did not reuse a pooled cache leaf")
 assert(recycledEntry.list[1] == enemyB and recycledEntry.list[2] == nil,
@@ -67,7 +71,7 @@ assert(unusedList[1] == nil and unusedList[2] == nil,
 	"unused pooled list retained stale enemy references")
 
 -- A sold tower is no longer queried and its historical key is not retained.
-assert(oldEntries[2] == nil, "sold tower coordinate survived the frame boundary")
+assert(oldEntries["2:0:1"] == nil, "sold tower coordinate survived the frame boundary")
 assert(queryCount == 3, "sold tower issued an unexpected spatial query")
 
 -- A run reset can occur without a frame-id change, so it must invalidate eagerly.
@@ -78,5 +82,15 @@ assert(cache.poolCount == 0 and next(cache.pool) == nil, "run reset retained poo
 assert(Targeting.findTarget(towerAtObsoleteCell) == enemyB,
 	"run reset reused candidates from the previous map")
 assert(queryCount == 4, "run reset did not force a fresh spatial query")
+
+-- Tuple delimiters keep negative coordinates distinct from positive tuples
+-- whose concatenated digits would otherwise be ambiguous.
+local negativeTower = {x = -105, y = 195, range = 50, range2 = 50 * 50}
+local otherTower = {x = -15, y = 95, range = 50, range2 = 50 * 50}
+Targeting.findTarget(negativeTower)
+Targeting.findTarget(otherTower)
+assert(cache.entries["-2:1:1"] and cache.entries["-1:0:1"],
+	"negative coordinate tuples did not receive collision-safe flat keys")
+assert(queryCount == 6, "distinct negative coordinate tuples shared a cache entry")
 
 print("targeting cache fixtures passed")
