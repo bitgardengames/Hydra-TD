@@ -30,7 +30,6 @@ local MAX_ACTIVE_ENEMIES = 180
 
 local EPS = 1e-6
 local BASE_MAX_NUDGE = 10
-local NUDGE_IDLE_EPS = 1e-3
 local MIN_NUDGE_DAMP = 5
 local MAX_NUDGE_DAMP = 30
 local NUDGE_TARGET_DAMP_MULT = 0.35
@@ -39,7 +38,6 @@ local MIN_NUDGE_RADIUS_SCALE = 0.85
 local MAX_NUDGE_RADIUS_SCALE = 1.45
 local NUDGE_RADIUS_REF = 16
 
-local exp = math.exp
 local min = math.min
 local max = math.max
 local sqrt = math.sqrt
@@ -48,8 +46,7 @@ local upper = string.upper
 local random = love.math.random
 
 local nextID = 0
-local INV_SPAWN_FADE_DUR = 1 / 0.12
-local INV_EXIT_FADE_DUR = 1 / 0.10
+local EMPTY_SPAWN_OPTIONS = {}
 local MAX_HIT_QUERY_RADIUS = 0
 
 for _, def in pairs(EnemyDefs) do
@@ -187,9 +184,9 @@ local function findEnemyAt(x, y)
 	return nil
 end
 
-local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts)
+local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, opts, pathDistance, pathT, summoned)
 	local def = EnemyDefs[kind]
-	opts = opts or {}
+	opts = opts or EMPTY_SPAWN_OPTIONS
 	assert(def, "unknown enemy kind: " .. tostring(kind))
 
 	Save.markEnemyEncountered(kind)
@@ -217,10 +214,10 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.prevY = y
 
 	-- Path driver
-	e.dist = opts.pathDistance or 0
+	e.dist = pathDistance or opts.pathDistance or 0
 	e.prevDist = 0
 	e.pathSeg = pathIndex or 1
-	e.pathT = opts.pathT or 0
+	e.pathT = pathT or opts.pathT or 0
 	e.anchorX = x
 	e.anchorY = y
 
@@ -297,6 +294,13 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.suppressionCasts = 0
 	e.enrage = def.enrage
 	e.enraged = false
+	-- Precomputed authored capabilities keep absent optional mechanics off the hot path.
+	e.hasPoisonModifier = def.modifiers ~= nil and def.modifiers.poison ~= nil
+	e.hasRegeneration = def.regeneration ~= nil
+	e.hasBossShield = def.bossShield ~= nil
+	e.hasEnrage = def.enrage ~= nil
+	e.hasSummon = def.summon ~= nil
+	e.hasSupport = def.support ~= nil
 	e.supportBoost = 1
 	e.supportContributions = e.supportContributions or {}
 	e.supportPulse = 0
@@ -305,7 +309,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	-- Reset this on every pooled instance so summoned/procedural enemies cannot
 	-- inherit the flag from an enemy that previously occupied the table.
 	e.scheduledWaveEnemy = false
-	e.summoned = opts.summoned == true
+	e.summoned = summoned == true or opts.summoned == true
 
 	computeNudgeParams(e)
 
@@ -511,6 +515,80 @@ computeNudgeParams = function(e)
 	e.maxNudge2 = maxNudge * maxNudge
 end
 
+local function updateAuthoredTraits(e, dt)
+	-- Stage 2: update timed statuses and optional authored traits.
+	-- Slow
+	local slowTimer = e.slowTimer
+	if slowTimer > 0 then
+		slowTimer = slowTimer - dt
+
+		if slowTimer <= 0 then
+			slowTimer = 0
+			e.slowDuration = 0
+			e.slowFactor = 1.0
+		end
+
+		e.slowTimer = slowTimer
+	end
+
+	if e.hasRegeneration and e.regenDelay > 0 then
+		e.regenDelay = max(0, e.regenDelay - dt)
+	elseif e.hasRegeneration and e.poisonStacks <= 0 and e.hp < e.maxHp then
+		e.hp = min(e.maxHp, e.hp + e.regeneration.hpPerSecond * e.hpScale * dt)
+		e.regenVisualPulse = 0.28
+	end
+
+	-- Aegis alternates a short, obvious protection window with a longer opening.
+	-- Ravager has just one threshold event, making its late sprint predictable.
+	if e.hasBossShield then
+		e.bossShieldTimer = e.bossShieldTimer - dt
+		if e.bossShieldActive and e.bossShieldTimer <= 0 then
+			e.bossShieldActive = false
+			e.bossShieldTimer = max(EPS, e.bossShield.period - e.bossShield.duration)
+		elseif not e.bossShieldActive and e.bossShieldTimer <= 0 then
+			e.bossShieldActive = true
+			e.bossShieldTimer = e.bossShield.duration
+		end
+	end
+	if e.hasEnrage and not e.enraged and e.hp <= e.maxHp * e.enrage.healthFraction then
+		e.enraged = true
+		Effects.shake(4, 0.2)
+	end
+
+	-- Summoned runners join at the caster's current path progress rather than at
+	-- the map entrance. Release a cast's children over a short interval so they
+	-- separate along the path instead of occupying exactly the same position.
+	if e.hasSummon then
+		e.summonTimer = e.summonTimer - dt
+		if e.summonTimer <= 0 then
+			local summon = e.summon
+			e.summonTimer = summon.period
+			local availableSlots = max(0, MAX_ACTIVE_ENEMIES - #enemies - e.summonPending)
+			local queued = min(summon.count, availableSlots)
+			if e.summonPending == 0 and queued > 0 then
+				e.summonStaggerTimer = 0
+			end
+			e.summonPending = e.summonPending + queued
+			Effects.shake(2.4)
+		end
+
+		if e.summonPending > 0 then
+			e.summonStaggerTimer = e.summonStaggerTimer - dt
+			if e.summonStaggerTimer <= 0 and #enemies < MAX_ACTIVE_ENEMIES then
+				local summon = e.summon
+				local child = spawnEnemy(summon.kind, e.hpScale, e.spdScale, e.x, e.y,
+					e.pathSeg, nil, e.dist, e.pathT, true)
+				e.summonChildIndex = e.summonChildIndex + 1
+				local side = e.summonChildIndex % 2 == 0 and 1 or -1
+				child.nudgeTargetY = side * (summon.spacing or 0)
+				child.nudgeY = child.nudgeTargetY
+				e.summonPending = e.summonPending - 1
+				e.summonStaggerTimer = e.summonStaggerTimer + (summon.stagger or 0)
+			end
+		end
+	end
+end
+
 local function updateEnemies(dt)
 	local map = MapMod.map
 	local pathWorld = map.pathWorld
@@ -524,38 +602,12 @@ local function updateEnemies(dt)
 		local e = enemies[i]
 		e.combatAge = (e.combatAge or 0) + dt
 		local isBoss = e.boss
-		e.hitSquash = max(0, (e.hitSquash or 0) - dt)
-		e.healthBarHitTimer = max(0, (e.healthBarHitTimer or 0) - dt)
 
-		-- Spawn fade-in
-		local spawnFade = e.spawnFade
-		if spawnFade and spawnFade > 0 then
-			spawnFade = spawnFade - dt
-
-			if spawnFade < 0 then
-				spawnFade = 0
-			end
-
-			e.spawnFade = spawnFade
+		-- Stage 1: resolve damage-over-time and death.
+		if e.poisonStacks > 0 then
+			updatePoison(e, dt)
+			spreadInfection(e)
 		end
-
-		local alphaIn = 1
-
-		if spawnFade and spawnFade > 0 then
-			alphaIn = 1 - (spawnFade * INV_SPAWN_FADE_DUR)
-		end
-
-		local alphaOut = 1
-		local exitFade = e.exitFade
-
-		if exitFade and exitFade > 0 then
-			alphaOut = exitFade * INV_EXIT_FADE_DUR
-		end
-
-		e.alpha = min(alphaIn, alphaOut)
-
-		updatePoison(e, dt)
-		spreadInfection(e)
 
 		-- Boss death hold (face shown, explosion delayed)
 		if isBoss and e.dying then
@@ -597,141 +649,23 @@ local function updateEnemies(dt)
 			goto continue
 		end
 
-		-- Slow
-		local slowTimer = e.slowTimer
-		if slowTimer > 0 then
-			slowTimer = slowTimer - dt
-
-			if slowTimer <= 0 then
-				slowTimer = 0
-				e.slowDuration = 0
-				e.slowFactor = 1.0
-			end
-
-			e.slowTimer = slowTimer
-		end
-
-		if e.regenDelay and e.regenDelay > 0 then
-			e.regenDelay = max(0, e.regenDelay - dt)
-		elseif e.regeneration and e.poisonStacks <= 0 and e.hp < e.maxHp then
-			e.hp = min(e.maxHp, e.hp + e.regeneration.hpPerSecond * e.hpScale * dt)
-			e.regenVisualPulse = 0.28
-		end
-		if e.regenVisualPulse > 0 then e.regenVisualPulse = max(0, e.regenVisualPulse - dt) end
-
-		-- Aegis alternates a short, obvious protection window with a longer opening.
-		-- Ravager has just one threshold event, making its late sprint predictable.
-		if e.bossShield then
-			e.bossShieldTimer = e.bossShieldTimer - dt
-			if e.bossShieldActive and e.bossShieldTimer <= 0 then
-				e.bossShieldActive = false
-				e.bossShieldTimer = max(EPS, e.bossShield.period - e.bossShield.duration)
-			elseif not e.bossShieldActive and e.bossShieldTimer <= 0 then
-				e.bossShieldActive = true
-				e.bossShieldTimer = e.bossShield.duration
-			end
-		end
-		if e.enrage and not e.enraged and e.hp <= e.maxHp * e.enrage.healthFraction then
-			e.enraged = true
-			Effects.shake(4, 0.2)
-		end
-
-		-- Summoned runners join at the caster's current path progress rather than at
-		-- the map entrance. Release a cast's children over a short interval so they
-		-- separate along the path instead of occupying exactly the same position.
-		if e.summon then
-			e.summonTimer = e.summonTimer - dt
-			if e.summonTimer <= 0 then
-				local summon = e.summon
-				e.summonTimer = summon.period
-				local availableSlots = max(0, MAX_ACTIVE_ENEMIES - #enemies - e.summonPending)
-				local queued = min(summon.count, availableSlots)
-				if e.summonPending == 0 and queued > 0 then
-					e.summonStaggerTimer = 0
-				end
-				e.summonPending = e.summonPending + queued
-				Effects.shake(2.4)
-			end
-
-			if e.summonPending > 0 then
-				e.summonStaggerTimer = e.summonStaggerTimer - dt
-				if e.summonStaggerTimer <= 0 and #enemies < MAX_ACTIVE_ENEMIES then
-					local summon = e.summon
-					local child = spawnEnemy(summon.kind, e.hpScale, e.spdScale, e.x, e.y, e.pathSeg, {
-						pathDistance = e.dist,
-						pathT = e.pathT,
-						summoned = true,
-					})
-					e.summonChildIndex = e.summonChildIndex + 1
-					local side = e.summonChildIndex % 2 == 0 and 1 or -1
-					child.nudgeTargetY = side * (summon.spacing or 0)
-					child.nudgeY = child.nudgeTargetY
-					e.summonPending = e.summonPending - 1
-					e.summonStaggerTimer = e.summonStaggerTimer + (summon.stagger or 0)
-				end
-			end
-		end
-
+		-- Stage 2: update timed statuses and optional authored traits.
+		updateAuthoredTraits(e, dt)
+		-- Stage 3: compute the effective movement speed.
 		local enrageSpeed = e.enraged and e.enrage.speedMultiplier or 1
 		e.speed = e.baseSpeed * e.slowFactor * e.supportBoost * enrageSpeed
-		e.prevAnimT = e.animT
-		e.animT = e.animT + dt * e.speed * 0.03
 
-		-- Hit flash
-		if e.hitFlash > 0 then
-			e.hitFlash = e.hitFlash - dt
-
-			if e.hitFlash < 0 then
-				e.hitFlash = 0
-			end
-		end
-
-		-- Faces
-		if e.face ~= "normal" then
-			e.faceT = e.faceT + dt
-
-			if e.faceT >= e.faceDur then
-				e.face = "normal"
-			end
-		end
-
-		-- store previous values for interpolation
+		-- Stage 4: advance gameplay path state and update the spatial index.
+		-- Store previous values for interpolation
 		e.prevDist = e.dist
 		e.prevX = e.x
 		e.prevY = e.y
-		e.prevNudgeX = e.nudgeX
-		e.prevNudgeY = e.nudgeY
 
 		-- advance along path
 		local moved = advanceEnemyAlongPath(e, e.speed * dt, pathWorld, pathSegLen, totalLen)
 
-		-- visual-only nudge smoothing:
-		-- 1) target eases back to path
-		-- 2) rendered nudge follows target for softer hit finish
-		local targetX, targetY = e.nudgeTargetX, e.nudgeTargetY
-		local nudgeX, nudgeY = e.nudgeX, e.nudgeY
-		local epsilon = NUDGE_IDLE_EPS
 
-		if targetX > epsilon or targetX < -epsilon
-			or targetY > epsilon or targetY < -epsilon
-			or nudgeX > epsilon or nudgeX < -epsilon
-			or nudgeY > epsilon or nudgeY < -epsilon then
-			local targetDecay = exp(-e.nudgeTargetK * dt)
-			local follow = 1 - exp(-e.nudgeFollowK * dt)
-			targetX = targetX * targetDecay
-			targetY = targetY * targetDecay
-			e.nudgeTargetX = targetX
-			e.nudgeTargetY = targetY
-			e.nudgeX = nudgeX + (targetX - nudgeX) * follow
-			e.nudgeY = nudgeY + (targetY - nudgeY) * follow
-		else
-			e.nudgeTargetX = 0
-			e.nudgeTargetY = 0
-			e.nudgeX = 0
-			e.nudgeY = 0
-		end
-
-		-- gameplay queries use path position only
+		-- Gameplay queries use path position only; visual offsets are render-owned.
 		if moved then
 			-- Spatial only emits a lifecycle hook when the cell changes. Aura
 			-- membership can also change while its source stays within one cell.
@@ -741,6 +675,9 @@ local function updateEnemies(dt)
 			Spatial.updateEnemy(e)
 		end
 
+		-- Stage 5: presentation timers/impulses are advanced by enemy_render_state.
+
+		-- Stage 6: resolve escape removal.
 		-- Reached end of path
 		if e.dist >= totalLen then
 			if not e.exitFade then
