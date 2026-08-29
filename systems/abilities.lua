@@ -33,7 +33,6 @@ local slowVisitContext = newRadiusVisitContext()
 local gravityPullVisitContext = newRadiusVisitContext()
 local gravityDamageVisitContext = newRadiusVisitContext()
 local meteorDamageVisitContext = newRadiusVisitContext()
-local abilityDamageSource = {sourceKind = "ability"}
 
 local function visitEnemyInRadius(enemy, context)
 	context.visitor(enemy, context)
@@ -61,7 +60,7 @@ local function pullEnemy(enemy, context)
 end
 
 local function damageEnemy(enemy, context)
-	Enemies.applyDamage(enemy, context.damage, abilityDamageSource)
+	Enemies.applyDamage(enemy, context.damage, "ability", false, false)
 end
 
 local function addActive(effect)

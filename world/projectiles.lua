@@ -252,11 +252,13 @@ local function resolveDamage(p, evt)
 		return
 	end
 
-	local dealt, absorbed = Enemies.applyDamage(e, amount, {
-		sourceKind = p.sourceKind,
-		chain = evt.chain == true,
-		armorHeavy = evt.armorHeavy == true,
-	})
+	local dealt, absorbed = Enemies.applyDamage(
+		e,
+		amount,
+		p.sourceKind,
+		evt.chain == true,
+		evt.armorHeavy == true
+	)
 	local effectiveDamage = dealt + absorbed
 
 	local t = p.sourceTower
