@@ -18,6 +18,20 @@ function RunModes.get(state)
 	return RunModes.normalize(state and state.runMode)
 end
 
+-- Internal plumbing for the module playtest entry point in systems/modules.lua.
+-- Run selection must never call this or infer the value from replay/endless mode.
+function RunModes._setExperimentalModulesForPlaytest(state, enabled)
+	state.runRules = state.runRules or {}
+	state.runRules.experimentalModules = enabled == true
+	return state.runRules.experimentalModules
+end
+
+function RunModes.experimentalModulesEnabled(state)
+	return state ~= nil
+		and state.runRules ~= nil
+		and state.runRules.experimentalModules == true
+end
+
 function RunModes.isCampaign(state) return RunModes.get(state) == RunModes.CAMPAIGN end
 function RunModes.isEndless(state) return RunModes.get(state) == RunModes.ENDLESS end
 function RunModes.isReplay(state) return not RunModes.isCampaign(state) end

@@ -1,6 +1,11 @@
 local Constants = require("core.constants")
 local Spatial = require("world.spatial_grid")
 
+-- EXPERIMENTAL MODULE SUPPORT: module-authored movement, proc, conversion, and
+-- tower-specialization behaviors remain implemented here for internal module
+-- playtests. Normal campaign and replay/endless runs do not attach them through
+-- module definitions; core projectile behaviors in this registry remain live.
+
 --[[
 	NOTE; ALL SYSTEMS MUST WORK TOGETHER FLUIDLY. This rule cannot be broken.
 
@@ -123,6 +128,21 @@ local function emitSpawnProjectile(p)
 	return emitEvent(p, "spawn_projectile")
 end
 
+local SHARED_BEHAVIORS_LANCER_RICOCHET = {
+	{ id = "move_homing" },
+	{ id = "hit_circle", data = { radius = 10 } },
+	{ id = "hit_damage" },
+	{ id = "lancer_hit_fx" },
+	{ id = "draw_lancer" },
+}
+
+local SHARED_BEHAVIORS_FROST_SHATTER = {
+	{ id = "move_linear" },
+	{ id = "hit_damage" },
+	{ id = "apply_slow", data = { factor = 0.35, dur = 0.8 } },
+	{ id = "draw_frost_shard" },
+}
+
 local function getStat(p, key, fallback)
 	local t = p.sourceTower
 	if t and t[key] ~= nil then return t[key] end
@@ -130,18 +150,18 @@ local function getStat(p, key, fallback)
 	return fallback
 end
 
-local function emitDamage(p, e, dmg, metadata)
+local function emitDamage(p, e, dmg)
 	local evt = emitEvent(p, "damage")
 	evt.target = e
 	evt.amount = dmg
-	-- Damage semantics belong to the behavior that emitted the event. Keeping
-	-- these defaults explicit prevents attribution fields from selecting combat.
-	evt.chain = metadata and metadata.chain == true or false
-	evt.armorHeavy = metadata and metadata.armorHeavy == true or false
+	-- Shock arcs use explicit chain graphs so each jump resolves once.
+	evt.chain = p.sourceKind == "shock" or p._chain ~= nil
 	-- Presentation metadata survives the pooled event path and is resolved after
 	-- authoritative damage, so spectacular attacks never alter combat outcomes.
-	evt.effectIntensity = evt.armorHeavy and e and e.armor and "armor_heavy"
-		or (dmg >= 100 and "strong" or "normal")
+	evt.effectIntensity = dmg >= 100 and "strong" or "normal"
+	-- Damage resolution uses these semantic hints to make successful counters
+	-- visibly distinct from ordinary hits without coupling visuals to a tower.
+		or (e and e.armor and (p.sourceKind == "cannon" or p.sourceKind == "lancer") and "armor_heavy")
 end
 
 local function beginChainDamageBudget(p)
@@ -189,15 +209,14 @@ local function emitImpulse(p, e, px, py, strength)
 end
 
 local function canHitTarget(p, enemy)
-	local profile = p.profile
-	local functions = profile and profile.canHitFns
-	if not functions then
+	local predicates = p._canHitPredicates
+	if not predicates then
 		return true
 	end
 
-	local data = profile.canHitData
-	for i = 1, #functions do
-		if not functions[i](p, enemy, data[i]) then
+	for i = 1, #predicates do
+		local predicate = predicates[i]
+		if not predicate.fn(p, enemy, predicate.data) then
 			return false
 		end
 	end
@@ -256,7 +275,20 @@ local function getTowerMuzzle(t)
 	end
 
 	local size = Constants.TILE * 0.42
-	local tipX = t.def and t.def.projectileMuzzleOffset or size * 0.9
+	local kind = t.kind
+	local tipX = size * 0.9
+
+	if kind == "cannon" then
+		tipX = size * 0.95
+	elseif kind == "shock" then
+		tipX = size * (0.28 + 0.52)
+	elseif kind == "slow" then
+		tipX = size * 0.64
+	elseif kind == "poison" then
+		tipX = size * 0.6
+	elseif kind == "plasma" then
+		tipX = (Constants.TILE * 0.48) * 0.86
+	end
 
 	local localX = tipX - (t.recoil or 0)
 	local ca = cos(t.angle or 0)
@@ -290,6 +322,8 @@ return {
 	emitEvent = emitEvent,
 	emitFX = emitFX,
 	emitSpawnProjectile = emitSpawnProjectile,
+	SHARED_BEHAVIORS_LANCER_RICOCHET = SHARED_BEHAVIORS_LANCER_RICOCHET,
+	SHARED_BEHAVIORS_FROST_SHATTER = SHARED_BEHAVIORS_FROST_SHATTER,
 	getStat = getStat,
 	emitDamage = emitDamage,
 	beginChainDamageBudget = beginChainDamageBudget,

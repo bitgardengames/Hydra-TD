@@ -33,6 +33,8 @@ local Overlay = require("ui.overlay")
 local Victory = require("ui.menu.screens.victory")
 local Steam = require("core.steam")
 local L = require("core.localization")
+local Modules = require("systems.modules")
+local ModulePicker = require("ui.module_picker")
 local RunStats = require("systems.run_stats")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
@@ -53,17 +55,6 @@ local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 
 local SCREENSHOT_DIR = "screenshots"
 local simulationAccumulator = 0
-
-local function simulationIsAllowed()
-	return State.mode == "game" and not State.paused
-end
-
-local function clearDisabledSimulationTime()
-	if not simulationIsAllowed() then
-		simulationAccumulator = 0
-		State.renderAlpha = 0
-	end
-end
 
 function resetGame()
 	if RunStats.data and not RunStats.final and State.mode == "game" then GameplayOutcome.cancel("restart") end
@@ -110,6 +101,8 @@ function resetGame()
 	State.waveLeaks = 0
 	State.totalLeaks = 0
 
+	State.modules = {}
+
     State.inPrep = true
     State.paused = false
 	GameSpeed.reset()
@@ -142,6 +135,11 @@ function resetGame()
     -- Waves
     Waves.resetSpawner()
 
+	-- Modules
+	Modules.clear()
+	State.moduleInventory = {}
+
+	ModulePicker.reset()
 	Camera.load()
 end
 
@@ -203,7 +201,7 @@ local function updateGamePresentation(dt)
 end
 
 local function updateGameplayOutcome()
-	if not simulationIsAllowed() then
+	if State.mode ~= "game" then
 		return
 	end
 
@@ -267,12 +265,51 @@ local function drawWorldAndUI()
 	Camera.present()
 
 	Draw.drawUI()
+	ModulePicker.draw()
 	Tooltip.draw()
 end
 
-local function updateFixedSimulation(dt)
-	if not simulationIsAllowed() then
-		clearDisabledSimulationTime()
+-- What is this name? lol "maybeDoSomething"
+function love.update(dt)
+	State.presentationFrameId = (State.presentationFrameId or 0) + 1
+	State.presentationDt = dt
+	Save.update(dt)
+	Camera.update(dt)
+
+	local mode = State.mode
+	if mode == "game" and not State.paused then RunStats.update(dt) end
+	local target = (mode == "pause" or mode == "settings_gameplay") and 1 or 0
+
+	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
+
+	Steam.update()
+	Sound.update(dt)
+
+	if isWorldMode(mode) then
+		BottomBar.update(dt)
+		DamageMeter.update(dt)
+		BossHealthBar.update(dt)
+	end
+	ModulePicker.update(dt)
+
+	if mode == "pause" then
+		simulationAccumulator = 0
+		Menu.updatePause(dt)
+
+		return
+	end
+
+	if mode == "settings_gameplay" then
+		simulationAccumulator = 0
+		Menu.update(dt)
+
+		return
+	end
+
+	local gameplayFrozen = ModulePicker.isActive()
+
+	if State.paused or gameplayFrozen then
+		simulationAccumulator = 0
 		return
 	end
 
@@ -286,11 +323,9 @@ local function updateFixedSimulation(dt)
 	end
 	simulationAccumulator = min(requestedSimulationTime, catchUpBudget)
 	local steps = 0
-	while simulationIsAllowed()
-		and simulationAccumulator + 1e-12 >= step
-		and steps < SimulationClock.maxCatchUpSteps do
+	while simulationAccumulator + 1e-12 >= step and steps < SimulationClock.maxCatchUpSteps do
 		Sim.update(step)
-		if simulationIsAllowed() then updateGameplayOutcome() end
+		updateGameplayOutcome()
 		simulationAccumulator = simulationAccumulator - step
 		steps = steps + 1
 	end
@@ -300,77 +335,27 @@ local function updateFixedSimulation(dt)
 	if steps == SimulationClock.maxCatchUpSteps then
 		DevelopmentCounters.add("framesAtCatchUpLimit")
 	end
-	if simulationIsAllowed() then
-		State.renderAlpha = max(0, min(1, simulationAccumulator / step))
-	else
-		clearDisabledSimulationTime()
-	end
-end
+	State.renderAlpha = max(0, min(1, simulationAccumulator / step))
 
-local function updateGameplayMode(dt)
-	updateFixedSimulation(dt)
-	if not simulationIsAllowed() then return end
+	if mode ~= "game" then
+		if mode == "victory" then
+			State.victoryDanceClock = (State.victoryDanceClock or 0) + dt
+		end
+		updateMetaScreens(dt, mode)
+
+		return
+	end
 
 	Input.updateHover()
-	if simulationIsAllowed() then updateGamePresentation(dt) end
+
+	updateGamePresentation(dt)
+
 	Tooltip.update(dt)
 	Messages.update(dt)
-end
-
-local function updatePauseMode(dt)
-	clearDisabledSimulationTime()
-	Menu.updatePause(dt)
-end
-
-local function updateGameplaySettingsMode(dt)
-	clearDisabledSimulationTime()
-	Menu.update(dt)
-end
-
-local function updateWorldResultMode(dt, mode)
-	clearDisabledSimulationTime()
-	if mode == "victory" then
-		State.victoryDanceClock = (State.victoryDanceClock or 0) + dt
-	end
-	updateMetaScreens(dt, mode)
-end
-
-local function updateNonWorldMenuMode(dt, mode)
-	clearDisabledSimulationTime()
-	updateMetaScreens(dt, mode)
-end
-
-local modeUpdateHandlers = {
-	game = updateGameplayMode,
-	pause = updatePauseMode,
-	settings_gameplay = updateGameplaySettingsMode,
-	game_over = updateWorldResultMode,
-	victory = updateWorldResultMode,
-}
-
-function love.update(dt)
-	State.presentationFrameId = (State.presentationFrameId or 0) + 1
-	State.presentationDt = dt
-	Save.update(dt)
-	Camera.update(dt)
-
-	local mode = State.mode
-	if simulationIsAllowed() then RunStats.update(dt) end
-	local target = (mode == "pause" or mode == "settings_gameplay") and 1 or 0
-
-	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
-
-	Steam.update()
-	Sound.update(dt)
-
-	if isWorldMode(mode) then
-		BottomBar.update(dt)
-		DamageMeter.update(dt)
-		BossHealthBar.update(dt)
+	if gameplayFrozen then
+		return
 	end
 
-	local handler = modeUpdateHandlers[mode] or updateNonWorldMenuMode
-	handler(dt, mode)
 end
 
 function love.draw()
@@ -416,6 +401,11 @@ function love.mousepressed(x, y, button)
 		end
 	end
 
+	if ModulePicker.isActive() then
+		ModulePicker.mousepressed(x, y, button)
+		return
+	end
+
 	if Overlay.isActive() then
 		Overlay.mousepressed(x, y, button)
 		return
@@ -441,6 +431,7 @@ function love.wheelmoved(x, y)
 end
 
 function love.mousereleased(x, y, button)
+	if ModulePicker.isActive() then return end
 	if Overlay.isActive() then
 		Overlay.mousereleased(x, y, button)
 		return
@@ -467,6 +458,11 @@ function love.keypressed(key)
 		end
 
 		lg.captureScreenshot(SCREENSHOT_DIR .. "/screenshot_" .. time .. ".png")
+	end
+
+	if ModulePicker.isActive() then
+		ModulePicker.keypressed(key)
+		return
 	end
 
 	if Overlay.isActive() then

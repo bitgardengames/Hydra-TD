@@ -1,5 +1,5 @@
--- Health-bar policy and lightweight render counters live outside the renderer
--- to keep the renderer focused on drawing.
+-- Health-bar policy and lightweight render counters live outside the renderer so
+-- dependency-free fixtures can exercise the rules without booting LÖVE.
 local HealthVisibility = {}
 
 HealthVisibility.RECENT_HIT_DURATION = 1.0

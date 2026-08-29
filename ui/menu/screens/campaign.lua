@@ -49,27 +49,6 @@ local scrollbarGrabY = 0
 local unlockSequence = UnlockPresentation.new()
 local campaignMedalsEarned = 0
 local campaignMedalsMaximum = #Maps * 3
-local medalTooltipCache = {}
-
-local function getMedalTooltip(map, tier, timestamp)
-	local mapCache = medalTooltipCache[map]
-	if not mapCache then
-		mapCache = {}
-		medalTooltipCache[map] = mapCache
-	end
-	local cached = mapCache[tier]
-	if cached and cached.timestamp == timestamp then return cached.definition end
-
-	local key = DIFFICULTIES[tier]
-	local date = type(timestamp) == "number" and os.date(L("campaign.medalDateFormat"), timestamp)
-		or L("campaign.medalDateUnavailable")
-	local definition = {
-		title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[tier]), L("difficulty." .. key)),
-		rows = {{label = L("campaign.medalEarnedOn"), value = date}},
-	}
-	mapCache[tier] = {timestamp = timestamp, definition = definition}
-	return definition
-end
 
 -- Campaign layout uses a small set of shared spacing tokens. Keeping the list,
 -- preview, difficulty cards, and actions on the same rhythm is especially
@@ -164,15 +143,8 @@ local function drawRewardIcon(reward, cx, cy)
 	end
 end
 
-local retainedLayout = {
-	left = {},
-	center = {},
-}
-
-local function updateLayoutIfNeeded()
+local function layout()
 	local sw, sh = lg.getDimensions()
-	if retainedLayout.sw == sw and retainedLayout.sh == sh then return retainedLayout end
-
 	local margin = max(18, floor(sw * 0.024))
 	local headerH = max(96, floor(sh * 0.115))
 	local footerH = max(46, floor(sh * 0.06))
@@ -185,14 +157,12 @@ local function updateLayoutIfNeeded()
 	local contentX = floor((sw - contentW) * 0.5)
 	local leftW = floor(contentW * 0.347)
 	local centerW = contentW - gap - leftW
-	retainedLayout.sw, retainedLayout.sh = sw, sh
-	retainedLayout.margin, retainedLayout.headerH, retainedLayout.footerH = margin, headerH, footerH
-	retainedLayout.gap, retainedLayout.contentY, retainedLayout.contentH = gap, contentY, contentH
-	local left = retainedLayout.left
-	left.x, left.y, left.w, left.h = contentX, contentY, leftW, contentH
-	local center = retainedLayout.center
-	center.x, center.y, center.w, center.h = contentX + leftW + gap, contentY, centerW, contentH
-	return retainedLayout
+	return {
+		sw = sw, sh = sh, margin = margin, headerH = headerH, footerH = footerH,
+		gap = gap, contentY = contentY, contentH = contentH,
+		left = {x = contentX, y = contentY, w = leftW, h = contentH},
+		center = {x = contentX + leftW + gap, y = contentY, w = centerW, h = contentH},
+	}
 end
 
 local function visibleRows(l)
@@ -308,7 +278,7 @@ local function navigate(direction)
 	end
 	Tooltip.hide()
 	selectMap(State.resolveMapIndex(nextIndex))
-	keepSelectedVisible(updateLayoutIfNeeded())
+	keepSelectedVisible(layout())
 	Sound.play("uiMove")
 end
 
@@ -643,7 +613,7 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 	Medals.update(dt)
 	UnlockPresentation.update(unlockSequence, dt)
-	local l = updateLayoutIfNeeded()
+	local l = layout()
 	if scrollbarDragging then
 		if love.mouse.isDown(1) then
 			local _, my = love.mouse.getPosition()
@@ -683,13 +653,15 @@ function Screen.update(dt)
 	if hoveredMedal then
 		local key = DIFFICULTIES[hoveredMedal]
 		local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[key]
-		Tooltip.show(getMedalTooltip(map, hoveredMedal, timestamp))
+		local date = type(timestamp) == "number" and os.date(L("campaign.medalDateFormat"), timestamp)
+			or L("campaign.medalDateUnavailable")
+		Tooltip.show({title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[hoveredMedal]), L("difficulty." .. key)), rows = {{label = L("campaign.medalEarnedOn"), value = date}}})
 	else Tooltip.hide() end
 end
 
 function Screen.draw()
 	Backdrop.draw()
-	local l = updateLayoutIfNeeded()
+	local l = layout()
 	lg.setColor(Theme.ui.screenDim)
 	lg.rectangle("fill", 0, 0, l.sw, l.sh)
 	local unlockEvent = unlockSequence.active
@@ -739,7 +711,7 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if button ~= 1 then return end
-	local l = updateLayoutIfNeeded()
+	local l = layout()
 	if selectedAbilitySlot then
 		local px, py, pw, ph, abilities = abilityPickerGeometry(l)
 		for index, abilityId in ipairs(abilities) do
@@ -797,7 +769,7 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.wheelmoved(_, y)
-	local l = updateLayoutIfNeeded()
+	local l = layout()
 	local mx = love.mouse.getPosition()
 	if mx >= l.left.x and mx <= l.left.x + l.left.w then
 		local _, count = visibleRows(l)
@@ -810,8 +782,7 @@ function Screen.resize()
 	Tooltip.hide()
 	MapPreviewCache.clear()
 	Backdrop.start()
-	retainedLayout.sw, retainedLayout.sh = nil, nil
-	keepSelectedVisible(updateLayoutIfNeeded())
+	keepSelectedVisible(layout())
 end
 
 function Screen.enter()
@@ -824,7 +795,7 @@ function Screen.enter()
 		State.mapIndex = State.resolveMapIndex(captured.sourceIndex)
 	end
 	refreshCampaignProgress()
-	keepSelectedVisible(updateLayoutIfNeeded())
+	keepSelectedVisible(layout())
 end
 function Screen.leave()
 	selectedAbilitySlot = nil

@@ -10,6 +10,8 @@ local getStat, emitDamage, beginChainDamageBudget = ctx.getStat, ctx.emitDamage,
 local consumeChainDamageBudget, emitImpulse = ctx.consumeChainDamageBudget, ctx.emitImpulse
 local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.projectileHasHit, ctx.canProcTarget
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
+local SHARED_BEHAVIORS_LANCER_RICOCHET = ctx.SHARED_BEHAVIORS_LANCER_RICOCHET
+local SHARED_BEHAVIORS_FROST_SHATTER = ctx.SHARED_BEHAVIORS_FROST_SHATTER
 B.hit_circle = {
 	type = "damage",
 
@@ -43,10 +45,85 @@ B.hit_circle = {
 		end
 	end,
 
-	init = function(p, data)
+	onSpawn = function(p, data)
 		p.hitRadius = data.radius
 	end
 }
 
-for id, handlers in pairs(B) do register(id, handlers) end
+B.instant_hit = {
+	type = "damage",
+
+	update = function(p, dt)
+		local e = p.target
+
+		if not e or e.hp <= 0 then
+			return "consume"
+		end
+
+		p.x = e.x
+		p.y = e.y
+
+		local id = e.id or e
+
+		if not projectileHasHit(p, id) and canHitTarget(p, e) then
+			p.hit = e
+		end
+
+		return "consume"
+	end
+}
+
+B.pierce = {
+	init = function(p, data)
+		data = data or {}
+
+		p.pierce = {
+			maxHits = data.maxHits or -1, -- -1 = infinite
+			hits = 0,
+			hitTargets = {}
+		}
+
+		p.allowRepeatHits = true
+		p.consumeOnHit = false
+	end,
+
+	canHit = function(p, enemy)
+		local pierce = p.pierce
+		if not pierce then
+			return true
+		end
+
+		return not pierce.hitTargets[enemy]
+	end,
+
+	onHit = function(p, enemy, data)
+		local pierce = p.pierce
+		if not pierce then
+			return
+		end
+
+		pierce.hitTargets[enemy] = true
+		pierce.hits = pierce.hits + 1
+
+		if pierce.maxHits > 0 and pierce.hits >= pierce.maxHits then
+			p.dead = true
+		end
+	end
+}
+
+B.projectile_radius = {
+	init = function(p, data)
+		local radius = data.radius
+		if not radius then
+			return
+		end
+
+		p.r = radius
+		p.baseR = radius
+		p.hitRadius = radius
+		p.hitRadius2 = radius * radius
+	end
+}
+
+for id, handlers in pairs(B) do register({ id = id, role = "collision", handlers = handlers }) end
 end

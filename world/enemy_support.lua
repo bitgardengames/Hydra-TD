@@ -12,7 +12,6 @@ local dirtySourceSet = {}
 local changedTargets = {}
 local changedTargetSet = {}
 local coveredSources = {}
-local coveredCellEntryPool = {}
 local lifecycleStats = {sourceCandidatesExamined = 0}
 local markDirty
 
@@ -32,30 +31,10 @@ end
 
 local function insertCoveredCell(cx, cy, source)
 	local cell = coveredCell(cx, cy)
-	local poolIndex = #coveredCellEntryPool
-	local entry = coveredCellEntryPool[poolIndex]
-	if entry then
-		coveredCellEntryPool[poolIndex] = nil
-	else
-		entry = {}
-	end
-	entry.source = source
-	entry.cell = cell
-	entry.index = #cell + 1
-	entry.cx = cx
-	entry.cy = cy
+	local entry = {source = source, cell = cell, index = #cell + 1, cx = cx, cy = cy}
 	cell[entry.index] = entry
 	local entries = source._supportCoveredCells
 	entries[#entries + 1] = entry
-end
-
-local function poolCoveredCellEntry(entry)
-	entry.source = nil
-	entry.cell = nil
-	entry.index = nil
-	entry.cx = nil
-	entry.cy = nil
-	coveredCellEntryPool[#coveredCellEntryPool + 1] = entry
 end
 
 local function removeCoveredCells(source)
@@ -76,7 +55,6 @@ local function removeCoveredCells(source)
 			if next(column) == nil then coveredSources[entry.cx] = nil end
 		end
 		entries[i] = nil
-		poolCoveredCellEntry(entry)
 	end
 end
 
@@ -186,23 +164,12 @@ local function refreshTargetVisitor(target, context)
 	local source, aura = context.source, context.aura
 	if target == source then return end
 	local dx, dy = target.x - source.x, target.y - source.y
-	local distanceSquared = dx * dx + dy * dy
-	local radiusSquared = aura.radius * aura.radius
-	local inside = distanceSquared <= radiusSquared
-	local movementThreshold = context.movementThreshold
-	local innerBoundary = aura.radius - movementThreshold
-	local outerBoundary = aura.radius + movementThreshold
-	local innerBoundarySquared = innerBoundary * innerBoundary
-	local outerBoundarySquared = outerBoundary * outerBoundary
-	if (innerBoundary <= 0 or distanceSquared > innerBoundarySquared)
-	and distanceSquared < outerBoundarySquared then
-		local distance = sqrt(distanceSquared)
-		local boundaryDistance = inside and aura.radius - distance or distance - aura.radius
-		if boundaryDistance < movementThreshold then
-			context.movementThreshold = boundaryDistance
-		end
+	local distance = sqrt(dx * dx + dy * dy)
+	local boundaryDistance = math.abs(distance - aura.radius)
+	if boundaryDistance < context.movementThreshold then
+		context.movementThreshold = boundaryDistance
 	end
-	if target.hp <= 0 or not inside then return end
+	if target.hp <= 0 or distance > aura.radius then return end
 	local affected = source.supportAffected
 	affected[target] = true
 	local contributions = target.supportContributions
@@ -290,9 +257,6 @@ function Support.onSourceMoved(source, oldX, oldY)
 	end
 
 	local dx, dy = source.x - refreshX, source.y - refreshY
-	-- The retained threshold must be no greater than the nearest candidate's
-	-- distance to the aura boundary. Keeping that value conservative ensures
-	-- that skipping a refresh can never leave aura membership stale.
 	if sqrt(dx * dx + dy * dy) >= (source._supportMovementThreshold or 0) then
 		markDirty(source)
 	end
@@ -410,16 +374,6 @@ function Support.clear()
 	for i = #dirtySources, 1, -1 do
 		dirtySourceSet[dirtySources[i]] = nil
 		dirtySources[i] = nil
-	end
-	-- Pooled entries should already be empty, but scrub the complete pool at the
-	-- lifecycle boundary so it can never retain an enemy or spatial cell.
-	for i = 1, #coveredCellEntryPool do
-		local entry = coveredCellEntryPool[i]
-		entry.source = nil
-		entry.cell = nil
-		entry.index = nil
-		entry.cx = nil
-		entry.cy = nil
 	end
 end
 

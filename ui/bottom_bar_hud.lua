@@ -164,4 +164,15 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 	Text.printShadow(speedLabel, right - font:getWidth(speedLabel), y)
 end
 
+-- Small, dependency-free fixture hooks. They expose presentation values, not
+-- the text cache or money interpolation implementation.
+function Hud._moneyFeedbackState(reducedMotion)
+	return moneyPulse, moneyPulseTime, feedbackPose(moneyPulse, moneyPulseTime, reducedMotion)
+end
+
+function Hud._resetMoneyFeedback(authoritativeMoney)
+	previousMoney = authoritativeMoney
+	moneyPulse, moneyPulseTime = 0, 0
+end
+
 return Hud

@@ -3,7 +3,6 @@ local Localization = {}
 local languages = {}
 local current = nil
 local fallback = nil
-local revision = 0
 
 local select = select
 local format = string.format
@@ -26,16 +25,11 @@ end
 
 function Localization.set(locale)
     current = languages[locale] or fallback
-    revision = revision + 1
 
     -- tell Fonts to switch
     if current.meta and current.meta.font then
         require("core.fonts").setLocale(current.meta.font)
     end
-end
-
-function Localization.getRevision()
-	return revision
 end
 
 function Localization.get(key, ...)

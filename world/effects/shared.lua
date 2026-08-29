@@ -33,13 +33,10 @@ function Shared.drag(object, dt, multiplier)
 	object.vy = object.vy * multiplier
 end
 
-function Shared.family(name, capacity, factory, fields, reset)
+function Shared.family(name, capacity, factory, fields)
 	local record = {name = name, list = {}, pool = {}, capacity = capacity, factory = factory or function() return {} end}
 	record.reserve = Shared.reserve
 	function record.release(object)
-		-- Reclaim owned/nested pooled state before the parent's references are
-		-- cleared. This keeps every family on the same release path in Registry.
-		if reset then reset(object) end
 		Shared.clear(object, fields)
 		record.pool[#record.pool + 1] = object
 	end

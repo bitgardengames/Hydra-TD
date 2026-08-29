@@ -25,6 +25,11 @@ local state = {
 	gameOver = false,
 	victory = false,
 	runMode = "campaign",
+	-- Opt-in run rules are separate from the selected run mode. Endless/replay
+	-- runs use the same linear tower upgrades as campaign runs.
+	runRules = {
+		experimentalModules = false,
+	},
 	buildSeed = nil,
 	-- The currently spawned boss enemy entity, or nil. Boss identifiers belong
 	-- in activeBossKind so presentation code never has to resolve this value.
@@ -58,6 +63,19 @@ local state = {
 	mode = "menu", -- "menu", "campaign", "game", "pause"
 
 	ignoreStats = false,
+
+	modules = {},
+	moduleInventory = {},
+	modulePicker = {
+		active = false,
+		choices = nil,
+		waveOffered = 0,
+		mode = "wave_reward",
+		title = nil,
+		subtitle = nil,
+		hint = nil,
+		tower = nil,
+	},
 
 	-- Combat data
 	combatStats = {

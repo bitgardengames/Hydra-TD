@@ -13,6 +13,7 @@ local Effects = require("world.effects")
 local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
 local L = require("core.localization")
+local Modules = require("systems.modules")
 local ProjectileProfiles = require("world.projectile_profiles")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
@@ -56,6 +57,7 @@ local FIRE_ANGLE_EPS = math.rad(6)
 local AIM_RECOMPUTE_POS_EPS2 = 1
 local AIM_RECOMPUTE_ANGLE_EPS = math.rad(0.75)
 local AIM_RECOMPUTE_STALE_FRAMES = 6
+local SPLASH_LEAD_SPEED_THRESHOLD = 20
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_UPGRADES = 4
 -- Each entry is the cost of the next level as a multiple of the tower's
@@ -279,10 +281,12 @@ local function recomputeTowerStats(t)
 	-- smoothly as levels are gained.
 	local scaledDamageMult = 1 + (dmgMult - 1) * progress
 	local scaledFireMult = 1 + (fireMult - 1) * progress
-	t.damage = def.damage * scaledDamageMult
-	t.fireRate = def.fireRate * scaledFireMult
+	local moduleStats = Modules.getTowerStatModifiers(t)
+
+	t.damage = def.damage * scaledDamageMult * moduleStats.damageMult
+	t.fireRate = def.fireRate * scaledFireMult * moduleStats.fireRateMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
-	t.range = def.range + rangeAdd * upgrades
+	t.range = def.range + rangeAdd * upgrades + moduleStats.rangeAdd
 	recomputeAbilityModifiers(t)
 end
 
@@ -348,6 +352,8 @@ local function addTower(kind, gx, gy)
 		lastTargetY = nil,
 		lastAimDiff = nil,
 		aimStaleFrames = 0,
+		_cacheVersion = 0,
+		_cache = {},
 		retargetT = 0,
 		_retargetSeed = towerPhaseSeed(kind, gx, gy),
 		_retargetCycle = 0,
@@ -355,6 +361,12 @@ local function addTower(kind, gx, gy)
 		canRotate = def.canRotate ~= false,
 		color = def.color,
 		sellValue = floor(def.cost * diff.sellRefund),
+		slow = def.onHitSlow,
+		splash = def.splash,
+		chain = def.chain,
+		poison = def.poison,
+		plasma = def.plasma,
+		appliedModules = {},
 		_upgradePreview = {
 			nextLevel = 2,
 		},
@@ -417,7 +429,7 @@ local function upgradeTower(t)
 
 	local diff = Difficulty.get()
 	-- Capture the same derived data used by the UI before mutating the tower. This
-	-- keeps the cosmetic response tied to the authored tower stats.
+	-- keeps the cosmetic response tied to real authored stats and module effects.
 	local transformationPreview = getUpgradePreview and getUpgradePreview(t)
 
 	State.money = State.money - cost
@@ -430,6 +442,7 @@ local function upgradeTower(t)
 	t.upgradeFlash = 0.3
 	Save.recordTowerUpgrade(t.kind)
 	recomputeTowerStats(t)
+	Modules.invalidateTower(t)
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 	t._upgradePreview = t._upgradePreview or {}
 	t._upgradePreview.nextLevel = t.level + 1
@@ -455,19 +468,25 @@ local function previewTowerStats(t, level)
 	local progress = min(1, upgrades / MAX_UPGRADES)
 	local upgrade = def.upgrade or {}
 
+	local moduleStats = Modules.getTowerStatModifiers(t)
 	return {
-		damage = def.damage * (1 + ((upgrade.dmgMult or 1) - 1) * progress),
-		fireRate = def.fireRate * (1 + ((upgrade.fireMult or 1) - 1) * progress),
-		range = def.range + (upgrade.rangeAdd or 0) * upgrades,
+		damage = def.damage * (1 + ((upgrade.dmgMult or 1) - 1) * progress) * moduleStats.damageMult,
+		fireRate = def.fireRate * (1 + ((upgrade.fireMult or 1) - 1) * progress) * moduleStats.fireRateMult,
+		range = def.range + (upgrade.rangeAdd or 0) * upgrades + moduleStats.rangeAdd,
 	}
 end
 
 local function cloneForPreview(t, level)
 	local clone = {}
 	for k, v in pairs(t) do
-		clone[k] = v
+		-- Module resolution only writes caches. Keeping them off the clone makes the
+		-- preview independent of, and unable to invalidate, the live tower.
+		if k ~= "_cache" then
+			clone[k] = v
+		end
 	end
 	clone.level = level
+	clone._cache = {}
 	return clone
 end
 
@@ -549,8 +568,8 @@ getUpgradePreview = function(t)
 	local nextClone = cloneForPreview(t, nextLevel)
 	local currentStats = previewTowerStats(currentClone, level)
 	local nextStats = previewTowerStats(nextClone, nextLevel)
-	local currentBehaviors = behaviorMap(ProjectileProfiles.get(currentClone))
-	local nextBehaviors = behaviorMap(ProjectileProfiles.get(nextClone))
+	local currentBehaviors = behaviorMap({ behaviors = ProjectileProfiles.get(currentClone) })
+	local nextBehaviors = behaviorMap({ behaviors = ProjectileProfiles.get(nextClone) })
 	local rows = {}
 
 	local currentDamage = effectiveDamage(currentStats, currentBehaviors)
@@ -829,8 +848,7 @@ local function updateTowers(dt)
 			if shouldRecompute then
 				local ax, ay = targetX, targetY
 				local targetSpeed = target.speed or 0
-				local leadSpeedThreshold = t.def.targeting and t.def.targeting.leadPathTargetsAboveSpeed
-				if leadSpeedThreshold and targetSpeed > leadSpeedThreshold then
+				if t.splash and targetSpeed > SPLASH_LEAD_SPEED_THRESHOLD then
 					local speedFactor = min(targetSpeed / 120, 0.18)
 					local leadTime = 0.28 + speedFactor
 

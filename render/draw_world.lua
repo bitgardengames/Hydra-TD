@@ -46,27 +46,11 @@ local grassCacheW
 local grassCacheH
 local grassCacheR, grassCacheG, grassCacheB, grassCacheA
 
-local function releaseGrassScatterCanvas()
-	if grassScatterCanvas then
-		grassScatterCanvas:release()
-	end
-
-	grassScatterCanvas = nil
-	grassCacheMapRef = nil
-	grassCacheTile = nil
-	grassCacheW = nil
-	grassCacheH = nil
-	grassCacheR, grassCacheG, grassCacheB, grassCacheA = nil, nil, nil, nil
-end
-
-local function invalidateGrassScatterCache()
-	releaseGrassScatterCanvas()
-end
-
 local function buildGrassScatterCache(terrain, map)
 
 	if not map or not map.isPath then
-		releaseGrassScatterCanvas()
+		grassScatterCanvas = nil
+		grassCacheMapRef = nil
 		return
 	end
 
@@ -88,13 +72,12 @@ local function buildGrassScatterCache(terrain, map)
 		return
 	end
 
-	releaseGrassScatterCanvas()
-	grassScatterCanvas = lg.newCanvas(gridW * tile, gridH * tile)
 	grassCacheMapRef = map.isPath
 	grassCacheW = gridW
 	grassCacheH = gridH
 	grassCacheTile = tile
 	grassCacheR, grassCacheG, grassCacheB, grassCacheA = gR, gG, gB, gA
+	grassScatterCanvas = lg.newCanvas(gridW * tile, gridH * tile)
 
 	local colorScatterDark = {gR * 0.94, gG * 0.94, gB * 0.94, 1}
 	local colorScatterLight = {gR * 1.06, gG * 1.06, gB * 1.06, 1}
@@ -225,7 +208,7 @@ local function updatePathColor(color)
 end
 
 local function updateGrassColor(_)
-	invalidateGrassScatterCache()
+	grassCacheMapRef = nil
 end
 
 local function updateWaterColor(color)
@@ -412,5 +395,4 @@ return {
 	updatePathColor = updatePathColor,
 	updateGrassColor = updateGrassColor,
 	updateWaterColor = updateWaterColor,
-	invalidateGrassScatterCache = invalidateGrassScatterCache,
 }

@@ -45,6 +45,7 @@ local META_TABLES = {
 	"encounteredEnemies",
 	"enemyHistory",
 	"towerHistory",
+	"discoveredModules",
 }
 
 local function defaultValue(tbl, key, value)
@@ -549,6 +550,13 @@ function Save.recordTowerRun(kind, damage, kills)
 	history.damage = (history.damage or 0) + damage
 	history.kills = (history.kills or 0) + kills
 	history.bestRunDamage = math.max(history.bestRunDamage or 0, damage)
+	Save.markDirty()
+end
+
+function Save.discoverModule(moduleId)
+	if not Save.data or not moduleId then return end
+	Save.data.meta.discoveredModules = Save.data.meta.discoveredModules or {}
+	Save.data.meta.discoveredModules[moduleId] = true
 	Save.markDirty()
 end
 

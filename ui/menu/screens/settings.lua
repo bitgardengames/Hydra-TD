@@ -507,13 +507,10 @@ function Screen.draw()
 		end
 	end
 	if describedRow and describedRow.description then
-		if not describedRow.tooltipDefinition then
-			describedRow.tooltipDefinition = {
-				title = describedRow.label,
-				rows = {{kind = "text", text = describedRow.description}},
-			}
-		end
-		Tooltip.show(describedRow.tooltipDefinition)
+		Tooltip.show({
+			title = describedRow.label,
+			rows = {{kind = "text", text = describedRow.description}},
+		})
 	end
 
 	if rowsScroll:canScroll() then

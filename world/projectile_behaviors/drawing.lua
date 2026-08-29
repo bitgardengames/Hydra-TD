@@ -9,8 +9,20 @@ local getStat, emitDamage, beginChainDamageBudget = ctx.getStat, ctx.emitDamage,
 local consumeChainDamageBudget, emitImpulse = ctx.consumeChainDamageBudget, ctx.emitImpulse
 local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.projectileHasHit, ctx.canProcTarget
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
+local SHARED_BEHAVIORS_LANCER_RICOCHET = ctx.SHARED_BEHAVIORS_LANCER_RICOCHET
+local SHARED_BEHAVIORS_FROST_SHATTER = ctx.SHARED_BEHAVIORS_FROST_SHATTER
+B.draw_rail_lance = {
+	draw = function(p, a)
+		local w = p.r * 3.0
+		local h = p.r * 0.9
+
+		lg.setColor(1,1,1,a)
+		lg.rectangle("fill", -w/2, -h/2, w, h, h, h)
+	end
+}
+
 B.lancer_hit_fx = {
-	hit = function(p)
+	onHit = function(p)
 		local evt = emitFX(p, "lancer_hit")
 		evt.x = p.x
 		evt.y = p.y
@@ -18,7 +30,7 @@ B.lancer_hit_fx = {
 }
 
 B.chain_zap_fx = {
-	hit = function(p)
+	onHit = function(p)
 		if not p._chain or #p._chain == 0 then
 			return
 		end
@@ -148,5 +160,58 @@ B.draw_plasma = {
 	end
 }
 
-for id, handlers in pairs(B) do register(id, handlers) end
+B.draw_shock_orb = {
+	draw = function(p, a)
+		local t = p.t
+		local outer = p.r * (10 / 4.5)
+		local inner = p.r * (5 / 4.5)
+
+		local cr, cg, cb = getProjectileColor(p, {0.6, 0.9, 1.0})
+		local hr, hg, hb = colorMul(cr, cg, cb, 1.2)
+
+		lg.setColor(cr, cg, cb, a * 0.4)
+		lg.circle("fill", 0, 0, outer)
+
+		lg.setColor(hr, hg, hb, a)
+		lg.circle("fill", 0, 0, inner)
+
+		for i = 1, 3 do
+			local ang = t * 6 + i * 2
+			local r = p.r * (6 / 4.5) + sin(t * 8 + i) * (2 / 4.5) * p.r
+
+			local x = cos(ang) * r
+			local y = sin(ang) * r
+
+			lg.setColor(1, 1, 1, a * 0.7)
+			lg.circle("fill", x, y, 1.5)
+		end
+	end
+}
+
+B.draw_static_field = {
+	draw = function(p, a)
+		local base = p.r * (16/4.5)
+		local wobble = sin(p.t * 4) * (2/4.5) * p.r
+
+		lg.setColor(0.5, 0.8, 1.0, a * 0.4)
+		lg.circle("line", 0, 0, base + wobble)
+	end
+}
+
+B.draw_frost_shard = {
+	draw = function(p, a)
+		local w = p.r * (4 / 4.5)
+		local h = p.r * (10 / 4.5)
+		lg.setColor(0.75, 0.9, 1.0, a)
+
+		lg.push()
+		lg.rotate(p.rotation or 0)
+
+		lg.rectangle("fill", -w / 2, -h / 2, w, h)
+
+		lg.pop()
+	end
+}
+
+for id, handlers in pairs(B) do register({ id = id, role = "drawing", handlers = handlers }) end
 end

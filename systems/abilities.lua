@@ -33,6 +33,7 @@ local slowVisitContext = newRadiusVisitContext()
 local gravityPullVisitContext = newRadiusVisitContext()
 local gravityDamageVisitContext = newRadiusVisitContext()
 local meteorDamageVisitContext = newRadiusVisitContext()
+local abilityDamageSource = {sourceKind = "ability"}
 
 local function visitEnemyInRadius(enemy, context)
 	context.visitor(enemy, context)
@@ -60,7 +61,7 @@ local function pullEnemy(enemy, context)
 end
 
 local function damageEnemy(enemy, context)
-	Enemies.applyDamage(enemy, context.damage, "ability", false, false)
+	Enemies.applyDamage(enemy, context.damage, abilityDamageSource)
 end
 
 local function addActive(effect)
@@ -127,7 +128,7 @@ end
 
 function Abilities.beginTargeting(id)
 	local def = Abilities.getEquipped(id)
-	if not def or not Abilities.isReady(def.id) or State.mode ~= "game" then
+	if not def or not Abilities.isReady(def.id) or State.mode ~= "game" or State.modulePicker.active then
 		return false
 	end
 

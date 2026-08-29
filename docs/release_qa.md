@@ -75,9 +75,11 @@ not infer one difficulty from another.
 
 ## Towers and stat-only upgrades
 
-The mandatory release gate covers the shipped **stat-only game**.
+The mandatory release gate covers the shipped **stat-only game**. Experimental
+modules and their projectile combinations are not part of campaign or
+replay/endless setup and must not be used to satisfy these rows.
 For each tower, place it legally and attempt an illegal placement; inspect it,
-upgrade repeatedly through maximum level, and verify
+upgrade repeatedly through maximum level without a module selection, and verify
 each preview against the resulting damage, fire rate, range, targeting controls,
 damage meter, sell/refund behavior, and restart cleanup.
 
@@ -89,6 +91,15 @@ damage meter, sell/refund behavior, and restart cleanup.
 | TWR-04 | RB | Cannon | Base through maximum level; damage, fire-rate, range/splash, targeting, and sell values. |
 | TWR-05 | RB | Shock | Base through maximum level; damage, fire-rate, range/chain behavior, targeting, and sell values. |
 | TWR-06 | RB | Plasma | Base through maximum level; damage, fire-rate, range/tick behavior, targeting, and sell values. |
+
+### Experimental module QA (non-release-gating)
+
+Run these checks only in an explicitly enabled internal module playtest. Keep the
+results separate from RC blocker evidence: exercise generic and tower-identity
+modules, exclusivity and stack limits, inventory application, and chained
+projectile termination. Also verify campaign and replay/endless runs started
+normally never show a module picker or apply module behavior, including after
+loading a save whose `discoveredModules` table is populated.
 
 ## Active abilities
 

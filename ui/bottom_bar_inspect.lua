@@ -3,14 +3,14 @@ local Util = require("core.util")
 local Towers = require("world.towers")
 local Enemies = require("world.enemies")
 local Sound = require("systems.sound")
+local ModulePicker = require("ui.module_picker")
+local Hotkeys = require("core.hotkeys")
 local Tooltip = require("ui.tooltip")
 local Floaters = require("ui.floaters")
 local Text = require("ui.text")
 local Button = require("ui.button")
-local HotkeyVisual = require("ui.hotkey_visual")
 local Theme = require("core.theme")
 local L = require("core.localization")
-local StatusRowBuffer = require("ui.status_row_buffer")
 
 local Inspect = {}
 
@@ -46,7 +46,6 @@ local BUTTON_H = 32
 local GAP = 16
 local IDLE_LIFT = 6
 local STAT_LINE_H = 22
-local HOTKEY_LABEL_GAP = 7
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -57,41 +56,6 @@ local outerSmallRadius = 6 + outlineW * 0.5
 local innerSmallRadius = 6 - outlineW * 0.25
 
 local inspectButtons
-local enemyStatusBuffer = StatusRowBuffer.new()
-local upgradeTooltipCache = setmetatable({}, {__mode = "k"})
-
-local function getUpgradeTooltip(t)
-	local level = t.level or 1
-	-- The authored upgrade table is the definition version: replacing it
-	-- invalidates previews without making the normal draw path rebuild rows.
-	local definitionVersion = t.def and (t.def.upgradeVersion or t.def.upgrade or t.def)
-	local title = L("inspect.upgradeTitle", level + 1)
-	local cached = upgradeTooltipCache[t]
-	if cached and cached.level == level and cached.definitionVersion == definitionVersion
-		and cached.definition.title == title then
-		return cached.definition
-	end
-
-	local preview = Towers.getUpgradePreview(t)
-	local rows = {}
-	for i = 1, math.min(#(preview and preview.rows or {}), 7) do
-		local row = preview.rows[i]
-		rows[#rows + 1] = {
-			label = L(row.labelKey),
-			value = row.current,
-			delta = row.next,
-			deltaColor = row.direction == "bad" and colorBad or colorGood,
-		}
-	end
-
-	local definition = {title = title, rows = rows}
-	upgradeTooltipCache[t] = {
-		level = level,
-		definitionVersion = definitionVersion,
-		definition = definition,
-	}
-	return definition
-end
 
 local function showUpgradeFailure(t, messageKey)
 	Sound.play("uiError")
@@ -103,6 +67,19 @@ local function showUpgradeFailure(t, messageKey)
 
 	local floaterY = (t.renderY or t.y) - 30
 	Floaters.add(t.x, floaterY, L(messageKey), colorBad[1], colorBad[2], colorBad[3], true)
+end
+
+local function drawHotkeyVisual(action, x, y, textY)
+	local label = Hotkeys.getDisplay(action)
+
+	if label then
+		lg.setColor(colorText)
+		Text.printShadow(label, x, textY)
+
+		return 14
+	end
+
+	return 0
 end
 
 -- Buttons
@@ -128,7 +105,7 @@ inspectButtons = {
 
 			-- Only upgrade if affordable
 			if upgradeCost and State.money >= upgradeCost then
-				Towers.upgradeTower(t)
+				ModulePicker.openTowerUpgrade(t)
 			else
 				showUpgradeFailure(t, upgradeCost and "floater.needMoney" or "floater.maxLevel")
 			end
@@ -349,10 +326,10 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			local nameX = bx + PAD
 
-			local used = HotkeyVisual.draw(action, bx + PAD, ty)
+			local used = drawHotkeyVisual(action, bx + PAD, fy, ty)
 
 			if used > 0 then
-				nameX = nameX + used + HOTKEY_LABEL_GAP
+				nameX = nameX + used
 			end
 
 			lg.setColor(ct1, ct2, ct3, btn.canAfford and 1 or 0.55)
@@ -368,7 +345,24 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			-- Upgrade tooltip
 			if hovered and btn.id == "upgrade" and upgradeCost then
-				Tooltip.show(getUpgradeTooltip(t))
+				local preview = Towers.getUpgradePreview(t)
+				local rows = {}
+				-- Preview rows are already fully derived by Towers from tower, branch,
+				-- and module definitions; this layer only gives them a compact layout.
+				for i = 1, math.min(#(preview and preview.rows or {}), 7) do
+					local row = preview.rows[i]
+					rows[#rows + 1] = {
+						label = L(row.labelKey),
+						value = row.current,
+						delta = row.next,
+						deltaColor = row.direction == "bad" and colorBad or colorGood,
+					}
+				end
+
+				Tooltip.show({
+					title = L("inspect.upgradeTitle", t.level + 1),
+					rows = rows,
+				})
 			end
 		end
     elseif State.selectedEnemy then
@@ -378,19 +372,18 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
         Text.printShadow(L("inspect.hp", formatInt(e.hp), formatInt(e.maxHp)), bodyX, bodyY)
 
-		local statusCount = Enemies.visitDisplayStatuses(e, StatusRowBuffer.writeVisitor, enemyStatusBuffer)
-		StatusRowBuffer.finish(enemyStatusBuffer, statusCount)
+		local statuses = Enemies.getDisplayStatuses(e)
 
 		local statusY = bodyY + 24
 		local availableH = max(0, panelY + h - OUTER_PAD - statusY)
-		local visibleRows = min(statusCount, floor(availableH / STATUS_ROW_H))
+		local visibleRows = min(#statuses, floor(availableH / STATUS_ROW_H))
 		for i = 1, visibleRows do
-			drawStatusRow(enemyStatusBuffer.rows[i], bodyX, statusY, infoW)
+			drawStatusRow(statuses[i], bodyX, statusY, infoW)
 			statusY = statusY + STATUS_ROW_H
 		end
-		if visibleRows < statusCount and visibleRows > 0 then
+		if visibleRows < #statuses and visibleRows > 0 then
 			lg.setColor(colorDisabled)
-			Text.printfShadow(L("inspect.moreStatuses", statusCount - visibleRows), bodyX, statusY - STATUS_ROW_H, infoW, "right")
+			Text.printfShadow(L("inspect.moreStatuses", #statuses - visibleRows), bodyX, statusY - STATUS_ROW_H, infoW, "right")
 		end
     end
 end

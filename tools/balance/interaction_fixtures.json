@@ -1,0 +1,178 @@
+{
+  "abilities": [
+    {
+      "ability": "meteor",
+      "charge_required": 56,
+      "effect": {
+        "damage": 75.0,
+        "radius": 82.0
+      },
+      "kind": "damage_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "ability": "frost_nova",
+      "charge_required": 44,
+      "effect": {
+        "duration": 5.0,
+        "radius": 105.0
+      },
+      "kind": "slow_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "ability": "overdrive",
+      "charge_required": 64,
+      "effect": {
+        "attackSpeed": 1.7,
+        "duration": 7.0,
+        "radius": 110.0
+      },
+      "kind": "tower_haste_area",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "ability": "gravity_well",
+      "charge_required": 72,
+      "effect": {
+        "damage": 28.0,
+        "duration": 3.0,
+        "pullSpeed": 36.0,
+        "radius": 95.0
+      },
+      "kind": "gravity_well",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "ability": "gold_rush",
+      "charge_required": 96,
+      "effect": {
+        "duration": 8.0,
+        "multiplier": 1.5
+      },
+      "kind": "income_multiplier",
+      "radius_samples_included": []
+    },
+    {
+      "ability": "last_stand",
+      "charge_required": 80,
+      "effect": {
+        "attackSpeed": 1.45,
+        "duration": 6.0,
+        "radius": 110.0,
+        "volleys": 1.0
+      },
+      "kind": "last_stand",
+      "radius_samples_included": [
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    }
+  ],
+  "assumptions": {
+    "encounter_seconds": 60,
+    "radius_rule": "distance_squared <= radius_squared",
+    "tick_seconds": 0.01
+  },
+  "boss_add_encounters": [
+    {
+      "add_hp_multiplier": 0.95,
+      "add_kind": "runner",
+      "add_speed_multiplier": 1.15,
+      "burst_count": 9,
+      "peak_alive_cap": 14,
+      "runtime_seconds": 60,
+      "summoned_adds": 18,
+      "template": "boss_displacement"
+    },
+    {
+      "add_hp_multiplier": 0.9,
+      "add_kind": "grunt",
+      "add_speed_multiplier": 1.0,
+      "burst_count": 10,
+      "peak_alive_cap": 20,
+      "runtime_seconds": 60,
+      "summoned_adds": 34,
+      "template": "boss_summoner"
+    }
+  ],
+  "definition_sha256": "55de2698c5f565bfe8d98108e0ad2618dc718e3606c3cc962778f463248c85c2",
+  "format_version": 1,
+  "overlap": {
+    "casts": [
+      "meteor",
+      "gravity_well"
+    ],
+    "coverage": 1.0,
+    "expected_damage_stacks": true,
+    "independent_expiries": true,
+    "leaks": 0,
+    "proc_count": 2,
+    "speed_invariant": true,
+    "total_damage": 113
+  },
+  "targeting": {
+    "expected_target": "slowed_front",
+    "formation": [
+      {
+        "dist": 92,
+        "hp": 18,
+        "id": 1,
+        "name": "front_damaged",
+        "priority": 0,
+        "slow": 0
+      },
+      {
+        "dist": 54,
+        "hp": 180,
+        "id": 2,
+        "name": "rear_tank",
+        "priority": 0,
+        "slow": 0
+      },
+      {
+        "dist": 70,
+        "hp": 65,
+        "id": 3,
+        "name": "priority_mid",
+        "priority": 30,
+        "slow": 0
+      },
+      {
+        "dist": 96,
+        "hp": 45,
+        "id": 4,
+        "name": "slowed_front",
+        "priority": 0,
+        "slow": 1
+      }
+    ]
+  }
+}

@@ -3,24 +3,9 @@ local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local lg, random = Shared.graphics, Shared.random
 local sin, cos, min, max, sqrt, pi = Shared.sin, Shared.cos, Shared.min, Shared.max, Shared.sqrt, Shared.pi
-local particleLists, particlePool = {}, {}
-local particleFields = {'angle','distance'}
 
 return function(context)
-	local function reclaimParticles(e)
-		local particles = e.particles
-		if not particles then return end
-		for i = #particles, 1, -1 do
-			local particle = particles[i]
-			particles[i] = nil
-			Shared.clear(particle, particleFields)
-			particlePool[#particlePool + 1] = particle
-		end
-		particleLists[#particleLists + 1] = particles
-	end
-
-	local record = Shared.family("presentation", 0, nil,
-		{'kind','t','life','x','y','path','particles'}, reclaimParticles)
+	local record = Shared.family("presentation", 0, nil, {'kind','t','life','x','y','path','particles'})
 	local Effects = context.Effects
 	local function presentationEvent(kind, opts)
 		opts = opts or {}
@@ -41,13 +26,11 @@ return function(context)
 		e.path = opts.path
 		e.particles = nil
 		if kind == "wave_cleared" or kind == "boss_defeated" then
-			e.particles = Shared.acquire(particleLists)
+			e.particles = {}
 			local count = context.particleCount(kind == "boss_defeated" and 16 or 10,
 				Theme.effects.intensity.normal)
 			for i = 1, count do
-				local particle = Shared.acquire(particlePool)
-				particle.angle, particle.distance = random() * pi * 2, random(24, 70)
-				e.particles[i] = particle
+				e.particles[i] = {angle = random() * pi * 2, distance = random(24, 70)}
 			end
 		end
 		record.list[#record.list + 1] = e

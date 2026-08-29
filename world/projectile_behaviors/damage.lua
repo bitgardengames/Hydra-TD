@@ -10,13 +10,14 @@ local getStat, emitDamage, beginChainDamageBudget = ctx.getStat, ctx.emitDamage,
 local consumeChainDamageBudget, emitImpulse = ctx.consumeChainDamageBudget, ctx.emitImpulse
 local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.projectileHasHit, ctx.canProcTarget
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
+local SHARED_BEHAVIORS_LANCER_RICOCHET = ctx.SHARED_BEHAVIORS_LANCER_RICOCHET
+local SHARED_BEHAVIORS_FROST_SHATTER = ctx.SHARED_BEHAVIORS_FROST_SHATTER
 local radiusVisitContext = {}
-local chainDamageMetadata = { chain = true }
 local function radiusVisitor(e, c, d2)
 	local p, op = c.p, c.op
 	if op == "aoe" then
 		local t = 1 - d2 / c.r2
-		emitDamage(p, e, p.damage * (c.falloff + (1 - c.falloff) * t), c.damageMetadata); emitImpulse(p, e, p.x, p.y, 3.2)
+		emitDamage(p, e, p.damage * (c.falloff + (1 - c.falloff) * t)); emitImpulse(p, e, p.x, p.y, 3.2)
 	elseif op == "shock" then
 		local t = 1 - d2 / c.r2
 		emitDamage(p, e, (p.damage or 0) * c.mult * (c.falloff + (1-c.falloff)*t)); emitImpulse(p,e,p.x,p.y,c.impulse)
@@ -39,19 +40,19 @@ local function radiusVisitor(e, c, d2)
 	end
 end
 B.hit_damage = {
-	hit = function(p, e, data)
+	onHit = function(p, e)
 		if not e or e.hp <= 0 then
 			return
 		end
 
 		local dmg = getStat(p, "damage", 0)
-		emitDamage(p, e, dmg, data)
+		emitDamage(p, e, dmg)
 		emitImpulse(p, e, p.x, p.y, 1.5)
 	end
 }
 
 B.aoe_damage = {
-	hit = function(p, e, data)
+	onHit = function(p, e, data)
 		local baseRadius = data.radius or 32
 		local falloff = data.falloff or 0.5
 
@@ -61,7 +62,6 @@ B.aoe_damage = {
 		local r2 = radius * radius
 		radiusVisitContext.p, radiusVisitContext.op = p, "aoe"
 		radiusVisitContext.r2, radiusVisitContext.falloff = r2, falloff
-		radiusVisitContext.damageMetadata = data
 		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext, spatialQueryContext, Spatial.radiusOptions.default)
 
 		local evt = emitFX(p, "cannon_impact")
@@ -72,8 +72,86 @@ B.aoe_damage = {
 	end
 }
 
+B.cannon_shockwave = {
+	onHit = function(p, _, data)
+		local radius = data.radius or 54
+		local impulse = data.impulse or 4.8
+		local damageMult = data.damageMult or 0.6
+		local minFalloff = data.minFalloff or 0.35
+		local r2 = radius * radius
+
+		radiusVisitContext.p, radiusVisitContext.op = p, "shock"
+		radiusVisitContext.r2, radiusVisitContext.mult = r2, damageMult
+		radiusVisitContext.falloff, radiusVisitContext.impulse = minFalloff, impulse
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
+	end
+}
+
+B.cannon_damage_scale = {
+	init = function(p, data)
+		p.damage = (p.damage or 0) * (data.mult or 1)
+	end
+}
+
+B.cannon_delayed_blast = {
+	init = function(p, data)
+		p._delayedBlast = {
+			timer = max(0.01, data.delay or 0.45),
+			radius = data.radius or 86,
+			falloff = data.falloff or 0.52,
+			damageMult = data.damageMult or 1.55,
+			ringRadius = data.ringRadius or 54,
+			ringWidth = data.ringWidth or 22,
+			ringDamageMult = data.ringDamageMult or 1.15,
+			repeatHitMult = data.repeatHitMult or 0.6,
+			ringOverlapCapMult = data.ringOverlapCapMult or 0.45,
+			fired = false,
+		}
+	end,
+
+	update = function(p, dt)
+		local b = p._delayedBlast
+		if not b or b.fired then
+			return
+		end
+
+		b.timer = b.timer - dt
+		if b.timer > 0 then
+			return
+		end
+		b.fired = true
+
+		local radius = b.radius
+		local r2 = radius * radius
+		local ringRadius = b.ringRadius
+		local ringHalfWidth = b.ringWidth * 0.5
+		local ringInner = max(0, ringRadius - ringHalfWidth)
+		local ringOuter = ringRadius + ringHalfWidth
+		local ringInner2 = ringInner * ringInner
+		local ringOuter2 = ringOuter * ringOuter
+
+		radiusVisitContext.p, radiusVisitContext.op, radiusVisitContext.b = p, "delayed", b
+		radiusVisitContext.r2, radiusVisitContext.inner2, radiusVisitContext.outer2 = r2, ringInner2, ringOuter2
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
+
+		local evt = emitFX(p, "cannon_impact")
+		evt.x = p.x
+		evt.y = p.y
+		evt.r = radius
+		evt.color = p.sourceTower and p.sourceTower.color
+		evt.hitOrigin = "long_fuse_payload"
+
+		p.dead = true
+		return "consume"
+	end
+}
+
 B.hit_chain = {
-	hit = function(p, e, data)
+	type = "damage",
+
+	onHit = function(p, e, data)
 		beginChainDamageBudget(p)
 		p._chainSecondaryHitCount = 0
 
@@ -120,7 +198,7 @@ B.hit_chain = {
 				dealt = consumeChainDamageBudget(p, dmg)
 			end
 			if dealt > 0 then
-				emitDamage(p, current, dealt, chainDamageMetadata)
+				emitDamage(p, current, dealt)
 			end
 			emitImpulse(p, current, p.x, p.y, 1.25)
 
@@ -162,6 +240,240 @@ B.hit_chain = {
 
 		-- store for FX (array reused across hits to reduce churn)
 		p._chain = chain
+	end
+}
+
+B.chain_static_surge = {
+	type = "damage",
+
+	onHit = function(p, e, data)
+		if not p._chain then return end
+		data = data or {}
+
+		local bonusPerStack = data.bonusPerStack or 0.2
+		local maxStacks = data.maxStacks or 6
+		local fullStacks = max(1, data.fullStacks or 3)
+		local postFullScale = data.postFullScale or 0.5
+		local stackMap = p.sourceTower and p.sourceTower._shockSurgeStacks
+
+		if not stackMap and p.sourceTower then
+			stackMap = {}
+			p.sourceTower._shockSurgeStacks = stackMap
+		end
+
+		if not stackMap then
+			return
+		end
+
+		for i = 1, #p._chain do
+			local target = p._chain[i].to
+			if target and target.hp > 0 then
+				local key = target.id or target
+				local stacks = min((stackMap[key] or 0) + 1, maxStacks)
+				stackMap[key] = stacks
+
+				local effectiveSteps
+				if stacks <= fullStacks then
+					effectiveSteps = stacks - 1
+				else
+					local earlySteps = fullStacks - 1
+					local lateSteps = stacks - fullStacks
+					effectiveSteps = earlySteps + (lateSteps * postFullScale)
+				end
+
+				local extraMult = effectiveSteps * bonusPerStack
+				if extraMult > 0 then
+					local surgeDmg = consumeChainDamageBudget(p, (p.damage or 0) * extraMult)
+					if surgeDmg > 0 then
+						emitDamage(p, target, surgeDmg)
+					end
+				end
+			end
+		end
+	end
+}
+
+B.chain_endpoint_burst = {
+	type = "damage",
+
+	onHit = function(p, e, data)
+		if not p._chain then return end
+		data = data or {}
+
+		local radius = data.radius or 32
+		local radius2 = radius * radius
+		local dmgMult = data.dmgMult or 0.5
+		local endpoints = p._retained.endpointScratch
+		clearMap(endpoints)
+
+		local hasOutgoing = p._retained.hasOutgoingScratch
+		clearMap(hasOutgoing)
+
+		for i = 1, #p._chain do
+			local link = p._chain[i]
+			if link.from then
+				hasOutgoing[link.from] = true
+			end
+		end
+
+		for i = 1, #p._chain do
+			local target = p._chain[i].to
+			if target and target.hp > 0 and not hasOutgoing[target] and not endpoints[target] then
+				endpoints[target] = true
+
+				radiusVisitContext.p, radiusVisitContext.op = p, "endpoint"
+				radiusVisitContext.damage = (p.damage or 0) * dmgMult
+				Spatial.visitRadius(target.x, target.y, radius, radiusVisitor, radiusVisitContext,
+					spatialQueryContext, Spatial.radiusOptions.living)
+			end
+		end
+	end
+}
+
+B.tick_zap = {
+	type = "damage",
+
+	init = function(p, data)
+		p._zap = {
+			timer = 0,
+			rate = data.rate or 0.25,
+			radius = data.radius or 64,
+		}
+	end,
+
+	update = function(p, dt)
+		local z = p._zap
+		z.timer = z.timer - dt
+		if z.timer > 0 then return end
+
+		local radius = z.radius
+		local r2 = radius * radius
+
+		radiusVisitContext.op, radiusVisitContext.visited = "nearest", nil
+		radiusVisitContext.best, radiusVisitContext.bestDistance = nil, r2
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.living)
+		local best = radiusVisitContext.best
+
+		if best then
+			emitDamage(p, best, p.damage or 0)
+
+			local evt = emitFX(p, "zap")
+			evt.x = p.x
+			evt.y = p.y
+			evt.chain = {
+				{ from = nil, to = best }
+			}
+		end
+
+		z.timer = z.rate
+	end
+}
+
+B.explode_on_hit = {
+	type = "damage",
+
+	onHit = function(p, e, data)
+		local evt = emitFX(p, "cannon_impact")
+		evt.x = p.x
+		evt.y = p.y
+		evt.r = data.radius or 48
+	end
+}
+
+-- Jacobs Ladder?
+
+B.slow_pop = {
+	onHit = function(p, e)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		if e.slowTimer and e.slowTimer > 0 then
+			local radius = 28
+			radiusVisitContext.p, radiusVisitContext.op = p, "slow_pop"
+			Spatial.visitRadius(e.x, e.y, radius, radiusVisitor, radiusVisitContext, spatialQueryContext, Spatial.radiusOptions.default)
+
+			local evt = emitFX(p, "frost_burst")
+			evt.x = e.x
+			evt.y = e.y
+			evt.color = p.sourceTower and p.sourceTower.color
+		end
+	end
+}
+
+B.shatter_bonus = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		if e.slowTimer and e.slowTimer > 0 then
+			local mult = data.mult or 0.5
+			emitDamage(p, e, (p.damage or 0) * mult)
+		end
+	end
+}
+
+B.snowball_ramp = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 then
+			return
+		end
+
+		local hitSet = p._snowballHits
+		if not hitSet then
+			hitSet = {}
+			p._snowballHits = hitSet
+		end
+
+		if hitSet[e.id] then
+			return
+		end
+
+		hitSet[e.id] = true
+
+		local ramp = data.ramp or 0.18
+		local cap = data.cap or 2.8
+		local base = p._snowballBaseDamage or p.damage or 0
+		local stacks = (p._snowballStacks or 0) + 1
+		local mult = min(1 + stacks * ramp, cap)
+
+		p._snowballBaseDamage = base
+		p._snowballStacks = stacks
+		p.damage = base * mult
+	end
+}
+
+B.plasma_supernova_burst = {
+	init = function(p)
+		p._supernovaBurstDone = false
+	end,
+
+	update = function(p, _, data)
+		if p._supernovaBurstDone then
+			return
+		end
+
+		local triggerAt = data.triggerAt or 0.2
+		if p.life > triggerAt then
+			return
+		end
+
+		p._supernovaBurstDone = true
+
+		local radius = data.radius or 36
+		local dmg = (p.damage or 0) * (data.dmgMult or 2.0)
+
+		radiusVisitContext.p, radiusVisitContext.op, radiusVisitContext.damage = p, "supernova", dmg
+		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext, spatialQueryContext, Spatial.radiusOptions.livingCollision)
+
+		local evt = emitFX(p, "plasma_hit")
+		evt.x = p.x
+		evt.y = p.y
+		evt.color = p.sourceTower and p.sourceTower.color
+
+		return "consume"
 	end
 }
 
@@ -213,5 +525,5 @@ B.tick_damage = {
 -- VISUALS (NOW MODULAR)
 -- =========================
 
-for id, handlers in pairs(B) do register(id, handlers) end
+for id, handlers in pairs(B) do register({ id = id, role = "damage", handlers = handlers }) end
 end

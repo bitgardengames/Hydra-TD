@@ -1,8 +1,8 @@
 local State = require("core.state")
 local Towers = require("world.towers")
+local Hotkeys = require("core.hotkeys")
 local Text = require("ui.text")
 local Button = require("ui.button")
-local HotkeyVisual = require("ui.hotkey_visual")
 local Tooltip = require("ui.tooltip")
 local Theme = require("core.theme")
 local L = require("core.localization")
@@ -88,6 +88,19 @@ local function ensureShopAnim(kind)
 	return shopAnims[kind]
 end
 
+local function drawHotkeyVisual(action, x, y, textY)
+	local label = Hotkeys.getDisplay(action)
+
+	if label then
+		lg.setColor(colorText)
+		Text.printShadow(label, x, textY)
+
+		return 14
+	end
+
+	return 0
+end
+
 local GAP_X = 15
 local GAP_Y = 18
 local PAD = 8
@@ -95,7 +108,6 @@ local SHOP_BTN_W = 126
 local SHOP_BTN_H = 32
 local SHOP_COLS = 3
 local IDLE_LIFT = 6
-local HOTKEY_LABEL_GAP = 7
 
 local totalRowWidth = SHOP_BTN_W * SHOP_COLS + GAP_X * (SHOP_COLS - 1)
 
@@ -120,6 +132,7 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 
 	for i, key in ipairs(towerList) do
 		local def = Towers.TowerDefs[key]
+		local hotkeyLabel = Hotkeys.getDisplay(key)
 		local lockMessage
 
 		local index = i - 1
@@ -238,10 +251,10 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 		local ty = fy + (SHOP_BTN_H - textH) * 0.5
 
 		if unlocked then
-			local used = HotkeyVisual.draw(key, x + PAD, ty)
+			if hotkeyLabel then
+				local used = drawHotkeyVisual(key, x + PAD, fy, ty)
 
-			if used > 0 then
-				nameX = nameX + used + HOTKEY_LABEL_GAP
+				nameX = nameX + used
 			end
 
 			lg.setColor(ct1, ct2, ct3, canAfford and 1 or 0.55)

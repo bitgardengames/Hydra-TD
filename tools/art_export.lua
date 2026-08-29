@@ -1064,7 +1064,7 @@ local function createTowerFiringTarget()
 	enemy.prevY = enemy.y
 
 	-- Projectiles and chain effects use both the authoritative enemy list and
-	-- the spatial grid, so the export target must be registered with each.
+	-- the spatial grid, so the export fixture must be registered with each.
 	Enemies.enemies = {enemy}
 	Spatial.updateEnemy(enemy)
 	return enemy

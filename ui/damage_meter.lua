@@ -45,7 +45,6 @@ local meterCache = {
 }
 
 local nameCache = {}
-local localizationRevision = L.getRevision()
 
 local DamageMeter = {}
 local pressedView = nil
@@ -102,34 +101,14 @@ local function sorter(a, b)
 	return a.dmg > b.dmg
 end
 
-local function getTowerName(kind)
-	local name = nameCache[kind]
-	if name == nil then
-		local def = Towers.TowerDefs[kind]
-		name = def and L(def.nameKey) or ""
-		nameCache[kind] = name
-	end
-	return name
-end
-
-local function buildEntryText(entry, pctBucket)
-	entry.text = format("%s %s (%d%%)", entry.name, formatNum(entry.dmg), pctBucket)
-	entry.lastTextDmg = entry.dmg
-	entry.lastTextPctBucket = pctBucket
-end
-
-function DamageMeter.localizationChanged()
-	for kind in pairs(nameCache) do
-		nameCache[kind] = nil
+local function buildEntryText(entry, name, pct)
+	if entry.lastTextDmg ~= entry.dmg or entry.lastTextPct ~= pct then
+		entry.text = format("%s %s (%.0f%%)", name, formatNum(entry.dmg), pct * 100)
+		entry.lastTextDmg = entry.dmg
+		entry.lastTextPct = pct
 	end
 
-	for _, entry in ipairs(meterCache.list) do
-		entry.name = getTowerName(entry.kind)
-		entry.lastTextDmg = nil
-		entry.lastTextPctBucket = nil
-	end
-
-	localizationRevision = L.getRevision()
+	return entry.text
 end
 
 function DamageMeter.update(dt)
@@ -138,9 +117,6 @@ function DamageMeter.update(dt)
 	end
 
 	local stats = State.combatStats
-	if localizationRevision ~= L.getRevision() then
-		DamageMeter.localizationChanged()
-	end
 	local isBossView = (stats.damageView == 1)
 
 	local dmgTable = isBossView and stats.bossDamageByTower or stats.damageByTower
@@ -173,12 +149,7 @@ function DamageMeter.update(dt)
 	-- ensure entries exist (cheap)
 	for kind, dmg in pairs(dmgTable) do
 		if dmg > 0 and not index[kind] then
-			local entry = {
-				kind = kind,
-				dmg = dmg,
-				displayPct = 0,
-				name = getTowerName(kind)
-			}
+			local entry = {kind = kind, dmg = dmg, displayPct = 0}
 
 			list[#list + 1] = entry
 			index[kind] = entry
@@ -206,9 +177,11 @@ function DamageMeter.update(dt)
 		local pct = (total > 0) and (entry.dmg / total) or 0
 		entry.displayPct = entry.displayPct + (pct - entry.displayPct) * factor
 		if abs(pct - entry.displayPct) < 0.001 then entry.displayPct = pct end
-		local pctBucket = floor(pct * 100 + 0.5)
-		if entry.lastTextDmg ~= entry.dmg or entry.lastTextPctBucket ~= pctBucket then
-			buildEntryText(entry, pctBucket)
+		local def = Towers.TowerDefs[entry.kind]
+		if def then
+			local name = L(def.nameKey)
+			nameCache[entry.kind] = name
+			buildEntryText(entry, name, pct)
 		end
 	end
 end
