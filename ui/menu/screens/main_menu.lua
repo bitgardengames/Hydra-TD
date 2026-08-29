@@ -81,7 +81,6 @@ function Screen.load()
 			h = btnH,
 			onClick = function()
 				State.ignoreStats = false
-				State.runRules = {experimentalModules = false}
 				RunModes.set(State, RunModes.CAMPAIGN)
 				Difficulty.set(Save.data.settings.difficulty)
 				require("ui.menu.menu").set("campaign")
@@ -96,7 +95,6 @@ function Screen.load()
 			onClick = function()
 				State.ignoreStats = false
 				State.buildSeed = nil
-				State.runRules = {experimentalModules = false}
 				RunModes.set(State, RunModes.ENDLESS)
 				require("ui.menu.menu").set("campaign")
 				Sound.play("uiConfirm")

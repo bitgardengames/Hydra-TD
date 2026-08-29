@@ -170,9 +170,6 @@ function CampaignUnlocks.getEquippedAbilities()
 	return equipped
 end
 
-function CampaignUnlocks.isModuleCategoryUnlocked(category)
-	return category == "identity" or category == "special" or isFeatureUnlocked("module_category", category)
-end
 
 function CampaignUnlocks.isTowerUnlocked(kind)
 	return requiredMapByTower[kind] ~= nil

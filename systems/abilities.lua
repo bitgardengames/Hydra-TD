@@ -128,7 +128,7 @@ end
 
 function Abilities.beginTargeting(id)
 	local def = Abilities.getEquipped(id)
-	if not def or not Abilities.isReady(def.id) or State.mode ~= "game" or State.modulePicker.active then
+	if not def or not Abilities.isReady(def.id) or State.mode ~= "game" then
 		return false
 	end
 

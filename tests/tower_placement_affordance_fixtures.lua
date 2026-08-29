@@ -58,7 +58,6 @@ package.loaded["core.localization"] = function(key, cost, money, shortfall)
 	end
 	return key
 end
-package.loaded["ui.module_picker"] = {openTowerUpgrade = function() end}
 package.loaded["systems.abilities"] = {cancelTargeting = function() end, beginTargeting = function() end}
 package.loaded["systems.campaign_unlocks"] = {isTowerUnlocked = function() return true end}
 package.loaded["core.game_speed"] = {cycle = function() end}

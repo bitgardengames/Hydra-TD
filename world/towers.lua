@@ -13,7 +13,6 @@ local Effects = require("world.effects")
 local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
 local L = require("core.localization")
-local Modules = require("systems.modules")
 local ProjectileProfiles = require("world.projectile_profiles")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
@@ -281,12 +280,10 @@ local function recomputeTowerStats(t)
 	-- smoothly as levels are gained.
 	local scaledDamageMult = 1 + (dmgMult - 1) * progress
 	local scaledFireMult = 1 + (fireMult - 1) * progress
-	local moduleStats = Modules.getTowerStatModifiers(t)
-
-	t.damage = def.damage * scaledDamageMult * moduleStats.damageMult
-	t.fireRate = def.fireRate * scaledFireMult * moduleStats.fireRateMult
+	t.damage = def.damage * scaledDamageMult
+	t.fireRate = def.fireRate * scaledFireMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
-	t.range = def.range + rangeAdd * upgrades + moduleStats.rangeAdd
+	t.range = def.range + rangeAdd * upgrades
 	recomputeAbilityModifiers(t)
 end
 
@@ -352,8 +349,6 @@ local function addTower(kind, gx, gy)
 		lastTargetY = nil,
 		lastAimDiff = nil,
 		aimStaleFrames = 0,
-		_cacheVersion = 0,
-		_cache = {},
 		retargetT = 0,
 		_retargetSeed = towerPhaseSeed(kind, gx, gy),
 		_retargetCycle = 0,
@@ -366,7 +361,6 @@ local function addTower(kind, gx, gy)
 		chain = def.chain,
 		poison = def.poison,
 		plasma = def.plasma,
-		appliedModules = {},
 		_upgradePreview = {
 			nextLevel = 2,
 		},
@@ -429,7 +423,7 @@ local function upgradeTower(t)
 
 	local diff = Difficulty.get()
 	-- Capture the same derived data used by the UI before mutating the tower. This
-	-- keeps the cosmetic response tied to real authored stats and module effects.
+	-- keeps the cosmetic response tied to the authored tower stats.
 	local transformationPreview = getUpgradePreview and getUpgradePreview(t)
 
 	State.money = State.money - cost
@@ -442,7 +436,6 @@ local function upgradeTower(t)
 	t.upgradeFlash = 0.3
 	Save.recordTowerUpgrade(t.kind)
 	recomputeTowerStats(t)
-	Modules.invalidateTower(t)
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 	t._upgradePreview = t._upgradePreview or {}
 	t._upgradePreview.nextLevel = t.level + 1
@@ -468,25 +461,19 @@ local function previewTowerStats(t, level)
 	local progress = min(1, upgrades / MAX_UPGRADES)
 	local upgrade = def.upgrade or {}
 
-	local moduleStats = Modules.getTowerStatModifiers(t)
 	return {
-		damage = def.damage * (1 + ((upgrade.dmgMult or 1) - 1) * progress) * moduleStats.damageMult,
-		fireRate = def.fireRate * (1 + ((upgrade.fireMult or 1) - 1) * progress) * moduleStats.fireRateMult,
-		range = def.range + (upgrade.rangeAdd or 0) * upgrades + moduleStats.rangeAdd,
+		damage = def.damage * (1 + ((upgrade.dmgMult or 1) - 1) * progress),
+		fireRate = def.fireRate * (1 + ((upgrade.fireMult or 1) - 1) * progress),
+		range = def.range + (upgrade.rangeAdd or 0) * upgrades,
 	}
 end
 
 local function cloneForPreview(t, level)
 	local clone = {}
 	for k, v in pairs(t) do
-		-- Module resolution only writes caches. Keeping them off the clone makes the
-		-- preview independent of, and unable to invalidate, the live tower.
-		if k ~= "_cache" then
-			clone[k] = v
-		end
+		clone[k] = v
 	end
 	clone.level = level
-	clone._cache = {}
 	return clone
 end
 

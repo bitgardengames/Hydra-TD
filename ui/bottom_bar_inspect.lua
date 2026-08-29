@@ -3,7 +3,6 @@ local Util = require("core.util")
 local Towers = require("world.towers")
 local Enemies = require("world.enemies")
 local Sound = require("systems.sound")
-local ModulePicker = require("ui.module_picker")
 local Hotkeys = require("core.hotkeys")
 local Tooltip = require("ui.tooltip")
 local Floaters = require("ui.floaters")
@@ -105,7 +104,7 @@ inspectButtons = {
 
 			-- Only upgrade if affordable
 			if upgradeCost and State.money >= upgradeCost then
-				ModulePicker.openTowerUpgrade(t)
+				Towers.upgradeTower(t)
 			else
 				showUpgradeFailure(t, upgradeCost and "floater.needMoney" or "floater.maxLevel")
 			end
@@ -347,8 +346,8 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			if hovered and btn.id == "upgrade" and upgradeCost then
 				local preview = Towers.getUpgradePreview(t)
 				local rows = {}
-				-- Preview rows are already fully derived by Towers from tower, branch,
-				-- and module definitions; this layer only gives them a compact layout.
+				-- Preview rows are fully derived from the tower definition; this layer
+				-- only gives them a compact layout.
 				for i = 1, math.min(#(preview and preview.rows or {}), 7) do
 					local row = preview.rows[i]
 					rows[#rows + 1] = {

@@ -12,7 +12,7 @@ from lua_source import named_entries, numeric_fields, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 CAPTURE = Path(__file__).with_name("interaction_fixtures.json")
-SOURCES = ("world/tower_defs.lua", "world/enemy_defs.lua", "systems/module_defs.lua",
+SOURCES = ("world/tower_defs.lua", "world/enemy_defs.lua",
            "systems/ability_defs.lua", "systems/difficulty.lua",
            "systems/difficulty_curve.lua", "systems/campaign_wave_defs.lua",
            "systems/waves.lua", "world/targeting.lua")

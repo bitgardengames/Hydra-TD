@@ -19,7 +19,6 @@ local State = require("core.state")
 local Abilities = require("systems.abilities")
 
 State.mode = "game"
-State.modulePicker.active = false
 State.equippedAbilities = {"last_stand"}
 State.abilityCharges = {last_stand = require("systems.ability_defs").last_stand.chargeRequired}
 Abilities.reset()

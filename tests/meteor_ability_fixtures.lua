@@ -34,7 +34,6 @@ local State = require("core.state")
 local Abilities = require("systems.abilities")
 
 State.mode = "game"
-State.modulePicker.active = false
 State.equippedAbilities = {"meteor"}
 State.abilityCharges = {}
 Abilities.reset()

@@ -42,7 +42,7 @@ is `$34` (`$94` including its base), a Cannon through tier 3 is `$214`, and a
 complete Plasma is `$600`. On Hard, complete towers become affordable across
 maps in waves 1–2 (Slow), 2–3 (Lancer), 2–4 (Poison), 3–4 (Cannon), 3–5
 (Shock), and 4–6 (Plasma). These are independent unspent-purchasing-power probes,
-not a build sequence; canonical scenarios contain no specialization or inventory modules.
+not a build sequence; canonical scenarios contain no specialization.
 
 ## Acceptance intent
 
