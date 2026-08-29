@@ -399,6 +399,28 @@ local function getUpgradeCost(tower)
 end
 
 local getUpgradePreview
+local upgradePreviewCache = {}
+
+-- Preview records are definition data, not tower state. Read-only proxies make
+-- it safe for effects and presentation code to retain and share one record.
+local function immutable(value, seen)
+	if type(value) ~= "table" then return value end
+	seen = seen or {}
+	if seen[value] then return seen[value] end
+	local proxy, data = {}, {}
+	seen[value] = proxy
+	for key, child in pairs(value) do data[key] = immutable(child, seen) end
+	return setmetatable(proxy, {
+		__index = data,
+		__len = function() return #data end,
+		__newindex = function() error("upgrade previews are immutable", 2) end,
+		__metatable = false,
+	})
+end
+
+local function invalidateUpgradePreviewCache()
+	upgradePreviewCache = {}
+end
 
 local function upgradeTower(t)
 	if not t then
@@ -540,10 +562,16 @@ local function addBehaviorRows(rows, before, after)
 end
 
 getUpgradePreview = function(t)
-	if not t or not t.def then
+	if not t or not t.def or not t.kind then
 		return nil
 	end
 	local level = max(1, t.level or 1)
+	local byLevel = upgradePreviewCache[t.kind]
+	if byLevel and byLevel[level] then return byLevel[level] end
+	if not byLevel then
+		byLevel = {}
+		upgradePreviewCache[t.kind] = byLevel
+	end
 	local nextLevel = level + 1
 	local currentClone = cloneForPreview(t, level)
 	local nextClone = cloneForPreview(t, nextLevel)
@@ -564,12 +592,15 @@ getUpgradePreview = function(t)
 	addPreviewRow(rows, "range", tostring(TowerStatDisplay.range(currentStats.range)), tostring(TowerStatDisplay.range(nextStats.range)), nextStats.range > currentStats.range and "good" or "bad")
 	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
 
-	return {
+	local preview = immutable({
 		nextLevel = nextLevel,
 		current = currentStats,
 		postUpgrade = nextStats,
 		rows = rows,
-	}
+		rowCount = #rows,
+	})
+	byLevel[level] = preview
+	return preview
 end
 
 local function sellTower(t)
@@ -953,6 +984,7 @@ return {
 	getUpgradeCost = getUpgradeCost,
 	upgradeTower = upgradeTower,
 	getUpgradePreview = getUpgradePreview,
+	invalidateUpgradePreviewCache = invalidateUpgradePreviewCache,
 	sellTower = sellTower,
 	findTowerAt = findTowerAt,
 	updateTowers = updateTowers,

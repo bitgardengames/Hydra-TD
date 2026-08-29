@@ -56,6 +56,53 @@ local outerSmallRadius = 6 + outlineW * 0.5
 local innerSmallRadius = 6 - outlineW * 0.25
 
 local inspectButtons
+local upgradeTooltipCache
+
+local function getUpgradeTooltipPresentation(t)
+	if not t then
+		upgradeTooltipCache = nil
+		return nil
+	end
+	local preview = Towers.getUpgradePreview(t)
+	local localeRevision = L.getRevision()
+	local cached = upgradeTooltipCache
+	if cached and cached.tower == t and cached.kind == t.kind
+		and cached.level == (t.level or 1) and cached.localeRevision == localeRevision
+		and cached.preview == preview then
+		return cached.presentation
+	end
+
+	local rows = {}
+	for i = 1, math.min(preview and preview.rowCount or 0, 7) do
+		local row = preview.rows[i]
+		rows[#rows + 1] = {
+			label = L(row.labelKey),
+			value = row.current,
+			delta = row.next,
+			deltaColor = row.direction == "bad" and colorBad or colorGood,
+		}
+	end
+	local presentation = {
+		title = L("inspect.upgradeTitle", (t.level or 1) + 1),
+		rows = rows,
+	}
+	upgradeTooltipCache = {
+		tower = t,
+		kind = t.kind,
+		level = t.level or 1,
+		localeRevision = localeRevision,
+		preview = preview, -- changes after definition-cache invalidation
+		presentation = presentation,
+	}
+	return presentation
+end
+
+function Inspect.invalidateUpgradeTooltipCache()
+	upgradeTooltipCache = nil
+end
+
+-- Exposed for focused presentation tests; draw uses the same retained record.
+Inspect.getUpgradeTooltipPresentation = getUpgradeTooltipPresentation
 
 local function showUpgradeFailure(t, messageKey)
 	Sound.play("uiError")
@@ -332,24 +379,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			-- Upgrade tooltip
 			if hovered and btn.id == "upgrade" and upgradeCost then
-				local preview = Towers.getUpgradePreview(t)
-				local rows = {}
-				-- Preview rows are fully derived from the tower definition; this layer
-				-- only gives them a compact layout.
-				for i = 1, math.min(#(preview and preview.rows or {}), 7) do
-					local row = preview.rows[i]
-					rows[#rows + 1] = {
-						label = L(row.labelKey),
-						value = row.current,
-						delta = row.next,
-						deltaColor = row.direction == "bad" and colorBad or colorGood,
-					}
-				end
-
-				Tooltip.show({
-					title = L("inspect.upgradeTitle", t.level + 1),
-					rows = rows,
-				})
+				Tooltip.show(getUpgradeTooltipPresentation(t))
 			end
 		end
     elseif State.selectedEnemy then
