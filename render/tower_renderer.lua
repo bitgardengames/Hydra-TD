@@ -629,6 +629,7 @@ local function drawTowers()
 	end
 
 	local towers = Towers.towers
+	local clock = love.timer.getTime()
 
 	for i = 1, #towers do
 		local t = towers[i]
@@ -648,7 +649,6 @@ local function drawTowers()
 		drawTowerInstance(t, cx, renderY, i)
 		drawTowerUpgradeFlash(t, cx, renderY)
 		if (t.suppressedTimer or 0) > 0 then
-			local clock = love.timer.getTime()
 			local pulse = 0.65 + 0.2 * sin(clock * 8 + i)
 			lg.setColor(1, 0.16, 0.28, pulse)
 			lg.setLineWidth(3)
