@@ -362,12 +362,6 @@ local function drawTowerAction(kind)
 		canRotate = def.canRotate ~= false,
 		turnSpeed = def.turnSpeed or 12,
 
-		-- behaviors
-		slow   = def.onHitSlow and {factor = def.onHitSlow.factor, dur = def.onHitSlow.dur} or nil,
-		splash = def.splash and {radius = def.splash.radius, falloff = def.splash.falloff} or nil,
-		chain  = def.chain and {jumps = def.chain.jumps, radius = def.chain.radius, falloff = def.chain.falloff} or nil,
-		poison = def.poison and {dps = def.poison.dps, dur = def.poison.dur, maxStacks = def.poison.maxStacks} or nil,
-		plasma = def.plasma and {radius = def.plasma.radius, tickRate = def.plasma.tickRate} or nil,
 	}
 
 	Towers.towers = {t}
@@ -386,7 +380,7 @@ local function drawTowerAction(kind)
 		TowerRenderer.drawTowerFX(t)
 		--Projectiles.draw()
 
-		if t.chain then
+		if t.kind == "shock" then
 			Effects.draw()
 		end
 	end, TOWER_SCALE)
