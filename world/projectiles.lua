@@ -110,29 +110,16 @@ local function acquire()
 		defaultHitCtx = {},
 		eventPool = {},
 		eventPoolCount = 0,
+		chain = {},
+		chainVisited = {},
+		forksScratch = {},
+		claimedScratch = {},
+		endpointScratch = {},
+		hasOutgoingScratch = {},
 	}
 
 	return { _retained = retained }
 end
-
--- These are shot-owned values. Retained containers live in p._retained and are
--- deliberately not mixed into this list.
-local reusableFields = {
-	"x", "y", "r", "baseR", "scale", "life", "t", "sourceTower", "sourceKind",
-	"speed", "damage", "hitOrigin", "target", "targetID", "ignoreTarget", "angle",
-	"rotation", "vx", "vy", "hitRadius", "hitRadius2", "lastTX", "lastTY",
-	"behaviors", "hit", "_consumed", "_hooks", "_drawHandlers", "_canHitPredicates",
-	"_didExpireHook",
-	"allowRepeatHits", "consumeOnHit", "pierce", "dead", "radius", "visualScale",
-	"cx", "cy", "orbitSpeed", "onEvent", "_baseDamage", "_beam", "_boom",
-	"_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
-	"_chainVisited", "_claimedScratch", "_conductRadius", "_delayedBlast",
-	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
-	"_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
-	"_slowAuraRadius", "_slowAuraTick", "_slowAuraTimer", "_snowballBaseDamage",
-	"_snowballHits", "_snowballStacks", "_spiral", "_supernovaBurstDone", "_suspend",
-	"_targetPointX", "_targetPointY", "_tickStates", "_wave", "_zap",
-}
 
 local function resetReusableState(p)
 	local retained = p._retained
@@ -149,18 +136,14 @@ local function resetReusableState(p)
 	Util.clearTable(retained.defaultHitCtx)
 	retained.eventPoolCount = p._eventPoolCount or retained.eventPoolCount
 
-	for i = 1, #reusableFields do
-		p[reusableFields[i]] = nil
+	-- Projectile fields are shot-owned unless they live in the retained
+	-- container. Clearing the table itself keeps newly introduced behavior state
+	-- from leaking merely because this cleanup forgot to enumerate it.
+	for key in pairs(p) do
+		if key ~= "_retained" then
+			p[key] = nil
+		end
 	end
-
-	p.eventRead = nil
-	p.eventCount = nil
-	p.hitSet = nil
-	p.hitCooldowns = nil
-	p.events = nil
-	p._defaultHitCtx = nil
-	p._eventPool = nil
-	p._eventPoolCount = nil
 end
 
 local function release(p)

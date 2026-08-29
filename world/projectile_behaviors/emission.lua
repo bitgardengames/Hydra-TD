@@ -122,21 +122,11 @@ B.fork_chain = {
 		local dmgMult = data.dmgMult or 0.35
 		local forksPerLink = max(1, data.forksPerLink or 1)
 
-		local forks = p._forksScratch
-		if forks then
-			clearArray(forks)
-		else
-			forks = {}
-			p._forksScratch = forks
-		end
+		local forks = p._retained.forksScratch
+		clearArray(forks)
 
-		local claimed = p._claimedScratch
-		if claimed then
-			clearMap(claimed)
-		else
-			claimed = {}
-			p._claimedScratch = claimed
-		end
+		local claimed = p._retained.claimedScratch
+		clearMap(claimed)
 
 		-- Forks should be "extra side arcs", so avoid spending fork damage on
 		-- enemies already hit by the main chain.
