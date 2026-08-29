@@ -39,7 +39,7 @@ local function radiusVisitor(e, c, d2)
 	end
 end
 B.hit_damage = {
-	onHit = function(p, e, data)
+	hit = function(p, e, data)
 		if not e or e.hp <= 0 then
 			return
 		end
@@ -51,7 +51,7 @@ B.hit_damage = {
 }
 
 B.aoe_damage = {
-	onHit = function(p, e, data)
+	hit = function(p, e, data)
 		local baseRadius = data.radius or 32
 		local falloff = data.falloff or 0.5
 
@@ -73,9 +73,7 @@ B.aoe_damage = {
 }
 
 B.hit_chain = {
-	type = "damage",
-
-	onHit = function(p, e, data)
+	hit = function(p, e, data)
 		beginChainDamageBudget(p)
 		p._chainSecondaryHitCount = 0
 
@@ -215,5 +213,5 @@ B.tick_damage = {
 -- VISUALS (NOW MODULAR)
 -- =========================
 
-for id, handlers in pairs(B) do register({ id = id, role = "damage", handlers = handlers }) end
+for id, handlers in pairs(B) do register(id, handlers) end
 end

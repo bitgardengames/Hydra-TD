@@ -189,7 +189,7 @@ local function emitImpulse(p, e, px, py, strength)
 end
 
 local function canHitTarget(p, enemy)
-	local predicates = p._canHitPredicates
+	local predicates = p.profile and p.profile.canHit
 	if not predicates then
 		return true
 	end

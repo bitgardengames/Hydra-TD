@@ -11,8 +11,6 @@ local consumeChainDamageBudget, emitImpulse = ctx.consumeChainDamageBudget, ctx.
 local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.projectileHasHit, ctx.canProcTarget
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
 B.move_homing = {
-	type = "movement",
-
 	update = function(p, dt)
 		local e = p.target
 
@@ -156,5 +154,5 @@ B.move_to_target_point = {
 	end
 }
 
-for id, handlers in pairs(B) do register({ id = id, role = "movement", handlers = handlers }) end
+for id, handlers in pairs(B) do register(id, handlers) end
 end

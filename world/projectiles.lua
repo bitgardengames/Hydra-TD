@@ -213,8 +213,8 @@ local function initProjectile(p, source, target)
 		p.lastTY = p.y + sin(p.angle) * 10
 	end
 
-	p.behaviors = ProjectileProfiles.get(source)
-	PB.compileHooks(p)
+	p.profile = ProjectileProfiles.get(source)
+	p.behaviors = p.profile.behaviors
 
 	return p
 end
@@ -311,6 +311,7 @@ local function resolveHit(p, evt)
 end
 
 local function resolveConsume(p)
+	PB.consume(p)
 	p._consumed = true
 end
 
@@ -414,6 +415,7 @@ local function update(dt)
 
 
 		if p.life <= 0 then
+			PB.expire(p)
 			removeAt(i)
 			goto continue
 		end

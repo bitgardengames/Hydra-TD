@@ -9,10 +9,11 @@ function PB.pushEvent(p, evt)
 	p.eventCount = (p.eventCount or 0) + 1
 	p.events[p.eventCount] = evt
 end
-function PB.compileHooks() end
 function PB.init() end
 function PB.draw() end
 function PB.hit() end
+function PB.expire() end
+function PB.consume() return "consume" end
 function PB.update(p)
 	if p.fixtureEmitted then return end
 	p.fixtureEmitted = true
@@ -25,7 +26,7 @@ function PB.update(p)
 end
 
 package.loaded["world.projectile_behaviors"] = PB
-package.loaded["world.projectile_profiles"] = { get = function() return {} end }
+package.loaded["world.projectile_profiles"] = { get = function() return { behaviors = {} } end }
 package.loaded["core.state"] = { addDamage = function() end }
 package.loaded["world.enemies"] = {
 	applyDamage = function(_, amount, context)

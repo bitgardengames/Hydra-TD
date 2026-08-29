@@ -1,6 +1,8 @@
 -- Fixed projectile plans for the six core towers. Tower upgrades may tune the
 -- numbers on a plan, but they never replace, inherit, or mix its behaviors.
 local Profiles = {}
+local Registry = require("world.projectile_behaviors.registry")
+local cache = setmetatable({}, { __mode = "k" })
 
 local function cloneBehavior(behavior)
 	local copy = { id = behavior.id }
@@ -31,17 +33,19 @@ local function build(tower)
 			data.radius = math.max(1, (data.radius or 1) + (upgrade.splashAdd or 0) * upgrades)
 		end
 	end
-	return behaviors
+	return Registry.compile(behaviors)
 end
 
 function Profiles.get(tower)
 	assert(tower and tower.def and tower.def.behaviors, "tower requires a projectile plan")
 	local level = tower.level or 1
-	if tower._projectileProfileLevel ~= level then
-		tower._projectileProfile = build(tower)
-		tower._projectileProfileLevel = level
+	local byLevel = cache[tower.def]
+	if not byLevel then
+		byLevel = {}
+		cache[tower.def] = byLevel
 	end
-	return tower._projectileProfile
+	if not byLevel[level] then byLevel[level] = build(tower) end
+	return byLevel[level]
 end
 
 return Profiles
