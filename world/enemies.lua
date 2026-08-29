@@ -739,13 +739,13 @@ local function applyHitImpulse(e, dx, dy, strength)
 end
 
 -- Single damage gateway for traits. The second return value reports mitigation.
-local function applyDamage(e, amount, context)
+-- Keep damage metadata scalar so high-frequency callers do not allocate contexts.
+local function applyDamage(e, amount, sourceKind, _chain, armorHeavy)
 	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
-	context = context or {}
 	local raw = amount
 	amount = amount * incomingDamageMultiplier(e)
 	if e.armor then
-		local heavy = context.armorHeavy == true or raw >= (e.armor.heavyThreshold or math.huge)
+		local heavy = armorHeavy == true or raw >= (e.armor.heavyThreshold or math.huge)
 		if heavy then amount = amount * (e.armor.heavyMultiplier or 1)
 		else amount = max(1, amount - (e.armor.flatReduction or 0)) end
 	end
@@ -757,7 +757,7 @@ local function applyDamage(e, amount, context)
 		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
 	end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
-	e.lastDamageSourceKind = context.sourceKind
+	e.lastDamageSourceKind = sourceKind
 	return amount, 0
 end
 
