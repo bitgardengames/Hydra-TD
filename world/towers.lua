@@ -21,6 +21,8 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 local towers = {}
 local towersByCell = {}
 local suppressionProjectiles = {}
+-- Suppression is uncommon, so only visit towers whose timers can expire.
+local suppressedTowers = {}
 -- Only towers in this dense list can have a buff expire. Towers keep their
 -- current slot so removal is O(1) and does not leave holes.
 local activeAbilityBuffTowers = {}
@@ -668,14 +670,30 @@ end
 local function applySuppression(target, duration)
 	if not isTowerActive(target) then return end
 	target.suppressedTimer = duration
+	if duration > 0 and not target._suppressedTowerIndex then
+		suppressedTowers[#suppressedTowers + 1] = target
+		target._suppressedTowerIndex = #suppressedTowers
+	end
 	target.target = nil
 	target.windUp = 0
 end
 
-local function updateSuppressionTimers(dt)
-	for i = 1, #towers do
-		local t = towers[i]
-		t.suppressedTimer = max(0, (t.suppressedTimer or 0) - dt)
+local function updateSuppressedTowers(dt)
+	for i = #suppressedTowers, 1, -1 do
+		local t = suppressedTowers[i]
+		local active = isTowerActive(t)
+		if active then
+			t.suppressedTimer = max(0, (t.suppressedTimer or 0) - dt)
+		end
+
+		if not active or t.suppressedTimer <= 0 then
+			local moved = suppressedTowers[#suppressedTowers]
+			swapRemove(suppressedTowers, i)
+			if moved and moved ~= t then
+				moved._suppressedTowerIndex = i
+			end
+			t._suppressedTowerIndex = nil
+		end
 	end
 end
 
@@ -752,7 +770,7 @@ local function updateTowers(dt)
 	-- Tick order is intentional: suppression timers expire first; existing boss
 	-- projectiles move and impact; the boss may cast; then towers retarget and fire.
 	-- This lets an impact retain its full authored duration for the current tick.
-	updateSuppressionTimers(dt)
+	updateSuppressedTowers(dt)
 	updateSuppression(dt)
 
 	for i = 1, #towers do
@@ -929,6 +947,11 @@ local function clear()
 	for i = #suppressionProjectiles, 1, -1 do
 		suppressionProjectiles[i] = nil
 	end
+
+	for i = #suppressedTowers, 1, -1 do
+		suppressedTowers[i]._suppressedTowerIndex = nil
+		suppressedTowers[i] = nil
+	end
 end
 
 return {
@@ -937,6 +960,7 @@ return {
 	PLACEMENT_FAILURE = PLACEMENT_FAILURE,
 	towersByCell = towersByCell,
 	suppressionProjectiles = suppressionProjectiles,
+	suppressedTowers = suppressedTowers,
 	activeAbilityBuffTowers = activeAbilityBuffTowers,
 	addAbilityBuff = addAbilityBuff,
 	expireAbilityBuffs = expireAbilityBuffs,
