@@ -178,8 +178,7 @@ local function removeAt(i)
 	projectiles[#projectiles] = nil
 end
 
-local function initProjectile(p, source, opts)
-	opts = opts or {}
+local function initProjectile(p, source, target, context, speed, life, opts)
 	local retained = p._retained
 
 	p.hitSet = retained.hitSet
@@ -191,33 +190,33 @@ local function initProjectile(p, source, opts)
 	p._eventPool = retained.eventPool
 	p._eventPoolCount = retained.eventPoolCount
 
-	p.x = opts.x or source.x
-	p.y = opts.y or source.renderY or source.y
+	p.x = opts and opts.x or source.x
+	p.y = opts and opts.y or source.renderY or source.y
 
-	p.r = opts.r or 4.5
+	p.r = opts and opts.r or 4.5
 	p.baseR = p.r
-	p.scale = opts.scale or 1
+	p.scale = opts and opts.scale or 1
 
-	p.life = opts.life or 3
+	p.life = life or 3
 	p.t = 0
 
 	p.sourceTower = source
 	p.sourceKind = source.kind
 
-	p.speed = opts.speed or source.projSpeed or 0
-	p.damage = opts.damage or source.damage or 0
+	p.speed = speed or source.projSpeed or 0
+	p.damage = opts and opts.damage or source.damage or 0
 
-	p.hitOrigin = opts.hitOrigin or "primary"
+	p.hitOrigin = opts and opts.hitOrigin or "primary"
 
-	p.target = opts.target
+	p.target = target
 	p.targetID = p.target and p.target.id or nil
-	p.ignoreTarget = opts.ignoreTarget
+	p.ignoreTarget = opts and opts.ignoreTarget
 
-	p.angle = opts.angle or source.angle or 0
+	p.angle = opts and opts.angle or source.angle or 0
 	p.rotation = p.angle
 
-	p.vx = opts.vx
-	p.vy = opts.vy
+	p.vx = opts and opts.vx
+	p.vy = opts and opts.vy
 
 	p._consumed = false
 	p.hasHit = projectileHasHit
@@ -228,13 +227,13 @@ local function initProjectile(p, source, opts)
 	nextHitSetStamp(p)
 	p._defaultHitCtx.origin = p.hitOrigin
 
-	p.hitRadius = opts.hitRadius or p.r
+	p.hitRadius = opts and opts.hitRadius or p.r
 	p.hitRadius2 = p.hitRadius * p.hitRadius
 
 	if p.target then
 		p.lastTX = p.target.x
 		p.lastTY = p.target.y
-	elseif opts.lastTX and opts.lastTY then
+	elseif opts and opts.lastTX and opts.lastTY then
 		p.lastTX = opts.lastTX
 		p.lastTY = opts.lastTY
 	elseif p.vx and p.vy then
@@ -245,10 +244,10 @@ local function initProjectile(p, source, opts)
 		p.lastTY = p.y + sin(p.angle) * 10
 	end
 
-	if opts.behaviors then
+	if opts and opts.behaviors then
 		p.behaviors = opts.behaviors
-	elseif opts.context then
-		p.behaviors = opts.context.behaviors
+	elseif context then
+		p.behaviors = context.behaviors
 	else
 		local fireProfile = source._fireProfile
 		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
@@ -258,13 +257,13 @@ local function initProjectile(p, source, opts)
 	return p
 end
 
-local function createProjectile(source, options)
+local function createProjectile(source, target, context, speed, life, options)
 	if not source then
 		return nil
 	end
 
 	local p = acquire()
-	initProjectile(p, source, options)
+	initProjectile(p, source, target, context, speed, life, options)
 
 	PB.init(p)
 	Sound.play(source.kind)
@@ -274,16 +273,11 @@ local function createProjectile(source, options)
 end
 
 local function spawnEvent(evt)
-	return createProjectile(evt.source, evt)
+	return createProjectile(evt.source, evt.target, evt.context, evt.speed, evt.life, evt)
 end
 
 local function spawnDirect(source, target, context, speed, life)
-	return createProjectile(source, {
-		target = target,
-		context = context,
-		speed = speed,
-		life = life,
-	})
+	return createProjectile(source, target, context, speed, life)
 end
 
 local function resolveSpawnProjectile(parent, evt)
