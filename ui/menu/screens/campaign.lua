@@ -164,8 +164,15 @@ local function drawRewardIcon(reward, cx, cy)
 	end
 end
 
-local function layout()
+local retainedLayout = {
+	left = {},
+	center = {},
+}
+
+local function updateLayoutIfNeeded()
 	local sw, sh = lg.getDimensions()
+	if retainedLayout.sw == sw and retainedLayout.sh == sh then return retainedLayout end
+
 	local margin = max(18, floor(sw * 0.024))
 	local headerH = max(96, floor(sh * 0.115))
 	local footerH = max(46, floor(sh * 0.06))
@@ -178,12 +185,14 @@ local function layout()
 	local contentX = floor((sw - contentW) * 0.5)
 	local leftW = floor(contentW * 0.347)
 	local centerW = contentW - gap - leftW
-	return {
-		sw = sw, sh = sh, margin = margin, headerH = headerH, footerH = footerH,
-		gap = gap, contentY = contentY, contentH = contentH,
-		left = {x = contentX, y = contentY, w = leftW, h = contentH},
-		center = {x = contentX + leftW + gap, y = contentY, w = centerW, h = contentH},
-	}
+	retainedLayout.sw, retainedLayout.sh = sw, sh
+	retainedLayout.margin, retainedLayout.headerH, retainedLayout.footerH = margin, headerH, footerH
+	retainedLayout.gap, retainedLayout.contentY, retainedLayout.contentH = gap, contentY, contentH
+	local left = retainedLayout.left
+	left.x, left.y, left.w, left.h = contentX, contentY, leftW, contentH
+	local center = retainedLayout.center
+	center.x, center.y, center.w, center.h = contentX + leftW + gap, contentY, centerW, contentH
+	return retainedLayout
 end
 
 local function visibleRows(l)
@@ -299,7 +308,7 @@ local function navigate(direction)
 	end
 	Tooltip.hide()
 	selectMap(State.resolveMapIndex(nextIndex))
-	keepSelectedVisible(layout())
+	keepSelectedVisible(updateLayoutIfNeeded())
 	Sound.play("uiMove")
 end
 
@@ -634,7 +643,7 @@ function Screen.update(dt)
 	Backdrop.update(dt)
 	Medals.update(dt)
 	UnlockPresentation.update(unlockSequence, dt)
-	local l = layout()
+	local l = updateLayoutIfNeeded()
 	if scrollbarDragging then
 		if love.mouse.isDown(1) then
 			local _, my = love.mouse.getPosition()
@@ -680,7 +689,7 @@ end
 
 function Screen.draw()
 	Backdrop.draw()
-	local l = layout()
+	local l = updateLayoutIfNeeded()
 	lg.setColor(Theme.ui.screenDim)
 	lg.rectangle("fill", 0, 0, l.sw, l.sh)
 	local unlockEvent = unlockSequence.active
@@ -730,7 +739,7 @@ end
 
 function Screen.mousepressed(x, y, button)
 	if button ~= 1 then return end
-	local l = layout()
+	local l = updateLayoutIfNeeded()
 	if selectedAbilitySlot then
 		local px, py, pw, ph, abilities = abilityPickerGeometry(l)
 		for index, abilityId in ipairs(abilities) do
@@ -788,7 +797,7 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.wheelmoved(_, y)
-	local l = layout()
+	local l = updateLayoutIfNeeded()
 	local mx = love.mouse.getPosition()
 	if mx >= l.left.x and mx <= l.left.x + l.left.w then
 		local _, count = visibleRows(l)
@@ -801,7 +810,8 @@ function Screen.resize()
 	Tooltip.hide()
 	MapPreviewCache.clear()
 	Backdrop.start()
-	keepSelectedVisible(layout())
+	retainedLayout.sw, retainedLayout.sh = nil, nil
+	keepSelectedVisible(updateLayoutIfNeeded())
 end
 
 function Screen.enter()
@@ -814,7 +824,7 @@ function Screen.enter()
 		State.mapIndex = State.resolveMapIndex(captured.sourceIndex)
 	end
 	refreshCampaignProgress()
-	keepSelectedVisible(layout())
+	keepSelectedVisible(updateLayoutIfNeeded())
 end
 function Screen.leave()
 	selectedAbilitySlot = nil
