@@ -3,8 +3,7 @@
 local CampaignWaveDefs = {}
 
 -- Pacing identities are expressed through the spawn schedule, not hidden stat or
--- enemy-count ramps.  The dependency-free report in tools/balance/ measures a
--- five-second engagement window and verifies these authored ceilings/ranges.
+-- enemy-count ramps.
 -- `openingPressure` and `peakSimultaneous` are enemy counts; duration/recovery
 -- values are seconds. Riverbend is the untouched baseline for the curriculum.
 local pacingIdentityByMapId = {

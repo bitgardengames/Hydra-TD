@@ -1,8 +1,8 @@
 local Constants = require("core.constants")
 local Theme = require("core.theme")
 
--- Costs, output, and upgrade curves below are the checked-in simulated baseline.
--- Keep role tradeoffs intact and regenerate the balance fixtures after tuning.
+-- Costs, output, and upgrade curves below are the checked-in tuning baseline.
+-- Keep role tradeoffs intact when tuning.
 
 return {
 	-- Role: control and runner/boss support. Low damage and modest scaling keep
