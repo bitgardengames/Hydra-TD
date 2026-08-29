@@ -56,7 +56,6 @@ local FIRE_ANGLE_EPS = math.rad(6)
 local AIM_RECOMPUTE_POS_EPS2 = 1
 local AIM_RECOMPUTE_ANGLE_EPS = math.rad(0.75)
 local AIM_RECOMPUTE_STALE_FRAMES = 6
-local SPLASH_LEAD_SPEED_THRESHOLD = 20
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
 local MAX_UPGRADES = 4
 -- Each entry is the cost of the next level as a multiple of the tower's
@@ -356,11 +355,6 @@ local function addTower(kind, gx, gy)
 		canRotate = def.canRotate ~= false,
 		color = def.color,
 		sellValue = floor(def.cost * diff.sellRefund),
-		slow = def.onHitSlow,
-		splash = def.splash,
-		chain = def.chain,
-		poison = def.poison,
-		plasma = def.plasma,
 		_upgradePreview = {
 			nextLevel = 2,
 		},
@@ -835,7 +829,8 @@ local function updateTowers(dt)
 			if shouldRecompute then
 				local ax, ay = targetX, targetY
 				local targetSpeed = target.speed or 0
-				if t.splash and targetSpeed > SPLASH_LEAD_SPEED_THRESHOLD then
+				local leadSpeedThreshold = t.def.targeting and t.def.targeting.leadPathTargetsAboveSpeed
+				if leadSpeedThreshold and targetSpeed > leadSpeedThreshold then
 					local speedFactor = min(targetSpeed / 120, 0.18)
 					local leadTime = 0.28 + speedFactor
 

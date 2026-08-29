@@ -119,6 +119,10 @@ return {
 		turnSpeed = 7,
 		color = Theme.tower.cannon,
 		canRotate = true,
+		targeting = {
+			-- Unguided shells aim ahead of sufficiently fast enemies on the path.
+			leadPathTargetsAboveSpeed = 20,
+		},
 		upgrade = {
 			-- Match Lancer's damage curve instead of letting Cannon's splash scale
 			-- faster at the levels where packed waves are largest.
