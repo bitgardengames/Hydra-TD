@@ -20,6 +20,7 @@ return {
 		projSpeed = 370,
 		turnSpeed = 10,
 		color = Theme.tower.slow,
+		projectileMuzzleOffset = Constants.TILE * 0.42 * 0.64,
 		canRotate = true,
 		upgrade = {
 			dmgMult = 1.7,
@@ -51,6 +52,7 @@ return {
 		projSpeed = 520,
 		turnSpeed = 18,
 		color = Theme.tower.lancer,
+		projectileMuzzleOffset = Constants.TILE * 0.42 * 0.9,
 		canRotate = true,
 		upgrade = {
 			dmgMult = 2.65,
@@ -60,7 +62,7 @@ return {
 		behaviors = {
 			{id = "move_homing"},
 			{id = "hit_circle", data = {radius = 12}},
-			{id = "hit_damage"},
+			{id = "hit_damage", data = {armorHeavy = true}},
 			{id = "lancer_hit_fx"},
 			{id = "draw_lancer"}
 		},
@@ -81,6 +83,7 @@ return {
 		projSpeed = 360,
 		turnSpeed = 11,
 		color = Theme.tower.poison,
+		projectileMuzzleOffset = Constants.TILE * 0.42 * 0.6,
 		canRotate = true,
 		upgrade = {
 			dmgMult = 2.0,
@@ -118,6 +121,7 @@ return {
 		projSpeed = 280,
 		turnSpeed = 7,
 		color = Theme.tower.cannon,
+		projectileMuzzleOffset = Constants.TILE * 0.42 * 0.95,
 		canRotate = true,
 		targeting = {
 			-- Unguided shells aim ahead of sufficiently fast enemies on the path.
@@ -133,7 +137,7 @@ return {
 		},
 		behaviors = {
 			{id = "move_to_target_point"},
-			{id = "aoe_damage", data = {radius = 44}},
+			{id = "aoe_damage", data = {radius = 44, armorHeavy = true}},
 			{id = "draw_cannon" }
 		}
 	},
@@ -151,6 +155,7 @@ return {
 		recoilDecay = 5, -- Dramatic because the recoil is so small
 		turnSpeed = 9,
 		color = Theme.tower.shock,
+		projectileMuzzleOffset = Constants.TILE * 0.42 * 0.8,
 		canRotate = true,
 		upgrade = {
 			dmgMult = 2.1,
@@ -179,6 +184,7 @@ return {
 		projSpeed = 120,
 		turnSpeed = 8,
 		color = Theme.tower.plasma,
+		projectileMuzzleOffset = Constants.TILE * 0.48 * 0.86,
 		canRotate = true,
 		upgrade = {
 			dmgMult = 2.15,

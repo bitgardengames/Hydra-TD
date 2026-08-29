@@ -746,8 +746,7 @@ local function applyDamage(e, amount, context)
 	local raw = amount
 	amount = amount * incomingDamageMultiplier(e)
 	if e.armor then
-		local heavy = context.sourceKind == "cannon" or context.sourceKind == "lancer"
-			or raw >= (e.armor.heavyThreshold or math.huge)
+		local heavy = context.armorHeavy == true or raw >= (e.armor.heavyThreshold or math.huge)
 		if heavy then amount = amount * (e.armor.heavyMultiplier or 1)
 		else amount = max(1, amount - (e.armor.flatReduction or 0)) end
 	end

@@ -11,11 +11,12 @@ local consumeChainDamageBudget, emitImpulse = ctx.consumeChainDamageBudget, ctx.
 local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.projectileHasHit, ctx.canProcTarget
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
 local radiusVisitContext = {}
+local chainDamageMetadata = { chain = true }
 local function radiusVisitor(e, c, d2)
 	local p, op = c.p, c.op
 	if op == "aoe" then
 		local t = 1 - d2 / c.r2
-		emitDamage(p, e, p.damage * (c.falloff + (1 - c.falloff) * t)); emitImpulse(p, e, p.x, p.y, 3.2)
+		emitDamage(p, e, p.damage * (c.falloff + (1 - c.falloff) * t), c.damageMetadata); emitImpulse(p, e, p.x, p.y, 3.2)
 	elseif op == "shock" then
 		local t = 1 - d2 / c.r2
 		emitDamage(p, e, (p.damage or 0) * c.mult * (c.falloff + (1-c.falloff)*t)); emitImpulse(p,e,p.x,p.y,c.impulse)
@@ -38,13 +39,13 @@ local function radiusVisitor(e, c, d2)
 	end
 end
 B.hit_damage = {
-	onHit = function(p, e)
+	onHit = function(p, e, data)
 		if not e or e.hp <= 0 then
 			return
 		end
 
 		local dmg = getStat(p, "damage", 0)
-		emitDamage(p, e, dmg)
+		emitDamage(p, e, dmg, data)
 		emitImpulse(p, e, p.x, p.y, 1.5)
 	end
 }
@@ -60,6 +61,7 @@ B.aoe_damage = {
 		local r2 = radius * radius
 		radiusVisitContext.p, radiusVisitContext.op = p, "aoe"
 		radiusVisitContext.r2, radiusVisitContext.falloff = r2, falloff
+		radiusVisitContext.damageMetadata = data
 		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext, spatialQueryContext, Spatial.radiusOptions.default)
 
 		local evt = emitFX(p, "cannon_impact")
@@ -120,7 +122,7 @@ B.hit_chain = {
 				dealt = consumeChainDamageBudget(p, dmg)
 			end
 			if dealt > 0 then
-				emitDamage(p, current, dealt)
+				emitDamage(p, current, dealt, chainDamageMetadata)
 			end
 			emitImpulse(p, current, p.x, p.y, 1.25)
 
