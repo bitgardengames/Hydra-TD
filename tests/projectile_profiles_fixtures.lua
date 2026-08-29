@@ -23,4 +23,8 @@ assert(Profiles.get(tower) == profile, "a projectile plan should be cached for i
 tower.level = 4
 assert(Profiles.get(tower)[2].data.dur == 3.5, "level changes must rebuild tuned values")
 
+local movementSource = assert(io.open("world/projectile_behaviors/movement.lua", "r")):read("*a")
+assert(not movementSource:find('p.sourceKind ==', 1, true),
+	"shared projectile movement must not branch on tower kinds")
+
 print("fixed projectile profile fixtures passed")
