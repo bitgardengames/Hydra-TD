@@ -109,7 +109,7 @@ def definitions() -> tuple[dict, str]:
     difficulty = lua_block(lua_block(difficulty_text, "Difficulty.defs"), TARGET_DIFFICULTY)
     hp_bias = number(difficulty, "enemyHpBias")
     # Hash only canonical stat progression, enemies, and difficulty. Experimental
-    # branch/module files intentionally cannot invalidate this release fixture.
+    # Experimental module files intentionally cannot invalidate this release fixture.
     digest = hashlib.sha256("".join(texts[name] for name in SOURCES).encode()).hexdigest()
     return {"towers": towers, "enemies": enemies, "enemy_hp_bias": hp_bias}, digest
 

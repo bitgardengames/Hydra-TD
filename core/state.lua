@@ -25,9 +25,8 @@ local state = {
 	gameOver = false,
 	victory = false,
 	runMode = "campaign",
-	-- Opt-in run rules are separate from the selected run mode. In particular,
-	-- endless/replay runs use ordinary stat upgrades unless a module experiment
-	-- explicitly enables the specialization system.
+	-- Opt-in run rules are separate from the selected run mode. Endless/replay
+	-- runs use the same linear tower upgrades as campaign runs.
 	runRules = {
 		experimentalModules = false,
 	},

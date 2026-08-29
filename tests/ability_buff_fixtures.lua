@@ -26,7 +26,6 @@ package.loaded["systems.modules"] = {
 	invalidateTower = function() end,
 	isEnabled = function() return false end,
 }
-package.loaded["world.tower_branch_defs"] = {isValidChoice = function() return false end}
 package.loaded["systems.run_stats"] = {recordPurchase = function() end}
 package.loaded["core.save"] = {recordTowerPlacement = function() end, recordTowerUpgrade = function() end}
 package.loaded["systems.campaign_unlocks"] = {isTowerUnlocked = function() return true end}
@@ -62,7 +61,7 @@ assert(#tower.abilityBuffs == 1 and tower.abilityAttackSpeed == 2 and tower.abil
 
 -- Upgrades replace base range; the effective squared range must retain the buff.
 tower.def = {cost = 100, damage = 10, fireRate = 1, range = 100, upgrade = {rangeAdd = 20}}
-tower.level, tower.sellValue, tower.branchSelections = 1, 50, {}
+tower.level, tower.sellValue = 1, 50
 assert(Towers.upgradeTower(tower))
 assert(tower.range == 120 and tower.range2 == (120 * 1.1) ^ 2,
 	"upgrading a buffed tower must recompute effective range from the new base")

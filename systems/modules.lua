@@ -1,7 +1,5 @@
 local ModuleDefs = require("systems.module_defs")
-local TowerBranchDefs = require("world.tower_branch_defs")
 local State = require("core.state")
-local CampaignUnlocks = require("systems.campaign_unlocks")
 local BehaviorContext = require("systems.behavior_context")
 
 local Modules = {}
@@ -90,8 +88,8 @@ local function collectModuleIds(out, moduleIds)
 	end
 end
 
--- Keep module precedence in one place so global, tower, applied, branch, and
--- legacy modules cannot drift into subtly different interpretations.
+-- Keep module precedence in one place so global, tower, and applied modules
+-- cannot drift into subtly different interpretations.
 local function collectTowerModules(towerOrKind)
 	local tower = type(towerOrKind) == "table" and towerOrKind or nil
 	local towerKind = tower and tower.kind or towerOrKind
@@ -102,11 +100,6 @@ local function collectTowerModules(towerOrKind)
 
 	if tower then
 		collectModuleIds(candidates, tower.appliedModules)
-		if tower.branchSelections then
-			collectModuleIds(candidates, tower.branchSelections)
-		elseif tower.specializationId then
-			addModuleCandidate(candidates, tower.specializationId)
-		end
 	end
 
 	return candidates
@@ -503,37 +496,6 @@ function Modules.getTowerStatModifiers(towerOrKind)
 		end
 	end)
 	return modifiers
-end
-
-function Modules.rollTowerUpgradeChoices(tower)
-	if not Modules.isEnabled() then
-		return {}
-	end
-	if not tower or not tower.kind then
-		return {}
-	end
-
-	local nextLevel = (tower.level or 1) + 1
-	local branchChoices = TowerBranchDefs.getChoices(tower.kind, nextLevel)
-
-	if not branchChoices then
-		return {}
-	end
-
-	local out = {}
-
-	for i = 1, #branchChoices do
-		local moduleId = branchChoices[i]
-		local mod = ModuleDefs[moduleId]
-		if mod and CampaignUnlocks.isModuleCategoryUnlocked(mod.category or mod.slot) then
-			out[#out + 1] = {
-				moduleId = moduleId,
-				target = tower.kind,
-			}
-		end
-	end
-
-	return out
 end
 
 return Modules
