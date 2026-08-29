@@ -230,8 +230,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.nudgeY = 0
 	e.nudgeTargetX = 0
 	e.nudgeTargetY = 0
-	e.prevNudgeX = 0
-	e.prevNudgeY = 0
 
 	e.boss = def.boss or false
 	-- Optional authored health landmarks are consumed by the boss HUD. Keeping

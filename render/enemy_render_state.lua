@@ -14,8 +14,10 @@ local function lerp(a, b, t) return a + (b - a) * t end
 -- idempotent (for example, a trailer export pass followed by the screen pass).
 local preparedAt = setmetatable({}, { __mode = "k" })
 
--- Central owner of render-only fields attached to enemies: rx/ry, prevRX/prevRY,
--- eyeDX/eyeDY, and rAnimT. Simulation code must not read these fields.
+-- Central owner of presentation-only fields attached to enemies: rx/ry,
+-- prevRX/prevRY, eyeDX/eyeDY, rAnimT, and nudge positions/targets. Only the
+-- simulation-owned prevX/prevY -> x/y transition is sampled with renderAlpha.
+-- Simulation code must not read the presentation-only fields.
 local function prepare(enemies, alpha, dt, timestamp)
 	enemies = enemies or Enemies.enemies
 	local a = max(0, min(1, alpha == nil and (State.renderAlpha or 0) or alpha))
@@ -42,7 +44,6 @@ local function prepare(enemies, alpha, dt, timestamp)
 
 			e.prevAnimT = e.animT or 0
 			e.animT = (e.animT or 0) + presentationDt * (e.speed or 0) * 0.03
-			e.prevNudgeX, e.prevNudgeY = e.nudgeX or 0, e.nudgeY or 0
 			local tx, ty = e.nudgeTargetX or 0, e.nudgeTargetY or 0
 			local nx, ny = e.nudgeX or 0, e.nudgeY or 0
 			if math.abs(tx) > NUDGE_IDLE_EPS or math.abs(ty) > NUDGE_IDLE_EPS
@@ -60,8 +61,8 @@ local function prepare(enemies, alpha, dt, timestamp)
 			local baseX = lerp(e.prevX or ex, ex, a)
 			local baseY = lerp(e.prevY or ey, ey, a)
 			local nx, ny = e.nudgeX or 0, e.nudgeY or 0
-			local targetX = baseX + lerp(e.prevNudgeX or nx, nx, a)
-			local targetY = baseY + lerp(e.prevNudgeY or ny, ny, a)
+			local targetX = baseX + nx
+			local targetY = baseY + ny
 			e.rx, e.ry, e.prevRX, e.prevRY = targetX, targetY, oldRX, oldRY
 			local rawDX, rawDY = targetX - oldRX, targetY - oldRY
 			local eyeDX, eyeDY = e.eyeDX or rawDX, e.eyeDY or rawDY
