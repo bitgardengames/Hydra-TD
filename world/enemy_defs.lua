@@ -1,9 +1,9 @@
 -- These are the actual wave-zero hit-point values. Wave and difficulty scaling
 -- are applied once, at spawn time; literal values keep encounter budgets and
--- balance fixtures auditable without a hidden global multiplier. HP and kill
--- rewards use whole numbers so an authored count has a legible threat
--- and income budget in tools/balance/challenge_fixtures.py. Standard archetypes
--- pay $1 per three to six base effective durability, after mechanic weighting.
+-- tuning auditable without a hidden global multiplier. HP and kill rewards use
+-- whole numbers so an authored count has a legible threat and income budget.
+-- Standard archetypes pay $1 per three to six base effective durability, after
+-- mechanic weighting.
 
 return {
 	grunt = {
