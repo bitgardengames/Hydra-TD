@@ -17,10 +17,6 @@ local expectedPlans = {
 	shock = {"emit_on_target", "hit_chain", "chain_zap_fx"},
 	plasma = {"move_linear", "tick_damage", "draw_plasma"},
 }
-local validRoles = {
-	movement = true, collision = true, damage = true,
-	status_proc = true, emission = true, drawing = true,
-}
 local reachable, planCount = {}, 0
 for kind, expected in pairs(expectedPlans) do
 	local plan = assert(TowerDefs[kind] and TowerDefs[kind].behaviors, "missing core plan: " .. kind)
@@ -33,30 +29,25 @@ for kind, expected in pairs(expectedPlans) do
 end
 assert(planCount == 6, "fixture must validate exactly six core projectile plans")
 
-local descriptors, descriptorCount = Registry.all(), 0
-for id, descriptor in pairs(descriptors) do
-	descriptorCount = descriptorCount + 1
+local definitions, definitionCount = Registry.all(), 0
+for id, handlers in pairs(definitions) do
+	definitionCount = definitionCount + 1
 	assert(reachable[id], "registry contains behavior unreachable from core plans: " .. id)
-	assert(descriptor.id == id, "descriptor key/id mismatch: " .. id)
-	assert(validRoles[descriptor.role], "invalid role on descriptor: " .. id)
-	assert(type(descriptor.hooks) == "table", "missing supported hooks: " .. id)
-	assert(type(descriptor.handlers) == "table", "missing handlers: " .. id)
-	for i = 1, #descriptor.hooks do
-		assert(descriptor.handlers[descriptor.hooks[i]], id .. " declares hook without a handler")
-	end
+	assert(type(handlers) == "table", "missing handlers: " .. id)
+	assert(handlers.role == nil and handlers.hooks == nil,
+		"fixed behavior definitions must not contain composition metadata: " .. id)
+	assert(handlers.onHit == nil and handlers.onKill == nil and handlers.onExpire == nil
+		and handlers.on_shot == nil and handlers.on_tick == nil and handlers.on_hit == nil,
+		"fixed behavior definitions must only use lifecycle operation names: " .. id)
 end
 local reachableCount = 0
 for id in pairs(reachable) do
 	reachableCount = reachableCount + 1
 	assert(Registry.get(id), "core plan references unknown behavior: " .. id)
 end
-assert(descriptorCount == reachableCount, "registry must contain exactly the reachable core behaviors")
+assert(definitionCount == reachableCount, "registry must contain exactly the reachable core behaviors")
 
-local ok = pcall(Registry.validateDescriptor, { id = "move_homing", role = "movement", handlers = {} })
-assert(not ok, "duplicate behavior IDs must be rejected")
-ok = pcall(Registry.validateDescriptor, { id = "fixture_bad_role", role = "mystery", handlers = {} })
-assert(not ok, "unknown behavior roles must be rejected")
-ok = pcall(Registry.validateDescriptor, { id = "fixture_missing_handler", role = "damage", hooks = { "on_hit" }, handlers = {} })
-assert(not ok, "declared hooks without handlers must be rejected")
+local ok = pcall(Registry.compile, {{ id = "not_a_core_behavior" }})
+assert(not ok, "fixed profiles must reject unknown behavior IDs when built")
 
-print("projectile behavior registry fixtures passed (6 core plans, " .. descriptorCount .. " behaviors)")
+print("projectile behavior registry fixtures passed (6 core plans, " .. definitionCount .. " behaviors)")

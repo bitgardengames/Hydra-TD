@@ -549,8 +549,8 @@ getUpgradePreview = function(t)
 	local nextClone = cloneForPreview(t, nextLevel)
 	local currentStats = previewTowerStats(currentClone, level)
 	local nextStats = previewTowerStats(nextClone, nextLevel)
-	local currentBehaviors = behaviorMap({ behaviors = ProjectileProfiles.get(currentClone) })
-	local nextBehaviors = behaviorMap({ behaviors = ProjectileProfiles.get(nextClone) })
+	local currentBehaviors = behaviorMap(ProjectileProfiles.get(currentClone))
+	local nextBehaviors = behaviorMap(ProjectileProfiles.get(nextClone))
 	local rows = {}
 
 	local currentDamage = effectiveDamage(currentStats, currentBehaviors)

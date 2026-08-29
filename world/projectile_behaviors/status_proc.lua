@@ -26,7 +26,7 @@ local function statusRadiusVisitor(e, c)
 	end
 end
 B.apply_slow = {
-	onHit = function(p, e, data)
+	hit = function(p, e, data)
 		if e and e.hp > 0 then
 			local factor = min(data.factor, 0.9)
 			local newFactor = 1 - factor
@@ -47,7 +47,7 @@ B.apply_slow = {
 }
 
 B.apply_poison = {
-	onHit = function(p, e, data)
+	hit = function(p, e, data)
 		if e and e.hp > 0 then
 			e.poisonStacks = e.poisonStacks or 0
 			e.poisonMaxStacks = max(e.poisonMaxStacks or 0, data.maxStacks)
@@ -71,5 +71,5 @@ B.apply_poison = {
 
 -- Temp, not sure if this type of effect should be handled like this or not
 
-for id, handlers in pairs(B) do register({ id = id, role = "status_proc", handlers = handlers }) end
+for id, handlers in pairs(B) do register(id, handlers) end
 end

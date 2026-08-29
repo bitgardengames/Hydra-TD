@@ -10,7 +10,7 @@ local consumeChainDamageBudget, emitImpulse = ctx.consumeChainDamageBudget, ctx.
 local canHitTarget, projectileHasHit, canProcTarget = ctx.canHitTarget, ctx.projectileHasHit, ctx.canProcTarget
 local getProjectileColor, colorMul, getTowerMuzzle = ctx.getProjectileColor, ctx.colorMul, ctx.getTowerMuzzle
 B.lancer_hit_fx = {
-	onHit = function(p)
+	hit = function(p)
 		local evt = emitFX(p, "lancer_hit")
 		evt.x = p.x
 		evt.y = p.y
@@ -18,7 +18,7 @@ B.lancer_hit_fx = {
 }
 
 B.chain_zap_fx = {
-	onHit = function(p)
+	hit = function(p)
 		if not p._chain or #p._chain == 0 then
 			return
 		end
@@ -148,5 +148,5 @@ B.draw_plasma = {
 	end
 }
 
-for id, handlers in pairs(B) do register({ id = id, role = "drawing", handlers = handlers }) end
+for id, handlers in pairs(B) do register(id, handlers) end
 end

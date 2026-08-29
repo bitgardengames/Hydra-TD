@@ -25,18 +25,17 @@ function PB.pushEvent(p, event)
 	p.events[p.eventCount] = event
 end
 
-function PB.compileHooks(p)
-	p._hooks = { plan = p.behaviors }
-	p._drawHandlers = { p.behaviors }
-	p._canHitPredicates = { p.behaviors }
-end
-
 function PB.init() end
 function PB.update() end
 function PB.draw() end
 function PB.hit() end
+function PB.expire(p) p._didExpire = true end
+function PB.consume(p) PB.expire(p); return "consume" end
 
 package.loaded["world.projectile_behaviors"] = PB
+package.loaded["world.projectile_profiles"] = { get = function(source)
+	return { behaviors = source.def.behaviors, init = {}, update = {}, hit = {}, expire = {}, draw = {}, canHit = {} }
+end }
 package.loaded["core.state"] = { addDamage = function() end }
 package.loaded["world.enemies"] = {}
 package.loaded["world.effects"] = {}
@@ -61,7 +60,7 @@ first.setHitCooldownExpiry(first, "enemy-b", 99)
 first._defaultHitCtx.hitX = 123
 first._defaultHitCtx.hitY = 456
 first.allowRepeatHits = true
-first._didExpireHook = true
+first._didExpire = true
 
 local queued = PB.takeEvent(first, "fixture_unresolved")
 queued.payload = "old shot"
@@ -77,7 +76,7 @@ source._projectileProfileLevel = nil
 local second = Projectiles.spawn(source)
 assert(second == first, "fixture must reacquire the released projectile")
 assert(second.behaviors[1].id == "second", "fixed tower projectile plan leaked between uses")
-assert(second._hooks.plan == second.behaviors, "compiled behavior hooks were not replaced")
+assert(second.profile.behaviors == secondPlan, "compiled fixed profile was not replaced")
 assert(second.eventRead == 1 and second.eventCount == 0 and next(second.events) == nil,
 	"queued events leaked between uses")
 assert(second._eventPoolCount == 1, "queued event was not returned to its owner pool")
@@ -87,7 +86,7 @@ assert(not second.hasHit(second, "enemy-a"), "hit stamp leaked between uses")
 assert(second.getHitCooldownExpiry(second, "enemy-b") == nil, "hit cooldown leaked between uses")
 assert(second._defaultHitCtx.origin == "primary" and second._defaultHitCtx.hitX == nil
 	and second._defaultHitCtx.hitY == nil, "default hit context leaked between uses")
-assert(second.allowRepeatHits == nil and second._didExpireHook == nil,
+assert(second.allowRepeatHits == nil and second._didExpire == nil,
 	"per-use projectile flags leaked between uses")
 
 Projectiles.clear()

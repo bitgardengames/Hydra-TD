@@ -29,8 +29,6 @@ local function emissionRadiusVisitor(e, c, d2)
 	end
 end
 B.emit_on_target = {
-	type = "emission",
-
 	update = function(p, dt)
 		local e = p.target
 
@@ -51,5 +49,5 @@ B.emit_on_target = {
 	end
 }
 
-for id, handlers in pairs(B) do register({ id = id, role = "emission", handlers = handlers }) end
+for id, handlers in pairs(B) do register(id, handlers) end
 end

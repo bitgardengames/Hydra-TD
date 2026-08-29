@@ -14,14 +14,21 @@ local tower = {
 }
 
 local profile = Profiles.get(tower)
-assert(#profile == 3 and profile[1].id == "move_homing" and profile[3].id == "draw_slow",
+assert(#profile.behaviors == 3 and profile.behaviors[1].id == "move_homing"
+	and profile.behaviors[3].id == "draw_slow",
 	"a fixed tower projectile plan must retain its designed behaviors")
-assert(profile[2].data.dur == 3, "linear upgrades must still tune projectile values")
+assert(profile.behaviors[2].data.dur == 3, "linear upgrades must still tune projectile values")
 assert(tower.def.behaviors[2].data.dur == 2, "profile tuning must not mutate tower definitions")
 assert(Profiles.get(tower) == profile, "a projectile plan should be cached for its tower level")
+assert(#profile.update == 1 and #profile.hit == 2 and #profile.draw == 1,
+	"profiles must be compiled when their level-tuned values are built")
+assert(profile.init and profile.expire and profile.canHit,
+	"compiled profiles must expose the fixed lifecycle operation lists")
+assert(Profiles.get({ level = 3, def = tower.def }) == profile,
+	"equal definition/level pairs must share their compiled fixed profile")
 
 tower.level = 4
-assert(Profiles.get(tower)[2].data.dur == 3.5, "level changes must rebuild tuned values")
+assert(Profiles.get(tower).behaviors[2].data.dur == 3.5, "level changes must rebuild tuned values")
 
 for _, path in ipairs({
 	"world/projectiles.lua",

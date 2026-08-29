@@ -43,10 +43,10 @@ B.hit_circle = {
 		end
 	end,
 
-	onSpawn = function(p, data)
+	init = function(p, data)
 		p.hitRadius = data.radius
 	end
 }
 
-for id, handlers in pairs(B) do register({ id = id, role = "collision", handlers = handlers }) end
+for id, handlers in pairs(B) do register(id, handlers) end
 end
