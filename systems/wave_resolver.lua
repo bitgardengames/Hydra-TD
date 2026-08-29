@@ -1,5 +1,6 @@
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local DifficultyCurve = require("systems.difficulty_curve")
+local Util = require("core.util")
 
 local Resolver = {}
 
@@ -84,15 +85,10 @@ function Resolver.resolveBossEncounterTemplate(map, bossKind, bossIndex)
 	local overrides = biomeEncounterOverrides[(map and map.biome) or "default"]
 	local mapEncounters = map and map.waves and map.waves.encounters
 	local resolved = {}
-	local function merge(layer)
-		for key, value in pairs(layer or {}) do
-			if value ~= nil then resolved[key] = value end
-		end
-	end
-	merge(base)
-	merge(overrides and overrides[bossKind])
-	merge(mapEncounters and mapEncounters[bossKind])
-	merge(mapEncounters and mapEncounters[bossIndex])
+	Util.copyNonNilInto(resolved, base)
+	Util.copyNonNilInto(resolved, overrides and overrides[bossKind])
+	Util.copyNonNilInto(resolved, mapEncounters and mapEncounters[bossKind])
+	Util.copyNonNilInto(resolved, mapEncounters and mapEncounters[bossIndex])
 	return resolved
 end
 
@@ -108,8 +104,7 @@ function Resolver.resolveWaveGroups(wave, map, waveNumber)
 	local bossIndex = math.max(1, math.floor(waveNumber / 10))
 	local groups = {}
 	for i, group in ipairs(wave.groups) do
-		groups[i] = {}
-		for key, value in pairs(group) do groups[i][key] = value end
+		groups[i] = Util.shallowCopyInto({}, group)
 		if group.kind == "boss" then
 			groups[i].kind = wave.bossArchetype or Resolver.getBossByArchetype(map, bossIndex)
 		end

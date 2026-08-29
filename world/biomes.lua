@@ -1,20 +1,6 @@
 
 local Biomes = {}
-
--- Deep copy
-local function deepCopy(src)
-	if type(src) ~= "table" then
-		return src
-	end
-
-	local dst = {}
-
-	for k, v in pairs(src) do
-		dst[k] = deepCopy(v)
-	end
-
-	return dst
-end
+local Util = require("core.util")
 
 -- Deep merge (map overrides biome)
 local function merge(dst, src)
@@ -26,7 +12,7 @@ local function merge(dst, src)
 		if type(v) == "table" and type(dst[k]) == "table" then
 			merge(dst[k], v)
 		else
-			dst[k] = deepCopy(v)
+			dst[k] = Util.deepCloneGraph(v)
 		end
 	end
 
@@ -438,7 +424,7 @@ function Biomes.resolve(mapDef)
 	local base = Biomes.defs[id] or Biomes.defs.default
 
 	-- Copy so we don't mutate shared defs
-	local biome = deepCopy(base)
+	local biome = Util.deepCloneGraph(base)
 
 	-- Optional per-map overrides
 	if mapDef.world then
