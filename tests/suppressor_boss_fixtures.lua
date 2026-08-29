@@ -26,6 +26,12 @@ assert(towersSource:find("applySuppression(target, p.duration)", 1, true),
 	"Suppression must be applied when the boss projectile reaches its tower")
 assert(towersSource:find("if (t.suppressedTimer or 0) > 0 then", 1, true),
 	"suppressed towers must be gated out of the firing update")
+assert(towersSource:find("local suppressedTowers = {}", 1, true),
+	"suppression timers must use sparse tracking rather than traverse every tower")
+assert(towersSource:find("updateSuppressedTowers(dt)\n\tupdateSuppression(dt)", 1, true),
+	"suppression timers must expire before suppression projectiles can impact")
+assert(not towersSource:find("updateSuppressionTimers", 1, true),
+	"the standalone full-tower suppression traversal must remain removed")
 
 local renderSource = assert(io.open("render/tower_renderer.lua", "r")):read("*a")
 assert(renderSource:find("local function drawSuppressionProjectiles()", 1, true),
