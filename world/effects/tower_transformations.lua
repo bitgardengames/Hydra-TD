@@ -3,9 +3,24 @@ local Theme = require("core.theme")
 local Sound = require("systems.sound")
 local lg, random = Shared.graphics, Shared.random
 local sin, cos, min, max, sqrt, pi = Shared.sin, Shared.cos, Shared.min, Shared.max, Shared.sqrt, Shared.pi
+local particleLists, particlePool = {}, {}
+local particleFields = {'angle','speed','radius'}
 
 return function(context)
-	local record = Shared.family("towerTransformations", 0, nil, {'x','y','t','life','color','range','cadencePulse','finalTier','particles'})
+	local function reclaimParticles(e)
+		local particles = e.particles
+		if not particles then return end
+		for i = #particles, 1, -1 do
+			local particle = particles[i]
+			particles[i] = nil
+			Shared.clear(particle, particleFields)
+			particlePool[#particlePool + 1] = particle
+		end
+		particleLists[#particleLists + 1] = particles
+	end
+
+	local record = Shared.family("towerTransformations", 0, nil,
+		{'x','y','t','life','color','range','cadencePulse','finalTier','particles'}, reclaimParticles)
 	local Effects = context.Effects
 	local function spawnTowerTransformation(x, y, opts)
 		opts = opts or {}
@@ -17,16 +32,16 @@ return function(context)
 		e.range = opts.range
 		e.cadencePulse = opts.cadencePulse
 		e.finalTier = opts.finalTier
-		e.particles = {}
+		e.particles = Shared.acquire(particleLists)
 
 		local count = context.particleCount(opts.finalTier and 14 or 8, Theme.effects.intensity.normal)
 		for i = 1, count do
 			local angle = random() * pi * 2
-			e.particles[i] = {
-				angle = angle,
-				speed = random(22, opts.finalTier and 58 or 42),
-				radius = random() * 5,
-			}
+			local particle = Shared.acquire(particlePool)
+			particle.angle = angle
+			particle.speed = random(22, opts.finalTier and 58 or 42)
+			particle.radius = random() * 5
+			e.particles[i] = particle
 		end
 		record.list[#record.list + 1] = e
 	end
