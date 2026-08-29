@@ -1,4 +1,3 @@
-local BehaviorContext = require("systems.behavior_context")
 local Registry = require("world.projectile_behaviors.registry")
 local Shared = require("world.projectile_behaviors.shared")
 
@@ -59,27 +58,6 @@ local function consumeProjectile(p)
 	return "consume"
 end
 
-function ProjectileBehaviors.build(t)
-	local b = {}
-	if t.def.behaviors then for i = 1, #t.def.behaviors do b[#b + 1] = t.def.behaviors[i] end end
-	if t.modBehaviors then for i = 1, #t.modBehaviors do b[#b + 1] = t.modBehaviors[i] end end
-	return b
-end
-
-function ProjectileBehaviors.buildChildBehaviors(parentBehaviors)
-	local out, hasRole = {}, { collision = false, damage = false }
-	for i = 1, #parentBehaviors do
-		local behavior = parentBehaviors[i]
-		if not behavior.noInherit then
-			out[#out + 1] = BehaviorContext.cloneBehavior(behavior)
-			local role = Registry.getRole(behavior.id)
-			if hasRole[role] ~= nil then hasRole[role] = true end
-		end
-	end
-	if not hasRole.collision then out[#out + 1] = { id = "hit_circle", data = { radius = 10 } } end
-	if not hasRole.damage then out[#out + 1] = { id = "hit_damage" } end
-	return out
-end
 
 function ProjectileBehaviors.init(p)
 	local hooks = p._hooks and p._hooks.on_shot
