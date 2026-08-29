@@ -4,6 +4,7 @@
 local BehaviorContext = {}
 
 local ProjectileBehaviorRegistry = require("world.projectile_behaviors.registry")
+local Util = require("core.util")
 
 local function getRole(id)
 	return ProjectileBehaviorRegistry.getRole(id)
@@ -13,30 +14,13 @@ end
 -- field (including open-ended metadata, hooks, and data) is recursively copied
 -- to arbitrary depth. Shared references and cycles inside one descriptor remain
 -- shared/cyclic in its clone, but no cloned table is shared with the source.
--- Scalar values and functions (including hook functions) are retained. Table
--- keys and metatables are not cloned; behavior descriptors must not rely on
--- mutable table keys or metatable state.
-local function cloneTable(source, seen)
-	local existing = seen[source]
-	if existing then
-		return existing
-	end
-
-	local copy = {}
-	seen[source] = copy
-	for key, value in pairs(source) do
-		if type(value) == "table" then
-			copy[key] = cloneTable(value, seen)
-		else
-			copy[key] = value
-		end
-	end
-	return copy
-end
+-- Scalar values and functions (including hook functions) are retained. The
+-- shared clone primitive retains table keys and discards metatables; behavior
+-- descriptors must not rely on mutable table keys or metatable state.
 
 local function cloneBehavior(behavior)
 	assert(type(behavior) == "table", "behavior must be a table")
-	return cloneTable(behavior, {})
+	return Util.deepCloneGraph(behavior)
 end
 
 local function cloneBehaviors(behaviors)

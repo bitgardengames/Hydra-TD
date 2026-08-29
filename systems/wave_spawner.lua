@@ -1,5 +1,6 @@
 local Spatial = require("world.spatial_grid")
 local DevelopmentCounters = require("core.development_counters")
+local Util = require("core.util")
 
 local Spawner = {}
 local max, min = math.max, math.min
@@ -16,8 +17,8 @@ local nearbyBossAddsContext = {count=0, cap=0, kind=nil}
 
 local function reset(target, defaults, overrides)
 	for key in pairs(target) do target[key] = nil end
-	for key, value in pairs(defaults) do target[key] = value end
-	for key, value in pairs(overrides or {}) do if value ~= nil then target[key] = value end end
+	Util.shallowCopyInto(target, defaults)
+	Util.copyNonNilInto(target, overrides)
 end
 reset(state, spawnerDefaults)
 reset(bossAdds, bossDefaults)
