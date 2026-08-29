@@ -86,4 +86,19 @@ assert(second.allowRepeatHits == nil and second._didExpireHook == nil,
 	"per-use projectile flags leaked between uses")
 
 Projectiles.clear()
+
+local target = { id = "enemy-direct", x = 40, y = 55 }
+local directPlan = { { id = "direct" } }
+local directContext = { behaviors = directPlan }
+local direct = Projectiles.spawnFromContext(source, target, directContext, 75, 2.5)
+assert(direct.target == target and direct.targetID == target.id,
+	"direct spawn did not initialize its target")
+assert(direct.behaviors == directPlan and direct._hooks.plan == directPlan,
+	"direct spawn did not initialize and compile context behaviors")
+assert(direct.speed == 75 and direct.life == 2.5,
+	"direct spawn did not apply speed and life arguments")
+assert(direct.x == source.x and direct.y == source.y and direct.damage == source.damage,
+	"direct spawn did not retain source defaults")
+
+Projectiles.clear()
 print("projectile pool fixtures passed")
