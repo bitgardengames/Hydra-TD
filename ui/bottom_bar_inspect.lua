@@ -58,6 +58,40 @@ local innerSmallRadius = 6 - outlineW * 0.25
 
 local inspectButtons
 local enemyStatusBuffer = StatusRowBuffer.new()
+local upgradeTooltipCache = setmetatable({}, {__mode = "k"})
+
+local function getUpgradeTooltip(t)
+	local level = t.level or 1
+	-- The authored upgrade table is the definition version: replacing it
+	-- invalidates previews without making the normal draw path rebuild rows.
+	local definitionVersion = t.def and (t.def.upgradeVersion or t.def.upgrade or t.def)
+	local title = L("inspect.upgradeTitle", level + 1)
+	local cached = upgradeTooltipCache[t]
+	if cached and cached.level == level and cached.definitionVersion == definitionVersion
+		and cached.definition.title == title then
+		return cached.definition
+	end
+
+	local preview = Towers.getUpgradePreview(t)
+	local rows = {}
+	for i = 1, math.min(#(preview and preview.rows or {}), 7) do
+		local row = preview.rows[i]
+		rows[#rows + 1] = {
+			label = L(row.labelKey),
+			value = row.current,
+			delta = row.next,
+			deltaColor = row.direction == "bad" and colorBad or colorGood,
+		}
+	end
+
+	local definition = {title = title, rows = rows}
+	upgradeTooltipCache[t] = {
+		level = level,
+		definitionVersion = definitionVersion,
+		definition = definition,
+	}
+	return definition
+end
 
 local function showUpgradeFailure(t, messageKey)
 	Sound.play("uiError")
@@ -334,24 +368,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			-- Upgrade tooltip
 			if hovered and btn.id == "upgrade" and upgradeCost then
-				local preview = Towers.getUpgradePreview(t)
-				local rows = {}
-				-- Preview rows are fully derived from the tower definition; this layer
-				-- only gives them a compact layout.
-				for i = 1, math.min(#(preview and preview.rows or {}), 7) do
-					local row = preview.rows[i]
-					rows[#rows + 1] = {
-						label = L(row.labelKey),
-						value = row.current,
-						delta = row.next,
-						deltaColor = row.direction == "bad" and colorBad or colorGood,
-					}
-				end
-
-				Tooltip.show({
-					title = L("inspect.upgradeTitle", t.level + 1),
-					rows = rows,
-				})
+				Tooltip.show(getUpgradeTooltip(t))
 			end
 		end
     elseif State.selectedEnemy then

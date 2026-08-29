@@ -49,6 +49,27 @@ local scrollbarGrabY = 0
 local unlockSequence = UnlockPresentation.new()
 local campaignMedalsEarned = 0
 local campaignMedalsMaximum = #Maps * 3
+local medalTooltipCache = {}
+
+local function getMedalTooltip(map, tier, timestamp)
+	local mapCache = medalTooltipCache[map]
+	if not mapCache then
+		mapCache = {}
+		medalTooltipCache[map] = mapCache
+	end
+	local cached = mapCache[tier]
+	if cached and cached.timestamp == timestamp then return cached.definition end
+
+	local key = DIFFICULTIES[tier]
+	local date = type(timestamp) == "number" and os.date(L("campaign.medalDateFormat"), timestamp)
+		or L("campaign.medalDateUnavailable")
+	local definition = {
+		title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[tier]), L("difficulty." .. key)),
+		rows = {{label = L("campaign.medalEarnedOn"), value = date}},
+	}
+	mapCache[tier] = {timestamp = timestamp, definition = definition}
+	return definition
+end
 
 -- Campaign layout uses a small set of shared spacing tokens. Keeping the list,
 -- preview, difficulty cards, and actions on the same rhythm is especially
@@ -653,9 +674,7 @@ function Screen.update(dt)
 	if hoveredMedal then
 		local key = DIFFICULTIES[hoveredMedal]
 		local timestamp = stats.medalEarnedAt and stats.medalEarnedAt[key]
-		local date = type(timestamp) == "number" and os.date(L("campaign.medalDateFormat"), timestamp)
-			or L("campaign.medalDateUnavailable")
-		Tooltip.show({title = L("campaign.medalTooltipTitle", L("campaign.medals." .. MEDAL_NAMES[hoveredMedal]), L("difficulty." .. key)), rows = {{label = L("campaign.medalEarnedOn"), value = date}}})
+		Tooltip.show(getMedalTooltip(map, hoveredMedal, timestamp))
 	else Tooltip.hide() end
 end
 

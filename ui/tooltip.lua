@@ -9,6 +9,7 @@ local sub = string.sub
 local Tooltip = {}
 
 Tooltip.active = nil
+Tooltip.cached = nil
 Tooltip.padding = 8
 Tooltip.titleSpacing = 10
 Tooltip.lineHeight = 18
@@ -33,12 +34,18 @@ local function getTitleFont()
 	return Fonts.ui
 end
 
-function Tooltip.show(def)
-	local t = Tooltip.active
+-- contentKey identifies the semantic contents of a tooltip. Callers may omit it
+-- when they retain the definition table, but must replace that table (or pass a
+-- new key/version) whenever any displayed value changes.
+function Tooltip.show(def, contentKey)
+	contentKey = contentKey or def
+	local t = Tooltip.cached
 
-	-- If content changed, rebuild + recalc
-	if not t or t.title ~= def.title or t.rows ~= def.rows then
+	-- A tooltip is hidden at the beginning of each draw pass. Keep its measured
+	-- layout cached across that hide/show cycle and only rebuild for new content.
+	if not t or t.contentKey ~= contentKey then
 		t = {
+			contentKey = contentKey,
 			title = def.title,
 			rows = def.rows or {},
 			x = 0,
@@ -47,9 +54,11 @@ function Tooltip.show(def)
 			h = 0,
 		}
 
+		Tooltip.cached = t
 		Tooltip.active = t
 		Tooltip.recalculate()
 	end
+	Tooltip.active = t
 
 	-- Always update position
 	t.x = love.mouse.getX() + 14
