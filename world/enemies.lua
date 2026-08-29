@@ -9,7 +9,6 @@ local enemyQueryContext = Spatial.newQueryContext(false)
 local infectionVisitContext = {}
 local EnemySupport = require("world.enemy_support")
 local EnemyDefs = require("world.enemy_defs")
-local EnemyRenderProfiles = require("render.enemy_decorators").profiles
 local Floaters = require("ui.floaters")
 local Achievements = require("systems.achievements")
 local L = require("core.localization")
@@ -209,7 +208,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 
 	e.kind = kind
 	e.def = def
-	e.renderProfile = assert(EnemyRenderProfiles[kind], "missing enemy render profile: " .. kind)
 
 	-- World position
 	e.x = x
