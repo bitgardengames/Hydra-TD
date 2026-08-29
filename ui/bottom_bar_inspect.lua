@@ -3,11 +3,11 @@ local Util = require("core.util")
 local Towers = require("world.towers")
 local Enemies = require("world.enemies")
 local Sound = require("systems.sound")
-local Hotkeys = require("core.hotkeys")
 local Tooltip = require("ui.tooltip")
 local Floaters = require("ui.floaters")
 local Text = require("ui.text")
 local Button = require("ui.button")
+local HotkeyVisual = require("ui.hotkey_visual")
 local Theme = require("core.theme")
 local L = require("core.localization")
 
@@ -45,6 +45,7 @@ local BUTTON_H = 32
 local GAP = 16
 local IDLE_LIFT = 6
 local STAT_LINE_H = 22
+local HOTKEY_LABEL_GAP = 7
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -66,19 +67,6 @@ local function showUpgradeFailure(t, messageKey)
 
 	local floaterY = (t.renderY or t.y) - 30
 	Floaters.add(t.x, floaterY, L(messageKey), colorBad[1], colorBad[2], colorBad[3], true)
-end
-
-local function drawHotkeyVisual(action, x, y, textY)
-	local label = Hotkeys.getDisplay(action)
-
-	if label then
-		lg.setColor(colorText)
-		Text.printShadow(label, x, textY)
-
-		return 14
-	end
-
-	return 0
 end
 
 -- Buttons
@@ -325,10 +313,10 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			local nameX = bx + PAD
 
-			local used = drawHotkeyVisual(action, bx + PAD, fy, ty)
+			local used = HotkeyVisual.draw(action, bx + PAD, ty)
 
 			if used > 0 then
-				nameX = nameX + used
+				nameX = nameX + used + HOTKEY_LABEL_GAP
 			end
 
 			lg.setColor(ct1, ct2, ct3, btn.canAfford and 1 or 0.55)
