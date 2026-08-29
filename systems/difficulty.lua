@@ -13,7 +13,6 @@ Difficulty.defs = {
 		bossHpBias = 0.8,
 
 		-- Economy
-		rewardBias = 1.10,
 		perfectWaveBonus = 2,
 
 		-- Player affordances
@@ -29,7 +28,6 @@ Difficulty.defs = {
 		enemyHpBias = 1.0,
 		bossHpBias = 1.0,
 
-		rewardBias = 1.0,
 		-- A visible $2 clean-clear reward cushions imperfect purchasing without
 		-- replacing kills as the income floor.
 		perfectWaveBonus = 1.5,
@@ -47,7 +45,6 @@ Difficulty.defs = {
 		enemyHpBias = 1.2,
 		bossHpBias = 1.2,
 
-		rewardBias = 0.95,
 		perfectWaveBonus = 1.25,
 
 		startMoney = 120,

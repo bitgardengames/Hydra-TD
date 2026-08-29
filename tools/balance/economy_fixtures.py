@@ -51,10 +51,6 @@ def definitions() -> tuple[dict, dict, dict]:
     return difficulties, rewards, maps
 
 
-def rounded_reward(reward: float, bias: float) -> int:
-    return math.floor(reward * bias + 0.5)
-
-
 def flawless_bonus(diff: dict, wave: int) -> int:
     # Campaign bosses use the base mechanic weight and package, so only the
     # authored five-wave milestone multiplier applies here.
@@ -77,7 +73,7 @@ def build_report() -> dict:
                 rows = []
                 affordable = {name: 0 if power >= cost else None for name, cost in TIER_ANCHORS.items()}
                 for wave_no, counts in enumerate(waves, 1):
-                    full_kills = sum(count * rounded_reward(rewards[kind], diff["rewardBias"])
+                    full_kills = sum(count * rewards[kind]
                                      for kind, count in counts.items())
                     kill_income = round(full_kills * kill_share, 2)
                     flawless = round(flawless_bonus(diff, wave_no) * flawless_chance, 2)
@@ -138,6 +134,16 @@ def checks(report: dict) -> list[tuple[str, bool, str]]:
     entries = sum(120 >= cost for cost in (50, 60, 70, 90, 95, 120))
     band = shared["hard_wave_1_affordable_entries"]
     out.append(("hard/no_mandatory_opening", band[0] <= entries <= band[1], f"{entries} distinct base towers affordable"))
+    normal_maps = report["difficulties"]["normal"]["curves"]["aggressive"]
+    for difficulty in ("easy", "hard"):
+        diff_maps = report["difficulties"][difficulty]["curves"]["aggressive"]
+        income_matches = all(
+            diff_maps[map_id]["waves"][wave]["expected_kill_income"]
+            == normal_maps[map_id]["waves"][wave]["expected_kill_income"]
+            for map_id in normal_maps for wave in range(len(normal_maps[map_id]["waves"]))
+        )
+        out.append((f"{difficulty}/authored_kill_values", income_matches,
+                    "kill income matches Normal on every map and wave"))
     return out
 
 
