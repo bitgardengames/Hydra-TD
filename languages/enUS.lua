@@ -419,10 +419,7 @@ return {
 	},
 
 	modulePicker = {
-		upgradeTitle = "%s Level Upgrade",
-		upgradeSubtitle = "Choose an experimental module • $%d",
 		hint = "Press 1, 2, or 3 • Click a card",
-		selectCta = "Click to Upgrade",
 		purchaseTitle = "Module Market",
 		purchaseSubtitle = "Choose a module to add to your inventory",
 		purchaseCta = "Click to Buy",
@@ -431,7 +428,6 @@ return {
 		applyCta = "Click to Apply",
 		noSpec = "No experimental module selected.",
 		currentSpec = "Experimental module: %s",
-		changes = "CHANGES",
 	},
 
 	upgradePreview = {

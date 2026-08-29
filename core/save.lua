@@ -526,10 +526,9 @@ local function towerHistory(kind)
 	meta.towerHistory = meta.towerHistory or {}
 	local history = meta.towerHistory[kind]
 	if type(history) ~= "table" then
-		history = {placements = 0, upgrades = 0, damage = 0, kills = 0, bestRunDamage = 0, discoveredPaths = {}}
+		history = {placements = 0, upgrades = 0, damage = 0, kills = 0, bestRunDamage = 0}
 		meta.towerHistory[kind] = history
 	end
-	history.discoveredPaths = history.discoveredPaths or {}
 	return history
 end
 
@@ -539,10 +538,9 @@ function Save.recordTowerPlacement(kind)
 	Save.markDirty()
 end
 
-function Save.recordTowerUpgrade(kind, pathId)
+function Save.recordTowerUpgrade(kind)
 	local history = towerHistory(kind); if not history then return end
 	history.upgrades = (history.upgrades or 0) + 1
-	if pathId then history.discoveredPaths[pathId] = true end
 	Save.markDirty()
 end
 

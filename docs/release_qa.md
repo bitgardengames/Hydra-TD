@@ -76,8 +76,8 @@ not infer one difficulty from another.
 ## Towers and stat-only upgrades
 
 The mandatory release gate covers the shipped **stat-only game**. Experimental
-modules, specialization branches, and their projectile combinations are not part
-of campaign or replay/endless setup and must not be used to satisfy these rows.
+modules and their projectile combinations are not part of campaign or
+replay/endless setup and must not be used to satisfy these rows.
 For each tower, place it legally and attempt an illegal placement; inspect it,
 upgrade repeatedly through maximum level without a module selection, and verify
 each preview against the resulting damage, fire rate, range, targeting controls,
@@ -95,12 +95,11 @@ damage meter, sell/refund behavior, and restart cleanup.
 ### Experimental module QA (non-release-gating)
 
 Run these checks only in an explicitly enabled internal module playtest. Keep the
-results separate from RC blocker evidence: exercise every choice in
-`world/tower_branch_defs.lua`, generic and tower-identity modules, exclusivity and
-stack limits, picker eligibility/preview copy, and chained projectile termination.
-Also verify campaign and replay/endless runs started normally never show a module
-picker or apply module behavior, including after loading a save whose
-`discoveredModules` table is populated.
+results separate from RC blocker evidence: exercise generic and tower-identity
+modules, exclusivity and stack limits, inventory application, and chained
+projectile termination. Also verify campaign and replay/endless runs started
+normally never show a module picker or apply module behavior, including after
+loading a save whose `discoveredModules` table is populated.
 
 ## Active abilities
 

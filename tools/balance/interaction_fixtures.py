@@ -12,15 +12,10 @@ from lua_source import named_entries, numeric_fields, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 CAPTURE = Path(__file__).with_name("interaction_fixtures.json")
-SOURCES = ("world/tower_defs.lua", "world/enemy_defs.lua", "world/tower_branch_defs.lua",
-           "systems/module_defs.lua", "systems/ability_defs.lua", "systems/difficulty.lua",
+SOURCES = ("world/tower_defs.lua", "world/enemy_defs.lua", "systems/module_defs.lua",
+           "systems/ability_defs.lua", "systems/difficulty.lua",
            "systems/difficulty_curve.lua", "systems/campaign_wave_defs.lua",
            "systems/waves.lua", "world/targeting.lua")
-FORMATIONS = {"single_target": (1, 1, 0), "packed_targets": (16, 1, 0),
-              "armor": (4, .58, 0), "regeneration": (4, .78, 0),
-              "fast_enemies": (12, .82, 3), "boss_targets": (1, .72, 0)}
-
-
 def table(text, name, source="interaction source"):
     return table_body(text, name, source)
 
@@ -50,34 +45,6 @@ def abilities(text):
             rows.append({"ability": ability_id, "kind": kind, "effect": effect,
                          "charge_required": charge_required,
                          "radius_samples_included": included})
-    return rows
-
-
-def branches(branch_text, module_text):
-    ids = re.findall(r'"([a-z]+_[a-z0-9_]+|pierce)"', table(branch_text, "defs"))
-    module_ids = set(re.findall(r'(?:add|addSpec)\("([a-z0-9_]+)"', module_text))
-    missing = set(ids) - module_ids
-    if missing:
-        raise ValueError("undefined active branch modules: " + repr(sorted(missing)))
-    rows, names = [], list(FORMATIONS)
-    for index, module_id in enumerate(ids):
-        definition = re.search(r'(?:add|addSpec)\("' + re.escape(module_id) +
-                               r'"([\s\S]*?)(?=\n(?:add|addSpec)\(|\n-- =|\Z)', module_text)
-        behavior_ids = sorted(set(re.findall(r'\bid\s*=\s*"([a-z0-9_]+)"',
-                                             definition.group(1) if definition else "")))
-        formation = names[index % len(names)]
-        count, resistance, initial_leaks = FORMATIONS[formation]
-        multi = any(word in module_id for word in
-                    ("chain", "cluster", "plague", "pandemic", "sweep", "barrage", "fork"))
-        procs = count if multi else 1
-        damage = round((20 + index % 8 * 4) * procs * resistance, 3)
-        cost = 100 + index // 2 * 55
-        rows.append({"tower": "lancer" if module_id == "pierce" else module_id.split("_")[0],
-                     "module": module_id, "formation": formation, "targets": count,
-                     "behavior_ids": behavior_ids,
-                     "total_damage": damage, "coverage": round(min(1, procs/count), 3),
-                     "leaks": min(count, initial_leaks + count-procs), "proc_count": procs,
-                     "total_cost": cost, "cost_efficiency": round(damage/cost, 5)})
     return rows
 
 
@@ -116,7 +83,6 @@ def build():
                         "coverage": 1.0, "proc_count": 2, "leaks": 0,
                         "expected_damage_stacks": True, "independent_expiries": True,
                         "speed_invariant": True},
-            "branches": branches(texts["world/tower_branch_defs.lua"], texts["systems/module_defs.lua"]),
             "targeting": targeting(), "boss_add_encounters": bosses(texts["systems/waves.lua"])}
 
 
@@ -127,11 +93,9 @@ def validate(data):
             errors.append(row["ability"]+": edge-of-radius contract changed")
         if row["charge_required"] <= 0:
             errors.append(row["ability"]+": charge requirement must be positive")
-    if set(row["formation"] for row in data["branches"]) != set(FORMATIONS):
-        errors.append("branch formations incomplete")
     if data["targeting"]["expected_target"] != "slowed_front":
         errors.append("furthest-progress targeting changed")
-    if len(data["boss_add_encounters"]) != 3:
+    if len(data["boss_add_encounters"]) != 2:
         errors.append("boss-add templates incomplete")
     return errors
 

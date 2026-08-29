@@ -1,7 +1,7 @@
 """Parse the shipped, stat-only tower progression model.
 
 Canonical balance and replay fixtures import this module rather than copying
-upgrade prices or consulting the experimental branch/module definitions.
+upgrade prices or consulting the experimental module definitions.
 """
 from __future__ import annotations
 

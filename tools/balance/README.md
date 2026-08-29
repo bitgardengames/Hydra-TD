@@ -65,7 +65,7 @@ python3 tools/balance/strategy_analysis.py --check
 ```
 
 The audit deterministically samples affordable plans across tower-role mixes,
-upgrade branches, placement regions, and ability loadouts. Purchase-order-only
+upgrade timing, placement regions, and ability loadouts. Purchase-order-only
 differences are canonicalized away. Each viable family is perturbed by moving a
 tower, delaying an upgrade or ability, substituting a tower, and removing five
 percent of available income. The report gives the independently viable and
@@ -153,13 +153,12 @@ drift. This makes tower output,
 enemy count and composition, kill income, and difficulty economy move as one
 curve without turning the fixture into a prescribed player build.
 
-`interaction_fixtures.json` is the separate experimental module report. It records branch
-mappings, representative module combat formations, targeting expectations, and
-the boss templates' dynamically summoned adds. It includes total damage,
-coverage, leaks, proc counts, and cost efficiency. Radius-boundary, cooldown,
-2x speed and overlapping-effect invariants use broad tuning tolerances.
+`interaction_fixtures.json` is the separate cross-system interaction report. It
+records ability geometry, targeting expectations, and the boss templates'
+dynamically summoned adds. Radius-boundary, cooldown, 2x speed and
+overlapping-effect invariants use broad tuning tolerances.
 
-This experimental capture fingerprints tower, enemy, branch, module, ability, difficulty,
+This capture fingerprints tower, enemy, module, ability, difficulty,
 campaign-wave, runtime-wave, and targeting definitions. Any edit to those files
 fails the gate until the fixtures are generated and reviewed:
 

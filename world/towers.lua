@@ -14,7 +14,6 @@ local Achievements = require("systems.achievements")
 local Emissions = require("world.emissions")
 local L = require("core.localization")
 local Modules = require("systems.modules")
-local TowerBranchDefs = require("world.tower_branch_defs")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
 local CampaignUnlocks = require("systems.campaign_unlocks")
@@ -57,7 +56,7 @@ local AIM_RECOMPUTE_ANGLE_EPS = math.rad(0.75)
 local AIM_RECOMPUTE_STALE_FRAMES = 6
 local SPLASH_LEAD_SPEED_THRESHOLD = 20
 local RETARGET_INTERVAL = Constants.TOWER_RETARGET_INTERVAL or 0.10
-local MAX_BRANCH_UPGRADES = 4
+local MAX_UPGRADES = 4
 -- Each entry is the cost of the next level as a multiple of the tower's
 -- purchase price. Every upgrade costs more than placing the base tower, and
 -- later power tiers carry an increasingly large premium.
@@ -269,7 +268,7 @@ local function recomputeTowerStats(t)
 	local level = max(1, t.level or 1)
 	local upgrades = max(0, level - 1)
 	local upgrade = def.upgrade or {}
-	local progress = min(1, upgrades / MAX_BRANCH_UPGRADES)
+	local progress = min(1, upgrades / MAX_UPGRADES)
 
 	local dmgMult = upgrade.dmgMult or 1
 	local fireMult = upgrade.fireMult or 1
@@ -364,11 +363,8 @@ local function addTower(kind, gx, gy)
 		chain = def.chain,
 		poison = def.poison,
 		plasma = def.plasma,
-		specializationId = nil,
 		appliedModules = {},
-		branchSelections = {},
 		_upgradePreview = {
-			specializationId = nil,
 			nextLevel = 2,
 		},
 	}
@@ -413,7 +409,7 @@ end
 
 local getUpgradePreview
 
-local function upgradeTower(t, specializationId)
+local function upgradeTower(t)
 	if not t then
 		return false, "missing_tower"
 	end
@@ -429,18 +425,9 @@ local function upgradeTower(t, specializationId)
 	end
 
 	local diff = Difficulty.get()
-	local nextLevel = (t.level or 1) + 1
-	if specializationId and not Modules.isEnabled() then
-		return false, "experimental_modules_disabled"
-	end
-
-	if specializationId and not TowerBranchDefs.isValidChoice(t.kind, nextLevel, specializationId) then
-		return false, "invalid_choice"
-	end
-
 	-- Capture the same derived data used by the UI before mutating the tower. This
 	-- keeps the cosmetic response tied to real authored stats and module effects.
-	local transformationPreview = getUpgradePreview and getUpgradePreview(t, specializationId)
+	local transformationPreview = getUpgradePreview and getUpgradePreview(t)
 
 	State.money = State.money - cost
 
@@ -450,17 +437,11 @@ local function upgradeTower(t, specializationId)
 	t.levelUpAnim = 1
 	-- Render-only confirmation that follows the tower body while its new tier rises.
 	t.upgradeFlash = 0.3
-	if specializationId then
-		t.specializationId = specializationId
-		t.branchSelections = t.branchSelections or {}
-		t.branchSelections[#t.branchSelections + 1] = specializationId
-	end
-	Save.recordTowerUpgrade(t.kind, specializationId)
+	Save.recordTowerUpgrade(t.kind)
 	recomputeTowerStats(t)
 	Modules.invalidateTower(t)
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 	t._upgradePreview = t._upgradePreview or {}
-	t._upgradePreview.specializationId = specializationId
 	t._upgradePreview.nextLevel = t.level + 1
 
 	Floaters.add(t.x, t.renderY - 30, L("floater.upgrade"), cgR, cgG, cgB)
@@ -481,7 +462,7 @@ end
 local function previewTowerStats(t, level)
 	local def = t.def
 	local upgrades = max(0, level - 1)
-	local progress = min(1, upgrades / MAX_BRANCH_UPGRADES)
+	local progress = min(1, upgrades / MAX_UPGRADES)
 	local upgrade = def.upgrade or {}
 
 	local moduleStats = Modules.getTowerStatModifiers(t)
@@ -492,25 +473,17 @@ local function previewTowerStats(t, level)
 	}
 end
 
-local function cloneForPreview(t, level, specializationId)
+local function cloneForPreview(t, level)
 	local clone = {}
 	for k, v in pairs(t) do
 		-- Module resolution only writes caches. Keeping them off the clone makes the
 		-- preview independent of, and unable to invalidate, the live tower.
-		if k ~= "_cache" and k ~= "branchSelections" then
+		if k ~= "_cache" then
 			clone[k] = v
 		end
 	end
 	clone.level = level
 	clone._cache = {}
-	clone.branchSelections = {}
-	for i = 1, #(t.branchSelections or {}) do
-		clone.branchSelections[i] = t.branchSelections[i]
-	end
-	if specializationId then
-		clone.branchSelections[#clone.branchSelections + 1] = specializationId
-		clone.specializationId = specializationId
-	end
 	return clone
 end
 
@@ -582,14 +555,14 @@ local function addBehaviorRows(rows, before, after)
 	end
 end
 
-getUpgradePreview = function(t, specializationId)
+getUpgradePreview = function(t)
 	if not t or not t.def then
 		return nil
 	end
 	local level = max(1, t.level or 1)
 	local nextLevel = level + 1
 	local currentClone = cloneForPreview(t, level)
-	local nextClone = cloneForPreview(t, nextLevel, specializationId)
+	local nextClone = cloneForPreview(t, nextLevel)
 	local currentStats = previewTowerStats(currentClone, level)
 	local nextStats = previewTowerStats(nextClone, nextLevel)
 	local currentBehaviors = behaviorMap(Modules.getFireProfile(currentClone))
@@ -608,7 +581,6 @@ getUpgradePreview = function(t, specializationId)
 	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
 
 	return {
-		specializationId = specializationId,
 		nextLevel = nextLevel,
 		current = currentStats,
 		postUpgrade = nextStats,
