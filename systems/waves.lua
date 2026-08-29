@@ -464,28 +464,21 @@ function Waves.startWave()
 	return true
 end
 
--- Both spawn queues share the same simulation-tick and population budgets. Centralizing
--- their scheduling keeps either queue from bypassing catch-up or cap protection.
-local function spawnWhileReady(owner, timerKey, pending, activeCap, spawnLoops, spawnOne)
-	while owner[timerKey] <= 0 and pending() > 0
-		and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
-		if spawnOne() == false then
-			return spawnLoops, false
-		end
-		spawnLoops = spawnLoops + 1
-	end
-
-	if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and owner[timerKey] <= 0 then
+-- Both spawn queues share the same simulation-tick and population budgets. Apply
+-- their common backpressure after each queue-specific loop without allocating
+-- closures during the update.
+local function finalizeSpawnQueue(pending, timer, activeCap, spawnLoops)
+	if spawnLoops == MAX_SPAWN_CATCHUP_PER_FRAME and timer <= 0 then
 		DevelopmentCounters.add("spawnBackpressureEvents")
 		-- Drop catch-up debt once this frame has spent its spawn budget.
-		owner[timerKey] = 0
-	elseif #Enemies.enemies >= activeCap and pending() > 0 then
+		timer = 0
+	elseif #Enemies.enemies >= activeCap and pending > 0 then
 		DevelopmentCounters.add("spawnBackpressureEvents")
 		-- Do not accumulate catch-up debt while the population cap is full.
-		owner[timerKey] = max(owner[timerKey], SPAWN_BACKPRESSURE_DELAY)
+		timer = max(timer, SPAWN_BACKPRESSURE_DELAY)
 	end
 
-	return spawnLoops, true
+	return timer
 end
 
 local function currentSpawnEntry()
@@ -521,16 +514,14 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 	end
 
 	spawner.timer = spawner.timer - dt
-	local sequenceValid
-	spawnLoops, sequenceValid = spawnWhileReady(spawner, "timer", function()
-		return spawner.active and spawner.remaining or 0
-	end, activeCap, spawnLoops, function()
+	while spawner.timer <= 0 and spawner.active and spawner.remaining > 0
+		and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
 		spawner.waitingGroupDelay = false
 		local group, kind = currentSpawnEntry()
 		if not kind then
 			spawner.remaining = 0
 			spawner.active = false
-			return false
+			return spawnLoops, true
 		end
 
 		local enemy = Enemies.spawnEnemy(kind, (group and group.hpMult) or spawner.hpMult,
@@ -548,10 +539,13 @@ local function updateWaveSpawner(dt, activeCap, spawnLoops)
 			Effects.shake(1.1, 0.22)
 		end
 		advanceSpawner(group)
-	end)
+		spawnLoops = spawnLoops + 1
+	end
 
 	spawner.active = spawner.remaining > 0
-	return spawnLoops, not sequenceValid
+	local pending = spawner.active and spawner.remaining or 0
+	spawner.timer = finalizeSpawnQueue(pending, spawner.timer, activeCap, spawnLoops)
+	return spawnLoops, false
 end
 
 local function countBossAddVisitor(enemy, context)
@@ -602,14 +596,16 @@ local function updateBossAdds(dt, activeCap, spawnLoops)
 	queueBossReinforcements(boss, activeCap)
 
 	-- Reinforcements keep their own queue, but consume the shared spawn budget.
-	spawnWhileReady(bossAdds, "queueTimer", function()
-		return bossAdds.queued
-	end, activeCap, spawnLoops, function()
+	while bossAdds.queueTimer <= 0 and bossAdds.queued > 0
+		and spawnLoops < MAX_SPAWN_CATCHUP_PER_FRAME and #Enemies.enemies < activeCap do
 		Enemies.spawnEnemy(bossAdds.kind, bossAdds.hpMult, bossAdds.spdMult)
 		bossAdds.queued = bossAdds.queued - 1
 		bossAdds.totalSpawned = bossAdds.totalSpawned + 1
 		bossAdds.queueTimer = bossAdds.queueTimer + bossAdds.queueGap
-	end)
+		spawnLoops = spawnLoops + 1
+	end
+	bossAdds.queueTimer = finalizeSpawnQueue(
+		bossAdds.queued, bossAdds.queueTimer, activeCap, spawnLoops)
 end
 
 -- Spawning update
