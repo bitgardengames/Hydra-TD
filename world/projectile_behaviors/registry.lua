@@ -29,12 +29,6 @@ end
 function Registry.compile(behaviors)
 	local profile = {
 		behaviors = behaviors,
-		init = {},
-		update = {},
-		hit = {},
-		expire = {},
-		draw = {},
-		canHit = {},
 	}
 
 	for i = 1, #behaviors do
@@ -42,9 +36,18 @@ function Registry.compile(behaviors)
 		local handlers = assert(definitions[behavior.id],
 			"unknown projectile behavior id: " .. tostring(behavior.id))
 		for _, operation in ipairs({ "init", "update", "hit", "expire", "draw", "canHit" }) do
-			if handlers[operation] then
-				local list = profile[operation]
-				list[#list + 1] = { fn = handlers[operation], data = behavior.data }
+			local fn = handlers[operation]
+			if fn then
+				local functionsKey = operation .. "Fns"
+				local dataKey = operation .. "Data"
+				local functions = profile[functionsKey]
+				if not functions then
+					functions = {}
+					profile[functionsKey] = functions
+					profile[dataKey] = {}
+				end
+				functions[#functions + 1] = fn
+				profile[dataKey][#functions] = behavior.data
 			end
 		end
 	end
