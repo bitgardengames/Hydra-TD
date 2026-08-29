@@ -109,31 +109,6 @@ B.move_homing = {
 
 			if alive then
 				p.hit = e
-			else
-				-- preserve your existing FX fallback behavior
-				if p.sourceKind == "lancer" then
-					local evt = emitEvent(p, "fx")
-					evt.kind = "lancer_hit"
-					evt.x = p.x
-					evt.y = p.y
-					evt.color = p.sourceTower and p.sourceTower.color
-				elseif p.sourceKind == "poison" then
-					local evt = emitEvent(p, "fx")
-					evt.kind = "poison_splash"
-					evt.x = p.x
-					evt.y = p.y
-					evt.color = p.sourceTower and p.sourceTower.color
-				elseif p.sourceKind == "cannon" then
-					local evt = emitEvent(p, "hit")
-					evt.target = nil
-					evt.origin = p.hitOrigin or "primary"
-				elseif p.sourceKind == "slow" then
-					local evt = emitEvent(p, "fx")
-					evt.kind = "frost_burst"
-					evt.x = p.x
-					evt.y = p.y
-					evt.color = p.sourceTower and p.sourceTower.color
-				end
 			end
 
 			return "consume"
