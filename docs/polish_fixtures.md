@@ -49,7 +49,7 @@ damage-meter rows and all six ability slots. Authored panel bounds must have
 
 ## Upgrade timing
 
-The report reuses the balanced economy curve and runtime stat-only upgrade multipliers; specialization and inventory modules are excluded.
+The report reuses the balanced economy curve and runtime stat-only upgrade multipliers; specialization is excluded.
 For every tower and difficulty it reports the earliest/latest map wave where
 unspent purchasing power can afford the first upgrade or the complete final
 tier. These are independent affordability probes, never a prescribed build.

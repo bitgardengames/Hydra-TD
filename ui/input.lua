@@ -12,7 +12,6 @@ local BottomBar = require("ui.bottom_bar")
 local Button = require("ui.button")
 local Sound = require("systems.sound")
 local L = require("core.localization")
-local ModulePicker = require("ui.module_picker")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local GameSpeed = require("core.game_speed")
 local DamageMeter = require("ui.damage_meter")
@@ -247,7 +246,7 @@ local gameplayActions = {
 	end,
 	upgrade = function()
 		if State.selectedTower then
-			ModulePicker.openTowerUpgrade(State.selectedTower)
+			Towers.upgradeTower(State.selectedTower)
 		end
 	end,
 	sell = function()

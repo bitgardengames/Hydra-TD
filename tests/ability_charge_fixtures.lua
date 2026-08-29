@@ -31,7 +31,6 @@ assert(Defs.overdrive.target.entities == "towers" and Defs.overdrive.target.requ
 assert(Defs.overdrive.sustained and not Defs.overdrive.sustained.entityMarker,
 	"overdrive must hand off from targeting highlights to its dedicated tower pulse after activation")
 State.mode = "game"
-State.modulePicker.active = false
 State.equippedAbilities = {"meteor"}
 State.abilityCharges = {}
 Abilities.reset()

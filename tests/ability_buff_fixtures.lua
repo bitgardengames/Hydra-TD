@@ -20,12 +20,6 @@ package.loaded["world.effects"] = {spawnPlacePuff = function() end, shake = func
 package.loaded["systems.achievements"] = {increment = function() end}
 package.loaded["world.emissions"] = {emit = function() end, emitUpgradeTransformation = function() end}
 package.loaded["core.localization"] = setmetatable({}, {__call = function(_, key) return key end})
-package.loaded["systems.modules"] = {
-	getTowerStatModifiers = function() return {damageMult = 1, fireRateMult = 1, rangeAdd = 0} end,
-	getFireProfile = function() return {behaviors = {}} end,
-	invalidateTower = function() end,
-	isEnabled = function() return false end,
-}
 package.loaded["systems.run_stats"] = {recordPurchase = function() end}
 package.loaded["core.save"] = {recordTowerPlacement = function() end, recordTowerUpgrade = function() end}
 package.loaded["systems.campaign_unlocks"] = {isTowerUnlocked = function() return true end}

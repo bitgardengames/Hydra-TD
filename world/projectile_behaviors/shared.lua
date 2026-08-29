@@ -1,11 +1,6 @@
 local Constants = require("core.constants")
 local Spatial = require("world.spatial_grid")
 
--- EXPERIMENTAL MODULE SUPPORT: module-authored movement, proc, conversion, and
--- tower-specialization behaviors remain implemented here for internal module
--- playtests. Normal campaign and replay/endless runs do not attach them through
--- module definitions; core projectile behaviors in this registry remain live.
-
 --[[
 	NOTE; ALL SYSTEMS MUST WORK TOGETHER FLUIDLY. This rule cannot be broken.
 
@@ -127,21 +122,6 @@ end
 local function emitSpawnProjectile(p)
 	return emitEvent(p, "spawn_projectile")
 end
-
-local SHARED_BEHAVIORS_LANCER_RICOCHET = {
-	{ id = "move_homing" },
-	{ id = "hit_circle", data = { radius = 10 } },
-	{ id = "hit_damage" },
-	{ id = "lancer_hit_fx" },
-	{ id = "draw_lancer" },
-}
-
-local SHARED_BEHAVIORS_FROST_SHATTER = {
-	{ id = "move_linear" },
-	{ id = "hit_damage" },
-	{ id = "apply_slow", data = { factor = 0.35, dur = 0.8 } },
-	{ id = "draw_frost_shard" },
-}
 
 local function getStat(p, key, fallback)
 	local t = p.sourceTower
@@ -322,8 +302,6 @@ return {
 	emitEvent = emitEvent,
 	emitFX = emitFX,
 	emitSpawnProjectile = emitSpawnProjectile,
-	SHARED_BEHAVIORS_LANCER_RICOCHET = SHARED_BEHAVIORS_LANCER_RICOCHET,
-	SHARED_BEHAVIORS_FROST_SHATTER = SHARED_BEHAVIORS_FROST_SHATTER,
 	getStat = getStat,
 	emitDamage = emitDamage,
 	beginChainDamageBudget = beginChainDamageBudget,

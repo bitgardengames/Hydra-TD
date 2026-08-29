@@ -33,8 +33,6 @@ local Overlay = require("ui.overlay")
 local Victory = require("ui.menu.screens.victory")
 local Steam = require("core.steam")
 local L = require("core.localization")
-local Modules = require("systems.modules")
-local ModulePicker = require("ui.module_picker")
 local RunStats = require("systems.run_stats")
 local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
@@ -101,8 +99,6 @@ function resetGame()
 	State.waveLeaks = 0
 	State.totalLeaks = 0
 
-	State.modules = {}
-
     State.inPrep = true
     State.paused = false
 	GameSpeed.reset()
@@ -135,11 +131,6 @@ function resetGame()
     -- Waves
     Waves.resetSpawner()
 
-	-- Modules
-	Modules.clear()
-	State.moduleInventory = {}
-
-	ModulePicker.reset()
 	Camera.load()
 end
 
@@ -265,7 +256,6 @@ local function drawWorldAndUI()
 	Camera.present()
 
 	Draw.drawUI()
-	ModulePicker.draw()
 	Tooltip.draw()
 end
 
@@ -290,7 +280,6 @@ function love.update(dt)
 		DamageMeter.update(dt)
 		BossHealthBar.update(dt)
 	end
-	ModulePicker.update(dt)
 
 	if mode == "pause" then
 		simulationAccumulator = 0
@@ -306,9 +295,7 @@ function love.update(dt)
 		return
 	end
 
-	local gameplayFrozen = ModulePicker.isActive()
-
-	if State.paused or gameplayFrozen then
+	if State.paused then
 		simulationAccumulator = 0
 		return
 	end
@@ -401,11 +388,6 @@ function love.mousepressed(x, y, button)
 		end
 	end
 
-	if ModulePicker.isActive() then
-		ModulePicker.mousepressed(x, y, button)
-		return
-	end
-
 	if Overlay.isActive() then
 		Overlay.mousepressed(x, y, button)
 		return
@@ -431,7 +413,6 @@ function love.wheelmoved(x, y)
 end
 
 function love.mousereleased(x, y, button)
-	if ModulePicker.isActive() then return end
 	if Overlay.isActive() then
 		Overlay.mousereleased(x, y, button)
 		return
@@ -458,11 +439,6 @@ function love.keypressed(key)
 		end
 
 		lg.captureScreenshot(SCREENSHOT_DIR .. "/screenshot_" .. time .. ".png")
-	end
-
-	if ModulePicker.isActive() then
-		ModulePicker.keypressed(key)
-		return
 	end
 
 	if Overlay.isActive() then

@@ -27,11 +27,9 @@ an extreme challenge contract rather than another required campaign clear.
 ## Canonical assumptions
 
 Canonical campaign, combat, replay-policy, economy, and polish fixtures model no
-specialization and no inventory modules. The only progression inputs are the
+specialization. The only progression inputs are the
 four `UPGRADE_COST_MULTIPLIERS` in `world/towers.lua` and each tower's `upgrade`
 `dmgMult`, `fireMult`, and `rangeAdd` values in `world/tower_defs.lua`.
-Experimental module coverage remains isolated in
-`tools/balance/interaction_fixtures.py` and is not a release gate.
 
 ## Applied tuning
 

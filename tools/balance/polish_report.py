@@ -18,7 +18,7 @@ TARGET_DIFFICULTY = "hard"
 TIP_TEST_WIDTHS = (1024, 1280)
 
 # Layout constants are deliberately mirrored from the tiny, declarative UI
-# modules.  Source assertions below make drift noisy instead of silently making
+# alternate progression. Source assertions below make drift noisy instead of silently making
 # this model stale.
 LAYOUT = {"screen_pad": 16, "wave_w": 320, "damage_inner_w": 210,
           "combat_x": 16, "combat_y": 16, "combat_w": 320, "combat_h": 70,
