@@ -10,6 +10,7 @@ local Button = require("ui.button")
 local HotkeyVisual = require("ui.hotkey_visual")
 local Theme = require("core.theme")
 local L = require("core.localization")
+local StatusRowBuffer = require("ui.status_row_buffer")
 
 local Inspect = {}
 
@@ -56,6 +57,7 @@ local outerSmallRadius = 6 + outlineW * 0.5
 local innerSmallRadius = 6 - outlineW * 0.25
 
 local inspectButtons
+local enemyStatusBuffer = StatusRowBuffer.new()
 
 local function showUpgradeFailure(t, messageKey)
 	Sound.play("uiError")
@@ -359,18 +361,19 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
         Text.printShadow(L("inspect.hp", formatInt(e.hp), formatInt(e.maxHp)), bodyX, bodyY)
 
-		local statuses = Enemies.getDisplayStatuses(e)
+		local statusCount = Enemies.visitDisplayStatuses(e, StatusRowBuffer.writeVisitor, enemyStatusBuffer)
+		StatusRowBuffer.finish(enemyStatusBuffer, statusCount)
 
 		local statusY = bodyY + 24
 		local availableH = max(0, panelY + h - OUTER_PAD - statusY)
-		local visibleRows = min(#statuses, floor(availableH / STATUS_ROW_H))
+		local visibleRows = min(statusCount, floor(availableH / STATUS_ROW_H))
 		for i = 1, visibleRows do
-			drawStatusRow(statuses[i], bodyX, statusY, infoW)
+			drawStatusRow(enemyStatusBuffer.rows[i], bodyX, statusY, infoW)
 			statusY = statusY + STATUS_ROW_H
 		end
-		if visibleRows < #statuses and visibleRows > 0 then
+		if visibleRows < statusCount and visibleRows > 0 then
 			lg.setColor(colorDisabled)
-			Text.printfShadow(L("inspect.moreStatuses", #statuses - visibleRows), bodyX, statusY - STATUS_ROW_H, infoW, "right")
+			Text.printfShadow(L("inspect.moreStatuses", statusCount - visibleRows), bodyX, statusY - STATUS_ROW_H, infoW, "right")
 		end
     end
 end

@@ -16,6 +16,7 @@ local Save = require("core.save")
 local RunStats = require("systems.run_stats")
 local Difficulty = require("systems.difficulty")
 local GameplayOutcome = require("systems.gameplay_outcome")
+local EnemyDisplayStatuses = require("world.enemy_display_statuses")
 
 local enemies = {}
 local enemyPool = {}
@@ -774,67 +775,6 @@ local function setPathDistance(e, distance)
 	Spatial.updateEnemy(e)
 end
 
--- Produces the player-facing, render-agnostic description of every currently
--- active enemy state. Identity traits deliberately do not
--- belong here: callers can therefore present expiring state separately from the
--- mechanics that define an enemy.
-local function getDisplayStatuses(e)
-	local result = {}
-	if not e then return result end
-
-	local function add(labelKey, icon, color, options)
-		options = options or {}
-		result[#result + 1] = {
-			id = options.id,
-			label = L(labelKey),
-			icon = icon,
-			color = color,
-			stacks = options.stacks,
-			value = options.value,
-			remainingFraction = options.remainingFraction,
-		}
-	end
-
-	local function fraction(remaining, duration)
-		if not remaining or not duration or duration <= 0 then return nil end
-		return max(0, min(1, remaining / duration))
-	end
-
-	if (e.slowTimer or 0) > 0 then
-		add("status.slow", "▼", Theme.tower.slow, {
-			id = "slow", remainingFraction = fraction(e.slowTimer, e.slowDuration),
-		})
-	end
-	if (e.poisonTimer or 0) > 0 and (e.poisonStacks or 0) > 0 then
-		add("status.poison", "●", Theme.tower.poison, {
-			id = "poison", stacks = e.poisonStacks,
-			remainingFraction = fraction(e.poisonTimer, e.poisonDuration),
-		})
-	end
-	if e.support then
-		add("status.supportAura", "◉", Theme.ui.good, {id = "support_aura"})
-	end
-	if (e.supportBoost or 1) > 1 then
-		add("status.supportBoost", "▲", Theme.ui.good, {
-			id = "support_boost", value = L("status.multiplier", e.supportBoost),
-		})
-	end
-	if e.regeneration and (e.regenDelay or 0) > 0 then
-		add("status.regenerationSuppressed", "⊘", Theme.ui.bad, {
-			id = "regeneration_suppressed",
-			remainingFraction = fraction(e.regenDelay, e.regeneration.delay),
-		})
-	end
-	if e.summon and (e.summonTimer or 0) > 0 then
-		add("status.summonPreparing", "✦", Theme.ui.money, {
-			id = "summon_preparing",
-			remainingFraction = fraction(e.summonTimer, e.summon.period),
-		})
-	end
-
-	return result
-end
-
 local function applySlow(e, factor, duration)
 	if not e or e.hp <= 0 then return false end
 	local newFactor = math.max(0, math.min(1, factor))
@@ -853,7 +793,8 @@ return {
 	applyHitImpulse = applyHitImpulse,
 	applyDamage = applyDamage,
 	applySlow = applySlow,
-	getDisplayStatuses = getDisplayStatuses,
+	visitDisplayStatuses = EnemyDisplayStatuses.visit,
+	snapshotDisplayStatuses = EnemyDisplayStatuses.snapshot,
 	setPathDistance = setPathDistance,
 	clear = clear,
 }
