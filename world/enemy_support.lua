@@ -5,6 +5,7 @@ local refreshVisitContext = {}
 local Support = {}
 
 local max = math.max
+local sqrt = math.sqrt
 local sources = {}
 local dirtySources = {}
 local dirtySourceSet = {}
@@ -162,6 +163,13 @@ end
 local function refreshTargetVisitor(target, context)
 	local source, aura = context.source, context.aura
 	if target == source then return end
+	local dx, dy = target.x - source.x, target.y - source.y
+	local distance = sqrt(dx * dx + dy * dy)
+	local boundaryDistance = math.abs(distance - aura.radius)
+	if boundaryDistance < context.movementThreshold then
+		context.movementThreshold = boundaryDistance
+	end
+	if target.hp <= 0 or distance > aura.radius then return end
 	local affected = source.supportAffected
 	affected[target] = true
 	local contributions = target.supportContributions
@@ -194,8 +202,12 @@ local function refreshSource(source)
 
 	refreshVisitContext.source = source
 	refreshVisitContext.aura = aura
-	Spatial.visitRadius(source.x, source.y, aura.radius, refreshTargetVisitor,
-		refreshVisitContext, spatialQueryContext, Spatial.radiusOptions.living)
+	refreshVisitContext.movementThreshold = math.huge
+	-- Inspect the complete candidate footprint, rather than only current aura
+	-- members, so movement is also bounded by the nearest candidate just outside
+	-- the aura. A cell crossing invalidates immediately and rebuilds this set.
+	Spatial.visitCells(source.x, source.y, aura.radius, refreshTargetVisitor,
+		refreshVisitContext, spatialQueryContext)
 
 	for target, present in pairs(affected) do
 		if not present then
@@ -214,6 +226,9 @@ local function refreshSource(source)
 	source._supportAura = aura
 	source._supportRadius = aura.radius
 	source._supportMultiplier = aura.speedMultiplier
+	source._supportRefreshX = source.x
+	source._supportRefreshY = source.y
+	source._supportMovementThreshold = refreshVisitContext.movementThreshold
 end
 
 local function syncDefinition(source)
@@ -231,14 +246,30 @@ function Support.markSourceDirty(source)
 	markDirty(source)
 end
 
+function Support.onSourceMoved(source, oldX, oldY)
+	if not source or not source.supportSourceIndex then return end
+	if source.x == oldX and source.y == oldY then return end
+
+	local refreshX, refreshY = source._supportRefreshX, source._supportRefreshY
+	if refreshX == nil or refreshY == nil then
+		markDirty(source)
+		return
+	end
+
+	local dx, dy = source.x - refreshX, source.y - refreshY
+	if sqrt(dx * dx + dy * dy) >= (source._supportMovementThreshold or 0) then
+		markDirty(source)
+	end
+end
+
 function Support.onEnemyCellChanged(enemy, oldCX, oldCY, newCX, newCY)
 	markCellSources(oldCX, oldCY, enemy)
 	if newCX ~= oldCX or newCY ~= oldCY then
 		markCellSources(newCX, newCY, enemy)
 	end
 	if enemy.supportSourceIndex then
-		-- A source can move within an unchanged cell neighborhood while its aura
-		-- membership changes, so its own movement always invalidates it.
+		-- Cell changes remain an immediate invalidation boundary and also change
+		-- the candidate footprint used by the movement threshold.
 		markDirty(enemy)
 		indexCoveredCells(enemy)
 	end
