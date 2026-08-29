@@ -244,8 +244,8 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.baseSpeed = def.speed * spdScale
 	e.speed = e.baseSpeed
 	-- Kill income is the economic floor for imperfect play; wave number does not
-	-- compound it independently of authored counts and compositions.
-	e.reward = def.reward * Difficulty.get().rewardBias
+	-- compound it independently of authored counts, compositions, or difficulty.
+	e.reward = def.reward
 	e.score = def.score or 0
 	e.radius = def.radius
 	e.radius2 = def.radius * def.radius

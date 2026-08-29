@@ -84,7 +84,6 @@ def definitions():
     diff_root = table_body(difficulty_text, "Difficulty.defs", ROOT / "systems/difficulty.lua")
     diffs = {name: {"hp_bp": decimal_bp(number(body, "enemyHpBias")),
                     "boss_bp": decimal_bp(number(body, "bossHpBias")),
-                    "reward_bp": decimal_bp(number(body, "rewardBias")),
                     "money": int(float(number(body, "startMoney")))}
              for name, body in named_entries(diff_root, "Difficulty.defs", ROOT / "systems/difficulty.lua").items()}
     curve = {key: decimal_bp(number(curve_text, key)) for key in
@@ -202,7 +201,7 @@ def build_report() -> dict:
                         spawn = time + index * group["spacing_ms"]
                         spawns.append((spawn, threat))
                         durability += threat
-                        income += half_up(enemy["reward"] * diff["reward_bp"], BP * BP)
+                        income += half_up(enemy["reward"], BP)
                         mechanics.update(t for t in enemy["traits"] if t in COUNTERS)
                     time = spawns[-1][0]
                 spawns.sort()
