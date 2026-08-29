@@ -68,7 +68,6 @@ function Sound.play(name, opts)
 	end
 
 	local entry = Sound.sfx[name]
-	opts = opts or {}
 
 	if not entry then
 		return
@@ -111,11 +110,11 @@ function Sound.play(name, opts)
 	end
 
 	if entry.jitter then
-		local basePitch = opts.pitch or 1
+		local basePitch = opts and opts.pitch or 1
 		local range = pitchJitterByCategory[entry.category] or 0
 		sound:setPitch(max(0.5, min(2.0, basePitch + (lmr() * 2 - 1) * range)))
 	else
-		sound:setPitch(opts.pitch or 1)
+		sound:setPitch(opts and opts.pitch or 1)
 	end
 
 	sound:play()
@@ -125,8 +124,7 @@ end
 -- cannot turn into a burst of UI sounds. Callers may also suppress a cue for
 -- contextual transitions such as restoring a run.
 function Sound.playAbilityReady(opts)
-	opts = opts or {}
-	if opts.suppress then
+	if opts and opts.suppress then
 		return
 	end
 	Sound.play("abilityReady", opts)
