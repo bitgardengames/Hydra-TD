@@ -3,6 +3,7 @@ local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local Sound = require("systems.sound")
 local PB = require("world.projectile_behaviors")
+local ProjectileProfiles = require("world.projectile_profiles")
 local Util = require("core.util")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
@@ -112,10 +113,6 @@ local function acquire()
 		eventPoolCount = 0,
 		chain = {},
 		chainVisited = {},
-		forksScratch = {},
-		claimedScratch = {},
-		endpointScratch = {},
-		hasOutgoingScratch = {},
 	}
 
 	return { _retained = retained }
@@ -161,7 +158,7 @@ local function removeAt(i)
 	projectiles[#projectiles] = nil
 end
 
-local function initProjectile(p, source, target, context, speed, life, opts)
+local function initProjectile(p, source, target)
 	local retained = p._retained
 
 	p.hitSet = retained.hitSet
@@ -173,33 +170,28 @@ local function initProjectile(p, source, target, context, speed, life, opts)
 	p._eventPool = retained.eventPool
 	p._eventPoolCount = retained.eventPoolCount
 
-	p.x = opts and opts.x or source.x
-	p.y = opts and opts.y or source.renderY or source.y
+	p.x = source.x
+	p.y = source.renderY or source.y
 
-	p.r = opts and opts.r or 4.5
+	p.r = 4.5
 	p.baseR = p.r
-	p.scale = opts and opts.scale or 1
+	p.scale = 1
 
-	p.life = life or 3
+	p.life = 3
 	p.t = 0
 
 	p.sourceTower = source
 	p.sourceKind = source.kind
 
-	p.speed = speed or source.projSpeed or 0
-	p.damage = opts and opts.damage or source.damage or 0
+	p.speed = source.projSpeed or 0
+	p.damage = source.damage or 0
 
-	p.hitOrigin = opts and opts.hitOrigin or "primary"
+	p.hitOrigin = "primary"
 
 	p.target = target
 	p.targetID = p.target and p.target.id or nil
-	p.ignoreTarget = opts and opts.ignoreTarget
-
-	p.angle = opts and opts.angle or source.angle or 0
+	p.angle = source.angle or 0
 	p.rotation = p.angle
-
-	p.vx = opts and opts.vx
-	p.vy = opts and opts.vy
 
 	p._consumed = false
 	p.hasHit = projectileHasHit
@@ -210,43 +202,30 @@ local function initProjectile(p, source, target, context, speed, life, opts)
 	nextHitSetStamp(p)
 	p._defaultHitCtx.origin = p.hitOrigin
 
-	p.hitRadius = opts and opts.hitRadius or p.r
+	p.hitRadius = p.r
 	p.hitRadius2 = p.hitRadius * p.hitRadius
 
 	if p.target then
 		p.lastTX = p.target.x
 		p.lastTY = p.target.y
-	elseif opts and opts.lastTX and opts.lastTY then
-		p.lastTX = opts.lastTX
-		p.lastTY = opts.lastTY
-	elseif p.vx and p.vy then
-		p.lastTX = p.x + p.vx * 10
-		p.lastTY = p.y + p.vy * 10
 	else
 		p.lastTX = p.x + cos(p.angle) * 10
 		p.lastTY = p.y + sin(p.angle) * 10
 	end
 
-	if opts and opts.behaviors then
-		p.behaviors = opts.behaviors
-	elseif context then
-		p.behaviors = context.behaviors
-	else
-		local fireProfile = source._fireProfile
-		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
-	end
+	p.behaviors = ProjectileProfiles.get(source)
 	PB.compileHooks(p)
 
 	return p
 end
 
-local function createProjectile(source, target, context, speed, life, options)
+local function createProjectile(source, target)
 	if not source then
 		return nil
 	end
 
 	local p = acquire()
-	initProjectile(p, source, target, context, speed, life, options)
+	initProjectile(p, source, target)
 
 	PB.init(p)
 	Sound.play(source.kind)
@@ -255,44 +234,6 @@ local function createProjectile(source, target, context, speed, life, options)
 	return p
 end
 
-local function spawnEvent(evt)
-	return createProjectile(evt.source, evt.target, evt.context, evt.speed, evt.life, evt)
-end
-
-local function spawnDirect(source, target, context, speed, life)
-	return createProjectile(source, target, context, speed, life)
-end
-
-local function resolveSpawnProjectile(parent, evt)
-	if not evt.behaviors and parent and parent.behaviors then
-		evt.behaviors = PB.buildChildBehaviors(parent.behaviors)
-	end
-
-	local newP = spawnEvent(evt)
-
-	if not newP then
-		return
-	end
-
-	if evt.angle ~= nil then
-		local ang = evt.angle
-
-		newP.angle = ang
-		newP.rotation = ang
-
-		newP.vx = cos(ang)
-		newP.vy = sin(ang)
-
-		if evt.lastTX and evt.lastTY then
-			newP.lastTX = evt.lastTX
-			newP.lastTY = evt.lastTY
-		else
-			newP.lastTX = newP.x + newP.vx * 10
-			newP.lastTY = newP.y + newP.vy * 10
-		end
-	end
-
-end
 
 local function resolveDamage(p, evt)
 	local e = evt.target
@@ -373,7 +314,6 @@ local function resolveConsume(p)
 end
 
 local eventDispatch = {
-	spawn_projectile = resolveSpawnProjectile,
 	damage = resolveDamage,
 	impulse = function(_, evt)
 		resolveImpulse(evt)
@@ -461,7 +401,7 @@ local function processHit(p)
 end
 
 local function spawn(t, e)
-	spawnDirect(t, e)
+	return createProjectile(t, e)
 end
 
 local function update(dt)
@@ -536,15 +476,9 @@ local function load()
 	end
 end
 
-local function spawnFromContext(t, target, ctx, speed, life)
-	return spawnDirect(t, target, ctx, speed, life)
-end
-
 return {
 	projectiles = projectiles,
 	spawn = spawn,
-	spawnEvent = spawnEvent,
-	spawnFromContext = spawnFromContext,
 	update = update,
 	draw = draw,
 	clear = clear,
