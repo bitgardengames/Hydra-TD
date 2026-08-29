@@ -666,11 +666,7 @@ local function updateEnemies(dt)
 
 		-- Gameplay queries use path position only; visual offsets are render-owned.
 		if moved then
-			-- Spatial only emits a lifecycle hook when the cell changes. Aura
-			-- membership can also change while its source stays within one cell.
-			if e.supportSourceIndex then
-				EnemySupport.markSourceDirty(e)
-			end
+			EnemySupport.onSourceMoved(e, e.prevX, e.prevY)
 			Spatial.updateEnemy(e)
 		end
 
