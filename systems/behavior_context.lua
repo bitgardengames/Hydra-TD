@@ -95,10 +95,18 @@ function Context:getBehaviorRole(id)
 end
 
 function Context:removeByType(role)
-	for i = #self.behaviors, 1, -1 do
-		if getRole(self.behaviors[i].id) == role then
-			table.remove(self.behaviors, i)
+	local count = #self.behaviors
+	local writeIndex = 1
+	for readIndex = 1, count do
+		local behavior = self.behaviors[readIndex]
+		if getRole(behavior.id) ~= role then
+			self.behaviors[writeIndex] = behavior
+			writeIndex = writeIndex + 1
 		end
+	end
+
+	for i = writeIndex, count do
+		self.behaviors[i] = nil
 	end
 end
 
