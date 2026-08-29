@@ -25,7 +25,8 @@ local function prepare(enemies, alpha, dt, timestamp)
 	local eyeBlend = 1 - exp(-EYE_RESPONSE_RATE * presentationDt)
 	for i = 1, #enemies do
 		local e = enemies[i]
-		if timestamp == nil or preparedAt[e] ~= timestamp then
+		local shouldAdvancePresentation = timestamp == nil or preparedAt[e] ~= timestamp
+		if shouldAdvancePresentation then
 			preparedAt[e] = timestamp
 			-- These fields are presentation-only. In particular, nudges never feed
 			-- back into e.x/e.y, spatial queries, path progress, or escape checks.
@@ -56,14 +57,23 @@ local function prepare(enemies, alpha, dt, timestamp)
 			else
 				e.nudgeTargetX, e.nudgeTargetY, e.nudgeX, e.nudgeY = 0, 0, 0, 0
 			end
-			local ex, ey = e.x, e.y
-			local oldRX, oldRY = e.rx or ex, e.ry or ey
-			local baseX = lerp(e.prevX or ex, ex, a)
-			local baseY = lerp(e.prevY or ey, ey, a)
-			local nx, ny = e.nudgeX or 0, e.nudgeY or 0
-			local targetX = baseX + nx
-			local targetY = baseY + ny
-			e.rx, e.ry, e.prevRX, e.prevRY = targetX, targetY, oldRX, oldRY
+		end
+
+		-- Position sampling is deliberately outside the presentation-timer guard.
+		-- A world can be simulated between two render passes carrying the same
+		-- presentation timestamp (tooling and off-screen passes do this). In that
+		-- case the old guard left rx/ry pinned even though path state had advanced.
+		local ex, ey = e.x, e.y
+		local oldRX, oldRY = e.rx or ex, e.ry or ey
+		local baseX = lerp(e.prevX or ex, ex, a)
+		local baseY = lerp(e.prevY or ey, ey, a)
+		local nx, ny = e.nudgeX or 0, e.nudgeY or 0
+		local targetX = baseX + nx
+		local targetY = baseY + ny
+		e.rx, e.ry = targetX, targetY
+
+		if shouldAdvancePresentation then
+			e.prevRX, e.prevRY = oldRX, oldRY
 			local rawDX, rawDY = targetX - oldRX, targetY - oldRY
 			local eyeDX, eyeDY = e.eyeDX or rawDX, e.eyeDY or rawDY
 			e.eyeDX = eyeDX + (rawDX - eyeDX) * eyeBlend
