@@ -186,12 +186,23 @@ local function refreshTargetVisitor(target, context)
 	local source, aura = context.source, context.aura
 	if target == source then return end
 	local dx, dy = target.x - source.x, target.y - source.y
-	local distance = sqrt(dx * dx + dy * dy)
-	local boundaryDistance = math.abs(distance - aura.radius)
-	if boundaryDistance < context.movementThreshold then
-		context.movementThreshold = boundaryDistance
+	local distanceSquared = dx * dx + dy * dy
+	local radiusSquared = aura.radius * aura.radius
+	local inside = distanceSquared <= radiusSquared
+	local movementThreshold = context.movementThreshold
+	local innerBoundary = aura.radius - movementThreshold
+	local outerBoundary = aura.radius + movementThreshold
+	local innerBoundarySquared = innerBoundary * innerBoundary
+	local outerBoundarySquared = outerBoundary * outerBoundary
+	if (innerBoundary <= 0 or distanceSquared > innerBoundarySquared)
+	and distanceSquared < outerBoundarySquared then
+		local distance = sqrt(distanceSquared)
+		local boundaryDistance = inside and aura.radius - distance or distance - aura.radius
+		if boundaryDistance < movementThreshold then
+			context.movementThreshold = boundaryDistance
+		end
 	end
-	if target.hp <= 0 or distance > aura.radius then return end
+	if target.hp <= 0 or not inside then return end
 	local affected = source.supportAffected
 	affected[target] = true
 	local contributions = target.supportContributions
@@ -279,6 +290,9 @@ function Support.onSourceMoved(source, oldX, oldY)
 	end
 
 	local dx, dy = source.x - refreshX, source.y - refreshY
+	-- The retained threshold must be no greater than the nearest candidate's
+	-- distance to the aura boundary. Keeping that value conservative ensures
+	-- that skipping a refresh can never leave aura membership stale.
 	if sqrt(dx * dx + dy * dy) >= (source._supportMovementThreshold or 0) then
 		markDirty(source)
 	end
