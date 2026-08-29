@@ -54,6 +54,17 @@ local cd1, cd2, cd3, cd4 = colorDim[1], colorDim[2], colorDim[3], colorDim[4]
 local SCREENSHOT_DIR = "screenshots"
 local simulationAccumulator = 0
 
+local function simulationIsAllowed()
+	return State.mode == "game" and not State.paused
+end
+
+local function clearDisabledSimulationTime()
+	if not simulationIsAllowed() then
+		simulationAccumulator = 0
+		State.renderAlpha = 0
+	end
+end
+
 function resetGame()
 	if RunStats.data and not RunStats.final and State.mode == "game" then GameplayOutcome.cancel("restart") end
 	simulationAccumulator = 0
@@ -192,7 +203,7 @@ local function updateGamePresentation(dt)
 end
 
 local function updateGameplayOutcome()
-	if State.mode ~= "game" then
+	if not simulationIsAllowed() then
 		return
 	end
 
@@ -259,44 +270,9 @@ local function drawWorldAndUI()
 	Tooltip.draw()
 end
 
--- What is this name? lol "maybeDoSomething"
-function love.update(dt)
-	State.presentationFrameId = (State.presentationFrameId or 0) + 1
-	State.presentationDt = dt
-	Save.update(dt)
-	Camera.update(dt)
-
-	local mode = State.mode
-	if mode == "game" and not State.paused then RunStats.update(dt) end
-	local target = (mode == "pause" or mode == "settings_gameplay") and 1 or 0
-
-	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
-
-	Steam.update()
-	Sound.update(dt)
-
-	if isWorldMode(mode) then
-		BottomBar.update(dt)
-		DamageMeter.update(dt)
-		BossHealthBar.update(dt)
-	end
-
-	if mode == "pause" then
-		simulationAccumulator = 0
-		Menu.updatePause(dt)
-
-		return
-	end
-
-	if mode == "settings_gameplay" then
-		simulationAccumulator = 0
-		Menu.update(dt)
-
-		return
-	end
-
-	if State.paused then
-		simulationAccumulator = 0
+local function updateFixedSimulation(dt)
+	if not simulationIsAllowed() then
+		clearDisabledSimulationTime()
 		return
 	end
 
@@ -310,9 +286,11 @@ function love.update(dt)
 	end
 	simulationAccumulator = min(requestedSimulationTime, catchUpBudget)
 	local steps = 0
-	while simulationAccumulator + 1e-12 >= step and steps < SimulationClock.maxCatchUpSteps do
+	while simulationIsAllowed()
+		and simulationAccumulator + 1e-12 >= step
+		and steps < SimulationClock.maxCatchUpSteps do
 		Sim.update(step)
-		updateGameplayOutcome()
+		if simulationIsAllowed() then updateGameplayOutcome() end
 		simulationAccumulator = simulationAccumulator - step
 		steps = steps + 1
 	end
@@ -322,27 +300,77 @@ function love.update(dt)
 	if steps == SimulationClock.maxCatchUpSteps then
 		DevelopmentCounters.add("framesAtCatchUpLimit")
 	end
-	State.renderAlpha = max(0, min(1, simulationAccumulator / step))
-
-	if mode ~= "game" then
-		if mode == "victory" then
-			State.victoryDanceClock = (State.victoryDanceClock or 0) + dt
-		end
-		updateMetaScreens(dt, mode)
-
-		return
+	if simulationIsAllowed() then
+		State.renderAlpha = max(0, min(1, simulationAccumulator / step))
+	else
+		clearDisabledSimulationTime()
 	end
+end
+
+local function updateGameplayMode(dt)
+	updateFixedSimulation(dt)
+	if not simulationIsAllowed() then return end
 
 	Input.updateHover()
-
-	updateGamePresentation(dt)
-
+	if simulationIsAllowed() then updateGamePresentation(dt) end
 	Tooltip.update(dt)
 	Messages.update(dt)
-	if gameplayFrozen then
-		return
+end
+
+local function updatePauseMode(dt)
+	clearDisabledSimulationTime()
+	Menu.updatePause(dt)
+end
+
+local function updateGameplaySettingsMode(dt)
+	clearDisabledSimulationTime()
+	Menu.update(dt)
+end
+
+local function updateWorldResultMode(dt, mode)
+	clearDisabledSimulationTime()
+	if mode == "victory" then
+		State.victoryDanceClock = (State.victoryDanceClock or 0) + dt
+	end
+	updateMetaScreens(dt, mode)
+end
+
+local function updateNonWorldMenuMode(dt, mode)
+	clearDisabledSimulationTime()
+	updateMetaScreens(dt, mode)
+end
+
+local modeUpdateHandlers = {
+	game = updateGameplayMode,
+	pause = updatePauseMode,
+	settings_gameplay = updateGameplaySettingsMode,
+	game_over = updateWorldResultMode,
+	victory = updateWorldResultMode,
+}
+
+function love.update(dt)
+	State.presentationFrameId = (State.presentationFrameId or 0) + 1
+	State.presentationDt = dt
+	Save.update(dt)
+	Camera.update(dt)
+
+	local mode = State.mode
+	if simulationIsAllowed() then RunStats.update(dt) end
+	local target = (mode == "pause" or mode == "settings_gameplay") and 1 or 0
+
+	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
+
+	Steam.update()
+	Sound.update(dt)
+
+	if isWorldMode(mode) then
+		BottomBar.update(dt)
+		DamageMeter.update(dt)
+		BossHealthBar.update(dt)
 	end
 
+	local handler = modeUpdateHandlers[mode] or updateNonWorldMenuMode
+	handler(dt, mode)
 end
 
 function love.draw()
