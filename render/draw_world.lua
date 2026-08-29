@@ -10,7 +10,6 @@ local Mushrooms = require("world.scatter_mushrooms")
 local lg = love.graphics
 local min = math.min
 local sin = math.sin
-local abs = math.abs
 local sqrt = math.sqrt
 local floor = math.floor
 
@@ -252,163 +251,115 @@ local function drawAnimatedScatter()
 	end
 end
 
+-- Keep preview/export maps isolated from the gameplay map while avoiding rebuilding
+-- geometry every frame. Weak keys also allow temporary maps to be collected.
+local pathGeometryByMap = setmetatable({}, {__mode = "k"})
+
+local function buildPathGeometry(path)
+	local pathLen = #path
+	local geometry = {
+		segments = {},
+		corners = {},
+	}
+
+	for i = 1, pathLen - 1 do
+		local a = path[i]
+		local b = path[i + 1]
+
+		local ax, ay = gridToCenter(a[1], a[2])
+		local bx, by = gridToCenter(b[1], b[2])
+
+		local trimA, trimB = false, false
+
+		if i > 1 then
+			local p = path[i - 1]
+			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
+		end
+
+		if i < pathLen - 1 then
+			local n = path[i + 2]
+			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
+		end
+
+		geometry.segments[#geometry.segments + 1] = {
+			orientation = a[1] ~= b[1] and "horizontal" or "vertical",
+			x1 = min(ax, bx),
+			y1 = min(ay, by),
+			x2 = math.max(ax, bx),
+			y2 = math.max(ay, by),
+			trimA = trimA,
+			trimB = trimB,
+		}
+	end
+
+	for i = 2, pathLen - 1 do
+		local prev = path[i - 1]
+		local cur = path[i]
+		local next = path[i + 1]
+
+		local dx1 = cur[1] - prev[1]
+		local dy1 = cur[2] - prev[2]
+		local dx2 = next[1] - cur[1]
+		local dy2 = next[2] - cur[2]
+
+		if dx1 ~= dx2 or dy1 ~= dy2 then
+			local cx, cy = gridToCenter(cur[1], cur[2])
+			geometry.corners[#geometry.corners + 1] = {x = cx, y = cy}
+		end
+	end
+
+	return geometry
+end
+
+local function getPathGeometry(targetMap)
+	local cached = pathGeometryByMap[targetMap]
+
+	if not cached or cached.path ~= targetMap.path then
+		cached = {
+			path = targetMap.path,
+			geometry = buildPathGeometry(targetMap.path),
+		}
+		pathGeometryByMap[targetMap] = cached
+	end
+
+	return cached.geometry
+end
+
+local function drawPathGeometry(geometry, thickness, color)
+	local halfThickness = thickness * 0.5
+
+	lg.setColor(color)
+
+	for i = 1, #geometry.segments do
+		local segment = geometry.segments[i]
+		local trimA = segment.trimA and halfThickness or 0
+		local trimB = segment.trimB and halfThickness or 0
+
+		if segment.orientation == "horizontal" then
+			local width = segment.x2 - segment.x1 - trimA - trimB
+			lg.rectangle("fill", segment.x1 + trimA, segment.y1 - halfThickness, width, thickness)
+		else
+			local height = segment.y2 - segment.y1 - trimA - trimB
+			lg.rectangle("fill", segment.x1 - halfThickness, segment.y1 + trimA, thickness, height)
+		end
+	end
+
+	for i = 1, #geometry.corners do
+		local corner = geometry.corners[i]
+		lg.circle("fill", corner.x, corner.y, halfThickness)
+	end
+end
+
 local function drawPath(targetMap)
 	targetMap = targetMap or MapMod.map
-	local pathThickness = tile
-	local path = targetMap.path
-	local pathLen = #path
-
-	local outlineThickness = pathThickness
-	local halfOutline = outlineThickness * 0.5
-
-	local fillThickness = pathThickness - outlineW * 2
-	local halfFill = fillThickness * 0.5
-
+	local geometry = getPathGeometry(targetMap)
 	local terrain = getTerrain(targetMap)
+	local outlineThickness = tile
+	local fillThickness = tile - outlineW * 2
 
-	-- Outline
-	lg.setColor(terrain.pathOutline)
-
-	for i = 1, pathLen - 1 do
-		local a = path[i]
-		local b = path[i + 1]
-
-		local ax, ay = gridToCenter(a[1], a[2])
-		local bx, by = gridToCenter(b[1], b[2])
-
-		local dx = b[1] - a[1]
-		local dy = b[2] - a[2]
-
-		local trimA, trimB = false, false
-
-		if i > 1 then
-			local p = path[i - 1]
-			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
-		end
-
-		if i < pathLen - 1 then
-			local n = path[i + 2]
-			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
-		end
-
-		if dx ~= 0 then
-			local x1 = min(ax, bx)
-			local w = abs(bx - ax)
-
-			if trimA then
-				x1 = x1 + halfOutline
-				w = w - halfOutline
-			end
-
-			if trimB then
-				w = w - halfOutline
-			end
-
-			lg.rectangle("fill", x1, ay - halfOutline, w, outlineThickness)
-		else
-			local y1 = min(ay, by)
-			local h = abs(by - ay)
-
-			if trimA then
-				y1 = y1 + halfOutline
-				h = h - halfOutline
-			end
-
-			if trimB then
-				h = h - halfOutline
-			end
-
-			lg.rectangle("fill", ax - halfOutline, y1, outlineThickness, h)
-		end
-	end
-
-	for i = 2, pathLen - 1 do
-		local prev = path[i - 1]
-		local cur = path[i]
-		local next = path[i + 1]
-
-		local dx1 = cur[1] - prev[1]
-		local dy1 = cur[2] - prev[2]
-		local dx2 = next[1] - cur[1]
-		local dy2 = next[2] - cur[2]
-
-		if dx1 ~= dx2 or dy1 ~= dy2 then
-			local cx, cy = gridToCenter(cur[1], cur[2])
-			lg.circle("fill", cx, cy, halfOutline)
-		end
-	end
-
-	-- Fill
-	lg.setColor(terrain.path)
-
-	for i = 1, pathLen - 1 do
-		local a = path[i]
-		local b = path[i + 1]
-
-		local ax, ay = gridToCenter(a[1], a[2])
-		local bx, by = gridToCenter(b[1], b[2])
-
-		local dx = b[1] - a[1]
-		local dy = b[2] - a[2]
-
-		local trimA, trimB = false, false
-
-		if i > 1 then
-			local p = path[i - 1]
-			trimA = (p[1] ~= b[1] and p[2] ~= b[2])
-		end
-
-		if i < pathLen - 1 then
-			local n = path[i + 2]
-			trimB = (n[1] ~= a[1] and n[2] ~= a[2])
-		end
-
-		if dx ~= 0 then
-			local x1 = min(ax, bx)
-			local w = abs(bx - ax)
-
-			if trimA then
-				x1 = x1 + halfFill
-				w = w - halfFill
-			end
-
-			if trimB then
-				w = w - halfFill
-			end
-
-			lg.rectangle("fill", x1, ay - halfFill, w, fillThickness)
-		else
-			local y1 = min(ay, by)
-			local h = abs(by - ay)
-
-			if trimA then
-				y1 = y1 + halfFill
-				h = h - halfFill
-			end
-
-			if trimB then
-				h = h - halfFill
-			end
-
-			lg.rectangle("fill", ax - halfFill, y1, fillThickness, h)
-		end
-	end
-
-	for i = 2, pathLen - 1 do
-		local prev = path[i - 1]
-		local cur = path[i]
-		local next = path[i + 1]
-
-		local dx1 = cur[1] - prev[1]
-		local dy1 = cur[2] - prev[2]
-		local dx2 = next[1] - cur[1]
-		local dy2 = next[2] - cur[2]
-
-		if dx1 ~= dx2 or dy1 ~= dy2 then
-			local cx, cy = gridToCenter(cur[1], cur[2])
-			lg.circle("fill", cx, cy, halfFill)
-		end
-	end
+	-- Each pass applies its own half-thickness to endpoint trims.
+	drawPathGeometry(geometry, outlineThickness, terrain.pathOutline)
+	drawPathGeometry(geometry, fillThickness, terrain.path)
 end
 
 local function drawWorld()
