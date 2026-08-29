@@ -254,7 +254,8 @@ local function resolveDamage(p, evt)
 
 	local dealt, absorbed = Enemies.applyDamage(e, amount, {
 		sourceKind = p.sourceKind,
-		chain = evt.chain == true or p.sourceKind == "shock",
+		chain = evt.chain == true,
+		armorHeavy = evt.armorHeavy == true,
 	})
 	local effectiveDamage = dealt + absorbed
 

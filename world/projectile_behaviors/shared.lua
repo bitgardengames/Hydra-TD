@@ -130,18 +130,18 @@ local function getStat(p, key, fallback)
 	return fallback
 end
 
-local function emitDamage(p, e, dmg)
+local function emitDamage(p, e, dmg, metadata)
 	local evt = emitEvent(p, "damage")
 	evt.target = e
 	evt.amount = dmg
-	-- Shock arcs use explicit chain graphs so each jump resolves once.
-	evt.chain = p.sourceKind == "shock" or p._chain ~= nil
+	-- Damage semantics belong to the behavior that emitted the event. Keeping
+	-- these defaults explicit prevents attribution fields from selecting combat.
+	evt.chain = metadata and metadata.chain == true or false
+	evt.armorHeavy = metadata and metadata.armorHeavy == true or false
 	-- Presentation metadata survives the pooled event path and is resolved after
 	-- authoritative damage, so spectacular attacks never alter combat outcomes.
-	evt.effectIntensity = dmg >= 100 and "strong" or "normal"
-	-- Damage resolution uses these semantic hints to make successful counters
-	-- visibly distinct from ordinary hits without coupling visuals to a tower.
-		or (e and e.armor and (p.sourceKind == "cannon" or p.sourceKind == "lancer") and "armor_heavy")
+	evt.effectIntensity = evt.armorHeavy and e and e.armor and "armor_heavy"
+		or (dmg >= 100 and "strong" or "normal")
 end
 
 local function beginChainDamageBudget(p)
@@ -255,20 +255,7 @@ local function getTowerMuzzle(t)
 	end
 
 	local size = Constants.TILE * 0.42
-	local kind = t.kind
-	local tipX = size * 0.9
-
-	if kind == "cannon" then
-		tipX = size * 0.95
-	elseif kind == "shock" then
-		tipX = size * (0.28 + 0.52)
-	elseif kind == "slow" then
-		tipX = size * 0.64
-	elseif kind == "poison" then
-		tipX = size * 0.6
-	elseif kind == "plasma" then
-		tipX = (Constants.TILE * 0.48) * 0.86
-	end
+	local tipX = t.def and t.def.projectileMuzzleOffset or size * 0.9
 
 	local localX = tipX - (t.recoil or 0)
 	local ca = cos(t.angle or 0)

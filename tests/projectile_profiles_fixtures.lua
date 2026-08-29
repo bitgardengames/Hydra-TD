@@ -23,8 +23,24 @@ assert(Profiles.get(tower) == profile, "a projectile plan should be cached for i
 tower.level = 4
 assert(Profiles.get(tower)[2].data.dur == 3.5, "level changes must rebuild tuned values")
 
-local movementSource = assert(io.open("world/projectile_behaviors/movement.lua", "r")):read("*a")
-assert(not movementSource:find('p.sourceKind ==', 1, true),
-	"shared projectile movement must not branch on tower kinds")
+for _, path in ipairs({
+	"world/projectiles.lua",
+	"world/projectile_behaviors/shared.lua",
+	"world/projectile_behaviors/movement.lua",
+	"world/projectile_behaviors/collision.lua",
+	"world/projectile_behaviors/damage.lua",
+	"world/projectile_behaviors/status_proc.lua",
+	"world/projectile_behaviors/emission.lua",
+	"world/projectile_behaviors/drawing.lua",
+}) do
+	local source = assert(io.open(path, "r")):read("*a")
+	assert(not source:find('sourceKind ==', 1, true), path .. " must not select behavior from attribution")
+	assert(not source:find('sourceTower.kind', 1, true), path .. " must not select behavior from tower kind")
+end
+
+local damageSource = assert(io.open("world/projectile_behaviors/damage.lua", "r")):read("*a")
+assert(damageSource:find('local chainDamageMetadata = { chain = true }', 1, true)
+	and damageSource:find('emitDamage(p, current, dealt, chainDamageMetadata)', 1, true),
+	"the retained chain core must explicitly attribute its damage events")
 
 print("fixed projectile profile fixtures passed")
