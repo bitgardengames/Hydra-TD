@@ -16,6 +16,7 @@ local Enemies = require("world.enemies")
 local Floaters = require("ui.floaters")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
+local RunModes = require("systems.run_modes")
 local EnemyRenderer = require("render.enemy_renderer")
 local EnemyRenderState = require("render.enemy_render_state")
 local TowerRenderer = require("render.tower_renderer")
@@ -283,8 +284,13 @@ function Director.load(name)
 		end
 	end
 
-	-- Jump to map
-	State.worldMapIndex = Director.shot.map
+	-- Trailer shots may seek past the authored campaign, so run them with endless
+	-- wave resolution. Keep the gameplay and world-map selections synchronized;
+	-- resetGame builds from worldMapIndex while Waves resolves from mapIndex.
+	local mapIndex = State.resolveMapIndex(Director.shot.map)
+	State.worldMapIndex = mapIndex
+	State.mapIndex = mapIndex
+	RunModes.set(State, RunModes.ENDLESS)
 
 	-- Reset game
 	State.mode = "game"
