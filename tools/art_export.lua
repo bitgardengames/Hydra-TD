@@ -170,46 +170,13 @@ function Export.exportEnemies()
 				lg.translate(size * 0.5, size * 0.5)
 				lg.scale(scale, scale)
 
-				local enemy = {
-					kind = kind,
-					def = def,
-					x = 0,
-					y = 0,
-					prevX = 0,
-					prevY = 0,
-					rx = 0,
-					ry = 0,
-					boss = def.boss or false,
-
-					hp = 0,
-					maxHp = def.hp or 1,
-					baseSpeed = def.speed,
-					speed = def.speed,
-					reward = def.reward,
-					score = def.score,
-
-					radius = def.radius,
-					split = def.split,
-
-					alpha = 1,
-					animT = 0,
-
-					hitFlash = 0,
-					dying = isDead,
-					deathDur = 0.3,
-					deathT = isDead and 0.3 or 0,
-
-					spawnFade = 0,
-					exitFade = nil,
-					pathIndex = 1,
-					modifiers = def.modifiers,
-
-					slowFactor = 1,
-					slowTimer = 0,
-					poisonStacks = 0,
-					poisonTimer = 0,
-					poisonDPS = 0,
-				}
+				-- Use the renderer's canonical portrait state instead of maintaining a
+				-- second, incomplete simulation of an enemy here.
+				local enemy = EnemyRenderer.newEnemyPortrait(kind)
+				enemy.dying = isDead
+				enemy.deathDur = 0.3
+				enemy.deathT = isDead and enemy.deathDur or 0
+				enemy.hp = isDead and 0 or def.hp
 
 				EnemyRenderer.drawEnemy(enemy)
 
