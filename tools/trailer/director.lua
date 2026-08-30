@@ -49,6 +49,21 @@ local function drawTrailerWorld()
 	Draw.drawWorld()
 end
 
+-- A rendered gameplay frame advances presentation state as well as producing
+-- pixels. Screenshot seeking must therefore render every frame it simulates;
+-- jumping the simulation straight to the requested frame leaves spawn fades,
+-- hit reactions, enemy animation, and other render-owned state at frame zero.
+-- Use the same camera and world renderer as gameplay rather than reproducing
+-- any of that presentation work in the exporter.
+local function renderGameplayFrame()
+	lg.push("all")
+	lg.setColor(1, 1, 1, 1)
+	Camera.begin()
+	drawTrailerWorld()
+	Camera.finish()
+	lg.pop()
+end
+
 Director = {
 	t = 0,
 	presentationDt = 0,
@@ -476,6 +491,7 @@ function Director.runScreenshotBatch(entries, prefix)
 
 		for f = 1, targetFrame do
 			Director.advanceFrame(SCREENSHOT_FRAME_DT)
+			renderGameplayFrame()
 		end
 
 		Director.scrub.enabled = true
