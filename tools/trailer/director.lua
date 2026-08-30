@@ -18,6 +18,8 @@ local Floaters = require("ui.floaters")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
 local RunModes = require("systems.run_modes")
+local CampaignWaveDefs = require("systems.campaign_wave_defs")
+local Maps = require("world.map_defs")
 
 local pi = math.pi
 local min = math.min
@@ -143,6 +145,9 @@ function Director.buildScene(scene)
     if scene.wave then
         if scene.wave.index then
             State.wave = scene.wave.index
+			assert(CampaignWaveDefs.get(Maps[State.mapIndex], State.wave),
+				string.format("Trailer shot requested unauthored wave %d for map %s",
+					State.wave, tostring(Maps[State.mapIndex] and Maps[State.mapIndex].id)))
             Waves.startWave()
         elseif scene.wave.start then
             Waves.startWave()
@@ -286,13 +291,15 @@ function Director.load(name)
 		end
 	end
 
-	-- Trailer shots may seek past the authored campaign, so run them with endless
-	-- wave resolution. Keep the gameplay and world-map selections synchronized;
-	-- resetGame builds from worldMapIndex while Waves resolves from mapIndex.
+	-- Export real campaign encounters rather than synthesizing more photogenic
+	-- endless compositions. A shot may render an art-only map, but it must then
+	-- name the campaign map whose authored formation it uses.
 	local mapIndex = State.resolveMapIndex(Director.shot.map)
 	State.worldMapIndex = mapIndex
-	State.mapIndex = mapIndex
-	RunModes.set(State, RunModes.ENDLESS)
+	State.mapIndex = State.resolveMapIndex(
+		(Director.shot.scene and Director.shot.scene.wave and Director.shot.scene.wave.authoredMap)
+			or Director.shot.map)
+	RunModes.set(State, RunModes.CAMPAIGN)
 
 	-- Reset game
 	State.mode = "game"
