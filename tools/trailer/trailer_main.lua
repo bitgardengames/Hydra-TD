@@ -7,7 +7,9 @@ local Trailer = {}
 local TRAILER_DIR = "trailer"
 local FRAMES_DIR = TRAILER_DIR .. "/frames"
 
-local FIXED_DT = 1 / 120
+-- Export one canonical presentation frame for every output frame. Gameplay's
+-- own fixed-step accumulator still runs the simulation at SimulationClock.step.
+local FIXED_DT = 1 / 60
 
 function Trailer.run()
 	require("core.bootstrap").initMinimal()
