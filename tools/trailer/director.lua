@@ -7,6 +7,7 @@ local State = require("core.state")
 local Waves = require("systems.waves")
 local Shots = require("tools.trailer.shots")
 local Sim = require("core.sim")
+local SimulationClock = require("core.simulation_clock")
 local Recorder = require("tools.trailer.recorder")
 local Sequences = require("tools.trailer.sequences")
 local HeroExport = require("tools.trailer.hero_export")
@@ -17,11 +18,6 @@ local Floaters = require("ui.floaters")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
 local RunModes = require("systems.run_modes")
-local EnemyRenderer = require("render.enemy_renderer")
-local EnemyRenderState = require("render.enemy_render_state")
-local TowerRenderer = require("render.tower_renderer")
-local Projectiles = require("world.projectiles")
-local Effects = require("world.effects")
 
 local pi = math.pi
 local min = math.min
@@ -44,24 +40,12 @@ local FONT_HERO = lg.newFont(FONT, HERO_FONT_SIZE)
 local FONT_CTA = lg.newFont(FONT, CTA_FONT_SIZE)
 local FONT_FLOATERS = lg.newFont(FONT, FLOATER_FONT_SIZE) -- Make floaters slightly more dramatic
 
-local FPS = 60
-local STEP_DT = 1 / FPS
+local STEP_DT = SimulationClock.step
+local SCREENSHOT_FRAME_DT = 1 / 60
 local Director
 
 local function drawTrailerWorld()
-	DrawWorld.drawGrass()
-	DrawWorld.drawPath()
-	DrawWorld.drawScatter()
-
-	DrawWorld.drawGrid()
-
-	TowerRenderer.drawTowerGhost()
-	TowerRenderer.drawTowers()
-	EnemyRenderState.prepare(nil, nil, Director.presentationDt, Director.presentationFrameId)
-	EnemyRenderer.drawEnemies()
-
-	Projectiles.draw()
-	Effects.draw()
+	Draw.drawWorld()
 end
 
 Director = {
@@ -316,6 +300,8 @@ end
 function Director.update(dt)
 	Director.presentationDt = dt
 	Director.presentationFrameId = Director.presentationFrameId + 1
+	State.presentationDt = dt
+	State.presentationFrameId = Director.presentationFrameId
 	-- Scrub mode takes over time
 	if Director.scrub.enabled then
 		if Director.scrub.playing then
@@ -478,7 +464,8 @@ function Director.runScreenshotBatch(entries, prefix)
 
 		Director.load(shot)
 
-		for f = 1, targetFrame do
+		local simulationFrames = floor(targetFrame * SCREENSHOT_FRAME_DT / STEP_DT + 0.5)
+		for f = 1, simulationFrames do
 			Director.stepFixed(STEP_DT)
 		end
 
