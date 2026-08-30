@@ -41,7 +41,8 @@ local FONT_CTA = lg.newFont(FONT, CTA_FONT_SIZE)
 local FONT_FLOATERS = lg.newFont(FONT, FLOATER_FONT_SIZE) -- Make floaters slightly more dramatic
 
 local STEP_DT = SimulationClock.step
-local SCREENSHOT_FRAME_DT = 1 / 60
+local OUTPUT_FPS = 60
+local SCREENSHOT_FRAME_DT = 1 / OUTPUT_FPS
 local Director
 
 local function drawTrailerWorld()
@@ -52,6 +53,7 @@ Director = {
 	t = 0,
 	presentationDt = 0,
 	presentationFrameId = 0,
+	simulationAccumulator = 0,
 	shot = nil,
 	nextShot = nil,
 	activeCamera = nil,
@@ -225,7 +227,7 @@ function Director.seekToFrame(frame)
 
 	-- Fast-forward deterministically
 	for i = 1, frame do
-		Director.stepFixed(STEP_DT)
+		Director.advanceFrame(SCREENSHOT_FRAME_DT)
 	end
 end
 
@@ -246,6 +248,7 @@ function Director.load(name)
 	Director.scrub.lastShotName = name
 
 	Director.t = 0
+	Director.simulationAccumulator = 0
 
 	Director.ctx = {
 		firstEnemy = nil,
@@ -297,28 +300,35 @@ function Director.load(name)
 	end
 end
 
-function Director.update(dt)
+function Director.advanceFrame(dt)
 	Director.presentationDt = dt
 	Director.presentationFrameId = Director.presentationFrameId + 1
 	State.presentationDt = dt
 	State.presentationFrameId = Director.presentationFrameId
+
+	-- Match gameplay's fixed-step accumulator exactly. Rendering is still driven
+	-- by the export frame rate, while the unmodified simulation runs exclusively
+	-- at its canonical tick rate.
+	Director.simulationAccumulator = Director.simulationAccumulator + dt * State.speed
+	while Director.simulationAccumulator + 1e-12 >= STEP_DT do
+		Director.stepFixed(STEP_DT)
+		Director.simulationAccumulator = Director.simulationAccumulator - STEP_DT
+	end
+	State.renderAlpha = max(0, min(1, Director.simulationAccumulator / STEP_DT))
+end
+
+function Director.update(dt)
 	-- Scrub mode takes over time
 	if Director.scrub.enabled then
 		if Director.scrub.playing then
-			-- advance in real time but quantized to fixed frames
-			Director._scrubAccum = (Director._scrubAccum or 0) + dt
-
-			while Director._scrubAccum >= STEP_DT do
-				Director._scrubAccum = Director._scrubAccum - STEP_DT
-				Director.scrub.frame = Director.scrub.frame + 1
-				Director.stepFixed(STEP_DT)
-			end
+			Director.scrub.frame = Director.scrub.frame + 1
+			Director.advanceFrame(dt)
 		end
 
 		return
 	end
 
-	Director.stepFixed(STEP_DT)
+	Director.advanceFrame(dt)
 
     -- Shot finished?
 	if Director.t >= Director.shot.duration and not Director.transition then
@@ -464,9 +474,8 @@ function Director.runScreenshotBatch(entries, prefix)
 
 		Director.load(shot)
 
-		local simulationFrames = floor(targetFrame * SCREENSHOT_FRAME_DT / STEP_DT + 0.5)
-		for f = 1, simulationFrames do
-			Director.stepFixed(STEP_DT)
+		for f = 1, targetFrame do
+			Director.advanceFrame(SCREENSHOT_FRAME_DT)
 		end
 
 		Director.scrub.enabled = true
@@ -481,6 +490,10 @@ function Director.runScreenshotBatch(entries, prefix)
 end
 
 function Director.draw()
+	-- love.draw does this before the canonical world renderer. Without it, the
+	-- camera canvas is multiplied by whichever color the previous draw left set,
+	-- which made exported frames visibly darker and inconsistently tinted.
+	lg.setColor(1, 1, 1, 1)
 	if Director.shot.type ~= "logo" then
 		if HeroExport.draw(function()
 			--Camera.begin()
@@ -640,7 +653,7 @@ function Director.draw()
 
 	if Director.scrub.playing then -- Director.scrub.enabled
 		local frame = Director.scrub.frame
-		local time = frame / FPS
+		local time = frame / OUTPUT_FPS
 
 		lg.setColor(0, 0, 0, 0.6)
 		lg.rectangle("fill", 10, 10, 180, 60, 6)
@@ -665,7 +678,7 @@ function love.keypressed(key)
 		Director._scrubAccum = 0
 
 		if Director.scrub.enabled then
-			Director.scrub.frame = floor(Director.t * FPS + 0.5)
+			Director.scrub.frame = floor(Director.t * OUTPUT_FPS + 0.5)
 			Director.seekToFrame(Director.scrub.frame)
 		end
 	elseif key == "f10" then
@@ -686,7 +699,7 @@ function love.keypressed(key)
 		elseif key == "home" then
 			Director.seekToFrame(0)
 		elseif key == "end" then
-			local maxFrame = floor((Director.shot.duration or 0) * FPS + 0.5)
+			local maxFrame = floor((Director.shot.duration or 0) * OUTPUT_FPS + 0.5)
 			Director.seekToFrame(maxFrame)
 		end
 	end
