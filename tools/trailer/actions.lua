@@ -126,7 +126,7 @@ end
 
 function Actions.jumpToWave(wave)
 	return function()
-		State.wave = wave - 1
+		State.wave = wave
 		Waves.startWave()
 	end
 end

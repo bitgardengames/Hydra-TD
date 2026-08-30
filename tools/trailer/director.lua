@@ -140,7 +140,7 @@ function Director.buildScene(scene)
     -- Start wave early if requested
     if scene.wave then
         if scene.wave.index then
-            State.wave = scene.wave.index - 1
+            State.wave = scene.wave.index
             Waves.startWave()
         elseif scene.wave.start then
             Waves.startWave()
