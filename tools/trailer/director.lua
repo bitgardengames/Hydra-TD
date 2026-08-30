@@ -6,7 +6,6 @@ local Towers = require("world.towers")
 local State = require("core.state")
 local Waves = require("systems.waves")
 local Shots = require("tools.trailer.shots")
-local Sim = require("core.sim")
 local Recorder = require("tools.trailer.recorder")
 local Sequences = require("tools.trailer.sequences")
 local HeroExport = require("tools.trailer.hero_export")
@@ -47,6 +46,8 @@ local FONT_FLOATERS = lg.newFont(FONT, FLOATER_FONT_SIZE) -- Make floaters sligh
 local FPS = 60
 local STEP_DT = 1 / FPS
 local Director
+local gameplayUpdate
+local gameplayDraw
 
 local function drawTrailerWorld()
 	DrawWorld.drawGrass()
@@ -102,6 +103,11 @@ Director = {
 	},
 }
 
+function Director.setGameplayCallbacks(update, draw)
+	gameplayUpdate = assert(update, "capture requires the gameplay update callback")
+	gameplayDraw = assert(draw, "capture requires the gameplay draw callback")
+end
+
 local HERO_ANGLE = -math.pi / 6
 
 Director.lancerIdle = {
@@ -152,7 +158,7 @@ function Director.buildScene(scene)
         local t = 0
 
         while t < warmup do
-            Sim.update(step)
+            gameplayUpdate(step)
             t = t + step
         end
     end
@@ -165,7 +171,7 @@ function Director.stepFixed(step)
 
 	-- Run simulation
 	if Director.shot.type ~= "logo" then
-		Sim.update(step)
+		gameplayUpdate(step)
 
 		-- Capture first enemy once
 		if not Director.ctx.firstEnemy then
@@ -494,6 +500,14 @@ function Director.runScreenshotBatch(entries, prefix)
 end
 
 function Director.draw()
+	if Director._shotBatch then
+		-- Screenshot export is capture mode, not an alternate renderer. Drawing
+		-- through the installed game callback keeps the exported frame identical
+		-- to the running game, including its map cache, overlays, and UI.
+		gameplayDraw()
+		return
+	end
+
 	if Director.shot.type ~= "logo" then
 		if HeroExport.draw(function()
 			--Camera.begin()
