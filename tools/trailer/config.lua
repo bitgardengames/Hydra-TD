@@ -1,5 +1,5 @@
 local Config = {
-	mode = "screenshots", -- sequence, single, screenshots
+	mode = "sequence", -- sequence, single, screenshots
 	sequence = "steam_trailer",
 	startShot = "survive",
 
