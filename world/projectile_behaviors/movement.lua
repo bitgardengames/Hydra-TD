@@ -90,22 +90,21 @@ B.move_homing = {
 		local nx = dx * inv
 		local ny = dy * inv
 
-		-- aim at enemy surface, derived from center-normalized direction
-		local enemyRadius = (alive and e.radius) or 0
-		local targetX = tx - nx * enemyRadius
-		local targetY = ty - ny * enemyRadius
-
-		local surfaceScale = dist - enemyRadius
-		local surfaceDx = nx * surfaceScale
-		local surfaceDy = ny * surfaceScale
-		local surfaceDist = abs(surfaceScale)
-		local surfaceDist2 = surfaceDist * surfaceDist
-
 		local step = (p.speed or 0) * dt
-		local step2 = step * step
+		-- Treat the projectile and target as circles. In particular, do not use
+		-- abs(dist - radius) here: once a fast projectile crosses the target's
+		-- surface that value makes it steer back out of the enemy instead of
+		-- resolving the overlap as a hit.
+		local contactRadius = alive and ((e.radius or 0) + (p.hitRadius or p.r or 0)) or 0
+		local distanceToContact = dist - contactRadius
 
-		if surfaceDist2 <= step2 then
-			p.x, p.y = targetX, targetY
+		if distanceToContact <= step then
+			-- Keep an already-overlapping projectile where it is; otherwise stop it
+			-- at the first point of contact so impact effects are positioned there.
+			if distanceToContact > 0 then
+				p.x = p.x + nx * distanceToContact
+				p.y = p.y + ny * distanceToContact
+			end
 
 			if alive then
 				p.hit = e
@@ -115,11 +114,10 @@ B.move_homing = {
 		end
 
 		-- normal movement
-		local invSurfaceDist = 1 / surfaceDist
-		p.x = p.x + surfaceDx * invSurfaceDist * step
-		p.y = p.y + surfaceDy * invSurfaceDist * step
+		p.x = p.x + nx * step
+		p.y = p.y + ny * step
 
-		p.rotation = atan2(surfaceDy, surfaceDx)
+		p.rotation = atan2(dy, dx)
 	end
 }
 
