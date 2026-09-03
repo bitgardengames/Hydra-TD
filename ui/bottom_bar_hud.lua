@@ -1,7 +1,6 @@
 local State = require("core.state")
 local Theme = require("core.theme")
 local Util = require("core.util")
-local Hotkeys = require("core.hotkeys")
 local Save = require("core.save")
 local Text = require("ui.text")
 local L = require("core.localization")
@@ -24,10 +23,6 @@ local cm1, cm2, cm3 = colorMoney[1], colorMoney[2], colorMoney[3]
 local cl1, cl2, cl3 = colorLives[1], colorLives[2], colorLives[3]
 
 local formatInt = Util.formatInt
-
-local MONEY_X = 12
-local LIVES_X = 90
-local CONTROL_PAD = 8
 
 -- Text caches (no per-frame string rebuilding)
 local hudCache = {
@@ -98,6 +93,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 	local font = lg.getFont()
 	local textH = font:getHeight()
 	local y = infoY + floor((infoH - textH) * 0.5 + 0.5)
+	local columnW = infoW / 3
 
 	local moneyRounded = floor(State.moneyLerp + 0.5)
 
@@ -110,7 +106,7 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 
 	local settings = Save.data and Save.data.settings or {}
 	local moneyPose = feedbackPose(moneyPulse, moneyPulseTime, settings.cameraMotion == false)
-	local moneyX = infoX + MONEY_X
+	local moneyX = infoX + columnW * 0.5 - font:getWidth(moneyCache.text) * 0.5
 	local moneyY = y + moneyPose.y
 	lg.setColor(moneyPose.r, moneyPose.g, moneyPose.b, 1)
 	if moneyPose.scaleY ~= 1 then
@@ -132,20 +128,20 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 
 	lg.setColor(cl1, cl2, cl3, 1)
 	local livesAnim = State.livesAnim or 0
+	local livesX = infoX + columnW * 1.5 - font:getWidth(livesCache.text) * 0.5
 
 	if livesAnim > 0 then
-		local x = infoX + LIVES_X
 		local t = 1 - livesAnim
 		local easedT = 1 - (1 - t) * (1 - t)
 		local dipY = sin(easedT * pi * 1.85) * livesAnim * 4.5
 		local animY = y + dipY
 
-		Text.printShadow(livesCache.text, x, animY)
+		Text.printShadow(livesCache.text, livesX, animY)
 
 		lg.setColor(cl1, cl2, cl3, 0.25 + livesAnim * 0.5)
-		Text.printShadow(livesCache.text, x, animY + 1)
+		Text.printShadow(livesCache.text, livesX, animY + 1)
 	else
-		Text.printShadow(livesCache.text, infoX + LIVES_X, y)
+		Text.printShadow(livesCache.text, livesX, y)
 	end
 
 	-- Always expose the active simulation multiplier, including during prep.
@@ -154,14 +150,12 @@ function Hud.draw(infoX, infoY, infoW, infoH, dt, mx, my)
 		speedCache.value = State.speed
 		speedCache.text = L("hud.speed", State.speed)
 	end
-	local speedKey = Hotkeys.getDisplay("fastForward")
-	local speedLabel = speedKey and (speedCache.text .. " [" .. speedKey .. "]") or speedCache.text
 
 	-- Keep the bottom bar focused on persistent run status. Starting a wave remains
 	-- available through its hotkey and the wave preview control.
-	local right = infoX + infoW - CONTROL_PAD
+	local speedX = infoX + columnW * 2.5 - font:getWidth(speedCache.text) * 0.5
 	lg.setColor(ct1, ct2, ct3, 1)
-	Text.printShadow(speedLabel, right - font:getWidth(speedLabel), y)
+	Text.printShadow(speedCache.text, speedX, y)
 end
 
 -- Small, dependency-free fixture hooks. They expose presentation values, not

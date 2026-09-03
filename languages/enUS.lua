@@ -469,7 +469,7 @@ return {
 	hud = {
 		lives = "Lives %d",
 		wave = "Wave %d",
-		speed = "%gx",
+		speed = "Speed: %g",
 		startWaveButton = "Start",
 		prep = "Press %s to start",
 		spawning = "Spawning %d - Alive %d",
