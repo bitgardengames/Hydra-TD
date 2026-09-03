@@ -180,12 +180,21 @@ B.hit_chain = {
 		-- =========================================
 		-- CHAIN LOGIC
 		-- =========================================
-		local chain = p._retained.chain
-		clearArray(chain)
-		p._chain = chain
+		local chain = p._chain
+		if chain then
+			clearArray(chain)
+		else
+			chain = {}
+			p._chain = chain
+		end
 
-		local visited = p._retained.chainVisited
-		clearMap(visited)
+		local visited = p._chainVisited
+		if visited then
+			clearMap(visited)
+		else
+			visited = {}
+			p._chainVisited = visited
+		end
 		local current = e
 		local dmg = currentDamage
 
@@ -303,11 +312,21 @@ B.chain_endpoint_burst = {
 		local radius = data.radius or 32
 		local radius2 = radius * radius
 		local dmgMult = data.dmgMult or 0.5
-		local endpoints = p._retained.endpointScratch
-		clearMap(endpoints)
+		local endpoints = p._endpointScratch
+		if endpoints then
+			clearMap(endpoints)
+		else
+			endpoints = {}
+			p._endpointScratch = endpoints
+		end
 
-		local hasOutgoing = p._retained.hasOutgoingScratch
-		clearMap(hasOutgoing)
+		local hasOutgoing = p._hasOutgoingScratch
+		if hasOutgoing then
+			clearMap(hasOutgoing)
+		else
+			hasOutgoing = {}
+			p._hasOutgoingScratch = hasOutgoing
+		end
 
 		for i = 1, #p._chain do
 			local link = p._chain[i]

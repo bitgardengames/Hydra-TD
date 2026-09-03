@@ -93,9 +93,6 @@ local function startNormalWave(wave, map)
 end
 
 function Waves.startWave()
-	-- Starting again while a wave is active replaces the spawner schedule without
-	-- removing enemies already on the map, which makes two waves appear to overlap.
-	if not State.inPrep then return false end
 	local map = Maps[State.mapIndex]
 	State.waveLeaks, State.inPrep = 0, false
 	if State.mode == "game" then

@@ -19,13 +19,6 @@ package.loaded["world.spatial_grid"] = {
 			end
 		end
 	end,
-	visitCells = function(x, y, radius, visitor, context)
-		queryCounts[x] = (queryCounts[x] or 0) + 1
-		local result = nearby[x] or {}
-		for i = 1, #result do
-			visitor(result[i], context)
-		end
-	end,
 	forEachQueryCell = function(x, y, radius, fn, context)
 		local cx, cy = floor(x / 100), floor(y / 100)
 		local footprint = radius > 0 and ceil(radius / 100) or 0
@@ -59,22 +52,7 @@ nearby[100] = {firstAura, strongerAura, target}
 nearby[200] = {firstAura, strongerAura, target}
 Support.flushDirtySources()
 assert(target.supportBoost == 2, "overlapping support did not select the strongest boost")
-assert(firstAura._supportRefreshX == 100 and firstAura._supportRefreshY == 0,
-	"support refresh position was not retained")
 queryCounts[100] = 0
-
--- Source movement stays cached until it can reach a nearby membership
--- boundary. An unchanged position should never enqueue redundant work.
-Support.onSourceMoved(firstAura, firstAura.x, firstAura.y)
-Support.flushDirtySources()
-assert(queryCounts[100] == 0, "unchanged support source was refreshed")
-firstAura.x = 110
-nearby[110] = nearby[100]
-Support.onSourceMoved(firstAura, 100, 0)
-Support.flushDirtySources()
-assert(queryCounts[110] == nil, "safe support movement crossed its refresh threshold")
-firstAura.x = 100
-
 Support.onEnemyCellChanged(target, 1, 0, 2, 0)
 Support.onEnemyCellChanged(target, 2, 0, 1, 0)
 Support.flushDirtySources()

@@ -36,7 +36,6 @@ return {
 		},
 
 		wave = {
-			authoredMap = 1,
 			index = 5,
 			start = true,
 			warmup = 9.0,

@@ -3,7 +3,6 @@ local Enemies = require("world.enemies")
 local Effects = require("world.effects")
 local Sound = require("systems.sound")
 local PB = require("world.projectile_behaviors")
-local ProjectileProfiles = require("world.projectile_profiles")
 local Util = require("core.util")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
@@ -111,12 +110,29 @@ local function acquire()
 		defaultHitCtx = {},
 		eventPool = {},
 		eventPoolCount = 0,
-		chain = {},
-		chainVisited = {},
 	}
 
 	return { _retained = retained }
 end
+
+-- These are shot-owned values. Retained containers live in p._retained and are
+-- deliberately not mixed into this list.
+local reusableFields = {
+	"x", "y", "r", "baseR", "scale", "life", "t", "sourceTower", "sourceKind",
+	"speed", "damage", "hitOrigin", "target", "targetID", "ignoreTarget", "angle",
+	"rotation", "vx", "vy", "hitRadius", "hitRadius2", "lastTX", "lastTY",
+	"behaviors", "hit", "_consumed", "_hooks", "_drawHandlers", "_canHitPredicates",
+	"_didExpireHook",
+	"allowRepeatHits", "consumeOnHit", "pierce", "dead", "radius", "visualScale",
+	"cx", "cy", "orbitSpeed", "onEvent", "_baseDamage", "_beam", "_boom",
+	"_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
+	"_chainVisited", "_claimedScratch", "_conductRadius", "_delayedBlast",
+	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
+	"_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
+	"_slowAuraRadius", "_slowAuraTick", "_slowAuraTimer", "_snowballBaseDamage",
+	"_snowballHits", "_snowballStacks", "_spiral", "_supernovaBurstDone", "_suspend",
+	"_targetPointX", "_targetPointY", "_tickStates", "_wave", "_zap",
+}
 
 local function resetReusableState(p)
 	local retained = p._retained
@@ -133,14 +149,18 @@ local function resetReusableState(p)
 	Util.clearTable(retained.defaultHitCtx)
 	retained.eventPoolCount = p._eventPoolCount or retained.eventPoolCount
 
-	-- Projectile fields are shot-owned unless they live in the retained
-	-- container. Clearing the table itself keeps newly introduced behavior state
-	-- from leaking merely because this cleanup forgot to enumerate it.
-	for key in pairs(p) do
-		if key ~= "_retained" then
-			p[key] = nil
-		end
+	for i = 1, #reusableFields do
+		p[reusableFields[i]] = nil
 	end
+
+	p.eventRead = nil
+	p.eventCount = nil
+	p.hitSet = nil
+	p.hitCooldowns = nil
+	p.events = nil
+	p._defaultHitCtx = nil
+	p._eventPool = nil
+	p._eventPoolCount = nil
 end
 
 local function release(p)
@@ -158,7 +178,8 @@ local function removeAt(i)
 	projectiles[#projectiles] = nil
 end
 
-local function initProjectile(p, source, target)
+local function initProjectile(p, source, opts)
+	opts = opts or {}
 	local retained = p._retained
 
 	p.hitSet = retained.hitSet
@@ -170,28 +191,33 @@ local function initProjectile(p, source, target)
 	p._eventPool = retained.eventPool
 	p._eventPoolCount = retained.eventPoolCount
 
-	p.x = source.x
-	p.y = source.renderY or source.y
+	p.x = opts.x or source.x
+	p.y = opts.y or source.renderY or source.y
 
-	p.r = 4.5
+	p.r = opts.r or 4.5
 	p.baseR = p.r
-	p.scale = 1
+	p.scale = opts.scale or 1
 
-	p.life = 3
+	p.life = opts.life or 3
 	p.t = 0
 
 	p.sourceTower = source
 	p.sourceKind = source.kind
 
-	p.speed = source.projSpeed or 0
-	p.damage = source.damage or 0
+	p.speed = opts.speed or source.projSpeed or 0
+	p.damage = opts.damage or source.damage or 0
 
-	p.hitOrigin = "primary"
+	p.hitOrigin = opts.hitOrigin or "primary"
 
-	p.target = target
+	p.target = opts.target
 	p.targetID = p.target and p.target.id or nil
-	p.angle = source.angle or 0
+	p.ignoreTarget = opts.ignoreTarget
+
+	p.angle = opts.angle or source.angle or 0
 	p.rotation = p.angle
+
+	p.vx = opts.vx
+	p.vy = opts.vy
 
 	p._consumed = false
 	p.hasHit = projectileHasHit
@@ -202,30 +228,43 @@ local function initProjectile(p, source, target)
 	nextHitSetStamp(p)
 	p._defaultHitCtx.origin = p.hitOrigin
 
-	p.hitRadius = p.r
+	p.hitRadius = opts.hitRadius or p.r
 	p.hitRadius2 = p.hitRadius * p.hitRadius
 
 	if p.target then
 		p.lastTX = p.target.x
 		p.lastTY = p.target.y
+	elseif opts.lastTX and opts.lastTY then
+		p.lastTX = opts.lastTX
+		p.lastTY = opts.lastTY
+	elseif p.vx and p.vy then
+		p.lastTX = p.x + p.vx * 10
+		p.lastTY = p.y + p.vy * 10
 	else
 		p.lastTX = p.x + cos(p.angle) * 10
 		p.lastTY = p.y + sin(p.angle) * 10
 	end
 
-	p.behaviors = ProjectileProfiles.get(source)
+	if opts.behaviors then
+		p.behaviors = opts.behaviors
+	elseif opts.context then
+		p.behaviors = opts.context.behaviors
+	else
+		local fireProfile = source._fireProfile
+		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
+	end
 	PB.compileHooks(p)
 
 	return p
 end
 
-local function createProjectile(source, target)
+local function createProjectile(source, options)
 	if not source then
 		return nil
 	end
 
 	local p = acquire()
-	initProjectile(p, source, target)
+	initProjectile(p, source, options)
 
 	PB.init(p)
 	Sound.play(source.kind)
@@ -234,6 +273,49 @@ local function createProjectile(source, target)
 	return p
 end
 
+local function spawnEvent(evt)
+	return createProjectile(evt.source, evt)
+end
+
+local function spawnDirect(source, target, context, speed, life)
+	return createProjectile(source, {
+		target = target,
+		context = context,
+		speed = speed,
+		life = life,
+	})
+end
+
+local function resolveSpawnProjectile(parent, evt)
+	if not evt.behaviors and parent and parent.behaviors then
+		evt.behaviors = PB.buildChildBehaviors(parent.behaviors)
+	end
+
+	local newP = spawnEvent(evt)
+
+	if not newP then
+		return
+	end
+
+	if evt.angle ~= nil then
+		local ang = evt.angle
+
+		newP.angle = ang
+		newP.rotation = ang
+
+		newP.vx = cos(ang)
+		newP.vy = sin(ang)
+
+		if evt.lastTX and evt.lastTY then
+			newP.lastTX = evt.lastTX
+			newP.lastTY = evt.lastTY
+		else
+			newP.lastTX = newP.x + newP.vx * 10
+			newP.lastTY = newP.y + newP.vy * 10
+		end
+	end
+
+end
 
 local function resolveDamage(p, evt)
 	local e = evt.target
@@ -314,6 +396,7 @@ local function resolveConsume(p)
 end
 
 local eventDispatch = {
+	spawn_projectile = resolveSpawnProjectile,
 	damage = resolveDamage,
 	impulse = function(_, evt)
 		resolveImpulse(evt)
@@ -401,7 +484,7 @@ local function processHit(p)
 end
 
 local function spawn(t, e)
-	return createProjectile(t, e)
+	spawnDirect(t, e)
 end
 
 local function update(dt)
@@ -476,9 +559,15 @@ local function load()
 	end
 end
 
+local function spawnFromContext(t, target, ctx, speed, life)
+	return spawnDirect(t, target, ctx, speed, life)
+end
+
 return {
 	projectiles = projectiles,
 	spawn = spawn,
+	spawnEvent = spawnEvent,
+	spawnFromContext = spawnFromContext,
 	update = update,
 	draw = draw,
 	clear = clear,

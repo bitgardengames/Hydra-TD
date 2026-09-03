@@ -52,10 +52,8 @@ local source = {
 }
 local firstPlan = { { id = "first" } }
 local secondPlan = { { id = "second" } }
-source.def.behaviors = firstPlan
 
-local first = Projectiles.spawn(source)
-first.life = 0.01
+local first = Projectiles.spawnEvent({ source = source, life = 0.01, behaviors = firstPlan })
 first.markHit(first, "enemy-a")
 first.setHitCooldownExpiry(first, "enemy-b", 99)
 first._defaultHitCtx.hitX = 123
@@ -71,13 +69,10 @@ PB.pushEvent(first, queued)
 Projectiles.update(0.02)
 assert(#Projectiles.projectiles == 0)
 
-source.def.behaviors = secondPlan
-source._projectileProfile = nil
-source._projectileProfileLevel = nil
-local second = Projectiles.spawn(source)
+local second = Projectiles.spawnEvent({ source = source, life = 1, behaviors = secondPlan })
 assert(second == first, "fixture must reacquire the released projectile")
-assert(second.behaviors[1].id == "second", "fixed tower projectile plan leaked between uses")
-assert(second._hooks.plan == second.behaviors, "compiled behavior hooks were not replaced")
+assert(second.behaviors == secondPlan, "behavior plan leaked between uses")
+assert(second._hooks.plan == secondPlan, "compiled behavior hooks were not replaced")
 assert(second.eventRead == 1 and second.eventCount == 0 and next(second.events) == nil,
 	"queued events leaked between uses")
 assert(second._eventPoolCount == 1, "queued event was not returned to its owner pool")

@@ -7,7 +7,6 @@ local State = require("core.state")
 local Waves = require("systems.waves")
 local Shots = require("tools.trailer.shots")
 local Sim = require("core.sim")
-local SimulationClock = require("core.simulation_clock")
 local Recorder = require("tools.trailer.recorder")
 local Sequences = require("tools.trailer.sequences")
 local HeroExport = require("tools.trailer.hero_export")
@@ -17,9 +16,11 @@ local Enemies = require("world.enemies")
 local Floaters = require("ui.floaters")
 local Sound = require("systems.sound")
 local Difficulty = require("systems.difficulty")
-local RunModes = require("systems.run_modes")
-local CampaignWaveDefs = require("systems.campaign_wave_defs")
-local Maps = require("world.map_defs")
+local EnemyRenderer = require("render.enemy_renderer")
+local EnemyRenderState = require("render.enemy_render_state")
+local TowerRenderer = require("render.tower_renderer")
+local Projectiles = require("world.projectiles")
+local Effects = require("world.effects")
 
 local pi = math.pi
 local min = math.min
@@ -42,35 +43,30 @@ local FONT_HERO = lg.newFont(FONT, HERO_FONT_SIZE)
 local FONT_CTA = lg.newFont(FONT, CTA_FONT_SIZE)
 local FONT_FLOATERS = lg.newFont(FONT, FLOATER_FONT_SIZE) -- Make floaters slightly more dramatic
 
-local STEP_DT = SimulationClock.step
-local OUTPUT_FPS = 60
-local SCREENSHOT_FRAME_DT = 1 / OUTPUT_FPS
+local FPS = 60
+local STEP_DT = 1 / FPS
 local Director
 
 local function drawTrailerWorld()
-	Draw.drawWorld()
-end
+	DrawWorld.drawGrass()
+	DrawWorld.drawPath()
+	DrawWorld.drawScatter()
 
--- A rendered gameplay frame advances presentation state as well as producing
--- pixels. Screenshot seeking must therefore render every frame it simulates;
--- jumping the simulation straight to the requested frame leaves spawn fades,
--- hit reactions, enemy animation, and other render-owned state at frame zero.
--- Use the same camera and world renderer as gameplay rather than reproducing
--- any of that presentation work in the exporter.
-local function renderGameplayFrame()
-	lg.push("all")
-	lg.setColor(1, 1, 1, 1)
-	Camera.begin()
-	drawTrailerWorld()
-	Camera.finish()
-	lg.pop()
+	DrawWorld.drawGrid()
+
+	TowerRenderer.drawTowerGhost()
+	TowerRenderer.drawTowers()
+	EnemyRenderState.prepare(nil, nil, Director.presentationDt, Director.presentationFrameId)
+	EnemyRenderer.drawEnemies()
+
+	Projectiles.draw()
+	Effects.draw()
 end
 
 Director = {
 	t = 0,
 	presentationDt = 0,
 	presentationFrameId = 0,
-	simulationAccumulator = 0,
 	shot = nil,
 	nextShot = nil,
 	activeCamera = nil,
@@ -144,10 +140,7 @@ function Director.buildScene(scene)
     -- Start wave early if requested
     if scene.wave then
         if scene.wave.index then
-            State.wave = scene.wave.index
-			assert(CampaignWaveDefs.get(Maps[State.mapIndex], State.wave),
-				string.format("Trailer shot requested unauthored wave %d for map %s",
-					State.wave, tostring(Maps[State.mapIndex] and Maps[State.mapIndex].id)))
+            State.wave = scene.wave.index - 1
             Waves.startWave()
         elseif scene.wave.start then
             Waves.startWave()
@@ -247,7 +240,7 @@ function Director.seekToFrame(frame)
 
 	-- Fast-forward deterministically
 	for i = 1, frame do
-		Director.advanceFrame(SCREENSHOT_FRAME_DT)
+		Director.stepFixed(STEP_DT)
 	end
 end
 
@@ -268,7 +261,6 @@ function Director.load(name)
 	Director.scrub.lastShotName = name
 
 	Director.t = 0
-	Director.simulationAccumulator = 0
 
 	Director.ctx = {
 		firstEnemy = nil,
@@ -291,15 +283,8 @@ function Director.load(name)
 		end
 	end
 
-	-- Export real campaign encounters rather than synthesizing more photogenic
-	-- endless compositions. A shot may render an art-only map, but it must then
-	-- name the campaign map whose authored formation it uses.
-	local mapIndex = State.resolveMapIndex(Director.shot.map)
-	State.worldMapIndex = mapIndex
-	State.mapIndex = State.resolveMapIndex(
-		(Director.shot.scene and Director.shot.scene.wave and Director.shot.scene.wave.authoredMap)
-			or Director.shot.map)
-	RunModes.set(State, RunModes.CAMPAIGN)
+	-- Jump to map
+	State.worldMapIndex = Director.shot.map
 
 	-- Reset game
 	State.mode = "game"
@@ -322,35 +307,26 @@ function Director.load(name)
 	end
 end
 
-function Director.advanceFrame(dt)
+function Director.update(dt)
 	Director.presentationDt = dt
 	Director.presentationFrameId = Director.presentationFrameId + 1
-	State.presentationDt = dt
-	State.presentationFrameId = Director.presentationFrameId
-
-	-- Match gameplay's fixed-step accumulator exactly. Rendering is still driven
-	-- by the export frame rate, while the unmodified simulation runs exclusively
-	-- at its canonical tick rate.
-	Director.simulationAccumulator = Director.simulationAccumulator + dt * State.speed
-	while Director.simulationAccumulator + 1e-12 >= STEP_DT do
-		Director.stepFixed(STEP_DT)
-		Director.simulationAccumulator = Director.simulationAccumulator - STEP_DT
-	end
-	State.renderAlpha = max(0, min(1, Director.simulationAccumulator / STEP_DT))
-end
-
-function Director.update(dt)
 	-- Scrub mode takes over time
 	if Director.scrub.enabled then
 		if Director.scrub.playing then
-			Director.scrub.frame = Director.scrub.frame + 1
-			Director.advanceFrame(dt)
+			-- advance in real time but quantized to fixed frames
+			Director._scrubAccum = (Director._scrubAccum or 0) + dt
+
+			while Director._scrubAccum >= STEP_DT do
+				Director._scrubAccum = Director._scrubAccum - STEP_DT
+				Director.scrub.frame = Director.scrub.frame + 1
+				Director.stepFixed(STEP_DT)
+			end
 		end
 
 		return
 	end
 
-	Director.advanceFrame(dt)
+	Director.stepFixed(STEP_DT)
 
     -- Shot finished?
 	if Director.t >= Director.shot.duration and not Director.transition then
@@ -497,8 +473,7 @@ function Director.runScreenshotBatch(entries, prefix)
 		Director.load(shot)
 
 		for f = 1, targetFrame do
-			Director.advanceFrame(SCREENSHOT_FRAME_DT)
-			renderGameplayFrame()
+			Director.stepFixed(STEP_DT)
 		end
 
 		Director.scrub.enabled = true
@@ -513,10 +488,6 @@ function Director.runScreenshotBatch(entries, prefix)
 end
 
 function Director.draw()
-	-- love.draw does this before the canonical world renderer. Without it, the
-	-- camera canvas is multiplied by whichever color the previous draw left set,
-	-- which made exported frames visibly darker and inconsistently tinted.
-	lg.setColor(1, 1, 1, 1)
 	if Director.shot.type ~= "logo" then
 		if HeroExport.draw(function()
 			--Camera.begin()
@@ -676,7 +647,7 @@ function Director.draw()
 
 	if Director.scrub.playing then -- Director.scrub.enabled
 		local frame = Director.scrub.frame
-		local time = frame / OUTPUT_FPS
+		local time = frame / FPS
 
 		lg.setColor(0, 0, 0, 0.6)
 		lg.rectangle("fill", 10, 10, 180, 60, 6)
@@ -701,7 +672,7 @@ function love.keypressed(key)
 		Director._scrubAccum = 0
 
 		if Director.scrub.enabled then
-			Director.scrub.frame = floor(Director.t * OUTPUT_FPS + 0.5)
+			Director.scrub.frame = floor(Director.t * FPS + 0.5)
 			Director.seekToFrame(Director.scrub.frame)
 		end
 	elseif key == "f10" then
@@ -722,7 +693,7 @@ function love.keypressed(key)
 		elseif key == "home" then
 			Director.seekToFrame(0)
 		elseif key == "end" then
-			local maxFrame = floor((Director.shot.duration or 0) * OUTPUT_FPS + 0.5)
+			local maxFrame = floor((Director.shot.duration or 0) * FPS + 0.5)
 			Director.seekToFrame(maxFrame)
 		end
 	end

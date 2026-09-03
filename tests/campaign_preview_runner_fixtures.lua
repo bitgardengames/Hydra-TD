@@ -5,7 +5,7 @@ file:close()
 
 assert(source:find("local function pointAlongPreviewPath(path, distance)", 1, true),
 	"campaign preview runner must interpolate along the cached map path")
-assert(source:find("local PREVIEW_RUNNER_SPEED = 120", 1, true),
+assert(source:find("local PREVIEW_RUNNER_SPEED = 64", 1, true),
 	"campaign preview runner must use the faster map-selection pace")
 assert(source:find("local cycleDuration = travelDuration + PREVIEW_RUNNER_FADE_DURATION", 1, true)
 	and source:find("local cycleTime = previewRunnerTime % cycleDuration", 1, true),

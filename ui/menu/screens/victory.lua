@@ -77,7 +77,7 @@ local confettiColors = {
 	Theme.ui.selected,
 }
 
-local confettiShapes = {"paper", "diamond", "dot"}
+local confettiShapes = {"paper", "diamond", "ribbon", "dot"}
 
 local function buildDamageRows(combatStats)
 	damageRows = {}
@@ -178,11 +178,11 @@ local function resetConfetti()
 		confetti[i] = {
 			x = burst and (fromLeft and -12 or sw + 12) or random(0, sw),
 			y = burst and (sh - random(20, 90)) or random(-sh * 0.75, -20),
-			vx = burst and (fromLeft and random(155, 320) or random(-320, -155)) or random(-22, 22),
-			vy = burst and random(-460, -270) or random(42, 112),
+			vx = burst and (fromLeft and random(105, 230) or random(-230, -105)) or random(-22, 22),
+			vy = burst and random(-330, -190) or random(42, 112),
 			gravity = burst and random(115, 175) or random(6, 20),
-			drag = burst and random(55, 90) * 0.01 or random(4, 10) * 0.01,
 			size = size,
+			length = size * random(14, 23) * 0.1,
 			spin = random() * 6.28,
 			spinRate = reducedMotion and random(-1, 1) or random(-6, 6),
 			flutter = random() * 6.28,
@@ -281,9 +281,6 @@ function Screen.update(dt)
 
 	for _, p in ipairs(confetti) do
 		p.flutter = p.flutter + p.flutterRate * dt
-		local drag = 1 / (1 + p.drag * dt)
-		p.vx = p.vx * drag
-		p.vy = p.vy * drag
 		p.vy = p.vy + p.gravity * dt
 		p.x = p.x + (p.vx + sin(p.flutter) * 18) * dt
 		p.y = p.y + p.vy * dt
@@ -295,7 +292,6 @@ function Screen.update(dt)
 			p.vx = random(-22, 22)
 			p.vy = random(44, 120)
 			p.gravity = random(6, 20)
-			p.drag = random(4, 10) * 0.01
 		end
 		if p.x < -20 then
 			p.x = sw + 20
@@ -375,6 +371,10 @@ function Screen.draw()
 		lg.rotate(p.spin + wobble)
 		if p.shape == "dot" then
 			lg.circle("fill", 0, 0, p.size * 0.42)
+		elseif p.shape == "ribbon" then
+			lg.setLineWidth(max(1, p.size * 0.3))
+			lg.line(-p.length * 0.5, -p.size * 0.35, 0, p.size * 0.35, p.length * 0.5, -p.size * 0.35)
+			lg.setLineWidth(1)
 		elseif p.shape == "diamond" then
 			lg.rotate(0.785)
 			lg.rectangle("fill", -p.size * 0.4 * flip, -p.size * 0.4, p.size * 0.8 * flip, p.size * 0.8, 1, 1)

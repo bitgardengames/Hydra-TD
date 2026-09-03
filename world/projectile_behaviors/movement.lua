@@ -90,47 +90,61 @@ B.move_homing = {
 		local nx = dx * inv
 		local ny = dy * inv
 
-		local step = (p.speed or 0) * dt
-		-- Treat the projectile and target as circles. In particular, do not use
-		-- abs(dist - radius) here: once a fast projectile crosses the target's
-		-- surface that value makes it steer back out of the enemy instead of
-		-- resolving the overlap as a hit.
-		-- The projectile is drawn around its center, so bring that center to the
-		-- enemy surface. Including the projectile radius here makes larger shots
-		-- (notably Lancer's 12px collision profile) hit and emit their impact
-		-- particles visibly short of the enemy.
-		local contactRadius = alive and (e.radius or 0) or 0
-		local distanceToContact = dist - contactRadius
+		-- aim at enemy surface, derived from center-normalized direction
+		local enemyRadius = (alive and e.radius) or 0
+		local targetX = tx - nx * enemyRadius
+		local targetY = ty - ny * enemyRadius
 
-		if distanceToContact <= step then
-			-- Keep an already-overlapping projectile where it is; otherwise stop it
-			-- at the first point of contact so impact effects are positioned there.
-			if distanceToContact > 0 then
-				p.x = p.x + nx * distanceToContact
-				p.y = p.y + ny * distanceToContact
-			end
+		local surfaceScale = dist - enemyRadius
+		local surfaceDx = nx * surfaceScale
+		local surfaceDy = ny * surfaceScale
+		local surfaceDist = abs(surfaceScale)
+		local surfaceDist2 = surfaceDist * surfaceDist
+
+		local step = (p.speed or 0) * dt
+		local step2 = step * step
+
+		if surfaceDist2 <= step2 then
+			p.x, p.y = targetX, targetY
 
 			if alive then
 				p.hit = e
 			else
-				-- A homing shot still owns its impact after its target dies. Queue an
-				-- impact-only hit at the snapshotted destination so visual/AOE hooks
-				-- run before the projectile is consumed. Setting p.hit cannot express
-				-- this case because nil is also the "no pending hit" sentinel used by
-				-- the projectile update loop.
-				local evt = emitEvent(p, "hit")
-				evt.target = nil
-				evt.origin = p.hitOrigin or "primary"
+				-- preserve your existing FX fallback behavior
+				if p.sourceKind == "lancer" then
+					local evt = emitEvent(p, "fx")
+					evt.kind = "lancer_hit"
+					evt.x = p.x
+					evt.y = p.y
+					evt.color = p.sourceTower and p.sourceTower.color
+				elseif p.sourceKind == "poison" then
+					local evt = emitEvent(p, "fx")
+					evt.kind = "poison_splash"
+					evt.x = p.x
+					evt.y = p.y
+					evt.color = p.sourceTower and p.sourceTower.color
+				elseif p.sourceKind == "cannon" then
+					local evt = emitEvent(p, "hit")
+					evt.target = nil
+					evt.origin = p.hitOrigin or "primary"
+				elseif p.sourceKind == "slow" then
+					local evt = emitEvent(p, "fx")
+					evt.kind = "frost_burst"
+					evt.x = p.x
+					evt.y = p.y
+					evt.color = p.sourceTower and p.sourceTower.color
+				end
 			end
 
 			return "consume"
 		end
 
 		-- normal movement
-		p.x = p.x + nx * step
-		p.y = p.y + ny * step
+		local invSurfaceDist = 1 / surfaceDist
+		p.x = p.x + surfaceDx * invSurfaceDist * step
+		p.y = p.y + surfaceDy * invSurfaceDist * step
 
-		p.rotation = atan2(dy, dx)
+		p.rotation = atan2(surfaceDy, surfaceDx)
 	end
 }
 
