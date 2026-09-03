@@ -583,7 +583,6 @@ return {
 		rewards = "Rewards",
 		mapNumber = "Map %d of %d",
 		gameTime = "Game time",
-		moneyRemaining = "Money remaining",
 		towersPlaced = "Towers placed",
 		abilitiesUsed = "Abilities used",
 		noMapReward = "No reward associated with this map",
