@@ -58,7 +58,9 @@ local innerRadius = baseRadius - outlineW * 0.25
 
 local btnW = 310
 local btnH = 42
-local panelW = 900
+-- Keep both recap columns 40px narrower than the previous 900px layout; the
+-- enclosing backdrop derives from this width so it stays aligned with them.
+local panelW = 820
 
 -- Medal visuals
 local medalR = 32
