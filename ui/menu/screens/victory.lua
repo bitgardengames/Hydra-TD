@@ -178,8 +178,8 @@ local function resetConfetti()
 		confetti[i] = {
 			x = burst and (fromLeft and -12 or sw + 12) or random(0, sw),
 			y = burst and (sh - random(20, 90)) or random(-sh * 0.75, -20),
-			vx = burst and (fromLeft and random(155, 320) or random(-320, -155)) or random(-22, 22),
-			vy = burst and random(-460, -270) or random(42, 112),
+			vx = burst and (fromLeft and random(210, 400) or random(-400, -210)) or random(-22, 22),
+			vy = burst and random(-600, -350) or random(42, 112),
 			gravity = burst and random(115, 175) or random(6, 20),
 			drag = burst and random(55, 90) * 0.01 or random(4, 10) * 0.01,
 			size = size,
