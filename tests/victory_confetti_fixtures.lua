@@ -13,9 +13,9 @@ assert(source:find("p.vy = p.vy + p.gravity * dt", 1, true),
 	"burst pieces should arc back down under gravity")
 assert(source:find("local drag = 1 / (1 + p.drag * dt)", 1, true),
 	"confetti velocity should gradually slow under air resistance")
-assert(source:find("random(210, 400)", 1, true) and source:find("random(-400, -210)", 1, true),
+assert(source:find("random(280, 520)", 1, true) and source:find("random(-520, -280)", 1, true),
 	"the opening volley should travel farther across the screen")
-assert(source:find("random(-600, -350)", 1, true),
+assert(source:find("random(-780, -460)", 1, true),
 	"the opening volley should launch with extra upward velocity")
 assert(source:find("local count = reducedMotion and 36 or 84", 1, true),
 	"reduced motion should use a calmer particle count")
