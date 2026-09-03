@@ -112,6 +112,15 @@ B.move_homing = {
 
 			if alive then
 				p.hit = e
+			else
+				-- A homing shot still owns its impact after its target dies. Queue an
+				-- impact-only hit at the snapshotted destination so visual/AOE hooks
+				-- run before the projectile is consumed. Setting p.hit cannot express
+				-- this case because nil is also the "no pending hit" sentinel used by
+				-- the projectile update loop.
+				local evt = emitEvent(p, "hit")
+				evt.target = nil
+				evt.origin = p.hitOrigin or "primary"
 			end
 
 			return "consume"

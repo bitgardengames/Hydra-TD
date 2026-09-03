@@ -38,6 +38,21 @@ assert(movement(travelling, 0.25) == nil and travelling.hit == nil,
 	"a homing projectile hit before reaching the target")
 assert(math.abs(travelling.x + 15) < 1e-9, "a homing projectile did not advance normally")
 
+local deadTarget = { id = 8, x = 10, y = 0, radius = 6, hp = 0 }
+local orphaned = projectile(0, 20, deadTarget)
+orphaned.events = {}
+orphaned.eventRead = 1
+orphaned.eventCount = 0
+assert(movement(orphaned, 0.5) == "consume",
+	"a homing projectile did not finish at its dead target's last position")
+assert(orphaned.x == 10 and orphaned.y == 0,
+	"a homing projectile did not stop at its dead target's last position")
+local orphanedImpact = orphaned.events[1]
+assert(orphanedImpact and orphanedImpact.id == "hit" and orphanedImpact.target == nil,
+	"a homing projectile did not queue an impact-only hit after its target died")
+assert(orphanedImpact.origin == "primary",
+	"a homing projectile did not preserve its hit origin after its target died")
+
 local function assertImpactFX(behaviorID, data, expectedKind)
 	local p = {
 		x = 3,
