@@ -15,6 +15,8 @@ assert(source:find("local summaryH = contentH * 0.56", 1, true),
 	"the shortened summary must leave more room for medals")
 assert(not source:find('L("victory.coinsEarned")', 1, true),
 	"remaining money must not be presented as coins earned")
+assert(not source:find('L("victory.moneyRemaining")', 1, true),
+	"victory must not display a money-remaining row")
 assert(not source:find('L("runRecap.score"), "+"', 1, true),
 	"score must not be presented as a reward")
 assert(not source:find("drawRewardUnlockCard", 1, true),

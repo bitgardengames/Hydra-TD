@@ -437,9 +437,8 @@ function Screen.draw()
 	drawStatRow(L("runRecap.score"), formatNumber(State.score), statsX, statsY, statsW, alpha, colorGood)
 	drawStatRow(L("runRecap.enemiesDefeated"), formatNumber(State.totalKills), statsX, statsY + statsGap, statsW, alpha)
 	drawStatRow(L("runRecap.livesRemaining"), formatNumber(State.lives), statsX, statsY + statsGap * 2, statsW, alpha, State.totalLeaks == 0 and colorGood or colorText)
-	drawStatRow(L("victory.moneyRemaining"), "$" .. formatNumber(State.money), statsX, statsY + statsGap * 3, statsW, alpha, Theme.ui.money)
-	drawStatRow(L("victory.towersPlaced"), formatNumber(result.towersPlaced), statsX, statsY + statsGap * 4, statsW, alpha)
-	drawStatRow(L("victory.gameTime"), format("%d:%02d", floor((result.duration or 0) / 60), floor((result.duration or 0) % 60)), statsX, statsY + statsGap * 5, statsW, alpha)
+	drawStatRow(L("victory.towersPlaced"), formatNumber(result.towersPlaced), statsX, statsY + statsGap * 3, statsW, alpha)
+	drawStatRow(L("victory.gameTime"), format("%d:%02d", floor((result.duration or 0) / 60), floor((result.duration or 0) % 60)), statsX, statsY + statsGap * 4, statsW, alpha)
 
 	-- Damage and medals form the second column.
 	local visibleDamageRows = min(6, #damageRows)
