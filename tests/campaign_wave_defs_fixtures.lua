@@ -50,6 +50,8 @@ for _, map in ipairs(Maps) do
 		assert(bossWave.boss and EnemyDefs[bossWave.bossArchetype],
 			map.id .. " wave " .. bossWaveIndex .. " has no legal explicit boss selection")
 	end
+	assert(CampaignWaveDefs.get(map, 10).bossArchetype ~= CampaignWaveDefs.get(map, 20).bossArchetype,
+		map.id .. " must feature different bosses on waves 10 and 20")
 
 	local final = CampaignWaveDefs.get(map, 20)
 	assert(final.boss and EnemyDefs[final.bossArchetype],
