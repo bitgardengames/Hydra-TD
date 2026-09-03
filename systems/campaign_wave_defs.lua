@@ -537,27 +537,30 @@ local wavesByMapId = {
 
 
 -- Boss selections remain explicit because they affect the spawned enemy type.
-local bossArchetypeByMapId = {
-	riverbend = "boss_summoner",
-	switchback = "boss_summoner",
-	highpass = "boss_summoner",
-	roundabout = "boss_displacement",
-	gauntlet = "boss_suppression",
-	snaketrail = "boss_summoner",
-	backtrack = "boss_displacement",
-	lowvalley = "boss_suppression",
-	circuit = "boss_aegis",
-	outerloop = "boss_ravager",
-	terrace = "boss_summoner",
-	highridge = "boss_aegis",
-	crossflow = "boss_ravager",
-	steppingstones = "boss_displacement",
-	twinloop = "boss_summoner",
+-- Each map changes the matchup for its second exam, while the pairings vary
+-- across maps so the campaign does not settle into one predictable rotation.
+local bossArchetypesByMapId = {
+	riverbend = {[10] = "boss_summoner", [20] = "boss_ravager"},
+	switchback = {[10] = "boss_summoner", [20] = "boss_displacement"},
+	highpass = {[10] = "boss_summoner", [20] = "boss_aegis"},
+	roundabout = {[10] = "boss_displacement", [20] = "boss_summoner"},
+	gauntlet = {[10] = "boss_suppression", [20] = "boss_displacement"},
+	snaketrail = {[10] = "boss_summoner", [20] = "boss_suppression"},
+	backtrack = {[10] = "boss_displacement", [20] = "boss_ravager"},
+	lowvalley = {[10] = "boss_suppression", [20] = "boss_aegis"},
+	circuit = {[10] = "boss_aegis", [20] = "boss_displacement"},
+	outerloop = {[10] = "boss_ravager", [20] = "boss_summoner"},
+	terrace = {[10] = "boss_summoner", [20] = "boss_suppression"},
+	highridge = {[10] = "boss_aegis", [20] = "boss_ravager"},
+	crossflow = {[10] = "boss_ravager", [20] = "boss_displacement"},
+	steppingstones = {[10] = "boss_displacement", [20] = "boss_aegis"},
+	twinloop = {[10] = "boss_summoner", [20] = "boss_ravager"},
 }
 
-for mapId, bossArchetype in pairs(bossArchetypeByMapId) do
-	wavesByMapId[mapId][10].bossArchetype = bossArchetype
-	wavesByMapId[mapId][20].bossArchetype = bossArchetype
+for mapId, bossArchetypes in pairs(bossArchetypesByMapId) do
+	for waveIndex, bossArchetype in pairs(bossArchetypes) do
+		wavesByMapId[mapId][waveIndex].bossArchetype = bossArchetype
+	end
 end
 
 local function mapIdOf(mapOrId)
