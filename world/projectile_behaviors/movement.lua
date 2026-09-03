@@ -95,7 +95,11 @@ B.move_homing = {
 		-- abs(dist - radius) here: once a fast projectile crosses the target's
 		-- surface that value makes it steer back out of the enemy instead of
 		-- resolving the overlap as a hit.
-		local contactRadius = alive and ((e.radius or 0) + (p.hitRadius or p.r or 0)) or 0
+		-- The projectile is drawn around its center, so bring that center to the
+		-- enemy surface. Including the projectile radius here makes larger shots
+		-- (notably Lancer's 12px collision profile) hit and emit their impact
+		-- particles visibly short of the enemy.
+		local contactRadius = alive and (e.radius or 0) or 0
 		local distanceToContact = dist - contactRadius
 
 		if distanceToContact <= step then
