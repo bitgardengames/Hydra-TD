@@ -8,6 +8,13 @@ local EnemyDefs = require("world.enemy_defs")
 local available = { boss = true }
 local minimumSpawnSpacing = 0.5
 
+-- The first map remains a readable grunt-only onboarding, but the campaign must
+-- expose both core special-enemy roles before the player leaves its first chapter.
+assert(Maps[2].introducesEnemies and Maps[2].introducesEnemies[1] == "tank",
+	"the second campaign map must introduce tanks")
+assert(Maps[3].introducesEnemies and Maps[3].introducesEnemies[1] == "runner",
+	"the third campaign map must introduce runners")
+
 for _, map in ipairs(Maps) do
 	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
 	local introducedEnemyAppearances = {}

@@ -88,24 +88,24 @@ local wavesByMapId = {
 		-- orientation
 		[1] = { g("grunt", 10, 0.87) },
 		-- demonstration
-		[2] = { g("grunt", 12, 0.71) },
+		[2] = { g("tank", 12, 0.71) },
 		-- demonstration
-		[3] = { g("grunt", 11, 0.61), g("grunt", 8, 0.59, 1.75) },
+		[3] = { g("grunt", 11, 0.61), g("tank", 8, 0.59, 1.75) },
 		-- practice
-		[4] = { g("grunt", 19, 0.50) },
+		[4] = { g("tank", 19, 0.50) },
 		-- practice
-		[5] = { g("grunt", 23, 0.50) },
+		[5] = { g("tank", 23, 0.50) },
 		-- practice: a sustained stream hands off to a trailing pack
-		[6] = { g("grunt", 16, 0.50), g("grunt", 10, 0.50, 0.81) },
+		[6] = { g("grunt", 16, 0.50), g("tank", 10, 0.50, 0.81) },
 		-- mixed check: two packs compress the recovery window
-		[7] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.38) },
+		[7] = { g("grunt", 13, 0.50), g("tank", 14, 0.50, 0.38) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 13, 0.50), g("grunt", 8, 0.50, 0.19), g("grunt", 7, 0.50, 0.15) },
+		[8] = { g("grunt", 13, 0.50), g("tank", 8, 0.50, 0.19), g("grunt", 7, 0.50, 0.15) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 12, 0.50), g("grunt", 10, 0.50, 0.10), g("grunt", 9, 0.50, 0.10) },
+		[9] = { g("grunt", 12, 0.50), g("tank", 10, 0.50, 0.10), g("grunt", 9, 0.50, 0.10) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
-		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.25), g("grunt", 12, 0.50, 0.44), g("grunt", 9, 0.50, 0.31) },
-		[11] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.42) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.25), g("tank", 12, 0.50, 0.44), g("grunt", 9, 0.50, 0.31) },
+		[11] = { g("grunt", 14, 0.50), g("tank", 15, 0.50, 0.42) },
 		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.85) },
 		[13] = { g("grunt", 14, 0.50), g("grunt", 9, 0.50, 0.19), g("grunt", 8, 0.50, 0.15) },
 		[14] = { g("grunt", 15, 0.50), g("grunt", 16, 0.50, 0.36) },
@@ -120,21 +120,21 @@ local wavesByMapId = {
 		-- orientation
 		[1] = { g("grunt", 10, 1.03) },
 		-- demonstration
-		[2] = { g("grunt", 12, 0.85) },
+		[2] = { g("runner", 12, 0.85) },
 		-- demonstration
-		[3] = { g("grunt", 12, 0.73), g("grunt", 8, 0.71, 1.47) },
+		[3] = { g("grunt", 12, 0.73), g("runner", 8, 0.71, 1.47) },
 		-- practice
-		[4] = { g("grunt", 18, 0.57) },
+		[4] = { g("runner", 18, 0.57) },
 		-- practice
-		[5] = { g("grunt", 22, 0.51) },
+		[5] = { g("runner", 22, 0.51) },
 		-- practice: a sustained stream hands off to a trailing pack
-		[6] = { g("grunt", 15, 0.52), g("grunt", 9, 0.50, 0.68) },
+		[6] = { g("grunt", 15, 0.52), g("runner", 9, 0.50, 0.68) },
 		-- mixed check: two packs compress the recovery window
-		[7] = { g("grunt", 12, 0.50), g("grunt", 13, 0.50, 0.32) },
+		[7] = { g("grunt", 12, 0.50), g("tank", 13, 0.50, 0.32) },
 		-- mixed check: staggered packs overlap the player's engagement windows
-		[8] = { g("grunt", 12, 0.50), g("grunt", 8, 0.50, 0.16), g("grunt", 6, 0.50, 0.13) },
+		[8] = { g("grunt", 12, 0.50), g("runner", 8, 0.50, 0.16), g("grunt", 6, 0.50, 0.13) },
 		-- mixed check: a tight three-pack density exam
-		[9] = { g("grunt", 11, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
+		[9] = { g("grunt", 11, 0.50), g("runner", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
 		-- final exam: boss with an authored vanguard, body, and rear escort
 		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.05), g("grunt", 12, 0.50, 0.37), g("grunt", 8, 0.50, 0.26) },
 		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.35) },
