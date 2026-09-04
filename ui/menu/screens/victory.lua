@@ -75,6 +75,10 @@ local confettiColors = {
 }
 
 local confettiShapes = {"paper", "diamond", "dot"}
+-- Keep the celebration finite: after the fade completes, releasing the particle
+-- table also removes its update and draw cost if the player leaves this screen open.
+local confettiDuration = 12
+local confettiFadeDuration = 2
 
 local function buildDamageRows(combatStats)
 	damageRows = {}
@@ -303,6 +307,10 @@ function Screen.update(dt)
 		end
 	end
 
+	if t >= confettiDuration and #confetti > 0 then
+		confetti = {}
+	end
+
 	Button.updateList(buttons, dt)
 end
 
@@ -365,10 +373,11 @@ function Screen.draw()
 	lg.setColor(colorDim)
 	lg.rectangle("fill", 0, 0, sw, sh)
 
+	local confettiFade = min(1, max(0, (confettiDuration - t) / confettiFadeDuration))
 	for _, p in ipairs(confetti) do
 		local wobble = sin(t * 3 + p.flutter) * 0.35
 		local flip = 0.3 + 0.7 * math.abs(cos(p.spin))
-		lg.setColor(p.color[1], p.color[2], p.color[3], p.alpha * panelT)
+		lg.setColor(p.color[1], p.color[2], p.color[3], p.alpha * panelT * confettiFade)
 		lg.push()
 		lg.translate(p.x, p.y)
 		lg.rotate(p.spin + wobble)

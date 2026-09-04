@@ -21,5 +21,12 @@ assert(source:find("local count = reducedMotion and 36 or 84", 1, true),
 	"reduced motion should use a calmer particle count")
 assert(source:find('p.shape == "diamond"', 1, true) and source:find('p.shape == "dot"', 1, true),
 	"the renderer should draw the authored confetti silhouettes")
+assert(source:find("local confettiDuration = 12", 1, true),
+	"confetti should have a finite celebration duration")
+assert(source:find("if t >= confettiDuration and #confetti > 0 then", 1, true)
+	and source:find("confetti = {}", 1, true),
+	"expired confetti should be released instead of updating forever")
+assert(source:find("(confettiDuration - t) / confettiFadeDuration", 1, true),
+	"confetti should fade out before it stops")
 
 print("victory confetti fixtures passed")
