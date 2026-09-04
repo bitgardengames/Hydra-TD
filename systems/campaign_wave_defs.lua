@@ -6,7 +6,7 @@ local CampaignWaveDefs = {}
 -- enemy-count ramps.  The dependency-free report in tools/balance/ measures a
 -- five-second engagement window and verifies these authored ceilings/ranges.
 -- `openingPressure` and `peakSimultaneous` are enemy counts; duration/recovery
--- values are seconds. Riverbend is the untouched baseline for the curriculum.
+-- values are seconds. Riverbend provides the baseline spawn schedule.
 local pacingIdentityByMapId = {
 	riverbend = "baseline: an even stream that gradually learns pack overlap",
 	switchback = "switchbacks: compact packs separated by readable resets",
@@ -53,25 +53,25 @@ end
 -- returned by get() rather than depending on its storage details.
 local wavesByMapId = {
 	riverbend = {
-		-- orientation
+		-- 8 grunts.
 		[1] = { g("grunt", 8, 0.90) },
-		-- demonstration
+		-- 12 grunts.
 		[2] = { g("grunt", 12, 0.72) },
-		-- demonstration
+		-- 10 grunts followed by 8 grunts.
 		[3] = { g("grunt", 10, 0.62), g("grunt", 8, 0.58, 1.4) },
-		-- practice
+		-- 20 grunts.
 		[4] = { g("grunt", 20, 0.50) },
-		-- practice
+		-- 24 grunts.
 		[5] = { g("grunt", 24, 0.50) },
-		-- practice: a sustained stream hands off to a trailing pack
+		-- 16 grunts followed by 10 grunts.
 		[6] = { g("grunt", 16, 0.50), g("grunt", 10, 0.50, 0.65) },
-		-- mixed check: two packs compress the recovery window
+		-- 14 grunts followed by 14 grunts.
 		[7] = { g("grunt", 14, 0.50), g("grunt", 14, 0.50, 0.30) },
-		-- mixed check: staggered packs overlap the player's engagement windows
+		-- 13 grunts, then 9 grunts, and 8 grunts.
 		[8] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.15), g("grunt", 8, 0.50, 0.12) },
-		-- mixed check: a tight three-pack density exam
+		-- 13 grunts, then 10 grunts, and 9 grunts.
 		[9] = { g("grunt", 13, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- 1 boss, then 12 grunts, then 13 grunts, and 9 grunts.
 		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 1.0), g("grunt", 13, 0.50, 0.35), g("grunt", 9, 0.50, 0.25) },
 		[11] = { g("grunt", 15, 0.50), g("grunt", 15, 0.50, 0.33) },
 		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.68) },
@@ -85,25 +85,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 0.90), g("grunt", 16, 0.50, 0.32), g("grunt", 11, 0.50, 0.23) },
 	},
 	switchback = {
-		-- orientation
+		-- 10 grunts.
 		[1] = { g("grunt", 10, 0.87) },
-		-- demonstration
+		-- 12 tanks.
 		[2] = { g("tank", 12, 0.71) },
-		-- demonstration
+		-- 11 grunts followed by 8 tanks.
 		[3] = { g("grunt", 11, 0.61), g("tank", 8, 0.59, 1.75) },
-		-- practice
+		-- 19 tanks.
 		[4] = { g("tank", 19, 0.50) },
-		-- practice
+		-- 23 tanks.
 		[5] = { g("tank", 23, 0.50) },
-		-- practice: a sustained stream hands off to a trailing pack
+		-- 16 grunts followed by 10 tanks.
 		[6] = { g("grunt", 16, 0.50), g("tank", 10, 0.50, 0.81) },
-		-- mixed check: two packs compress the recovery window
+		-- 13 grunts followed by 14 tanks.
 		[7] = { g("grunt", 13, 0.50), g("tank", 14, 0.50, 0.38) },
-		-- mixed check: staggered packs overlap the player's engagement windows
+		-- 13 grunts, then 8 tanks, and 7 grunts.
 		[8] = { g("grunt", 13, 0.50), g("tank", 8, 0.50, 0.19), g("grunt", 7, 0.50, 0.15) },
-		-- mixed check: a tight three-pack density exam
+		-- 12 grunts, then 10 tanks, and 9 grunts.
 		[9] = { g("grunt", 12, 0.50), g("tank", 10, 0.50, 0.10), g("grunt", 9, 0.50, 0.10) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- 1 boss, then 11 grunts, then 12 tanks, and 9 grunts.
 		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.25), g("tank", 12, 0.50, 0.44), g("grunt", 9, 0.50, 0.31) },
 		[11] = { g("grunt", 14, 0.50), g("tank", 15, 0.50, 0.42) },
 		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.85) },
@@ -117,25 +117,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 1.12), g("grunt", 15, 0.50, 0.40), g("grunt", 11, 0.50, 0.28) },
 	},
 	highpass = {
-		-- orientation
+		-- 10 grunts.
 		[1] = { g("grunt", 10, 1.03) },
-		-- demonstration
+		-- 12 runners.
 		[2] = { g("runner", 12, 0.85) },
-		-- demonstration
+		-- 12 grunts followed by 8 runners.
 		[3] = { g("grunt", 12, 0.73), g("runner", 8, 0.71, 1.47) },
-		-- practice
+		-- 18 runners.
 		[4] = { g("runner", 18, 0.57) },
-		-- practice
+		-- 22 runners.
 		[5] = { g("runner", 22, 0.51) },
-		-- practice: a sustained stream hands off to a trailing pack
+		-- 15 grunts followed by 9 runners.
 		[6] = { g("grunt", 15, 0.52), g("runner", 9, 0.50, 0.68) },
-		-- mixed check: two packs compress the recovery window
+		-- 12 grunts followed by 13 tanks.
 		[7] = { g("grunt", 12, 0.50), g("tank", 13, 0.50, 0.32) },
-		-- mixed check: staggered packs overlap the player's engagement windows
+		-- 12 grunts, then 8 runners, and 6 grunts.
 		[8] = { g("grunt", 12, 0.50), g("runner", 8, 0.50, 0.16), g("grunt", 6, 0.50, 0.13) },
-		-- mixed check: a tight three-pack density exam
+		-- 11 grunts, then 10 runners, and 8 grunts.
 		[9] = { g("grunt", 11, 0.50), g("runner", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- 1 boss, then 11 grunts, then 12 grunts, and 8 grunts.
 		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.05), g("grunt", 12, 0.50, 0.37), g("grunt", 8, 0.50, 0.26) },
 		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.35) },
 		[12] = { g("grunt", 17, 0.52), g("grunt", 10, 0.50, 0.71) },
@@ -149,25 +149,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.95), g("grunt", 15, 0.50, 0.33), g("grunt", 10, 0.50, 0.23) },
 	},
 	roundabout = {
-		-- orientation
+		-- 11 grunts.
 		[1] = { g("grunt", 11, 0.75) },
-		-- demonstration
+		-- 13 grunts.
 		[2] = { g("grunt", 13, 0.63) },
-		-- demonstration
+		-- 12 grunts followed by 8 grunts.
 		[3] = { g("grunt", 12, 0.55), g("grunt", 8, 0.53, 0.69) },
-		-- practice
+		-- 18 grunts.
 		[4] = { g("grunt", 18, 0.50) },
-		-- practice
+		-- 22 grunts.
 		[5] = { g("grunt", 22, 0.50) },
-		-- practice: a sustained stream hands off to a trailing pack
+		-- 15 grunts followed by 9 grunts.
 		[6] = { g("grunt", 15, 0.50), g("grunt", 9, 0.50, 0.28) },
-		-- mixed check: two packs compress the recovery window
+		-- 12 grunts followed by 13 grunts.
 		[7] = { g("grunt", 12, 0.50), g("grunt", 13, 0.50, 0.09) },
-		-- mixed check: staggered packs overlap the player's engagement windows
+		-- 12 grunts, then 8 grunts, and 7 grunts.
 		[8] = { g("grunt", 12, 0.50), g("grunt", 8, 0.50, 0.08), g("grunt", 7, 0.50, 0.08) },
-		-- mixed check: a tight three-pack density exam
+		-- 10 grunts, then 9 grunts, and 9 grunts.
 		[9] = { g("grunt", 10, 0.50), g("grunt", 9, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- 1 boss, then 11 grunts, then 11 grunts, and 8 grunts.
 		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 0.47), g("grunt", 11, 0.50, 0.11), g("grunt", 8, 0.50, 0.08) },
 		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.10) },
 		[12] = { g("grunt", 17, 0.50), g("grunt", 10, 0.50, 0.29) },
@@ -181,25 +181,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.42), g("grunt", 14, 0.50, 0.10), g("grunt", 10, 0.50, 0.07) },
 	},
 	gauntlet = {
-		-- orientation
+		-- 12 grunts.
 		[1] = { g("grunt", 12, 0.60) },
-		-- demonstration
+		-- 13 grunts.
 		[2] = { g("grunt", 13, 0.52) },
-		-- demonstration
+		-- 13 grunts followed by 8 grunts.
 		[3] = { g("grunt", 13, 0.50), g("grunt", 8, 0.50, 2.94) },
-		-- practice
+		-- 18 grunts.
 		[4] = { g("grunt", 18, 0.50) },
-		-- practice
+		-- 22 grunts.
 		[5] = { g("grunt", 22, 0.50) },
-		-- practice: a sustained stream hands off to a trailing pack
+		-- 15 grunts followed by 9 grunts.
 		[6] = { g("grunt", 15, 0.50), g("grunt", 9, 0.50, 1.37) },
-		-- mixed check: two packs compress the recovery window
+		-- 12 grunts followed by 13 grunts.
 		[7] = { g("grunt", 12, 0.50), g("grunt", 13, 0.50, 0.98) },
-		-- mixed check: staggered packs overlap the player's engagement windows
+		-- 12 grunts, then 8 grunts, and 6 grunts.
 		[8] = { g("grunt", 12, 0.50), g("grunt", 8, 0.50, 0.67), g("grunt", 6, 0.50, 0.60) },
-		-- mixed check: a tight three-pack density exam
+		-- 10 grunts, then 9 grunts, and 8 grunts.
 		[9] = { g("grunt", 10, 0.50), g("grunt", 9, 0.50, 0.52), g("grunt", 8, 0.50, 0.52) },
-		-- final exam: boss with an authored vanguard, body, and rear escort
+		-- 1 boss, then 10 grunts, then 11 grunts, and 9 grunts.
 		[10] = { g("boss", 1, 0.00), g("grunt", 10, 0.50, 2.45), g("grunt", 11, 0.50, 1.08), g("grunt", 9, 0.50, 0.88) },
 		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 1.08) },
 		[12] = { g("grunt", 17, 0.50), g("grunt", 10, 0.50, 1.44) },
@@ -213,25 +213,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 13, 0.50, 2.21), g("grunt", 14, 0.50, 0.97), g("grunt", 11, 0.50, 0.79) },
 	},
 	snaketrail = {
-		-- orientation
+		-- 17 grunts.
 		[1] = { g("grunt", 17, 0.90) },
-		-- demonstration
+		-- 10 tanks.
 		[2] = { g("tank", 10, 0.89) },
-		-- demonstration
+		-- 15 grunts followed by 5 tanks.
 		[3] = { g("grunt", 15, 0.73), g("tank", 5, 0.87, 1.88) },
-		-- practice
+		-- 11 tanks followed by 14 grunts.
 		[4] = { g("tank", 11, 0.70), g("grunt", 14, 0.60, 1.00) },
-		-- practice
+		-- 11 grunts followed by 9 tanks.
 		[5] = { g("grunt", 11, 0.76), g("tank", 9, 0.67, 0.88) },
-		-- practice
+		-- 10 tanks followed by 13 grunts.
 		[6] = { g("tank", 10, 0.56), g("grunt", 13, 0.67, 0.62) },
-		-- mixed check
+		-- 7 tanks followed by 8 grunts.
 		[7] = { g("tank", 7, 0.52), g("grunt", 8, 0.59, 0.38) },
-		-- mixed check
+		-- 9 grunts followed by 9 tanks.
 		[8] = { g("grunt", 9, 0.50), g("tank", 9, 0.53, 0.38) },
-		-- mixed check
+		-- 8 tanks followed by 9 grunts.
 		[9] = { g("tank", 8, 0.50), g("grunt", 9, 0.50, 0.25) },
-		-- final exam
+		-- 1 boss, then 8 tanks, and 8 grunts.
 		[10] = { g("boss", 1, 0.00), g("tank", 8, 0.50, 2.25), g("grunt", 8, 0.55, 2.50) },
 		[11] = { g("tank", 8, 0.52), g("grunt", 9, 0.59, 0.42) },
 		[12] = { g("tank", 11, 0.56), g("grunt", 15, 0.67, 0.65) },
@@ -245,25 +245,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("tank", 10, 0.50, 2.02), g("grunt", 10, 0.55, 2.25) },
 	},
 	backtrack = {
-		-- orientation
+		-- 17 grunts.
 		[1] = { g("grunt", 17, 0.70) },
-		-- demonstration
+		-- 10 runners.
 		[2] = { g("runner", 10, 0.71) },
-		-- demonstration
+		-- 14 grunts followed by 5 runners.
 		[3] = { g("grunt", 14, 0.58), g("runner", 5, 0.69, 1.12) },
-		-- practice
+		-- 11 runners followed by 14 grunts.
 		[4] = { g("runner", 11, 0.56), g("grunt", 14, 0.50, 0.60) },
-		-- practice
+		-- 11 tanks followed by 8 runners.
 		[5] = { g("tank", 11, 0.60), g("runner", 8, 0.53, 0.52) },
-		-- practice
+		-- 10 runners, then 10 tanks, and 14 grunts.
 		[6] = { g("runner", 10, 0.50), g("tank", 10, 0.53, 0.38), g("grunt", 14, 0.63, 0.75) },
-		-- mixed check
+		-- 6 runners, then 8 tanks, and 8 grunts.
 		[7] = { g("runner", 6, 0.50), g("tank", 8, 0.50, 0.22), g("grunt", 8, 0.53, 0.52) },
-		-- mixed check
+		-- 8 tanks, then 8 runners, and 10 grunts.
 		[8] = { g("tank", 8, 0.50), g("runner", 8, 0.50, 0.22), g("grunt", 10, 0.50, 0.45) },
-		-- mixed check
+		-- 7 runners, then 8 tanks, and 10 grunts.
 		[9] = { g("runner", 7, 0.50), g("tank", 8, 0.50, 0.15), g("grunt", 10, 0.50, 0.38) },
-		-- final exam
+		-- 1 boss, then 7 runners, then 7 tanks, and 8 grunts.
 		[10] = { g("boss", 1, 0.00), g("runner", 7, 0.50, 1.35), g("tank", 7, 0.50, 1.50), g("grunt", 8, 0.50, 1.72) },
 		[11] = { g("runner", 6, 0.50), g("tank", 9, 0.50, 0.24), g("grunt", 9, 0.53, 0.57) },
 		[12] = { g("runner", 11, 0.50), g("tank", 11, 0.53, 0.40), g("grunt", 16, 0.63, 0.79) },
@@ -277,25 +277,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("runner", 9, 0.50, 1.22), g("tank", 9, 0.50, 1.35), g("grunt", 10, 0.50, 1.55) },
 	},
 	lowvalley = {
-		-- orientation
+		-- 17 grunts.
 		[1] = { g("grunt", 17, 0.82) },
-		-- demonstration
+		-- 9 bulwarks.
 		[2] = { g("bulwark", 9, 0.84) },
-		-- demonstration
+		-- 13 grunts followed by 4 bulwarks.
 		[3] = { g("grunt", 13, 0.69), g("bulwark", 4, 0.82, 2.17) },
-		-- practice
+		-- 10 bulwarks followed by 13 grunts.
 		[4] = { g("bulwark", 10, 0.66), g("grunt", 13, 0.57, 1.16) },
-		-- practice
+		-- 10 runners followed by 8 bulwarks.
 		[5] = { g("runner", 10, 0.71), g("bulwark", 8, 0.63, 1.01) },
-		-- practice
+		-- 10 bulwarks, then 9 runners, and 13 tanks.
 		[6] = { g("bulwark", 10, 0.53), g("runner", 9, 0.63, 0.72), g("tank", 13, 0.74, 1.45) },
-		-- mixed check
+		-- 6 bulwarks, then 7 runners, then 7 tanks, and 9 grunts.
 		[7] = { g("bulwark", 6, 0.50), g("runner", 7, 0.56, 0.43), g("tank", 7, 0.63, 1.01), g("grunt", 9, 0.71, 1.45) },
-		-- mixed check
+		-- 8 grunts, then 8 tanks, then 9 runners, and 11 bulwarks.
 		[8] = { g("grunt", 8, 0.50), g("tank", 8, 0.50, 0.43), g("runner", 9, 0.56, 0.87), g("bulwark", 11, 0.62, 1.30) },
-		-- mixed check
+		-- 7 bulwarks, then 8 runners, then 9 tanks, and 9 grunts.
 		[9] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.29), g("tank", 9, 0.52, 0.72), g("grunt", 9, 0.59, 1.16) },
-		-- final exam
+		-- 1 boss, then 7 bulwarks, then 7 runners, then 8 tanks, and 8 grunts.
 		[10] = { g("boss", 1, 0.00), g("bulwark", 7, 0.50, 2.61), g("runner", 7, 0.52, 2.90), g("tank", 8, 0.60, 3.33), g("grunt", 8, 0.67, 3.62) },
 		[11] = { g("bulwark", 6, 0.50), g("runner", 8, 0.56, 0.47), g("tank", 8, 0.63, 1.11), g("grunt", 10, 0.71, 1.59) },
 		[12] = { g("bulwark", 11, 0.53), g("runner", 10, 0.63, 0.76), g("tank", 15, 0.74, 1.52) },
@@ -309,25 +309,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("bulwark", 9, 0.50, 2.35), g("runner", 9, 0.52, 2.61), g("tank", 10, 0.60, 3.00), g("grunt", 10, 0.67, 3.26) },
 	},
 	circuit = {
-		-- orientation
+		-- 17 grunts.
 		[1] = { g("grunt", 17, 0.70) },
-		-- demonstration
+		-- 9 regenerators.
 		[2] = { g("regenerator", 9, 0.74) },
-		-- demonstration
+		-- 13 grunts followed by 4 regenerators.
 		[3] = { g("grunt", 13, 0.61), g("regenerator", 4, 0.73, 0.98) },
-		-- practice
+		-- 10 regenerators followed by 13 grunts.
 		[4] = { g("regenerator", 10, 0.59), g("grunt", 13, 0.50, 0.52) },
-		-- practice
+		-- 10 bulwarks followed by 7 regenerators.
 		[5] = { g("bulwark", 10, 0.63), g("regenerator", 7, 0.56, 0.45) },
-		-- practice
+		-- 10 regenerators, then 9 bulwarks, and 13 runners.
 		[6] = { g("regenerator", 10, 0.50), g("bulwark", 9, 0.56, 0.33), g("runner", 13, 0.65, 0.65) },
-		-- mixed check
+		-- 6 regenerators, then 7 bulwarks, then 7 runners, and 8 tanks.
 		[7] = { g("regenerator", 6, 0.50), g("bulwark", 7, 0.50, 0.20), g("runner", 7, 0.56, 0.45), g("tank", 8, 0.63, 0.65) },
-		-- mixed check
+		-- 8 regenerators, then 8 grunts, then 9 tanks, and 10 runners.
 		[8] = { g("regenerator", 8, 0.50), g("grunt", 8, 0.50, 0.20), g("tank", 9, 0.50, 0.39), g("runner", 10, 0.55, 0.59) },
-		-- mixed check
+		-- 6 regenerators, then 7 bulwarks, then 9 runners, then 9 tanks, and 10 grunts.
 		[9] = { g("regenerator", 6, 0.50), g("bulwark", 7, 0.50, 0.13), g("runner", 9, 0.50, 0.33), g("tank", 9, 0.52, 0.52), g("grunt", 10, 0.57, 0.65) },
-		-- final exam
+		-- 1 boss, then 6 regenerators, then 7 bulwarks, then 8 runners, and 8 tanks.
 		[10] = { g("boss", 1, 0.00), g("regenerator", 6, 0.50, 1.17), g("bulwark", 7, 0.50, 1.30), g("runner", 8, 0.53, 1.49), g("tank", 8, 0.60, 1.62) },
 		[11] = { g("regenerator", 6, 0.50), g("bulwark", 8, 0.50, 0.22), g("runner", 8, 0.56, 0.50), g("tank", 9, 0.63, 0.72) },
 		[12] = { g("regenerator", 11, 0.50), g("bulwark", 10, 0.56, 0.35), g("runner", 15, 0.65, 0.68) },
@@ -341,25 +341,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("regenerator", 8, 0.50, 1.05), g("bulwark", 9, 0.50, 1.17), g("runner", 10, 0.53, 1.34), g("tank", 10, 0.60, 1.46) },
 	},
 	outerloop = {
-		-- orientation
+		-- 17 grunts.
 		[1] = { g("grunt", 17, 0.89) },
-		-- demonstration
+		-- 9 regenerators.
 		[2] = { g("regenerator", 9, 0.94) },
-		-- demonstration
+		-- 13 grunts followed by 4 regenerators.
 		[3] = { g("grunt", 13, 0.78), g("regenerator", 4, 0.93, 2.55) },
-		-- practice
+		-- 10 regenerators followed by 13 grunts.
 		[4] = { g("regenerator", 10, 0.75), g("grunt", 13, 0.64, 1.36) },
-		-- practice
+		-- 10 bulwarks followed by 7 regenerators.
 		[5] = { g("bulwark", 10, 0.80), g("regenerator", 7, 0.71, 1.19) },
-		-- practice
+		-- 10 regenerators, then 9 bulwarks, and 13 runners.
 		[6] = { g("regenerator", 10, 0.60), g("bulwark", 9, 0.71, 0.85), g("runner", 13, 0.84, 1.70) },
-		-- mixed check
+		-- 6 regenerators, then 7 bulwarks, then 7 runners, and 8 tanks.
 		[7] = { g("regenerator", 6, 0.55), g("bulwark", 7, 0.63, 0.51), g("runner", 7, 0.71, 1.19), g("tank", 8, 0.80, 1.70) },
-		-- mixed check
+		-- 8 grunts, then 8 tanks, then 9 runners, and 10 bulwarks.
 		[8] = { g("grunt", 8, 0.50), g("tank", 8, 0.56, 0.51), g("runner", 9, 0.63, 1.02), g("bulwark", 10, 0.70, 1.53) },
-		-- mixed check
+		-- 7 regenerators, then 8 bulwarks, then 9 runners, then 9 tanks, and 10 grunts.
 		[9] = { g("regenerator", 7, 0.50), g("bulwark", 8, 0.52, 0.34), g("runner", 9, 0.59, 0.85), g("tank", 9, 0.66, 1.36), g("grunt", 10, 0.73, 1.70) },
-		-- final exam
+		-- 1 boss, then 7 regenerators, then 7 bulwarks, then 8 runners, and 8 tanks.
 		[10] = { g("boss", 1, 0.00), g("regenerator", 7, 0.51, 3.06), g("bulwark", 7, 0.59, 3.40), g("runner", 8, 0.67, 3.91), g("tank", 8, 0.76, 4.25) },
 		[11] = { g("regenerator", 6, 0.55), g("bulwark", 8, 0.63, 0.56), g("runner", 8, 0.71, 1.31), g("tank", 9, 0.80, 1.87) },
 		[12] = { g("regenerator", 11, 0.60), g("bulwark", 10, 0.71, 0.89), g("runner", 15, 0.84, 1.78) },
@@ -373,25 +373,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("regenerator", 9, 0.51, 2.75), g("bulwark", 9, 0.59, 3.06), g("runner", 10, 0.67, 3.52), g("tank", 10, 0.76, 3.83) },
 	},
 	terrace = {
-		-- orientation
+		-- 17 grunts.
 		[1] = { g("grunt", 17, 0.61) },
-		-- demonstration
+		-- 9 warcallers.
 		[2] = { g("warcaller", 9, 0.67) },
-		-- demonstration
+		-- 13 grunts followed by 4 warcallers.
 		[3] = { g("grunt", 13, 0.56), g("warcaller", 4, 0.66, 1.08) },
-		-- practice
+		-- 10 warcallers followed by 13 grunts.
 		[4] = { g("warcaller", 10, 0.53), g("grunt", 13, 0.50, 0.58) },
-		-- practice
+		-- 10 regenerators followed by 7 warcallers.
 		[5] = { g("regenerator", 10, 0.57), g("warcaller", 7, 0.51, 0.50) },
-		-- practice
+		-- 10 warcallers, then 9 regenerators, and 13 bulwarks.
 		[6] = { g("warcaller", 10, 0.50), g("regenerator", 9, 0.51, 0.36), g("bulwark", 13, 0.60, 0.72) },
-		-- mixed check
+		-- 6 warcallers, then 7 regenerators, then 7 bulwarks, and 8 runners.
 		[7] = { g("warcaller", 6, 0.50), g("regenerator", 7, 0.50, 0.22), g("bulwark", 7, 0.51, 0.50), g("runner", 8, 0.57, 0.72) },
-		-- mixed check
+		-- 8 warcallers, then 7 grunts, then 9 tanks, and 10 runners.
 		[8] = { g("warcaller", 8, 0.50), g("grunt", 7, 0.50, 0.22), g("tank", 9, 0.50, 0.43), g("runner", 10, 0.50, 0.65) },
-		-- mixed check
+		-- 6 warcallers, then 7 regenerators, then 8 bulwarks, then 8 runners, and 9 tanks.
 		[9] = { g("warcaller", 6, 0.50), g("regenerator", 7, 0.50, 0.14), g("bulwark", 8, 0.50, 0.36), g("runner", 8, 0.50, 0.58), g("tank", 9, 0.52, 0.72) },
-		-- final exam
+		-- 1 boss, then 6 warcallers, then 7 regenerators, then 8 bulwarks, and 7 runners.
 		[10] = { g("boss", 1, 0.00), g("warcaller", 6, 0.50, 1.30), g("regenerator", 7, 0.50, 1.44), g("bulwark", 8, 0.50, 1.66), g("runner", 7, 0.54, 1.80) },
 		[11] = { g("warcaller", 6, 0.50), g("regenerator", 8, 0.50, 0.24), g("bulwark", 8, 0.51, 0.55), g("runner", 9, 0.57, 0.79) },
 		[12] = { g("warcaller", 11, 0.50), g("regenerator", 10, 0.51, 0.38), g("bulwark", 15, 0.60, 0.76) },
@@ -405,25 +405,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("warcaller", 8, 0.50, 1.17), g("regenerator", 9, 0.50, 1.30), g("bulwark", 10, 0.50, 1.49), g("runner", 9, 0.54, 1.62) },
 	},
 	highridge = {
-		-- orientation
+		-- 17 grunts.
 		[1] = { g("grunt", 17, 0.78) },
-		-- demonstration
+		-- 6 bulwarks followed by 6 runners.
 		[2] = { g("bulwark", 6, 0.87), g("runner", 6, 0.70, 0.30) },
-		-- demonstration
+		-- 13 grunts, then 2 bulwarks, and 2 runners.
 		[3] = { g("grunt", 13, 0.72), g("bulwark", 2, 0.86, 1.80), g("runner", 2, 0.69, 2.10) },
-		-- practice
+		-- 6 bulwarks, then 6 runners, and 13 grunts.
 		[4] = { g("bulwark", 6, 0.69), g("runner", 6, 0.55, 0.30), g("grunt", 13, 0.59, 0.96) },
-		-- practice
+		-- 10 warcallers, then 4 bulwarks, and 4 runners.
 		[5] = { g("warcaller", 10, 0.74), g("bulwark", 4, 0.66, 0.84), g("runner", 4, 0.53, 1.14) },
-		-- practice
+		-- 6 bulwarks, then 6 runners, then 10 warcallers, and 13 regenerators.
 		[6] = { g("bulwark", 6, 0.55), g("runner", 6, 0.50, 0.30), g("warcaller", 10, 0.66, 0.60), g("regenerator", 13, 0.77, 1.20) },
-		-- mixed check
+		-- 3 bulwarks, then 4 runners, then 7 warcallers, then 7 regenerators, and 8 bulwarks.
 		[7] = { g("bulwark", 3, 0.51), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.58, 0.36), g("regenerator", 7, 0.66, 0.84), g("bulwark", 8, 0.74, 1.20) },
-		-- mixed check
+		-- 8 warcallers, then 4 bulwarks, then 5 runners, then 9 grunts, and 10 tanks.
 		[8] = { g("warcaller", 8, 0.50), g("bulwark", 4, 0.52, 0.36), g("runner", 5, 0.50, 0.66), g("grunt", 9, 0.58, 0.72), g("tank", 10, 0.64, 1.08) },
-		-- mixed check
+		-- 4 bulwarks, then 4 runners, then 8 warcallers, then 9 regenerators, then 8 bulwarks, and 10 runners.
 		[9] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.50, 0.24), g("regenerator", 9, 0.54, 0.60), g("bulwark", 8, 0.61, 0.96), g("runner", 10, 0.68, 1.20) },
-		-- final exam
+		-- 1 boss, then 4 bulwarks, then 4 runners, then 7 warcallers, then 8 regenerators, and 8 bulwarks.
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 2.16), g("runner", 4, 0.50, 2.46), g("warcaller", 7, 0.54, 2.40), g("regenerator", 8, 0.62, 2.76), g("bulwark", 8, 0.70, 3.00) },
 		[11] = { g("bulwark", 3, 0.51), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.58, 0.40), g("regenerator", 8, 0.66, 0.92), g("bulwark", 9, 0.74, 1.32) },
 		[12] = { g("bulwark", 7, 0.55), g("runner", 7, 0.50, 0.32), g("warcaller", 11, 0.66, 0.63), g("regenerator", 15, 0.77, 1.26) },
@@ -437,25 +437,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 1.94), g("runner", 5, 0.50, 2.21), g("warcaller", 9, 0.54, 2.16), g("regenerator", 10, 0.62, 2.48), g("bulwark", 10, 0.70, 2.70) },
 	},
 	crossflow = {
-		-- orientation
+		-- 19 grunts.
 		[1] = { g("grunt", 19, 0.56) },
-		-- demonstration
+		-- 6 bulwarks followed by 6 runners.
 		[2] = { g("bulwark", 6, 0.64), g("runner", 6, 0.51, 0.30) },
-		-- demonstration
+		-- 14 grunts, then 2 bulwarks, and 2 runners.
 		[3] = { g("grunt", 14, 0.53), g("bulwark", 2, 0.63, 0.60), g("runner", 2, 0.50, 0.90) },
-		-- practice
+		-- 6 bulwarks, then 7 runners, and 13 grunts.
 		[4] = { g("bulwark", 6, 0.51), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.28) },
-		-- practice
+		-- 11 warcallers, then 4 bulwarks, and 4 runners.
 		[5] = { g("warcaller", 11, 0.55), g("bulwark", 4, 0.50, 0.23), g("runner", 4, 0.50, 0.53) },
-		-- practice
+		-- 6 bulwarks, then 7 runners, then 10 warcallers, and 13 regenerators.
 		[6] = { g("bulwark", 6, 0.50), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.50, 0.15), g("regenerator", 13, 0.57, 0.37) },
-		-- mixed check
+		-- 3 bulwarks, then 4 runners, then 7 warcallers, then 7 regenerators, and 8 bulwarks.
 		[7] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.08), g("regenerator", 7, 0.50, 0.23), g("bulwark", 8, 0.54, 0.37) },
-		-- mixed check
+		-- 4 bulwarks, then 5 runners, then 8 grunts, then 9 tanks, and 10 runners.
 		[8] = { g("bulwark", 4, 0.50), g("runner", 5, 0.50, 0.30), g("grunt", 8, 0.50, 0.08), g("tank", 9, 0.50, 0.19), g("runner", 10, 0.50, 0.33) },
-		-- mixed check
+		-- 3 bulwarks, then 4 runners, then 7 warcallers, then 8 regenerators, then 8 bulwarks, and 9 runners.
 		[9] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.08), g("regenerator", 8, 0.50, 0.15), g("bulwark", 8, 0.50, 0.28), g("runner", 9, 0.50, 0.37) },
-		-- final exam
+		-- 1 boss, then 4 bulwarks, then 4 runners, then 7 warcallers, then 8 regenerators, and 8 bulwarks.
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 0.73), g("runner", 4, 0.50, 1.03), g("warcaller", 7, 0.50, 0.82), g("regenerator", 8, 0.50, 0.95), g("bulwark", 8, 0.52, 1.04) },
 		[11] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.50, 0.09), g("regenerator", 8, 0.50, 0.25), g("bulwark", 9, 0.54, 0.41) },
 		[12] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.50, 0.16), g("regenerator", 15, 0.57, 0.39) },
@@ -469,25 +469,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 0.66), g("runner", 5, 0.50, 0.93), g("warcaller", 9, 0.50, 0.74), g("regenerator", 10, 0.50, 0.85), g("bulwark", 10, 0.52, 0.94) },
 	},
 	steppingstones = {
-		-- orientation
+		-- 20 grunts.
 		[1] = { g("grunt", 20, 0.80) },
-		-- demonstration
+		-- 6 bulwarks followed by 6 runners.
 		[2] = { g("bulwark", 6, 0.92), g("runner", 6, 0.74, 0.30) },
-		-- demonstration
+		-- 14 grunts, then 2 bulwarks, and 2 runners.
 		[3] = { g("grunt", 14, 0.76), g("bulwark", 2, 0.90, 3.00), g("runner", 2, 0.72, 3.30) },
-		-- practice
+		-- 6 bulwarks, then 7 runners, and 13 grunts.
 		[4] = { g("bulwark", 6, 0.73), g("runner", 7, 0.58, 0.30), g("grunt", 13, 0.63, 1.60) },
-		-- practice
+		-- 11 warcallers, then 4 bulwarks, and 5 runners.
 		[5] = { g("warcaller", 11, 0.78), g("bulwark", 4, 0.70, 1.40), g("runner", 5, 0.56, 1.70) },
-		-- practice
+		-- 5 bulwarks, then 7 runners, then 10 warcallers, and 13 regenerators.
 		[6] = { g("bulwark", 5, 0.58), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.70, 1.00), g("regenerator", 13, 0.81, 2.00) },
-		-- mixed check
+		-- 3 bulwarks, then 4 runners, then 7 warcallers, then 7 regenerators, and 8 bulwarks.
 		[7] = { g("bulwark", 3, 0.54), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.61, 0.95), g("regenerator", 7, 0.70, 1.75), g("bulwark", 8, 0.78, 2.35) },
-		-- mixed check
+		-- 8 grunts, then 8 tanks, then 9 runners, and 10 bulwarks.
 		[8] = { g("grunt", 8, 0.50), g("tank", 8, 0.54, 0.95), g("runner", 9, 0.61, 1.55), g("bulwark", 10, 0.68, 2.15) },
-		-- mixed check
+		-- 4 bulwarks, then 4 runners, then 8 warcallers, then 9 regenerators, then 9 bulwarks, and 10 runners.
 		[9] = { g("bulwark", 4, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.51, 0.75), g("regenerator", 9, 0.58, 1.35), g("bulwark", 9, 0.64, 1.95), g("runner", 10, 0.72, 2.35) },
-		-- final exam
+		-- 1 boss, then 4 bulwarks, then 4 runners, then 7 warcallers, then 8 regenerators, and 8 bulwarks.
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 3.95), g("runner", 4, 0.50, 4.25), g("warcaller", 7, 0.58, 4.35), g("regenerator", 8, 0.66, 4.95), g("bulwark", 8, 0.74, 5.35) },
 		[11] = { g("bulwark", 3, 0.54), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.61, 1.04), g("regenerator", 8, 0.70, 1.93), g("bulwark", 9, 0.78, 2.59) },
 		[12] = { g("bulwark", 6, 0.58), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.70, 1.05), g("regenerator", 15, 0.81, 2.10) },
@@ -501,26 +501,25 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("bulwark", 5, 0.50, 3.56), g("runner", 5, 0.50, 3.83), g("warcaller", 9, 0.58, 3.91), g("regenerator", 10, 0.66, 4.46), g("bulwark", 10, 0.74, 4.81) },
 	},
 	twinloop = {
-		-- orientation
+		-- 20 grunts.
 		[1] = { g("grunt", 20, 0.51) },
-		-- demonstration
+		-- 3 summoners.
 		[2] = { g("summoner", 3, 1.00) },
-		-- demonstration
+		-- 10 grunts followed by 2 summoners.
 		[3] = { g("grunt", 10, 0.50), g("summoner", 2, 0.84, 0.93) },
-		-- practice
+		-- 6 bulwarks, then 7 runners, and 13 grunts.
 		[4] = { g("bulwark", 6, 0.50), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.50) },
-		-- practice
-		-- summoners recur as single priority targets inside otherwise familiar formations
+		-- 1 summoner, then 10 warcallers, then 4 bulwarks, and 4 runners.
 		[5] = { g("summoner", 1, 0.00), g("warcaller", 10, 0.52, 0.52), g("bulwark", 4, 0.50, 0.43), g("runner", 4, 0.50, 0.73) },
-		-- practice
+		-- 6 bulwarks, then 7 runners, then 10 warcallers, and 13 regenerators.
 		[6] = { g("bulwark", 6, 0.50), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.50, 0.31), g("regenerator", 13, 0.54, 0.62) },
-		-- mixed check
+		-- 3 bulwarks, then 4 runners, then 7 warcallers, then 7 regenerators, and 8 bulwarks.
 		[7] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.19), g("regenerator", 7, 0.50, 0.43), g("bulwark", 8, 0.52, 0.62) },
-		-- mixed check
+		-- 1 summoner, then 7 tanks, then 7 runners, then 8 bulwarks, and 10 regenerators.
 		[8] = { g("summoner", 1, 0.00), g("tank", 7, 0.50, 0.50), g("runner", 7, 0.50, 0.19), g("bulwark", 8, 0.50, 0.37), g("regenerator", 10, 0.50, 0.56) },
-		-- mixed check
+		-- 3 bulwarks, then 4 runners, then 7 warcallers, then 8 regenerators, then 8 bulwarks, and 9 runners.
 		[9] = { g("bulwark", 3, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.50, 0.12), g("regenerator", 8, 0.50, 0.31), g("bulwark", 8, 0.50, 0.50), g("runner", 9, 0.50, 0.62) },
-		-- final exam
+		-- 1 boss, then 4 bulwarks, then 4 runners, then 7 warcallers, then 8 regenerators, and 7 bulwarks.
 		[10] = { g("boss", 1, 0.00), g("bulwark", 4, 0.50, 1.12), g("runner", 4, 0.50, 1.42), g("warcaller", 7, 0.50, 1.24), g("regenerator", 8, 0.50, 1.43), g("bulwark", 7, 0.50, 1.55) },
 		[11] = { g("summoner", 1, 0.00), g("bulwark", 2, 0.50, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.50, 0.21), g("regenerator", 8, 0.50, 0.47), g("bulwark", 9, 0.52, 0.68) },
 		[12] = { g("bulwark", 7, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.50, 0.33), g("regenerator", 15, 0.54, 0.65) },
@@ -537,8 +536,8 @@ local wavesByMapId = {
 
 
 -- Boss selections remain explicit because they affect the spawned enemy type.
--- Each map changes the matchup for its second exam, while the pairings vary
--- across maps so the campaign does not settle into one predictable rotation.
+-- Each map uses a different boss for its second boss wave, and the pairings
+-- vary across maps rather than following one rotation.
 local bossArchetypesByMapId = {
 	riverbend = {[10] = "boss_summoner", [20] = "boss_ravager"},
 	switchback = {[10] = "boss_summoner", [20] = "boss_displacement"},
