@@ -30,6 +30,9 @@ local maps = {
 		id = "switchback",
 		campaignStage = 1,
 		nameKey = "map.switchback",
+		-- Bring durable enemies into the first campaign chapter so players start
+		-- making target-priority decisions immediately after the onboarding map.
+		introducesEnemies = {"tank"},
 		biome = "default",
 		path = {
 			{5, 7}, {15, 7},
@@ -44,6 +47,9 @@ local maps = {
 		id = "highpass",
 		campaignStage = 1,
 		nameKey = "map.highpass",
+		-- Runners follow one map later, adding a contrasting fast threat while the
+		-- tank lesson is still fresh.
+		introducesEnemies = {"runner"},
 		biome = "default",
 		path = {
 			{5, 5}, {21, 5},
@@ -105,9 +111,6 @@ local maps = {
 		id = "snaketrail",
 		campaignStage = 2,
 		nameKey = "map.snaketrail",
-		-- Snake Trail introduces Tanks; authored waves on all earlier maps contain
-		-- Grunts only. Backtrack introduces Runners next.
-		introducesEnemies = {"tank"},
 		biome = "default",
 		path = {
 			{5, 9}, {16, 9},
@@ -131,9 +134,6 @@ local maps = {
 		id = "backtrack",
 		campaignStage = 2,
 		nameKey = "map.backtrack",
-		-- Keep runners out of earlier map-specific encounters so this remains
-		-- their first campaign-map introduction.
-		introducesEnemies = {"runner"},
 		biome = "autumn",
 		path = {
 			{5, 7}, {16, 7},
