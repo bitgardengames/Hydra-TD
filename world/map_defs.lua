@@ -65,27 +65,22 @@ local maps = {
 	},
 
 	{
-		id = "roundabout",
+		id = "outerloop",
 		campaignStage = 1,
-		nameKey = "map.roundabout",
-		biome = "highlands",
+		nameKey = "map.outerloop",
+		biome = "drylands",
 		path = {
-			{5, 9}, {12, 9},
-			{12, 3}, {18, 3},
-			{18, 9}, {25, 9},
-			{25, 6}, {15, 6},
-			{15, 11}, {30, 11},
+			{5, 6}, {14, 6},
+			{14, 11}, {22, 11},
+			{22, 3}, {10, 3},
+			{10, 8}, {28, 8},
+			{28, 3}, {30, 3},
 		},
 		water = {
-			-- central pond
-			{16, 7, 2},
-		},
-		waves = {
-			encounters = {
-				boss_displacement = { flankKind = "grunt", flankBurst = 3, interval = 5.4, maxAliveAdds = 16 },
-				boss_summoner = { flankKind = "grunt", flankBurst = 5, interval = 5.2 },
-			},
-		},
+			-- outer pond
+			{7, 10, 2},
+			{8, 10, 1},
+		}
 	},
 
 	{
@@ -198,22 +193,27 @@ local maps = {
 	},
 
 	{
-		id = "outerloop",
+		id = "roundabout",
 		campaignStage = 2,
-		nameKey = "map.outerloop",
-		biome = "drylands",
+		nameKey = "map.roundabout",
+		biome = "highlands",
 		path = {
-			{5, 6}, {14, 6},
-			{14, 11}, {22, 11},
-			{22, 3}, {10, 3},
-			{10, 8}, {28, 8},
-			{28, 3}, {30, 3},
+			{5, 9}, {12, 9},
+			{12, 3}, {18, 3},
+			{18, 9}, {25, 9},
+			{25, 6}, {15, 6},
+			{15, 11}, {30, 11},
 		},
 		water = {
-			-- outer pond
-			{7, 10, 2},
-			{8, 10, 1},
-		}
+			-- central pond
+			{16, 7, 2},
+		},
+		waves = {
+			encounters = {
+				boss_displacement = { flankKind = "grunt", flankBurst = 3, interval = 5.4, maxAliveAdds = 16 },
+				boss_summoner = { flankKind = "grunt", flankBurst = 5, interval = 5.2 },
+			},
+		},
 	},
 
 	{

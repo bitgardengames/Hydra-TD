@@ -17,6 +17,11 @@ local function check(value, message)
 	assert(value, message)
 end
 
+check(Maps[4].id == "outerloop" and Maps[4].campaignStage == 1,
+	"Outer Loop must be the fourth map in the first campaign stage")
+check(Maps[10].id == "roundabout" and Maps[10].campaignStage == 2,
+	"Roundabout must be the tenth map in the second campaign stage")
+
 check(CampaignUnlocks.getUnlockedAbilitySlots() == 0,
 	"profiles without active abilities must not display ability slots")
 
