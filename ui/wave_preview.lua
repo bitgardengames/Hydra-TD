@@ -80,9 +80,6 @@ local function buildEnemyTooltip(group)
 	if def and def.descriptionKey then
 		rows[#rows + 1] = {kind = "text", text = L(def.descriptionKey), padAfter = 4}
 	end
-	if #group.tags > 0 then
-		rows[#rows + 1] = {kind = "text", text = L("hud.threatTags", table.concat(group.tags, ", "))}
-	end
 	return {title = group.name, rows = rows}
 end
 
