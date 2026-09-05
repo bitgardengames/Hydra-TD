@@ -11,6 +11,7 @@ from lua_source import named_entries, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "systems/campaign_wave_defs.lua"
+MAP_SOURCE = ROOT / "world/map_defs.lua"
 WINDOW_SECONDS = 5.0
 GROUP = re.compile(
     r'g\("(?P<kind>[a-z]+)",\s*(?P<count>\d+),\s*'
@@ -79,12 +80,38 @@ def summarize(waves: list[dict]) -> dict:
     }
 
 
+def introduction_audit(maps: dict[str, list[list[dict]]]) -> dict:
+    """Match introduction metadata to each non-boss kind's first campaign map."""
+    text = MAP_SOURCE.read_text()
+    map_blocks = re.split(r"\n\s*\{\n\s*id = ", text)[1:]
+    order = []
+    declared = {}
+    for block in map_blocks:
+        map_id = re.match(r'"([a-z]+)"', block).group(1)
+        order.append(map_id)
+        field = re.search(r"introducesEnemies\s*=\s*\{([^}]*)\}", block)
+        for kind in re.findall(r'"([a-z]+)"', field.group(1) if field else ""):
+            if kind in declared:
+                raise ValueError(f"{kind} is introduced by both {declared[kind]} and {map_id}")
+            declared[kind] = map_id
+    actual = {}
+    for map_id in order:
+        for wave in maps[map_id]:
+            for group in wave:
+                if group["kind"] != "boss":
+                    actual.setdefault(group["kind"], map_id)
+    if declared != actual:
+        raise ValueError(f"introduction metadata mismatch: declared={declared}, actual={actual}")
+    return {kind: {"map": actual[kind], "declared": True} for kind in sorted(actual)}
+
+
 def main() -> int:
     text = SOURCE.read_text()
     measured = {map_id: [wave_metrics(w) for w in waves]
                 for map_id, waves in parse_waves(text).items()}
     summaries = {map_id: summarize(waves) for map_id, waves in measured.items()}
     print(json.dumps({"engagementWindowSeconds": WINDOW_SECONDS,
+                      "introductions": introduction_audit(parse_waves(text)),
                       "maps": measured, "summaries": summaries}, indent=2))
     return 0
 
