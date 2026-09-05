@@ -7,7 +7,10 @@ local Achievements = {}
 
 local watchers = {}
 
-local BASE_CAMPAIGN_MAP_IDS = {
+-- These achievements describe completion of the campaign shown by the current
+-- map-select screen, including the fourth chapter. Keep this list explicit so
+-- unrelated/custom maps cannot silently become achievement requirements.
+local CAMPAIGN_MAP_IDS = {
 	"riverbend",
 	"switchback",
 	"highpass",
@@ -23,6 +26,9 @@ local BASE_CAMPAIGN_MAP_IDS = {
 	"crossflow",
 	"steppingstones",
 	"twinloop",
+	"frostgate",
+	"tidelock",
+	"ashspiral",
 }
 
 local rank = {
@@ -51,12 +57,12 @@ local function isDifficultyAtLeast(completedDifficulty, targetDifficulty)
 	return (rank[completedDifficulty] or 0) >= (rank[targetDifficulty] or 0)
 end
 
-local function countCompletedBaseCampaignMaps(targetDifficulty)
+local function countCompletedCampaignMaps(targetDifficulty)
 	local mapStats = Save.data.mapStats or {}
 	local count = 0
 
-	for i = 1, #BASE_CAMPAIGN_MAP_IDS do
-		local mapId = BASE_CAMPAIGN_MAP_IDS[i]
+	for i = 1, #CAMPAIGN_MAP_IDS do
+		local mapId = CAMPAIGN_MAP_IDS[i]
 		local stats = mapStats[mapId]
 
 		if stats and isDifficultyAtLeast(stats.completedDifficulty, targetDifficulty) then
@@ -67,8 +73,8 @@ local function countCompletedBaseCampaignMaps(targetDifficulty)
 	return count
 end
 
-local function hasCompletedBaseCampaign(targetDifficulty)
-	return countCompletedBaseCampaignMaps(targetDifficulty) == #BASE_CAMPAIGN_MAP_IDS
+local function hasCompletedCampaign(targetDifficulty)
+	return countCompletedCampaignMaps(targetDifficulty) == #CAMPAIGN_MAP_IDS
 end
 
 function Achievements.checkCampaignCompletion()
@@ -76,15 +82,15 @@ function Achievements.checkCampaignCompletion()
 		return
 	end
 
-	if hasCompletedBaseCampaign("easy") then
+	if hasCompletedCampaign("easy") then
 		unlock("CAMPAIGN_EASY")
 	end
 
-	if hasCompletedBaseCampaign("normal") then
+	if hasCompletedCampaign("normal") then
 		unlock("CAMPAIGN_NORMAL")
 	end
 
-	if hasCompletedBaseCampaign("hard") then
+	if hasCompletedCampaign("hard") then
 		unlock("CAMPAIGN_HARD")
 	end
 end
