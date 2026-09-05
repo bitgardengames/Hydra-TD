@@ -23,12 +23,24 @@ local function drawEnemy(e)
 	local iy = e.ry
 	local animT = e.rAnimT or 0
 	local enemyAlpha = e.alpha
+	if e.phaseActive then enemyAlpha = enemyAlpha * 0.28 end
 
 	e.drawX = ix
 	e.drawY = iy
 	local r = e.radius
 	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
 	squash = squash * (e.hitSquashStrength or 1)
+
+	-- Phasewalkers never leave the path or spatial grid. Their luminous wake and
+	-- faint silhouette make that continuing underground movement easy to follow.
+	if e.phaseActive then
+		local wake = r + 11 + sin(animT * 7) * 2
+		lg.setColor(0.35, 0.82, 1, 0.18 + sin(animT * 5) * 0.05)
+		lg.ellipse("fill", ix, iy + r * 0.65, wake, r * 0.42)
+		lg.setColor(0.55, 0.92, 1, 0.8)
+		lg.setLineWidth(2)
+		lg.arc("line", "open", ix, iy + r * 0.55, wake, pi * 0.12, pi * 0.88)
+	end
 
 	-- Keep the shadow anchored to the ground while the enemy body reacts to a hit.
 	-- Drawing it before the squash transform also keeps its footprint unchanged.
@@ -109,6 +121,11 @@ local function drawEnemy(e)
 		lg.line(ix - r - trail, iy - 7, ix - r - 3, iy - 7)
 		lg.line(ix - r - trail - 4, iy, ix - r - 3, iy)
 		lg.line(ix - r - trail, iy + 7, ix - r - 3, iy + 7)
+	elseif e.kind == "boss_phasewalker" then
+		lg.setColor(0.38, 0.85, 1, (e.phaseActive and 0.95 or 0.55) * enemyAlpha)
+		lg.setLineWidth(e.phaseActive and 4 or 2)
+		lg.arc("line", "open", ix, iy, r + 8, pi * 0.08, pi * 0.92)
+		lg.arc("line", "open", ix, iy, r + 8, pi * 1.08, pi * 1.92)
 	end
 	if e.kind == "bulwark" then
 		lg.setColor(outR, outG, outB, enemyAlpha)
@@ -126,7 +143,7 @@ local function drawEnemy(e)
 
     -- Boss Horns
     if e.boss then
-        lg.setColor(outlineColor)
+        lg.setColor(outR, outG, outB, enemyAlpha)
 
         local hornW = e.radius * 0.60
         local hornH = e.radius * 0.82
@@ -151,7 +168,7 @@ local function drawEnemy(e)
 
 	-- Body lighting (canonical system)
 	-- Base (shadowed)
-	lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul)
+	lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul, enemyAlpha)
 	lg.circle("fill", ix, iy, r)
 
 	-- Top highlight
@@ -439,6 +456,8 @@ local function newEnemyPortrait(kind)
 		bossShieldActive = false,
 		enrage = def.enrage,
 		enraged = false,
+		phase = def.phase,
+		phaseActive = false,
 		regenDelay = 1,
 		hp = def.hp,
 		maxHp = def.hp,

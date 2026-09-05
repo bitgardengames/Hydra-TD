@@ -1,5 +1,6 @@
 local Spatial = require("world.spatial_grid")
 local State = require("core.state")
+local EnemyPhase = require("world.enemy_phase")
 
 local Targeting = {}
 
@@ -30,7 +31,7 @@ local function updateBest(e, c, score)
 end
 
 local function evaluateCandidate(e, c)
-	if e.hp <= 0 or e.dying then
+	if e.hp <= 0 or e.dying or not EnemyPhase.canDirectHit(e) then
 		return
 	end
 
@@ -144,7 +145,7 @@ local function getCandidatesForTower(tower)
 	local count = 0
 	for i = 1, candidateCount do
 		local e = candidates[i]
-		if e and e.hp > 0 and not e.dying then
+		if e and e.hp > 0 and not e.dying and EnemyPhase.canDirectHit(e) then
 			count = count + 1
 			list[count] = e
 		end
@@ -155,7 +156,7 @@ local function getCandidatesForTower(tower)
 end
 
 function Targeting.isSemanticallyValidTarget(tower, e)
-	if not Targeting.isTargetEntityValid(e) or e.hp <= 0 or e.dying then
+	if not Targeting.isTargetEntityValid(e) or e.hp <= 0 or e.dying or not EnemyPhase.canDirectHit(e) then
 		return false
 	end
 
