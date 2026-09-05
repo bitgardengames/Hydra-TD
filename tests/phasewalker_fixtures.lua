@@ -11,6 +11,7 @@ assert(def.boss and def.phase, "Phasewalker must be a boss with phase configurat
 assert(def.phase.initialDelay > 0 and def.phase.period > def.phase.duration
 	and def.phase.duration > 0 and def.phase.speedMultiplier > 0,
 	"Phasewalker timing and speed configuration is invalid")
+assert(def.phase.duration == 3.0, "Phasewalker's phased-out duration must remain at the longer three-second window")
 
 local enemy = {id = 1, x = 20, y = 0, hp = 10, dist = 20}
 Phase.initialize(enemy, def.phase)

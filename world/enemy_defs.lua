@@ -170,7 +170,7 @@ return {
 		radius = 18,
 		boss = true,
 		mechanicWeight = 1.55,
-		phase = { initialDelay = 3.5, period = 8.0, duration = 2.5, speedMultiplier = 1.35 },
+		phase = { initialDelay = 3.5, period = 8.0, duration = 3.0, speedMultiplier = 1.35 },
 		traits = {"boss_phasewalker"},
 	},
 
