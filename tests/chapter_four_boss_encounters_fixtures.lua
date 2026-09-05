@@ -7,9 +7,9 @@ local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local Resolver = require("systems.wave_resolver")
 
 local expected = {
-	frostgate = {"boss_aegis", "boss_suppression"},
-	tidelock = {"boss_displacement", "boss_summoner"},
-	ashspiral = {"boss_ravager", "boss_aegis"},
+	frostgate = {"boss_aegis", "boss_phasewalker"},
+	tidelock = {"boss_suppression", "boss_gatecrasher"},
+	ashspiral = {"boss_ravager", "boss_phasewalker"},
 }
 
 local mapsById = {}

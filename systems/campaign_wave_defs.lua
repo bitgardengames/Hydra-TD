@@ -563,7 +563,9 @@ local wavesByMapId = {
 
 -- Boss selections remain explicit because they affect the spawned enemy type.
 -- Each map uses a different boss for its second boss wave, and the pairings
--- vary across maps rather than following one rotation.
+-- vary across maps rather than following one rotation. Across the campaign,
+-- every archetype appears five times (with Summoner appearing once more to fill
+-- the 36 encounter slots) so no boss is crowded out by another.
 local bossArchetypesByMapId = {
 	riverbend = {[10] = "boss_summoner", [20] = "boss_ravager"},
 	switchback = {[10] = "boss_summoner", [20] = "boss_displacement"},
@@ -575,14 +577,14 @@ local bossArchetypesByMapId = {
 	lowvalley = {[10] = "boss_suppression", [20] = "boss_aegis"},
 	circuit = {[10] = "boss_aegis", [20] = "boss_gatecrasher"},
 	outerloop = {[10] = "boss_ravager", [20] = "boss_summoner"},
-	terrace = {[10] = "boss_summoner", [20] = "boss_phasewalker"},
+	terrace = {[10] = "boss_suppression", [20] = "boss_phasewalker"},
 	highridge = {[10] = "boss_aegis", [20] = "boss_gatecrasher"},
 	crossflow = {[10] = "boss_ravager", [20] = "boss_displacement"},
-	steppingstones = {[10] = "boss_displacement", [20] = "boss_aegis"},
-	twinloop = {[10] = "boss_summoner", [20] = "boss_gatecrasher"},
+	steppingstones = {[10] = "boss_phasewalker", [20] = "boss_gatecrasher"},
+	twinloop = {[10] = "boss_suppression", [20] = "boss_gatecrasher"},
 	frostgate = {[10] = "boss_aegis", [20] = "boss_phasewalker"},
-	tidelock = {[10] = "boss_displacement", [20] = "boss_phasewalker"},
-	ashspiral = {[10] = "boss_ravager", [20] = "boss_gatecrasher"},
+	tidelock = {[10] = "boss_suppression", [20] = "boss_gatecrasher"},
+	ashspiral = {[10] = "boss_ravager", [20] = "boss_phasewalker"},
 }
 
 for mapId, bossArchetypes in pairs(bossArchetypesByMapId) do
