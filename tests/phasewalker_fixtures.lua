@@ -43,8 +43,8 @@ assert(tower.target == candidates[2], "tower did not reacquire a legal target")
 
 Phase.update(enemy, def.phase.duration)
 assert(not enemy.phaseActive, "phase did not expire after its configured duration")
-assert(Phase.canDirectHit(enemy), "direct projectile filtering rejected a surfaced enemy")
-assert(Targeting.isSemanticallyValidTarget(tower, enemy), "surfaced boss did not become targetable")
+assert(Phase.canDirectHit(enemy), "direct projectile filtering rejected an unphased enemy")
+assert(Targeting.isSemanticallyValidTarget(tower, enemy), "boss did not become targetable when its phase ended")
 
 local authored = false
 for _, map in ipairs(Maps) do

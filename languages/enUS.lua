@@ -501,9 +501,9 @@ return {
 		boss_ravager = {tag = "FINAL SPRINT"},
 		boss_phasewalker = {
 			tag = "PHASE SHIFT",
-			mechanic = "Phases underground, evading targeting and direct projectiles while speeding up. Ground-area effects still deal damage.",
-			tell = "A translucent silhouette and bright trail mark its underground path.",
-			counterplay = "Use ground-area damage during the phase or overlapping towers to reacquire it when it surfaces.",
+			mechanic = "Phases out while continuing along the path, evading targeting and direct projectiles while speeding up. Ground-area effects still deal damage.",
+			tell = "Its body becomes translucent while it is phased out.",
+			counterplay = "Use ground-area damage during the phase or overlapping towers to reacquire it when the phase ends.",
 		},
 	},
 
