@@ -23,6 +23,9 @@ local pacingIdentityByMapId = {
 	crossflow = "finale lesson two: tighter crossings add overlapping pressure",
 	steppingstones = "finale synthesis: separated platoons test target priority",
 	twinloop = "campaign final exam: two dense cycles orbit summoner pressure",
+	frostgate = "armored siege: long columns test sustained single-target damage",
+	tidelock = "support lock: alternating escorts force rapid target-priority changes",
+	ashspiral = "final convergence: compressed mixed-role formations allow no full reset",
 }
 
 local pacingTargetsByMapId = {
@@ -41,6 +44,9 @@ local pacingTargetsByMapId = {
 	crossflow = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 6.05, 22.51 }, downtimeBetweenGroups = { 0.07, 1.04 } },
 	steppingstones = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 8.60, 41.81 }, downtimeBetweenGroups = { 0.26, 5.35 } },
 	twinloop = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 2.00, 23.07 }, downtimeBetweenGroups = { 0.10, 1.55 } },
+	frostgate = { openingPressure = 10, peakSimultaneous = 11, totalWaveDuration = { 7.92, 33.81 }, downtimeBetweenGroups = { 0.62, 2.40 } },
+	tidelock = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.82, 25.46 }, downtimeBetweenGroups = { 0.24, 1.30 } },
+	ashspiral = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 8.80, 33.73 }, downtimeBetweenGroups = { 0.10, 0.90 } },
 }
 
 -- A wave is written as a short list of spawn groups. Delay is the pause after
@@ -532,6 +538,73 @@ local wavesByMapId = {
 		[19] = { g("summoner", 1, 0.00), g("bulwark", 3, 0.50, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.50, 0.10), g("regenerator", 10, 0.50, 0.26), g("bulwark", 10, 0.50, 0.42), g("runner", 11, 0.50, 0.53) },
 		[20] = { g("boss", 1, 0.00), g("summoner", 1, 0.00, 1.01), g("bulwark", 4, 0.50, 0.50), g("runner", 5, 0.50, 1.28), g("warcaller", 9, 0.50, 1.12), g("regenerator", 10, 0.50, 1.29), g("bulwark", 9, 0.50, 1.40) },
 	},
+
+	frostgate = {
+		[1] = { g("tank", 12, 0.72) },
+		[2] = { g("bulwark", 7, 0.82), g("grunt", 8, 0.62, 1.80) },
+		[3] = { g("tank", 9, 0.68), g("regenerator", 6, 0.78, 1.55) },
+		[4] = { g("bulwark", 8, 0.72), g("runner", 10, 0.55, 1.30) },
+		[5] = { g("warcaller", 6, 0.76), g("tank", 12, 0.62, 1.60) },
+		[6] = { g("regenerator", 8, 0.70), g("bulwark", 9, 0.66, 1.40), g("grunt", 10, 0.55, 1.05) },
+		[7] = { g("tank", 10, 0.64), g("runner", 12, 0.50, 1.20), g("warcaller", 6, 0.72, 1.35) },
+		[8] = { g("bulwark", 9, 0.68), g("regenerator", 9, 0.66, 1.25), g("tank", 11, 0.58, 1.10) },
+		[9] = { g("warcaller", 7, 0.68), g("bulwark", 10, 0.62, 1.15), g("runner", 13, 0.50, 1.00) },
+		[10] = { g("boss", 1, 0.00), g("tank", 11, 0.62, 2.40), g("regenerator", 9, 0.68, 1.65), g("bulwark", 9, 0.64, 1.45) },
+		[11] = { g("tank", 12, 0.60), g("runner", 14, 0.50, 1.05), g("warcaller", 7, 0.66, 1.20) },
+		[12] = { g("bulwark", 10, 0.64), g("regenerator", 10, 0.62, 1.15), g("grunt", 15, 0.50, 0.95) },
+		[13] = { g("warcaller", 8, 0.64), g("tank", 13, 0.58, 1.05), g("runner", 15, 0.50, 0.90) },
+		[14] = { g("regenerator", 11, 0.60), g("bulwark", 11, 0.60, 1.00), g("tank", 13, 0.56, 0.85) },
+		[15] = { g("summoner", 2, 1.00), g("tank", 14, 0.56, 1.30), g("warcaller", 8, 0.62, 0.95) },
+		[16] = { g("bulwark", 12, 0.58), g("runner", 17, 0.50, 0.80), g("regenerator", 11, 0.58, 0.90) },
+		[17] = { g("tank", 15, 0.54), g("warcaller", 9, 0.60, 0.85), g("grunt", 18, 0.50, 0.70) },
+		[18] = { g("regenerator", 12, 0.56), g("bulwark", 13, 0.56, 0.80), g("runner", 18, 0.50, 0.68) },
+		[19] = { g("summoner", 2, 0.90), g("warcaller", 10, 0.58, 0.80), g("tank", 16, 0.52, 0.66), g("bulwark", 12, 0.54, 0.62) },
+		[20] = { g("boss", 1, 0.00), g("bulwark", 13, 0.54, 2.10), g("regenerator", 12, 0.56, 1.15), g("tank", 16, 0.52, 0.90), g("runner", 18, 0.50, 0.72) },
+	},
+	tidelock = {
+		[1] = { g("runner", 14, 0.58) },
+		[2] = { g("warcaller", 5, 0.80), g("grunt", 10, 0.55, 0.65) },
+		[3] = { g("regenerator", 6, 0.74), g("runner", 11, 0.52, 0.55) },
+		[4] = { g("summoner", 2, 0.90), g("tank", 10, 0.58, 0.70) },
+		[5] = { g("warcaller", 6, 0.70), g("bulwark", 8, 0.62, 0.50), g("runner", 12, 0.50, 0.45) },
+		[6] = { g("regenerator", 8, 0.64), g("grunt", 13, 0.50, 0.42), g("tank", 9, 0.56, 0.50) },
+		[7] = { g("summoner", 2, 0.84), g("runner", 14, 0.50, 0.52), g("bulwark", 8, 0.58, 0.44) },
+		[8] = { g("warcaller", 7, 0.64), g("tank", 11, 0.54, 0.40), g("regenerator", 9, 0.60, 0.46) },
+		[9] = { g("runner", 15, 0.50), g("summoner", 2, 0.80, 0.38), g("bulwark", 10, 0.56, 0.42) },
+		[10] = { g("boss", 1, 0.00), g("warcaller", 8, 0.62, 1.30), g("runner", 15, 0.50, 0.66), g("regenerator", 9, 0.58, 0.58) },
+		[11] = { g("summoner", 2, 0.78), g("tank", 12, 0.52, 0.38), g("runner", 16, 0.50, 0.36) },
+		[12] = { g("regenerator", 10, 0.58), g("bulwark", 11, 0.54, 0.35), g("grunt", 16, 0.50, 0.34) },
+		[13] = { g("warcaller", 9, 0.60), g("runner", 17, 0.50, 0.32), g("tank", 13, 0.52, 0.38) },
+		[14] = { g("summoner", 3, 0.76), g("bulwark", 12, 0.52, 0.36), g("regenerator", 11, 0.56, 0.34) },
+		[15] = { g("runner", 18, 0.50), g("warcaller", 10, 0.58, 0.30), g("tank", 14, 0.50, 0.32) },
+		[16] = { g("regenerator", 12, 0.54), g("summoner", 3, 0.72, 0.32), g("bulwark", 13, 0.50, 0.30) },
+		[17] = { g("warcaller", 11, 0.56), g("runner", 19, 0.50, 0.28), g("grunt", 18, 0.50, 0.26) },
+		[18] = { g("summoner", 3, 0.68), g("tank", 15, 0.50, 0.28), g("regenerator", 13, 0.52, 0.26) },
+		[19] = { g("runner", 20, 0.50), g("warcaller", 12, 0.54, 0.25), g("bulwark", 14, 0.50, 0.24), g("summoner", 3, 0.64, 0.24) },
+		[20] = { g("boss", 1, 0.00), g("summoner", 3, 0.62, 1.10), g("runner", 20, 0.50, 0.52), g("warcaller", 12, 0.52, 0.46), g("bulwark", 14, 0.50, 0.42) },
+	},
+	ashspiral = {
+		[1] = { g("grunt", 18, 0.52), g("runner", 8, 0.50, 0.30) },
+		[2] = { g("tank", 10, 0.56), g("bulwark", 7, 0.58, 0.28) },
+		[3] = { g("warcaller", 6, 0.62), g("regenerator", 7, 0.58, 0.26), g("runner", 10, 0.50, 0.24) },
+		[4] = { g("summoner", 2, 0.76), g("grunt", 14, 0.50, 0.24), g("tank", 10, 0.52, 0.22) },
+		[5] = { g("bulwark", 9, 0.54), g("runner", 13, 0.50, 0.22), g("warcaller", 7, 0.58, 0.20) },
+		[6] = { g("regenerator", 9, 0.54), g("tank", 12, 0.50, 0.20), g("summoner", 2, 0.70, 0.20) },
+		[7] = { g("runner", 15, 0.50), g("bulwark", 10, 0.52, 0.18), g("warcaller", 8, 0.56, 0.18) },
+		[8] = { g("summoner", 3, 0.68), g("regenerator", 10, 0.52, 0.18), g("grunt", 17, 0.50, 0.16) },
+		[9] = { g("tank", 13, 0.50), g("runner", 17, 0.50, 0.16), g("warcaller", 9, 0.54, 0.16) },
+		[10] = { g("boss", 1, 0.00), g("summoner", 3, 0.64, 0.90), g("bulwark", 11, 0.50, 0.38), g("runner", 17, 0.50, 0.34), g("regenerator", 10, 0.50, 0.30) },
+		[11] = { g("warcaller", 10, 0.52), g("tank", 14, 0.50, 0.15), g("runner", 18, 0.50, 0.15) },
+		[12] = { g("summoner", 3, 0.62), g("regenerator", 11, 0.50, 0.15), g("bulwark", 12, 0.50, 0.14) },
+		[13] = { g("runner", 19, 0.50), g("grunt", 20, 0.50, 0.14), g("warcaller", 11, 0.50, 0.14) },
+		[14] = { g("tank", 15, 0.50), g("summoner", 4, 0.60, 0.14), g("regenerator", 12, 0.50, 0.13) },
+		[15] = { g("bulwark", 13, 0.50), g("runner", 20, 0.50, 0.13), g("warcaller", 12, 0.50, 0.13) },
+		[16] = { g("summoner", 4, 0.58), g("tank", 16, 0.50, 0.12), g("regenerator", 13, 0.50, 0.12) },
+		[17] = { g("runner", 21, 0.50), g("bulwark", 14, 0.50, 0.12), g("warcaller", 13, 0.50, 0.11) },
+		[18] = { g("regenerator", 14, 0.50), g("summoner", 4, 0.56, 0.11), g("tank", 17, 0.50, 0.11) },
+		[19] = { g("warcaller", 14, 0.50), g("runner", 22, 0.50, 0.10), g("bulwark", 15, 0.50, 0.10), g("summoner", 4, 0.54, 0.10) },
+		[20] = { g("boss", 1, 0.00), g("summoner", 4, 0.52, 0.72), g("warcaller", 14, 0.50, 0.28), g("regenerator", 14, 0.50, 0.25), g("bulwark", 15, 0.50, 0.22), g("runner", 22, 0.50, 0.20) },
+	},
 }
 
 
@@ -554,6 +627,9 @@ local bossArchetypesByMapId = {
 	crossflow = {[10] = "boss_ravager", [20] = "boss_displacement"},
 	steppingstones = {[10] = "boss_displacement", [20] = "boss_aegis"},
 	twinloop = {[10] = "boss_summoner", [20] = "boss_ravager"},
+	frostgate = {[10] = "boss_aegis", [20] = "boss_suppression"},
+	tidelock = {[10] = "boss_displacement", [20] = "boss_summoner"},
+	ashspiral = {[10] = "boss_ravager", [20] = "boss_aegis"},
 }
 
 for mapId, bossArchetypes in pairs(bossArchetypesByMapId) do

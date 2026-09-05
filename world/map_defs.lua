@@ -331,6 +331,66 @@ local maps = {
 			{23, 10, 2},
 		}
 	},
+
+	{
+		id = "frostgate",
+		prerequisiteMapId = "twinloop",
+		campaignStage = 4,
+		nameKey = "map.frostgate",
+		-- A long frozen choke tests sustained damage against armored columns.
+		biome = "winter",
+		path = {
+			{5, 4}, {15, 4},
+			{15, 10}, {9, 10},
+			{9, 7}, {23, 7},
+			{23, 3}, {27, 3},
+			{27, 9}, {30, 9},
+		},
+		water = {
+			-- Frozen reservoirs divide the long central firing lane.
+			{7, 6, 2}, {18, 9, 2}, {25, 11, 1},
+		},
+	},
+
+	{
+		id = "tidelock",
+		prerequisiteMapId = "frostgate",
+		campaignStage = 4,
+		nameKey = "map.tidelock",
+		-- Short returning lanes make target switching and support priority decisive.
+		biome = "autumn",
+		path = {
+			{5, 9}, {13, 9},
+			{13, 3}, {20, 3},
+			{20, 11}, {10, 11},
+			{10, 6}, {25, 6},
+			{25, 9}, {30, 9},
+		},
+		water = {
+			-- A broad lock and offset spillway constrain the two best build pockets.
+			{16, 7, 3}, {22, 9, 2}, {7, 3, 1},
+		},
+	},
+
+	{
+		id = "ashspiral",
+		prerequisiteMapId = "tidelock",
+		campaignStage = 4,
+		nameKey = "map.ashspiral",
+		-- The finale compresses every enemy role into an inward spiral with few resets.
+		biome = "drylands",
+		path = {
+			{5, 3}, {27, 3},
+			{27, 11}, {9, 11},
+			{9, 6}, {23, 6},
+			{23, 9}, {14, 9},
+			{14, 5}, {30, 5},
+		},
+		water = {
+			-- Sparse oases deny easy coverage at the spiral's outer corners.
+			{6, 8, 1}, {18, 7, 2}, {28, 9, 1},
+		},
+	},
 }
 
 return maps
