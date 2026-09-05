@@ -31,6 +31,21 @@ package.loaded["systems.gameplay_outcome"] = {defeat=function(reason) defeatReas
 package.loaded["world.enemy_phase"] = {initialize=function() end,update=function() end,movementMultiplier=function() return 1 end}
 
 local Enemies = require("world.enemies")
+
+local aegis = Enemies.spawnEnemy("boss_aegis", 1, 1)
+aegis.bossShieldActive = true
+local aegisHpBeforeHit = aegis.hp
+local aegisDamage = Enemies.applyDamage(aegis, 100, {})
+assert(aegisDamage == 0 and aegis.hp == aegisHpBeforeHit,
+	"Aegis must be immune to damage while its shield is active")
+
+local warcaller = Enemies.spawnEnemy("warcaller", 1, 1)
+local warcallerStatuses = Enemies.getDisplayStatuses(warcaller)
+for i = 1, #warcallerStatuses do
+	assert(warcallerStatuses[i].id ~= "support_aura",
+		"Warcaller speed aura must not appear as status text")
+end
+
 local def = assert(Enemies.EnemyDefs.boss_gatecrasher)
 assert(def.healthThresholds[1] > def.healthThresholds[2] and def.healthThresholds[2] > def.healthThresholds[3],
 	"health thresholds must be ordered high to low")
