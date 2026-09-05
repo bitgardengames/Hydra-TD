@@ -189,7 +189,6 @@ return {
 		slow = "Slowed",
 		poison = "Poisoned",
 		barrier = "Barrier",
-		supportAura = "Speed aura active",
 		supportBoost = "Aura accelerated",
 		regenerationSuppressed = "Regeneration suppressed",
 		summonPreparing = "Summoning charge",

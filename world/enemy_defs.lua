@@ -144,7 +144,7 @@ return {
 		radius = 18,
 		boss = true,
 		mechanicWeight = 1.45,
-		bossShield = { period = 6.0, duration = 2.0, initialDelay = 3.0, damageMultiplier = 0.45 },
+		bossShield = { period = 6.0, duration = 2.0, initialDelay = 3.0, damageMultiplier = 0 },
 		traits = {"boss_aegis"},
 	},
 

@@ -884,9 +884,6 @@ local function getDisplayStatuses(e)
 			remainingFraction = fraction(e.poisonTimer, e.poisonDuration),
 		})
 	end
-	if e.support then
-		add("status.supportAura", "◉", Theme.ui.good, {id = "support_aura"})
-	end
 	if (e.supportBoost or 1) > 1 then
 		add("status.supportBoost", "▲", Theme.ui.good, {
 			id = "support_boost", value = L("status.multiplier", e.supportBoost),
