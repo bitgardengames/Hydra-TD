@@ -147,7 +147,7 @@ local function drawEnemy(e)
 		end
 	elseif e.kind == "regenerator" then
 		lg.setColor(outR, outG, outB, enemyAlpha)
-		lg.setLineWidth(4)
+		lg.setLineWidth(3)
 		drawRegeneratorArcs(ix, iy, r + 4, animT * 0.08)
 	end
 
@@ -230,7 +230,7 @@ local function drawEnemy(e)
 	-- backward speed streaks.
 	if e.regeneration and e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0 then
 		lg.setColor(0.55, 1, 0.55, enemyAlpha)
-		lg.setLineWidth(3)
+		lg.setLineWidth(2)
 		drawRegeneratorArcs(ix, iy, r + 1, animT * 0.08)
 		if e.regenVisualPulse > 0 then
 			local a = e.regenVisualPulse / 0.28
