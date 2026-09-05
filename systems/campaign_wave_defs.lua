@@ -627,6 +627,10 @@ local bossArchetypesByMapId = {
 	crossflow = {[10] = "boss_ravager", [20] = "boss_displacement"},
 	steppingstones = {[10] = "boss_displacement", [20] = "boss_aegis"},
 	twinloop = {[10] = "boss_summoner", [20] = "boss_ravager"},
+	-- Chapter four's six encounters are deliberately hand-paired: Frostgate
+	-- tests sustained fire around shield and suppression windows, Tidelock tests
+	-- target switching against two add-driven bosses, and Ash Spiral tests
+	-- control and burst timing while its authored mixed formations stay dense.
 	frostgate = {[10] = "boss_aegis", [20] = "boss_suppression"},
 	tidelock = {[10] = "boss_displacement", [20] = "boss_summoner"},
 	ashspiral = {[10] = "boss_ravager", [20] = "boss_aegis"},
