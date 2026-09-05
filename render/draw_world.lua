@@ -118,10 +118,40 @@ local function drawGrass(targetMap)
 	local terrain = getTerrain(targetMap)
 	local grass = terrain.grass
 
-	buildGrassScatterCache(terrain, targetMap)
-
 	lg.setColor(grass)
 	lg.rectangle("fill", 0, 0, gridW * tile, gridH * tile)
+
+	if terrain.backgroundStyle == "space" then
+		-- Fixed procedural stars keep gameplay and cached map previews identical.
+		-- A few soft nebula discs give the field depth without introducing props
+		-- that could be mistaken for build blockers.
+		lg.setColor(0.10, 0.05, 0.22, 0.24)
+		lg.circle("fill", gridW * tile * 0.20, gridH * tile * 0.76, tile * 3.8)
+		lg.setColor(0.04, 0.18, 0.30, 0.20)
+		lg.circle("fill", gridW * tile * 0.78, gridH * tile * 0.22, tile * 4.6)
+
+		for y = 1, gridH do
+			for x = 1, gridW do
+				local sparkle = hashNoise(x, y, 19)
+				if sparkle > 0.58 then
+					local sx = (x - 1 + hashNoise(x, y, 31)) * tile
+					local sy = (y - 1 + hashNoise(x, y, 47)) * tile
+					local radius = sparkle > 0.92 and 2.4 or 1.3
+					local tint = hashNoise(x, y, 67)
+					lg.setColor(0.72 + tint * 0.28, 0.78 + tint * 0.18, 1, 0.72 + tint * 0.28)
+					lg.circle("fill", sx, sy, radius)
+					if sparkle > 0.96 then
+						lg.setLineWidth(1)
+						lg.line(sx - 5, sy, sx + 5, sy)
+						lg.line(sx, sy - 5, sx, sy + 5)
+					end
+				end
+			end
+		end
+		return
+	end
+
+	buildGrassScatterCache(terrain, targetMap)
 
 	if grassScatterCanvas then
 		lg.setColor(1, 1, 1, 1)
@@ -359,6 +389,16 @@ local function drawPath(targetMap)
 
 	-- Each pass applies its own half-thickness to endpoint trims.
 	drawPathGeometry(geometry, outlineThickness, terrain.pathOutline)
+	if terrain.pathStyle == "rainbow" and terrain.rainbow then
+		-- Nested passes form seven continuous neon bands. Because every pass uses
+		-- the same geometry, stripes stay clean through bends and endpoints.
+		local palette = terrain.rainbow
+		for i = 1, #palette do
+			local width = fillThickness * (#palette - i + 1) / #palette
+			drawPathGeometry(geometry, width, palette[i])
+		end
+		return
+	end
 	drawPathGeometry(geometry, fillThickness, terrain.path)
 end
 
