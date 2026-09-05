@@ -196,6 +196,7 @@ return {
 		summonPreparing = "Summoning charge",
 		phased = "Phased: direct fire passes through",
 		phasePreparing = "Next phase shift",
+		lungePreparing = "Lunge incoming",
 		value = "%s / %s",
 		multiplier = "x%.2f",
 	},
@@ -471,6 +472,7 @@ return {
 		bossAegis = "Aegis",
 		bossRavager = "Ravager",
 		bossPhasewalker = "Phasewalker",
+		bossGatecrasher = "Gatecrasher",
 	},
 
 	hud = {
@@ -504,6 +506,12 @@ return {
 			mechanic = "Phases out while continuing along the path, evading targeting and direct projectiles while speeding up. Ground-area effects still deal damage.",
 			tell = "Its body becomes translucent while it is phased out.",
 			counterplay = "Use ground-area damage during the phase or overlapping towers to reacquire it when the phase ends.",
+		},
+		boss_gatecrasher = {
+			tag = "THRESHOLD LUNGES",
+			mechanic = "Winds up and lunges forward at 75%, 50%, and 25% health. Every crossed marker queues one lunge.",
+			tell = "The next health marker and a forward arrow flare during the protected wind-up.",
+			counterplay = "Burst it early, then use slows and overlapping coverage to contain each lunge.",
 		},
 	},
 

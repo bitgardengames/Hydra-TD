@@ -79,6 +79,13 @@ local Traits = {
 		counter = "Place overlapping coverage to reacquire it when the phase ends, or time ground-area damage for its phase window.",
 		answers = {"Cannon area specializations", "Overlapping rapid-fire coverage"},
 	},
+	boss_gatecrasher = {
+		tag = "Boss Mechanic",
+		mechanic = "Lunges forward once at each marked health threshold after a protected wind-up.",
+		tell = "An arrow and the matching health-bar marker flare before each lunge.",
+		counter = "Deal burst damage early enough to survive the queued lunges, then finish it between wind-ups.",
+		answers = {"Long-path burst coverage", "Slow/control specializations"},
+	},
 }
 
 function Traits.get(id)

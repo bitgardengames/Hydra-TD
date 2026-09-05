@@ -166,6 +166,46 @@ local function advanceEnemyAlongPath(e, moveDist, pathWorld, pathSegLen, totalLe
 	return moved
 end
 
+-- Move by path distance rather than by a single segment's interpolation. This
+-- is shared by ordinary movement and instantaneous mechanics so neither can
+-- skip corners, leave the spatial grid stale, or overshoot the exit.
+local function advanceEnemyByDistance(e, moveDist, pathWorld, pathSegLen, totalLen)
+	local map = MapMod.map
+	pathWorld = pathWorld or map.pathWorld
+	pathSegLen = pathSegLen or map.pathSegLen
+	totalLen = totalLen or map.totalWorldLength
+	local moved = advanceEnemyAlongPath(e, max(0, moveDist or 0), pathWorld, pathSegLen, totalLen)
+	if moved then
+		if e.supportSourceIndex then EnemySupport.markSourceDirty(e) end
+		Spatial.updateEnemy(e)
+	end
+	return moved, e.dist >= totalLen
+end
+
+local function triggerHealthThresholds(e)
+	local thresholds = e.healthThresholds
+	if not e.lunge or type(thresholds) ~= "table" then return 0 end
+	local crossed = 0
+	while e.nextHealthThreshold <= #thresholds do
+		local value = thresholds[e.nextHealthThreshold]
+		if type(value) == "table" then value = value.hpFraction or value.fraction or value.hp end
+		local thresholdHp = value and (value <= 1 and e.maxHp * value or value)
+		if not thresholdHp or e.hp > thresholdHp then break end
+		e.nextHealthThreshold = e.nextHealthThreshold + 1
+		crossed = crossed + 1
+	end
+	if crossed > 0 then
+		-- Queueing rule: every crossed threshold contributes exactly one lunge;
+		-- simultaneous crossings play sequentially rather than being coalesced.
+		e.lungesPending = e.lungesPending + crossed
+		if not e.lungeWindup then
+			e.lungeWindup = e.lunge.windupDuration
+			e.lungeActiveThreshold = e.nextHealthThreshold - crossed
+		end
+	end
+	return crossed
+end
+
 local function findEnemyAt(x, y)
 	local candidates, candidateCount = Spatial.querySquareCandidatesLocal(x, y, MAX_HIT_QUERY_RADIUS, hitQueryContext)
 
@@ -238,6 +278,12 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	-- Optional authored health landmarks are consumed by the boss HUD. Keeping
 	-- this opt-in avoids presenting arbitrary ticks as encounter phases.
 	e.healthThresholds = def.healthThresholds or def.phaseThresholds
+	e.lunge = def.lunge
+	e.nextHealthThreshold = 1
+	e.lungesPending = 0
+	e.lungesCompleted = 0
+	e.lungeWindup = nil
+	e.lungeActiveThreshold = nil
 	e.hpScale = hpScale
 	e.spdScale = spdScale
 	e.hp = (def.hp * hpScale) or 0
@@ -412,6 +458,9 @@ local function handleEnemyEscaped(e, i, isBoss)
 end
 
 local function incomingDamageMultiplier(e)
+	if e.lungeWindup and e.lunge then
+		return e.lunge.windupDamageMultiplier or 1
+	end
 	if e.bossShieldActive and e.bossShield then
 		return e.bossShield.damageMultiplier
 	end
@@ -441,6 +490,7 @@ local function updatePoison(e, dt)
 			* poisonRamp * POISON_TICK * ticks * (1 + missingFrac * (e.poisonMissingHpMult or 0))
 		damage = damage * incomingDamageMultiplier(e)
 		e.hp = e.hp - damage
+		triggerHealthThresholds(e)
 		EnemySupport.detachDead(e)
 
 		if e.poisonSource then
@@ -591,6 +641,27 @@ local function updateAuthoredTraits(e, dt)
 	end
 end
 
+local function updateGatecrasherLunge(e, dt, pathWorld, pathSegLen, totalLen)
+	if not e.lungeWindup then return false end
+	e.lungeWindup = e.lungeWindup - dt
+	if e.lungeWindup > 0 then return false end
+
+	local oldX, oldY = e.x, e.y
+	local _, reachedExit = advanceEnemyByDistance(e, e.lunge.distance, pathWorld, pathSegLen, totalLen)
+	e.lungesPending = max(0, e.lungesPending - 1)
+	e.lungesCompleted = e.lungesCompleted + 1
+	Effects.spawnGatecrasherLunge(oldX, oldY, e.x, e.y, e.radius)
+	Effects.shake(5, 0.18)
+	if e.lungesPending > 0 and not reachedExit then
+		e.lungeWindup = e.lunge.windupDuration
+		e.lungeActiveThreshold = e.nextHealthThreshold - e.lungesPending
+	else
+		e.lungeWindup = nil
+		e.lungeActiveThreshold = nil
+	end
+	return reachedExit
+end
+
 local function updateEnemies(dt)
 	local map = MapMod.map
 	local pathWorld = map.pathWorld
@@ -653,6 +724,7 @@ local function updateEnemies(dt)
 
 		-- Stage 2: update timed statuses and optional authored traits.
 		updateAuthoredTraits(e, dt)
+		updateGatecrasherLunge(e, dt, pathWorld, pathSegLen, totalLen)
 		-- Stage 3: compute the effective movement speed.
 		local enrageSpeed = e.enraged and e.enrage.speedMultiplier or 1
 		local phaseSpeed = EnemyPhase.movementMultiplier(e)
@@ -665,18 +737,7 @@ local function updateEnemies(dt)
 		e.prevY = e.y
 
 		-- advance along path
-		local moved = advanceEnemyAlongPath(e, e.speed * dt, pathWorld, pathSegLen, totalLen)
-
-
-		-- Gameplay queries use path position only; visual offsets are render-owned.
-		if moved then
-			-- Spatial only emits a lifecycle hook when the cell changes. Aura
-			-- membership can also change while its source stays within one cell.
-			if e.supportSourceIndex then
-				EnemySupport.markSourceDirty(e)
-			end
-			Spatial.updateEnemy(e)
-		end
+		advanceEnemyByDistance(e, e.speed * dt, pathWorld, pathSegLen, totalLen)
 
 		-- Stage 5: presentation timers/impulses are advanced by enemy_render_state.
 
@@ -760,6 +821,7 @@ local function applyDamage(e, amount, context)
 		else amount = max(1, amount - (e.armor.flatReduction or 0)) end
 	end
 	e.hp = e.hp - amount
+	triggerHealthThresholds(e)
 	EnemySupport.detachDead(e)
 	if amount > 0 then
 		e.hitSquash = HIT_SQUASH_DUR
@@ -851,6 +913,11 @@ local function getDisplayStatuses(e)
 			id = "phase_preparing", remainingFraction = fraction(e.phaseTimer, e.phase.period - e.phase.duration),
 		})
 	end
+	if e.lungeWindup then
+		add("status.lungePreparing", "➤", Theme.ui.warn, {
+			id = "lunge_preparing", remainingFraction = fraction(e.lungeWindup, e.lunge.windupDuration),
+		})
+	end
 
 	return result
 end
@@ -874,6 +941,8 @@ return {
 	applyDamage = applyDamage,
 	applySlow = applySlow,
 	getDisplayStatuses = getDisplayStatuses,
+	advanceEnemyByDistance = advanceEnemyByDistance,
+	triggerHealthThresholds = triggerHealthThresholds,
 	setPathDistance = setPathDistance,
 	clear = clear,
 }

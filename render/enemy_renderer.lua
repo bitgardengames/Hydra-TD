@@ -115,6 +115,17 @@ local function drawEnemy(e)
 		lg.setLineWidth(e.phaseActive and 4 or 2)
 		lg.arc("line", "open", ix, iy, r + 8, pi * 0.08, pi * 0.92)
 		lg.arc("line", "open", ix, iy, r + 8, pi * 1.08, pi * 1.92)
+	elseif e.kind == "boss_gatecrasher" then
+		local winding = e.lungeWindup ~= nil
+		local dx, dy = e.eyeDX or 1, e.eyeDY or 0
+		local pulse = 0.65 + sin(animT * 9) * 0.25
+		lg.setColor(1, 0.46, 0.14, (winding and pulse or 0.45) * enemyAlpha)
+		lg.setLineWidth(winding and 4 or 2)
+		local tipX, tipY = ix + dx * (r + 19), iy + dy * (r + 19)
+		local sideX, sideY = -dy * 7, dx * 7
+		lg.line(ix + dx * (r + 4), iy + dy * (r + 4), tipX, tipY)
+		lg.polygon("fill", tipX, tipY, tipX - dx * 9 + sideX, tipY - dy * 9 + sideY,
+			tipX - dx * 9 - sideX, tipY - dy * 9 - sideY)
 	end
 	if e.kind == "bulwark" then
 		lg.setColor(outR, outG, outB, enemyAlpha)

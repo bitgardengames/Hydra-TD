@@ -173,4 +173,21 @@ return {
 		phase = { initialDelay = 3.5, period = 8.0, duration = 2.5, speedMultiplier = 1.35 },
 		traits = {"boss_phasewalker"},
 	},
+
+	-- Gatecrasher turns three predictable health landmarks into path pressure.
+	-- Thresholds are deliberately ordered from highest to lowest; each one earns
+	-- one lunge, even when a single hit crosses more than one landmark.
+	boss_gatecrasher = {
+		nameKey = "enemy.bossGatecrasher",
+		hp = 445,
+		speed = 40,
+		reward = 138,
+		score = 500,
+		radius = 19,
+		boss = true,
+		mechanicWeight = 1.6,
+		healthThresholds = {0.75, 0.50, 0.25},
+		lunge = {distance = 150, windupDuration = 0.8, windupDamageMultiplier = 0.6},
+		traits = {"boss_gatecrasher"},
+	},
 }
