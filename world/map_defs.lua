@@ -370,6 +370,17 @@ local maps = {
 			-- A broad lock and offset spillway constrain the two best build pockets.
 			{16, 7, 3}, {22, 9, 2}, {7, 3, 1},
 		},
+		waves = {
+			-- The first boss sends quick pressure through the short return lanes;
+			-- the second replaces speed with support escorts that repeatedly ask the
+			-- player to switch priority away from the Summoner.
+			encounters = {
+				[1] = { flankKind = "runner", flankBurst = 3, interval = 5.6, initialDelay = 2.2,
+					maxAliveAdds = 12, maxTotalAdds = 28, addSpdMult = 1.2 },
+				[2] = { flankKind = "warcaller", flankBurst = 2, interval = 6.4, initialDelay = 3.0,
+					maxAliveAdds = 8, maxTotalAdds = 20, addHpMult = 0.85, addSpdMult = 0.95 },
+			},
+		},
 	},
 
 	{
