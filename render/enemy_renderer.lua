@@ -332,9 +332,6 @@ local function drawEnemy(e)
 
 	-- Selection Ring
 	if State.selectedEnemy == e then
-		lg.setColor(selR, selG, selB, 0.25)
-		lg.circle("fill", ix, iy, e.radius + 4)
-
 		lg.setColor(selR, selG, selB)
 		lg.circle("line", ix, iy, e.radius + 4)
 	end
