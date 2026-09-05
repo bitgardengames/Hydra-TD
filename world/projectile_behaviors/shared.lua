@@ -1,5 +1,6 @@
 local Constants = require("core.constants")
 local Spatial = require("world.spatial_grid")
+local EnemyPhase = require("world.enemy_phase")
 
 -- EXPERIMENTAL MODULE SUPPORT: module-authored movement, proc, conversion, and
 -- tower-specialization behaviors remain implemented here for internal module
@@ -209,6 +210,11 @@ local function emitImpulse(p, e, px, py, strength)
 end
 
 local function canHitTarget(p, enemy)
+	-- Phased enemies remain in the spatial index so ground-area effects can hit
+	-- them, but direct projectile collision and homing impacts pass through.
+	if not EnemyPhase.canDirectHit(enemy) then
+		return false
+	end
 	local predicates = p._canHitPredicates
 	if not predicates then
 		return true

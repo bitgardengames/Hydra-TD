@@ -581,7 +581,7 @@ local bossArchetypesByMapId = {
 	steppingstones = {[10] = "boss_displacement", [20] = "boss_aegis"},
 	twinloop = {[10] = "boss_summoner", [20] = "boss_ravager"},
 	frostgate = {[10] = "boss_aegis", [20] = "boss_suppression"},
-	tidelock = {[10] = "boss_displacement", [20] = "boss_summoner"},
+	tidelock = {[10] = "boss_displacement", [20] = "boss_phasewalker"},
 	ashspiral = {[10] = "boss_ravager", [20] = "boss_aegis"},
 }
 

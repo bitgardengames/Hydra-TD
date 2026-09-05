@@ -194,6 +194,8 @@ return {
 		supportBoost = "Aura accelerated",
 		regenerationSuppressed = "Regeneration suppressed",
 		summonPreparing = "Summoning charge",
+		phased = "Phased: direct fire passes through",
+		phasePreparing = "Next phase shift",
 		value = "%s / %s",
 		multiplier = "x%.2f",
 	},
@@ -468,6 +470,7 @@ return {
 		bossSuppression = "Suppressor",
 		bossAegis = "Aegis",
 		bossRavager = "Ravager",
+		bossPhasewalker = "Phasewalker",
 	},
 
 	hud = {
@@ -496,6 +499,12 @@ return {
 		boss_suppression = {tag = "TOWER SUPPRESSION"},
 		boss_aegis = {tag = "CYCLING SHIELD"},
 		boss_ravager = {tag = "FINAL SPRINT"},
+		boss_phasewalker = {
+			tag = "PHASE SHIFT",
+			mechanic = "Phases underground, evading targeting and direct projectiles while speeding up. Ground-area effects still deal damage.",
+			tell = "A translucent silhouette and bright trail mark its underground path.",
+			counterplay = "Use ground-area damage during the phase or overlapping towers to reacquire it when it surfaces.",
+		},
 	},
 
 	messages = {

@@ -16,6 +16,7 @@ local Save = require("core.save")
 local RunStats = require("systems.run_stats")
 local Difficulty = require("systems.difficulty")
 local GameplayOutcome = require("systems.gameplay_outcome")
+local EnemyPhase = require("world.enemy_phase")
 
 local enemies = {}
 local enemyPool = {}
@@ -295,6 +296,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.suppressionCasts = 0
 	e.enrage = def.enrage
 	e.enraged = false
+	EnemyPhase.initialize(e, def.phase)
 	-- Precomputed authored capabilities keep absent optional mechanics off the hot path.
 	e.hasPoisonModifier = def.modifiers ~= nil and def.modifiers.poison ~= nil
 	e.hasRegeneration = def.regeneration ~= nil
@@ -553,6 +555,7 @@ local function updateAuthoredTraits(e, dt)
 		e.enraged = true
 		Effects.shake(4, 0.2)
 	end
+	EnemyPhase.update(e, dt)
 
 	-- Summoned runners join at the caster's current path progress rather than at
 	-- the map entrance. Release a cast's children over a short interval so they
@@ -652,7 +655,8 @@ local function updateEnemies(dt)
 		updateAuthoredTraits(e, dt)
 		-- Stage 3: compute the effective movement speed.
 		local enrageSpeed = e.enraged and e.enrage.speedMultiplier or 1
-		e.speed = e.baseSpeed * e.slowFactor * e.supportBoost * enrageSpeed
+		local phaseSpeed = EnemyPhase.movementMultiplier(e)
+		e.speed = e.baseSpeed * e.slowFactor * e.supportBoost * enrageSpeed * phaseSpeed
 
 		-- Stage 4: advance gameplay path state and update the spatial index.
 		-- Store previous values for interpolation
@@ -836,6 +840,15 @@ local function getDisplayStatuses(e)
 		add("status.summonPreparing", "✦", Theme.ui.money, {
 			id = "summon_preparing",
 			remainingFraction = fraction(e.summonTimer, e.summon.period),
+		})
+	end
+	if e.phaseActive then
+		add("status.phased", "◌", Theme.tower.slow, {
+			id = "phased", remainingFraction = fraction(e.phaseTimer, e.phase.duration),
+		})
+	elseif e.phase and (e.phaseTimer or 0) > 0 then
+		add("status.phasePreparing", "◔", Theme.tower.slow, {
+			id = "phase_preparing", remainingFraction = fraction(e.phaseTimer, e.phase.period - e.phase.duration),
 		})
 	end
 

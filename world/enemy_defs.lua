@@ -160,4 +160,17 @@ return {
 		enrage = { healthFraction = 0.45, speedMultiplier = 1.7 },
 		traits = {"boss_ravager"},
 	},
+
+	boss_phasewalker = {
+		nameKey = "enemy.bossPhasewalker",
+		hp = 420,
+		speed = 41,
+		reward = 136,
+		score = 490,
+		radius = 18,
+		boss = true,
+		mechanicWeight = 1.55,
+		phase = { initialDelay = 3.5, period = 8.0, duration = 2.5, speedMultiplier = 1.35 },
+		traits = {"boss_phasewalker"},
+	},
 }
