@@ -75,8 +75,9 @@ local confettiColors = {
 }
 
 local confettiShapes = {"paper", "diamond", "dot"}
--- Keep the celebration finite: after the fade completes, releasing the particle
--- table also removes its update and draw cost if the player leaves this screen open.
+-- Let the celebration run at full strength before fading. After the fade completes,
+-- releasing the particle table also removes its update and draw cost if the player
+-- leaves this screen open.
 local confettiDuration = 12
 local confettiFadeDuration = 2
 
@@ -307,7 +308,7 @@ function Screen.update(dt)
 		end
 	end
 
-	if t >= confettiDuration and #confetti > 0 then
+	if t >= confettiDuration + confettiFadeDuration and #confetti > 0 then
 		confetti = {}
 	end
 
@@ -373,7 +374,8 @@ function Screen.draw()
 	lg.setColor(colorDim)
 	lg.rectangle("fill", 0, 0, sw, sh)
 
-	local confettiFade = min(1, max(0, (confettiDuration - t) / confettiFadeDuration))
+	local confettiFade = min(1, max(0,
+		(confettiDuration + confettiFadeDuration - t) / confettiFadeDuration))
 	for _, p in ipairs(confetti) do
 		local wobble = sin(t * 3 + p.flutter) * 0.35
 		local flip = 0.3 + 0.7 * math.abs(cos(p.spin))
