@@ -2,32 +2,11 @@
 -- enemy kinds, counts, and timing.
 local CampaignWaveDefs = {}
 
--- Pacing identities are expressed through the spawn schedule, not hidden stat or
--- enemy-count ramps.  The dependency-free report in tools/balance/ measures a
--- five-second engagement window and verifies these authored ceilings/ranges.
+-- Pacing is expressed through the spawn schedule, not hidden stat or enemy-count
+-- ramps.  The dependency-free report in tools/balance/ measures a five-second
+-- engagement window and verifies these authored ceilings/ranges.
 -- `openingPressure` and `peakSimultaneous` are enemy counts; duration/recovery
 -- values are seconds. Riverbend provides the baseline spawn schedule.
-local pacingIdentityByMapId = {
-	riverbend = "baseline: an even stream that gradually learns pack overlap",
-	switchback = "switchbacks: compact packs separated by readable resets",
-	highpass = "long approach: sustained, widely spaced columns",
-	roundabout = "convergence: offset groups fold into one another",
-	gauntlet = "burst test: short rushes followed by full recovery windows",
-	snaketrail = "armored cadence: tanks anchor alternating light columns",
-	backtrack = "pincer cadence: runners arrive between slower anchors",
-	lowvalley = "blockade: bulwark-led wedges with deliberate regrouping",
-	circuit = "relay: regenerators hand pressure from group to group",
-	outerloop = "long rotation: broad formations with generous recovery",
-	terrace = "escalation: warcaller pulses inside steady escorts",
-	highridge = "finale lesson one: staggered durable fronts expose runner leaks",
-	crossflow = "finale lesson two: tighter crossings add overlapping pressure",
-	steppingstones = "finale synthesis: separated platoons test target priority",
-	twinloop = "campaign final exam: two dense cycles orbit summoner pressure",
-	frostgate = "armored siege: long columns test sustained single-target damage",
-	tidelock = "support lock: alternating escorts force rapid target-priority changes",
-	ashspiral = "final convergence: compressed mixed-role formations allow no full reset",
-}
-
 local pacingTargetsByMapId = {
 	riverbend = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 6.30, 20.95 }, downtimeBetweenGroups = { 0.07, 1.40 } },
 	switchback = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.81, 20.30 }, downtimeBetweenGroups = { 0.09, 1.75 } },
@@ -683,7 +662,6 @@ function CampaignWaveDefs.getTotalEnemyCount(mapOrId)
 	return total
 end
 
-CampaignWaveDefs.pacingIdentityByMapId = pacingIdentityByMapId
 CampaignWaveDefs.pacingTargetsByMapId = pacingTargetsByMapId
 
 return CampaignWaveDefs
