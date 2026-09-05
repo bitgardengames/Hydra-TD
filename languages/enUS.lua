@@ -456,7 +456,7 @@ return {
 		bulwark = "Bulwark",
 		bulwarkDescription = "Plated against small hits; crack it with cannon or lancer fire.",
 		regenerator = "Regenerator",
-		regeneratorDescription = "Heals after a respite; poison or focused fire stops recovery.",
+		regeneratorDescription = "Heals while not being attacked.",
 		warcaller = "Warcaller",
 		warcallerDescription = "Accelerates nearby enemies; eliminate the standard-bearer first.",
 		summoner = "Summoner",
