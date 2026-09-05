@@ -96,6 +96,7 @@ return {
 	campaign = {
 		title = "CAMPAIGN",
 		selectMap = "Select a map",
+		stage = "Chapter %d",
 		maps = "Maps",
 		playMap = "Play Map",
 		difficultyDescription = "Affects enemy health and rewards",
@@ -159,6 +160,9 @@ return {
 			crossflow = "Use active abilities where crossing lanes bring several threats together.",
 			steppingstones = "Alternate Frost Nova and Meteor so both build pockets stay protected.",
 			twinloop = "Concentrate every counter where the two loops overlap.",
+			frostgate = "Build sustained damage along the central choke before armored columns reach the gate.",
+			tidelock = "Retarget support enemies as they return through the lock's shared firing lanes.",
+			ashspiral = "Layer every counter around the inner spiral and save abilities for the final convergence.",
 		},
 		medalTooltipTitle = "%s Medal (%s)",
 		medalEarnedOn = "Earned",
@@ -618,6 +622,9 @@ return {
 		crossflow = "Crossflow",
 		steppingstones = "Stepping Stones",
 		twinloop = "Twin Loop",
+		frostgate = "Frost Gate",
+		tidelock = "Tide Lock",
+		ashspiral = "Ash Spiral",
 	},
 
 	presence = {

@@ -113,7 +113,7 @@ def curve_multiplier_bp(curve: dict, wave: int, map_index: int, diff: dict, boss
     progress = (wave - 1) / 9
     local = curve["localStartHp"] / BP + (curve["localEndHp"] - curve["localStartHp"]) / BP * \
         progress ** (curve["localExponent"] / BP)
-    map_mult = 1 + (curve["finalMapHp"] / BP - 1) * (map_index - 1) / 14
+    map_mult = 1 + (curve["finalMapHp"] / BP - 1) * min(map_index - 1, 14) / 14
     value = int(local * map_mult * diff["hp_bp"] + 0.5)
     if boss:
         value = half_up(value * diff["boss_bp"] * 9, BP * 10)

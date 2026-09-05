@@ -282,6 +282,16 @@ local function navigate(direction)
 	Sound.play("uiMove")
 end
 
+local function navigateTo(index)
+	index = max(1, min(#Maps, index))
+	while index > State.mapIndex and isMapLocked(index) do index = index - 1 end
+	if index == State.mapIndex then Sound.play("uiError"); return end
+	Tooltip.hide()
+	selectMap(State.resolveMapIndex(index))
+	keepSelectedVisible(layout())
+	Sound.play("uiMove")
+end
+
 local function playMap()
 	if isMapLocked(State.mapIndex) then Sound.play("uiError"); return end
 	Tooltip.hide()
@@ -531,7 +541,8 @@ local function drawCenter(l, map, mapIndex)
 	Text.printShadow(L(map.nameKey), x, y)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75)
-	Text.printShadow(L("campaign.mapOf", mapIndex, #Maps), x, y + 38)
+	Text.printShadow(L("campaign.mapOf", mapIndex, #Maps) .. "  •  "
+		.. L("campaign.stage", map.campaignStage), x, y + 38)
 
 	local stats = statsFor(map.id)
 	local earned = stats and Medals.getCount(stats.completedDifficulty) or 0
@@ -696,6 +707,11 @@ function Screen.keypressed(key)
 	end
 	if key == "left" then navigate(-1)
 	elseif key == "right" then navigate(1)
+	elseif key == "pageup" or key == "pagedown" then
+		local _, count = visibleRows(layout())
+		navigateTo(State.mapIndex + (key == "pageup" and -count or count))
+	elseif key == "home" then navigateTo(1)
+	elseif key == "end" then navigateTo(#Maps)
 	elseif key == "up" or key == "down" then
 		local direction = key == "up" and -1 or 1
 		local i = difficultyIndex(Save.data.settings.difficulty or "normal")
