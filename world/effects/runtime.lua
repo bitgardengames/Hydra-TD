@@ -34,7 +34,7 @@ local context = {Effects = Effects, particleCount = Effects.particleCount}
 -- first only so cannon splashes can delegate their particle component to them.
 local constructors = {
 	"presentation", "tower_transformations", "explosions", "splashes", "zaps",
-	"zap_lines", "frost", "poison", "lancer", "plasma", "place_puffs", "death",
+	"zap_lines", "frost", "poison", "lancer", "gatecrasher", "plasma", "place_puffs", "death",
 }
 local byName = {}
 for i = 1, #constructors do
@@ -44,7 +44,7 @@ for i = 1, #constructors do
 end
 local drawOrder = {
 	"presentation", "towerTransformations", "splashes", "explosions", "zaps",
-	"zapLines", "frost", "poison", "lancer", "plasmaParticles", "placePuffs", "death",
+	"zapLines", "frost", "poison", "lancer", "gatecrasher", "plasmaParticles", "placePuffs", "death",
 }
 local families = {}
 for i = 1, #drawOrder do families[i] = byName[drawOrder[i]] end

@@ -172,8 +172,15 @@ function BossHP.draw()
 
 	if cache.thresholds then
 		lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
-		for _, fraction in ipairs(cache.thresholds) do
+		for index, fraction in ipairs(cache.thresholds) do
 			local tx = shownX + floor(shownW * fraction)
+			if boss and boss.lungeWindup and boss.lungeActiveThreshold == index then
+				local pulse = 0.65 + 0.35 * math.sin((boss.lungeWindup or 0) * 18)
+				lg.setColor(1, 0.55, 0.16, pulse * alpha)
+				lg.rectangle("fill", tx - 3, fy, 6, barH)
+			else
+				lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
+			end
 			lg.rectangle("fill", tx - 1, fy + 3, 2, barH - 6)
 		end
 	end
