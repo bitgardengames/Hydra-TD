@@ -388,18 +388,13 @@ local maps = {
 		prerequisiteMapId = "tidelock",
 		campaignStage = 4,
 		nameKey = "map.ashspiral",
-		-- The finale compresses every enemy role into an inward spiral with few resets.
-		biome = "drylands",
+		-- A broad, simple switchback keeps the finale readable while retaining two
+		-- long shared-coverage lanes.
+		biome = "rainbowRoad",
 		path = {
-			{5, 3}, {27, 3},
-			{27, 11}, {9, 11},
-			{9, 6}, {23, 6},
-			{23, 9}, {14, 9},
-			{14, 5}, {30, 5},
-		},
-		water = {
-			-- Sparse oases deny easy coverage at the spiral's outer corners.
-			{6, 8, 1}, {18, 7, 2}, {28, 9, 1},
+			{5, 4}, {25, 4},
+			{25, 10}, {11, 10},
+			{11, 7}, {30, 7},
 		},
 	},
 }

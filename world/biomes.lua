@@ -365,6 +365,39 @@ Biomes.defs = {
 		},
 	},
 
+	rainbowRoad = {
+		terrain = {
+			-- The empty build field reads as deep space rather than land. The road
+			-- renderer uses the palette below as nested, brightly coloured bands.
+			grass = {0.008, 0.012, 0.055},
+			path = {0.96, 0.96, 1.00},
+			pathOutline = {0.04, 0.05, 0.14},
+			water = {0.08, 0.16, 0.34},
+			backgroundStyle = "space",
+			pathStyle = "rainbow",
+			rainbow = {
+				{0.96, 0.18, 0.28},
+				{1.00, 0.48, 0.12},
+				{1.00, 0.86, 0.20},
+				{0.25, 0.82, 0.38},
+				{0.16, 0.66, 0.96},
+				{0.34, 0.30, 0.88},
+				{0.72, 0.26, 0.90},
+			},
+		},
+
+		ground = {
+			detailDensity = 0,
+			lightMul = 1,
+			darkMul = 1,
+		},
+
+		-- Keeping space clear makes the road silhouette easy to read and avoids
+		-- terrestrial props floating beside it.
+		world = {},
+		scatter = {},
+	},
+
 	mushroom = {
 		terrain = {
 			grass = {0.22, 0.22, 0.30},
