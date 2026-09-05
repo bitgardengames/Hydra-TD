@@ -26,10 +26,10 @@ for mapId, pair in pairs(expected) do
 end
 
 local tidelock = mapsById.tidelock
-local displacement = assert(Resolver.resolveBossEncounterTemplate(tidelock, "boss_displacement", 1))
-assert(displacement.flankKind == "runner" and displacement.flankBurst == 3
-	and displacement.interval == 5.6 and displacement.initialDelay == 2.2,
-	"Tidelock's displacement encounter must pressure its short return lanes")
+local vanguard = assert(Resolver.resolveBossEncounterTemplate(tidelock, "boss_vanguard", 1))
+assert(vanguard.flankKind == "runner" and vanguard.flankBurst == 3
+	and vanguard.interval == 5.6 and vanguard.initialDelay == 2.2,
+	"Tidelock's vanguard encounter must pressure its short return lanes")
 
 local summoner = assert(Resolver.resolveBossEncounterTemplate(tidelock, "boss_summoner", 2))
 assert(summoner.flankKind == "warcaller" and summoner.flankBurst == 2

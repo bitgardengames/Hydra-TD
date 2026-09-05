@@ -11,7 +11,7 @@ Each non-special boss archetype targets three to six base effective durability p
 | Enemy | Base threat | Reward | Threat/$ |
 |:---|---:|---:|---:|
 | boss | 385 | 64 | 6 |
-| boss_displacement | 385 | 125 | 3 |
+| boss_vanguard | 385 | 125 | 3 |
 | boss_summoner | 341 | 110 | 3 |
 | boss_suppression | 836 | 140 | 6 |
 | bulwark | 74 | 16 | 5 |

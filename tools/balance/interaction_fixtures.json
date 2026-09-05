@@ -110,7 +110,7 @@
       "peak_alive_cap": 14,
       "runtime_seconds": 60,
       "summoned_adds": 18,
-      "template": "boss_displacement"
+      "template": "boss_vanguard"
     },
     {
       "add_hp_multiplier": 0.9,
