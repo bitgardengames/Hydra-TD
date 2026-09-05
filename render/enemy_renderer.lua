@@ -18,6 +18,16 @@ local efR, efG, efB = enemyFace[1], enemyFace[2], enemyFace[3]
 local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]
 local selR, selG, selB = colorSelected[1], colorSelected[2], colorSelected[3]
 local outlineWidth, EYE_DEADZONE, HIT_SQUASH_DUR = Theme.outline.width, 0.03, 0.12
+
+-- A broken circular halo gives Regenerators a compact, readable silhouette
+-- without adding detached markers that could be confused with Summoners.
+local function drawRegeneratorArcs(ix, iy, radius, rotation)
+	for n = 0, 2 do
+		local angle = rotation + n * pi * 2 / 3
+		lg.arc("line", "open", ix, iy, radius, angle - 0.43, angle + 0.43)
+	end
+end
+
 local function drawEnemy(e)
 	local ix = e.rx
 	local iy = e.ry
@@ -49,7 +59,7 @@ local function drawEnemy(e)
 	lg.translate(-ix, -iy)
 
 	-- Mechanical silhouettes are deliberately geometric and remain legible without
-	-- their colors: armor plates, regeneration cross, and war banner.
+	-- their colors: armor plates, regeneration halo, and war banner.
 	if e.support then
 		-- The banner trails opposite the Warcaller's horizontal facing. Mirror the
 		-- whole standard so both its pole and cloth keep a consistent silhouette.
@@ -137,8 +147,8 @@ local function drawEnemy(e)
 		end
 	elseif e.kind == "regenerator" then
 		lg.setColor(outR, outG, outB, enemyAlpha)
-		lg.rectangle("fill", ix - 2, iy - r * 1.65, 4, r * 0.75)
-		lg.rectangle("fill", ix - r * 0.38, iy - r * 1.42, r * 0.76, 4)
+		lg.setLineWidth(4)
+		drawRegeneratorArcs(ix, iy, r + 4, animT * 0.08)
 	end
 
     -- Boss Horns
@@ -215,11 +225,13 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
-	-- Trait status glyphs provide state, not just identity. Regenerators show
-	-- chevrons only while recovering; boosted units carry backward speed streaks.
+	-- Trait status glyphs provide state, not just identity. A recovering
+	-- Regenerator lights an inner track of its permanent halo; boosted units carry
+	-- backward speed streaks.
 	if e.regeneration and e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0 then
-		lg.setColor(0.55, 1, 0.55, enemyAlpha); lg.setLineWidth(2)
-		lg.line(ix - 6, iy + r + 5, ix, iy + r + 1, ix + 6, iy + r + 5)
+		lg.setColor(0.55, 1, 0.55, enemyAlpha)
+		lg.setLineWidth(3)
+		drawRegeneratorArcs(ix, iy, r + 1, animT * 0.08)
 		if e.regenVisualPulse > 0 then
 			local a = e.regenVisualPulse / 0.28
 			lg.circle("line", ix, iy, r + 4 + (1 - a) * 8)
