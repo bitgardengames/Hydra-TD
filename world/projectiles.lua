@@ -356,10 +356,6 @@ local function resolveDamage(p, evt)
 	if effectiveDamage > 0 and (not Save.data or Save.data.settings.showDamageNumbers ~= false) then
 		Floaters.add(e.x, e.y - (e.radius or 10), tostring(math.floor(effectiveDamage + 0.5)), 1, 0.82, 0.45)
 	end
-	local highDamage = effectiveDamage >= math.max(40, (e.maxHp or 0) * 0.12)
-	if highDamage then
-		Effects.shake(e.boss and 4 or 2.5)
-	end
 end
 
 local function resolveImpulse(evt)
