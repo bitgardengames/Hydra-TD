@@ -102,10 +102,6 @@ function Screen.invalidateCampaignProgress()
 end
 
 local function isMapLocked(index)
-	if RunModes.isEndless(State) then
-		local stats = statsFor(Maps[index].id)
-		return not (stats and stats.completedDifficulty)
-	end
 	return not Save.isMapUnlocked(index, Maps[index].id)
 end
 

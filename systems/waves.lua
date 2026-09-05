@@ -8,7 +8,6 @@ local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
 local EnemyTraits = require("world.enemy_traits")
 local Effects = require("world.effects")
-local RunModes = require("systems.run_modes")
 local Resolver = require("systems.wave_resolver")
 local Spawner = require("systems.wave_spawner")
 local Outcome = require("systems.wave_outcome")
@@ -19,12 +18,8 @@ local max, min = math.max, math.min
 local bossSpawnPresented = false
 local lastBossPosition
 
-function Waves.generateEndlessWave(waveNumber, seed)
-	return Resolver.generateEndlessWave(waveNumber, seed)
-end
-
 local function getWave(map, waveNumber)
-	return Resolver.getWave(map, waveNumber, RunModes.isEndless(State), State.buildSeed)
+	return Resolver.getWave(map, waveNumber)
 end
 
 local function describeEnemyGroup(kind, count, spacing, delay)
@@ -84,11 +79,6 @@ local function startNormalWave(wave, map)
 	Spawner.configureBossAdds()
 	local hpMult, spdMult = Resolver.getWaveMultipliers(State.wave, State.mapIndex, map, false)
 	local groups = Resolver.resolveWaveGroups(wave, map, State.wave)
-	if wave.procedural then
-		for _, group in ipairs(groups or {}) do
-			group.hpMult, group.spdMult = hpMult * (group.hpMult or 1), spdMult * (group.spdMult or 1)
-		end
-	end
 	Spawner.begin(max(1, wave.count or 1), hpMult, spdMult, groups)
 end
 

@@ -92,11 +92,6 @@ function resetGame()
 	State.score = 0
 	State.totalKills = 0
 	State.spawnedKills = 0
-	if RunModes.isEndless(State) and State.buildSeed == nil then
-		State.buildSeed = os.time()
-	elseif RunModes.isCampaign(State) then
-		State.buildSeed = nil
-	end
     State.wave = 1
 	State.waveLeaks = 0
 	State.totalLeaks = 0

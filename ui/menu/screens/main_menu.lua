@@ -89,20 +89,6 @@ function Screen.load()
 			end
 		},
 		{
-			id = "endless",
-			label = L("menu.endless"),
-			w = btnW,
-			h = btnH,
-			onClick = function()
-				State.ignoreStats = false
-				State.buildSeed = nil
-				State.runRules = {experimentalModules = false}
-				RunModes.set(State, RunModes.ENDLESS)
-				require("ui.menu.menu").set("campaign")
-				Sound.play("uiConfirm")
-			end
-		},
-		{
 			id = "settings",
 			label = L("menu.settings"),
 			w = btnW,

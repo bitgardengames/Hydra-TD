@@ -4,7 +4,7 @@ local EnemyPhase = require("world.enemy_phase")
 
 -- EXPERIMENTAL MODULE SUPPORT: module-authored movement, proc, conversion, and
 -- tower-specialization behaviors remain implemented here for internal module
--- playtests. Normal campaign and replay/endless runs do not attach them through
+-- playtests. Normal campaign and replay runs do not attach them through
 -- module definitions; core projectile behaviors in this registry remain live.
 
 --[[

@@ -4,48 +4,7 @@ local Util = require("core.util")
 
 local Resolver = {}
 
-local endlessRoster = {"grunt", "runner", "tank", "bulwark", "regenerator", "warcaller"}
-
-function Resolver.seededValue(seed, wave, slot)
-	local n = (math.floor(tonumber(seed) or 1) % 2147483647 + wave * 48271 + slot * 69621) % 2147483647
-	n = (n * 16807) % 2147483647
-	return n
-end
-
-function Resolver.generateEndlessWave(waveNumber, seed)
-	waveNumber = math.max(21, math.floor(tonumber(waveNumber) or 21))
-	local scaling = DifficultyCurve.getEndlessScaling(waveNumber)
-	local boss = waveNumber % 10 == 0
-	local groupCount = boss and 4 or (2 + Resolver.seededValue(seed, waveNumber, 1) % 3)
-	local remaining, groups = scaling.density, {}
-	if boss then
-		groups[1] = {kind = "boss", count = 1, spacing = 0, delay = 0}
-		remaining = remaining - 1
-	end
-	for slot = #groups + 1, groupCount do
-		local slotsLeft = groupCount - slot + 1
-		local count = slot == groupCount and remaining
-			or math.max(4, math.floor(remaining / slotsLeft) + (Resolver.seededValue(seed, waveNumber, slot) % 7) - 3)
-		count = math.min(count, remaining - (slotsLeft - 1) * 4, 40)
-		local elite = waveNumber % 5 == 0 and slot == (boss and 2 or 1)
-		groups[#groups + 1] = {
-			kind = endlessRoster[(Resolver.seededValue(seed, waveNumber, slot + 9) % #endlessRoster) + 1],
-			count = count, spacing = math.max(0.16, 0.48 - (waveNumber - 20) * 0.002),
-			delay = slot == 1 and 0 or 0.35, eliteTrait = elite and "veteran" or nil,
-			hpMult = elite and 1.65 or nil, spdMult = elite and 1.12 or nil,
-			rewardMult = scaling.reward,
-		}
-		remaining = remaining - count
-	end
-	local count = 0
-	for _, group in ipairs(groups) do count = count + group.count end
-	return {boss = boss, count = count, groups = groups, procedural = true}
-end
-
-function Resolver.getWave(map, waveNumber, endless, seed)
-	if endless and waveNumber > DifficultyCurve.campaignEnd then
-		return Resolver.generateEndlessWave(waveNumber, seed)
-	end
+function Resolver.getWave(map, waveNumber)
 	return CampaignWaveDefs.get(map, waveNumber)
 end
 

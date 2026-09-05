@@ -15,23 +15,6 @@ DifficultyCurve.localEndHp = 5.25
 DifficultyCurve.localExponent = 1.25
 DifficultyCurve.mapIndexCap = 15
 DifficultyCurve.finalMapHp = 1.75
-DifficultyCurve.endlessHpCap = 48
-DifficultyCurve.endlessSpeedCap = 1.75
-DifficultyCurve.endlessRewardCap = 3.5
-
-function DifficultyCurve.getEndlessScaling(waveIndex)
-	local late = math.max(0, math.floor(tonumber(waveIndex) or 21) - DifficultyCurve.campaignEnd)
-	-- Sub-linear, explicitly capped pressure prevents floating-point runaway while
-	-- density is handled separately by the procedural composition budget.
-	local root = math.sqrt(late)
-	return {
-		hp = math.min(DifficultyCurve.endlessHpCap, 1 + late * 0.115 + root * 0.16),
-		speed = math.min(DifficultyCurve.endlessSpeedCap, 1 + late * 0.006),
-		reward = math.min(DifficultyCurve.endlessRewardCap, 1 + root * 0.075),
-		density = math.min(96, 38 + math.floor(root * 7)),
-	}
-end
-
 function DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
 	if tonumber(authoredScalar) then return math.max(0.1, tonumber(authoredScalar)) end
 	mapIndex = math.max(1, math.floor(tonumber(mapIndex) or 1))
@@ -56,14 +39,11 @@ function DifficultyCurve.getEnemyHpMultiplier(waveIndex, mapIndex, authoredScala
 				* (progress ^ DifficultyCurve.localExponent)
 	end
 	local mapHp = DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
-	local endless = waveIndex > DifficultyCurve.campaignEnd and DifficultyCurve.getEndlessScaling(waveIndex).hp or 1
-	return math.min(1e6, localHp * mapHp * Difficulty.get().enemyHpBias * endless)
+	return math.min(1e6, localHp * mapHp * Difficulty.get().enemyHpBias)
 end
 
-function DifficultyCurve.getEnemySpeedMultiplier(waveIndex)
-	local endless = (tonumber(waveIndex) or 1) > DifficultyCurve.campaignEnd
-		and DifficultyCurve.getEndlessScaling(waveIndex).speed or 1
-	return Difficulty.get().enemySpeedBias * endless
+function DifficultyCurve.getEnemySpeedMultiplier()
+	return Difficulty.get().enemySpeedBias
 end
 
 function DifficultyCurve.getBossHpMultiplier(waveIndex, mapIndex, authoredScalar)

@@ -2,7 +2,7 @@
 
 ## Mandatory stat-only release review
 
-The shipped campaign and replay/endless setup uses stat-only tower upgrades. For
+The shipped campaign and replay setup uses stat-only tower upgrades. For
 every change to `world/tower_defs.lua`, verify the maximum-level interpolation
 for damage, fire rate, range, and tower-specific status fields against the
 upgrade preview and in-game result. This review is release-gating and must not

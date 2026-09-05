@@ -5,7 +5,7 @@ local BehaviorContext = require("systems.behavior_context")
 local Modules = {}
 
 -- EXPERIMENTAL: this is the single, explicit opt-in entry point for internal
--- module playtests. Campaign and replay/endless setup deliberately never call
+-- module playtests. Campaign and replay setup deliberately never call
 -- it; selecting a run mode therefore always leaves the stat-only game intact.
 function Modules.enableExperimentalPlaytest()
 	require("systems.run_modes")._setExperimentalModulesForPlaytest(State, true)

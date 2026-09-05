@@ -77,7 +77,7 @@ not infer one difficulty from another.
 
 The mandatory release gate covers the shipped **stat-only game**. Experimental
 modules and their projectile combinations are not part of campaign or
-replay/endless setup and must not be used to satisfy these rows.
+replay setup and must not be used to satisfy these rows.
 For each tower, place it legally and attempt an illegal placement; inspect it,
 upgrade repeatedly through maximum level without a module selection, and verify
 each preview against the resulting damage, fire rate, range, targeting controls,
@@ -97,7 +97,7 @@ damage meter, sell/refund behavior, and restart cleanup.
 Run these checks only in an explicitly enabled internal module playtest. Keep the
 results separate from RC blocker evidence: exercise generic and tower-identity
 modules, exclusivity and stack limits, inventory application, and chained
-projectile termination. Also verify campaign and replay/endless runs started
+projectile termination. Also verify campaign and replay runs started
 normally never show a module picker or apply module behavior, including after
 loading a save whose `discoveredModules` table is populated.
 
