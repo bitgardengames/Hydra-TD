@@ -74,9 +74,9 @@ local Traits = {
 	},
 	boss_phasewalker = {
 		tag = "Boss Mechanic",
-		mechanic = "Periodically phases underground, becoming untargetable and immune to direct projectile collision while moving faster. Ground-area effects still damage it.",
-		tell = "Its body fades to a translucent silhouette above a bright underground trail.",
-		counter = "Place overlapping coverage to reacquire it after surfacing, or time ground-area damage for its phase window.",
+		mechanic = "Periodically phases out while continuing along the path, becoming untargetable and immune to direct projectile collision while moving faster. Ground-area effects still damage it.",
+		tell = "Its body becomes translucent while it is phased out.",
+		counter = "Place overlapping coverage to reacquire it when the phase ends, or time ground-area damage for its phase window.",
 		answers = {"Cannon area specializations", "Overlapping rapid-fire coverage"},
 	},
 }

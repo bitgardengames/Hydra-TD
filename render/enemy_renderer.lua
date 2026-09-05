@@ -31,17 +31,6 @@ local function drawEnemy(e)
 	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
 	squash = squash * (e.hitSquashStrength or 1)
 
-	-- Phasewalkers never leave the path or spatial grid. Their luminous wake and
-	-- faint silhouette make that continuing underground movement easy to follow.
-	if e.phaseActive then
-		local wake = r + 11 + sin(animT * 7) * 2
-		lg.setColor(0.35, 0.82, 1, 0.18 + sin(animT * 5) * 0.05)
-		lg.ellipse("fill", ix, iy + r * 0.65, wake, r * 0.42)
-		lg.setColor(0.55, 0.92, 1, 0.8)
-		lg.setLineWidth(2)
-		lg.arc("line", "open", ix, iy + r * 0.55, wake, pi * 0.12, pi * 0.88)
-	end
-
 	-- Keep the shadow anchored to the ground while the enemy body reacts to a hit.
 	-- Drawing it before the squash transform also keeps its footprint unchanged.
 	if e.shadow then
