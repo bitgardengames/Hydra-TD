@@ -443,22 +443,22 @@
       "maximum_percentage_change": 15
     },
     {
-      "id": "enemy.boss_displacement.hp",
+      "id": "enemy.boss_vanguard.hp",
       "source_file": "world/enemy_defs.lua",
       "lua_table": "return",
       "lua_key": "hp",
-      "entry": "boss_displacement",
+      "entry": "boss_vanguard",
       "minimum": 160,
       "maximum": 577,
       "step": 1,
       "maximum_percentage_change": 15
     },
     {
-      "id": "enemy.boss_displacement.reward",
+      "id": "enemy.boss_vanguard.reward",
       "source_file": "world/enemy_defs.lua",
       "lua_table": "return",
       "lua_key": "reward",
-      "entry": "boss_displacement",
+      "entry": "boss_vanguard",
       "minimum": 62,
       "maximum": 226,
       "step": 1,

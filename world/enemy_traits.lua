@@ -44,7 +44,7 @@ local Traits = {
 		counter = "Use area or chain damage to clear reinforcements while focusing the boss.",
 		answers = {"Cannon area specializations", "Shock chain specializations"},
 	},
-	boss_displacement = {
+	boss_vanguard = {
 		tag = "Boss Mechanic",
 		mechanic = "Arrives with fast runner reinforcements.",
 		tell = "Small groups of runners continue entering while the boss is alive.",

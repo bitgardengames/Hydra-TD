@@ -50,26 +50,26 @@ function Resolver.getWave(map, waveNumber, endless, seed)
 end
 
 local biomeBossArchetypes = {
-	default = {"boss_summoner", "boss_displacement", "boss_suppression", "boss_aegis", "boss_ravager", "boss_phasewalker", "boss_gatecrasher"},
-	autumn = {"boss_displacement", "boss_aegis", "boss_suppression", "boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_summoner"},
-	drylands = {"boss_suppression", "boss_ravager", "boss_displacement", "boss_gatecrasher", "boss_phasewalker", "boss_aegis", "boss_summoner"},
-	winter = {"boss_aegis", "boss_summoner", "boss_phasewalker", "boss_suppression", "boss_gatecrasher", "boss_ravager", "boss_displacement"},
-	highlands = {"boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_displacement", "boss_summoner", "boss_aegis", "boss_suppression"},
+	default = {"boss_summoner", "boss_vanguard", "boss_suppression", "boss_aegis", "boss_ravager", "boss_phasewalker", "boss_gatecrasher"},
+	autumn = {"boss_vanguard", "boss_aegis", "boss_suppression", "boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_summoner"},
+	drylands = {"boss_suppression", "boss_ravager", "boss_vanguard", "boss_gatecrasher", "boss_phasewalker", "boss_aegis", "boss_summoner"},
+	winter = {"boss_aegis", "boss_summoner", "boss_phasewalker", "boss_suppression", "boss_gatecrasher", "boss_ravager", "boss_vanguard"},
+	highlands = {"boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_vanguard", "boss_summoner", "boss_aegis", "boss_suppression"},
 }
 local mapBossOverrides = {
-	roundabout = {[1] = "boss_displacement", [2] = "boss_summoner"},
-	gauntlet = {[1] = "boss_suppression", [2] = "boss_displacement"},
+	roundabout = {[1] = "boss_vanguard", [2] = "boss_summoner"},
+	gauntlet = {[1] = "boss_suppression", [2] = "boss_vanguard"},
 	terrace = {[1] = "boss_summoner", [2] = "boss_suppression"},
 }
 local encounterTemplates = {
-	boss_displacement = {flankKind="runner", flankBurst=2, interval=6.5, initialDelay=3, maxAliveAdds=14, maxTotalAdds=26, addHpMult=.95, addSpdMult=1.15},
+	boss_vanguard = {flankKind="runner", flankBurst=2, interval=6.5, initialDelay=3, maxAliveAdds=14, maxTotalAdds=26, addHpMult=.95, addSpdMult=1.15},
 	boss_summoner = {flankKind="grunt", flankBurst=4, interval=5.8, initialDelay=2.4, maxAliveAdds=20, maxTotalAdds=34, addHpMult=.9, addSpdMult=1},
 }
 local biomeEncounterOverrides = {
-	autumn = {boss_displacement={flankBurst=3, interval=5.7, addSpdMult=1.2}, boss_summoner={flankBurst=5, interval=5, maxTotalAdds=38}},
-	drylands = {boss_displacement={initialDelay=2.3, maxAliveAdds=12}, boss_summoner={flankKind="runner", flankBurst=3, interval=6.8}},
-	winter = {boss_displacement={interval=7.4, addSpdMult=1.05}, boss_summoner={flankBurst=4, interval=6.2, addHpMult=1}},
-	highlands = {boss_displacement={flankKind="runner", flankBurst=2, interval=5.9}, boss_summoner={flankKind="runner", flankBurst=4, interval=5.4}},
+	autumn = {boss_vanguard={flankBurst=3, interval=5.7, addSpdMult=1.2}, boss_summoner={flankBurst=5, interval=5, maxTotalAdds=38}},
+	drylands = {boss_vanguard={initialDelay=2.3, maxAliveAdds=12}, boss_summoner={flankKind="runner", flankBurst=3, interval=6.8}},
+	winter = {boss_vanguard={interval=7.4, addSpdMult=1.05}, boss_summoner={flankBurst=4, interval=6.2, addHpMult=1}},
+	highlands = {boss_vanguard={flankKind="runner", flankBurst=2, interval=5.9}, boss_summoner={flankKind="runner", flankBurst=4, interval=5.4}},
 }
 
 function Resolver.getBossByArchetype(map, bossIndex)

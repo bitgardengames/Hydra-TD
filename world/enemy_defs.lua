@@ -101,8 +101,8 @@ return {
 		traits = {"boss_summoner"},
 	},
 
-	boss_displacement = {
-		nameKey = "enemy.bossDisplacement",
+	boss_vanguard = {
+		nameKey = "enemy.bossVanguard",
 		hp = 385,
 		speed = 48,
 		reward = 125,
@@ -110,8 +110,8 @@ return {
 		radius = 19,
 		boss = true,
 		mechanicWeight = 1.5,
-		mechanicPackage = "displacement",
-		traits = {"boss_displacement"},
+		mechanicPackage = "vanguard",
+		traits = {"boss_vanguard"},
 	},
 
 	boss_suppression = {
