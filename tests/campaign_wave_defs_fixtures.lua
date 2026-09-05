@@ -10,12 +10,23 @@ local minimumSpawnSpacing = 0.5
 local featuredBossStages = {boss_phasewalker = {}, boss_gatecrasher = {}}
 local bossAppearances = {}
 
--- The first map remains a readable grunt-only onboarding, but the campaign must
--- expose both core special-enemy roles before the player leaves its first chapter.
-assert(Maps[2].introducesEnemies and Maps[2].introducesEnemies[1] == "tank",
-	"the second campaign map must introduce tanks")
-assert(Maps[3].introducesEnemies and Maps[3].introducesEnemies[1] == "runner",
-	"the third campaign map must introduce runners")
+-- Introduction metadata must name exactly the map containing each kind's first
+-- authored appearance. Riverbend previews the two baseline contrasts late while
+-- remaining Grunt-only through its first boss; specialist previews stay sparse.
+assert(Maps[1].introducesEnemies[1] == "grunt" and Maps[1].introducesEnemies[2] == "tank"
+	and Maps[1].introducesEnemies[3] == "runner", "Riverbend must declare its late previews")
+assert(Maps[4].introducesEnemies[1] == "regenerator"
+	and Maps[4].introducesEnemies[2] == "bulwark", "Outerloop must own its specialist introductions")
+assert(Maps[5].introducesEnemies[1] == "warcaller", "Gauntlet must own the Warcaller introduction")
+
+local declaredIntroductions = {}
+for _, map in ipairs(Maps) do
+	for _, kind in ipairs(map.introducesEnemies or {}) do
+		assert(not declaredIntroductions[kind], kind .. " is introduced more than once")
+		declaredIntroductions[kind] = map.id
+	end
+end
+local firstActualAppearance = {}
 
 for _, map in ipairs(Maps) do
 	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
@@ -35,6 +46,9 @@ for _, map in ipairs(Maps) do
 			authoredTotal = authoredTotal + group.count
 			counted = counted + group.count
 			assert(EnemyDefs[group.kind], map.id .. " uses unknown enemy " .. tostring(group.kind))
+			if group.kind ~= "boss" and not firstActualAppearance[group.kind] then
+				firstActualAppearance[group.kind] = map.id
+			end
 			assert(available[group.kind], map.id .. " uses unavailable enemy " .. group.kind)
 			assert(group.count == 1 or group.spacing >= minimumSpawnSpacing,
 				map.id .. " places consecutive enemies too close together")
@@ -71,14 +85,23 @@ for _, map in ipairs(Maps) do
 		map.id .. " final exam has no legal explicit boss selection")
 
 	for _, kind in ipairs(map.introducesEnemies or {}) do
-		assert((introducedEnemyAppearances[kind] or 0) >= 4,
-			map.id .. " must revisit introduced enemy " .. kind .. " throughout later waves")
+		assert((introducedEnemyAppearances[kind] or 0) >= 1,
+			map.id .. " must revisit introduced enemy " .. kind .. " after onboarding")
 	end
 	if map.campaignStage > 1 then
 		local compositionCount = 0
 		for _ in pairs(lateWaveCompositions) do compositionCount = compositionCount + 1 end
 		assert(compositionCount >= 3, map.id .. " needs at least three distinct late-wave compositions")
 	end
+end
+
+for kind, mapId in pairs(declaredIntroductions) do
+	assert(firstActualAppearance[kind] == mapId,
+		kind .. " metadata says " .. mapId .. " but first appears on " .. tostring(firstActualAppearance[kind]))
+end
+for kind, mapId in pairs(firstActualAppearance) do
+	assert(declaredIntroductions[kind] == mapId,
+		kind .. " first appears on " .. mapId .. " without matching introduction metadata")
 end
 
 local leastAppearances, mostAppearances = math.huge, 0

@@ -12,100 +12,74 @@ end
 -- returned by get() rather than depending on its storage details.
 local wavesByMapId = {
 	riverbend = {
-		-- 8 grunts.
+		-- A short Grunt onboarding: cadence first, then compact packs for splash.
 		[1] = { g("grunt", 8, 0.90) },
-		-- 12 grunts.
-		[2] = { g("grunt", 12, 0.72) },
-		-- 10 grunts followed by 8 grunts.
-		[3] = { g("grunt", 10, 0.62), g("grunt", 8, 0.58, 1.4) },
-		-- 20 grunts.
-		[4] = { g("grunt", 20, 0.50) },
-		-- 24 grunts.
-		[5] = { g("grunt", 24, 0.50) },
-		-- 16 grunts followed by 10 grunts.
-		[6] = { g("grunt", 16, 0.50), g("grunt", 10, 0.50, 0.65) },
-		-- 14 grunts followed by 14 grunts.
-		[7] = { g("grunt", 14, 0.50), g("grunt", 14, 0.50, 0.30) },
-		-- 13 grunts, then 9 grunts, and 8 grunts.
-		[8] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.15), g("grunt", 8, 0.50, 0.12) },
-		-- 13 grunts, then 10 grunts, and 9 grunts.
-		[9] = { g("grunt", 13, 0.50), g("grunt", 10, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
-		-- 1 boss, then 12 grunts, then 13 grunts, and 9 grunts.
-		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 1.0), g("grunt", 13, 0.50, 0.35), g("grunt", 9, 0.50, 0.25) },
-		[11] = { g("grunt", 15, 0.50), g("grunt", 15, 0.50, 0.33) },
-		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.68) },
-		[13] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.15), g("grunt", 9, 0.50, 0.12) },
-		[14] = { g("grunt", 16, 0.50), g("grunt", 16, 0.50, 0.28) },
-		[15] = { g("grunt", 15, 0.50), g("grunt", 11, 0.50, 0.08), g("grunt", 10, 0.50, 0.08) },
-		[16] = { g("grunt", 20, 0.50), g("grunt", 12, 0.50, 0.59) },
-		[17] = { g("grunt", 16, 0.50), g("grunt", 11, 0.50, 0.14), g("grunt", 10, 0.50, 0.11) },
-		[18] = { g("grunt", 18, 0.50), g("grunt", 18, 0.50, 0.26) },
-		[19] = { g("grunt", 16, 0.50), g("grunt", 13, 0.50, 0.07), g("grunt", 11, 0.50, 0.07) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 0.90), g("grunt", 16, 0.50, 0.32), g("grunt", 11, 0.50, 0.23) },
+		[2] = { g("grunt", 11, 0.75) },
+		[3] = { g("grunt", 8, 0.70), g("grunt", 6, 0.70, 1.80) },
+		[4] = { g("grunt", 15, 0.62) },
+		[5] = { g("grunt", 18, 0.50) },
+		[6] = { g("grunt", 10, 0.55), g("grunt", 8, 0.55, 1.20) },
+		[7] = { g("grunt", 20, 0.50) },
+		[8] = { g("grunt", 8, 0.52), g("grunt", 8, 0.52, 1.00) },
+		[9] = { g("grunt", 22, 0.50) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.55, 1.20), g("grunt", 10, 0.50, 0.80) },
+		[11] = { g("grunt", 14, 0.52), g("grunt", 10, 0.52, 0.90) },
+		[12] = { g("grunt", 24, 0.50) },
+		[13] = { g("grunt", 10, 0.55), g("grunt", 10, 0.55, 0.75) },
+		[14] = { g("grunt", 26, 0.50) },
+		-- The closing section previews target priority without becoming a trait exam.
+		[15] = { g("tank", 3, 0.90), g("grunt", 16, 0.52, 1.60) },
+		[16] = { g("grunt", 12, 0.50), g("tank", 4, 0.85, 0.80) },
+		[17] = { g("tank", 4, 0.85), g("grunt", 18, 0.50, 1.30) },
+		[18] = { g("grunt", 14, 0.55), g("runner", 5, 0.50, 0.75) },
+		[19] = { g("tank", 4, 0.85), g("grunt", 12, 0.52, 1.10), g("runner", 5, 0.50, 0.65) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 16, 0.52, 1.10), g("runner", 6, 0.50, 0.65) },
 	},
 	switchback = {
-		-- 10 grunts.
+		-- Sparse durable fronts ask for focused damage; ordinary escorts punish tunnel vision.
 		[1] = { g("grunt", 10, 0.87) },
-		-- 12 tanks.
-		[2] = { g("tank", 12, 0.76) },
-		-- 11 grunts followed by 8 tanks.
-		[3] = { g("grunt", 11, 0.61), g("tank", 8, 0.64, 1.75) },
-		-- 19 tanks.
-		[4] = { g("tank", 19, 0.55) },
-		-- 23 tanks.
-		[5] = { g("tank", 23, 0.55) },
-		-- 16 grunts followed by 10 tanks.
-		[6] = { g("grunt", 16, 0.50), g("tank", 10, 0.55, 0.81) },
-		-- 13 grunts followed by 14 tanks.
-		[7] = { g("grunt", 13, 0.50), g("tank", 14, 0.55, 0.38) },
-		-- 13 grunts, then 8 tanks, and 7 grunts.
-		[8] = { g("grunt", 13, 0.50), g("tank", 8, 0.55, 0.19), g("grunt", 7, 0.50, 0.15) },
-		-- 12 grunts, then 10 tanks, and 9 grunts.
-		[9] = { g("grunt", 12, 0.50), g("tank", 10, 0.55, 0.10), g("grunt", 9, 0.50, 0.10) },
-		-- 1 boss, then 11 grunts, then 12 tanks, and 9 grunts.
-		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.25), g("tank", 12, 0.55, 0.44), g("grunt", 9, 0.50, 0.31) },
-		[11] = { g("grunt", 14, 0.50), g("tank", 15, 0.55, 0.42) },
-		[12] = { g("grunt", 18, 0.50), g("grunt", 11, 0.50, 0.85) },
-		[13] = { g("grunt", 14, 0.50), g("grunt", 9, 0.50, 0.19), g("grunt", 8, 0.50, 0.15) },
-		[14] = { g("grunt", 15, 0.50), g("grunt", 16, 0.50, 0.36) },
-		[15] = { g("grunt", 13, 0.50), g("grunt", 11, 0.50, 0.11), g("grunt", 10, 0.50, 0.11) },
-		[16] = { g("grunt", 20, 0.50), g("grunt", 12, 0.50, 0.73) },
-		[17] = { g("grunt", 16, 0.50), g("grunt", 10, 0.50, 0.17), g("grunt", 8, 0.50, 0.14) },
-		[18] = { g("grunt", 17, 0.50), g("grunt", 18, 0.50, 0.32) },
-		[19] = { g("grunt", 15, 0.50), g("grunt", 13, 0.50, 0.09), g("grunt", 11, 0.50, 0.09) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 1.12), g("grunt", 15, 0.50, 0.40), g("grunt", 11, 0.50, 0.28) },
+		[2] = { g("tank", 5, 1.15) },
+		[3] = { g("tank", 4, 1.05), g("grunt", 10, 0.58, 2.00) },
+		[4] = { g("grunt", 14, 0.52), g("tank", 5, 1.00, 1.25) },
+		[5] = { g("tank", 6, 1.00), g("grunt", 14, 0.52, 1.75) },
+		[6] = { g("grunt", 18, 0.50), g("tank", 5, 0.95, 1.10) },
+		[7] = { g("tank", 7, 0.95), g("grunt", 15, 0.50, 1.50) },
+		[8] = { g("grunt", 10, 0.50), g("tank", 6, 0.90, 0.90), g("grunt", 8, 0.50, 1.20) },
+		[9] = { g("tank", 7, 0.90), g("grunt", 18, 0.50, 1.30) },
+		[10] = { g("boss", 1, 0.00), g("tank", 6, 0.95, 1.40), g("grunt", 16, 0.50, 1.40) },
+		[11] = { g("grunt", 20, 0.50), g("tank", 6, 0.90, 1.00) },
+		[12] = { g("tank", 8, 0.90), g("grunt", 18, 0.50, 1.25) },
+		[13] = { g("grunt", 12, 0.50), g("tank", 7, 0.88, 0.80), g("grunt", 10, 0.50, 1.10) },
+		[14] = { g("tank", 8, 0.88), g("grunt", 20, 0.50, 1.15) },
+		[15] = { g("grunt", 22, 0.50), g("tank", 7, 0.86, 0.85) },
+		[16] = { g("tank", 9, 0.86), g("grunt", 20, 0.50, 1.05) },
+		[17] = { g("grunt", 13, 0.50), g("tank", 8, 0.84, 0.75), g("grunt", 11, 0.50, 1.00) },
+		[18] = { g("tank", 9, 0.84), g("grunt", 22, 0.50, 0.95) },
+		[19] = { g("grunt", 24, 0.50), g("tank", 8, 0.82, 0.70) },
+		[20] = { g("boss", 1, 0.00), g("tank", 9, 0.84, 1.30), g("grunt", 22, 0.50, 1.15) },
 	},
 	highpass = {
-		-- 10 grunts.
+		-- Alternating fast and armored groups reward coverage over one fixed counter.
 		[1] = { g("grunt", 10, 1.03) },
-		-- 12 runners.
-		[2] = { g("runner", 12, 0.85) },
-		-- 12 grunts followed by 8 runners.
-		[3] = { g("grunt", 12, 0.73), g("runner", 8, 0.71, 1.47) },
-		-- 18 runners.
-		[4] = { g("runner", 18, 0.57) },
-		-- 22 runners.
-		[5] = { g("runner", 22, 0.51) },
-		-- 15 grunts followed by 9 runners.
-		[6] = { g("grunt", 15, 0.52), g("runner", 9, 0.50, 0.68) },
-		-- 12 grunts followed by 13 tanks.
-		[7] = { g("grunt", 12, 0.50), g("tank", 13, 0.55, 0.32) },
-		-- 12 grunts, then 8 runners, and 6 grunts.
-		[8] = { g("grunt", 12, 0.50), g("runner", 8, 0.50, 0.16), g("grunt", 6, 0.50, 0.13) },
-		-- 11 grunts, then 10 runners, and 8 grunts.
-		[9] = { g("grunt", 11, 0.50), g("runner", 10, 0.50, 0.08), g("grunt", 8, 0.50, 0.08) },
-		-- 1 boss, then 11 grunts, then 12 grunts, and 8 grunts.
-		[10] = { g("boss", 1, 0.00), g("grunt", 11, 0.50, 1.05), g("grunt", 12, 0.50, 0.37), g("grunt", 8, 0.50, 0.26) },
-		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 0.35) },
-		[12] = { g("grunt", 17, 0.52), g("grunt", 10, 0.50, 0.71) },
-		[13] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.16), g("grunt", 7, 0.50, 0.13) },
-		[14] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.30) },
-		[15] = { g("grunt", 12, 0.50), g("grunt", 11, 0.50, 0.08), g("grunt", 9, 0.50, 0.08) },
-		[16] = { g("grunt", 19, 0.52), g("grunt", 11, 0.50, 0.61) },
-		[17] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.14), g("grunt", 7, 0.50, 0.12) },
-		[18] = { g("grunt", 16, 0.50), g("grunt", 17, 0.50, 0.27) },
-		[19] = { g("grunt", 14, 0.50), g("grunt", 13, 0.50, 0.07), g("grunt", 10, 0.50, 0.07) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.95), g("grunt", 15, 0.50, 0.33), g("grunt", 10, 0.50, 0.23) },
+		[2] = { g("runner", 10, 0.78) },
+		[3] = { g("tank", 4, 1.00), g("runner", 8, 0.62, 1.60) },
+		[4] = { g("runner", 14, 0.55), g("tank", 5, 0.95, 1.40) },
+		[5] = { g("tank", 6, 0.95), g("runner", 14, 0.53, 1.25) },
+		[6] = { g("runner", 16, 0.52), g("tank", 6, 0.92, 1.10) },
+		[7] = { g("tank", 7, 0.92), g("runner", 15, 0.52, 1.00) },
+		[8] = { g("runner", 10, 0.50), g("tank", 6, 0.90, 0.80), g("grunt", 8, 0.52, 1.10) },
+		[9] = { g("tank", 7, 0.90), g("runner", 18, 0.50, 0.90) },
+		[10] = { g("boss", 1, 0.00), g("runner", 14, 0.52, 1.20), g("tank", 6, 0.92, 1.20) },
+		[11] = { g("tank", 8, 0.90), g("runner", 17, 0.50, 0.90) },
+		[12] = { g("runner", 20, 0.50), g("tank", 7, 0.88, 0.80) },
+		[13] = { g("tank", 8, 0.88), g("runner", 18, 0.50, 0.80) },
+		[14] = { g("runner", 21, 0.50), g("tank", 8, 0.86, 0.75) },
+		[15] = { g("tank", 9, 0.86), g("runner", 19, 0.50, 0.72) },
+		[16] = { g("runner", 22, 0.50), g("tank", 8, 0.84, 0.70) },
+		[17] = { g("tank", 9, 0.84), g("runner", 20, 0.50, 0.68) },
+		[18] = { g("runner", 23, 0.50), g("tank", 9, 0.82, 0.65) },
+		[19] = { g("tank", 10, 0.82), g("runner", 21, 0.50, 0.62) },
+		[20] = { g("boss", 1, 0.00), g("runner", 22, 0.50, 1.10), g("tank", 9, 0.84, 1.10) },
 	},
 	roundabout = {
 		-- 11 grunts.
@@ -140,68 +114,50 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.42), g("grunt", 14, 0.50, 0.10), g("grunt", 10, 0.50, 0.07) },
 	},
 	gauntlet = {
-		-- 12 grunts.
+		-- Tight ordinary packs are the splash lesson; Warcallers stay behind escorts.
 		[1] = { g("grunt", 12, 0.60) },
-		-- 13 grunts.
-		[2] = { g("grunt", 13, 0.52) },
-		-- 13 grunts followed by 8 grunts.
-		[3] = { g("grunt", 13, 0.50), g("grunt", 8, 0.50, 2.94) },
-		-- 18 grunts.
-		[4] = { g("grunt", 18, 0.50) },
-		-- 22 grunts.
-		[5] = { g("grunt", 22, 0.50) },
-		-- 15 grunts followed by 9 grunts.
-		[6] = { g("grunt", 15, 0.50), g("grunt", 9, 0.50, 1.37) },
-		-- 12 grunts followed by 13 grunts.
-		[7] = { g("grunt", 12, 0.50), g("grunt", 13, 0.50, 0.98) },
-		-- 12 grunts, then 8 grunts, and 6 grunts.
-		[8] = { g("grunt", 12, 0.50), g("grunt", 8, 0.50, 0.67), g("grunt", 6, 0.50, 0.60) },
-		-- 10 grunts, then 9 grunts, and 8 grunts.
-		[9] = { g("grunt", 10, 0.50), g("grunt", 9, 0.50, 0.52), g("grunt", 8, 0.50, 0.52) },
-		-- 1 boss, then 10 grunts, then 11 grunts, and 9 grunts.
-		[10] = { g("boss", 1, 0.00), g("grunt", 10, 0.50, 2.45), g("grunt", 11, 0.50, 1.08), g("grunt", 9, 0.50, 0.88) },
-		[11] = { g("grunt", 13, 0.50), g("grunt", 14, 0.50, 1.08) },
-		[12] = { g("grunt", 17, 0.50), g("grunt", 10, 0.50, 1.44) },
-		[13] = { g("grunt", 13, 0.50), g("grunt", 9, 0.50, 0.67), g("grunt", 7, 0.50, 0.60) },
-		[14] = { g("grunt", 14, 0.50), g("grunt", 15, 0.50, 0.93) },
-		[15] = { g("grunt", 11, 0.50), g("grunt", 10, 0.50, 0.55), g("grunt", 9, 0.50, 0.55) },
-		[16] = { g("grunt", 19, 0.50), g("grunt", 11, 0.50, 1.23) },
-		[17] = { g("grunt", 14, 0.50), g("grunt", 10, 0.50, 0.60), g("grunt", 7, 0.50, 0.54) },
-		[18] = { g("grunt", 16, 0.50), g("grunt", 17, 0.50, 0.83) },
-		[19] = { g("grunt", 13, 0.50), g("grunt", 11, 0.50, 0.44), g("grunt", 10, 0.50, 0.44) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 13, 0.50, 2.21), g("grunt", 14, 0.50, 0.97), g("grunt", 11, 0.50, 0.79) },
+		[2] = { g("grunt", 16, 0.50) },
+		[3] = { g("grunt", 18, 0.50) },
+		[4] = { g("runner", 16, 0.50) },
+		[5] = { g("grunt", 20, 0.50) },
+		[6] = { g("tank", 5, 0.92), g("grunt", 16, 0.50, 1.30) },
+		[7] = { g("grunt", 18, 0.50), g("warcaller", 2, 0.90, 0.70) },
+		[8] = { g("runner", 18, 0.50), g("grunt", 12, 0.50, 0.70) },
+		[9] = { g("grunt", 20, 0.50), g("warcaller", 3, 0.86, 0.60) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 18, 0.50, 1.20), g("warcaller", 3, 0.90, 0.80) },
+		[11] = { g("tank", 7, 0.88), g("grunt", 18, 0.50, 0.90) },
+		[12] = { g("grunt", 22, 0.50) },
+		[13] = { g("runner", 20, 0.50), g("grunt", 12, 0.50, 0.65) },
+		[14] = { g("grunt", 22, 0.50), g("warcaller", 4, 0.82, 0.55) },
+		[15] = { g("tank", 8, 0.86), g("grunt", 20, 0.50, 0.75) },
+		[16] = { g("grunt", 24, 0.50) },
+		[17] = { g("runner", 22, 0.50), g("grunt", 12, 0.50, 0.60) },
+		[18] = { g("grunt", 24, 0.50), g("warcaller", 4, 0.80, 0.50) },
+		[19] = { g("tank", 9, 0.84), g("grunt", 20, 0.50, 0.65) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 22, 0.50, 1.10), g("warcaller", 4, 0.82, 0.70) },
 	},
 	snaketrail = {
-		-- 17 grunts.
+		-- Long bends turn separated armored and fast blocks into a retargeting drill.
 		[1] = { g("grunt", 17, 0.90) },
-		-- 10 tanks.
-		[2] = { g("tank", 10, 0.94) },
-		-- 15 grunts followed by 5 tanks.
-		[3] = { g("grunt", 15, 0.73), g("tank", 5, 0.92, 1.88) },
-		-- 11 tanks followed by 14 grunts.
-		[4] = { g("tank", 11, 0.75), g("grunt", 14, 0.60, 1.00) },
-		-- 11 grunts followed by 9 tanks.
-		[5] = { g("grunt", 11, 0.76), g("tank", 9, 0.72, 0.88) },
-		-- 10 tanks followed by 13 grunts.
-		[6] = { g("tank", 10, 0.61), g("grunt", 13, 0.67, 0.62) },
-		-- 7 tanks followed by 8 grunts.
-		[7] = { g("tank", 7, 0.57), g("grunt", 8, 0.59, 0.38) },
-		-- 9 grunts followed by 9 tanks.
-		[8] = { g("grunt", 9, 0.50), g("tank", 9, 0.58, 0.38) },
-		-- 8 tanks followed by 9 grunts.
-		[9] = { g("tank", 8, 0.55), g("grunt", 9, 0.50, 0.25) },
-		-- 1 boss, then 8 tanks, and 8 grunts.
-		[10] = { g("boss", 1, 0.00), g("tank", 8, 0.55, 2.25), g("grunt", 8, 0.55, 2.50) },
-		[11] = { g("tank", 8, 0.57), g("grunt", 9, 0.59, 0.42) },
-		[12] = { g("tank", 11, 0.61), g("grunt", 15, 0.67, 0.65) },
-		[13] = { g("grunt", 10, 0.50), g("tank", 10, 0.58, 0.38) },
-		[14] = { g("tank", 8, 0.57), g("grunt", 9, 0.59, 0.36) },
-		[15] = { g("tank", 9, 0.55), g("grunt", 10, 0.50, 0.26) },
-		[16] = { g("tank", 12, 0.61), g("grunt", 16, 0.67, 0.56) },
-		[17] = { g("grunt", 11, 0.50), g("tank", 11, 0.58, 0.34) },
-		[18] = { g("tank", 9, 0.57), g("grunt", 10, 0.59, 0.32) },
-		[19] = { g("tank", 10, 0.55), g("grunt", 11, 0.50, 0.21) },
-		[20] = { g("boss", 1, 0.00), g("tank", 10, 0.55, 2.02), g("grunt", 10, 0.55, 2.25) },
+		[2] = { g("tank", 6, 1.00) },
+		[3] = { g("runner", 12, 0.58) },
+		[4] = { g("tank", 7, 0.95), g("runner", 10, 0.52, 1.50) },
+		[5] = { g("runner", 14, 0.52), g("tank", 6, 0.92, 1.25) },
+		[6] = { g("tank", 8, 0.92), g("grunt", 14, 0.55, 1.20) },
+		[7] = { g("runner", 16, 0.50), g("tank", 7, 0.90, 1.00) },
+		[8] = { g("tank", 8, 0.90), g("runner", 15, 0.50, 0.90) },
+		[9] = { g("runner", 17, 0.50), g("tank", 8, 0.88, 0.85) },
+		[10] = { g("boss", 1, 0.00), g("tank", 8, 0.90, 1.35), g("runner", 16, 0.50, 1.20) },
+		[11] = { g("runner", 18, 0.50), g("tank", 8, 0.86, 0.80) },
+		[12] = { g("tank", 9, 0.86), g("grunt", 18, 0.52, 0.80) },
+		[13] = { g("runner", 19, 0.50), g("tank", 9, 0.84, 0.75) },
+		[14] = { g("tank", 10, 0.84), g("runner", 18, 0.50, 0.70) },
+		[15] = { g("runner", 20, 0.50), g("tank", 9, 0.82, 0.68) },
+		[16] = { g("tank", 10, 0.82), g("grunt", 20, 0.50, 0.65) },
+		[17] = { g("runner", 21, 0.50), g("tank", 10, 0.80, 0.62) },
+		[18] = { g("tank", 11, 0.80), g("runner", 20, 0.50, 0.60) },
+		[19] = { g("runner", 22, 0.50), g("tank", 10, 0.78, 0.58) },
+		[20] = { g("boss", 1, 0.00), g("tank", 11, 0.80, 1.20), g("runner", 21, 0.50, 1.05) },
 	},
 	backtrack = {
 		-- 17 grunts.
@@ -300,36 +256,27 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("regenerator", 8, 0.60, 1.05), g("bulwark", 9, 0.65, 1.17), g("runner", 10, 0.53, 1.34), g("tank", 10, 0.65, 1.46) },
 	},
 	outerloop = {
-		-- 17 grunts.
-		[1] = { g("grunt", 17, 0.89) },
-		-- 9 regenerators.
-		[2] = { g("regenerator", 9, 1.04) },
-		-- 13 grunts followed by 4 regenerators.
-		[3] = { g("grunt", 13, 0.78), g("regenerator", 4, 1.03, 2.55) },
-		-- 10 regenerators followed by 13 grunts.
-		[4] = { g("regenerator", 10, 0.85), g("grunt", 13, 0.64, 1.36) },
-		-- 10 bulwarks followed by 7 regenerators.
-		[5] = { g("bulwark", 10, 0.95), g("regenerator", 7, 0.81, 1.19) },
-		-- 10 regenerators, then 9 bulwarks, and 13 runners.
-		[6] = { g("regenerator", 10, 0.70), g("bulwark", 9, 0.86, 0.85), g("runner", 13, 0.84, 1.70) },
-		-- 6 regenerators, then 7 bulwarks, then 7 runners, and 8 tanks.
-		[7] = { g("regenerator", 6, 0.65), g("bulwark", 7, 0.78, 0.51), g("runner", 7, 0.71, 1.19), g("tank", 8, 0.85, 1.70) },
-		-- 8 grunts, then 8 tanks, then 9 runners, and 10 bulwarks.
-		[8] = { g("grunt", 8, 0.50), g("tank", 8, 0.61, 0.51), g("runner", 9, 0.63, 1.02), g("bulwark", 10, 0.85, 1.53) },
-		-- 7 regenerators, then 8 bulwarks, then 9 runners, then 9 tanks, and 10 grunts.
-		[9] = { g("regenerator", 7, 0.60), g("bulwark", 8, 0.67, 0.34), g("runner", 9, 0.59, 0.85), g("tank", 9, 0.71, 1.36), g("grunt", 10, 0.73, 1.70) },
-		-- 1 boss, then 7 regenerators, then 7 bulwarks, then 8 runners, and 8 tanks.
-		[10] = { g("boss", 1, 0.00), g("regenerator", 7, 0.61, 3.06), g("bulwark", 7, 0.74, 3.40), g("runner", 8, 0.67, 3.91), g("tank", 8, 0.81, 4.25) },
-		[11] = { g("regenerator", 6, 0.65), g("bulwark", 8, 0.78, 0.56), g("runner", 8, 0.71, 1.31), g("tank", 9, 0.85, 1.87) },
-		[12] = { g("regenerator", 11, 0.70), g("bulwark", 10, 0.86, 0.89), g("runner", 15, 0.84, 1.78) },
-		[13] = { g("grunt", 9, 0.50), g("tank", 9, 0.61, 0.51), g("runner", 10, 0.63, 1.02), g("bulwark", 11, 0.85, 1.53) },
-		[14] = { g("regenerator", 7, 0.65), g("bulwark", 8, 0.78, 0.48), g("runner", 8, 0.71, 1.13), g("tank", 9, 0.85, 1.61) },
-		[15] = { g("regenerator", 8, 0.60), g("bulwark", 9, 0.67, 0.36), g("runner", 10, 0.59, 0.89), g("tank", 10, 0.71, 1.43), g("grunt", 11, 0.73, 1.78) },
-		[16] = { g("regenerator", 12, 0.70), g("bulwark", 11, 0.86, 0.77), g("runner", 16, 0.84, 1.53) },
-		[17] = { g("grunt", 10, 0.50), g("tank", 10, 0.61, 0.46), g("runner", 11, 0.63, 0.92), g("bulwark", 12, 0.85, 1.38) },
-		[18] = { g("regenerator", 8, 0.65), g("bulwark", 9, 0.78, 0.43), g("runner", 9, 0.71, 1.01), g("tank", 10, 0.85, 1.44) },
-		[19] = { g("regenerator", 9, 0.60), g("bulwark", 10, 0.67, 0.29), g("runner", 11, 0.59, 0.72), g("tank", 11, 0.71, 1.16), g("grunt", 13, 0.73, 1.44) },
-		[20] = { g("boss", 1, 0.00), g("regenerator", 9, 0.61, 2.75), g("bulwark", 9, 0.74, 3.06), g("runner", 10, 0.67, 3.52), g("tank", 10, 0.81, 3.83) },
+		-- Regenerators arrive in small escorted pockets, with a late Bulwark preview.
+		[1] = { g("grunt", 14, 0.82) },
+		[2] = { g("grunt", 8, 0.58), g("regenerator", 2, 1.00, 1.40) },
+		[3] = { g("grunt", 12, 0.55), g("regenerator", 3, 0.95, 1.10) },
+		[4] = { g("tank", 5, 0.95), g("grunt", 12, 0.52, 1.40) },
+		[5] = { g("grunt", 14, 0.50), g("regenerator", 3, 0.90, 0.85) },
+		[6] = { g("runner", 12, 0.52), g("grunt", 12, 0.52, 1.20) },
+		[7] = { g("grunt", 10, 0.50), g("regenerator", 4, 0.88, 0.80), g("grunt", 8, 0.50, 1.00) },
+		[8] = { g("tank", 6, 0.90), g("runner", 12, 0.50, 1.10) },
+		[9] = { g("grunt", 14, 0.50), g("regenerator", 4, 0.86, 0.70), g("runner", 8, 0.50, 0.90) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 14, 0.52, 1.25), g("regenerator", 4, 0.90, 0.90) },
+		[11] = { g("tank", 7, 0.88), g("grunt", 16, 0.50, 1.00) },
+		[12] = { g("grunt", 16, 0.50), g("regenerator", 5, 0.84, 0.70) },
+		[13] = { g("runner", 16, 0.50), g("tank", 7, 0.86, 0.85) },
+		[14] = { g("grunt", 12, 0.50), g("regenerator", 5, 0.82, 0.65), g("grunt", 10, 0.50, 0.85) },
+		[15] = { g("bulwark", 2, 1.10), g("grunt", 18, 0.50, 1.60) },
+		[16] = { g("grunt", 16, 0.50), g("regenerator", 5, 0.80, 0.60), g("runner", 10, 0.50, 0.80) },
+		[17] = { g("bulwark", 3, 1.05), g("runner", 16, 0.50, 1.40) },
+		[18] = { g("tank", 8, 0.84), g("grunt", 18, 0.50, 0.75) },
+		[19] = { g("grunt", 14, 0.50), g("regenerator", 6, 0.78, 0.55), g("runner", 10, 0.50, 0.75) },
+		[20] = { g("boss", 1, 0.00), g("bulwark", 3, 1.00, 1.20), g("grunt", 18, 0.50, 1.30) },
 	},
 	terrace = {
 		-- 17 grunts.

@@ -255,3 +255,10 @@ rates, ability uptime and overlaps, preview wrapping, HUD bounds, and upgrade
 timing. It explicitly exercises 1280×720 at the default font size, six damage-meter
 rows, six ability buttons, and the largest campaign preview. The check uses the
 broad alarm bands documented in `docs/polish_fixtures.md`.
+
+The pacing report also treats `world/map_defs.lua` introduction metadata as a
+fixture: every non-boss enemy must be declared exactly once on the map where its
+first authored group occurs. The revised opening curriculum keeps specialist
+budgets deliberately small—Regenerators and Bulwarks first appear on Outerloop,
+and escorted Warcallers first appear on Gauntlet—while the challenge report
+records the resulting per-wave effective and peak five-second threat budgets.
