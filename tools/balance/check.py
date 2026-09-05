@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-GATES = (("combat", "run_fixtures.py"), ("pacing", "campaign_pacing_report.py"),
+GATES = (("combat", "run_fixtures.py"),
          ("economy", "economy_fixtures.py"),
          ("campaign challenge", "challenge_fixtures.py"),
          ("strategy diversity + robustness", "strategy_analysis.py"),

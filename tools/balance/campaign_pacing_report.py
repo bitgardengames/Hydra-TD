@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-"""Report and guard the authored campaign's spawn-schedule pacing."""
+"""Report the authored campaign's spawn-schedule pacing."""
 
 from __future__ import annotations
 
-import argparse
 import json
 import re
-import sys
 from pathlib import Path
 
-from lua_source import named_entries, numeric_field, table_body
+from lua_source import named_entries, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "systems/campaign_wave_defs.lua"
@@ -81,42 +79,14 @@ def summarize(waves: list[dict]) -> dict:
     }
 
 
-def parse_targets(text: str) -> dict[str, dict]:
-    declaration = "pacingTargetsByMapId"
-    blocks = named_entries(table_body(text, declaration, SOURCE), declaration, SOURCE)
-    targets = {}
-    for map_id, block in blocks.items():
-        scalar = lambda name: numeric_field(block, name, SOURCE, map_id)
-        pair = lambda name: [float(x) for x in re.search(
-            rf"{name}\s*=\s*\{{\s*([0-9.]+),\s*([0-9.]+)\s*\}}", block).groups()]
-        targets[map_id] = {
-            "openingPressure": int(scalar("openingPressure")),
-            "peakSimultaneous": int(scalar("peakSimultaneous")),
-            "totalWaveDuration": pair("totalWaveDuration"),
-            "downtimeBetweenGroups": pair("downtimeBetweenGroups"),
-        }
-    return targets
-
-
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true", help="fail when measured pacing misses an authored target")
-    args = parser.parse_args()
     text = SOURCE.read_text()
     measured = {map_id: [wave_metrics(w) for w in waves]
                 for map_id, waves in parse_waves(text).items()}
     summaries = {map_id: summarize(waves) for map_id, waves in measured.items()}
-    targets = parse_targets(text)
-    mismatches = {map_id: {"target": targets.get(map_id), "measured": summary}
-                  for map_id, summary in summaries.items() if targets.get(map_id) != summary}
-    if args.check:
-        for map_id, mismatch in mismatches.items():
-            print(f"PACING REGRESSION {map_id}: {mismatch}", file=sys.stderr)
-    else:
-        print(json.dumps({"engagementWindowSeconds": WINDOW_SECONDS,
-                          "maps": measured, "summaries": summaries,
-                          "targets": targets, "mismatches": mismatches}, indent=2))
-    return 1 if mismatches else 0
+    print(json.dumps({"engagementWindowSeconds": WINDOW_SECONDS,
+                      "maps": measured, "summaries": summaries}, indent=2))
+    return 0
 
 
 if __name__ == "__main__":

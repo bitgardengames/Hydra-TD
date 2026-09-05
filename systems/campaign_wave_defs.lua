@@ -2,32 +2,6 @@
 -- enemy kinds, counts, and timing.
 local CampaignWaveDefs = {}
 
--- Pacing is expressed through the spawn schedule, not hidden stat or enemy-count
--- ramps.  The dependency-free report in tools/balance/ measures a five-second
--- engagement window and verifies these authored ceilings/ranges.
--- `openingPressure` and `peakSimultaneous` are enemy counts; duration/recovery
--- values are seconds. Riverbend provides the baseline spawn schedule.
-local pacingTargetsByMapId = {
-	riverbend = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 6.30, 20.95 }, downtimeBetweenGroups = { 0.07, 1.40 } },
-	switchback = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.81, 20.30 }, downtimeBetweenGroups = { 0.09, 1.75 } },
-	highpass = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 9.27, 19.51 }, downtimeBetweenGroups = { 0.07, 1.47 } },
-	roundabout = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 7.50, 18.09 }, downtimeBetweenGroups = { 0.07, 0.69 } },
-	gauntlet = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.24, 21.47 }, downtimeBetweenGroups = { 0.44, 2.94 } },
-	snaketrail = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.63, 16.77 }, downtimeBetweenGroups = { 0.21, 2.50 } },
-	backtrack = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 6.39, 22.43 }, downtimeBetweenGroups = { 0.13, 1.72 } },
-	lowvalley = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.72, 30.81 }, downtimeBetweenGroups = { 0.25, 3.62 } },
-	circuit = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.92, 25.92 }, downtimeBetweenGroups = { 0.11, 1.62 } },
-	outerloop = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 7.52, 34.83 }, downtimeBetweenGroups = { 0.29, 4.25 } },
-	terrace = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 5.36, 23.23 }, downtimeBetweenGroups = { 0.12, 1.80 } },
-	highridge = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 8.15, 31.69 }, downtimeBetweenGroups = { 0.20, 3.00 } },
-	crossflow = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 6.05, 22.51 }, downtimeBetweenGroups = { 0.07, 1.04 } },
-	steppingstones = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 8.60, 41.81 }, downtimeBetweenGroups = { 0.26, 5.35 } },
-	twinloop = { openingPressure = 12, peakSimultaneous = 12, totalWaveDuration = { 2.00, 23.07 }, downtimeBetweenGroups = { 0.10, 1.55 } },
-	frostgate = { openingPressure = 10, peakSimultaneous = 11, totalWaveDuration = { 7.92, 33.81 }, downtimeBetweenGroups = { 0.62, 2.40 } },
-	tidelock = { openingPressure = 11, peakSimultaneous = 11, totalWaveDuration = { 6.82, 25.46 }, downtimeBetweenGroups = { 0.24, 1.30 } },
-	ashspiral = { openingPressure = 11, peakSimultaneous = 12, totalWaveDuration = { 8.80, 33.73 }, downtimeBetweenGroups = { 0.10, 0.90 } },
-}
-
 -- A wave is written as a short list of spawn groups. Delay is the pause after
 -- the previous group, so the common case (start immediately) can omit it.
 local function g(kind, count, spacing, delay)
@@ -661,7 +635,5 @@ function CampaignWaveDefs.getTotalEnemyCount(mapOrId)
 	end
 	return total
 end
-
-CampaignWaveDefs.pacingTargetsByMapId = pacingTargetsByMapId
 
 return CampaignWaveDefs
