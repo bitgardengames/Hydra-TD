@@ -195,8 +195,6 @@ return {
 		regenerationSuppressed = "Regeneration suppressed",
 		summonPreparing = "Summoning charge",
 		phased = "Phased: direct fire passes through",
-		phasePreparing = "Next phase shift",
-		lungePreparing = "Lunge incoming",
 		value = "%s / %s",
 		multiplier = "x%.2f",
 	},

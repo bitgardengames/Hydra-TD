@@ -908,15 +908,6 @@ local function getDisplayStatuses(e)
 		add("status.phased", "◌", Theme.tower.slow, {
 			id = "phased", remainingFraction = fraction(e.phaseTimer, e.phase.duration),
 		})
-	elseif e.phase and (e.phaseTimer or 0) > 0 then
-		add("status.phasePreparing", "◔", Theme.tower.slow, {
-			id = "phase_preparing", remainingFraction = fraction(e.phaseTimer, e.phase.period - e.phase.duration),
-		})
-	end
-	if e.lungeWindup then
-		add("status.lungePreparing", "➤", Theme.ui.warn, {
-			id = "lunge_preparing", remainingFraction = fraction(e.lungeWindup, e.lunge.windupDuration),
-		})
 	end
 
 	return result

@@ -7,6 +7,7 @@ local EnemyDefs = require("world.enemy_defs")
 
 local available = { boss = true }
 local minimumSpawnSpacing = 0.5
+local featuredBossStages = {boss_phasewalker = {}, boss_gatecrasher = {}}
 
 -- The first map remains a readable grunt-only onboarding, but the campaign must
 -- expose both core special-enemy roles before the player leaves its first chapter.
@@ -56,6 +57,9 @@ for _, map in ipairs(Maps) do
 		local bossWave = CampaignWaveDefs.get(map, bossWaveIndex)
 		assert(bossWave.boss and EnemyDefs[bossWave.bossArchetype],
 			map.id .. " wave " .. bossWaveIndex .. " has no legal explicit boss selection")
+		if featuredBossStages[bossWave.bossArchetype] then
+			featuredBossStages[bossWave.bossArchetype][map.campaignStage] = true
+		end
 	end
 	assert(CampaignWaveDefs.get(map, 10).bossArchetype ~= CampaignWaveDefs.get(map, 20).bossArchetype,
 		map.id .. " must feature different bosses on waves 10 and 20")
@@ -72,6 +76,12 @@ for _, map in ipairs(Maps) do
 		local compositionCount = 0
 		for _ in pairs(lateWaveCompositions) do compositionCount = compositionCount + 1 end
 		assert(compositionCount >= 3, map.id .. " needs at least three distinct late-wave compositions")
+	end
+end
+
+for bossKind, stages in pairs(featuredBossStages) do
+	for stage = 2, 4 do
+		assert(stages[stage], bossKind .. " must be featured in campaign stage " .. stage)
 	end
 end
 
