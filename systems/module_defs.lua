@@ -1,5 +1,5 @@
 -- EXPERIMENTAL: retained for explicit internal module playtests. These
--- definitions are not part of normal campaign or replay/endless balance.
+-- definitions are not part of normal campaign or replay balance.
 local ModuleDefs = {}
 local ProjectileBehaviorRegistry = require("world.projectile_behaviors.registry")
 local BehaviorContext = require("systems.behavior_context")

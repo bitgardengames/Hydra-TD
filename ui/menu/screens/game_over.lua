@@ -8,11 +8,8 @@ local Backdrop = require("scenes.backdrop")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local RunRecap = require("ui.run_recap")
-local Save = require("core.save")
 local Hotkeys = require("core.hotkeys")
 local AnimatedRunStats = require("ui.animated_run_stats")
-local RecordRows = require("ui.record_rows")
-local RunModes = require("systems.run_modes")
 
 local lg = love.graphics
 
@@ -81,15 +78,7 @@ local function returnToMenu(playSound)
 end
 
 local function buildRunSummary()
-	local rows = {}
-	if RunModes.isEndless(State) then
-		rows[#rows + 1] = {label = "Wave", value = RunRecap.getReachedWave()}
-		rows[#rows + 1] = {label = "Kills", value = State.totalKills or 0}
-		local map = RunRecap.getMap()
-		local records = map and Save.getMapRecords(map.id, RunModes.ENDLESS, RunRecap.getDifficultyKey())
-		for _, row in ipairs(RecordRows.build(records, State.newRecords)) do rows[#rows + 1] = row end
-	end
-	runStats:setRows(rows)
+	runStats:setRows({})
 end
 
 local function selectGameOverMessage()

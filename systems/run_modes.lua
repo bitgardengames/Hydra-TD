@@ -1,9 +1,8 @@
 local RunModes = {}
 
 RunModes.CAMPAIGN = "campaign"
-RunModes.ENDLESS = "endless"
 
-local valid = {campaign = true, endless = true}
+local valid = {campaign = true}
 
 function RunModes.normalize(mode)
 	return valid[mode] and mode or RunModes.CAMPAIGN
@@ -19,7 +18,7 @@ function RunModes.get(state)
 end
 
 -- Internal plumbing for the module playtest entry point in systems/modules.lua.
--- Run selection must never call this or infer the value from replay/endless mode.
+-- Run selection must never call this or infer the value from replay mode.
 function RunModes._setExperimentalModulesForPlaytest(state, enabled)
 	state.runRules = state.runRules or {}
 	state.runRules.experimentalModules = enabled == true
@@ -33,10 +32,9 @@ function RunModes.experimentalModulesEnabled(state)
 end
 
 function RunModes.isCampaign(state) return RunModes.get(state) == RunModes.CAMPAIGN end
-function RunModes.isEndless(state) return RunModes.get(state) == RunModes.ENDLESS end
 function RunModes.isReplay(state) return not RunModes.isCampaign(state) end
-function RunModes.hasCampaignVictory(state) return RunModes.isCampaign(state) end
-function RunModes.awardsCampaignProgress(state) return RunModes.isCampaign(state) end
+function RunModes.hasCampaignVictory() return true end
+function RunModes.awardsCampaignProgress() return true end
 function RunModes.lossCondition(state) return (tonumber(state and state.lives) or 0) <= 0 end
 
 return RunModes

@@ -25,12 +25,11 @@ local state = {
 	gameOver = false,
 	victory = false,
 	runMode = "campaign",
-	-- Opt-in run rules are separate from the selected run mode. Endless/replay
-	-- runs use the same linear tower upgrades as campaign runs.
+	-- Opt-in run rules are separate from the selected run mode. Replay runs use
+	-- the same linear tower upgrades as campaign runs.
 	runRules = {
 		experimentalModules = false,
 	},
-	buildSeed = nil,
 	-- The currently spawned boss enemy entity, or nil. Boss identifiers belong
 	-- in activeBossKind so presentation code never has to resolve this value.
 	activeBoss = nil,

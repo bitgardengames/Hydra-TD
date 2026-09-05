@@ -5,10 +5,6 @@ local definitions = {
 	{"fastestClear", "Fastest clear, seconds (lower is better)"},
 	{"highestRemainingLives", "Most lives remaining (higher is better)"},
 	{"fewestLeaks", "Fewest leaks (lower is better)"},
-	{"highestEndlessWave", "Highest endless wave (higher is better)"},
-	{"longestEndlessDuration", "Longest endless run, seconds"},
-	{"highestEndlessKills", "Most endless kills"},
-	{"buildSeed", "Build seed"},
 }
 
 function RecordRows.build(records, newKeys)
