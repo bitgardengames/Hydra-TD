@@ -1,6 +1,17 @@
 -- Dependency-free pause presentation fixtures. Run from the repository root with Lua/LuaJIT.
 local Presentation = require("ui.pause_presentation")
 
+local pauseFile = assert(io.open("ui/menu/pause.lua", "r"))
+local pauseSource = pauseFile:read("*a")
+pauseFile:close()
+
+assert(pauseSource:find("easy = Theme.ui.good", 1, true)
+	and pauseSource:find("normal = Theme.ui.warn", 1, true)
+	and pauseSource:find("hard = Theme.ui.bad", 1, true),
+	"pause difficulty colors must match the campaign difficulty colors")
+assert(pauseSource:find("setColorAlpha(difficultyColors[Difficulty.key()] or Theme.ui.text, pose.contextAlpha)", 1, true),
+	"the paused-game difficulty label must use its difficulty color")
+
 local function near(actual, expected)
 	return math.abs(actual - expected) < 1e-9
 end

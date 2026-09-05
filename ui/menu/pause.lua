@@ -18,6 +18,11 @@ local lg = love.graphics
 
 local colorBackdrop = Theme.ui.backdrop
 local colorOutline = Theme.outline.color
+local difficultyColors = {
+	easy = Theme.ui.good,
+	normal = Theme.ui.warn,
+	hard = Theme.ui.bad,
+}
 
 local outlineW = Theme.outline.width
 local baseRadius = 6 * 3
@@ -83,7 +88,7 @@ local function drawDifficultyCard(sw, pose)
 	)
 
 	Fonts.set("menu")
-	setColorAlpha(Theme.ui.selected, pose.contextAlpha)
+	setColorAlpha(difficultyColors[Difficulty.key()] or Theme.ui.text, pose.contextAlpha)
 	lg.printf(
 		L("difficulty." .. Difficulty.key()),
 		cardX + contextCardPadding,
