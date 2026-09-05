@@ -22,6 +22,11 @@ assert(not rendererSource:find("prepareEnemyRenderData", 1, true))
 assert(not rendererSource:find("EnemyRenderState.prepare", 1, true))
 assert(rendererSource:find("local colorSlow = Theme.projectiles.slow", 1, true))
 assert(rendererSource:find("local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]", 1, true))
+local selectionRing = assert(rendererSource:match("%-%- Selection Ring(.-)end"))
+assert(selectionRing:find('lg.circle("line", ix, iy, e.radius + 4)', 1, true),
+	"selected enemies retain their yellow outline")
+assert(not selectionRing:find('lg.circle("fill", ix, iy, e.radius + 4)', 1, true),
+	"selected enemies do not receive a yellow fill")
 for i, value in ipairs(prepared) do
 	assert(({ enemy.rx, enemy.ry, enemy.prevRX, enemy.prevRY, enemy.eyeDX, enemy.eyeDY, enemy.rAnimT })[i] == value)
 end
