@@ -8,6 +8,7 @@ local EnemyDefs = require("world.enemy_defs")
 local available = { boss = true }
 local minimumSpawnSpacing = 0.5
 local featuredBossStages = {boss_phasewalker = {}, boss_gatecrasher = {}}
+local bossAppearances = {}
 
 -- The first map remains a readable grunt-only onboarding, but the campaign must
 -- expose both core special-enemy roles before the player leaves its first chapter.
@@ -57,6 +58,7 @@ for _, map in ipairs(Maps) do
 		local bossWave = CampaignWaveDefs.get(map, bossWaveIndex)
 		assert(bossWave.boss and EnemyDefs[bossWave.bossArchetype],
 			map.id .. " wave " .. bossWaveIndex .. " has no legal explicit boss selection")
+		bossAppearances[bossWave.bossArchetype] = (bossAppearances[bossWave.bossArchetype] or 0) + 1
 		if featuredBossStages[bossWave.bossArchetype] then
 			featuredBossStages[bossWave.bossArchetype][map.campaignStage] = true
 		end
@@ -78,6 +80,17 @@ for _, map in ipairs(Maps) do
 		assert(compositionCount >= 3, map.id .. " needs at least three distinct late-wave compositions")
 	end
 end
+
+local leastAppearances, mostAppearances = math.huge, 0
+for bossKind, definition in pairs(EnemyDefs) do
+	if definition.boss and bossKind ~= "boss" then
+		local appearances = bossAppearances[bossKind] or 0
+		leastAppearances = math.min(leastAppearances, appearances)
+		mostAppearances = math.max(mostAppearances, appearances)
+	end
+end
+assert(mostAppearances - leastAppearances <= 1,
+	"campaign boss archetypes must be evenly dispersed across authored encounters")
 
 for bossKind, stages in pairs(featuredBossStages) do
 	for stage = 2, 4 do
