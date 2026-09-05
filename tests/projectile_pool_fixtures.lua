@@ -38,12 +38,23 @@ function PB.hit() end
 
 package.loaded["world.projectile_behaviors"] = PB
 package.loaded["core.state"] = { addDamage = function() end }
-package.loaded["world.enemies"] = {}
-package.loaded["world.effects"] = {}
+local damageCalls = 0
+package.loaded["world.enemies"] = {
+	applyDamage = function(_, amount)
+		damageCalls = damageCalls + 1
+		return amount, 0
+	end,
+}
+package.loaded["world.effects"] = {
+	spawnFX = function() end,
+	shake = function()
+		error("projectile damage must not shake the screen")
+	end,
+}
 package.loaded["systems.sound"] = { play = function() end }
-package.loaded["systems.run_stats"] = {}
+package.loaded["systems.run_stats"] = { recordDamage = function() end }
 package.loaded["core.save"] = {}
-package.loaded["ui.floaters"] = {}
+package.loaded["ui.floaters"] = { add = function() end }
 
 local Projectiles = require("world.projectiles")
 local source = {
@@ -84,6 +95,13 @@ assert(second._defaultHitCtx.origin == "primary" and second._defaultHitCtx.hitX 
 	and second._defaultHitCtx.hitY == nil, "default hit context leaked between uses")
 assert(second.allowRepeatHits == nil and second._didExpireHook == nil,
 	"per-use projectile flags leaked between uses")
+
+local damageEvent = PB.takeEvent(second, "damage")
+damageEvent.target = { hp = 1000, maxHp = 1000, hitFlash = 0, x = 0, y = 0, radius = 10 }
+damageEvent.amount = 500
+PB.pushEvent(second, damageEvent)
+Projectiles.update(0)
+assert(damageCalls == 1, "large projectile hit did not resolve damage")
 
 Projectiles.clear()
 print("projectile pool fixtures passed")
