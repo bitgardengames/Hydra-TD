@@ -52,8 +52,8 @@ local tabH = 36
 local tabW = 132
 local tabAnimSpeed = 12
 local minRowsVisible = 6
-local tabOuterRadius = 12
-local tabInnerRadius = 10
+local tabOuterRadius = 10
+local tabInnerRadius = 8
 
 local scrollbarW = 8
 local scrollbarMargin = 10
