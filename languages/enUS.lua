@@ -29,7 +29,7 @@ return {
 		quitDescription = "The game will close and any unsaved progress will be lost.",
 		restoreKeybindsTitle = "Restore default keybinds?",
 		restoreKeybindsDescription = "All customized keybinds will be replaced with the default controls. This cannot be undone.",
-		restoreDefaults = "Restore Defaults",
+		restoreDefaults = "Accept",
 	},
 
 	ability = {
@@ -88,7 +88,6 @@ return {
 		controlConflictSwapPreview = "%s: %s → %s | %s: %s → %s",
 		controlConflictSwapApplied = "Swap applied.",
 		controlsRestoreDefaults = "Restore Default Keybinds",
-		controlsDefaultsRestored = "Default keybinds restored.",
 		reset = "Reset",
 		on = "On",
 		off = "Off",

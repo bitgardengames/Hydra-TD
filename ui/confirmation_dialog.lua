@@ -34,6 +34,7 @@ function ConfirmationDialog:show(options)
 	self.elapsed = 0
 	self.reducedMotion = options.reducedMotion == nil and self.defaultReducedMotion or options.reducedMotion == true
 	self.title = options.title
+	self.titleFont = options.titleFont or "title"
 	self.description = options.description
 	self.onConfirm = options.onConfirm
 
@@ -74,7 +75,7 @@ function ConfirmationDialog:_finishClosing()
 	self.state = "closed"
 	self.closeReason = nil
 	self.elapsed = 0
-	self.title, self.description, self.onConfirm = nil, nil, nil
+	self.title, self.titleFont, self.description, self.onConfirm = nil, nil, nil, nil
 	self.buttons = {}
 	if callback then callback() end
 end
@@ -135,7 +136,7 @@ function ConfirmationDialog:draw()
 	lg.setColor(backdrop[1], backdrop[2], backdrop[3], (backdrop[4] or 1) * pose.panelAlpha)
 	lg.rectangle("fill", x, y, panelW, panelH, radius)
 
-	Fonts.set("title")
+	Fonts.set(self.titleFont)
 	local textColor = Theme.ui.text
 	lg.setColor(textColor[1], textColor[2], textColor[3], (textColor[4] or 1) * pose.panelAlpha)
 	Text.printfShadow(self.title, x + 24, y + 28, panelW - 48, "center")

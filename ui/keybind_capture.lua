@@ -114,7 +114,7 @@ function Capture:restoreDefaults()
 	Save.data.settings.keybinds = Hotkeys.getDefaultBindings()
 	Hotkeys.refreshFromSave()
 	Save.markDirty()
-	self.conflictMessage = L("settings.controlsDefaultsRestored")
+	self.conflictMessage = nil
 	self.pendingChange = nil
 	Sound.play("uiConfirm")
 end
