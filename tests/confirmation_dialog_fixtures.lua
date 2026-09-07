@@ -36,8 +36,9 @@ assert(confirmed.scale < 1 and confirmed.offsetY < 0, "confirm must show an acce
 local calls = 0
 local dialog = ConfirmationDialog.new()
 dialog:show({ title = "Title", description = "Body", confirmLabel = "Yes", cancelLabel = "No",
-	onConfirm = function() calls = calls + 1 end })
+	titleFont = "menu", onConfirm = function() calls = calls + 1 end })
 assert(dialog:isOpen() and dialog.state == "opening", "show must enter opening state")
+assert(dialog.titleFont == "menu", "show must retain a custom title font")
 assert(not dialog:confirm(), "confirm must not activate during early opening")
 dialog:update(Presentation.OPEN_DURATION)
 assert(dialog.state == "open", "opening must settle into open state")
@@ -52,10 +53,12 @@ assert(calls == 1, "closed dialog must never repeat its callback")
 
 dialog:show({ title = "Title", description = "Body", confirmLabel = "Yes", cancelLabel = "No",
 	onConfirm = function() calls = calls + 1 end })
+assert(dialog.titleFont == "title", "show must default to the standard title font")
 assert(dialog:cancel() and dialog.state == "closing" and dialog.closeReason == "cancel",
 	"cancel must enter cancelling close state")
 dialog:update(Presentation.CANCEL_DURATION)
-assert(not dialog:isOpen() and calls == 1 and dialog.title == nil, "cancel must clear content without callback")
+assert(not dialog:isOpen() and calls == 1 and dialog.title == nil and dialog.titleFont == nil,
+	"cancel must clear content without callback")
 
 local reduced = Presentation.pose("opening", Presentation.REDUCED_DURATION * 0.5, true)
 assert(reduced.scale == 1 and reduced.offsetY == 0, "reduced motion must use opacity only")

@@ -108,6 +108,7 @@ local function confirmRestoreKeybindDefaults()
 	confirmation:show({
 		reducedMotion = Save.data.settings.cameraMotion == false,
 		title = L("confirmation.restoreKeybindsTitle"),
+		titleFont = "menu",
 		description = L("confirmation.restoreKeybindsDescription"),
 		confirmLabel = L("confirmation.restoreDefaults"),
 		cancelLabel = L("confirmation.cancel"),
