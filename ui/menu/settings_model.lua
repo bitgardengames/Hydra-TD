@@ -37,7 +37,7 @@ local function toggle(id, label, setting, description, set)
 		set = set or function(value) Save.data.settings[setting] = value end}
 end
 
-local function keybindRows(capture)
+local function keybindRows(capture, options)
 	local rows = {}
 	for _, def in ipairs(keyboardControlsLayout) do
 		rows[#rows + 1] = {
@@ -47,11 +47,15 @@ local function keybindRows(capture)
 		}
 	end
 	rows[#rows + 1] = {id = "restore_defaults_controls", label = L("settings.controlsRestoreDefaults"),
-		type = "action", onClick = function() capture:restoreDefaults() end}
+		type = "action", onClick = options.onRestoreKeybindDefaults}
 	return rows
 end
 
-function Model.build(capture)
+function Model.build(capture, options)
+	options = options or {}
+	local onRestoreKeybindDefaults = options.onRestoreKeybindDefaults
+		or function() capture:restoreDefaults() end
+	local keybindOptions = {onRestoreKeybindDefaults = onRestoreKeybindDefaults}
 	return {
 		{id = "audio", label = L("settings.tabAudio"), rows = {
 			slider("music", L("settings.music"), Theme.tower.shock,
@@ -70,7 +74,7 @@ function Model.build(capture)
 				require("core.window").apply(Save.data.settings, v)
 			end),
 		}},
-		{id = "controls_keyboard", label = L("settings.tabControlsKeybinds"), rows = keybindRows(capture)},
+		{id = "controls_keyboard", label = L("settings.tabControlsKeybinds"), rows = keybindRows(capture, keybindOptions)},
 	}
 end
 

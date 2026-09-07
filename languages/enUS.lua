@@ -27,6 +27,9 @@ return {
 		mainMenuDescription = "Your current run will end and unsaved run progress will be lost.",
 		quitTitle = "Quit the game?",
 		quitDescription = "The game will close and any unsaved progress will be lost.",
+		restoreKeybindsTitle = "Restore default keybinds?",
+		restoreKeybindsDescription = "All customized keybinds will be replaced with the default controls. This cannot be undone.",
+		restoreDefaults = "Restore Defaults",
 	},
 
 	ability = {

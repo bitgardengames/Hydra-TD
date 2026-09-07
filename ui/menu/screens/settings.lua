@@ -15,6 +15,7 @@ local L = require("core.localization")
 local KeybindCapture = require("ui.keybind_capture")
 local ScrollView = require("ui.scroll_view")
 local Tooltip = require("ui.tooltip")
+local ConfirmationDialog = require("ui.confirmation_dialog")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -100,6 +101,25 @@ local activeTab = 1
 local tabAnim = {}
 local tabTime = 0
 local keybindCapture = KeybindCapture.new()
+local confirmation = ConfirmationDialog.new()
+
+local function confirmRestoreKeybindDefaults()
+	keybindCapture:close()
+	confirmation:show({
+		reducedMotion = Save.data.settings.cameraMotion == false,
+		title = L("confirmation.restoreKeybindsTitle"),
+		description = L("confirmation.restoreKeybindsDescription"),
+		confirmLabel = L("confirmation.restoreDefaults"),
+		cancelLabel = L("confirmation.cancel"),
+		onConfirm = function() keybindCapture:restoreDefaults() end,
+	})
+end
+
+local function buildTabs()
+	return SettingsModel.build(keybindCapture, {
+		onRestoreKeybindDefaults = confirmRestoreKeybindDefaults,
+	})
+end
 
 local function requestLayoutMeasurement()
 	layoutDirty = true
@@ -305,12 +325,13 @@ end
 function Screen.load()
 	Hotkeys.refreshFromSave()
 	keybindCapture:close()
+	confirmation = ConfirmationDialog.new()
 	rowsScroll:reset()
 	focusedRow = nil
 	activeTab = 1
 	tabTime = 0
 
-	tabs = SettingsModel.build(keybindCapture)
+	tabs = buildTabs()
 
 	buttons = {
 		{
@@ -436,9 +457,13 @@ function Screen.update(dt)
 	elseif layoutDirty then
 		layoutRows()
 	end
-	updateTabAnimations(dt)
-	updateButtons(dt)
-	updateDraggedSlider()
+	if confirmation:isOpen() then
+		confirmation:update(dt)
+	else
+		updateTabAnimations(dt)
+		updateButtons(dt)
+		updateDraggedSlider()
+	end
 end
 
 function Screen.enter()
@@ -457,7 +482,7 @@ end
 function Screen.localizationChanged()
 	-- Localized row collections are rebuilt by their owner before this hook.
 	-- Widths and counts may both have changed, requiring a complete pass.
-	tabs = SettingsModel.build(keybindCapture)
+	tabs = buildTabs()
 	requestLayoutMeasurement()
 end
 
@@ -574,9 +599,12 @@ function Screen.draw()
 		lg.setColor(colorText)
 		Text.printfShadow(keybindCapture.conflictMessage, listX, buttonsStartY - 24, ROW_W, "left")
 	end
+
+	confirmation:draw()
 end
 
 function Screen.keypressed(key)
+	if confirmation:isOpen() then return confirmation:keypressed(key) end
 	if keybindCapture:keypressed(key, rows) then
 		return
 	end
@@ -620,6 +648,7 @@ function Screen.leave()
 	draggingSlider = nil
 	flushSettingsNow()
 	keybindCapture:close()
+	confirmation = ConfirmationDialog.new()
 end
 
 function Screen.gamepadpressed(_, button)
@@ -662,6 +691,7 @@ controlContext = {
 }
 
 function Screen.mousepressed(x, y, button)
+	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
 	if button == 1 then
 		local tabIndex = findRectAt(tabRects, x, y)
 		if tabIndex then
@@ -686,6 +716,7 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
+	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
 	if draggingSlider then
 		Sound.play("uiMove")
 		flushSettingsNow()
