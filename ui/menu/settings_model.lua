@@ -8,7 +8,6 @@ local Model = {}
 
 local keyboardControlsLayout = {
 	{kind = "action", id = "escape", label = "settings.controlPause"},
-	{kind = "action", id = "restartRun", label = "settings.controlRestartRun"},
 	{kind = "action", id = "returnToMenu", label = "settings.controlReturnToMenu"},
 	{kind = "action", id = "fastForward", label = "settings.controlSpeed"},
 	{kind = "action", id = "skipPrep", label = "settings.controlStartWave"},

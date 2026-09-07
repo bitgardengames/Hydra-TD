@@ -68,6 +68,12 @@ local function ensureKeybinds(settings)
 		return true
 	end
 
+	-- Discard the retired restart shortcut rather than carrying it forward in
+	-- saves created by older versions.
+	if type(settings.keybinds.actions) == "table" and settings.keybinds.actions.restartRun ~= nil then
+		settings.keybinds.actions.restartRun = nil
+		changed = true
+	end
 
 	local defaults = Hotkeys.getDefaultBindings()
 	for section, sectionDefaults in pairs(defaults) do

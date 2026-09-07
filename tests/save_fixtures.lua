@@ -61,6 +61,18 @@ check(Save.data.version == 6, "old version was not migrated")
 check(Save.data.unknownFutureField.enabled, "unknown field was discarded")
 check(files["saves/save.bak.lua"], "pre-migration save was not backed up")
 
+-- Retired controls are removed from both loaded state and the rewritten save.
+reset({["saves/save.lua"] = [[return {
+	version = 6,
+	settings = {keybinds = {shop = {}, actions = {restartRun = "r"}}},
+}]]})
+Save.load()
+check(Save.data.settings.keybinds.actions.restartRun == nil,
+	"retired restart hotkey remained in loaded settings")
+local rewritten = assert(love.filesystem.load("saves/save.lua"))()
+check(rewritten.settings.keybinds.actions.restartRun == nil,
+	"retired restart hotkey remained in persisted settings")
+
 -- Experimental module discovery is inert in normal runs, but remains persisted
 -- so disabling the experiment never makes an older save unloadable or lossy.
 reset({["saves/save.lua"] = "return { version = 6, meta = { discoveredModules = { move_wave = true, retired_test_module = true } } }"})
