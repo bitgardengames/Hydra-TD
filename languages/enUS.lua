@@ -62,7 +62,6 @@ return {
 		tabControls = "Controls",
 		tabControlsKeybinds = "Keybinds",
 		controlPause = "Pause / Menu",
-		controlRestartRun = "Restart Run",
 		controlReturnToMenu = "Return to Main Menu",
 		controlSpeed = "Toggle Speed",
 		controlStartWave = "Start Wave",
@@ -582,7 +581,6 @@ return {
 			lateWave = "You held deep into the run—tighten the final defense and finish it next attempt.",
 			hardFight = "Hard mode pressure is brutal. Refine your midgame and come back stronger.",
 		},
-		shortcuts = "Press %s to restart • %s for main menu",
 	},
 
 	runRecap = {

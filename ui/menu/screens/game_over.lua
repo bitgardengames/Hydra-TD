@@ -277,8 +277,6 @@ function Screen.keypressed(key)
 	elseif key == Hotkeys.getActionKey("returnToMenu") then
 		returnToMenu(false)
 		Sound.play("uiBack")
-	elseif key == Hotkeys.getActionKey("restartRun") then
-		restartRun()
 	end
 end
 
