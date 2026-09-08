@@ -19,15 +19,6 @@ local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]
 local selR, selG, selB = colorSelected[1], colorSelected[2], colorSelected[3]
 local outlineWidth, EYE_DEADZONE, HIT_SQUASH_DUR = Theme.outline.width, 0.03, 0.12
 
--- A broken circular halo gives Regenerators a compact, readable silhouette
--- without adding detached markers that could be confused with Summoners.
-local function drawRegeneratorArcs(ix, iy, radius, rotation)
-	for n = 0, 2 do
-		local angle = rotation + n * pi * 2 / 3
-		lg.arc("line", "open", ix, iy, radius, angle - 0.43, angle + 0.43)
-	end
-end
-
 local function drawEnemy(e)
 	local ix = e.rx
 	local iy = e.ry
@@ -146,9 +137,17 @@ local function drawEnemy(e)
 			lg.rectangle("fill", -r * 0.35, -r * 0.55, r * 0.7, r * 1.1, 2, 2); lg.pop()
 		end
 	elseif e.kind == "regenerator" then
-		lg.setColor(outR, outG, outB, enemyAlpha)
-		lg.setLineWidth(3)
-		drawRegeneratorArcs(ix, iy, r + 4, animT * 0.08)
+		-- One quiet ring keeps the regenerative silhouette recognizable. When the
+		-- trait is active, tint that same ring instead of layering animated tracks
+		-- and expanding pulses around the body.
+		local regenerating = e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0
+		if regenerating then
+			lg.setColor(0.55, 1, 0.55, enemyAlpha)
+		else
+			lg.setColor(outR, outG, outB, enemyAlpha)
+		end
+		lg.setLineWidth(2)
+		lg.circle("line", ix, iy, r + 4)
 	end
 
     -- Boss Horns
@@ -225,18 +224,8 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
-	-- Trait status glyphs provide state, not just identity. A recovering
-	-- Regenerator lights an inner track of its permanent halo; boosted units carry
-	-- backward speed streaks.
-	if e.regeneration and e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0 then
-		lg.setColor(0.55, 1, 0.55, enemyAlpha)
-		lg.setLineWidth(2)
-		drawRegeneratorArcs(ix, iy, r + 1, animT * 0.08)
-		if e.regenVisualPulse > 0 then
-			local a = e.regenVisualPulse / 0.28
-			lg.circle("line", ix, iy, r + 4 + (1 - a) * 8)
-		end
-	end
+	-- Trait status glyphs provide state, not just identity. Boosted units carry
+	-- backward speed streaks; regeneration state is communicated by the halo above.
 	if (e.supportBoost or 1) > 1 then
 		lg.setColor(1, 0.8, 0.35, 0.8 * enemyAlpha); lg.setLineWidth(2)
 		lg.line(ix - r - 8, iy - 4, ix - r - 2, iy - 4)
