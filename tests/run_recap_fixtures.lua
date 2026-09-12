@@ -101,6 +101,8 @@ assert(not gameOverSource:find('L("runRecap.score")', 1, true),
 assert(gameOverSource:find("local panelW = 420", 1, true)
 		and gameOverSource:find("panelW = math.min(420, sw - 64)", 1, true),
 	"defeat panel must use its narrow layout")
+assert(not gameOverSource:find("selectedSubheadline", 1, true),
+	"defeat screen must not display a note beneath its headline")
 for name, screenSource in pairs({victory = victorySource, defeat = gameOverSource}) do
 	assert(not screenSource:find('L("runRecap.enemiesDefeated")', 1, true),
 		name .. " recap must not display kill stats")

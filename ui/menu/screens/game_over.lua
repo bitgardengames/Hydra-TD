@@ -17,7 +17,6 @@ local floor = math.floor
 
 local Screen = {}
 local selectedHeadline = nil
-local selectedSubheadline = nil
 
 -- animation
 local t = 0
@@ -44,14 +43,12 @@ local btnH = 42
 local gap = 62
 
 local headerHeight = 36
-local subtitleSpacing = 28
 local highlightOffset = 22
 local difficultyOffset = 18
 local buttonsOffset = 34
 
 local contentStartY = 0
 local titleY = 0
-local reasonY = 0
 local highlightsY = 0
 local difficultyY = 0
 local panelW = 420
@@ -81,7 +78,7 @@ local function buildRunSummary()
 	runStats:setRows({})
 end
 
-local function selectGameOverMessage()
+local function selectGameOverHeadline()
 	local reachedWave = RunRecap.getReachedWave()
 	local lateWave = RunRecap.isLateWave(reachedWave)
 	local leaks = State.totalLeaks or 0
@@ -89,27 +86,21 @@ local function selectGameOverMessage()
 	local diff = RunRecap.getDifficultyKey()
 
 	if lateWave and (leaks <= 6 or lives <= 3) then
-		return L("gameOver.headline.lateWave"), L("gameOver.subheadline.lateWave")
+		return L("gameOver.headline.lateWave")
 	end
 
 	if diff == "hard" and reachedWave >= 10 then
-		return L("gameOver.headline.hardFight"), L("gameOver.subheadline.hardFight")
+		return L("gameOver.headline.hardFight")
 	end
 
-	local reason = State.endReason
-	if reason == L("game.outOfLives") then
-		reason = nil
-	elseif not reason then
-		reason = L("gameOver.recapMid")
-	end
-	return State.endTitle or L("game.gameOver"), reason
+	return State.endTitle or L("game.gameOver")
 end
 
 function Screen.enter()
 	t = 0
 	panelT = 0
 	buildRunSummary()
-	selectedHeadline, selectedSubheadline = selectGameOverMessage()
+	selectedHeadline = selectGameOverHeadline()
 end
 
 function Screen.load()
@@ -156,14 +147,12 @@ function Screen.update(dt)
 	panelX = cx - panelW * 0.5
 
 	local buttonsHeight = (#buttons - 1) * gap + btnH
-	local subheadlineHeight = selectedSubheadline and subtitleSpacing or 0
-	local contentHeight = headerHeight + subheadlineHeight + highlightOffset
+	local contentHeight = headerHeight + highlightOffset
 		+ runStats:getHeight() + difficultyOffset + 24 + buttonsOffset + buttonsHeight
 	contentStartY = floor((sh - contentHeight) * 0.5)
 
 	titleY = contentStartY
-	reasonY = titleY + headerHeight + subtitleSpacing
-	highlightsY = titleY + headerHeight + subheadlineHeight + highlightOffset
+	highlightsY = titleY + headerHeight + highlightOffset
 	difficultyY = highlightsY + runStats:getHeight() + difficultyOffset
 
 	local buttonsStartY = difficultyY + 24 + buttonsOffset
@@ -183,9 +172,7 @@ function Screen.draw()
 	local buttonsHeight = (count - 1) * gap + btnH
 
 	local highlightsHeight = runStats:getHeight()
-	local subheadlineHeight = selectedSubheadline and subtitleSpacing or 0
 	local contentHeight = headerHeight
-		+ subheadlineHeight
 		+ highlightOffset
 		+ highlightsHeight
 		+ difficultyOffset
@@ -228,12 +215,6 @@ function Screen.draw()
 	Text.printfShadow(selectedHeadline or State.endTitle or L("game.gameOver"), 0, titleY, sw, "center")
 
 	Fonts.set("menu")
-
-	-- Reason / subtitle
-	if selectedSubheadline then
-		lg.setColor(colorText[1], colorText[2], colorText[3], alpha)
-		Text.printfShadow(selectedSubheadline, 0, reasonY, sw, "center")
-	end
 
 	runStats:draw(boxX + paddingX, highlightsY, boxW - paddingX * 2, alpha)
 
