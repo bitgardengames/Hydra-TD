@@ -15,6 +15,7 @@ local state = {
 	mapIndex = 1,
 	worldMapIndex = 1,
 	wave = 1,
+	waveTime = 0,
 	waveAnim = 1,
 	waveLeaks = 0,
 	totalLeaks = 0,

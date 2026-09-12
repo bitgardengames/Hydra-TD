@@ -78,6 +78,7 @@ end
 function Waves.startWave()
 	local map = Maps[State.mapIndex]
 	State.waveLeaks, State.inPrep = 0, false
+	State.waveTime = 0
 	if State.mode == "game" then
 		Steam.setRichPresence(L("presence.gameStatus", State.wave, L("difficulty." .. Difficulty.key())))
 	end

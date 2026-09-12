@@ -43,6 +43,7 @@ local SimulationClock = require("core.simulation_clock")
 local DevelopmentCounters = require("core.development_counters")
 local GameplayOutcome = require("systems.gameplay_outcome")
 local RunModes = require("systems.run_modes")
+local SceneExport = require("core.scene_export")
 
 local lg = love.graphics
 
@@ -93,6 +94,7 @@ function resetGame()
 	State.totalKills = 0
 	State.spawnedKills = 0
     State.wave = 1
+	State.waveTime = 0
 	State.waveLeaks = 0
 	State.totalLeaks = 0
 
@@ -248,6 +250,7 @@ local function updateGameplayOutcome()
 		State.activeBoss = nil
 		State.activeBossKind = nil
 		State.wave = State.wave + 1
+		State.waveTime = 0
 		State.waveAnim = State.waveAnim + (1 - State.waveAnim) * 0.6
 		State.inPrep = true
 	end
@@ -453,6 +456,14 @@ function love.keypressed(key)
 		end
 
 		lg.captureScreenshot(SCREENSHOT_DIR .. "/screenshot_" .. time .. ".png")
+	end
+
+	-- Development authoring shortcut: capture the live battlefield in the same
+	-- table format consumed by scenes/backdrop.lua.
+	if key == "f7" and isWorldMode(State.mode) then
+		SceneExport.copy()
+		Messages.add("Backdrop scene copied to clipboard (F7)", 0.4, 1, 0.6, {silent = true})
+		return
 	end
 
 	if ModulePicker.isActive() then
