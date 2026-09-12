@@ -39,7 +39,6 @@ DEFINITION_FILES = (
     "world/towers.lua",
     "world/enemy_defs.lua",
     "world/enemies.lua",
-    "world/enemy_traits.lua",
     "world/projectiles.lua",
     "world/projectile_behaviors.lua",
     "world/targeting.lua",

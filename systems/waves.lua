@@ -6,7 +6,6 @@ local DifficultyCurve = require("systems.difficulty_curve")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
-local EnemyTraits = require("world.enemy_traits")
 local Effects = require("world.effects")
 local Resolver = require("systems.wave_resolver")
 local Spawner = require("systems.wave_spawner")
@@ -25,13 +24,7 @@ end
 local function describeEnemyGroup(kind, count, spacing, delay)
 	local def = EnemyDefs[kind]
 	local group = {kind=kind, name=L((def and def.nameKey) or ("enemy." .. kind)), count=count,
-		spacing=spacing or 0, delay=delay or 0, tags={}, traitIds={}}
-	for _, traitId in ipairs((def and def.traits) or {}) do
-		if EnemyTraits.get(traitId) then
-			group.traitIds[#group.traitIds + 1] = traitId
-			group.tags[#group.tags + 1] = L("enemyTrait." .. traitId .. ".tag")
-		end
-	end
+		spacing=spacing or 0, delay=delay or 0}
 	return group
 end
 

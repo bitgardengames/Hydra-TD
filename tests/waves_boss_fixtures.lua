@@ -33,7 +33,6 @@ package.loaded["systems.campaign_wave_defs"] = {get = function() return bossWave
 package.loaded["core.steam"] = {setRichPresence = function() end}
 package.loaded["core.localization"] = function(key) return key end
 package.loaded["world.enemy_defs"] = {}
-package.loaded["world.enemy_traits"] = {get = function() return nil end}
 package.loaded["world.spatial_grid"] = {}
 package.loaded["world.effects"] = {presentationEvent = function() end}
 package.loaded["ui.messages"] = {presentationEvent = function() end}
