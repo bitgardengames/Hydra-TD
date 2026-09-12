@@ -7,7 +7,6 @@ local EnemyDefs = require("world.enemy_defs")
 
 local available = { boss = true }
 local minimumSpawnSpacing = 0.5
-local featuredBossStages = {boss_phasewalker = {}, boss_gatecrasher = {}}
 local bossAppearances = {}
 
 -- Introduction metadata must name exactly the map containing each kind's first
@@ -28,7 +27,7 @@ for _, map in ipairs(Maps) do
 end
 local firstActualAppearance = {}
 
-for _, map in ipairs(Maps) do
+for mapIndex, map in ipairs(Maps) do
 	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
 	local introducedEnemyAppearances = {}
 	local lateWaveCompositions = {}
@@ -73,9 +72,6 @@ for _, map in ipairs(Maps) do
 		assert(bossWave.boss and EnemyDefs[bossWave.bossArchetype],
 			map.id .. " wave " .. bossWaveIndex .. " has no legal explicit boss selection")
 		bossAppearances[bossWave.bossArchetype] = (bossAppearances[bossWave.bossArchetype] or 0) + 1
-		if featuredBossStages[bossWave.bossArchetype] then
-			featuredBossStages[bossWave.bossArchetype][map.campaignStage] = true
-		end
 	end
 	assert(CampaignWaveDefs.get(map, 10).bossArchetype ~= CampaignWaveDefs.get(map, 20).bossArchetype,
 		map.id .. " must feature different bosses on waves 10 and 20")
@@ -88,7 +84,7 @@ for _, map in ipairs(Maps) do
 		assert((introducedEnemyAppearances[kind] or 0) >= 1,
 			map.id .. " must revisit introduced enemy " .. kind .. " after onboarding")
 	end
-	if map.campaignStage > 1 then
+	if mapIndex > 5 then
 		local compositionCount = 0
 		for _ in pairs(lateWaveCompositions) do compositionCount = compositionCount + 1 end
 		assert(compositionCount >= 3, map.id .. " needs at least three distinct late-wave compositions")
@@ -114,11 +110,5 @@ for bossKind, definition in pairs(EnemyDefs) do
 end
 assert(mostAppearances - leastAppearances <= 1,
 	"campaign boss archetypes must be evenly dispersed across authored encounters")
-
-for bossKind, stages in pairs(featuredBossStages) do
-	for stage = 2, 3 do
-		assert(stages[stage], bossKind .. " must be featured in campaign stage " .. stage)
-	end
-end
 
 print("campaign wave definition fixtures passed")

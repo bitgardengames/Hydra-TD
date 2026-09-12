@@ -2,7 +2,6 @@
 local maps = {
 	{
 		id = "riverbend",
-		campaignStage = 1,
 		nameKey = "map.riverbend",
 		introducesEnemies = {"grunt", "tank", "runner"},
 		biome = "default",
@@ -28,7 +27,6 @@ local maps = {
 
 	{
 		id = "switchback",
-		campaignStage = 1,
 		nameKey = "map.switchback",
 		-- Sparse durable fronts followed by escorts teach target priority.
 		introducesEnemies = {},
@@ -44,7 +42,6 @@ local maps = {
 
 	{
 		id = "highpass",
-		campaignStage = 1,
 		nameKey = "map.highpass",
 		-- Alternating fast and armored groups teach counter coverage.
 		introducesEnemies = {},
@@ -64,7 +61,6 @@ local maps = {
 
 	{
 		id = "outerloop",
-		campaignStage = 1,
 		nameKey = "map.outerloop",
 		-- Small escorted specialists teach sustained focus before dense trait mixes.
 		introducesEnemies = {"regenerator", "bulwark"},
@@ -85,7 +81,6 @@ local maps = {
 
 	{
 		id = "gauntlet",
-		campaignStage = 1,
 		nameKey = "map.gauntlet",
 		-- Packed ordinary bodies teach splash; Warcallers appear only behind escorts.
 		introducesEnemies = {"warcaller"},
@@ -106,7 +101,6 @@ local maps = {
 
 	{
 		id = "snaketrail",
-		campaignStage = 2,
 		nameKey = "map.snaketrail",
 		biome = "default",
 		path = {
@@ -129,7 +123,6 @@ local maps = {
 
 	{
 		id = "backtrack",
-		campaignStage = 2,
 		nameKey = "map.backtrack",
 		biome = "autumn",
 		path = {
@@ -147,7 +140,6 @@ local maps = {
 
 	{
 		id = "lowvalley",
-		campaignStage = 2,
 		nameKey = "map.lowvalley",
 		-- Revisits armor in larger mixed formations.
 		introducesEnemies = {},
@@ -172,7 +164,6 @@ local maps = {
 
 	{
 		id = "circuit",
-		campaignStage = 2,
 		nameKey = "map.circuit",
 		-- Revisits regeneration in larger mixed formations.
 		introducesEnemies = {},
@@ -196,7 +187,6 @@ local maps = {
 
 	{
 		id = "roundabout",
-		campaignStage = 2,
 		nameKey = "map.roundabout",
 		biome = "highlands",
 		path = {
@@ -220,7 +210,6 @@ local maps = {
 
 	{
 		id = "terrace",
-		campaignStage = 3,
 		nameKey = "map.terrace",
 		introducesEnemies = {},
 		biome = "winter",
@@ -248,7 +237,6 @@ local maps = {
 	{
 		id = "highridge",
 		-- The finale begins with staggered mixed formations.
-		campaignStage = 3,
 		nameKey = "map.highridge",
 		-- High Ridge teaches staggered mixed-wave timing: durable fronts create
 		-- openings for faster enemies to pressure the exit.
@@ -267,7 +255,6 @@ local maps = {
 	{
 		id = "crossflow",
 		-- Crossflow escalates High Ridge's lesson with tighter, overlapping groups.
-		campaignStage = 3,
 		nameKey = "map.crossflow",
 		biome = "winter",
 		path = {
@@ -291,7 +278,6 @@ local maps = {
 		id = "steppingstones",
 		-- Stepping Stones uses separated pockets to demand deliberate ability timing
 		-- before the final map.
-		campaignStage = 3,
 		nameKey = "map.steppingstones",
 		biome = "autumn",
 		path = {
@@ -316,7 +302,6 @@ local maps = {
 		-- Twin Loop is the campaign's final exam: earlier enemy archetypes share the
 		-- route with Summoners and its two-loop pressure cycle.
 		prerequisiteMapId = "steppingstones",
-		campaignStage = 3,
 		nameKey = "map.twinloop",
 		introducesEnemies = {"summoner"},
 		biome = "rainbowRoad",
