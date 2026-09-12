@@ -319,7 +319,7 @@ local maps = {
 		campaignStage = 3,
 		nameKey = "map.twinloop",
 		introducesEnemies = {"summoner"},
-		biome = "winter",
+		biome = "rainbowRoad",
 		path = {
 			{5, 7}, {12, 7},
 			{12, 3}, {20, 3},
