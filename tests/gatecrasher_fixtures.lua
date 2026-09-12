@@ -46,6 +46,7 @@ assert(#warcallerStatuses == 0,
 	"Warcaller speed aura and acceleration must not appear as status text")
 
 local def = assert(Enemies.EnemyDefs.boss_gatecrasher)
+assert(def.hp == 490, "Gatecrasher must use its increased base health")
 assert(def.healthThresholds[1] > def.healthThresholds[2] and def.healthThresholds[2] > def.healthThresholds[3],
 	"health thresholds must be ordered high to low")
 

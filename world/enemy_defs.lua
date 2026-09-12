@@ -179,7 +179,7 @@ return {
 	-- one lunge, even when a single hit crosses more than one landmark.
 	boss_gatecrasher = {
 		nameKey = "enemy.bossGatecrasher",
-		hp = 445,
+		hp = 490,
 		speed = 40,
 		reward = 138,
 		score = 500,
