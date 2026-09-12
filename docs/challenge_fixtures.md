@@ -28,7 +28,7 @@ Each non-special boss archetype targets three to six base effective durability p
 
 ## Acceptance bands
 
-Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 and 4, then tighten through practice and the final exam as kill income funds a broader loadout. Each range is tuned to the shipped maps with approximately ten percent integer headroom, so a change to tower output, count, composition, reward, or difficulty economy must remain part of the same challenge curve. The income-coverage envelope independently requires each wave's enemy payout to fund a deliberate share of that same wave's damage demand, directly coupling tower output, enemy count, enemy type, and income. A ratio of 10,000 bp means the compared DPS values are equal.
+Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 and 4, then tighten on higher-numbered waves as kill income funds a broader loadout. Each range is tuned to the shipped maps with approximately ten percent integer headroom, so a change to tower output, count, composition, reward, or difficulty economy must remain part of the same challenge curve. The income-coverage envelope independently requires each wave's enemy payout to fund a deliberate share of that same wave's damage demand, directly coupling tower output, enemy count, enemy type, and income. A ratio of 10,000 bp means the compared DPS values are equal.
 
 | Difficulty | Wave | Minimum ratio (bp) | Maximum ratio (bp) |
 |:---|---:|---:|---:|

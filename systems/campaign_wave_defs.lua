@@ -12,7 +12,7 @@ end
 -- returned by get() rather than depending on its storage details.
 local wavesByMapId = {
 	riverbend = {
-		-- A short Grunt onboarding: cadence first, then compact packs for splash.
+		-- Grunt-only waves vary cadence and pack size.
 		[1] = { g("grunt", 8, 0.90) },
 		[2] = { g("grunt", 11, 0.75) },
 		[3] = { g("grunt", 8, 0.70), g("grunt", 6, 0.70, 1.80) },
@@ -27,7 +27,7 @@ local wavesByMapId = {
 		[12] = { g("grunt", 24, 0.50) },
 		[13] = { g("grunt", 10, 0.55), g("grunt", 10, 0.55, 0.75) },
 		[14] = { g("grunt", 26, 0.50) },
-		-- The closing section previews target priority without becoming a trait exam.
+		-- Later waves add small Tank and Runner groups.
 		[15] = { g("tank", 3, 0.90), g("grunt", 16, 0.52, 1.60) },
 		[16] = { g("grunt", 12, 0.50), g("tank", 4, 0.85, 0.80) },
 		[17] = { g("tank", 4, 0.85), g("grunt", 18, 0.50, 1.30) },
@@ -114,7 +114,7 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.42), g("grunt", 14, 0.50, 0.10), g("grunt", 10, 0.50, 0.07) },
 	},
 	gauntlet = {
-		-- Tight ordinary packs are the splash lesson; Warcallers stay behind escorts.
+		-- Tight ordinary packs accompany Warcallers positioned behind escorts.
 		[1] = { g("grunt", 12, 0.60) },
 		[2] = { g("grunt", 16, 0.50) },
 		[3] = { g("grunt", 18, 0.50) },
@@ -137,7 +137,7 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 22, 0.50, 1.10), g("warcaller", 4, 0.98, 0.70) },
 	},
 	snaketrail = {
-		-- Long bends turn separated armored and fast blocks into a retargeting drill.
+		-- Long bends separate armored and fast blocks to force frequent retargeting.
 		[1] = { g("grunt", 17, 0.90) },
 		[2] = { g("tank", 6, 1.00) },
 		[3] = { g("runner", 12, 0.58) },

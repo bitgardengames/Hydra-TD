@@ -258,7 +258,7 @@ broad alarm bands documented in `docs/polish_fixtures.md`.
 
 The pacing report also treats `world/map_defs.lua` introduction metadata as a
 fixture: every non-boss enemy must be declared exactly once on the map where its
-first authored group occurs. The revised opening curriculum keeps specialist
-budgets deliberately small—Regenerators and Bulwarks first appear on Outerloop,
+first authored group occurs. The current map compositions keep specialist budgets
+deliberately small—Regenerators and Bulwarks first appear on Outerloop,
 and escorted Warcallers first appear on Gauntlet—while the challenge report
 records the resulting per-wave effective and peak five-second threat budgets.
