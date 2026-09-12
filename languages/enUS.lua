@@ -446,9 +446,8 @@ return {
 
 	enemy = {
 		grunt = "Grunt",
-		tank = "Tank",
 		runner = "Runner",
-		bulwark = "Bulwark",
+		bulwark = "Tank",
 		bulwarkDescription = "Plated against small hits; crack it with cannon or lancer fire.",
 		regenerator = "Regenerator",
 		regeneratorDescription = "Heals while not being attacked.",

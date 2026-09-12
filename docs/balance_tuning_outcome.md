@@ -80,16 +80,15 @@ python3 tools/balance/polish_report.py --check
 
 The maps use distinct enemy compositions instead of repeating a single enemy
 profile for twenty waves. Riverbend remains Grunt-only through its first boss and
-uses only small Tank/Runner groups in higher-numbered waves. Switchback presents
-sparse durable fronts followed by ordinary escorts;
-Highpass alternates fast and armored blocks; Outerloop places a few regenerating
-or armored specialists behind ordinary bodies; Gauntlet creates tightly packed
+uses only Grunt/Runner groups in higher-numbered waves. Switchback presents
+sparse Grunt fronts followed by ordinary escorts; Highpass alternates fast and
+dense blocks; Outerloop formally introduces small regenerating or plated specialists behind ordinary bodies; Gauntlet creates tightly packed
 splash targets and only a few escorted Warcallers; and Snaketrail separates fast
 and armored blocks to force frequent retargeting. Other maps use dense
 combinations of several special traits.
 
 `introducesEnemies` is audited against first authored appearances. The canonical
-ordering is Grunt/Tank/Runner on Riverbend, Regenerator/Bulwark on Outerloop,
+ordering is Grunt/Runner on Riverbend, Regenerator/Bulwark on Outerloop,
 Warcaller on Gauntlet, and Summoner on Twin Loop. The generated challenge tables
 below remain the source of truth for per-wave effective threat, peak five-second
 threat, income, and counter reserve after these composition changes.

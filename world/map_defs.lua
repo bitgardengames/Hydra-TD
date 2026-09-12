@@ -3,7 +3,7 @@ local maps = {
 	{
 		id = "riverbend",
 		nameKey = "map.riverbend",
-		introducesEnemies = {"grunt", "tank", "runner"},
+		introducesEnemies = {"grunt", "runner"},
 		biome = "default",
 		path = {
 			{5, 7}, {13, 7},
@@ -43,7 +43,7 @@ local maps = {
 	{
 		id = "highpass",
 		nameKey = "map.highpass",
-		-- Alternating fast and armored groups teach counter coverage.
+		-- Alternating fast and durable groups teach counter coverage.
 		introducesEnemies = {},
 		biome = "default",
 		path = {
@@ -136,7 +136,7 @@ local maps = {
 	{
 		id = "lowvalley",
 		nameKey = "map.lowvalley",
-		-- Revisits armor in larger mixed formations.
+		-- Revisits Bulwarks in larger mixed formations.
 		introducesEnemies = {},
 		biome = "drylands",
 		path = {

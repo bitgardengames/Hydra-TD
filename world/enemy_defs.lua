@@ -15,14 +15,6 @@ return {
 		radius = 10,
 	},
 
-	tank = {
-		nameKey = "enemy.tank",
-		hp = 50,
-		speed = 45,
-		reward = 8,
-		score = 22,
-		radius = 12,
-	},
 
 	runner = {
 		nameKey = "enemy.runner",

@@ -11,10 +11,9 @@ from each `upgrade` table in `world/tower_defs.lua`. Re-run captures after chang
 traits, or the difficulty curve.
 
 The acceptance rule is intentional: Lancer is the best general-purpose damage
-per dollar on the single Grunt and Tank controls. Slow wins control-heavy Tank,
-Cannon wins armor and packed bodies, Poison wins regeneration, Shock wins
+per dollar on the single Grunt control. Cannon wins armor and packed bodies, Poison wins regeneration, Shock wins
 chain-friendly packs, and Plasma wins sustained packed-lane coverage. A specialist must not
-beat Lancer's cost efficiency in both control fixtures.
+beat Lancer's cost efficiency in the baseline control fixture.
 
 Values are formatted `TTK / cost / leaks / coverage`.
 
@@ -27,16 +26,6 @@ Values are formatted `TTK / cost / leaks / coverage`.
 | Cannon | 1.5s / $90 / 0 / 100% | 0.5s / $675 / 0 / 100% |
 | Shock | 2.9s / $95 / 0 / 100% | 0.8s / $712 / 0 / 100% |
 | Plasma | 1.8s / $120 / 0 / 100% | 0.6s / $900 / 0 / 100% |
-
-## Single Tank — control (1 Tank)
-| Tower | Base | Maximum |
-|---|---:|---:|
-| Slow | 10.7s / $50 / 0 / 100% | 2.4s / $375 / 0 / 100% |
-| Lancer | 2.3s / $60 / 0 / 100% | 0.6s / $450 / 0 / 100% |
-| Poison | 6.3s / $70 / 0 / 100% | 1.6s / $525 / 0 / 100% |
-| Cannon | 2.9s / $90 / 0 / 100% | 0.8s / $675 / 0 / 100% |
-| Shock | 7.2s / $95 / 0 / 100% | 1.9s / $712 / 0 / 100% |
-| Plasma | 4.2s / $120 / 0 / 100% | 1.1s / $900 / 0 / 100% |
 
 ## Packed Grunts — splash/coverage (16 Grunts, 0.32s spacing)
 | Tower | Base | Maximum |
