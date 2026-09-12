@@ -170,21 +170,6 @@ function BossHP.draw()
 	lg.setColor(colorHealth[1], colorHealth[2], colorHealth[3], alpha)
 	lg.rectangle("fill", shownX, fy, fillW, barH, innerRadius)
 
-	if cache.thresholds then
-		lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
-		for index, fraction in ipairs(cache.thresholds) do
-			local tx = shownX + floor(shownW * fraction)
-			if boss and boss.lungeWindup and boss.lungeActiveThreshold == index then
-				local pulse = 0.65 + 0.35 * math.sin((boss.lungeWindup or 0) * 18)
-				lg.setColor(1, 0.55, 0.16, pulse * alpha)
-				lg.rectangle("fill", tx - 3, fy, 6, barH)
-			else
-				lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
-			end
-			lg.rectangle("fill", tx - 1, fy + 3, 2, barH - 6)
-		end
-	end
-
 	local hpInt = ceil(cache.displayHp)
 	if cache.hpValue ~= hpInt then
 		cache.hpValue = hpInt
@@ -192,11 +177,46 @@ function BossHP.draw()
 		cache.textW = lg.getFont():getWidth(cache.text)
 	end
 	local textH = lg.getFont():getHeight()
+	local textX = x + (barW - cache.textW) * 0.5
+	local textY = fy + (barH - textH) * 0.5
+	local textLeft, textRight = textX - 2, textX + cache.textW + 2
+	local textTop, textBottom = floor(textY) - 1, ceil(textY + textH) + 1
+
+	if cache.thresholds then
+		lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
+		for index, fraction in ipairs(cache.thresholds) do
+			local tx = shownX + floor(shownW * fraction)
+			local tickX, tickW = tx - 1, 2
+			local tickTop, tickBottom = fy + 3, fy + barH - 3
+			if boss and boss.lungeWindup and boss.lungeActiveThreshold == index then
+				local pulse = 0.65 + 0.35 * math.sin((boss.lungeWindup or 0) * 18)
+				lg.setColor(1, 0.55, 0.16, pulse * alpha)
+				tickX, tickW = tx - 3, 6
+				tickTop, tickBottom = fy, fy + barH
+			else
+				lg.setColor(colorText[1], colorText[2], colorText[3], 0.72 * alpha)
+			end
+
+			-- Leave the label's footprint clear. In particular, Gatecrasher's middle
+			-- threshold sits beneath the centered HP value and must not cut through it.
+			if tickX + tickW > textLeft and tickX < textRight then
+				local topH = max(0, textTop - tickTop)
+				local bottomY = min(tickBottom, textBottom)
+				if topH > 0 then lg.rectangle("fill", tickX, tickTop, tickW, topH) end
+				if bottomY < tickBottom then
+					lg.rectangle("fill", tickX, bottomY, tickW, tickBottom - bottomY)
+				end
+			else
+				lg.rectangle("fill", tickX, tickTop, tickW, tickBottom - tickTop)
+			end
+		end
+	end
+
 	-- Let the face open before introducing the label; this avoids squeezed text
 	-- during the short unfurl animation.
 	local textAlpha = max(0, min(1, (reveal - 0.55) / 0.45)) * alpha
 	lg.setColor(colorText[1], colorText[2], colorText[3], textAlpha)
-	Text.printShadow(cache.text, x + (barW - cache.textW) * 0.5, fy + (barH - textH) * 0.5)
+	Text.printShadow(cache.text, textX, textY)
 end
 
 return BossHP
