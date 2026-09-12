@@ -188,7 +188,7 @@ local maps = {
 	{
 		id = "roundabout",
 		nameKey = "map.roundabout",
-		biome = "drylands",
+		biome = "winter",
 		path = {
 			{5, 9}, {12, 9},
 			{12, 3}, {18, 3},
@@ -212,7 +212,7 @@ local maps = {
 		id = "terrace",
 		nameKey = "map.terrace",
 		introducesEnemies = {},
-		biome = "winter",
+		biome = "drylands",
 		path = {
 			{5, 3}, {14, 3},
 			{14, 11}, {20, 11},
