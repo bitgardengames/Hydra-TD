@@ -25,7 +25,7 @@ package.loaded["ui.text"] = {
 }
 package.loaded["core.localization"] = function(key, value)
 	if key == "hud.lives" then return ("Lives %d"):format(value) end
-	if key == "hud.speed" then return ("Speed: %g"):format(value) end
+	if key == "hud.speed" then return ("Speed: %gx"):format(value) end
 	return key
 end
 
@@ -35,7 +35,7 @@ Hud.draw(10, 20, 300, 28)
 assert(#labels == 3, "HUD should draw exactly three status labels")
 assert(labels[1].text == "$100", "money label changed unexpectedly")
 assert(labels[2].text == "Lives 20", "lives label changed unexpectedly")
-assert(labels[3].text == "Speed: 2", "speed label should be descriptive and omit its hotkey")
+assert(labels[3].text == "Speed: 2x", "speed label should show a multiplier and omit its hotkey")
 
 local centers = {}
 for i, label in ipairs(labels) do
