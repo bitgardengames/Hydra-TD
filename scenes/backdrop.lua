@@ -62,8 +62,8 @@ Backdrop.shots = {
 			{kind = "slow", gx = 20, gy = 8, level = 2},
 		},
 		wave = 17,
-		warmup = 14,
-		camera = {gx = 16, gy = 7, ox = -28, oy = -28, zoom = 1.6},
+		warmup = 8,
+		camera = {gx = 16, gy = 7, ox = -28, oy = -28, zoom = 2.0},
 	},
 
 	{
