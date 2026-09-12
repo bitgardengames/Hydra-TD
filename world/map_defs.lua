@@ -188,7 +188,7 @@ local maps = {
 	{
 		id = "roundabout",
 		nameKey = "map.roundabout",
-		biome = "mushroom",
+		biome = "drylands",
 		path = {
 			{5, 9}, {12, 9},
 			{12, 3}, {18, 3},
@@ -302,7 +302,7 @@ local maps = {
 		prerequisiteMapId = "steppingstones",
 		nameKey = "map.twinloop",
 		introducesEnemies = {"summoner"},
-		biome = "void",
+		biome = "winter",
 		path = {
 			{5, 7}, {12, 7},
 			{12, 3}, {20, 3},

@@ -18,10 +18,10 @@ local function check(value, message)
 end
 
 check(Maps[4].id == "outerloop", "Outer Loop must be the fourth campaign map")
-check(Maps[10].id == "roundabout" and Maps[10].biome == "mushroom",
-	"Roundabout must be the tenth campaign map with the mushroom biome")
-check(#Maps == 15 and Maps[15].id == "twinloop",
-	"the campaign must end with Twin Loop as its fifteenth map")
+check(Maps[10].id == "roundabout" and Maps[10].biome == "drylands",
+	"Roundabout must be the tenth campaign map with the drylands biome")
+check(#Maps == 15 and Maps[15].id == "twinloop" and Maps[15].biome == "winter",
+	"the campaign must end with Twin Loop as its fifteenth map in the winter biome")
 
 check(CampaignUnlocks.getUnlockedAbilitySlots() == 0,
 	"profiles without active abilities must not display ability slots")
