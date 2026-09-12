@@ -232,7 +232,7 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
-	-- Trait status glyphs provide state, not just identity. Boosted units carry
+	-- Status glyphs provide state, not just identity. Boosted units carry
 	-- backward speed streaks; regeneration state is communicated by the growth
 	-- plates above.
 	if (e.supportBoost or 1) > 1 then

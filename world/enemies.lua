@@ -559,8 +559,8 @@ computeNudgeParams = function(e)
 	e.maxNudge2 = maxNudge * maxNudge
 end
 
-local function updateAuthoredTraits(e, dt)
-	-- Stage 2: update timed statuses and optional authored traits.
+local function updateStatusesAndMechanics(e, dt)
+	-- Stage 2: update timed statuses and authored enemy mechanics.
 	-- Slow
 	local slowTimer = e.slowTimer
 	if slowTimer > 0 then
@@ -703,8 +703,8 @@ local function updateEnemies(dt)
 			goto continue
 		end
 
-		-- Stage 2: update timed statuses and optional authored traits.
-		updateAuthoredTraits(e, dt)
+		-- Stage 2: update timed statuses and authored enemy mechanics.
+		updateStatusesAndMechanics(e, dt)
 		updateGatecrasherLunge(e, dt, pathWorld, pathSegLen, totalLen)
 		-- Stage 3: compute the effective movement speed.
 		local enrageSpeed = e.enraged and e.enrage.speedMultiplier or 1
@@ -789,7 +789,7 @@ local function applyHitImpulse(e, dx, dy, strength)
 	end
 end
 
--- Single damage gateway for traits. The second return value reports mitigation.
+-- Single damage gateway for enemy mechanics. The second return value reports mitigation.
 local function applyDamage(e, amount, context)
 	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
 	context = context or {}
@@ -829,9 +829,8 @@ local function setPathDistance(e, distance)
 end
 
 -- Produces the player-facing, render-agnostic description of every currently
--- active enemy state. Identity traits deliberately do not
--- belong here: callers can therefore present expiring state separately from the
--- mechanics that define an enemy.
+-- active enemy state. Callers can therefore present expiring state separately
+-- from the mechanics that define an enemy.
 local function getDisplayStatuses(e)
 	local result = {}
 	if not e then return result end
