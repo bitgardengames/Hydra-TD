@@ -190,7 +190,6 @@ return {
 		slow = "Slowed",
 		poison = "Poisoned",
 		barrier = "Barrier",
-		supportBoost = "Aura accelerated",
 		regenerationSuppressed = "Regeneration suppressed",
 		phased = "Phased: direct fire passes through",
 		value = "%s / %s",

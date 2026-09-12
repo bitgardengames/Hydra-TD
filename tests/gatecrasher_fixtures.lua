@@ -40,11 +40,10 @@ assert(aegisDamage == 0 and aegis.hp == aegisHpBeforeHit,
 	"Aegis must be immune to damage while its shield is active")
 
 local warcaller = Enemies.spawnEnemy("warcaller", 1, 1)
+warcaller.supportBoost = 1.5
 local warcallerStatuses = Enemies.getDisplayStatuses(warcaller)
-for i = 1, #warcallerStatuses do
-	assert(warcallerStatuses[i].id ~= "support_aura",
-		"Warcaller speed aura must not appear as status text")
-end
+assert(#warcallerStatuses == 0,
+	"Warcaller speed aura and acceleration must not appear as status text")
 
 local def = assert(Enemies.EnemyDefs.boss_gatecrasher)
 assert(def.healthThresholds[1] > def.healthThresholds[2] and def.healthThresholds[2] > def.healthThresholds[3],
