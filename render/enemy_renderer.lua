@@ -19,6 +19,42 @@ local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]
 local selR, selG, selB = colorSelected[1], colorSelected[2], colorSelected[3]
 local outlineWidth, EYE_DEADZONE, HIT_SQUASH_DUR = Theme.outline.width, 0.03, 0.12
 
+-- Three broad growth plates give Regenerators an organic, tri-lobed outline that
+-- stays recognizable in a crowd and at portrait scale. Their bases tuck beneath
+-- the body, making the plates part of the enemy rather than detached status FX.
+local function drawRegeneratorGrowthPlates(ix, iy, radius, enemyAlpha, regenerating)
+	for n = 0, 2 do
+		local angle = -HALF_PI + n * pi * 2 / 3
+		local baseX = ix + cos(angle) * radius * 0.72
+		local baseY = iy + sin(angle) * radius * 0.72
+
+		lg.push()
+		lg.translate(baseX, baseY)
+		lg.rotate(angle)
+
+		-- The dark, oversized leaf establishes a clean outline around its fill.
+		lg.setColor(outR, outG, outB, enemyAlpha)
+		lg.polygon("fill",
+			-radius * 0.12, -radius * 0.42,
+			radius * 0.82, 0,
+			-radius * 0.12, radius * 0.42,
+			-radius * 0.34, 0)
+
+		if regenerating then
+			lg.setColor(0.55, 1, 0.55, enemyAlpha)
+		else
+			lg.setColor(eR * darkMul, eG * darkMul, eB * darkMul, enemyAlpha)
+		end
+		lg.polygon("fill",
+			0, -radius * 0.24,
+			radius * 0.58, 0,
+			0, radius * 0.24,
+			-radius * 0.16, 0)
+
+		lg.pop()
+	end
+end
+
 local function drawEnemy(e)
 	local ix = e.rx
 	local iy = e.ry
@@ -137,17 +173,8 @@ local function drawEnemy(e)
 			lg.rectangle("fill", -r * 0.35, -r * 0.55, r * 0.7, r * 1.1, 2, 2); lg.pop()
 		end
 	elseif e.kind == "regenerator" then
-		-- One quiet ring keeps the regenerative silhouette recognizable. When the
-		-- trait is active, tint that same ring instead of layering animated tracks
-		-- and expanding pulses around the body.
 		local regenerating = e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0
-		if regenerating then
-			lg.setColor(0.55, 1, 0.55, enemyAlpha)
-		else
-			lg.setColor(outR, outG, outB, enemyAlpha)
-		end
-		lg.setLineWidth(2)
-		lg.circle("line", ix, iy, r + 4)
+		drawRegeneratorGrowthPlates(ix, iy, r, enemyAlpha, regenerating)
 	end
 
     -- Boss Horns
@@ -225,7 +252,8 @@ local function drawEnemy(e)
 	end
 
 	-- Trait status glyphs provide state, not just identity. Boosted units carry
-	-- backward speed streaks; regeneration state is communicated by the halo above.
+	-- backward speed streaks; regeneration state is communicated by the growth
+	-- plates above.
 	if (e.supportBoost or 1) > 1 then
 		lg.setColor(1, 0.8, 0.35, 0.8 * enemyAlpha); lg.setLineWidth(2)
 		lg.line(ix - r - 8, iy - 4, ix - r - 2, iy - 4)
