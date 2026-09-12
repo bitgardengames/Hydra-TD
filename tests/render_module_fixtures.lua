@@ -22,12 +22,16 @@ assert(not rendererSource:find("prepareEnemyRenderData", 1, true))
 assert(not rendererSource:find("EnemyRenderState.prepare", 1, true))
 assert(rendererSource:find("local colorSlow = Theme.projectiles.slow", 1, true))
 assert(rendererSource:find("local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]", 1, true))
-assert(rendererSource:find('lg.circle("line", ix, iy, r + 4)', 1, true),
-	"regenerators retain a simple circular halo")
-assert(not rendererSource:find("drawRegeneratorArcs", 1, true),
-	"regenerator halo does not use noisy segmented arcs")
+assert(rendererSource:find("local function drawRegeneratorGrowthPlates", 1, true),
+	"regenerators use a dedicated growth-plate silhouette")
+assert(rendererSource:find("for n = 0, 2 do", 1, true),
+	"regenerator silhouette has three readable lobes")
+assert(rendererSource:find("drawRegeneratorGrowthPlates(ix, iy, r, enemyAlpha, regenerating)", 1, true),
+	"regenerator enemies draw their growth plates")
+assert(not rendererSource:find('lg.circle("line", ix, iy, r + 4)', 1, true),
+	"regenerator silhouette no longer relies on the selection-sized halo")
 assert(not rendererSource:find("r + 4 + (1 - a) * 8", 1, true),
-	"regenerator halo does not emit expanding pulse rings")
+	"regenerator silhouette does not emit expanding pulse rings")
 local selectionRing = assert(rendererSource:match("%-%- Selection Ring(.-)end"))
 assert(selectionRing:find('lg.circle("line", ix, iy, e.radius + 4)', 1, true),
 	"selected enemies retain their yellow outline")
