@@ -123,11 +123,6 @@ local function drawEnemy(e)
 			local sy = iy + sin(angle) * (r + 8)
 			lg.polygon("fill", sx, sy - 4, sx + 4, sy, sx, sy + 4, sx - 4, sy)
 		end
-	elseif e.kind == "boss_vanguard" then
-		lg.setColor(1, 0.66, 0.22, 0.8 * enemyAlpha)
-		lg.setLineWidth(3)
-		lg.line(ix - r - 9, iy - 5, ix - r - 3, iy, ix - r - 9, iy + 5)
-		lg.line(ix + r + 9, iy - 5, ix + r + 3, iy, ix + r + 9, iy + 5)
 	elseif e.kind == "boss_suppression" then
 		lg.setColor(0.9, 0.25, 0.3, (0.55 + sin(animT * 2) * 0.15) * enemyAlpha)
 		lg.setLineWidth(4)

@@ -94,7 +94,7 @@ local maps = {
 		-- intentionally dry battlefield
 		waves = {
 			encounters = {
-				boss_vanguard = { flankKind = "grunt", flankBurst = 2, initialDelay = 2.0 },
+				boss_summoner = { flankKind = "runner", flankBurst = 2, initialDelay = 2.0 },
 			},
 		},
 	},
@@ -202,7 +202,6 @@ local maps = {
 		},
 		waves = {
 			encounters = {
-				boss_vanguard = { flankKind = "grunt", flankBurst = 3, interval = 5.4, maxAliveAdds = 16 },
 				boss_summoner = { flankKind = "grunt", flankBurst = 5, interval = 5.2 },
 			},
 		},

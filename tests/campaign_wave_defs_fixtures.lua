@@ -90,15 +90,19 @@ for kind, mapId in pairs(firstActualAppearance) do
 		kind .. " first appears on " .. mapId .. " without matching introduction metadata")
 end
 
-local leastAppearances, mostAppearances = math.huge, 0
+local expectedBossAppearances = {
+	boss_summoner = 8,
+	boss_phasewalker = 6,
+	boss_suppression = 6,
+	boss_ravager = 5,
+	boss_gatecrasher = 5,
+}
 for bossKind, definition in pairs(EnemyDefs) do
 	if definition.boss and bossKind ~= "boss" then
 		local appearances = bossAppearances[bossKind] or 0
-		leastAppearances = math.min(leastAppearances, appearances)
-		mostAppearances = math.max(mostAppearances, appearances)
+		assert(appearances == expectedBossAppearances[bossKind],
+			bossKind .. " must follow the authored campaign cadence")
 	end
 end
-assert(mostAppearances - leastAppearances <= 1,
-	"campaign boss archetypes must be evenly dispersed across authored encounters")
 
 print("campaign wave definition fixtures passed")

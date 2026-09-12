@@ -103,16 +103,6 @@
   },
   "boss_add_encounters": [
     {
-      "add_hp_multiplier": 0.95,
-      "add_kind": "runner",
-      "add_speed_multiplier": 1.15,
-      "burst_count": 9,
-      "peak_alive_cap": 14,
-      "runtime_seconds": 60,
-      "summoned_adds": 18,
-      "template": "boss_vanguard"
-    },
-    {
       "add_hp_multiplier": 0.9,
       "add_kind": "grunt",
       "add_speed_multiplier": 1.0,
@@ -123,7 +113,7 @@
       "template": "boss_summoner"
     }
   ],
-  "definition_sha256": "55de2698c5f565bfe8d98108e0ad2618dc718e3606c3cc962778f463248c85c2",
+  "definition_sha256": "caa023b0907425fc87f043f8c832160fab06e8403384790db9a12d6162a43e05",
   "format_version": 1,
   "overlap": {
     "casts": [
