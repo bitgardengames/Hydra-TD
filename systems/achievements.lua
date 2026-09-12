@@ -8,7 +8,7 @@ local Achievements = {}
 local watchers = {}
 
 -- These achievements describe completion of the campaign shown by the current
--- map-select screen, including the fourth chapter. Keep this list explicit so
+-- map-select screen. Keep this list explicit so
 -- unrelated/custom maps cannot silently become achievement requirements.
 local CAMPAIGN_MAP_IDS = {
 	"riverbend",
@@ -26,9 +26,6 @@ local CAMPAIGN_MAP_IDS = {
 	"crossflow",
 	"steppingstones",
 	"twinloop",
-	"frostgate",
-	"tidelock",
-	"ashspiral",
 }
 
 local rank = {

@@ -116,7 +116,7 @@ assert(mostAppearances - leastAppearances <= 1,
 	"campaign boss archetypes must be evenly dispersed across authored encounters")
 
 for bossKind, stages in pairs(featuredBossStages) do
-	for stage = 2, 4 do
+	for stage = 2, 3 do
 		assert(stages[stage], bossKind .. " must be featured in campaign stage " .. stage)
 	end
 end
