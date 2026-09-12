@@ -460,7 +460,6 @@ return {
 		bossSummoner = "Summoner",
 		bossVanguard = "Vanguard",
 		bossSuppression = "Suppressor",
-		bossAegis = "Aegis",
 		bossRavager = "Ravager",
 		bossPhasewalker = "Phasewalker",
 		bossGatecrasher = "Gatecrasher",

@@ -133,21 +133,6 @@ return {
 		traits = {"boss_suppression"},
 	},
 
-	-- New bosses keep the canonical 18px boss footprint; their identity comes
-	-- from silhouette accents and one readable combat rule rather than size.
-	boss_aegis = {
-		nameKey = "enemy.bossAegis",
-		hp = 430,
-		speed = 43,
-		reward = 128,
-		score = 450,
-		radius = 18,
-		boss = true,
-		mechanicWeight = 1.45,
-		bossShield = { period = 6.0, duration = 2.0, initialDelay = 3.0, damageMultiplier = 0 },
-		traits = {"boss_aegis"},
-	},
-
 	boss_ravager = {
 		nameKey = "enemy.bossRavager",
 		hp = 455,
