@@ -27,7 +27,9 @@ local transitionCanvasH = 0
 local function getTransitionCanvas()
 	local w, h = love.graphics.getDimensions()
 	if not transitionCanvas or transitionCanvasW ~= w or transitionCanvasH ~= h then
-		transitionCanvas = love.graphics.newCanvas(w, h)
+		-- Transition screens can use stencil-clipped effects (for example, medal
+		-- shines), so their off-screen target needs its own stencil buffer.
+		transitionCanvas = love.graphics.newCanvas(w, h, {stencil = true})
 		transitionCanvasW = w
 		transitionCanvasH = h
 	end
