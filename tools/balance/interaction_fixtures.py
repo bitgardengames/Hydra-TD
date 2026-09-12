@@ -15,7 +15,7 @@ CAPTURE = Path(__file__).with_name("interaction_fixtures.json")
 SOURCES = ("world/tower_defs.lua", "world/enemy_defs.lua", "systems/module_defs.lua",
            "systems/ability_defs.lua", "systems/difficulty.lua",
            "systems/difficulty_curve.lua", "systems/campaign_wave_defs.lua",
-           "systems/waves.lua", "world/targeting.lua")
+           "systems/wave_resolver.lua", "systems/waves.lua", "world/targeting.lua")
 def table(text, name, source="interaction source"):
     return table_body(text, name, source)
 
@@ -59,7 +59,7 @@ def targeting():
 
 def bosses(text):
     rows = []
-    for kind, raw in entries(table(text, "bossEncounterTemplates")).items():
+    for kind, raw in entries(table(text, "encounterTemplates")).items():
         f = nums(raw)
         bursts = math.floor((60-f["initialDelay"])/f["interval"])+1
         total = min(int(f["maxTotalAdds"]), bursts*int(f["flankBurst"]))
@@ -83,7 +83,7 @@ def build():
                         "coverage": 1.0, "proc_count": 2, "leaks": 0,
                         "expected_damage_stacks": True, "independent_expiries": True,
                         "speed_invariant": True},
-            "targeting": targeting(), "boss_add_encounters": bosses(texts["systems/waves.lua"])}
+            "targeting": targeting(), "boss_add_encounters": bosses(texts["systems/wave_resolver.lua"])}
 
 
 def validate(data):
@@ -95,7 +95,7 @@ def validate(data):
             errors.append(row["ability"]+": charge requirement must be positive")
     if data["targeting"]["expected_target"] != "slowed_front":
         errors.append("furthest-progress targeting changed")
-    if len(data["boss_add_encounters"]) != 2:
+    if len(data["boss_add_encounters"]) != 1:
         errors.append("boss-add templates incomplete")
     return errors
 

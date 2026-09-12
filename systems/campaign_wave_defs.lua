@@ -445,21 +445,22 @@ local wavesByMapId = {
 -- Boss selections remain explicit because they affect the spawned enemy type.
 -- Each map uses a different boss for its second boss wave, and the pairings
 -- vary across maps rather than following one rotation. Across the campaign,
--- the six boss archetypes are each represented five times.
+-- Summoners recur as the campaign's reinforcement boss, while the other
+-- archetypes keep the surrounding encounters varied.
 local bossArchetypesByMapId = {
 	riverbend = {[10] = "boss_phasewalker", [20] = "boss_ravager"},
-	switchback = {[10] = "boss_summoner", [20] = "boss_vanguard"},
+	switchback = {[10] = "boss_summoner", [20] = "boss_suppression"},
 	highpass = {[10] = "boss_summoner", [20] = "boss_gatecrasher"},
-	roundabout = {[10] = "boss_vanguard", [20] = "boss_summoner"},
-	gauntlet = {[10] = "boss_suppression", [20] = "boss_vanguard"},
+	roundabout = {[10] = "boss_phasewalker", [20] = "boss_summoner"},
+	gauntlet = {[10] = "boss_suppression", [20] = "boss_summoner"},
 	snaketrail = {[10] = "boss_summoner", [20] = "boss_phasewalker"},
-	backtrack = {[10] = "boss_vanguard", [20] = "boss_ravager"},
+	backtrack = {[10] = "boss_summoner", [20] = "boss_ravager"},
 	lowvalley = {[10] = "boss_suppression", [20] = "boss_phasewalker"},
 	circuit = {[10] = "boss_suppression", [20] = "boss_gatecrasher"},
 	outerloop = {[10] = "boss_ravager", [20] = "boss_summoner"},
 	terrace = {[10] = "boss_suppression", [20] = "boss_phasewalker"},
 	highridge = {[10] = "boss_ravager", [20] = "boss_gatecrasher"},
-	crossflow = {[10] = "boss_ravager", [20] = "boss_vanguard"},
+	crossflow = {[10] = "boss_ravager", [20] = "boss_summoner"},
 	steppingstones = {[10] = "boss_phasewalker", [20] = "boss_gatecrasher"},
 	twinloop = {[10] = "boss_suppression", [20] = "boss_gatecrasher"},
 }

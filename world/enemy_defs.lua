@@ -95,18 +95,6 @@ return {
 		mechanicPackage = "summoner",
 	},
 
-	boss_vanguard = {
-		nameKey = "enemy.bossVanguard",
-		hp = 385,
-		speed = 48,
-		reward = 125,
-		score = 430,
-		radius = 19,
-		boss = true,
-		mechanicWeight = 1.5,
-		mechanicPackage = "vanguard",
-	},
-
 	boss_suppression = {
 		nameKey = "enemy.bossSuppression",
 		hp = 430,

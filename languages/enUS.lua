@@ -458,7 +458,6 @@ return {
 		summonerDescription = "Periodically summons pairs of runners at its position on the path.",
 		boss = "Boss",
 		bossSummoner = "Summoner",
-		bossVanguard = "Vanguard",
 		bossSuppression = "Suppressor",
 		bossRavager = "Ravager",
 		bossPhasewalker = "Phasewalker",
