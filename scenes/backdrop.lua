@@ -34,30 +34,16 @@ local Backdrop = {
 }
 
 Backdrop.shots = {
-	--[[{
-		duration = 14,
-		map = 7,
-		towers = {
-			{kind = "cannon", gx = 11, gy = 9, level = 3},
-			{kind = "slow", gx = 12, gy = 10, level = 2},
-			{kind = "poison", gx = 17, gy = 6, level = 4},
-			{kind = "plasma", gx = 21, gy = 11, level = 3},
-		},
-		wave = 17,
-		warmup = 20.0,
-		camera = {gx = 16, gy = 7, ox = 180, oy = 50, zoom = 2.0},
-	},]]
-
 	{
 		duration = 14,
 		map = 3,
 		towers = {
-			{kind = "lancer", gx = 13, gy = 7, level = 4},
+			{kind = "lancer", gx = 13, gy = 7, level = 2},
 			{kind = "slow", gx = 14, gy = 7, level = 1},
-			{kind = "poison", gx = 20, gy = 6, level = 4},
-			{kind = "poison", gx = 11, gy = 7, level = 4},
+			{kind = "poison", gx = 20, gy = 6, level = 3},
+			{kind = "poison", gx = 11, gy = 7, level = 3},
 			{kind = "shock", gx = 12, gy = 6, level = 3},
-			{kind = "cannon", gx = 11, gy = 6, level = 3},
+			{kind = "cannon", gx = 11, gy = 6, level = 2},
 			{kind = "slow", gx = 20, gy = 7, level = 1},
 			{kind = "plasma", gx = 21, gy = 4, level = 2},
 		},
