@@ -4,7 +4,6 @@ local campaignMapIds = {
 	"riverbend", "switchback", "highpass", "roundabout", "gauntlet",
 	"snaketrail", "backtrack", "lowvalley", "circuit", "outerloop",
 	"terrace", "highridge", "crossflow", "steppingstones", "twinloop",
-	"frostgate", "tidelock", "ashspiral",
 }
 
 local state = {ignoreStats = false}
@@ -35,27 +34,15 @@ local function check(mapStats, unlockedAchievements)
 	return save.data.meta.unlockedAchievements
 end
 
--- A save made before chapter four has all 15 original maps completed, but has
--- not completed the current campaign and must not receive a campaign unlock.
-local oldSaveUnlocks = check(statsThrough(15, "normal"))
-assert(not oldSaveUnlocks.CAMPAIGN_EASY and not oldSaveUnlocks.CAMPAIGN_NORMAL,
-	"an old 15-map save must not count as completing the current campaign")
-
--- Achievements already persisted in an old save remain intact; checking current
--- completion only grants achievements and never revokes historical unlocks.
-local persistedUnlocks = check(statsThrough(15, "normal"), {CAMPAIGN_NORMAL = true})
-assert(persistedUnlocks.CAMPAIGN_NORMAL,
-	"an achievement persisted by an old save must not be revoked")
-
-local partialUnlocks = check(statsThrough(17, "hard"))
+local partialUnlocks = check(statsThrough(14, "hard"))
 assert(not partialUnlocks.CAMPAIGN_EASY
 	and not partialUnlocks.CAMPAIGN_NORMAL
 	and not partialUnlocks.CAMPAIGN_HARD,
 	"a campaign missing any current map must not unlock at any difficulty")
 
-local completeUnlocks = check(statsThrough(18, "normal"))
+local completeUnlocks = check(statsThrough(15, "normal"))
 assert(completeUnlocks.CAMPAIGN_EASY and completeUnlocks.CAMPAIGN_NORMAL,
-	"all 18 maps completed on Normal must unlock Easy and Normal")
+	"all 15 maps completed on Normal must unlock Easy and Normal")
 assert(not completeUnlocks.CAMPAIGN_HARD,
 	"Normal campaign completion must not unlock Hard")
 
