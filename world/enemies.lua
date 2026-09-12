@@ -883,11 +883,6 @@ local function getDisplayStatuses(e)
 			remainingFraction = fraction(e.poisonTimer, e.poisonDuration),
 		})
 	end
-	if (e.supportBoost or 1) > 1 then
-		add("status.supportBoost", "▲", Theme.ui.good, {
-			id = "support_boost", value = L("status.multiplier", e.supportBoost),
-		})
-	end
 	if e.regeneration and (e.regenDelay or 0) > 0 then
 		add("status.regenerationSuppressed", "⊘", Theme.ui.bad, {
 			id = "regeneration_suppressed",
