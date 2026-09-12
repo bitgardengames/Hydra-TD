@@ -22,10 +22,13 @@ BP = 10_000
 WINDOW_MS = 5_000
 # Mechanic pressure is intentionally broad, rather than pretending that path
 # geometry or a particular loadout can be solved statically.
-MECHANIC_BP = {"fast": 10_500, "armored": 12_500, "regenerates": 12_000,
-               "support": 11_500, "summons": 12_000}
-COUNTERS = {"fast": "slow", "armored": "cannon", "regenerates": "poison",
-            "support": "lancer", "summons": "cannon"}
+ENEMY_MECHANICS = {
+    "runner": (10_500, "slow"),
+    "bulwark": (12_500, "cannon"),
+    "regenerator": (12_000, "poison"),
+    "warcaller": (11_500, "lancer"),
+    "summoner": (12_000, "cannon"),
+}
 # Base enemies return about one dollar for every four effective durability
 # points.  Latitude preserves meaningful cheap and premium archetypes
 # while preventing enemy type from silently becoming an economy multiplier.
@@ -75,11 +78,11 @@ def definitions():
     for kind, body in named_entries(table_body(enemies_text, "return", ROOT / "world/enemy_defs.lua"), "return", ROOT / "world/enemy_defs.lua").items():
         if not re.search(r"\bhp\s*=", body) or not re.search(r"\breward\s*=", body):
             continue
-        traits_match = re.search(r"traits\s*=\s*\{([^}]*)", body)
-        traits = re.findall(r'"([a-z_]+)"', traits_match.group(1)) if traits_match else []
+        mechanic_bp, counter = ENEMY_MECHANICS.get(kind, (BP, None))
         enemies[kind] = {"hp_bp": decimal_bp(number(body, "hp")),
                          "reward": decimal_bp(number(body, "reward")),
-                         "traits": traits, "boss": "boss = true" in body}
+                         "mechanic_bp": mechanic_bp, "counter": counter,
+                         "boss": "boss = true" in body}
 
     diff_root = table_body(difficulty_text, "Difficulty.defs", ROOT / "systems/difficulty.lua")
     diffs = {name: {"hp_bp": decimal_bp(number(body, "enemyHpBias")),
@@ -161,8 +164,7 @@ def build_report() -> dict:
     best = max(towers.values(), key=lambda tower: tower["sustained_damage"] * 10_000 // tower["cost"])
     archetypes = {}
     for kind, enemy in enemies.items():
-        mechanic_bp = max((MECHANIC_BP.get(t, BP) for t in enemy["traits"]), default=BP)
-        threat = half_up(enemy["hp_bp"] * mechanic_bp, BP * BP)
+        threat = half_up(enemy["hp_bp"] * enemy["mechanic_bp"], BP * BP)
         reward = half_up(enemy["reward"], BP)
         archetypes[kind] = {"base_effective_durability": threat, "reward": reward,
                             "threat_per_dollar": half_up(threat, max(1, reward))}
@@ -196,13 +198,13 @@ def build_report() -> dict:
                         composition[kind] = composition.get(kind, 0) + 1
                         mult = curve_multiplier_bp(curve, wave_no, map_index, diff, enemy["boss"])
                         raw = half_up(enemy["hp_bp"] * mult, BP * BP)
-                        mechanic_bp = max((MECHANIC_BP.get(t, BP) for t in enemy["traits"]), default=BP)
-                        threat = half_up(raw * mechanic_bp, BP)
+                        threat = half_up(raw * enemy["mechanic_bp"], BP)
                         spawn = time + index * group["spacing_ms"]
                         spawns.append((spawn, threat))
                         durability += threat
                         income += half_up(enemy["reward"], BP)
-                        mechanics.update(t for t in enemy["traits"] if t in COUNTERS)
+                        if enemy["counter"]:
+                            mechanics.add(enemy["counter"])
                     time = spawns[-1][0]
                 spawns.sort()
                 peak = left = running = 0
@@ -212,7 +214,7 @@ def build_report() -> dict:
                         running -= spawns[left][1]
                         left += 1
                     peak = max(peak, running)
-                specialists = {COUNTERS[t] for t in mechanics}
+                specialists = mechanics
                 affordable, specialist_cost, loadout = affordable_loadout(towers, money, specialists)
                 required = half_up(peak, 5)
                 ratio = half_up(required * BP, max(1, affordable))

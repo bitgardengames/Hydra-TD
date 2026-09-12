@@ -24,7 +24,7 @@ function Sim.update(dt)
 		State.waveTime = (State.waveTime or 0) + dt
 	end
 	Waves.updateSpawner(dt)
-	-- Required enemy order: DOT/death, authored traits, effective speed, path and
+	-- Required enemy order: DOT/death, authored mechanics, effective speed, path and
 	-- spatial update, presentation handoff, then escape removal. Movement and
 	-- swap-removal queue aura work. This flush MUST stay after the complete enemy
 	-- pass and before towers/projectiles consume support boosts.

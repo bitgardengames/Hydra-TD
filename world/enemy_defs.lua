@@ -31,7 +31,6 @@ return {
 		reward = 4,
 		score = 12,
 		radius = 9,
-		traits = {"fast"},
 	},
 
 	bulwark = {
@@ -39,7 +38,6 @@ return {
 		descriptionKey = "enemy.bulwarkDescription",
 		hp = 57, speed = 40, reward = 16, score = 30, radius = 14,
 		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
-		traits = {"armored"},
 	},
 
 	regenerator = {
@@ -48,7 +46,6 @@ return {
 		hp = 41, speed = 53, reward = 10, score = 28, radius = 12,
 		regeneration = { hpPerSecond = 2.5, delay = 1.25 },
 		modifiers = { poison = 1.25 },
-		traits = {"regenerates"},
 	},
 
 	warcaller = {
@@ -57,7 +54,6 @@ return {
 		hp = 41, speed = 48, reward = 10, score = 38, radius = 13,
 		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
 		targetPriority = 34,
-		traits = {"support"},
 	},
 
 	summoner = {
@@ -69,7 +65,6 @@ return {
 			stagger = 0.18, spacing = 9,
 		},
 		targetPriority = 38,
-		traits = {"summons"},
 	},
 
 	boss = {
@@ -98,7 +93,6 @@ return {
 		boss = true,
 		mechanicWeight = 1.35,
 		mechanicPackage = "summoner",
-		traits = {"boss_summoner"},
 	},
 
 	boss_vanguard = {
@@ -111,7 +105,6 @@ return {
 		boss = true,
 		mechanicWeight = 1.5,
 		mechanicPackage = "vanguard",
-		traits = {"boss_vanguard"},
 	},
 
 	boss_suppression = {
@@ -130,7 +123,6 @@ return {
 			range = 240,
 			projectileSpeed = 360,
 		},
-		traits = {"boss_suppression"},
 	},
 
 	boss_ravager = {
@@ -143,7 +135,6 @@ return {
 		boss = true,
 		mechanicWeight = 1.4,
 		enrage = { healthFraction = 0.45, speedMultiplier = 1.7 },
-		traits = {"boss_ravager"},
 	},
 
 	boss_phasewalker = {
@@ -156,7 +147,6 @@ return {
 		boss = true,
 		mechanicWeight = 1.55,
 		phase = { initialDelay = 3.5, period = 8.0, duration = 3.0, speedMultiplier = 1.35 },
-		traits = {"boss_phasewalker"},
 	},
 
 	-- Gatecrasher turns three predictable health landmarks into path pressure.
@@ -173,6 +163,5 @@ return {
 		mechanicWeight = 1.6,
 		healthThresholds = {0.75, 0.50, 0.25},
 		lunge = {distance = 150, windupDuration = 0.8, windupDamageMultiplier = 0.6},
-		traits = {"boss_gatecrasher"},
 	},
 }
