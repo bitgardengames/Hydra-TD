@@ -537,8 +537,7 @@ local function drawCenter(l, map, mapIndex)
 	Text.printShadow(L(map.nameKey), x, y)
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.75)
-	Text.printShadow(L("campaign.mapOf", mapIndex, #Maps) .. "  •  "
-		.. L("campaign.stage", map.campaignStage), x, y + 38)
+	Text.printShadow(L("campaign.mapOf", mapIndex, #Maps), x, y + 38)
 
 	local stats = statsFor(map.id)
 	local earned = stats and Medals.getCount(stats.completedDifficulty) or 0

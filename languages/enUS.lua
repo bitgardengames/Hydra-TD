@@ -96,7 +96,6 @@ return {
 	campaign = {
 		title = "CAMPAIGN",
 		selectMap = "Select a map",
-		stage = "Chapter %d",
 		maps = "Maps",
 		playMap = "Play Map",
 		difficultyDescription = "Affects enemy health and rewards",
