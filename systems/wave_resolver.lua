@@ -8,43 +8,22 @@ function Resolver.getWave(map, waveNumber)
 	return CampaignWaveDefs.get(map, waveNumber)
 end
 
-local biomeBossArchetypes = {
-	default = {"boss_summoner", "boss_suppression", "boss_ravager", "boss_phasewalker", "boss_gatecrasher"},
-	autumn = {"boss_summoner", "boss_suppression", "boss_ravager", "boss_gatecrasher", "boss_phasewalker"},
-	drylands = {"boss_suppression", "boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_summoner"},
-	winter = {"boss_summoner", "boss_phasewalker", "boss_suppression", "boss_gatecrasher", "boss_ravager"},
-	highlands = {"boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_summoner", "boss_suppression"},
-}
-local mapBossOverrides = {
-	terrace = {[1] = "boss_summoner", [2] = "boss_suppression"},
+local bossArchetypes = {
+	"boss_summoner", "boss_suppression", "boss_ravager", "boss_phasewalker", "boss_gatecrasher",
 }
 local encounterTemplates = {
 	boss_summoner = {flankKind="grunt", flankBurst=4, interval=5.8, initialDelay=2.4, maxAliveAdds=20, maxTotalAdds=34, addHpMult=0.9, addSpdMult=1},
 }
-local biomeEncounterOverrides = {
-	autumn = {boss_summoner={flankKind="runner", flankBurst=3, interval=5.7, maxTotalAdds=38, addSpdMult=1.2}},
-	drylands = {boss_summoner={flankKind="runner", flankBurst=3, interval=6.8, initialDelay=2.3, maxAliveAdds=12}},
-	winter = {boss_summoner={flankBurst=4, interval=6.2, addHpMult=1}},
-	highlands = {boss_summoner={flankKind="runner", flankBurst=4, interval=5.4}},
-}
 
-function Resolver.getBossByArchetype(map, bossIndex)
-	local override = map and mapBossOverrides[map.id]
-	if override and override[bossIndex] then return override[bossIndex] end
-	local roster = biomeBossArchetypes[(map and map.biome) or "default"] or biomeBossArchetypes.default
-	return roster[((bossIndex - 1) % #roster) + 1]
+function Resolver.getBossByArchetype(_, bossIndex)
+	return bossArchetypes[((bossIndex - 1) % #bossArchetypes) + 1]
 end
 
-function Resolver.resolveBossEncounterTemplate(map, bossKind, bossIndex)
+function Resolver.resolveBossEncounterTemplate(_, bossKind)
 	local base = encounterTemplates[bossKind]
 	if not base then return nil end
-	local overrides = biomeEncounterOverrides[(map and map.biome) or "default"]
-	local mapEncounters = map and map.waves and map.waves.encounters
 	local resolved = {}
 	Util.copyNonNilInto(resolved, base)
-	Util.copyNonNilInto(resolved, overrides and overrides[bossKind])
-	Util.copyNonNilInto(resolved, mapEncounters and mapEncounters[bossKind])
-	Util.copyNonNilInto(resolved, mapEncounters and mapEncounters[bossIndex])
 	return resolved
 end
 
