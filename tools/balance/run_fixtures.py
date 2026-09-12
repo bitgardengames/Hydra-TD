@@ -102,7 +102,7 @@ def definitions() -> tuple[dict, str]:
         block = lua_block(tower_text, kind)
         towers[kind] = {"cost": int(number(block, "cost"))}
     enemies = {}
-    for kind in ("grunt", "tank", "bulwark", "regenerator"):
+    for kind in ("grunt", "bulwark", "regenerator"):
         block = lua_block(enemy_text, kind)
         enemies[kind] = {"hp": number(block, "hp")}
     difficulty_text = texts["systems/difficulty.lua"]
@@ -162,13 +162,13 @@ def checks(data: dict) -> list[dict]:
               and abs(result["cooldown_complete_tick"] - baseline["cooldown_complete_tick"]) <= 1,
               "kills, leaks, income, and completion must be exact; cooldown tolerance is one tick")
     for level in ("base", "maximum"):
-        controls = [by_name["single_grunt"], by_name["single_tank"]]
+        controls = [by_name["single_grunt"]]
         lancer = [efficiency(s["results"]["lancer"][level]) for s in controls]
         for specialist in ("slow", "poison", "cannon", "shock", "plasma"):
             values = [efficiency(s["results"][specialist][level]) for s in controls]
             check(f"lancer_baseline/{level}/{specialist}",
                   not all(values[i] > lancer[i] for i in range(2)),
-                  "specialist must not beat Lancer efficiency in both controls")
+                  "specialist must not beat Lancer efficiency in the baseline control")
         roles = (("packed_grunts", "cannon", "leaks"), ("packed_grunts", "plasma", "ttk_seconds"),
                  ("bulwark", "cannon", "ttk_seconds"), ("regenerator", "poison", "ttk_seconds"))
         for fixture, tower, metric in roles:
@@ -177,9 +177,6 @@ def checks(data: dict) -> list[dict]:
             finite = [x for x in candidates if x is not None]
             check(f"specialist/{fixture}/{level}/{tower}", r[tower][level][metric] == min(finite),
                   f"{tower} must have the lowest {metric}")
-        tank = by_name["single_tank"]["results"]
-        check(f"specialist/single_tank/{level}/slow", tank["slow"][level]["coverage"] == 1,
-              "Slow must maintain full Tank control coverage")
     rows = data["upgrade_vs_expansion"]
     for row in rows:
         check(f'upgrade/open/{row["tower"]}/{row["tier"]}',

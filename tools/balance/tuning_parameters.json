@@ -267,28 +267,6 @@
       "maximum_percentage_change": 15
     },
     {
-      "id": "enemy.tank.hp",
-      "source_file": "world/enemy_defs.lua",
-      "lua_table": "return",
-      "lua_key": "hp",
-      "entry": "tank",
-      "minimum": 20,
-      "maximum": 73,
-      "step": 1,
-      "maximum_percentage_change": 15
-    },
-    {
-      "id": "enemy.tank.reward",
-      "source_file": "world/enemy_defs.lua",
-      "lua_table": "return",
-      "lua_key": "reward",
-      "entry": "tank",
-      "minimum": 4,
-      "maximum": 15,
-      "step": 1,
-      "maximum_percentage_change": 15
-    },
-    {
       "id": "enemy.runner.hp",
       "source_file": "world/enemy_defs.lua",
       "lua_table": "return",

@@ -10,10 +10,10 @@ local minimumSpawnSpacing = 0.5
 local bossAppearances = {}
 
 -- Introduction metadata must name exactly the map containing each kind's first
--- authored appearance. Riverbend previews the two baseline contrasts late while
--- remaining Grunt-only through its first boss; specialist previews stay sparse.
-assert(Maps[1].introducesEnemies[1] == "grunt" and Maps[1].introducesEnemies[2] == "tank"
-	and Maps[1].introducesEnemies[3] == "runner", "Riverbend must declare its late previews")
+-- authored appearance. Riverbend previews Runners late while remaining free of
+-- armor; specialist previews stay sparse.
+assert(Maps[1].introducesEnemies[1] == "grunt" and Maps[1].introducesEnemies[2] == "runner"
+	and Maps[1].introducesEnemies[3] == nil, "Riverbend must declare only its baseline enemies")
 assert(Maps[4].introducesEnemies[1] == "regenerator"
 	and Maps[4].introducesEnemies[2] == "bulwark", "Outerloop must own its specialist introductions")
 assert(Maps[5].introducesEnemies[1] == "warcaller", "Gauntlet must own the Warcaller introduction")
@@ -26,6 +26,7 @@ for _, map in ipairs(Maps) do
 	end
 end
 local firstActualAppearance = {}
+assert(not EnemyDefs.tank, "the retired tank archetype must not resolve")
 
 for _, map in ipairs(Maps) do
 	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
@@ -41,6 +42,7 @@ for _, map in ipairs(Maps) do
 		local counted = 0
 		local composition = {}
 		for _, group in ipairs(wave.groups) do
+			assert(group.kind ~= "tank", map.id .. " wave " .. waveIndex .. " references retired tank")
 			authoredTotal = authoredTotal + group.count
 			counted = counted + group.count
 			assert(EnemyDefs[group.kind], map.id .. " uses unknown enemy " .. tostring(group.kind))
@@ -80,6 +82,8 @@ for _, map in ipairs(Maps) do
 			map.id .. " must reuse introduced enemy " .. kind .. " after its first appearance")
 	end
 end
+
+assert(firstActualAppearance.bulwark == "outerloop", "Outerloop must remain the first Bulwark encounter")
 
 for kind, mapId in pairs(declaredIntroductions) do
 	assert(firstActualAppearance[kind] == mapId,

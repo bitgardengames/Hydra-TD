@@ -37,8 +37,8 @@ return {
 
 	-- Role: cheap single-target baseline. Medium range and highly reliable shots
 	-- make it the efficient default for focused damage, while strong damage
-	-- scaling rewards upgrades. It lacks crowd control and armor utility,
-	-- and splash.
+	-- scaling rewards upgrades. It lacks crowd control and splash, while its heavy hits retain
+	-- focused utility against armor.
 	lancer = {
 		nameKey = "tower.lancer",
 		descKey = "towerDesc.lancer",
