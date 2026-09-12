@@ -541,14 +541,9 @@ return {
 		waveReached = "Wave Reached",
 		score = "Score",
 		difficultyLabel = "Difficulty",
-		recapMid = "Solid start, then pressure won. Shift more power into mid-wave stabilization.",
 		headline = {
 			lateWave = "So Close",
 			hardFight = "Defeat",
-		},
-		subheadline = {
-			lateWave = "You held deep into the run—tighten the final defense and finish it next attempt.",
-			hardFight = "Hard mode pressure is brutal. Refine your midgame and come back stronger.",
 		},
 	},
 
