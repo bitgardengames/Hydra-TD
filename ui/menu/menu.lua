@@ -27,9 +27,7 @@ local transitionCanvasH = 0
 local function getTransitionCanvas()
 	local w, h = love.graphics.getDimensions()
 	if not transitionCanvas or transitionCanvasW ~= w or transitionCanvasH ~= h then
-		-- Transition screens can use stencil-clipped effects (for example, medal
-		-- shines), so their off-screen target needs its own stencil buffer.
-		transitionCanvas = love.graphics.newCanvas(w, h, {stencil = true})
+		transitionCanvas = love.graphics.newCanvas(w, h)
 		transitionCanvasW = w
 		transitionCanvasH = h
 	end
@@ -94,7 +92,9 @@ local function drawScreen(mode, alpha, offsetX)
 
 	local canvas = getTransitionCanvas()
 	love.graphics.push("all")
-	love.graphics.setCanvas(canvas)
+	-- Request a temporary stencil buffer for this render target. Stencil is a
+	-- setCanvas option in LÖVE, not a valid newCanvas setting.
+	love.graphics.setCanvas({canvas, stencil = true})
 	love.graphics.clear(0, 0, 0, 0)
 	love.graphics.origin()
 	screen.draw()
