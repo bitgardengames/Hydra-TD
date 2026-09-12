@@ -12,7 +12,7 @@ Each non-special boss archetype targets three to six base effective durability p
 |:---|---:|---:|---:|
 | boss | 385 | 64 | 6 |
 | boss_aegis | 430 | 128 | 3 |
-| boss_gatecrasher | 445 | 138 | 3 |
+| boss_gatecrasher | 490 | 138 | 4 |
 | boss_phasewalker | 420 | 136 | 3 |
 | boss_ravager | 455 | 130 | 4 |
 | boss_summoner | 341 | 110 | 3 |
