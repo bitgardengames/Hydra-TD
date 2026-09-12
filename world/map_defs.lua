@@ -198,7 +198,7 @@ local maps = {
 		id = "roundabout",
 		campaignStage = 2,
 		nameKey = "map.roundabout",
-		biome = "highlands",
+		biome = "mushroom",
 		path = {
 			{5, 9}, {12, 9},
 			{12, 3}, {18, 3},
