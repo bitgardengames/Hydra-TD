@@ -32,13 +32,6 @@ package.loaded["world.enemy_phase"] = {initialize=function() end,update=function
 
 local Enemies = require("world.enemies")
 
-local aegis = Enemies.spawnEnemy("boss_aegis", 1, 1)
-aegis.bossShieldActive = true
-local aegisHpBeforeHit = aegis.hp
-local aegisDamage = Enemies.applyDamage(aegis, 100, {})
-assert(aegisDamage == 0 and aegis.hp == aegisHpBeforeHit,
-	"Aegis must be immune to damage while its shield is active")
-
 local warcaller = Enemies.spawnEnemy("warcaller", 1, 1)
 warcaller.supportBoost = 1.5
 local warcallerStatuses = Enemies.getDisplayStatuses(warcaller)

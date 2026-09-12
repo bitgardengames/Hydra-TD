@@ -334,9 +334,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.summonPending = 0
 	e.summonStaggerTimer = 0
 	e.summonChildIndex = 0
-	e.bossShield = def.bossShield
-	e.bossShieldTimer = def.bossShield and (def.bossShield.initialDelay or def.bossShield.period) or 0
-	e.bossShieldActive = false
 	e.suppression = def.suppression
 	e.suppressionTimer = def.suppression and (def.suppression.initialDelay or def.suppression.period) or 0
 	e.suppressionCasts = 0
@@ -346,7 +343,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	-- Precomputed authored capabilities keep absent optional mechanics off the hot path.
 	e.hasPoisonModifier = def.modifiers ~= nil and def.modifiers.poison ~= nil
 	e.hasRegeneration = def.regeneration ~= nil
-	e.hasBossShield = def.bossShield ~= nil
 	e.hasEnrage = def.enrage ~= nil
 	e.hasSummon = def.summon ~= nil
 	e.hasSupport = def.support ~= nil
@@ -460,9 +456,6 @@ end
 local function incomingDamageMultiplier(e)
 	if e.lungeWindup and e.lunge then
 		return e.lunge.windupDamageMultiplier or 1
-	end
-	if e.bossShieldActive and e.bossShield then
-		return e.bossShield.damageMultiplier
 	end
 	return 1
 end
@@ -589,18 +582,7 @@ local function updateAuthoredTraits(e, dt)
 		e.regenVisualPulse = 0.28
 	end
 
-	-- Aegis alternates a short, obvious protection window with a longer opening.
 	-- Ravager has just one threshold event, making its late sprint predictable.
-	if e.hasBossShield then
-		e.bossShieldTimer = e.bossShieldTimer - dt
-		if e.bossShieldActive and e.bossShieldTimer <= 0 then
-			e.bossShieldActive = false
-			e.bossShieldTimer = max(EPS, e.bossShield.period - e.bossShield.duration)
-		elseif not e.bossShieldActive and e.bossShieldTimer <= 0 then
-			e.bossShieldActive = true
-			e.bossShieldTimer = e.bossShield.duration
-		end
-	end
 	if e.hasEnrage and not e.enraged and e.hp <= e.maxHp * e.enrage.healthFraction then
 		e.enraged = true
 		Effects.shake(4, 0.2)

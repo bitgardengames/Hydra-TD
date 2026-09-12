@@ -132,14 +132,6 @@ local function drawEnemy(e)
 		lg.setColor(0.9, 0.25, 0.3, (0.55 + sin(animT * 2) * 0.15) * enemyAlpha)
 		lg.setLineWidth(4)
 		lg.arc("line", "open", ix, iy, r + 8, pi * 0.12, pi * 0.88)
-	elseif e.kind == "boss_aegis" then
-		local shieldAlpha = e.bossShieldActive and 0.95 or 0.38
-		lg.setColor(0.3, 0.9, 1, shieldAlpha * enemyAlpha)
-		lg.setLineWidth(e.bossShieldActive and 5 or 2)
-		for n = 0, 2 do
-			local a = -HALF_PI + n * pi * 2 / 3
-			lg.arc("line", "open", ix, iy, r + 8, a - 0.62, a + 0.62)
-		end
 	elseif e.kind == "boss_ravager" then
 		lg.setColor(1, 0.28, 0.18, (e.enraged and 0.95 or 0.5) * enemyAlpha)
 		lg.setLineWidth(e.enraged and 4 or 2)
@@ -467,8 +459,6 @@ local function newEnemyPortrait(kind)
 		summon = def.summon,
 		summonTimer = def.summon and def.summon.period or 0,
 		regeneration = def.regeneration,
-		bossShield = def.bossShield,
-		bossShieldActive = false,
 		enrage = def.enrage,
 		enraged = false,
 		phase = def.phase,

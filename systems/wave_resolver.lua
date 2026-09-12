@@ -9,11 +9,11 @@ function Resolver.getWave(map, waveNumber)
 end
 
 local biomeBossArchetypes = {
-	default = {"boss_summoner", "boss_vanguard", "boss_suppression", "boss_aegis", "boss_ravager", "boss_phasewalker", "boss_gatecrasher"},
-	autumn = {"boss_vanguard", "boss_aegis", "boss_suppression", "boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_summoner"},
-	drylands = {"boss_suppression", "boss_ravager", "boss_vanguard", "boss_gatecrasher", "boss_phasewalker", "boss_aegis", "boss_summoner"},
-	winter = {"boss_aegis", "boss_summoner", "boss_phasewalker", "boss_suppression", "boss_gatecrasher", "boss_ravager", "boss_vanguard"},
-	highlands = {"boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_vanguard", "boss_summoner", "boss_aegis", "boss_suppression"},
+	default = {"boss_summoner", "boss_vanguard", "boss_suppression", "boss_ravager", "boss_phasewalker", "boss_gatecrasher"},
+	autumn = {"boss_vanguard", "boss_suppression", "boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_summoner"},
+	drylands = {"boss_suppression", "boss_ravager", "boss_vanguard", "boss_gatecrasher", "boss_phasewalker", "boss_summoner"},
+	winter = {"boss_summoner", "boss_phasewalker", "boss_suppression", "boss_gatecrasher", "boss_ravager", "boss_vanguard"},
+	highlands = {"boss_ravager", "boss_gatecrasher", "boss_phasewalker", "boss_vanguard", "boss_summoner", "boss_suppression"},
 }
 local mapBossOverrides = {
 	roundabout = {[1] = "boss_vanguard", [2] = "boss_summoner"},
