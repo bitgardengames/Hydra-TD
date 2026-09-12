@@ -32,6 +32,8 @@ assert(not rendererSource:find('lg.circle("line", ix, iy, r + 4)', 1, true),
 	"regenerator silhouette no longer relies on the selection-sized halo")
 assert(not rendererSource:find("r + 4 + (1 - a) * 8", 1, true),
 	"regenerator silhouette does not emit expanding pulse rings")
+assert(not rendererSource:find('e.kind == "boss_gatecrasher"', 1, true),
+	"Gatecrasher does not draw a directional arrow")
 local selectionRing = assert(rendererSource:match("%-%- Selection Ring(.-)end"))
 assert(selectionRing:find('lg.circle("line", ix, iy, e.radius + 4)', 1, true),
 	"selected enemies retain their yellow outline")

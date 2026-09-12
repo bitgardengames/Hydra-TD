@@ -501,7 +501,7 @@ return {
 		boss_gatecrasher = {
 			tag = "THRESHOLD LUNGES",
 			mechanic = "Winds up and lunges forward at 75%, 50%, and 25% health. Every crossed marker queues one lunge.",
-			tell = "The next health marker and a forward arrow flare during the protected wind-up.",
+			tell = "The next health marker flares during the protected wind-up.",
 			counterplay = "Burst it early, then use slows and overlapping coverage to contain each lunge.",
 		},
 	},

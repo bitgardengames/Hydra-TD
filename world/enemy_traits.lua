@@ -82,7 +82,7 @@ local Traits = {
 	boss_gatecrasher = {
 		tag = "Boss Mechanic",
 		mechanic = "Lunges forward once at each marked health threshold after a protected wind-up.",
-		tell = "An arrow and the matching health-bar marker flare before each lunge.",
+		tell = "The matching health-bar marker flares before each lunge.",
 		counter = "Deal burst damage early enough to survive the queued lunges, then finish it between wind-ups.",
 		answers = {"Long-path burst coverage", "Slow/control specializations"},
 	},
