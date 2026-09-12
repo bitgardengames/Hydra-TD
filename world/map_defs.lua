@@ -92,11 +92,6 @@ local maps = {
 			{11, 9}, {30, 9},
 		},
 		-- intentionally dry battlefield
-		waves = {
-			encounters = {
-				boss_summoner = { flankKind = "runner", flankBurst = 2, initialDelay = 2.0 },
-			},
-		},
 	},
 
 	{
@@ -200,11 +195,6 @@ local maps = {
 			-- central pond
 			{16, 7, 2},
 		},
-		waves = {
-			encounters = {
-				boss_summoner = { flankKind = "grunt", flankBurst = 5, interval = 5.2 },
-			},
-		},
 	},
 
 	{
@@ -225,11 +215,6 @@ local maps = {
 
 			-- cliffside pool
 			{27, 3, 2},
-		},
-		waves = {
-			encounters = {
-				boss_summoner = { flankBurst = 4, interval = 6.5, maxTotalAdds = 40 },
-			},
 		},
 	},
 

@@ -113,7 +113,7 @@
       "template": "boss_summoner"
     }
   ],
-  "definition_sha256": "caa023b0907425fc87f043f8c832160fab06e8403384790db9a12d6162a43e05",
+  "definition_sha256": "b1927d97ffeba0bcbb638d2938557f482db10656b004fcd0ae0ce18403e526dd",
   "format_version": 1,
   "overlap": {
     "casts": [
