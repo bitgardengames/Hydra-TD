@@ -304,7 +304,7 @@ local maps = {
 		prerequisiteMapId = "steppingstones",
 		nameKey = "map.twinloop",
 		introducesEnemies = {"summoner"},
-		biome = "rainbowRoad",
+		biome = "void",
 		path = {
 			{5, 7}, {12, 7},
 			{12, 3}, {20, 3},
