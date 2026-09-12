@@ -8,7 +8,7 @@
 return {
 	grunt = {
 		nameKey = "enemy.grunt",
-		hp = 17,
+		hp = 18,
 		speed = 70,
 		reward = 5,
 		score = 10,
@@ -17,7 +17,7 @@ return {
 
 	tank = {
 		nameKey = "enemy.tank",
-		hp = 43,
+		hp = 50,
 		speed = 45,
 		reward = 8,
 		score = 22,
