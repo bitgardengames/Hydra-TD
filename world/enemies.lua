@@ -621,7 +621,6 @@ local function updateAuthoredTraits(e, dt)
 				e.summonStaggerTimer = 0
 			end
 			e.summonPending = e.summonPending + queued
-			Effects.shake(2.4)
 		end
 
 		if e.summonPending > 0 then
@@ -893,12 +892,6 @@ local function getDisplayStatuses(e)
 		add("status.regenerationSuppressed", "⊘", Theme.ui.bad, {
 			id = "regeneration_suppressed",
 			remainingFraction = fraction(e.regenDelay, e.regeneration.delay),
-		})
-	end
-	if e.summon and (e.summonTimer or 0) > 0 then
-		add("status.summonPreparing", "✦", Theme.ui.money, {
-			id = "summon_preparing",
-			remainingFraction = fraction(e.summonTimer, e.summon.period),
 		})
 	end
 	if e.phaseActive then

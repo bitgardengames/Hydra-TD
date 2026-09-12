@@ -192,7 +192,6 @@ return {
 		barrier = "Barrier",
 		supportBoost = "Aura accelerated",
 		regenerationSuppressed = "Regeneration suppressed",
-		summonPreparing = "Summoning charge",
 		phased = "Phased: direct fire passes through",
 		value = "%s / %s",
 		multiplier = "x%.2f",
