@@ -19,8 +19,8 @@ end
 
 check(Maps[4].id == "outerloop" and Maps[4].campaignStage == 1,
 	"Outer Loop must be the fourth map in the first campaign stage")
-check(Maps[10].id == "roundabout" and Maps[10].campaignStage == 2,
-	"Roundabout must be the tenth map in the second campaign stage")
+check(Maps[10].id == "roundabout" and Maps[10].campaignStage == 2 and Maps[10].biome == "mushroom",
+	"Roundabout must be the tenth map in the second campaign stage with the mushroom biome")
 check(#Maps == 15 and Maps[15].id == "twinloop" and Maps[15].campaignStage == 3,
 	"the campaign must end with Twin Loop as its fifteenth map")
 
