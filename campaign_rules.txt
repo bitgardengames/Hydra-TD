@@ -1,7 +1,7 @@
 Core Campaign Philosophy
 Hydra TD should use this structure:
 
-The player should win because they learned placement, tower roles, upgrades, targeting, and abilities.
+The player should win through placement, tower roles, upgrades, targeting, and abilities.
 
 Power should come from in-map economy and upgrades, not meta-level damage boosts.
 

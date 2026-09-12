@@ -1,4 +1,4 @@
--- Dependency-free campaign curriculum fixtures. Run from the repository root.
+-- Dependency-free campaign wave fixtures. Run from the repository root.
 package.path = "./?.lua;./?/init.lua;" .. package.path
 
 local Maps = require("world.map_defs")
@@ -73,11 +73,11 @@ for _, map in ipairs(Maps) do
 
 	local final = CampaignWaveDefs.get(map, 20)
 	assert(final.boss and EnemyDefs[final.bossArchetype],
-		map.id .. " final exam has no legal explicit boss selection")
+		map.id .. " final wave has no legal explicit boss selection")
 
 	for _, kind in ipairs(map.introducesEnemies or {}) do
 		assert((introducedEnemyAppearances[kind] or 0) >= 1,
-			map.id .. " must revisit introduced enemy " .. kind .. " after onboarding")
+			map.id .. " must reuse introduced enemy " .. kind .. " after its first appearance")
 	end
 end
 

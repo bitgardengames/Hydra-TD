@@ -9,8 +9,8 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 
 -- Campaign rewards are authored by map order. Keep the rewards here as the
 -- single unlock source; map_defs owns only the playable map ordering/layouts.
--- Rewards intentionally avoid mandatory stat power and instead emphasize new
--- verbs, optional build utilities, and information that teaches counters.
+-- Rewards intentionally avoid mandatory stat power and instead offer optional
+-- build utilities and enemy information.
 -- Towers are the player's baseline arsenal and are never campaign rewards.
 -- Active abilities remain experimental and therefore are not campaign rewards.
 -- Keep this table ready for unrelated, production-ready rewards.

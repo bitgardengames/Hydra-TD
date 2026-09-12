@@ -76,17 +76,17 @@ python3 tools/balance/run_fixtures.py --write-docs
 python3 tools/balance/polish_report.py --check
 ```
 
-## September 2026 opening-wave curriculum
+## September 2026 wave composition update
 
-The first campaign third now assigns one tactical lesson to each map instead of
-repeating a single enemy profile for twenty waves. Riverbend remains Grunt-only
-through its first boss and uses only small Tank/Runner previews in its closing
-waves. Switchback presents sparse durable fronts followed by ordinary escorts;
+The maps use distinct enemy compositions instead of repeating a single enemy
+profile for twenty waves. Riverbend remains Grunt-only through its first boss and
+uses only small Tank/Runner groups in higher-numbered waves. Switchback presents
+sparse durable fronts followed by ordinary escorts;
 Highpass alternates fast and armored blocks; Outerloop places a few regenerating
 or armored specialists behind ordinary bodies; Gauntlet creates tightly packed
 splash targets and only a few escorted Warcallers; and Snaketrail separates fast
-and armored blocks into a retargeting drill. Dense combinations of several
-special traits remain in the later campaign.
+and armored blocks to force frequent retargeting. Other maps use dense
+combinations of several special traits.
 
 `introducesEnemies` is audited against first authored appearances. The canonical
 ordering is Grunt/Tank/Runner on Riverbend, Regenerator/Bulwark on Outerloop,

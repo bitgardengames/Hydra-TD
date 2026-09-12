@@ -53,8 +53,7 @@ local progressRewards = CampaignUnlocks.getNewRewards(1, #Maps + 1)
 check(#progressRewards == rewardCount, "campaign progress did not return every authored reward")
 check(rewardCount < #Maps, "fixture no longer covers a campaign with fewer unlocks than maps")
 
--- Ability rewards follow their teaching progression, use localized labels that
--- both Campaign and Victory can render, and start with Meteor on the first clear.
+-- Ability rewards use localized labels that both Campaign and Victory can render.
 local abilityTeachingOrder = {
 	{"riverbend", "meteor", "burst"},
 	{"roundabout", "overdrive", "tower_buff"},
