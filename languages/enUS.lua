@@ -478,32 +478,6 @@ return {
 		waveProgress = "%d/%d",
 		incomingGroup = "INCOMING",
 		compositionEntry = "%d %s",
-		threatTags = "Threats: %s",
-	},
-
-
-	enemyTrait = {
-		armored = {tag = "ARMORED"},
-		regenerates = {tag = "REGENERATING"},
-		support = {tag = "SUPPORT"},
-		fast = {tag = "FAST"},
-		boss_summoner = {tag = "SUMMONER"},
-		boss_vanguard = {tag = "FAST ESCORTS"},
-		boss_suppression = {tag = "TOWER SUPPRESSION"},
-		boss_aegis = {tag = "CYCLING SHIELD"},
-		boss_ravager = {tag = "FINAL SPRINT"},
-		boss_phasewalker = {
-			tag = "PHASE SHIFT",
-			mechanic = "Phases out while continuing along the path, evading targeting and direct projectiles while speeding up. Ground-area effects still deal damage.",
-			tell = "Its body becomes translucent while it is phased out.",
-			counterplay = "Use ground-area damage during the phase or overlapping towers to reacquire it when the phase ends.",
-		},
-		boss_gatecrasher = {
-			tag = "THRESHOLD LUNGES",
-			mechanic = "Winds up and lunges forward at 75%, 50%, and 25% health. Every crossed marker queues one lunge.",
-			tell = "The next health marker flares during the protected wind-up.",
-			counterplay = "Burst it early, then use slows and overlapping coverage to contain each lunge.",
-		},
 	},
 
 	messages = {
