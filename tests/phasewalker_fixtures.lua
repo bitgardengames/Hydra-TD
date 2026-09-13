@@ -38,7 +38,10 @@ package.loaded["world.spatial_grid"] = {
 	newQueryContext = function() return {} end,
 	pointToCell = function() return 0, 0 end,
 	localQueryFootprintKey = function() return 1 end,
-	querySquareCandidatesLocal = function() return candidates, #candidates end,
+	visitCellsLocal = function(_, _, _, visitor, context)
+		for i = 1, #candidates do visitor(candidates[i], context) end
+		return #candidates
+	end,
 }
 package.loaded["world.targeting"] = nil
 local Targeting = require("world.targeting")

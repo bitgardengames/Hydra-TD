@@ -7,20 +7,13 @@ local Targeting = {}
 local EPS = 0.0001
 local HUGE_NEG = -math.huge
 local pointToCell = Spatial.pointToCell
-local querySquareCandidatesLocal = Spatial.querySquareCandidatesLocal
+local visitCellsLocal = Spatial.visitCellsLocal
 local queryContext = Spatial.newQueryContext(false)
 local localQueryFootprintKey = Spatial.localQueryFootprintKey
 local simpleCtx = {}
--- Keep only the current frame's keys. Entry objects own their candidate buffers,
--- and a bounded pool lets common cell/footprint counts avoid per-frame garbage.
-local MAX_POOLED_ENTRIES = 256
 local frameCache = {
 	entries = {},
-	activeEntries = {},
-	activeCount = 0,
 	frameId = nil,
-	pool = {},
-	poolCount = 0,
 }
 local function updateBest(e, c, score)
 	local diff = score - c.bestScore
@@ -45,63 +38,31 @@ local function evaluateCandidate(e, c)
 	updateBest(e, c, e.dist)
 end
 
-local function releaseCandidates(entry)
-	local list = entry.list
-	for i = 1, entry.count do
-		list[i] = nil
-	end
-	entry.count = 0
-end
-
-local function recycleCurrentEntries(cache)
-	local entries = cache.entries
-	local activeEntries = cache.activeEntries
-	for i = 1, cache.activeCount do
-		local entry = activeEntries[i]
-		releaseCandidates(entry)
-		local cellX = entry.cellX
-		local cellY = entry.cellY
-		local footprintKey = entry.footprintKey
-		local xEntries = entries[cellX]
-		local yEntries = xEntries[cellY]
-		yEntries[footprintKey] = nil
-		if next(yEntries) == nil then
-			xEntries[cellY] = nil
-			if next(xEntries) == nil then
-				entries[cellX] = nil
-			end
-		end
-		entry.cellX = nil
-		entry.cellY = nil
-		entry.footprintKey = nil
-		activeEntries[i] = nil
-		if cache.poolCount < MAX_POOLED_ENTRIES then
-			cache.poolCount = cache.poolCount + 1
-			cache.pool[cache.poolCount] = entry
-		end
-	end
-	cache.activeCount = 0
-end
-
 function Targeting.beginFrame(frameId)
 	frameId = frameId or 0
-	if frameCache.frameId == frameId then
-		return
-	end
-
-	recycleCurrentEntries(frameCache)
 	frameCache.frameId = frameId
 end
 
 function Targeting.clearFrameCache()
-	recycleCurrentEntries(frameCache)
-	-- A run reset also drains the reuse pool. Lists were scrubbed above (and are
-	-- scrubbed before pooling), so neither active nor pooled buffers hold enemies.
-	for i = 1, frameCache.poolCount do
-		frameCache.pool[i] = nil
+	for cellX, xEntries in pairs(frameCache.entries) do
+		for _, yEntries in pairs(xEntries) do
+			for _, entry in pairs(yEntries) do
+				for i = 1, entry.count do entry.list[i] = nil end
+				entry.count = 0
+				entry.fillCount = nil
+				entry.frameId = nil
+			end
+		end
+		frameCache.entries[cellX] = nil
 	end
-	frameCache.poolCount = 0
 	frameCache.frameId = nil
+end
+
+local function retainTargetableCandidate(enemy, entry)
+	if enemy.hp > 0 and not enemy.dying and EnemyPhase.canDirectHit(enemy) then
+		entry.fillCount = entry.fillCount + 1
+		entry.list[entry.fillCount] = enemy
+	end
 end
 
 local function getCandidatesForTower(tower)
@@ -112,7 +73,7 @@ local function getCandidatesForTower(tower)
 	local xEntries = frameCache.entries[cx]
 	local yEntries = xEntries and xEntries[cy]
 	local entry = yEntries and yEntries[footprintKey]
-	if entry then
+	if entry and entry.frameId == frameId then
 		return entry.list, entry.count
 	end
 
@@ -125,34 +86,22 @@ local function getCandidatesForTower(tower)
 		xEntries[cy] = yEntries
 	end
 
-	if frameCache.poolCount > 0 then
-		entry = frameCache.pool[frameCache.poolCount]
-		frameCache.pool[frameCache.poolCount] = nil
-		frameCache.poolCount = frameCache.poolCount - 1
-	else
+	if not entry then
 		entry = {list = {}, count = 0}
+		yEntries[footprintKey] = entry
 	end
-	entry.cellX = cx
-	entry.cellY = cy
-	entry.footprintKey = footprintKey
-	yEntries[footprintKey] = entry
-	frameCache.activeCount = frameCache.activeCount + 1
-	frameCache.activeEntries[frameCache.activeCount] = entry
 
-	local list = entry.list
-
-	local candidates, candidateCount = querySquareCandidatesLocal(tower.x, tower.y, tower.range, queryContext)
-	local count = 0
-	for i = 1, candidateCount do
-		local e = candidates[i]
-		if e and e.hp > 0 and not e.dying and EnemyPhase.canDirectHit(e) then
-			count = count + 1
-			list[count] = e
-		end
+	local previousCount = entry.count
+	entry.fillCount = 0
+	visitCellsLocal(tower.x, tower.y, tower.range, retainTargetableCandidate, entry, queryContext)
+	local count = entry.fillCount
+	for i = count + 1, previousCount do
+		entry.list[i] = nil
 	end
 	entry.count = count
+	entry.frameId = frameId
 
-	return list, count
+	return entry.list, count
 end
 
 function Targeting.isSemanticallyValidTarget(tower, e)
