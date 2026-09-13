@@ -79,7 +79,7 @@ local function buildEnemyTooltip(group)
 	local rows = {}
 	local def = EnemyDefs[group.kind]
 	if def and def.descriptionKey then
-		rows[#rows + 1] = {kind = "text", text = L(def.descriptionKey), padAfter = 4}
+		rows[#rows + 1] = {kind = "text", text = L(def.descriptionKey), padAfter = Tooltip.lineHeight}
 	end
 	if group.health then
 		rows[#rows + 1] = {label = L("hud.enemyHealth"), value = Util.formatInt(group.health)}

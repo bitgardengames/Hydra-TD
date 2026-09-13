@@ -7,6 +7,8 @@ assert(source:find("local function buildEnemyTooltip", 1, true),
 	"wave preview must continue to build enemy tooltips")
 assert(source:find("L(def.descriptionKey)", 1, true),
 	"upcoming-enemy tooltips must retain enemy descriptions")
+assert(source:find("padAfter = Tooltip.lineHeight", 1, true),
+	"upcoming-enemy tooltips must leave an empty line after enemy descriptions")
 assert(source:find('L("hud.enemyHealth")', 1, true),
 	"upcoming-enemy tooltips must label enemy health")
 assert(source:find("Util.formatInt(group.health)", 1, true),
