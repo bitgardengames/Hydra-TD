@@ -60,6 +60,13 @@ assert(buttonSource:find('btn.label:gsub("\\n", "")', 1, true),
 	"button labels must account for every line when vertically centered")
 assert(buttonSource:find("(h - labelHeight) * 0.5", 1, true),
 	"button label blocks must be vertically centered")
+assert(campaignSource:find('play.labelFont = Fonts.get("menu")', 1, true),
+	"the Play Map label must use the larger menu font")
+assert(campaignSource:find('play.subtextFont = Fonts.get("ui")', 1, true),
+	"the map and difficulty subtext must retain the UI font")
+assert(buttonSource:find("if btn.subtext then", 1, true)
+	and buttonSource:find("lg.setFont(subtextFont)", 1, true),
+	"buttons with subtext must render their label and subtext independently")
 
 local bootstrapFile = assert(io.open("core/bootstrap.lua", "r"))
 local bootstrapSource = bootstrapFile:read("*a")
