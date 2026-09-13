@@ -36,14 +36,7 @@ function Actions.upgradeTowerAt(gx, gy, times)
 		end
 
 		for i = 1, times do
-			local choices = t.def and t.def.upgradeChoices or {}
-			if #choices > 0 then
-				local choiceId = choices[((i - 1) % #choices) + 1]
-
-				if choiceId then
-					Towers.upgradeTower(t, choiceId)
-				end
-			end
+			Towers.upgradeTower(t)
 		end
 	end
 end
