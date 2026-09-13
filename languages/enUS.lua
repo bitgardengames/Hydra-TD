@@ -447,6 +447,8 @@ return {
 	enemy = {
 		grunt = "Grunt",
 		gruntDescription = "A dependable foot soldier with balanced speed and durability.",
+		tank = "Tank",
+		tankDescription = "Slow and durable; concentrate fire to bring it down.",
 		runner = "Runner",
 		runnerDescription = "Fast but fragile; stop it before it slips through your defenses.",
 		regenerator = "Regenerator",

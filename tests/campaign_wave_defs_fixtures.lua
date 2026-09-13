@@ -26,7 +26,8 @@ for _, map in ipairs(Maps) do
 	end
 end
 local firstActualAppearance = {}
-assert(not EnemyDefs.tank, "the retired tank archetype must not resolve")
+assert(EnemyDefs.tank and EnemyDefs.tank.hp == 51, "Tank must resolve with its increased base health")
+assert(EnemyDefs.regenerator.hp == 42, "Regenerator must use its increased base health")
 
 for _, map in ipairs(Maps) do
 	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
