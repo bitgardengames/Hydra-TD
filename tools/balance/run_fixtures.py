@@ -102,7 +102,7 @@ def definitions() -> tuple[dict, str]:
         block = lua_block(tower_text, kind)
         towers[kind] = {"cost": int(number(block, "cost"))}
     enemies = {}
-    for kind in ("grunt", "bulwark", "regenerator"):
+    for kind in ("grunt", "regenerator"):
         block = lua_block(enemy_text, kind)
         enemies[kind] = {"hp": number(block, "hp")}
     difficulty_text = texts["systems/difficulty.lua"]
@@ -170,7 +170,7 @@ def checks(data: dict) -> list[dict]:
                   not all(values[i] > lancer[i] for i in range(2)),
                   "specialist must not beat Lancer efficiency in the baseline control")
         roles = (("packed_grunts", "cannon", "leaks"), ("packed_grunts", "plasma", "ttk_seconds"),
-                 ("bulwark", "cannon", "ttk_seconds"), ("regenerator", "poison", "ttk_seconds"))
+                 ("regenerator", "poison", "ttk_seconds"))
         for fixture, tower, metric in roles:
             r = by_name[fixture]["results"]
             candidates = [r[x][level][metric] for x in TOWERS]

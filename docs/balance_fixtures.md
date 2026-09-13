@@ -37,16 +37,6 @@ Values are formatted `TTK / cost / leaks / coverage`.
 | Shock | — / $95 / 2 / 94% | 6.1s / $712 / 0 / 100% |
 | Plasma | 6.3s / $120 / 0 / 100% | 4.8s / $900 / 0 / 100% |
 
-## Bulwark — armor (4 Bulwarks, 0.8s spacing)
-| Tower | Base | Maximum |
-|---|---:|---:|
-| Slow | — / $50 / 4 / 25% | — / $375 / 2 / 75% |
-| Lancer | — / $60 / 3 / 50% | 8.2s / $450 / 0 / 100% |
-| Poison | — / $70 / 2 / 75% | 9.0s / $525 / 0 / 100% |
-| Cannon | 8.4s / $90 / 0 / 100% | 4.7s / $675 / 0 / 100% |
-| Shock | — / $95 / 4 / 50% | — / $712 / 1 / 100% |
-| Plasma | — / $120 / 2 / 75% | 7.8s / $900 / 0 / 100% |
-
 ## Regenerator — attrition (4 Regenerators, 0.9s spacing)
 | Tower | Base | Maximum |
 |---|---:|---:|
