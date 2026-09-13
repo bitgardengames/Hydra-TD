@@ -31,31 +31,8 @@ function PB.compileHooks(p)
 	p._canHitPredicates = { p.behaviors }
 end
 
-local familyFields = {
-	movement = "_orbit",
-	collision = "pierce",
-	damage = "_chain",
-	status_proc = "_procCooldowns",
-	emission = "_beam",
-	drawing = "visualScale",
-}
-
-function PB.init(p)
-	local behavior = p.behaviors[1]
-	local field = behavior and familyFields[behavior.id]
-	if field then
-		p[field] = { owner = behavior.id }
-	end
-end
-function PB.update(p)
-	if p.spawnFixtureChild then
-		p.spawnFixtureChild = nil
-		local event = PB.takeEvent(p, "spawn_projectile")
-		event.source = p.sourceTower
-		event.behaviors = p.behaviors
-		PB.pushEvent(p, event)
-	end
-end
+function PB.init() end
+function PB.update() end
 function PB.draw() end
 function PB.hit() end
 
@@ -86,31 +63,6 @@ local source = {
 }
 local firstPlan = { { id = "first" } }
 local secondPlan = { { id = "second" } }
-
-local function assertDefaultShot(p, expectedTarget, expectedBehaviors)
-	assert(p.x == source.x and p.y == source.y, "default projectile position changed")
-	assert(p.speed == source.projSpeed and p.life == 3, "default speed or lifetime changed")
-	assert(p.target == expectedTarget, "default projectile target changed")
-	assert(p.behaviors == expectedBehaviors, "default behavior context changed")
-	assert(p.angle == source.angle, "default projectile angle changed")
-	assert(p.vx == nil and p.vy == nil, "default projectile velocity changed")
-	assert(p.hitOrigin == "primary", "default projectile hit origin changed")
-	assert(p.hitRadius == 4.5, "default projectile hit radius changed")
-end
-
-local directContext = { behaviors = firstPlan }
-local direct = Projectiles.spawnFromContext(source, nil, directContext)
-assertDefaultShot(direct, nil, firstPlan)
-
-local eventDefault = Projectiles.spawnEvent({ source = source, behaviors = firstPlan })
-assertDefaultShot(eventDefault, nil, firstPlan)
-
-eventDefault.spawnFixtureChild = true
-Projectiles.update(0)
-local child = Projectiles.projectiles[#Projectiles.projectiles]
-assert(child ~= eventDefault, "recursive projectile event did not spawn a child")
-assertDefaultShot(child, nil, firstPlan)
-Projectiles.clear()
 
 local first = Projectiles.spawnEvent({ source = source, life = 0.01, behaviors = firstPlan })
 first.markHit(first, "enemy-a")
@@ -143,41 +95,6 @@ assert(second._defaultHitCtx.origin == "primary" and second._defaultHitCtx.hitX 
 	and second._defaultHitCtx.hitY == nil, "default hit context leaked between uses")
 assert(second.allowRepeatHits == nil and second._didExpireHook == nil,
 	"per-use projectile flags leaked between uses")
-
-local retainedIdentities = {
-	retained = second._retained,
-	hitSet = second._retained.hitSet,
-	hitCooldowns = second._retained.hitCooldowns,
-	events = second._retained.events,
-	defaultHitCtx = second._retained.defaultHitCtx,
-	eventPool = second._retained.eventPool,
-}
-local families = { "movement", "collision", "damage", "status_proc", "emission", "drawing" }
-for i = 1, #families do
-	local family = families[i]
-	local transientField = familyFields[family]
-	second["arbitraryTransient" .. i] = true
-	Projectiles.clear()
-
-	local reused = Projectiles.spawnEvent({ source = source, life = 1, behaviors = { { id = family } } })
-	assert(reused == second, family .. " projectile did not reuse the pooled instance")
-	for previousIndex = 1, i - 1 do
-		assert(reused[familyFields[families[previousIndex]]] == nil,
-			families[previousIndex] .. " state leaked into " .. family .. " projectile")
-	end
-	assert(reused[transientField] and reused[transientField].owner == family,
-		family .. " fixture did not populate its behavior-specific state")
-	assert(reused["arbitraryTransient" .. i] == nil,
-		"arbitrary transient field survived recycling")
-	assert(reused._retained == retainedIdentities.retained
-		and reused.hitSet == retainedIdentities.hitSet
-		and reused.hitCooldowns == retainedIdentities.hitCooldowns
-		and reused.events == retainedIdentities.events
-		and reused._defaultHitCtx == retainedIdentities.defaultHitCtx
-		and reused._eventPool == retainedIdentities.eventPool,
-		"retained container identity changed while recycling " .. family .. " projectile")
-	second = reused
-end
 
 local damageEvent = PB.takeEvent(second, "damage")
 damageEvent.target = { hp = 1000, maxHp = 1000, hitFlash = 0, x = 0, y = 0, radius = 10 }

@@ -115,6 +115,25 @@ local function acquire()
 	return { _retained = retained }
 end
 
+-- These are shot-owned values. Retained containers live in p._retained and are
+-- deliberately not mixed into this list.
+local reusableFields = {
+	"x", "y", "r", "baseR", "scale", "life", "t", "sourceTower", "sourceKind",
+	"speed", "damage", "hitOrigin", "target", "targetID", "ignoreTarget", "angle",
+	"rotation", "vx", "vy", "hitRadius", "hitRadius2", "lastTX", "lastTY",
+	"behaviors", "hit", "_consumed", "_hooks", "_drawHandlers", "_canHitPredicates",
+	"_didExpireHook",
+	"allowRepeatHits", "consumeOnHit", "pierce", "dead", "radius", "visualScale",
+	"cx", "cy", "orbitSpeed", "onEvent", "_baseDamage", "_beam", "_boom",
+	"_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
+	"_chainVisited", "_claimedScratch", "_conductRadius", "_delayedBlast",
+	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
+	"_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
+	"_slowAuraRadius", "_slowAuraTick", "_slowAuraTimer", "_snowballBaseDamage",
+	"_snowballHits", "_snowballStacks", "_spiral", "_supernovaBurstDone", "_suspend",
+	"_targetPointX", "_targetPointY", "_tickStates", "_wave", "_zap",
+}
+
 local function resetReusableState(p)
 	local retained = p._retained
 
@@ -130,14 +149,18 @@ local function resetReusableState(p)
 	Util.clearTable(retained.defaultHitCtx)
 	retained.eventPoolCount = p._eventPoolCount or retained.eventPoolCount
 
-	-- Everything populated directly on a projectile belongs to that shot. This
-	-- also makes new behavior state transient by default, without maintaining a
-	-- parallel list of every field behaviors may introduce.
-	for key in pairs(p) do
-		if key ~= "_retained" then
-			p[key] = nil
-		end
+	for i = 1, #reusableFields do
+		p[reusableFields[i]] = nil
 	end
+
+	p.eventRead = nil
+	p.eventCount = nil
+	p.hitSet = nil
+	p.hitCooldowns = nil
+	p.events = nil
+	p._defaultHitCtx = nil
+	p._eventPool = nil
+	p._eventPoolCount = nil
 end
 
 local function release(p)
@@ -155,14 +178,9 @@ local function removeAt(i)
 	projectiles[#projectiles] = nil
 end
 
-local function initProjectile(p, source, target, context, speed, life, record)
+local function initProjectile(p, source, opts)
+	opts = opts or {}
 	local retained = p._retained
-	if record then
-		target = record.target
-		context = record.context
-		speed = record.speed
-		life = record.life
-	end
 
 	p.hitSet = retained.hitSet
 	p.hitCooldowns = retained.hitCooldowns
@@ -173,33 +191,33 @@ local function initProjectile(p, source, target, context, speed, life, record)
 	p._eventPool = retained.eventPool
 	p._eventPoolCount = retained.eventPoolCount
 
-	p.x = record and record.x or source.x
-	p.y = record and record.y or source.renderY or source.y
+	p.x = opts.x or source.x
+	p.y = opts.y or source.renderY or source.y
 
-	p.r = record and record.r or 4.5
+	p.r = opts.r or 4.5
 	p.baseR = p.r
-	p.scale = record and record.scale or 1
+	p.scale = opts.scale or 1
 
-	p.life = life or 3
+	p.life = opts.life or 3
 	p.t = 0
 
 	p.sourceTower = source
 	p.sourceKind = source.kind
 
-	p.speed = speed or source.projSpeed or 0
-	p.damage = record and record.damage or source.damage or 0
+	p.speed = opts.speed or source.projSpeed or 0
+	p.damage = opts.damage or source.damage or 0
 
-	p.hitOrigin = record and record.hitOrigin or "primary"
+	p.hitOrigin = opts.hitOrigin or "primary"
 
-	p.target = target
+	p.target = opts.target
 	p.targetID = p.target and p.target.id or nil
-	p.ignoreTarget = record and record.ignoreTarget
+	p.ignoreTarget = opts.ignoreTarget
 
-	p.angle = record and record.angle or source.angle or 0
+	p.angle = opts.angle or source.angle or 0
 	p.rotation = p.angle
 
-	p.vx = record and record.vx
-	p.vy = record and record.vy
+	p.vx = opts.vx
+	p.vy = opts.vy
 
 	p._consumed = false
 	p.hasHit = projectileHasHit
@@ -210,15 +228,15 @@ local function initProjectile(p, source, target, context, speed, life, record)
 	nextHitSetStamp(p)
 	p._defaultHitCtx.origin = p.hitOrigin
 
-	p.hitRadius = record and record.hitRadius or p.r
+	p.hitRadius = opts.hitRadius or p.r
 	p.hitRadius2 = p.hitRadius * p.hitRadius
 
 	if p.target then
 		p.lastTX = p.target.x
 		p.lastTY = p.target.y
-	elseif record and record.lastTX and record.lastTY then
-		p.lastTX = record.lastTX
-		p.lastTY = record.lastTY
+	elseif opts.lastTX and opts.lastTY then
+		p.lastTX = opts.lastTX
+		p.lastTY = opts.lastTY
 	elseif p.vx and p.vy then
 		p.lastTX = p.x + p.vx * 10
 		p.lastTY = p.y + p.vy * 10
@@ -227,10 +245,10 @@ local function initProjectile(p, source, target, context, speed, life, record)
 		p.lastTY = p.y + sin(p.angle) * 10
 	end
 
-	if record and record.behaviors then
-		p.behaviors = record.behaviors
-	elseif context then
-		p.behaviors = context.behaviors
+	if opts.behaviors then
+		p.behaviors = opts.behaviors
+	elseif opts.context then
+		p.behaviors = opts.context.behaviors
 	else
 		local fireProfile = source._fireProfile
 		p.behaviors = fireProfile and fireProfile.behaviors or source.def.behaviors
@@ -240,13 +258,13 @@ local function initProjectile(p, source, target, context, speed, life, record)
 	return p
 end
 
-local function createProjectile(source, target, context, speed, life, record)
+local function createProjectile(source, options)
 	if not source then
 		return nil
 	end
 
 	local p = acquire()
-	initProjectile(p, source, target, context, speed, life, record)
+	initProjectile(p, source, options)
 
 	PB.init(p)
 	Sound.play(source.kind)
@@ -256,11 +274,16 @@ local function createProjectile(source, target, context, speed, life, record)
 end
 
 local function spawnEvent(evt)
-	return createProjectile(evt.source, nil, nil, nil, nil, evt)
+	return createProjectile(evt.source, evt)
 end
 
 local function spawnDirect(source, target, context, speed, life)
-	return createProjectile(source, target, context, speed, life)
+	return createProjectile(source, {
+		target = target,
+		context = context,
+		speed = speed,
+		life = life,
+	})
 end
 
 local function resolveSpawnProjectile(parent, evt)
