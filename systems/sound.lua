@@ -29,6 +29,16 @@ local pitchJitterByCategory = {
 	repetitive = 0.08,
 }
 
+-- Categories describe how a cue behaves, while this table deliberately routes
+-- them to user-facing mixer channels. UI is reserved for menu/HUD interaction;
+-- combat repetition and important placement/outcome/notification cues are
+-- gameplay sounds.
+local sfxChannelByCategory = {
+	ui = "ui",
+	repetitive = "gameplay",
+	important = "gameplay",
+}
+
 local function focusGain()
 	local settings = Save.data and Save.data.settings
 	if not Sound.focused and settings and settings.muteWhenUnfocused then return 0 end
@@ -139,10 +149,13 @@ function Sound.playAbilityReady(opts)
 	Sound.play("abilityReady", opts)
 end
 
-function Sound.setSFXVolume(v)
-	local baseVol = scaleVolume(v)
-
+function Sound.setSFXVolume()
+	local settings = Save.data.settings
 	for _, entry in pairs(Sound.sfx) do
+		local channel = assert(sfxChannelByCategory[entry.category],
+			"unmapped SFX category: " .. tostring(entry.category))
+		local channelVolume = channel == "ui" and settings.uiVolume or settings.gameplaySfxVolume
+		local baseVol = scaleVolume(channelVolume)
 		local bias = entry.bias or 1.0
 		local vol = baseVol * bias
 
@@ -207,7 +220,7 @@ end
 -- channel levels and pause ducking can be restored without approximation.
 function Sound.setFocused(focused)
 	Sound.focused = focused ~= false
-	Sound.setSFXVolume(Save.data.settings.sfxVolume)
+	Sound.setSFXVolume()
 	Sound.setMusicVolume(Save.data.settings.musicVolume)
 	if Sound.currentMusic and Sound.musicFadeT > 0 then
 		local eased = Sound.musicFadeT * Sound.musicFadeT
@@ -235,14 +248,14 @@ function Sound.load()
 		uiConfirm = { file = "assets/sounds/uiConfirm.ogg", category = "ui" },
 		uiBack = { file = "assets/sounds/uiBack.ogg", category = "ui" },
 		uiError = { file = "assets/sounds/uiError.ogg", category = "ui" },
-		abilityReady = { file = "assets/sounds/uiConfirm.ogg", cooldown = 0.35, bias = 0.7, category = "ui", pool = 2 },
-		victory = { file = "assets/sounds/victory.ogg" },
-		gameOver = { file = "assets/sounds/gameOver.ogg" },
-		towerPlaced = { files = { "assets/sounds/towerPlaced1.ogg", "assets/sounds/towerPlaced2.ogg" }, jitter = true },
-		towerUpgraded = { file = "assets/sounds/upgrade.ogg" },
-		message = { file = "assets/sounds/message.ogg", jitter = true, bias = 0.8 },
-		medal = { file = "assets/sounds/medal.mp3", jitter = true, bias = 0.9 },
-		towerSold = { files = { "assets/sounds/towerSold1.ogg", "assets/sounds/towerSold2.ogg", "assets/sounds/towerSold3.ogg" } },
+		abilityReady = { file = "assets/sounds/uiConfirm.ogg", cooldown = 0.35, bias = 0.7, category = "important", pool = 2 },
+		victory = { file = "assets/sounds/victory.ogg", category = "important" },
+		gameOver = { file = "assets/sounds/gameOver.ogg", category = "important" },
+		towerPlaced = { files = { "assets/sounds/towerPlaced1.ogg", "assets/sounds/towerPlaced2.ogg" }, jitter = true, category = "important" },
+		towerUpgraded = { file = "assets/sounds/upgrade.ogg", category = "important" },
+		message = { file = "assets/sounds/message.ogg", jitter = true, bias = 0.8, category = "important" },
+		medal = { file = "assets/sounds/medal.mp3", jitter = true, bias = 0.9, category = "important" },
+		towerSold = { files = { "assets/sounds/towerSold1.ogg", "assets/sounds/towerSold2.ogg", "assets/sounds/towerSold3.ogg" }, category = "important" },
 		lancer = { file = "assets/sounds/lancer.ogg", jitter = true, bias = 0.7, cooldown = 0.06, category = "repetitive", pool = 3 },
 		slow = { file = "assets/sounds/slow.ogg", jitter = true, bias = 0.2, cooldown = 0.08, category = "repetitive", pool = 2 },
 		cannon = { file = "assets/sounds/cannon.ogg", jitter = true, bias = 0.82, cooldown = 0.06, category = "repetitive", pool = 3 },
@@ -281,7 +294,7 @@ function Sound.load()
 	}
 
 	Sound.setMusicVolume(Save.data.settings.musicVolume)
-	Sound.setSFXVolume(Save.data.settings.sfxVolume)
+	Sound.setSFXVolume()
 end
 
 function Sound.update(dt)

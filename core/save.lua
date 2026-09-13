@@ -4,7 +4,7 @@ local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local BACKUP_FILE = SAVE_DIR .. "/save.bak.lua"
 local TEMP_FILE = SAVE_DIR .. "/save.tmp.lua"
-local SAVE_VERSION = 6 -- Unreleased save-format changes
+local SAVE_VERSION = 7 -- Split interface and gameplay sound-effect levels
 local DIRTY_DELAY = 0.35
 
 local Hotkeys = require("core.hotkeys")
@@ -18,7 +18,8 @@ local rep = string.rep
 
 local DEFAULT_SETTINGS = {
 	musicVolume = 0.20,
-	sfxVolume = 0.20,
+	uiVolume = 0.20,
+	gameplaySfxVolume = 0.20,
 	muteWhenUnfocused = true,
 	difficulty = "normal",
 	screenShake = true,
@@ -133,6 +134,15 @@ end
 local function normalizeSettings(data)
 	local changed = defaultTable(data, "settings")
 	local settings = data.settings
+	-- The old SFX slider controlled every non-music source. Seed both new
+	-- channels from it before applying defaults so an existing mix sounds
+	-- exactly the same immediately after migration.
+	if settings.sfxVolume ~= nil then
+		changed = defaultValue(settings, "uiVolume", settings.sfxVolume) or changed
+		changed = defaultValue(settings, "gameplaySfxVolume", settings.sfxVolume) or changed
+		settings.sfxVolume = nil
+		changed = true
+	end
 	for key, value in pairs(DEFAULT_SETTINGS) do
 		changed = defaultValue(settings, key, value) or changed
 	end

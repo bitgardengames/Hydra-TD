@@ -11,7 +11,8 @@ end
 love = {audio = {}, math = {random = math.random}}
 package.loaded["core.save"] = {data = {settings = {
 	musicVolume = 0.5,
-	sfxVolume = 0.25,
+	uiVolume = 0.4,
+	gameplaySfxVolume = 0.25,
 	muteWhenUnfocused = true,
 }}}
 package.loaded["core.game_speed"] = {getSoundCooldownScale = function() return 1 end}
@@ -19,8 +20,8 @@ package.loaded["core.game_speed"] = {getSoundCooldownScale = function() return 1
 local Sound = require("systems.sound")
 local effect, pooledA, pooledB, music = source(), source(), source(), source()
 Sound.sfx = {
-	single = {source = effect},
-	pooled = {sources = {pooledA, pooledB}, bias = 0.5},
+	single = {source = effect, category = "important"},
+	pooled = {sources = {pooledA, pooledB}, bias = 0.5, category = "repetitive"},
 }
 Sound.music = {menu = music}
 

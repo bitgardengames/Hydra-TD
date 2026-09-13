@@ -48,7 +48,10 @@ return {
 	settings = {
 		title = "Settings",
 		music = "Music Volume",
-		sfx = "SFX Volume",
+		gameplaySounds = "Gameplay Sounds",
+		gameplaySoundsDesc = "Controls combat, tower placement, outcome, and gameplay notification sounds.",
+		interfaceSounds = "Interface Sounds",
+		interfaceSoundsDesc = "Controls menu navigation and interface interaction sounds.",
 		muteWhenUnfocused = "Mute when unfocused",
 		muteWhenUnfocusedDesc = "Silences all audio while the game window is not focused.",
 		percentValue = "%d%%",
