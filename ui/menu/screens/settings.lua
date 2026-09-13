@@ -245,6 +245,17 @@ local function drawToggleRow(row, x, yTop)
 	Text.printShadow(string.format("%s: %s", row.label, valueText), x, rowTextY(yTop))
 end
 
+local function drawChoiceRow(row, x, yTop)
+	local choices = type(row.choices) == "function" and row.choices() or row.choices or {}
+	local value, label = row.get(), ""
+	for _, choice in ipairs(choices) do
+		if choice.value == value then label = choice.label; break end
+	end
+	Text.printShadow(row.label, x, rowTextY(yTop))
+	Text.printfShadow("‹  " .. label .. "  ›", x + LABEL_W, rowTextY(yTop),
+		SLIDER_W + SLIDER_VALUE_GAP + SLIDER_VALUE_W, "right")
+end
+
 local function drawInfoRow(row, x, yTop)
 	Text.printShadow(row.label, x, rowTextY(yTop))
 end
@@ -678,6 +689,7 @@ local function findRectAt(rects, x, y)
 end
 
 controlContext = {
+	drawChoice = drawChoiceRow,
 	drawSlider = drawSliderRow,
 	drawToggle = drawToggleRow,
 	drawKeybind = drawKeybindRow,

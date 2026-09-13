@@ -37,6 +37,11 @@ local function toggle(id, label, setting, description, set)
 		set = set or function(value) Save.data.settings[setting] = value end}
 end
 
+local function choice(id, label, description, choices, get, set)
+	return {id = id, label = label, description = description, type = "choice",
+		choices = choices, get = get, set = set}
+end
+
 local function keybindRows(capture, options)
 	local rows = {}
 	for _, def in ipairs(keyboardControlsLayout) do
@@ -56,6 +61,36 @@ function Model.build(capture, options)
 	local onRestoreKeybindDefaults = options.onRestoreKeybindDefaults
 		or function() capture:restoreDefaults() end
 	local keybindOptions = {onRestoreKeybindDefaults = onRestoreKeybindDefaults}
+	local Window = require("core.window")
+	local function applyWindow() Window.apply(Save.data.settings) end
+	local function displays() return Window.getDisplays() end
+	local function monitorChoices()
+		local result = {}
+		for _, display in ipairs(displays()) do
+			result[#result + 1] = {value = display.index,
+				label = L("settings.monitorValue", display.index, display.width, display.height)}
+		end
+		return result
+	end
+	local function resolutionChoices()
+		local all = displays()
+		local display = all[Save.data.settings.displayIndex] or all[1]
+		local result = {}
+		for _, mode in ipairs(display.resolutions) do
+			result[#result + 1] = {value = mode.width .. "x" .. mode.height,
+				width = mode.width, height = mode.height, label = L("settings.resolutionValue", mode.width, mode.height)}
+		end
+		return result
+	end
+	local function resolutionValue()
+		local settings = Save.data.settings
+		if settings.displayMode == "borderless" then
+			local display = displays()[settings.displayIndex]
+			return display.width .. "x" .. display.height
+		end
+		local prefix = settings.displayMode == "fullscreen" and "fullscreen" or "window"
+		return settings[prefix .. "Width"] .. "x" .. settings[prefix .. "Height"]
+	end
 	return {
 		{id = "audio", label = L("settings.tabAudio"), rows = {
 			slider("music", L("settings.music"), nil, Theme.tower.shock,
@@ -73,10 +108,29 @@ function Model.build(capture, options)
 		{id = "video", label = L("settings.tabVideo"), rows = {
 			toggle("camera_motion", L("settings.cameraMotion"), "cameraMotion", L("settings.cameraMotionDesc")),
 			toggle("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers", L("settings.damageNumbersDesc")),
-			toggle("fullscreen", L("settings.fullscreen"), "fullscreen", nil, function(v)
-				Save.data.settings.fullscreen = v
-				require("core.window").apply(Save.data.settings, v)
-			end),
+			choice("display_mode", L("settings.displayMode"), L("settings.displayModeDesc"), {
+				{value = "windowed", label = L("settings.displayModeWindowed")},
+				{value = "borderless", label = L("settings.displayModeBorderless")},
+				{value = "fullscreen", label = L("settings.displayModeFullscreen")},
+			}, function() return Save.data.settings.displayMode end,
+			function(value) Save.data.settings.displayMode = value; applyWindow() end),
+			choice("monitor", L("settings.monitor"), L("settings.monitorDesc"), monitorChoices,
+				function() return Save.data.settings.displayIndex end,
+				function(value)
+					Save.data.settings.displayIndex = value
+					Window.normalizeSettings(Save.data.settings)
+					applyWindow()
+				end),
+			choice("resolution", L("settings.resolution"), L("settings.resolutionDesc"), resolutionChoices,
+				resolutionValue, function(_, selected)
+					local settings = Save.data.settings
+					if settings.displayMode == "fullscreen" then
+						settings.fullscreenWidth, settings.fullscreenHeight = selected.width, selected.height
+					elseif settings.displayMode == "windowed" then
+						settings.windowWidth, settings.windowHeight = selected.width, selected.height
+					end
+					applyWindow()
+				end),
 		}},
 		{id = "controls_keyboard", label = L("settings.tabControlsKeybinds"), rows = keybindRows(capture, keybindOptions)},
 	}
