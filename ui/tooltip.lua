@@ -95,7 +95,7 @@ function Tooltip.draw()
 
 	local x = t.x + Tooltip.padding
 	local y = t.y + Tooltip.padding
-	local oldScissor = {lg.getScissor()}
+	local oldScissorX, oldScissorY, oldScissorW, oldScissorH = lg.getScissor()
 
 	-- A tooltip can be higher than the viewport. Keep its contents inside the
 	-- panel; the bottom is deliberately clipped instead of moving the panel to
@@ -105,7 +105,7 @@ function Tooltip.draw()
 	-- Title
 	if t.title then
 		lg.setColor(colorText)
-		for _, line in ipairs(t.titleLines or {t.title}) do
+		for _, line in ipairs(t.titleLines) do
 			Text.printShadow(line, x, y)
 			y = y + Tooltip.lineHeight
 		end
@@ -123,7 +123,7 @@ function Tooltip.draw()
 
 		if kind == "text" then
 			lg.setColor(row.color or colorMuted)
-			for _, line in ipairs(layout.lines or {row.text or ""}) do
+			for _, line in ipairs(layout.lines) do
 				Text.printShadow(line, x, y)
 				y = y + Tooltip.lineHeight
 			end
@@ -137,7 +137,7 @@ function Tooltip.draw()
 
 			-- Label (left). On narrow screens stats are placed on the next line.
 			lg.setColor(row.color or colorText)
-			for _, line in ipairs(layout.labelLines or {label}) do
+			for _, line in ipairs(layout.labelLines) do
 				Text.printShadow(line, x, y)
 				y = y + Tooltip.lineHeight
 			end
@@ -187,8 +187,8 @@ function Tooltip.draw()
 		end
 	end
 
-	if oldScissor[1] then
-		lg.setScissor(unpack(oldScissor))
+	if oldScissorX ~= nil then
+		lg.setScissor(oldScissorX, oldScissorY, oldScissorW, oldScissorH)
 	else
 		lg.setScissor()
 	end
@@ -242,6 +242,8 @@ function Tooltip.recalculate()
 			local delta = row.delta
 			local labelW = font:getWidth(label)
 			local statsW = font:getWidth(value)
+
+			layout.labelLines = {label}
 
 			maxLabelW = max(maxLabelW, labelW)
 
