@@ -153,14 +153,22 @@ function Button.draw(btn)
 	lg.rectangle("fill", x, fy, w, h, innerRadius)
 
 	-- Label
-	local font = lg.getFont()
+	local font = btn.labelFont or lg.getFont()
+	local subtextFont = btn.subtextFont or font
 	local lineCount = 1
-	if type(btn.label) == "string" then
+	if btn.subtext then
+		lineCount = 2
+	elseif type(btn.label) == "string" then
 		local _, breaks = btn.label:gsub("\n", "")
 		lineCount = breaks + 1
 	end
-	local labelHeight = font:getHeight()
-		+ (lineCount - 1) * font:getHeight() * font:getLineHeight()
+	local labelHeight
+	if btn.subtext then
+		labelHeight = font:getHeight() + subtextFont:getHeight() * subtextFont:getLineHeight()
+	else
+		labelHeight = font:getHeight()
+			+ (lineCount - 1) * font:getHeight() * font:getLineHeight()
+	end
 	local ty = fy + (h - labelHeight) * 0.5
 
 	if btn.enabled == false then
@@ -170,7 +178,14 @@ function Button.draw(btn)
 		lg.setColor(textColor[1], textColor[2], textColor[3], (textColor[4] or 1) * drawAlpha)
 	end
 
+	local previousFont = lg.getFont()
+	lg.setFont(font)
 	Text.printfShadow(btn.label, x, ty, w, "center")
+	if btn.subtext then
+		lg.setFont(subtextFont)
+		Text.printfShadow(btn.subtext, x, ty + font:getHeight(), w, "center")
+	end
+	lg.setFont(previousFont)
 end
 
 -- Most screens treat buttons as a single group. Keep the iteration and event

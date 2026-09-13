@@ -594,7 +594,10 @@ local function drawRight(l, map)
 
 	local play = buttons.play
 	play.x, play.y, play.w, play.h = x, playY, w, PLAY_BUTTON_H
-	play.label = L("campaign.playMap") .. "\n" .. L(map.nameKey) .. "  •  " .. L("difficulty." .. selected)
+	play.label = L("campaign.playMap")
+	play.labelFont = Fonts.get("menu")
+	play.subtext = L(map.nameKey) .. "  •  " .. L("difficulty." .. selected)
+	play.subtextFont = Fonts.get("ui")
 	play.enabled = not isMapLocked(State.mapIndex)
 	Fonts.set("ui")
 	Button.draw(play)
