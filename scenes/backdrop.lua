@@ -9,6 +9,7 @@ local Constants = require("core.constants")
 local Theme = require("core.theme")
 local Fonts = require("core.fonts")
 local Difficulty = require("systems.difficulty")
+local SimulationClock = require("core.simulation_clock")
 
 local lg = love.graphics
 
@@ -17,8 +18,6 @@ local versionPad = 12
 
 local colorText = Theme.ui.text
 local cr, cg, cb = colorText[1], colorText[2], colorText[3]
-
-local FIXED_DT = 1 / 120
 
 local Backdrop = {
     active = false,
@@ -182,15 +181,20 @@ function Backdrop.start(index)
 	end
 
 	-- Start wave
-	State.wave = ((shot.wave or 1) - 1) % 10 + 1
+	-- Scene exports record the full campaign wave number. Preserve it so the
+	-- backdrop resolves the same encounter and difficulty scaling as gameplay.
+	State.wave = shot.wave or 1
 	Waves.startWave()
 
-	-- Warmup
+	-- Replay the warmup on the exact same fixed clock used by live gameplay.
+	-- Besides keeping waveTime aligned, this preserves tick-sensitive targeting,
+	-- firing, projectile, and enemy positions from the captured scene.
+	local step = SimulationClock.step
 	local tt = 0
 
 	while tt < (shot.warmup or 0) do
-		Sim.update(FIXED_DT)
-		tt = tt + FIXED_DT
+		Sim.update(step)
+		tt = tt + step
 	end
 
 	Sound.suppressed = false
@@ -211,7 +215,7 @@ function Backdrop.update(dt)
 
 	-- Handle fade
 	if Backdrop.fadeDir ~= 0 then
-		Backdrop.fadeT = Backdrop.fadeT + FIXED_DT * Backdrop.fadeDir
+		Backdrop.fadeT = Backdrop.fadeT + dt * Backdrop.fadeDir
 
 		if Backdrop.fadeDir == 1 and Backdrop.fadeT >= Backdrop.currentFadeDur then
 			Backdrop.fadeT = Backdrop.currentFadeDur
