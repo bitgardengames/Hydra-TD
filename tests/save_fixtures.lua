@@ -73,6 +73,19 @@ local rewritten = assert(love.filesystem.load("saves/save.lua"))()
 check(rewritten.settings.keybinds.actions.restartRun == nil,
 	"retired restart hotkey remained in persisted settings")
 
+-- Retired visual options are removed because effects now always use the full
+-- particle density.
+reset({["saves/save.lua"] = [[return {
+	version = 6,
+	settings = {highDensityParticles = false},
+}]]})
+Save.load()
+check(Save.data.settings.highDensityParticles == nil,
+	"retired particle-density setting remained in loaded settings")
+rewritten = assert(love.filesystem.load("saves/save.lua"))()
+check(rewritten.settings.highDensityParticles == nil,
+	"retired particle-density setting remained in persisted settings")
+
 -- Experimental module discovery is inert in normal runs, but remains persisted
 -- so disabling the experiment never makes an older save unloadable or lossy.
 reset({["saves/save.lua"] = "return { version = 6, meta = { discoveredModules = { move_wave = true, retired_test_module = true } } }"})

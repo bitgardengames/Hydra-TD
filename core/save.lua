@@ -24,7 +24,6 @@ local DEFAULT_SETTINGS = {
 	showDamageNumbers = true,
 	fullscreen = true,
 	cameraMotion = true,
-	highDensityParticles = true,
 }
 
 local META_COUNTERS = {
@@ -138,6 +137,7 @@ local function normalizeSettings(data)
 	end
 	if settings.msaaQuality ~= nil then settings.msaaQuality = nil; changed = true end
 	if settings.abilityReadySound ~= nil then settings.abilityReadySound = nil; changed = true end
+	if settings.highDensityParticles ~= nil then settings.highDensityParticles = nil; changed = true end
 	return ensureKeybinds(settings) or changed
 end
 

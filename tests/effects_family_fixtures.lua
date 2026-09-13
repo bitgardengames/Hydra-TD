@@ -2,7 +2,7 @@
 package.path = "./?.lua;./?/init.lua;" .. package.path
 
 package.loaded["systems.sound"] = {play = function() end}
-package.loaded["core.save"] = {data = {settings = {highDensityParticles = true}}}
+package.loaded["core.save"] = {data = {settings = {}}}
 package.loaded["core.camera"] = {shake = function() end}
 
 love = {
@@ -15,6 +15,9 @@ love = {
 
 local Effects = require("world.effects")
 local Clock = require("core.simulation_clock")
+
+assert(Effects.particleCount(5, 0, false) == 5,
+	"effects should always use the full particle count")
 
 -- Expiration and pool reuse use the same descriptor release path.
 Effects.presentationEvent("wave_cleared", {life = 0.01})
