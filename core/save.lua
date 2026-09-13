@@ -4,7 +4,7 @@ local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local BACKUP_FILE = SAVE_DIR .. "/save.bak.lua"
 local TEMP_FILE = SAVE_DIR .. "/save.tmp.lua"
-local SAVE_VERSION = 7 -- Split interface and gameplay sound-effect levels
+local SAVE_VERSION = 8 -- Persist monitor, display mode, and mode-specific dimensions
 local DIRTY_DELAY = 0.35
 
 local Hotkeys = require("core.hotkeys")
@@ -24,7 +24,12 @@ local DEFAULT_SETTINGS = {
 	difficulty = "normal",
 	screenShake = true,
 	showDamageNumbers = true,
-	fullscreen = true,
+	displayMode = "borderless",
+	displayIndex = 1,
+	windowWidth = 1280,
+	windowHeight = 800,
+	fullscreenWidth = 1280,
+	fullscreenHeight = 800,
 	cameraMotion = true,
 }
 
@@ -143,9 +148,18 @@ local function normalizeSettings(data)
 		settings.sfxVolume = nil
 		changed = true
 	end
+	-- Preserve the intent of the former boolean before displayMode receives its
+	-- default value. Window normalization removes the obsolete field.
+	if settings.displayMode == nil and type(settings.fullscreen) == "boolean" then
+		settings.displayMode = settings.fullscreen and "borderless" or "windowed"
+		changed = true
+	end
 	for key, value in pairs(DEFAULT_SETTINGS) do
 		changed = defaultValue(settings, key, value) or changed
 	end
+	local before = Save.serialize(settings)
+	require("core.window").normalizeSettings(settings)
+	changed = before ~= Save.serialize(settings) or changed
 	if settings.msaaQuality ~= nil then settings.msaaQuality = nil; changed = true end
 	if settings.abilityReadySound ~= nil then settings.abilityReadySound = nil; changed = true end
 	if settings.highDensityParticles ~= nil then settings.highDensityParticles = nil; changed = true end

@@ -53,7 +53,7 @@ for path in pairs(files) do
 	if path:match("^saves/save%.corrupt%-%d%d%d%d%d%d%d%d%-%d%d%d%d%d%d") then diagnostic = path end
 end
 check(diagnostic and files[diagnostic], "malformed primary was not preserved")
-check(Save.data.version == 7, "malformed save did not produce fresh data")
+check(Save.data.version == 8, "malformed save did not produce fresh data")
 check(Save.data.settings.muteWhenUnfocused == true,
 	"fresh saves did not enable focus muting by default")
 check(Save.data.settings.uiVolume == 0.20 and Save.data.settings.gameplaySfxVolume == 0.20,
@@ -62,7 +62,7 @@ check(Save.data.settings.uiVolume == 0.20 and Save.data.settings.gameplaySfxVolu
 -- Older saves migrate while retaining fields this version does not know about.
 reset({["saves/save.lua"] = "return { version = 1, unknownFutureField = { enabled = true } }"})
 Save.load()
-check(Save.data.version == 7, "old version was not migrated")
+check(Save.data.version == 8, "old version was not migrated")
 check(Save.data.unknownFutureField.enabled, "unknown field was discarded")
 check(files["saves/save.bak.lua"], "pre-migration save was not backed up")
 check(Save.data.settings.muteWhenUnfocused == true,

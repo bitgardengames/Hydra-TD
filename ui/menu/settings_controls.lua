@@ -9,6 +9,25 @@ local function commonActivate(row, _, ctx)
 end
 
 Controls.operations = {
+	choice = {
+		draw = function(row, x, y, _, _, ctx) ctx.drawChoice(row, x, y) end,
+		adjust = function(row, direction, ctx)
+			local choices = type(row.choices) == "function" and row.choices() or row.choices
+			if not choices or #choices == 0 then return false end
+			local current, index = row.get(), 1
+			for i, choice in ipairs(choices) do
+				if choice.value == current then index = i; break end
+			end
+			index = ((index - 1 + direction) % #choices) + 1
+			row.set(choices[index].value, choices[index])
+			ctx.changed()
+			Sound.play("uiMove")
+			return true
+		end,
+		activate = function(row, _, ctx)
+			return Controls.operations.choice.adjust(row, 1, ctx)
+		end,
+	},
 	slider = {
 		draw = function(row, x, y, hovered, index, ctx) ctx.drawSlider(row, x, y, hovered, index) end,
 		adjust = function(row, direction, ctx)
