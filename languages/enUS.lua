@@ -446,7 +446,9 @@ return {
 
 	enemy = {
 		grunt = "Grunt",
+		gruntDescription = "A dependable foot soldier with balanced speed and durability.",
 		runner = "Runner",
+		runnerDescription = "Fast but fragile; stop it before it slips through your defenses.",
 		bulwark = "Tank",
 		bulwarkDescription = "Plated against small hits; crack it with cannon or lancer fire.",
 		regenerator = "Regenerator",
@@ -456,11 +458,17 @@ return {
 		summoner = "Summoner",
 		summonerDescription = "Periodically summons pairs of runners at its position on the path.",
 		boss = "Boss",
+		bossDescription = "A massive enemy built to absorb sustained fire.",
 		bossSummoner = "Summoner",
+		bossSummonerDescription = "Calls reinforcements onto the path throughout the battle.",
 		bossSuppression = "Suppressor",
+		bossSuppressionDescription = "Periodically disables towers with a suppression pulse.",
 		bossRavager = "Ravager",
+		bossRavagerDescription = "Enrages at low health and charges toward the exit.",
 		bossPhasewalker = "Phasewalker",
+		bossPhasewalkerDescription = "Phases out periodically, becoming untargetable and moving faster.",
 		bossGatecrasher = "Gatecrasher",
+		bossGatecrasherDescription = "Lunges forward as its health crosses key thresholds.",
 	},
 
 	hud = {
@@ -475,6 +483,7 @@ return {
 		waveProgress = "%d/%d",
 		incomingGroup = "INCOMING",
 		compositionEntry = "%d %s",
+		enemyHealth = "Health",
 	},
 
 	messages = {
