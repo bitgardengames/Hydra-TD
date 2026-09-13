@@ -26,7 +26,10 @@ function CineCam.follow(opts)
 			-- Resolve target
 			local target = opts.getTarget and opts.getTarget() or opts.target
 
-			if not target or target.dead then
+			-- Enemy objects are pooled and cleared after they die. A shot may still
+			-- hold the cleared object in its context, so validate its coordinates
+			-- before trying to offset them.
+			if not target or target.dead or type(target.x) ~= "number" or type(target.y) ~= "number" then
 				return
 			end
 
