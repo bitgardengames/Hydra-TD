@@ -114,27 +114,27 @@ local wavesByMapId = {
 		[20] = { g("boss", 1, 0.00), g("grunt", 14, 0.50, 0.42), g("grunt", 14, 0.50, 0.10), g("grunt", 10, 0.50, 0.07) },
 	},
 	gauntlet = {
-		-- Tight ordinary packs accompany Warcallers positioned behind escorts.
+		-- Tight ordinary packs accompany Regenerators positioned behind escorts.
 		[1] = { g("grunt", 12, 0.60) },
 		[2] = { g("grunt", 16, 0.50) },
 		[3] = { g("grunt", 18, 0.50) },
 		[4] = { g("runner", 16, 0.50) },
 		[5] = { g("grunt", 20, 0.50) },
 		[6] = { g("grunt", 9, 0.50), g("grunt", 16, 0.50, 1.30) },
-		[7] = { g("grunt", 18, 0.50), g("warcaller", 2, 1.08, 0.70) },
+		[7] = { g("grunt", 18, 0.50), g("regenerator", 2, 1.08, 0.70) },
 		[8] = { g("runner", 18, 0.50), g("grunt", 12, 0.50, 0.70) },
-		[9] = { g("grunt", 20, 0.50), g("warcaller", 3, 1.03, 0.60) },
-		[10] = { g("boss", 1, 0.00), g("grunt", 18, 0.50, 1.20), g("warcaller", 3, 1.08, 0.80) },
+		[9] = { g("grunt", 20, 0.50), g("regenerator", 3, 1.03, 0.60) },
+		[10] = { g("boss", 1, 0.00), g("grunt", 18, 0.50, 1.20), g("regenerator", 3, 1.08, 0.80) },
 		[11] = { g("grunt", 12, 0.50), g("grunt", 18, 0.50, 0.90) },
 		[12] = { g("grunt", 22, 0.50) },
 		[13] = { g("runner", 20, 0.50), g("grunt", 12, 0.50, 0.65) },
-		[14] = { g("grunt", 22, 0.50), g("warcaller", 4, 0.98, 0.55) },
+		[14] = { g("grunt", 22, 0.50), g("regenerator", 4, 0.98, 0.55) },
 		[15] = { g("grunt", 15, 0.50), g("grunt", 20, 0.50, 0.75) },
 		[16] = { g("grunt", 24, 0.50) },
 		[17] = { g("runner", 22, 0.50), g("grunt", 12, 0.50, 0.60) },
-		[18] = { g("grunt", 24, 0.50), g("warcaller", 4, 0.96, 0.50) },
+		[18] = { g("grunt", 24, 0.50), g("regenerator", 4, 0.96, 0.50) },
 		[19] = { g("grunt", 15, 0.50), g("grunt", 20, 0.50, 0.65) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 22, 0.50, 1.10), g("warcaller", 4, 0.98, 0.70) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 22, 0.50, 1.10), g("regenerator", 4, 0.98, 0.70) },
 	},
 	snaketrail = {
 		-- Long bends separate durable and fast blocks to force frequent retargeting.
@@ -281,34 +281,34 @@ local wavesByMapId = {
 	terrace = {
 		-- 17 grunts.
 		[1] = { g("grunt", 17, 0.61) },
-		-- 9 warcallers.
-		[2] = { g("warcaller", 9, 0.80) },
-		-- 13 grunts followed by 4 warcallers.
-		[3] = { g("grunt", 13, 0.56), g("warcaller", 4, 0.79, 1.08) },
-		-- 10 warcallers followed by 13 grunts.
-		[4] = { g("warcaller", 10, 0.64), g("grunt", 13, 0.50, 0.58) },
-		-- 10 regenerators followed by 7 warcallers.
-		[5] = { g("regenerator", 10, 0.67), g("warcaller", 7, 0.61, 0.50) },
-		-- 10 warcallers, then 9 regenerators, and 13 grunts.
-		[6] = { g("warcaller", 10, 0.60), g("regenerator", 9, 0.61, 0.36), g("grunt", 39, 0.50, 0.72) },
-		-- 6 warcallers, then 7 regenerators, then 7 grunts, and 8 runners.
-		[7] = { g("warcaller", 6, 0.60), g("regenerator", 7, 0.60, 0.22), g("grunt", 21, 0.50, 0.50), g("runner", 8, 0.57, 0.72) },
-		-- 8 warcallers, then 7 grunts, then 9 grunts, and 10 runners.
-		[8] = { g("warcaller", 8, 0.60), g("grunt", 7, 0.50, 0.22), g("grunt", 15, 0.50, 0.48), g("runner", 10, 0.50, 0.65) },
-		-- 6 warcallers, then 7 regenerators, then 8 grunts, then 8 runners, and 9 grunts.
-		[9] = { g("warcaller", 6, 0.60), g("regenerator", 7, 0.60, 0.14), g("grunt", 24, 0.50, 0.36), g("runner", 8, 0.50, 0.58), g("grunt", 15, 0.50, 0.81) },
-		-- 1 boss, then 6 warcallers, then 7 regenerators, then 8 grunts, and 7 runners.
-		[10] = { g("boss", 1, 0.00), g("warcaller", 6, 0.60, 1.30), g("regenerator", 7, 0.60, 1.44), g("grunt", 24, 0.50, 1.66), g("runner", 7, 0.54, 1.80) },
-		[11] = { g("warcaller", 6, 0.60), g("regenerator", 8, 0.60, 0.24), g("grunt", 24, 0.50, 0.55), g("runner", 9, 0.57, 0.79) },
-		[12] = { g("warcaller", 11, 0.60), g("regenerator", 10, 0.61, 0.38), g("grunt", 45, 0.50, 0.76) },
-		[13] = { g("warcaller", 9, 0.60), g("grunt", 8, 0.50, 0.22), g("grunt", 18, 0.50, 0.48), g("runner", 11, 0.50, 0.65) },
-		[14] = { g("warcaller", 7, 0.60), g("regenerator", 8, 0.60, 0.21), g("grunt", 24, 0.50, 0.47), g("runner", 9, 0.57, 0.68) },
-		[15] = { g("warcaller", 7, 0.60), g("regenerator", 8, 0.60, 0.15), g("grunt", 27, 0.50, 0.38), g("runner", 9, 0.50, 0.61), g("grunt", 18, 0.50, 0.85) },
-		[16] = { g("warcaller", 12, 0.60), g("regenerator", 11, 0.61, 0.32), g("grunt", 48, 0.50, 0.65) },
-		[17] = { g("warcaller", 10, 0.60), g("grunt", 8, 0.50, 0.20), g("grunt", 21, 0.50, 0.44), g("runner", 12, 0.50, 0.59) },
-		[18] = { g("warcaller", 8, 0.60), g("regenerator", 9, 0.60, 0.19), g("grunt", 27, 0.50, 0.42), g("runner", 10, 0.57, 0.61) },
-		[19] = { g("warcaller", 8, 0.60), g("regenerator", 9, 0.60, 0.12), g("grunt", 30, 0.50, 0.31), g("runner", 10, 0.50, 0.49), g("grunt", 21, 0.50, 0.68) },
-		[20] = { g("boss", 1, 0.00), g("warcaller", 8, 0.60, 1.17), g("regenerator", 9, 0.60, 1.30), g("grunt", 30, 0.50, 1.49), g("runner", 9, 0.54, 1.62) },
+		-- 9 regenerators.
+		[2] = { g("regenerator", 9, 0.80) },
+		-- 13 grunts followed by 4 regenerators.
+		[3] = { g("grunt", 13, 0.56), g("regenerator", 4, 0.79, 1.08) },
+		-- 10 regenerators followed by 13 grunts.
+		[4] = { g("regenerator", 10, 0.64), g("grunt", 13, 0.50, 0.58) },
+		-- 10 regenerators followed by 7 regenerators.
+		[5] = { g("regenerator", 10, 0.67), g("regenerator", 7, 0.61, 0.50) },
+		-- 10 regenerators, then 9 regenerators, and 13 grunts.
+		[6] = { g("regenerator", 10, 0.60), g("regenerator", 9, 0.61, 0.36), g("grunt", 39, 0.50, 0.72) },
+		-- 6 regenerators, then 7 regenerators, then 7 grunts, and 8 runners.
+		[7] = { g("regenerator", 6, 0.60), g("regenerator", 7, 0.60, 0.22), g("grunt", 21, 0.50, 0.50), g("runner", 8, 0.57, 0.72) },
+		-- 8 regenerators, then 7 grunts, then 9 grunts, and 10 runners.
+		[8] = { g("regenerator", 8, 0.60), g("grunt", 7, 0.50, 0.22), g("grunt", 15, 0.50, 0.48), g("runner", 10, 0.50, 0.65) },
+		-- 6 regenerators, then 7 regenerators, then 8 grunts, then 8 runners, and 9 grunts.
+		[9] = { g("regenerator", 6, 0.60), g("regenerator", 7, 0.60, 0.14), g("grunt", 24, 0.50, 0.36), g("runner", 8, 0.50, 0.58), g("grunt", 15, 0.50, 0.81) },
+		-- 1 boss, then 6 regenerators, then 7 regenerators, then 8 grunts, and 7 runners.
+		[10] = { g("boss", 1, 0.00), g("regenerator", 6, 0.60, 1.30), g("regenerator", 7, 0.60, 1.44), g("grunt", 24, 0.50, 1.66), g("runner", 7, 0.54, 1.80) },
+		[11] = { g("regenerator", 6, 0.60), g("regenerator", 8, 0.60, 0.24), g("grunt", 24, 0.50, 0.55), g("runner", 9, 0.57, 0.79) },
+		[12] = { g("regenerator", 11, 0.60), g("regenerator", 10, 0.61, 0.38), g("grunt", 45, 0.50, 0.76) },
+		[13] = { g("regenerator", 9, 0.60), g("grunt", 8, 0.50, 0.22), g("grunt", 18, 0.50, 0.48), g("runner", 11, 0.50, 0.65) },
+		[14] = { g("regenerator", 7, 0.60), g("regenerator", 8, 0.60, 0.21), g("grunt", 24, 0.50, 0.47), g("runner", 9, 0.57, 0.68) },
+		[15] = { g("regenerator", 7, 0.60), g("regenerator", 8, 0.60, 0.15), g("grunt", 27, 0.50, 0.38), g("runner", 9, 0.50, 0.61), g("grunt", 18, 0.50, 0.85) },
+		[16] = { g("regenerator", 12, 0.60), g("regenerator", 11, 0.61, 0.32), g("grunt", 48, 0.50, 0.65) },
+		[17] = { g("regenerator", 10, 0.60), g("grunt", 8, 0.50, 0.20), g("grunt", 21, 0.50, 0.44), g("runner", 12, 0.50, 0.59) },
+		[18] = { g("regenerator", 8, 0.60), g("regenerator", 9, 0.60, 0.19), g("grunt", 27, 0.50, 0.42), g("runner", 10, 0.57, 0.61) },
+		[19] = { g("regenerator", 8, 0.60), g("regenerator", 9, 0.60, 0.12), g("grunt", 30, 0.50, 0.31), g("runner", 10, 0.50, 0.49), g("grunt", 21, 0.50, 0.68) },
+		[20] = { g("boss", 1, 0.00), g("regenerator", 8, 0.60, 1.17), g("regenerator", 9, 0.60, 1.30), g("grunt", 30, 0.50, 1.49), g("runner", 9, 0.54, 1.62) },
 	},
 	highridge = {
 		-- 17 grunts.
@@ -319,28 +319,28 @@ local wavesByMapId = {
 		[3] = { g("grunt", 13, 0.72), g("grunt", 6, 0.61, 1.80), g("runner", 2, 0.69, 2.10) },
 		-- 6 grunts, then 6 runners, and 13 grunts.
 		[4] = { g("grunt", 18, 0.50), g("runner", 6, 0.55, 0.30), g("grunt", 13, 0.59, 0.96) },
-		-- 10 warcallers, then 4 grunts, and 4 runners.
-		[5] = { g("warcaller", 10, 0.89), g("grunt", 12, 0.50, 0.84), g("runner", 4, 0.53, 1.14) },
-		-- 6 grunts, then 6 runners, then 10 warcallers, and 13 regenerators.
-		[6] = { g("grunt", 18, 0.50), g("runner", 6, 0.50, 0.30), g("warcaller", 10, 0.79, 0.60), g("regenerator", 13, 0.87, 1.20) },
-		-- 3 grunts, then 4 runners, then 7 warcallers, then 7 regenerators, and 8 grunts.
-		[7] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.70, 0.36), g("regenerator", 7, 0.76, 0.84), g("grunt", 24, 0.53, 1.20) },
-		-- 8 warcallers, then 4 grunts, then 5 runners, then 9 grunts, and 10 grunts.
-		[8] = { g("warcaller", 8, 0.60), g("grunt", 12, 0.50, 0.36), g("runner", 5, 0.50, 0.66), g("grunt", 9, 0.58, 0.72), g("grunt", 18, 0.50, 1.21) },
-		-- 4 grunts, then 4 runners, then 8 warcallers, then 9 regenerators, then 8 grunts, and 10 runners.
-		[9] = { g("grunt", 12, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.60, 0.24), g("regenerator", 9, 0.64, 0.60), g("grunt", 24, 0.50, 0.96), g("runner", 10, 0.68, 1.20) },
-		-- 1 boss, then 4 grunts, then 4 runners, then 7 warcallers, then 8 regenerators, and 8 grunts.
-		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 2.16), g("runner", 4, 0.50, 2.46), g("warcaller", 7, 0.65, 2.40), g("regenerator", 8, 0.72, 2.76), g("grunt", 24, 0.51, 3.00) },
-		[11] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.70, 0.40), g("regenerator", 8, 0.76, 0.92), g("grunt", 27, 0.53, 1.32) },
-		[12] = { g("grunt", 21, 0.50), g("runner", 7, 0.50, 0.32), g("warcaller", 11, 0.79, 0.63), g("regenerator", 15, 0.87, 1.26) },
-		[13] = { g("warcaller", 9, 0.60), g("grunt", 12, 0.50, 0.36), g("runner", 6, 0.50, 0.66), g("grunt", 10, 0.58, 0.72), g("grunt", 21, 0.50, 1.21) },
-		[14] = { g("grunt", 9, 0.50), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.70, 0.34), g("regenerator", 8, 0.76, 0.80), g("grunt", 27, 0.53, 1.14) },
-		[15] = { g("grunt", 12, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 9, 0.60, 0.25), g("regenerator", 10, 0.64, 0.63), g("grunt", 27, 0.50, 1.01), g("runner", 11, 0.68, 1.26) },
-		[16] = { g("grunt", 21, 0.50), g("runner", 7, 0.50, 0.27), g("warcaller", 12, 0.79, 0.54), g("regenerator", 16, 0.87, 1.08) },
-		[17] = { g("warcaller", 10, 0.60), g("grunt", 15, 0.50, 0.32), g("runner", 6, 0.50, 0.59), g("grunt", 11, 0.58, 0.65), g("grunt", 21, 0.50, 1.09) },
-		[18] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.70, 0.31), g("regenerator", 9, 0.76, 0.71), g("grunt", 30, 0.53, 1.02) },
-		[19] = { g("grunt", 15, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 10, 0.60, 0.20), g("regenerator", 11, 0.64, 0.51), g("grunt", 30, 0.50, 0.82), g("runner", 13, 0.68, 1.02) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 1.94), g("runner", 5, 0.50, 2.21), g("warcaller", 9, 0.65, 2.16), g("regenerator", 10, 0.72, 2.48), g("grunt", 30, 0.51, 2.70) },
+		-- 10 regenerators, then 4 grunts, and 4 runners.
+		[5] = { g("regenerator", 10, 0.89), g("grunt", 12, 0.50, 0.84), g("runner", 4, 0.53, 1.14) },
+		-- 6 grunts, then 6 runners, then 10 regenerators, and 13 regenerators.
+		[6] = { g("grunt", 18, 0.50), g("runner", 6, 0.50, 0.30), g("regenerator", 10, 0.79, 0.60), g("regenerator", 13, 0.87, 1.20) },
+		-- 3 grunts, then 4 runners, then 7 regenerators, then 7 regenerators, and 8 grunts.
+		[7] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("regenerator", 7, 0.70, 0.36), g("regenerator", 7, 0.76, 0.84), g("grunt", 24, 0.53, 1.20) },
+		-- 8 regenerators, then 4 grunts, then 5 runners, then 9 grunts, and 10 grunts.
+		[8] = { g("regenerator", 8, 0.60), g("grunt", 12, 0.50, 0.36), g("runner", 5, 0.50, 0.66), g("grunt", 9, 0.58, 0.72), g("grunt", 18, 0.50, 1.21) },
+		-- 4 grunts, then 4 runners, then 8 regenerators, then 9 regenerators, then 8 grunts, and 10 runners.
+		[9] = { g("grunt", 12, 0.50), g("runner", 4, 0.50, 0.30), g("regenerator", 8, 0.60, 0.24), g("regenerator", 9, 0.64, 0.60), g("grunt", 24, 0.50, 0.96), g("runner", 10, 0.68, 1.20) },
+		-- 1 boss, then 4 grunts, then 4 runners, then 7 regenerators, then 8 regenerators, and 8 grunts.
+		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 2.16), g("runner", 4, 0.50, 2.46), g("regenerator", 7, 0.65, 2.40), g("regenerator", 8, 0.72, 2.76), g("grunt", 24, 0.51, 3.00) },
+		[11] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.33), g("regenerator", 8, 0.70, 0.40), g("regenerator", 8, 0.76, 0.92), g("grunt", 27, 0.53, 1.32) },
+		[12] = { g("grunt", 21, 0.50), g("runner", 7, 0.50, 0.32), g("regenerator", 11, 0.79, 0.63), g("regenerator", 15, 0.87, 1.26) },
+		[13] = { g("regenerator", 9, 0.60), g("grunt", 12, 0.50, 0.36), g("runner", 6, 0.50, 0.66), g("grunt", 10, 0.58, 0.72), g("grunt", 21, 0.50, 1.21) },
+		[14] = { g("grunt", 9, 0.50), g("runner", 5, 0.50, 0.28), g("regenerator", 8, 0.70, 0.34), g("regenerator", 8, 0.76, 0.80), g("grunt", 27, 0.53, 1.14) },
+		[15] = { g("grunt", 12, 0.50), g("runner", 4, 0.50, 0.32), g("regenerator", 9, 0.60, 0.25), g("regenerator", 10, 0.64, 0.63), g("grunt", 27, 0.50, 1.01), g("runner", 11, 0.68, 1.26) },
+		[16] = { g("grunt", 21, 0.50), g("runner", 7, 0.50, 0.27), g("regenerator", 12, 0.79, 0.54), g("regenerator", 16, 0.87, 1.08) },
+		[17] = { g("regenerator", 10, 0.60), g("grunt", 15, 0.50, 0.32), g("runner", 6, 0.50, 0.59), g("grunt", 11, 0.58, 0.65), g("grunt", 21, 0.50, 1.09) },
+		[18] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("regenerator", 9, 0.70, 0.31), g("regenerator", 9, 0.76, 0.71), g("grunt", 30, 0.53, 1.02) },
+		[19] = { g("grunt", 15, 0.50), g("runner", 5, 0.50, 0.26), g("regenerator", 10, 0.60, 0.20), g("regenerator", 11, 0.64, 0.51), g("grunt", 30, 0.50, 0.82), g("runner", 13, 0.68, 1.02) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 1.94), g("runner", 5, 0.50, 2.21), g("regenerator", 9, 0.65, 2.16), g("regenerator", 10, 0.72, 2.48), g("grunt", 30, 0.51, 2.70) },
 	},
 	crossflow = {
 		-- 19 grunts.
@@ -351,28 +351,28 @@ local wavesByMapId = {
 		[3] = { g("grunt", 14, 0.53), g("grunt", 6, 0.50, 0.60), g("runner", 2, 0.50, 0.90) },
 		-- 6 grunts, then 7 runners, and 13 grunts.
 		[4] = { g("grunt", 18, 0.50), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.28) },
-		-- 11 warcallers, then 4 grunts, and 4 runners.
-		[5] = { g("warcaller", 11, 0.66), g("grunt", 12, 0.50, 0.23), g("runner", 4, 0.50, 0.53) },
-		-- 6 grunts, then 7 runners, then 10 warcallers, and 13 regenerators.
-		[6] = { g("grunt", 18, 0.50), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.60, 0.15), g("regenerator", 13, 0.67, 0.37) },
-		-- 3 grunts, then 4 runners, then 7 warcallers, then 7 regenerators, and 8 grunts.
-		[7] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.60, 0.08), g("regenerator", 7, 0.60, 0.23), g("grunt", 24, 0.50, 0.37) },
+		-- 11 regenerators, then 4 grunts, and 4 runners.
+		[5] = { g("regenerator", 11, 0.66), g("grunt", 12, 0.50, 0.23), g("runner", 4, 0.50, 0.53) },
+		-- 6 grunts, then 7 runners, then 10 regenerators, and 13 regenerators.
+		[6] = { g("grunt", 18, 0.50), g("runner", 7, 0.50, 0.30), g("regenerator", 10, 0.60, 0.15), g("regenerator", 13, 0.67, 0.37) },
+		-- 3 grunts, then 4 runners, then 7 regenerators, then 7 regenerators, and 8 grunts.
+		[7] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("regenerator", 7, 0.60, 0.08), g("regenerator", 7, 0.60, 0.23), g("grunt", 24, 0.50, 0.37) },
 		-- 4 grunts, then 5 runners, then 8 grunts, then 9 grunts, and 10 runners.
 		[8] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.30), g("grunt", 8, 0.50, 0.08), g("grunt", 15, 0.50, 0.21), g("runner", 10, 0.50, 0.33) },
-		-- 3 grunts, then 4 runners, then 7 warcallers, then 8 regenerators, then 8 grunts, and 9 runners.
-		[9] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.60, 0.08), g("regenerator", 8, 0.60, 0.15), g("grunt", 24, 0.50, 0.28), g("runner", 9, 0.50, 0.37) },
-		-- 1 boss, then 4 grunts, then 4 runners, then 7 warcallers, then 8 regenerators, and 8 grunts.
-		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 0.73), g("runner", 4, 0.50, 1.03), g("warcaller", 7, 0.60, 0.82), g("regenerator", 8, 0.60, 0.95), g("grunt", 24, 0.50, 1.04) },
-		[11] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.60, 0.09), g("regenerator", 8, 0.60, 0.25), g("grunt", 27, 0.50, 0.41) },
-		[12] = { g("grunt", 21, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.60, 0.16), g("regenerator", 15, 0.67, 0.39) },
+		-- 3 grunts, then 4 runners, then 7 regenerators, then 8 regenerators, then 8 grunts, and 9 runners.
+		[9] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("regenerator", 7, 0.60, 0.08), g("regenerator", 8, 0.60, 0.15), g("grunt", 24, 0.50, 0.28), g("runner", 9, 0.50, 0.37) },
+		-- 1 boss, then 4 grunts, then 4 runners, then 7 regenerators, then 8 regenerators, and 8 grunts.
+		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 0.73), g("runner", 4, 0.50, 1.03), g("regenerator", 7, 0.60, 0.82), g("regenerator", 8, 0.60, 0.95), g("grunt", 24, 0.50, 1.04) },
+		[11] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.33), g("regenerator", 8, 0.60, 0.09), g("regenerator", 8, 0.60, 0.25), g("grunt", 27, 0.50, 0.41) },
+		[12] = { g("grunt", 21, 0.50), g("runner", 8, 0.50, 0.32), g("regenerator", 11, 0.60, 0.16), g("regenerator", 15, 0.67, 0.39) },
 		[13] = { g("grunt", 12, 0.50), g("runner", 6, 0.50, 0.30), g("grunt", 9, 0.50, 0.08), g("grunt", 18, 0.50, 0.21), g("runner", 11, 0.50, 0.33) },
-		[14] = { g("grunt", 9, 0.50), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.60, 0.08), g("regenerator", 8, 0.60, 0.22), g("grunt", 27, 0.50, 0.35) },
-		[15] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 8, 0.60, 0.08), g("regenerator", 9, 0.60, 0.16), g("grunt", 27, 0.50, 0.29), g("runner", 10, 0.50, 0.39) },
-		[16] = { g("grunt", 21, 0.50), g("runner", 9, 0.50, 0.27), g("warcaller", 12, 0.60, 0.14), g("regenerator", 16, 0.67, 0.33) },
+		[14] = { g("grunt", 9, 0.50), g("runner", 5, 0.50, 0.28), g("regenerator", 8, 0.60, 0.08), g("regenerator", 8, 0.60, 0.22), g("grunt", 27, 0.50, 0.35) },
+		[15] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.32), g("regenerator", 8, 0.60, 0.08), g("regenerator", 9, 0.60, 0.16), g("grunt", 27, 0.50, 0.29), g("runner", 10, 0.50, 0.39) },
+		[16] = { g("grunt", 21, 0.50), g("runner", 9, 0.50, 0.27), g("regenerator", 12, 0.60, 0.14), g("regenerator", 16, 0.67, 0.33) },
 		[17] = { g("grunt", 15, 0.50), g("runner", 6, 0.50, 0.27), g("grunt", 10, 0.50, 0.07), g("grunt", 21, 0.50, 0.19), g("runner", 12, 0.50, 0.30) },
-		[18] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.60, 0.07), g("regenerator", 9, 0.60, 0.20), g("grunt", 30, 0.50, 0.31) },
-		[19] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.60, 0.07), g("regenerator", 10, 0.60, 0.13), g("grunt", 30, 0.50, 0.24), g("runner", 11, 0.50, 0.31) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 0.66), g("runner", 5, 0.50, 0.93), g("warcaller", 9, 0.60, 0.74), g("regenerator", 10, 0.60, 0.85), g("grunt", 30, 0.50, 0.94) },
+		[18] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("regenerator", 9, 0.60, 0.07), g("regenerator", 9, 0.60, 0.20), g("grunt", 30, 0.50, 0.31) },
+		[19] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("regenerator", 9, 0.60, 0.07), g("regenerator", 10, 0.60, 0.13), g("grunt", 30, 0.50, 0.24), g("runner", 11, 0.50, 0.31) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 0.66), g("runner", 5, 0.50, 0.93), g("regenerator", 9, 0.60, 0.74), g("regenerator", 10, 0.60, 0.85), g("grunt", 30, 0.50, 0.94) },
 	},
 	steppingstones = {
 		-- 20 grunts.
@@ -383,28 +383,28 @@ local wavesByMapId = {
 		[3] = { g("grunt", 14, 0.76), g("grunt", 6, 0.63, 3.00), g("runner", 2, 0.72, 3.30) },
 		-- 6 grunts, then 7 runners, and 13 grunts.
 		[4] = { g("grunt", 18, 0.53), g("runner", 7, 0.58, 0.30), g("grunt", 13, 0.63, 1.60) },
-		-- 11 warcallers, then 4 grunts, and 5 runners.
-		[5] = { g("warcaller", 11, 0.94), g("grunt", 12, 0.51, 1.40), g("runner", 5, 0.56, 1.70) },
-		-- 5 grunts, then 7 runners, then 10 warcallers, and 13 regenerators.
-		[6] = { g("grunt", 15, 0.50), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.84, 1.00), g("regenerator", 13, 0.91, 2.00) },
-		-- 3 grunts, then 4 runners, then 7 warcallers, then 7 regenerators, and 8 grunts.
-		[7] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.73, 0.95), g("regenerator", 7, 0.80, 1.75), g("grunt", 24, 0.56, 2.35) },
+		-- 11 regenerators, then 4 grunts, and 5 runners.
+		[5] = { g("regenerator", 11, 0.94), g("grunt", 12, 0.51, 1.40), g("runner", 5, 0.56, 1.70) },
+		-- 5 grunts, then 7 runners, then 10 regenerators, and 13 regenerators.
+		[6] = { g("grunt", 15, 0.50), g("runner", 7, 0.50, 0.30), g("regenerator", 10, 0.84, 1.00), g("regenerator", 13, 0.91, 2.00) },
+		-- 3 grunts, then 4 runners, then 7 regenerators, then 7 regenerators, and 8 grunts.
+		[7] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("regenerator", 7, 0.73, 0.95), g("regenerator", 7, 0.80, 1.75), g("grunt", 24, 0.56, 2.35) },
 		-- 8 grunts, then 8 grunts, then 9 runners, and 10 grunts.
 		[8] = { g("grunt", 8, 0.50), g("grunt", 15, 0.50, 1.06), g("runner", 9, 0.61, 1.55), g("grunt", 30, 0.50, 2.15) },
-		-- 4 grunts, then 4 runners, then 8 warcallers, then 9 regenerators, then 9 grunts, and 10 runners.
-		[9] = { g("grunt", 12, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 8, 0.61, 0.75), g("regenerator", 9, 0.68, 1.35), g("grunt", 27, 0.50, 1.95), g("runner", 10, 0.72, 2.35) },
-		-- 1 boss, then 4 grunts, then 4 runners, then 7 warcallers, then 8 regenerators, and 8 grunts.
-		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 3.95), g("runner", 4, 0.50, 4.25), g("warcaller", 7, 0.70, 4.35), g("regenerator", 8, 0.76, 4.95), g("grunt", 24, 0.53, 5.35) },
-		[11] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.73, 1.04), g("regenerator", 8, 0.80, 1.93), g("grunt", 27, 0.56, 2.59) },
-		[12] = { g("grunt", 18, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.84, 1.05), g("regenerator", 15, 0.91, 2.10) },
+		-- 4 grunts, then 4 runners, then 8 regenerators, then 9 regenerators, then 9 grunts, and 10 runners.
+		[9] = { g("grunt", 12, 0.50), g("runner", 4, 0.50, 0.30), g("regenerator", 8, 0.61, 0.75), g("regenerator", 9, 0.68, 1.35), g("grunt", 27, 0.50, 1.95), g("runner", 10, 0.72, 2.35) },
+		-- 1 boss, then 4 grunts, then 4 runners, then 7 regenerators, then 8 regenerators, and 8 grunts.
+		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 3.95), g("runner", 4, 0.50, 4.25), g("regenerator", 7, 0.70, 4.35), g("regenerator", 8, 0.76, 4.95), g("grunt", 24, 0.53, 5.35) },
+		[11] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.33), g("regenerator", 8, 0.73, 1.04), g("regenerator", 8, 0.80, 1.93), g("grunt", 27, 0.56, 2.59) },
+		[12] = { g("grunt", 18, 0.50), g("runner", 8, 0.50, 0.32), g("regenerator", 11, 0.84, 1.05), g("regenerator", 15, 0.91, 2.10) },
 		[13] = { g("grunt", 9, 0.50), g("grunt", 15, 0.50, 1.06), g("runner", 10, 0.61, 1.55), g("grunt", 33, 0.50, 2.15) },
-		[14] = { g("grunt", 9, 0.50), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.73, 0.90), g("regenerator", 8, 0.80, 1.66), g("grunt", 27, 0.56, 2.23) },
-		[15] = { g("grunt", 12, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 9, 0.61, 0.79), g("regenerator", 10, 0.68, 1.42), g("grunt", 30, 0.50, 2.05), g("runner", 11, 0.72, 2.47) },
-		[16] = { g("grunt", 18, 0.50), g("runner", 9, 0.50, 0.27), g("warcaller", 12, 0.84, 0.90), g("regenerator", 16, 0.91, 1.80) },
+		[14] = { g("grunt", 9, 0.50), g("runner", 5, 0.50, 0.28), g("regenerator", 8, 0.73, 0.90), g("regenerator", 8, 0.80, 1.66), g("grunt", 27, 0.56, 2.23) },
+		[15] = { g("grunt", 12, 0.50), g("runner", 4, 0.50, 0.32), g("regenerator", 9, 0.61, 0.79), g("regenerator", 10, 0.68, 1.42), g("grunt", 30, 0.50, 2.05), g("runner", 11, 0.72, 2.47) },
+		[16] = { g("grunt", 18, 0.50), g("runner", 9, 0.50, 0.27), g("regenerator", 12, 0.84, 0.90), g("regenerator", 16, 0.91, 1.80) },
 		[17] = { g("grunt", 10, 0.50), g("grunt", 18, 0.50, 0.95), g("runner", 11, 0.61, 1.40), g("grunt", 36, 0.50, 1.94) },
-		[18] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.73, 0.81), g("regenerator", 9, 0.80, 1.49), g("grunt", 30, 0.56, 2.00) },
-		[19] = { g("grunt", 15, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 10, 0.61, 0.64), g("regenerator", 11, 0.68, 1.15), g("grunt", 33, 0.50, 1.66), g("runner", 13, 0.72, 2.00) },
-		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 3.56), g("runner", 5, 0.50, 3.83), g("warcaller", 9, 0.70, 3.91), g("regenerator", 10, 0.76, 4.46), g("grunt", 30, 0.53, 4.81) },
+		[18] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("regenerator", 9, 0.73, 0.81), g("regenerator", 9, 0.80, 1.49), g("grunt", 30, 0.56, 2.00) },
+		[19] = { g("grunt", 15, 0.50), g("runner", 5, 0.50, 0.26), g("regenerator", 10, 0.61, 0.64), g("regenerator", 11, 0.68, 1.15), g("grunt", 33, 0.50, 1.66), g("runner", 13, 0.72, 2.00) },
+		[20] = { g("boss", 1, 0.00), g("grunt", 15, 0.50, 3.56), g("runner", 5, 0.50, 3.83), g("regenerator", 9, 0.70, 3.91), g("regenerator", 10, 0.76, 4.46), g("grunt", 30, 0.53, 4.81) },
 	},
 	twinloop = {
 		-- 20 grunts.
@@ -415,28 +415,28 @@ local wavesByMapId = {
 		[3] = { g("grunt", 10, 0.50), g("summoner", 2, 1.51, 0.93) },
 		-- 6 grunts, then 7 runners, and 13 grunts.
 		[4] = { g("grunt", 18, 0.50), g("runner", 7, 0.50, 0.30), g("grunt", 13, 0.50, 0.50) },
-		-- 1 summoner, then 10 warcallers, then 4 grunts, and 4 runners.
-		[5] = { g("summoner", 1, 0.00), g("warcaller", 10, 0.62, 0.52), g("grunt", 12, 0.50, 0.43), g("runner", 4, 0.50, 0.73) },
-		-- 6 grunts, then 7 runners, then 10 warcallers, and 13 regenerators.
-		[6] = { g("grunt", 18, 0.50), g("runner", 7, 0.50, 0.30), g("warcaller", 10, 0.60, 0.31), g("regenerator", 13, 0.64, 0.62) },
-		-- 3 grunts, then 4 runners, then 7 warcallers, then 7 regenerators, and 8 grunts.
-		[7] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.60, 0.19), g("regenerator", 7, 0.60, 0.43), g("grunt", 24, 0.50, 0.62) },
+		-- 1 summoner, then 10 regenerators, then 4 grunts, and 4 runners.
+		[5] = { g("summoner", 1, 0.00), g("regenerator", 10, 0.62, 0.52), g("grunt", 12, 0.50, 0.43), g("runner", 4, 0.50, 0.73) },
+		-- 6 grunts, then 7 runners, then 10 regenerators, and 13 regenerators.
+		[6] = { g("grunt", 18, 0.50), g("runner", 7, 0.50, 0.30), g("regenerator", 10, 0.60, 0.31), g("regenerator", 13, 0.64, 0.62) },
+		-- 3 grunts, then 4 runners, then 7 regenerators, then 7 regenerators, and 8 grunts.
+		[7] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("regenerator", 7, 0.60, 0.19), g("regenerator", 7, 0.60, 0.43), g("grunt", 24, 0.50, 0.62) },
 		-- 1 summoner, then 7 grunts, then 7 runners, then 8 grunts, and 10 regenerators.
 		[8] = { g("summoner", 1, 0.00), g("grunt", 12, 0.50, 0.56), g("runner", 7, 0.50, 0.19), g("grunt", 24, 0.50, 0.37), g("regenerator", 10, 0.60, 0.56) },
-		-- 3 grunts, then 4 runners, then 7 warcallers, then 8 regenerators, then 8 grunts, and 9 runners.
-		[9] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("warcaller", 7, 0.60, 0.12), g("regenerator", 8, 0.60, 0.31), g("grunt", 24, 0.50, 0.50), g("runner", 9, 0.50, 0.62) },
-		-- 1 boss, then 4 grunts, then 4 runners, then 7 warcallers, then 8 regenerators, and 7 grunts.
-		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 1.12), g("runner", 4, 0.50, 1.42), g("warcaller", 7, 0.60, 1.24), g("regenerator", 8, 0.60, 1.43), g("grunt", 21, 0.50, 1.55) },
-		[11] = { g("summoner", 1, 0.00), g("grunt", 6, 0.50, 0.50), g("runner", 4, 0.50, 0.33), g("warcaller", 8, 0.60, 0.21), g("regenerator", 8, 0.60, 0.47), g("grunt", 27, 0.50, 0.68) },
-		[12] = { g("grunt", 21, 0.50), g("runner", 8, 0.50, 0.32), g("warcaller", 11, 0.60, 0.33), g("regenerator", 15, 0.64, 0.65) },
+		-- 3 grunts, then 4 runners, then 7 regenerators, then 8 regenerators, then 8 grunts, and 9 runners.
+		[9] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.30), g("regenerator", 7, 0.60, 0.12), g("regenerator", 8, 0.60, 0.31), g("grunt", 24, 0.50, 0.50), g("runner", 9, 0.50, 0.62) },
+		-- 1 boss, then 4 grunts, then 4 runners, then 7 regenerators, then 8 regenerators, and 7 grunts.
+		[10] = { g("boss", 1, 0.00), g("grunt", 12, 0.50, 1.12), g("runner", 4, 0.50, 1.42), g("regenerator", 7, 0.60, 1.24), g("regenerator", 8, 0.60, 1.43), g("grunt", 21, 0.50, 1.55) },
+		[11] = { g("summoner", 1, 0.00), g("grunt", 6, 0.50, 0.50), g("runner", 4, 0.50, 0.33), g("regenerator", 8, 0.60, 0.21), g("regenerator", 8, 0.60, 0.47), g("grunt", 27, 0.50, 0.68) },
+		[12] = { g("grunt", 21, 0.50), g("runner", 8, 0.50, 0.32), g("regenerator", 11, 0.60, 0.33), g("regenerator", 15, 0.64, 0.65) },
 		[13] = { g("grunt", 15, 0.50), g("runner", 8, 0.50, 0.19), g("grunt", 27, 0.50, 0.37), g("regenerator", 11, 0.60, 0.56) },
-		[14] = { g("summoner", 1, 0.00), g("grunt", 6, 0.50, 0.50), g("runner", 5, 0.50, 0.28), g("warcaller", 8, 0.60, 0.18), g("regenerator", 8, 0.60, 0.41), g("grunt", 27, 0.50, 0.59) },
-		[15] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.32), g("warcaller", 8, 0.60, 0.13), g("regenerator", 9, 0.60, 0.33), g("grunt", 27, 0.50, 0.53), g("runner", 10, 0.50, 0.65) },
-		[16] = { g("grunt", 21, 0.50), g("runner", 9, 0.50, 0.27), g("warcaller", 12, 0.60, 0.28), g("regenerator", 16, 0.64, 0.56) },
+		[14] = { g("summoner", 1, 0.00), g("grunt", 6, 0.50, 0.50), g("runner", 5, 0.50, 0.28), g("regenerator", 8, 0.60, 0.18), g("regenerator", 8, 0.60, 0.41), g("grunt", 27, 0.50, 0.59) },
+		[15] = { g("grunt", 9, 0.50), g("runner", 4, 0.50, 0.32), g("regenerator", 8, 0.60, 0.13), g("regenerator", 9, 0.60, 0.33), g("grunt", 27, 0.50, 0.53), g("runner", 10, 0.50, 0.65) },
+		[16] = { g("grunt", 21, 0.50), g("runner", 9, 0.50, 0.27), g("regenerator", 12, 0.60, 0.28), g("regenerator", 16, 0.64, 0.56) },
 		[17] = { g("summoner", 1, 0.00), g("grunt", 15, 0.50, 0.56), g("runner", 8, 0.50, 0.17), g("grunt", 30, 0.50, 0.33), g("regenerator", 12, 0.60, 0.50) },
-		[18] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.60, 0.16), g("regenerator", 9, 0.60, 0.37), g("grunt", 30, 0.50, 0.53) },
-		[19] = { g("summoner", 1, 0.00), g("grunt", 9, 0.50, 0.50), g("runner", 5, 0.50, 0.26), g("warcaller", 9, 0.60, 0.10), g("regenerator", 10, 0.60, 0.26), g("grunt", 30, 0.50, 0.42), g("runner", 11, 0.50, 0.53) },
-		[20] = { g("boss", 1, 0.00), g("summoner", 1, 0.00, 1.01), g("grunt", 12, 0.50, 0.50), g("runner", 5, 0.50, 1.28), g("warcaller", 9, 0.60, 1.12), g("regenerator", 10, 0.60, 1.29), g("grunt", 27, 0.50, 1.40) },
+		[18] = { g("grunt", 12, 0.50), g("runner", 5, 0.50, 0.26), g("regenerator", 9, 0.60, 0.16), g("regenerator", 9, 0.60, 0.37), g("grunt", 30, 0.50, 0.53) },
+		[19] = { g("summoner", 1, 0.00), g("grunt", 9, 0.50, 0.50), g("runner", 5, 0.50, 0.26), g("regenerator", 9, 0.60, 0.10), g("regenerator", 10, 0.60, 0.26), g("grunt", 30, 0.50, 0.42), g("runner", 11, 0.50, 0.53) },
+		[20] = { g("boss", 1, 0.00), g("summoner", 1, 0.00, 1.01), g("grunt", 12, 0.50, 0.50), g("runner", 5, 0.50, 1.28), g("regenerator", 9, 0.60, 1.12), g("regenerator", 10, 0.60, 1.29), g("grunt", 27, 0.50, 1.40) },
 	},
 
 }

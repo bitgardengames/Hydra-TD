@@ -54,8 +54,9 @@ For every tower and difficulty it reports the earliest/latest map wave where
 unspent purchasing power can afford the first upgrade or the complete final
 tier. These are independent affordability probes, never a prescribed build.
 On Hard, first upgrades alarm outside waves **0–2** and complete towers outside
-waves **2–8**. Observed complete-tower affordability spans waves **1–6** across
-tower kinds and maps. This protects useful upgrade feedback cadence without pinning
+waves **2–8**. Observed complete-tower affordability spans waves **3–10** across
+tower kinds and maps; the current Cannon, Shock, and Plasma maxima trigger the
+existing late-upgrade alarm for follow-up tuning. This protects useful upgrade feedback cadence without pinning
 income to an exact dollar snapshot.
 
 Run the focused gate with:

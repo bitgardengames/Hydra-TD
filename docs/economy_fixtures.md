@@ -1,7 +1,7 @@
 # Campaign economy fixtures
 
 `tools/balance/economy_fixtures.py` is a dependency-free planning model for all
-15 maps and all 10 authored waves in `systems/campaign_wave_defs.lua`. It parses
+15 maps and all 20 authored waves in `systems/campaign_wave_defs.lua`. It parses
 the shipped enemy rewards and difficulty values rather than duplicating them.
 The complete deterministic JSON report is the canonical detailed baseline.
 
@@ -25,23 +25,23 @@ Ranges are the least- and most-lucrative authored maps after wave 10.
 
 | Difficulty | Conservative | Balanced | Aggressive | Lancer sell loss |
 |---|---:|---:|---:|---:|
-| Easy | $924.30–$1,897.30 | $1,167.10–$2,418.10 | $1,289–$2,679 | $9 |
-| Normal | $924.30–$1,897.30 | $1,167.10–$2,418.10 | $1,289–$2,679 | $15 |
-| Hard | $924.30–$1,897.30 | $1,160.60–$2,411.60 | $1,279–$2,669 | $24 |
+| Easy | $738.80–$1,856.70 | $928.60–$2,365.90 | $1,024–$2,621 | $9 |
+| Normal | $738.80–$1,856.70 | $928.60–$2,365.90 | $1,024–$2,621 | $15 |
+| Hard | $738.80–$1,856.70 | $922.10–$2,359.40 | $1,014–$2,611 | $24 |
 
 For the balanced curve, wave-one expected kill income spans `$36–$90` on every
 difficulty and expected flawless income is `$0.65`; wave-ten kill income spans
-`$151.20–$379.80` on every difficulty. Expected
+`$156.60–$369` on every difficulty. Expected
 early-call income is `$0` throughout. Full per-wave values are in JSON output.
 
 ## Representative affordability
 
 The `$110` Slow plus Lancer entry pair remains affordable before wave 1. Stat-only
-upgrade probes use the runtime 0.5625/0.8125/1.125/1.50 curve: a Lancer's first upgrade
-is `$34` (`$94` including its base), a Cannon through tier 3 is `$214`, and a
-complete Plasma is `$600`. On Hard, complete towers become affordable across
-maps in waves 1–2 (Slow), 2–3 (Lancer), 2–4 (Poison), 3–4 (Cannon), 3–5
-(Shock), and 4–6 (Plasma). These are independent unspent-purchasing-power probes,
+upgrade probes use the runtime 0.5625/0.8125/1.125/1.50 curve: a Lancer's first upgrade milestone
+is `$75` including its base, a Cannon through the final tier is `$675`, and a
+complete Plasma is `$900`. On Hard, complete towers become affordable across
+maps in waves 3–5 (Slow), 4–6 (Lancer), 4–7 (Poison), 5–9 (Cannon), 5–9
+(Shock), and 6–10 (Plasma). These are independent unspent-purchasing-power probes,
 not a build sequence; canonical scenarios contain no specialization or inventory modules.
 
 ## Acceptance intent
