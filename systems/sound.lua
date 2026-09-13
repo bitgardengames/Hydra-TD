@@ -3,6 +3,8 @@ local GameSpeed = require("core.game_speed")
 
 local Sound = {
 	masterVolume = 0.16,
+	masterMuted = false,
+	focused = true,
 	currentMusic = nil,
 	suppressed = false,
 	musicFadeT = 0,
@@ -27,8 +29,15 @@ local pitchJitterByCategory = {
 	repetitive = 0.08,
 }
 
+local function focusGain()
+	local settings = Save.data and Save.data.settings
+	if not Sound.focused and settings and settings.muteWhenUnfocused then return 0 end
+	return 1
+end
+
 local function scaleVolume(v)
-	return v * Sound.masterVolume
+	local masterGain = Sound.masterMuted and 0 or Sound.masterVolume
+	return v * masterGain * focusGain()
 end
 
 local function buildSfxEntry(def)
@@ -194,6 +203,29 @@ function Sound.setMusicVolume(v)
 	end
 end
 
+-- Apply focus muting at the mixer boundary so sources keep playing and their
+-- channel levels and pause ducking can be restored without approximation.
+function Sound.setFocused(focused)
+	Sound.focused = focused ~= false
+	Sound.setSFXVolume(Save.data.settings.sfxVolume)
+	Sound.setMusicVolume(Save.data.settings.musicVolume)
+	if Sound.currentMusic and Sound.musicFadeT > 0 then
+		local eased = Sound.musicFadeT * Sound.musicFadeT
+		local fadeFactor = 1 - (eased * (1 - Sound.musicDuckAmount))
+		Sound.currentMusic:setVolume(scaleVolume(Save.data.settings.musicVolume) * fadeFactor)
+	end
+end
+
+function Sound.setMuteWhenUnfocused(enabled)
+	Save.data.settings.muteWhenUnfocused = enabled
+	Sound.setFocused(Sound.focused)
+end
+
+function Sound.setMasterMuted(muted)
+	Sound.masterMuted = muted == true
+	Sound.setFocused(Sound.focused)
+end
+
 function Sound.load()
 	local sfx = Sound.sfx
 	local music = Sound.music
@@ -279,7 +311,7 @@ function Sound.update(dt)
 
 	local eased = t * t
 	local fadeFactor = 1 - (eased * (1 - duck))
-	local finalVol = base * fadeFactor * Sound.masterVolume
+	local finalVol = scaleVolume(base) * fadeFactor
 
 	Sound.currentMusic:setVolume(finalVol)
 end

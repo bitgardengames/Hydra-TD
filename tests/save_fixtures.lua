@@ -53,6 +53,8 @@ for path in pairs(files) do
 end
 check(diagnostic and files[diagnostic], "malformed primary was not preserved")
 check(Save.data.version == 6, "malformed save did not produce fresh data")
+check(Save.data.settings.muteWhenUnfocused == true,
+	"fresh saves did not enable focus muting by default")
 
 -- Older saves migrate while retaining fields this version does not know about.
 reset({["saves/save.lua"] = "return { version = 1, unknownFutureField = { enabled = true } }"})
@@ -60,6 +62,8 @@ Save.load()
 check(Save.data.version == 6, "old version was not migrated")
 check(Save.data.unknownFutureField.enabled, "unknown field was discarded")
 check(files["saves/save.bak.lua"], "pre-migration save was not backed up")
+check(Save.data.settings.muteWhenUnfocused == true,
+	"old saves did not gain the persisted focus-muting default")
 
 -- Retired controls are removed from both loaded state and the rewritten save.
 reset({["saves/save.lua"] = [[return {

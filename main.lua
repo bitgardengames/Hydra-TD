@@ -503,6 +503,7 @@ function love.resize(w, h)
 end
 
 function love.focus(focused)
+	Sound.setFocused(focused)
 	if not focused then -- Alt-tab or focus loss
 		pauseGame()
 	end

@@ -64,6 +64,8 @@ function Model.build(capture, options)
 			slider("sfx", L("settings.sfx"), Theme.tower.cannon,
 				function() return Save.data.settings.sfxVolume end,
 				function(v) Save.data.settings.sfxVolume = v; Sound.setSFXVolume(v) end),
+			toggle("mute_unfocused", L("settings.muteWhenUnfocused"), "muteWhenUnfocused",
+				L("settings.muteWhenUnfocusedDesc"), function(v) Sound.setMuteWhenUnfocused(v) end),
 		}},
 		{id = "video", label = L("settings.tabVideo"), rows = {
 			toggle("camera_motion", L("settings.cameraMotion"), "cameraMotion", L("settings.cameraMotionDesc")),
