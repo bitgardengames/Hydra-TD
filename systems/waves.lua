@@ -21,10 +21,11 @@ local function getWave(map, waveNumber)
 	return Resolver.getWave(map, waveNumber)
 end
 
-local function describeEnemyGroup(kind, count, spacing, delay)
+local function describeEnemyGroup(kind, count, spacing, delay, hpMultiplier)
 	local def = EnemyDefs[kind]
 	local group = {kind=kind, name=L((def and def.nameKey) or ("enemy." .. kind)), count=count,
-		spacing=spacing or 0, delay=delay or 0}
+		spacing=spacing or 0, delay=delay or 0,
+		health=def and def.hp and def.hp * (hpMultiplier or 1) or nil}
 	return group
 end
 
@@ -32,10 +33,25 @@ function Waves.getWavePreview(waveNumber)
 	local map = Maps[State.mapIndex]
 	local wave = getWave(map, waveNumber)
 	local descriptions = {}
-	for _, group in ipairs(Resolver.resolveWaveGroups(wave, map, waveNumber) or {}) do
+	local groups = Resolver.resolveWaveGroups(wave, map, waveNumber) or {}
+	local waveHpMultiplier = Resolver.getWaveMultipliers(waveNumber, State.mapIndex, map, wave.boss)
+	local addHpMultiplier = wave.boss
+		and DifficultyCurve.getEnemyHpMultiplier(waveNumber, State.mapIndex, map and map.hpScalar)
+	for i, group in ipairs(groups) do
+		local hpMultiplier
+		if wave.boss then
+			hpMultiplier = (i == 1 and waveHpMultiplier or addHpMultiplier) * (group.hpMult or 1)
+		else
+			-- Match WaveSpawner: an authored group multiplier overrides the wave default.
+			hpMultiplier = group.hpMult or waveHpMultiplier
+		end
 		local previous = descriptions[#descriptions]
-		if previous and previous.kind == group.kind then previous.count = previous.count + group.count
-		else descriptions[#descriptions + 1] = describeEnemyGroup(group.kind, group.count, group.spacing, group.delay) end
+		local description = describeEnemyGroup(group.kind, group.count, group.spacing, group.delay, hpMultiplier)
+		if previous and previous.kind == group.kind and previous.health == description.health then
+			previous.count = previous.count + group.count
+		else
+			descriptions[#descriptions + 1] = description
+		end
 	end
 	local counts = {}
 	for _, group in ipairs(descriptions) do counts[group.kind] = (counts[group.kind] or 0) + group.count end

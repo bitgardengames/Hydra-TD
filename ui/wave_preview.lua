@@ -7,6 +7,7 @@ local EnemyRenderer = require("render.enemy_renderer")
 local Text = require("ui.text")
 local Tooltip = require("ui.tooltip")
 local L = require("core.localization")
+local Util = require("core.util")
 
 local lg = love.graphics
 local floor = math.floor
@@ -79,6 +80,9 @@ local function buildEnemyTooltip(group)
 	local def = EnemyDefs[group.kind]
 	if def and def.descriptionKey then
 		rows[#rows + 1] = {kind = "text", text = L(def.descriptionKey), padAfter = 4}
+	end
+	if group.health then
+		rows[#rows + 1] = {label = L("hud.enemyHealth"), value = Util.formatInt(group.health)}
 	end
 	return {title = group.name, rows = rows}
 end

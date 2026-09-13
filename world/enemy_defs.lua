@@ -8,6 +8,7 @@
 return {
 	grunt = {
 		nameKey = "enemy.grunt",
+		descriptionKey = "enemy.gruntDescription",
 		hp = 18,
 		speed = 70,
 		reward = 5,
@@ -18,6 +19,7 @@ return {
 
 	runner = {
 		nameKey = "enemy.runner",
+		descriptionKey = "enemy.runnerDescription",
 		hp = 14,
 		speed = 95,
 		reward = 4,
@@ -61,6 +63,7 @@ return {
 
 	boss = {
 		nameKey = "enemy.boss",
+		descriptionKey = "enemy.bossDescription",
 		hp = 385,
 		speed = 45,
 		reward = 64,
@@ -77,6 +80,7 @@ return {
 
 	boss_summoner = {
 		nameKey = "enemy.bossSummoner",
+		descriptionKey = "enemy.bossSummonerDescription",
 		hp = 341,
 		speed = 42,
 		reward = 110,
@@ -89,6 +93,7 @@ return {
 
 	boss_suppression = {
 		nameKey = "enemy.bossSuppression",
+		descriptionKey = "enemy.bossSuppressionDescription",
 		hp = 430,
 		speed = 40,
 		reward = 140,
@@ -107,6 +112,7 @@ return {
 
 	boss_ravager = {
 		nameKey = "enemy.bossRavager",
+		descriptionKey = "enemy.bossRavagerDescription",
 		hp = 455,
 		speed = 39,
 		reward = 130,
@@ -119,6 +125,7 @@ return {
 
 	boss_phasewalker = {
 		nameKey = "enemy.bossPhasewalker",
+		descriptionKey = "enemy.bossPhasewalkerDescription",
 		hp = 420,
 		speed = 41,
 		reward = 136,
@@ -134,6 +141,7 @@ return {
 	-- one lunge, even when a single hit crosses more than one landmark.
 	boss_gatecrasher = {
 		nameKey = "enemy.bossGatecrasher",
+		descriptionKey = "enemy.bossGatecrasherDescription",
 		hp = 490,
 		speed = 40,
 		reward = 138,
