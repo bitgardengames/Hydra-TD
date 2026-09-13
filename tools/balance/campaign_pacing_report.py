@@ -81,28 +81,15 @@ def summarize(waves: list[dict]) -> dict:
 
 
 def introduction_audit(maps: dict[str, list[list[dict]]]) -> dict:
-    """Match introduction metadata to each non-boss kind's first campaign map."""
-    text = MAP_SOURCE.read_text()
-    map_blocks = re.split(r"\n\s*\{\n\s*id = ", text)[1:]
-    order = []
-    declared = {}
-    for block in map_blocks:
-        map_id = re.match(r'"([a-z]+)"', block).group(1)
-        order.append(map_id)
-        field = re.search(r"introducesEnemies\s*=\s*\{([^}]*)\}", block)
-        for kind in re.findall(r'"([a-z]+)"', field.group(1) if field else ""):
-            if kind in declared:
-                raise ValueError(f"{kind} is introduced by both {declared[kind]} and {map_id}")
-            declared[kind] = map_id
+    """Find each non-boss kind's first authored campaign appearance."""
+    map_order = re.findall(r'^\s*id\s*=\s*"([a-z]+)"', MAP_SOURCE.read_text(), re.MULTILINE)
     actual = {}
-    for map_id in order:
+    for map_id in map_order:
         for wave in maps[map_id]:
             for group in wave:
                 if group["kind"] != "boss":
                     actual.setdefault(group["kind"], map_id)
-    if declared != actual:
-        raise ValueError(f"introduction metadata mismatch: declared={declared}, actual={actual}")
-    return {kind: {"map": actual[kind], "declared": True} for kind in sorted(actual)}
+    return {kind: {"map": actual[kind]} for kind in sorted(actual)}
 
 
 def main() -> int:

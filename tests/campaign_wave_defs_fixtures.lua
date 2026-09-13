@@ -5,32 +5,21 @@ local Maps = require("world.map_defs")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local EnemyDefs = require("world.enemy_defs")
 
-local available = { boss = true }
 local minimumSpawnSpacing = 0.5
 local bossAppearances = {}
 
--- Introduction metadata must name exactly the map containing each kind's first
--- authored appearance. Riverbend previews Runners late while remaining free of
--- armor; specialist previews stay sparse.
-assert(Maps[1].introducesEnemies[1] == "grunt" and Maps[1].introducesEnemies[2] == "runner"
-	and Maps[1].introducesEnemies[3] == nil, "Riverbend must declare only its baseline enemies")
-assert(Maps[4].introducesEnemies[1] == "regenerator"
-	and Maps[4].introducesEnemies[2] == nil, "Outerloop must own only the Regenerator introduction")
-assert(Maps[5].introducesEnemies[1] == "warcaller", "Gauntlet must own the Warcaller introduction")
-
-local declaredIntroductions = {}
-for _, map in ipairs(Maps) do
-	for _, kind in ipairs(map.introducesEnemies or {}) do
-		assert(not declaredIntroductions[kind], kind .. " is introduced more than once")
-		declaredIntroductions[kind] = map.id
-	end
-end
 local firstActualAppearance = {}
+local expectedFirstAppearance = {
+	grunt = "riverbend",
+	runner = "riverbend",
+	regenerator = "outerloop",
+	warcaller = "gauntlet",
+	summoner = "twinloop",
+}
 assert(EnemyDefs.tank and EnemyDefs.tank.hp == 51, "Tank must resolve with its increased base health")
 assert(EnemyDefs.regenerator.hp == 42, "Regenerator must use its increased base health")
 
 for _, map in ipairs(Maps) do
-	for _, kind in ipairs(map.introducesEnemies or {}) do available[kind] = true end
 	local introducedEnemyAppearances = {}
 
 	assert(CampaignWaveDefs.getFinalWave(map) == 20, map.id .. " must author exactly twenty waves")
@@ -50,7 +39,6 @@ for _, map in ipairs(Maps) do
 			if group.kind ~= "boss" and not firstActualAppearance[group.kind] then
 				firstActualAppearance[group.kind] = map.id
 			end
-			assert(available[group.kind], map.id .. " uses unavailable enemy " .. group.kind)
 			assert(group.count == 1 or group.spacing >= minimumSpawnSpacing,
 				map.id .. " places consecutive enemies too close together")
 			if group.kind ~= "boss" then composition[group.kind] = true end
@@ -78,19 +66,21 @@ for _, map in ipairs(Maps) do
 	assert(final.boss and EnemyDefs[final.bossArchetype],
 		map.id .. " final wave has no legal explicit boss selection")
 
-	for _, kind in ipairs(map.introducesEnemies or {}) do
-		assert((introducedEnemyAppearances[kind] or 0) >= 1,
-			map.id .. " must reuse introduced enemy " .. kind .. " after its first appearance")
+	for kind, introductionMapId in pairs(expectedFirstAppearance) do
+		if introductionMapId == map.id then
+			assert((introducedEnemyAppearances[kind] or 0) >= 1,
+				map.id .. " must reuse introduced enemy " .. kind .. " after its first appearance")
+		end
 	end
 end
 
-for kind, mapId in pairs(declaredIntroductions) do
+for kind, mapId in pairs(expectedFirstAppearance) do
 	assert(firstActualAppearance[kind] == mapId,
-		kind .. " metadata says " .. mapId .. " but first appears on " .. tostring(firstActualAppearance[kind]))
+		kind .. " must first appear on " .. mapId .. ", not " .. tostring(firstActualAppearance[kind]))
 end
 for kind, mapId in pairs(firstActualAppearance) do
-	assert(declaredIntroductions[kind] == mapId,
-		kind .. " first appears on " .. mapId .. " without matching introduction metadata")
+	assert(expectedFirstAppearance[kind] == mapId,
+		kind .. " first appears on unexpected map " .. mapId)
 end
 
 local expectedBossAppearances = {

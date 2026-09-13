@@ -87,8 +87,8 @@ splash targets and only a few escorted Warcallers; and Snaketrail separates fast
 and armored blocks to force frequent retargeting. Other maps use dense
 combinations of several special traits.
 
-`introducesEnemies` is audited against first authored appearances. The canonical
-ordering is Grunt/Runner on Riverbend, Regenerator on Outerloop,
+Enemy introductions are derived directly from first authored appearances. The
+canonical ordering is Grunt/Runner on Riverbend, Regenerator on Outerloop,
 Warcaller on Gauntlet, and Summoner on Twin Loop. The generated challenge tables
 below remain the source of truth for per-wave effective threat, peak five-second
 threat, income, and counter reserve after these composition changes.
