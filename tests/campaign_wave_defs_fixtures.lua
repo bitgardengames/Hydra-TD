@@ -13,7 +13,6 @@ local expectedFirstAppearance = {
 	grunt = "riverbend",
 	runner = "riverbend",
 	regenerator = "outerloop",
-	warcaller = "gauntlet",
 	summoner = "twinloop",
 }
 assert(EnemyDefs.tank and EnemyDefs.tank.hp == 51, "Tank must resolve with its increased base health")

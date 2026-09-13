@@ -429,7 +429,7 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                         hp,
                         hp,
                         ed["speed"] * diff["hp_bp"] / diff["hp_bp"],
-                        half_up(int(ed["reward"] * BP) * diff["reward_bp"], BP * BP),
+                        int(ed["reward"]),
                         armor=ed["armor"],
                         regen=ed["regen"],
                     )

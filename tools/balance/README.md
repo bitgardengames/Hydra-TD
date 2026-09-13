@@ -258,7 +258,7 @@ broad alarm bands documented in `docs/polish_fixtures.md`.
 
 The pacing report derives every non-boss enemy's introduction from its first
 authored wave group, avoiding duplicate metadata in `world/map_defs.lua`. The
-current map compositions keep specialist budgets deliberately small—Regenerators
-first appear on Outerloop,
-and escorted Warcallers first appear on Gauntlet—while the challenge report
-records the resulting per-wave effective and peak five-second threat budgets.
+current map compositions introduce Regenerators on Outerloop and use them in
+later specialist slots; authored campaign waves no longer deploy Warcallers. The
+challenge report records the resulting per-wave effective and peak five-second
+threat budgets.

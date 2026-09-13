@@ -82,13 +82,15 @@ The maps use distinct enemy compositions instead of repeating a single enemy
 profile for twenty waves. Riverbend remains Grunt-only through its first boss and
 uses only Grunt/Runner groups in higher-numbered waves. Switchback presents
 sparse Grunt fronts followed by ordinary escorts; Highpass alternates fast and
-dense blocks; Outerloop formally introduces small regenerating or plated specialists behind ordinary bodies; Gauntlet creates tightly packed
-splash targets and only a few escorted Warcallers; and Snaketrail separates fast
-and armored blocks to force frequent retargeting. Other maps use dense
-combinations of several special traits.
+dense blocks; Outerloop formally introduces regenerating specialists behind
+ordinary bodies; Gauntlet creates tightly packed splash targets with escorted Regenerators; and
+Snaketrail separates fast and armored blocks to force frequent retargeting. Later
+maps use dense combinations of the remaining campaign traits, with Regenerators
+replacing all previously authored Warcaller groups one-for-one.
 
 Enemy introductions are derived directly from first authored appearances. The
 canonical ordering is Grunt/Runner on Riverbend, Regenerator on Outerloop,
-Warcaller on Gauntlet, and Summoner on Twin Loop. The generated challenge tables
+and Summoner on Twin Loop. Warcallers remain defined for non-campaign use but no
+longer have an authored campaign introduction. The generated challenge tables
 below remain the source of truth for per-wave effective threat, peak five-second
 threat, income, and counter reserve after these composition changes.
