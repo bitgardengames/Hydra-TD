@@ -18,8 +18,8 @@ local function check(value, message)
 end
 
 check(Maps[4].id == "outerloop", "Outer Loop must be the fourth campaign map")
-check(Maps[10].id == "roundabout" and Maps[10].biome == "winter",
-	"Roundabout must be the tenth campaign map with the winter biome")
+check(Maps[10].id == "roundabout" and Maps[10].biome == "default",
+	"Roundabout must be the tenth campaign map with the default biome")
 check(Maps[11].id == "terrace" and Maps[11].biome == "drylands",
 	"Terrace must be the eleventh campaign map with the drylands biome")
 check(#Maps == 15 and Maps[15].id == "twinloop" and Maps[15].biome == "winter",

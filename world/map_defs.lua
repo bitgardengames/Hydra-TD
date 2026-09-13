@@ -183,7 +183,7 @@ local maps = {
 	{
 		id = "roundabout",
 		nameKey = "map.roundabout",
-		biome = "winter",
+		biome = "default",
 		path = {
 			{5, 9}, {12, 9},
 			{12, 3}, {18, 3},
