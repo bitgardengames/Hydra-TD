@@ -282,9 +282,7 @@ def composition_for(groups):
 
 def choose_kind(policy, composition, towers, key):
     counter = None
-    if any(k in composition for k in ("bulwark",)):
-        counter = "cannon"
-    elif any(k in composition for k in ("regenerator",)):
+    if any(k in composition for k in ("regenerator",)):
         counter = "poison"
     elif any(k in composition for k in ("runner", "warcaller")):
         counter = "slow"

@@ -15,7 +15,7 @@ local bossAppearances = {}
 assert(Maps[1].introducesEnemies[1] == "grunt" and Maps[1].introducesEnemies[2] == "runner"
 	and Maps[1].introducesEnemies[3] == nil, "Riverbend must declare only its baseline enemies")
 assert(Maps[4].introducesEnemies[1] == "regenerator"
-	and Maps[4].introducesEnemies[2] == "bulwark", "Outerloop must own its specialist introductions")
+	and Maps[4].introducesEnemies[2] == nil, "Outerloop must own only the Regenerator introduction")
 assert(Maps[5].introducesEnemies[1] == "warcaller", "Gauntlet must own the Warcaller introduction")
 
 local declaredIntroductions = {}
@@ -82,8 +82,6 @@ for _, map in ipairs(Maps) do
 			map.id .. " must reuse introduced enemy " .. kind .. " after its first appearance")
 	end
 end
-
-assert(firstActualAppearance.bulwark == "outerloop", "Outerloop must remain the first Bulwark encounter")
 
 for kind, mapId in pairs(declaredIntroductions) do
 	assert(firstActualAppearance[kind] == mapId,

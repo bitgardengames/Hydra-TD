@@ -63,7 +63,7 @@ local maps = {
 		id = "outerloop",
 		nameKey = "map.outerloop",
 		-- Small escorted specialists teach sustained focus before dense trait mixes.
-		introducesEnemies = {"regenerator", "bulwark"},
+		introducesEnemies = {"regenerator"},
 		biome = "drylands",
 		path = {
 			{5, 6}, {14, 6},
@@ -136,7 +136,7 @@ local maps = {
 	{
 		id = "lowvalley",
 		nameKey = "map.lowvalley",
-		-- Revisits Bulwarks in larger mixed formations.
+		-- Revisits durable enemies in larger mixed formations.
 		introducesEnemies = {},
 		biome = "drylands",
 		path = {

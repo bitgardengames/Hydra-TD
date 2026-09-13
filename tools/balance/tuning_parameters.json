@@ -289,28 +289,6 @@
       "maximum_percentage_change": 15
     },
     {
-      "id": "enemy.bulwark.hp",
-      "source_file": "world/enemy_defs.lua",
-      "lua_table": "return",
-      "lua_key": "hp",
-      "entry": "bulwark",
-      "minimum": 27,
-      "maximum": 98,
-      "step": 1,
-      "maximum_percentage_change": 15
-    },
-    {
-      "id": "enemy.bulwark.reward",
-      "source_file": "world/enemy_defs.lua",
-      "lua_table": "return",
-      "lua_key": "reward",
-      "entry": "bulwark",
-      "minimum": 7,
-      "maximum": 26,
-      "step": 1,
-      "maximum_percentage_change": 15
-    },
-    {
       "id": "enemy.regenerator.hp",
       "source_file": "world/enemy_defs.lua",
       "lua_table": "return",

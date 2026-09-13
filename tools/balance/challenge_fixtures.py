@@ -24,7 +24,6 @@ WINDOW_MS = 5_000
 # geometry or a particular loadout can be solved statically.
 ENEMY_MECHANICS = {
     "runner": (10_500, "slow"),
-    "bulwark": (12_500, "cannon"),
     "regenerator": (12_000, "poison"),
     "warcaller": (11_500, "lancer"),
     "summoner": (12_000, "cannon"),

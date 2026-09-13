@@ -1111,7 +1111,7 @@ function Export.run()
 
 	-- Add a new fake enemy type just for artwork sizing
 	EnemyDefs.fakeEntry = {
-		nameKey = "enemy.bulwark",
+		nameKey = "enemy.grunt",
 		hp = 90,
 		speed = 45,
 		reward = 12,

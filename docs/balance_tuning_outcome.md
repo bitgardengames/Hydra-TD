@@ -11,7 +11,7 @@ preferred specialist is too expensive.
 
 To keep health values small and whole while making every enemy slightly sturdier,
 standard enemy health is 17/43/14 for Grunts, Tanks, and Runners, and
-57/41/41/53 for Bulwarks, Regenerators, Warcallers, and Summoners. Hard retains
+41/41/53 for Regenerators, Warcallers, and Summoners. Hard retains
 its tighter life, reward, sell-refund, and boss contracts, and now applies a
 whole 5x standard-enemy health contract; bosses retain their 1.2 multiplier.
 
@@ -88,7 +88,7 @@ and armored blocks to force frequent retargeting. Other maps use dense
 combinations of several special traits.
 
 `introducesEnemies` is audited against first authored appearances. The canonical
-ordering is Grunt/Runner on Riverbend, Regenerator/Bulwark on Outerloop,
+ordering is Grunt/Runner on Riverbend, Regenerator on Outerloop,
 Warcaller on Gauntlet, and Summoner on Twin Loop. The generated challenge tables
 below remain the source of truth for per-wave effective threat, peak five-second
 threat, income, and counter reserve after these composition changes.

@@ -27,13 +27,6 @@ return {
 		radius = 9,
 	},
 
-	bulwark = {
-		nameKey = "enemy.bulwark",
-		descriptionKey = "enemy.bulwarkDescription",
-		hp = 57, speed = 40, reward = 16, score = 30, radius = 14,
-		armor = { flatReduction = 5, heavyMultiplier = 1.35, heavyThreshold = 14 },
-	},
-
 	regenerator = {
 		nameKey = "enemy.regenerator",
 		descriptionKey = "enemy.regeneratorDescription",

@@ -140,15 +140,7 @@ local function drawEnemy(e)
 		lg.arc("line", "open", ix, iy, r + 8, pi * 0.08, pi * 0.92)
 		lg.arc("line", "open", ix, iy, r + 8, pi * 1.08, pi * 1.92)
 	end
-	if e.kind == "bulwark" then
-		lg.setColor(outR, outG, outB, enemyAlpha)
-		for a = 0, 3 do
-			local ang = a * HALF_PI + pi * 0.25
-			local px, py = ix + cos(ang) * r, iy + sin(ang) * r
-			lg.push(); lg.translate(px, py); lg.rotate(ang)
-			lg.rectangle("fill", -r * 0.35, -r * 0.55, r * 0.7, r * 1.1, 2, 2); lg.pop()
-		end
-	elseif e.kind == "regenerator" then
+	if e.kind == "regenerator" then
 		local regenerating = e.regenDelay <= 0 and e.hp < e.maxHp and e.poisonStacks <= 0
 		drawRegeneratorGrowthPlates(ix, iy, r, enemyAlpha, regenerating)
 	end
