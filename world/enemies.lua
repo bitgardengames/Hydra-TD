@@ -864,12 +864,6 @@ local function getDisplayStatuses(e)
 			remainingFraction = fraction(e.poisonTimer, e.poisonDuration),
 		})
 	end
-	if e.regeneration and (e.regenDelay or 0) > 0 then
-		add("status.regenerationSuppressed", "⊘", Theme.ui.bad, {
-			id = "regeneration_suppressed",
-			remainingFraction = fraction(e.regenDelay, e.regeneration.delay),
-		})
-	end
 	if e.phaseActive then
 		add("status.phased", "◌", Theme.tower.slow, {
 			id = "phased", remainingFraction = fraction(e.phaseTimer, e.phase.duration),
