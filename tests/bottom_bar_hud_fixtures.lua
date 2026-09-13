@@ -44,4 +44,12 @@ end
 assert(centers[1] == 60 and centers[2] == 160 and centers[3] == 260,
 	"status labels should be centered in three evenly spaced columns")
 
+local inspectFile = assert(io.open("ui/bottom_bar_inspect.lua", "r"))
+local inspectSource = inspectFile:read("*a")
+inspectFile:close()
+assert(inspectSource:find("local enemyStatusBuffer = {}", 1, true),
+	"enemy inspect must retain a private status buffer")
+assert(inspectSource:find("Enemies.getDisplayStatuses(e, enemyStatusBuffer)", 1, true),
+	"enemy inspect must pass its retained buffer to status collection")
+
 print("bottom bar HUD fixtures: ok")
