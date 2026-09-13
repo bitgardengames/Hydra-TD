@@ -42,7 +42,7 @@ local maps = {
 		id = "highpass",
 		nameKey = "map.highpass",
 		-- Alternating fast and durable groups teach counter coverage.
-		biome = "default",
+		biome = "highlands",
 		path = {
 			{5, 5}, {21, 5},
 			{21, 11}, {10, 11},
@@ -215,7 +215,7 @@ local maps = {
 		-- Staggered mixed formations suit the long alternating path segments.
 		nameKey = "map.highridge",
 		-- Durable fronts create openings for faster enemies to pressure the exit.
-		biome = "default",
+		biome = "highlands",
 		path = {
 			{5, 5}, {12, 5},
 			{12, 3}, {20, 3},
