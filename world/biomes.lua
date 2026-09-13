@@ -84,6 +84,62 @@ Biomes.defs = {
 		},
 	},
 
+	highlands = { -- Cool, windswept uplands
+		terrain = {
+			grass = {0.32, 0.46, 0.36},
+			path = {0.56, 0.55, 0.50},
+			pathOutline = {0.29, 0.31, 0.29},
+			water = {0.24, 0.43, 0.52},
+		},
+
+		ground = {
+			detailDensity = 0.20,
+			lightMul = 1.04,
+			darkMul = 0.91,
+		},
+
+		world = {
+			tree = {
+				trunk = {0.30, 0.25, 0.20},
+				trunkOutline = {0.16, 0.14, 0.12},
+				shapes = {"evergreen", "square"},
+
+				styles = {
+					{fill = {0.30, 0.50, 0.38}, outline = {0.13, 0.29, 0.22}},
+					{fill = {0.25, 0.43, 0.35}, outline = {0.11, 0.25, 0.20}},
+					{fill = {0.38, 0.56, 0.42}, outline = {0.17, 0.33, 0.24}},
+					{fill = {0.29, 0.46, 0.43}, outline = {0.12, 0.27, 0.25}},
+				},
+			},
+
+			rock = {
+				styles = {
+					{fill = {0.55, 0.58, 0.57}, outline = {0.29, 0.32, 0.32}},
+					{fill = {0.48, 0.52, 0.53}, outline = {0.25, 0.29, 0.30}},
+					{fill = {0.61, 0.62, 0.59}, outline = {0.34, 0.35, 0.33}},
+					{fill = {0.43, 0.48, 0.49}, outline = {0.22, 0.26, 0.28}},
+				},
+			},
+		},
+
+		-- Exposed slopes have fewer trees and more visible stone than the lowlands.
+		scatter = {
+			trees = {
+				enabled = true,
+				density = 0.13,
+				cluster = 0.14,
+				minDistFromPath = 1,
+			},
+
+			rocks = {
+				enabled = true,
+				density = 0.14,
+				cluster = 0.09,
+				minDistFromPath = 1,
+			},
+		},
+	},
+
 	drylands = {
 		terrain = {
 			grass = {0.78, 0.68, 0.48},
