@@ -3,7 +3,6 @@ local maps = {
 	{
 		id = "riverbend",
 		nameKey = "map.riverbend",
-		introducesEnemies = {"grunt", "runner"},
 		biome = "default",
 		path = {
 			{5, 7}, {13, 7},
@@ -29,7 +28,6 @@ local maps = {
 		id = "switchback",
 		nameKey = "map.switchback",
 		-- Sparse durable fronts followed by escorts teach target priority.
-		introducesEnemies = {},
 		biome = "default",
 		path = {
 			{5, 7}, {15, 7},
@@ -44,7 +42,6 @@ local maps = {
 		id = "highpass",
 		nameKey = "map.highpass",
 		-- Alternating fast and durable groups teach counter coverage.
-		introducesEnemies = {},
 		biome = "default",
 		path = {
 			{5, 5}, {21, 5},
@@ -63,7 +60,6 @@ local maps = {
 		id = "outerloop",
 		nameKey = "map.outerloop",
 		-- Small escorted specialists teach sustained focus before dense trait mixes.
-		introducesEnemies = {"regenerator"},
 		biome = "drylands",
 		path = {
 			{5, 6}, {14, 6},
@@ -83,7 +79,6 @@ local maps = {
 		id = "gauntlet",
 		nameKey = "map.gauntlet",
 		-- Packed ordinary bodies teach splash; Warcallers appear only behind escorts.
-		introducesEnemies = {"warcaller"},
 		biome = "autumn",
 		path = {
 			{5, 11}, {19, 11},
@@ -137,7 +132,6 @@ local maps = {
 		id = "lowvalley",
 		nameKey = "map.lowvalley",
 		-- Revisits durable enemies in larger mixed formations.
-		introducesEnemies = {},
 		biome = "drylands",
 		path = {
 			{5, 5}, {17, 5},
@@ -161,7 +155,6 @@ local maps = {
 		id = "circuit",
 		nameKey = "map.circuit",
 		-- Revisits regeneration in larger mixed formations.
-		introducesEnemies = {},
 		biome = "default",
 		path = {
 			{5, 6}, {11, 6},
@@ -200,7 +193,6 @@ local maps = {
 	{
 		id = "terrace",
 		nameKey = "map.terrace",
-		introducesEnemies = {},
 		biome = "drylands",
 		path = {
 			{5, 3}, {14, 3},
@@ -223,7 +215,6 @@ local maps = {
 		-- Staggered mixed formations suit the long alternating path segments.
 		nameKey = "map.highridge",
 		-- Durable fronts create openings for faster enemies to pressure the exit.
-		introducesEnemies = {},
 		biome = "default",
 		path = {
 			{5, 5}, {12, 5},
@@ -285,7 +276,6 @@ local maps = {
 		-- pressure cycle.
 		prerequisiteMapId = "steppingstones",
 		nameKey = "map.twinloop",
-		introducesEnemies = {"summoner"},
 		biome = "winter",
 		path = {
 			{5, 7}, {12, 7},
