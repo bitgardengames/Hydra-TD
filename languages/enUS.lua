@@ -49,6 +49,8 @@ return {
 		title = "Settings",
 		music = "Music Volume",
 		sfx = "SFX Volume",
+		muteWhenUnfocused = "Mute when unfocused",
+		muteWhenUnfocusedDesc = "Silences all audio while the game window is not focused.",
 		percentValue = "%d%%",
 		difficulty = "Difficulty",
 		fullscreen = "Fullscreen",

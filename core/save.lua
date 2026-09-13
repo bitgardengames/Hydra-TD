@@ -19,6 +19,7 @@ local rep = string.rep
 local DEFAULT_SETTINGS = {
 	musicVolume = 0.20,
 	sfxVolume = 0.20,
+	muteWhenUnfocused = true,
 	difficulty = "normal",
 	screenShake = true,
 	showDamageNumbers = true,
