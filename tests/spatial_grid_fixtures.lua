@@ -134,6 +134,52 @@ assert(outerCount == 2 and outerSeen[nestedA] == 1 and outerSeen[nestedB] == 1,
 	"nested query lost or duplicated an outer visitor candidate")
 clear()
 
+-- The support secondary index follows real Spatial lifecycle hooks while
+-- retaining its warmed footprint entries across movement and radius changes.
+local Support = require("world.enemy_support")
+Spatial.setEnemyLifecycleHooks(Support.onEnemyCellChanged, Support.onEnemyRemoved)
+local supportTarget = add(CELL_SIZE + 10, 0)
+supportTarget.supportBoost = 1
+local movingSupport = add(10, 0)
+movingSupport.supportBoost = 1
+movingSupport.def = {support = {radius = CELL_SIZE * 2, speedMultiplier = 1.5, pulsePeriod = 1}}
+movingSupport.support = movingSupport.def.support
+Support.register(movingSupport)
+local overlappingSupport = add(CELL_SIZE + 10, 0)
+overlappingSupport.supportBoost = 1
+overlappingSupport.def = {support = {radius = CELL_SIZE, speedMultiplier = 2, pulsePeriod = 1}}
+overlappingSupport.support = overlappingSupport.def.support
+Support.register(overlappingSupport)
+Support.flushDirtySources()
+assert(supportTarget.supportBoost == 2,
+	"real spatial queries did not preserve the strongest overlapping aura")
+
+Support.resetLifecycleStats()
+movingSupport.x = CELL_SIZE + 10
+Spatial.updateEnemy(movingSupport)
+Support.flushDirtySources()
+assert(Support.getFootprintEntryAllocationCount() == 0,
+	"real cell crossing allocated a footprint entry after warm-up")
+assert(supportTarget.supportBoost == 2,
+	"moving an overlapping aura changed the stable strongest multiplier")
+
+movingSupport.def.support.radius = CELL_SIZE
+Support.update(0)
+movingSupport.def.support.radius = CELL_SIZE * 2
+Support.update(0)
+assert(Support.getFootprintEntryAllocationCount() == 0,
+	"real radius shrink/grow failed to reuse warmed footprint entries")
+overlappingSupport.hp = 0
+Spatial.removeEnemy(overlappingSupport)
+assert(supportTarget.supportBoost == 1.5,
+	"removing the strongest real-grid source did not restore the remaining aura")
+Support.remove(movingSupport)
+assert(supportTarget.supportBoost == 1,
+	"removing the final real-grid source left a support contribution")
+Support.clear()
+Spatial.setEnemyLifecycleHooks(nil, nil)
+clear()
+
 -- Radius visitation filters in place and honors its retained hot-path options.
 local radiusCenter = add(0, 0)
 local renderedOnly = add(CELL_SIZE, 0)

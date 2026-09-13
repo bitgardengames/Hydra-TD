@@ -44,6 +44,15 @@ local function source(id, x, multiplier, radius)
 	return result
 end
 
+local function coveredEntriesByCoordinate(sourceEnemy)
+	local result = {}
+	for i = 1, #sourceEnemy._supportCoveredCells do
+		local entry = sourceEnemy._supportCoveredCells[i]
+		result[entry.cx .. ":" .. entry.cy] = entry
+	end
+	return result
+end
+
 -- Overlapping auras retain the strongest boost and dirty work is deduplicated.
 local firstAura = source(1, 100, 1.5)
 local strongerAura = source(2, 200, 2)
@@ -67,6 +76,52 @@ assert(queryCounts[500] == nil, "source movement refreshed membership immediatel
 Support.flushDirtySources()
 assert(queryCounts[500] == 1, "moving support source was not refreshed")
 assert(target.supportBoost == 2, "moving one overlap removed the remaining boost")
+
+-- Cell-footprint entries that still overlap survive movement by identity, and
+-- entries leaving one edge are recycled onto the entering edge.
+local recyclingAura = source(6, 2000, 1.4, 64)
+nearby[2000] = {recyclingAura}
+Support.flushDirtySources()
+local beforeMove = coveredEntriesByCoordinate(recyclingAura)
+Support.resetLifecycleStats()
+recyclingAura.x = 2100
+nearby[2100] = {recyclingAura}
+Support.onEnemyCellChanged(recyclingAura, 20, 0, 21, 0)
+local afterMove = coveredEntriesByCoordinate(recyclingAura)
+assert(afterMove["20:0"] == beforeMove["20:0"] and afterMove["21:0"] == beforeMove["21:0"],
+	"movement replaced entries for cells that remained covered")
+for i = 1, 20 do
+	local oldCell = i % 2 == 1 and 21 or 20
+	local newCell = i % 2 == 1 and 20 or 21
+	recyclingAura.x = newCell * 100
+	Support.onEnemyCellChanged(recyclingAura, oldCell, 0, newCell, 0)
+end
+assert(Support.getFootprintEntryAllocationCount() == 0,
+	"repeated warmed cell crossings allocated footprint entries")
+Support.flushDirtySources()
+
+-- Warming the largest radius also makes later shrink/grow cycles allocation-free.
+recyclingAura.def.support.radius = 164
+Support.update(0)
+local warmedAllocationCount = Support.getFootprintEntryAllocationCount()
+for i = 1, 8 do
+	recyclingAura.def.support.radius = i % 2 == 0 and 164 or 64
+	Support.update(0)
+end
+assert(Support.getFootprintEntryAllocationCount() == warmedAllocationCount,
+	"radius reconciliation failed to recycle warmed footprint entries")
+
+-- Replacing the support definition uses the same path and retains entries when
+-- its radius footprint is unchanged.
+local beforeDefinitionChange = coveredEntriesByCoordinate(recyclingAura)
+recyclingAura.def.support = {radius = 164, speedMultiplier = 1.6, pulsePeriod = 1}
+Support.update(0)
+local afterDefinitionChange = coveredEntriesByCoordinate(recyclingAura)
+for coordinate, entry in pairs(beforeDefinitionChange) do
+	assert(afterDefinitionChange[coordinate] == entry,
+		"support-definition replacement recreated a retained cell entry")
+end
+Support.flushDirtySources()
 
 -- Removing/dying sources cleans contributions immediately.
 strongerAura.hp = 0
@@ -98,5 +153,12 @@ Support.onEnemyCellChanged(crossingTarget, 13, 0, 14, 0)
 local examined = Support.getLifecycleStats()
 assert(examined == 1, "nearby lookup examined " .. examined .. " sources instead of one")
 
+Support.remove(recyclingAura)
+assert(recyclingAura._supportCoveredCells == nil
+	and recyclingAura._supportCoveredCellPool == nil
+	and recyclingAura._supportCoveredCellColumns == nil,
+	"source removal retained footprint references")
 Support.clear()
+assert(firstAura._supportCoveredCells == nil and resizingAura._supportCoveredCells == nil,
+	"support clear retained source footprint references")
 print("enemy support fixtures passed")
