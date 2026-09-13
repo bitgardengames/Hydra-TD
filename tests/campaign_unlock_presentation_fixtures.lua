@@ -10,6 +10,39 @@ local function victory(rewards)
 	}
 end
 
+local function verifyCompletionBoundary(rewardCount, reducedMotion)
+	local rewards = {}
+	for index = 1, rewardCount do
+		rewards[index] = {type = "tower", id = "reward-" .. index}
+	end
+	local event = assert(Presentation.capture(Presentation.new(), victory(rewards), 5, reducedMotion))
+	local completionTime
+	if reducedMotion then
+		completionTime = Presentation.REDUCED_HIGHLIGHT_DURATION
+	else
+		local rewardTime = rewardCount > 0
+			and (rewardCount - 1) * Presentation.REWARD_STAGGER + Presentation.REWARD_DURATION or 0
+		completionTime = math.max(Presentation.ROW_DURATION, rewardTime)
+	end
+
+	event.elapsed = completionTime - 0.000001
+	assert(not Presentation.isComplete(event),
+		("%s-motion presentation with %d rewards should be incomplete before its boundary")
+			:format(reducedMotion and "reduced" or "normal", rewardCount))
+	event.elapsed = completionTime
+	assert(Presentation.isComplete(event),
+		("%s-motion presentation with %d rewards should complete at its boundary")
+			:format(reducedMotion and "reduced" or "normal", rewardCount))
+	assert(Presentation.sample(event).complete,
+		"sampled pose should report the same completion state as the allocation-free helper")
+end
+
+for _, reducedMotion in ipairs({false, true}) do
+	for _, rewardCount in ipairs({0, 1, 3}) do
+		verifyCompletionBoundary(rewardCount, reducedMotion)
+	end
+end
+
 -- A first clear identifies the newly available map and acknowledges state only after capture.
 local controller = Presentation.new()
 local state = victory({{type = "ability", id = "meteor"}})
