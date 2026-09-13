@@ -11,7 +11,7 @@ local dirtySourceSet = {}
 local changedTargets = {}
 local changedTargetSet = {}
 local coveredSources = {}
-local lifecycleStats = {sourceCandidatesExamined = 0}
+local lifecycleStats = {sourceCandidatesExamined = 0, footprintEntryAllocations = 0}
 local markDirty
 
 local function coveredCell(cx, cy)
@@ -28,41 +28,136 @@ local function coveredCell(cx, cy)
 	return cell
 end
 
-local function insertCoveredCell(cx, cy, source)
+local function insertCoveredCell(cx, cy, source, entry)
 	local cell = coveredCell(cx, cy)
-	local entry = {source = source, cell = cell, index = #cell + 1, cx = cx, cy = cy}
+	if not entry then
+		entry = {}
+		lifecycleStats.footprintEntryAllocations = lifecycleStats.footprintEntryAllocations + 1
+	end
+	entry.source = source
+	entry.cell = cell
+	entry.index = #cell + 1
+	entry.cx = cx
+	entry.cy = cy
 	cell[entry.index] = entry
 	local entries = source._supportCoveredCells
-	entries[#entries + 1] = entry
+	entry.sourceIndex = #entries + 1
+	entries[entry.sourceIndex] = entry
+	local columns = source._supportCoveredCellColumns
+	local column = columns[cx]
+	if not column then
+		column = {}
+		columns[cx] = column
+	end
+	column[cy] = entry
 end
 
+local function detachCoveredCell(source, entry)
+	local cell = entry.cell
+	local last = cell[#cell]
+	cell[entry.index] = last
+	cell[#cell] = nil
+	if last and last ~= entry then
+		last.index = entry.index
+	end
+	if #cell == 0 then
+		local column = coveredSources[entry.cx]
+		column[entry.cy] = nil
+		if next(column) == nil then coveredSources[entry.cx] = nil end
+	end
+
+	local entries = source._supportCoveredCells
+	local lastEntry = entries[#entries]
+	entries[entry.sourceIndex] = lastEntry
+	entries[#entries] = nil
+	if lastEntry and lastEntry ~= entry then
+		lastEntry.sourceIndex = entry.sourceIndex
+	end
+	local columns = source._supportCoveredCellColumns
+	local sourceColumn = columns[entry.cx]
+	sourceColumn[entry.cy] = nil
+	if next(sourceColumn) == nil then columns[entry.cx] = nil end
+	entry.cell = nil
+	entry.index = nil
+	entry.sourceIndex = nil
+end
+
+-- Full teardown is reserved for unregister/reset. Normal movement and definition
+-- changes reconcile in place so the source retains and recycles its entry tables.
 local function removeCoveredCells(source)
 	local entries = source._supportCoveredCells
 	if not entries then return end
-	for i = #entries, 1, -1 do
-		local entry = entries[i]
-		local cell = entry.cell
-		local last = cell[#cell]
-		cell[entry.index] = last
-		cell[#cell] = nil
-		if last and last ~= entry then
-			last.index = entry.index
+	while #entries > 0 do
+		local entry = entries[#entries]
+		detachCoveredCell(source, entry)
+		entry.source = nil
+		entry.cx = nil
+		entry.cy = nil
+		entry.coverageStamp = nil
+	end
+	local pool = source._supportCoveredCellPool
+	if pool then
+		for i = #pool, 1, -1 do
+			local entry = pool[i]
+			entry.source = nil
+			entry.cx = nil
+			entry.cy = nil
+			entry.coverageStamp = nil
+			pool[i] = nil
 		end
-		if #cell == 0 then
-			local column = coveredSources[entry.cx]
-			column[entry.cy] = nil
-			if next(column) == nil then coveredSources[entry.cx] = nil end
-		end
-		entries[i] = nil
+	end
+	source._supportCoveredCells = nil
+	source._supportCoveredCellPool = nil
+	source._supportCoveredCellColumns = nil
+	source._supportPendingCells = nil
+	source._supportCoverageStamp = nil
+end
+
+local function collectCoveredCell(cx, cy, source)
+	local column = source._supportCoveredCellColumns[cx]
+	local entry = column and column[cy]
+	if entry then
+		entry.coverageStamp = source._supportCoverageStamp
+	else
+		local pending = source._supportPendingCells
+		pending[#pending + 1] = cx
+		pending[#pending + 1] = cy
 	end
 end
 
 local function indexCoveredCells(source)
-	removeCoveredCells(source)
+	if not source._supportCoveredCells then
+		source._supportCoveredCells = {}
+		source._supportCoveredCellPool = {}
+		source._supportCoveredCellColumns = {}
+		source._supportPendingCells = {}
+		source._supportCoverageStamp = 0
+	end
+
+	local stamp = source._supportCoverageStamp + 1
+	source._supportCoverageStamp = stamp
 	local aura = source.support
-	if not aura or source.hp <= 0 or source._supportRemoved then return end
-	source._supportCoveredCells = source._supportCoveredCells or {}
-	Spatial.forEachQueryCell(source.x, source.y, aura.radius, insertCoveredCell, source)
+	if aura and source.hp > 0 and not source._supportRemoved then
+		Spatial.forEachQueryCell(source.x, source.y, aura.radius, collectCoveredCell, source)
+	end
+
+	local entries = source._supportCoveredCells
+	local pool = source._supportCoveredCellPool
+	for i = #entries, 1, -1 do
+		local entry = entries[i]
+		if entry.coverageStamp ~= stamp then
+			detachCoveredCell(source, entry)
+			pool[#pool + 1] = entry
+		end
+	end
+
+	local pending = source._supportPendingCells
+	for i = 1, #pending, 2 do
+		local entry = pool[#pool]
+		if entry then pool[#pool] = nil end
+		insertCoveredCell(pending[i], pending[i + 1], source, entry)
+		pending[i], pending[i + 1] = nil, nil
+	end
 end
 
 local function markCellSources(cx, cy, excluded)
@@ -309,10 +404,15 @@ end
 
 function Support.resetLifecycleStats()
 	lifecycleStats.sourceCandidatesExamined = 0
+	lifecycleStats.footprintEntryAllocations = 0
 end
 
 function Support.getLifecycleStats()
 	return lifecycleStats.sourceCandidatesExamined
+end
+
+function Support.getFootprintEntryAllocationCount()
+	return lifecycleStats.footprintEntryAllocations
 end
 
 -- Called after all enemy Spatial.updateEnemy calls for the tick. Lifecycle
