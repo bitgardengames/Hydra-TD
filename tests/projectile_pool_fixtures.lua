@@ -32,7 +32,15 @@ function PB.compileHooks(p)
 end
 
 function PB.init() end
-function PB.update() end
+function PB.update(p)
+	if p.spawnFixtureChild then
+		p.spawnFixtureChild = nil
+		local event = PB.takeEvent(p, "spawn_projectile")
+		event.source = p.sourceTower
+		event.behaviors = p.behaviors
+		PB.pushEvent(p, event)
+	end
+end
 function PB.draw() end
 function PB.hit() end
 
@@ -63,6 +71,31 @@ local source = {
 }
 local firstPlan = { { id = "first" } }
 local secondPlan = { { id = "second" } }
+
+local function assertDefaultShot(p, expectedTarget, expectedBehaviors)
+	assert(p.x == source.x and p.y == source.y, "default projectile position changed")
+	assert(p.speed == source.projSpeed and p.life == 3, "default speed or lifetime changed")
+	assert(p.target == expectedTarget, "default projectile target changed")
+	assert(p.behaviors == expectedBehaviors, "default behavior context changed")
+	assert(p.angle == source.angle, "default projectile angle changed")
+	assert(p.vx == nil and p.vy == nil, "default projectile velocity changed")
+	assert(p.hitOrigin == "primary", "default projectile hit origin changed")
+	assert(p.hitRadius == 4.5, "default projectile hit radius changed")
+end
+
+local directContext = { behaviors = firstPlan }
+local direct = Projectiles.spawnFromContext(source, nil, directContext)
+assertDefaultShot(direct, nil, firstPlan)
+
+local eventDefault = Projectiles.spawnEvent({ source = source, behaviors = firstPlan })
+assertDefaultShot(eventDefault, nil, firstPlan)
+
+eventDefault.spawnFixtureChild = true
+Projectiles.update(0)
+local child = Projectiles.projectiles[#Projectiles.projectiles]
+assert(child ~= eventDefault, "recursive projectile event did not spawn a child")
+assertDefaultShot(child, nil, firstPlan)
+Projectiles.clear()
 
 local first = Projectiles.spawnEvent({ source = source, life = 0.01, behaviors = firstPlan })
 first.markHit(first, "enemy-a")
