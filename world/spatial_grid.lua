@@ -380,6 +380,16 @@ function Spatial.visitCells(x, y, radius, fn, context, queryContext)
 	return traverseSquareCandidatesCallback(x, y, radius, fn, context, queryContext)
 end
 
+-- Local hot paths can write straight into caller-owned storage while retaining
+-- the same per-frame accounting as querySquareCandidatesLocal.
+function Spatial.visitCellsLocal(x, y, radius, fn, context, queryContext)
+	assert(queryContext, "visitCellsLocal requires a caller-owned query context")
+	local count = traverseSquareCandidatesCallback(x, y, radius, fn, context, queryContext)
+	frameStats.localQueryCount = frameStats.localQueryCount + 1
+	frameStats.localCandidateTotal = frameStats.localCandidateTotal + count
+	return count
+end
+
 -- Visits exact-radius matches directly from grid cells, without materializing
 -- a candidate array. A query context cannot be active in a nested traversal;
 -- retain a distinct context at every nesting level.

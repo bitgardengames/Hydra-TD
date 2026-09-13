@@ -9,6 +9,7 @@ local nextId = 0
 local inserted = {}
 local queryContext = Spatial.newQueryContext(true)
 local localQueryContext = Spatial.newQueryContext(true)
+local localVisitorContext = Spatial.newQueryContext(true)
 
 local function add(x, y)
 	nextId = nextId + 1
@@ -40,6 +41,20 @@ local function assertBothQueriesFind(x, radius, enemy, label)
 	assert(Spatial.localQueryFootprintKey(radius) == math.ceil(radius / CELL_SIZE),
 		label .. " (cache footprint)")
 end
+
+-- Caller-owned local visitation avoids an intermediate result list while
+-- preserving traversal/candidate statistics and filtering in the visitor.
+Spatial.beginFrame()
+local visited = {}
+local visitA = add(1, 1)
+local visitB = add(CELL_SIZE + 1, 1)
+local visitedCount = Spatial.visitCellsLocal(1, 1, CELL_SIZE, function(enemy, output)
+	if enemy.hp > 0 then output[#output + 1] = enemy end
+end, visited, localVisitorContext)
+local localQueries, localCandidates = Spatial.getLocalQueryFrameStats()
+assert(visitedCount == 2 and #visited == 2, "local visitor omitted traversal candidates")
+assert(localQueries == 1 and localCandidates == 2, "local visitor did not update query statistics")
+clear()
 
 local function currentMaxEnemyRadius()
 	for outer = 1, 20 do
