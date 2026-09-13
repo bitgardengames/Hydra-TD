@@ -115,25 +115,6 @@ local function acquire()
 	return { _retained = retained }
 end
 
--- These are shot-owned values. Retained containers live in p._retained and are
--- deliberately not mixed into this list.
-local reusableFields = {
-	"x", "y", "r", "baseR", "scale", "life", "t", "sourceTower", "sourceKind",
-	"speed", "damage", "hitOrigin", "target", "targetID", "ignoreTarget", "angle",
-	"rotation", "vx", "vy", "hitRadius", "hitRadius2", "lastTX", "lastTY",
-	"behaviors", "hit", "_consumed", "_hooks", "_drawHandlers", "_canHitPredicates",
-	"_didExpireHook",
-	"allowRepeatHits", "consumeOnHit", "pierce", "dead", "radius", "visualScale",
-	"cx", "cy", "orbitSpeed", "onEvent", "_baseDamage", "_beam", "_boom",
-	"_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
-	"_chainVisited", "_claimedScratch", "_conductRadius", "_delayedBlast",
-	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
-	"_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
-	"_slowAuraRadius", "_slowAuraTick", "_slowAuraTimer", "_snowballBaseDamage",
-	"_snowballHits", "_snowballStacks", "_spiral", "_supernovaBurstDone", "_suspend",
-	"_targetPointX", "_targetPointY", "_tickStates", "_wave", "_zap",
-}
-
 local function resetReusableState(p)
 	local retained = p._retained
 
@@ -149,18 +130,14 @@ local function resetReusableState(p)
 	Util.clearTable(retained.defaultHitCtx)
 	retained.eventPoolCount = p._eventPoolCount or retained.eventPoolCount
 
-	for i = 1, #reusableFields do
-		p[reusableFields[i]] = nil
+	-- Everything populated directly on a projectile belongs to that shot. This
+	-- also makes new behavior state transient by default, without maintaining a
+	-- parallel list of every field behaviors may introduce.
+	for key in pairs(p) do
+		if key ~= "_retained" then
+			p[key] = nil
+		end
 	end
-
-	p.eventRead = nil
-	p.eventCount = nil
-	p.hitSet = nil
-	p.hitCooldowns = nil
-	p.events = nil
-	p._defaultHitCtx = nil
-	p._eventPool = nil
-	p._eventPoolCount = nil
 end
 
 local function release(p)
