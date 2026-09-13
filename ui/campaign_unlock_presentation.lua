@@ -67,8 +67,23 @@ function Presentation.update(controller, dt)
 	local event = controller.active
 	if not event then return end
 	event.elapsed = event.elapsed + math.max(0, dt or 0)
-	local pose = Presentation.sample(event)
-	if pose.complete then controller.active = nil end
+	if Presentation.isComplete(event) then controller.active = nil end
+end
+
+-- Completion is kept separate from sampling so update does not build a pose
+-- that will be discarded before the draw path samples the event.
+function Presentation.isComplete(event)
+	if not event then return true end
+
+	local baseDuration = event.reducedMotion
+		and Presentation.REDUCED_HIGHLIGHT_DURATION or Presentation.ROW_DURATION
+	local rewardDuration = 0
+	local rewardCount = #event.rewards
+	if not event.reducedMotion and rewardCount > 0 then
+		rewardDuration = (rewardCount - 1) * Presentation.REWARD_STAGGER
+			+ Presentation.REWARD_DURATION
+	end
+	return event.elapsed >= math.max(baseDuration, rewardDuration)
 end
 
 function Presentation.sample(event)
@@ -81,18 +96,14 @@ function Presentation.sample(event)
 		row = math.sin(math.pi * clamp01(elapsed / Presentation.ROW_DURATION))
 	end
 
-	local rewardPoses, lastComplete = {}, true
+	local rewardPoses = {}
 	for index = 1, #event.rewards do
 		local progress = event.reducedMotion and 1 or
 			clamp01((elapsed - (index - 1) * Presentation.REWARD_STAGGER)
 				/ Presentation.REWARD_DURATION)
 		rewardPoses[index] = {progress = smoothstep(progress), visible = progress > 0 and progress < 1}
-		lastComplete = lastComplete and progress >= 1
 	end
-	local baseComplete = event.reducedMotion
-		and elapsed >= Presentation.REDUCED_HIGHLIGHT_DURATION
-		or elapsed >= Presentation.ROW_DURATION
-	return {complete = baseComplete and lastComplete, row = row,
+	return {complete = Presentation.isComplete(event), row = row,
 		rewards = rewardPoses, sourceIndex = event.sourceIndex, targetIndex = event.targetIndex}
 end
 
