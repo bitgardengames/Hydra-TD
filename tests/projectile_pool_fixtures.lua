@@ -31,7 +31,22 @@ function PB.compileHooks(p)
 	p._canHitPredicates = { p.behaviors }
 end
 
-function PB.init() end
+local familyFields = {
+	movement = "_orbit",
+	collision = "pierce",
+	damage = "_chain",
+	status_proc = "_procCooldowns",
+	emission = "_beam",
+	drawing = "visualScale",
+}
+
+function PB.init(p)
+	local behavior = p.behaviors[1]
+	local field = behavior and familyFields[behavior.id]
+	if field then
+		p[field] = { owner = behavior.id }
+	end
+end
 function PB.update(p)
 	if p.spawnFixtureChild then
 		p.spawnFixtureChild = nil
@@ -128,6 +143,41 @@ assert(second._defaultHitCtx.origin == "primary" and second._defaultHitCtx.hitX 
 	and second._defaultHitCtx.hitY == nil, "default hit context leaked between uses")
 assert(second.allowRepeatHits == nil and second._didExpireHook == nil,
 	"per-use projectile flags leaked between uses")
+
+local retainedIdentities = {
+	retained = second._retained,
+	hitSet = second._retained.hitSet,
+	hitCooldowns = second._retained.hitCooldowns,
+	events = second._retained.events,
+	defaultHitCtx = second._retained.defaultHitCtx,
+	eventPool = second._retained.eventPool,
+}
+local families = { "movement", "collision", "damage", "status_proc", "emission", "drawing" }
+for i = 1, #families do
+	local family = families[i]
+	local transientField = familyFields[family]
+	second["arbitraryTransient" .. i] = true
+	Projectiles.clear()
+
+	local reused = Projectiles.spawnEvent({ source = source, life = 1, behaviors = { { id = family } } })
+	assert(reused == second, family .. " projectile did not reuse the pooled instance")
+	for previousIndex = 1, i - 1 do
+		assert(reused[familyFields[families[previousIndex]]] == nil,
+			families[previousIndex] .. " state leaked into " .. family .. " projectile")
+	end
+	assert(reused[transientField] and reused[transientField].owner == family,
+		family .. " fixture did not populate its behavior-specific state")
+	assert(reused["arbitraryTransient" .. i] == nil,
+		"arbitrary transient field survived recycling")
+	assert(reused._retained == retainedIdentities.retained
+		and reused.hitSet == retainedIdentities.hitSet
+		and reused.hitCooldowns == retainedIdentities.hitCooldowns
+		and reused.events == retainedIdentities.events
+		and reused._defaultHitCtx == retainedIdentities.defaultHitCtx
+		and reused._eventPool == retainedIdentities.eventPool,
+		"retained container identity changed while recycling " .. family .. " projectile")
+	second = reused
+end
 
 local damageEvent = PB.takeEvent(second, "damage")
 damageEvent.target = { hp = 1000, maxHp = 1000, hitFlash = 0, x = 0, y = 0, radius = 10 }
