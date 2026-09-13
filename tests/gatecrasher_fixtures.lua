@@ -34,15 +34,57 @@ local Enemies = require("world.enemies")
 
 local warcaller = Enemies.spawnEnemy("warcaller", 1, 1)
 warcaller.supportBoost = 1.5
-local warcallerStatuses = Enemies.getDisplayStatuses(warcaller)
+local statusBuffer = {{id = "stale", stacks = 99, value = "stale", remainingFraction = 1}}
+local warcallerStatuses = Enemies.getDisplayStatuses(warcaller, statusBuffer)
+assert(warcallerStatuses == statusBuffer, "caller-owned status buffer must be returned")
 assert(#warcallerStatuses == 0,
 	"Warcaller speed aura and acceleration must not appear as status text")
 
 local regenerator = Enemies.spawnEnemy("regenerator", 1, 1)
 regenerator.regenDelay = regenerator.regeneration.delay
-local regeneratorStatuses = Enemies.getDisplayStatuses(regenerator)
+local regeneratorStatuses = Enemies.getDisplayStatuses(regenerator, statusBuffer)
 assert(#regeneratorStatuses == 0,
 	"Regenerator suppression must not appear as status text")
+
+-- Display rows retain their identity in steady state and are fully rewritten
+-- when the status at an index changes type.
+local statusEnemy = Enemies.spawnEnemy("boss_phasewalker", 1, 1)
+statusEnemy.slowTimer, statusEnemy.slowDuration = 2, 4
+statusEnemy.poisonTimer, statusEnemy.poisonDuration, statusEnemy.poisonStacks = 3, 6, 4
+statusEnemy.phaseActive, statusEnemy.phaseTimer = true, 1.5
+local statuses = Enemies.getDisplayStatuses(statusEnemy, statusBuffer)
+assert(statuses == statusBuffer and #statuses == 3, "all timed statuses must populate the supplied buffer")
+assert(statuses[1].id == "slow" and statuses[2].id == "poison" and statuses[3].id == "phased",
+	"status ordering changed")
+assert(statuses[1].label == "status.slow" and statuses[1].icon == "▼"
+	and statuses[1].color == package.loaded["core.theme"].tower.slow,
+	"slow presentation metadata changed")
+assert(statuses[2].stacks == 4 and statuses[2].remainingFraction == 0.5
+	and statuses[3].remainingFraction == 0.5,
+	"stack and remaining-duration presentation changed")
+local slowRow, poisonRow, phaseRow = statuses[1], statuses[2], statuses[3]
+statuses = Enemies.getDisplayStatuses(statusEnemy, statusBuffer)
+assert(statuses[1] == slowRow and statuses[2] == poisonRow and statuses[3] == phaseRow,
+	"steady-state status rendering must reuse buffer row identities")
+
+statusEnemy.slowTimer = 0
+statusEnemy.poisonTimer = 0
+statuses = Enemies.getDisplayStatuses(statusEnemy, statusBuffer)
+assert(#statuses == 1 and statuses[1] == slowRow and statuses[1].id == "phased",
+	"a changed first status must reuse the first row")
+assert(statuses[1].stacks == nil and statuses[1].value == nil,
+	"optional poison fields leaked into a reused phase row")
+assert(statusBuffer[2] == nil and statusBuffer[3] == nil, "unused status tail was not cleared")
+
+statusEnemy.phaseActive = false
+statusEnemy.enraged = true
+statusEnemy.supportBoost = 1.5
+statusEnemy.regeneration = {hpPerSecond = 2.5, delay = 1.25}
+statusEnemy.regenDelay = 1
+assert(#Enemies.getDisplayStatuses(statusEnemy, statusBuffer) == 0,
+	"regeneration, enrage, and support mechanics must clear expired display rows")
+assert(Enemies.getDisplayStatuses(nil, statusBuffer) == statusBuffer and #statusBuffer == 0,
+	"a missing enemy must clear and return the caller buffer")
 
 local def = assert(Enemies.EnemyDefs.boss_gatecrasher)
 assert(def.hp == 490, "Gatecrasher must use its increased base health")

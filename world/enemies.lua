@@ -831,44 +831,54 @@ end
 -- Produces the player-facing, render-agnostic description of every currently
 -- active enemy state. Callers can therefore present expiring state separately
 -- from the mechanics that define an enemy.
-local function getDisplayStatuses(e)
-	local result = {}
-	if not e then return result end
+local function statusRemainingFraction(remaining, duration)
+	if not remaining or not duration or duration <= 0 then return nil end
+	return max(0, min(1, remaining / duration))
+end
 
-	local function add(labelKey, icon, color, options)
-		options = options or {}
-		result[#result + 1] = {
-			id = options.id,
-			label = L(labelKey),
-			icon = icon,
-			color = color,
-			stacks = options.stacks,
-			value = options.value,
-			remainingFraction = options.remainingFraction,
-		}
+local function setDisplayStatus(result, index, id, labelKey, icon, color, stacks, value, remainingFraction)
+	local row = result[index]
+	if not row then
+		row = {}
+		result[index] = row
 	end
 
-	local function fraction(remaining, duration)
-		if not remaining or not duration or duration <= 0 then return nil end
-		return max(0, min(1, remaining / duration))
+	-- Assign every field, including optional ones: rows belong to the caller and
+	-- can represent a different status on the next frame.
+	row.id = id
+	row.label = L(labelKey)
+	row.icon = icon
+	row.color = color
+	row.stacks = stacks
+	row.value = value
+	row.remainingFraction = remainingFraction
+end
+
+local function getDisplayStatuses(e, result)
+	result = result or {}
+	local count = 0
+	if not e then
+		for i = #result, 1, -1 do result[i] = nil end
+		return result
 	end
 
 	if (e.slowTimer or 0) > 0 then
-		add("status.slow", "▼", Theme.tower.slow, {
-			id = "slow", remainingFraction = fraction(e.slowTimer, e.slowDuration),
-		})
+		count = count + 1
+		setDisplayStatus(result, count, "slow", "status.slow", "▼", Theme.tower.slow,
+			nil, nil, statusRemainingFraction(e.slowTimer, e.slowDuration))
 	end
 	if (e.poisonTimer or 0) > 0 and (e.poisonStacks or 0) > 0 then
-		add("status.poison", "●", Theme.tower.poison, {
-			id = "poison", stacks = e.poisonStacks,
-			remainingFraction = fraction(e.poisonTimer, e.poisonDuration),
-		})
+		count = count + 1
+		setDisplayStatus(result, count, "poison", "status.poison", "●", Theme.tower.poison,
+			e.poisonStacks, nil, statusRemainingFraction(e.poisonTimer, e.poisonDuration))
 	end
 	if e.phaseActive then
-		add("status.phased", "◌", Theme.tower.slow, {
-			id = "phased", remainingFraction = fraction(e.phaseTimer, e.phase.duration),
-		})
+		count = count + 1
+		setDisplayStatus(result, count, "phased", "status.phased", "◌", Theme.tower.slow,
+			nil, nil, statusRemainingFraction(e.phaseTimer, e.phase.duration))
 	end
+
+	for i = #result, count + 1, -1 do result[i] = nil end
 
 	return result
 end

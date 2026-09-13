@@ -25,6 +25,7 @@ local formatInt = Util.formatInt
 -- Animation state
 local inspectAnim = 0
 local inspectTarget = 0
+local enemyStatusBuffer = {}
 
 -- Colors
 local colorBackdrop = Theme.ui.backdrop
@@ -372,7 +373,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
         Text.printShadow(L("inspect.hp", formatInt(e.hp), formatInt(e.maxHp)), bodyX, bodyY)
 
-		local statuses = Enemies.getDisplayStatuses(e)
+		local statuses = Enemies.getDisplayStatuses(e, enemyStatusBuffer)
 
 		local statusY = bodyY + 24
 		local availableH = max(0, panelY + h - OUTER_PAD - statusY)
