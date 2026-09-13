@@ -489,6 +489,27 @@ local function cloneForPreview(t, level)
 	return clone
 end
 
+local function sameAppliedModules(snapshot, applied)
+	applied = applied or {}
+	if not snapshot or #snapshot ~= #applied then return false end
+	for i = 1, #applied do
+		if snapshot[i] ~= applied[i] then return false end
+	end
+	return true
+end
+
+local function upgradePreviewCacheMatches(cached, t, level)
+	return cached
+		and cached.level == level
+		and cached.modulesVersion == Modules.version
+		and cached.cacheVersion == (t._cacheVersion or 0)
+		and cached.fireProfileLocalVersion == (t._fireProfileLocalVersion or 0)
+		and cached.modulesEnabled == Modules.isEnabled()
+		and sameAppliedModules(cached.appliedModules, t.appliedModules)
+		and cached.kind == t.kind
+		and cached.def == t.def
+end
+
 local function behaviorMap(profile)
 	local out = {}
 	for i = 1, #(profile and profile.behaviors or {}) do
@@ -562,6 +583,11 @@ getUpgradePreview = function(t)
 		return nil
 	end
 	local level = max(1, t.level or 1)
+	t._cache = t._cache or {}
+	local cached = t._cache.upgradePreview
+	if upgradePreviewCacheMatches(cached, t, level) then
+		return cached.value
+	end
 	local nextLevel = level + 1
 	local currentClone = cloneForPreview(t, level)
 	local nextClone = cloneForPreview(t, nextLevel)
@@ -582,12 +608,26 @@ getUpgradePreview = function(t)
 	addPreviewRow(rows, "range", tostring(TowerStatDisplay.range(currentStats.range)), tostring(TowerStatDisplay.range(nextStats.range)), nextStats.range > currentStats.range and "good" or "bad")
 	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
 
-	return {
+	local preview = {
 		nextLevel = nextLevel,
 		current = currentStats,
 		postUpgrade = nextStats,
 		rows = rows,
 	}
+	local appliedModules = {}
+	for i = 1, #(t.appliedModules or {}) do appliedModules[i] = t.appliedModules[i] end
+	t._cache.upgradePreview = {
+		value = preview,
+		level = level,
+		modulesVersion = Modules.version,
+		cacheVersion = t._cacheVersion or 0,
+		fireProfileLocalVersion = t._fireProfileLocalVersion or 0,
+		modulesEnabled = Modules.isEnabled(),
+		appliedModules = appliedModules,
+		kind = t.kind,
+		def = t.def,
+	}
+	return preview
 end
 
 local function sellTower(t)
