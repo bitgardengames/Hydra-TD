@@ -1,4 +1,4 @@
--- Campaign map order and authored layouts. Unlock rewards live in systems/campaign_unlocks.lua.
+-- Campaign map order and authored layouts
 local maps = {
 	{
 		id = "riverbend",
@@ -11,55 +11,35 @@ local maps = {
 			{15, 5}, {21, 5},
 			{21, 7}, {30, 7},
 		},
-		water = {
-			-- river banks
-			{7, 5, 2},
-			{8, 6, 2},
-			{9, 5, 1},
-
-			-- downstream basin
-			{22, 8, 2},
-			{23, 8, 2},
-			{23, 9, 1},
-		}
 	},
 
 	{
 		id = "switchback",
 		nameKey = "map.switchback",
-		-- Sparse durable fronts followed by escorts teach target priority.
-		biome = "default",
+		biome = "highlands",
 		path = {
 			{5, 7}, {15, 7},
 			{15, 3}, {21, 3},
 			{21, 11}, {11, 11},
 			{11, 5}, {30, 5},
 		},
-		-- dry mountain pass
 	},
 
 	{
 		id = "highpass",
 		nameKey = "map.highpass",
-		-- Alternating fast and durable groups teach counter coverage.
-		biome = "highlands",
+		biome = "default",
 		path = {
 			{5, 5}, {21, 5},
 			{21, 11}, {10, 11},
 			{10, 3}, {23, 3},
 			{23, 9}, {30, 9},
 		},
-		water = {
-			-- alpine pool
-			{6, 2, 2},
-			{7, 2, 1},
-		}
 	},
 
 	{
 		id = "outerloop",
 		nameKey = "map.outerloop",
-		-- Small escorted specialists teach sustained focus before dense trait mixes.
 		biome = "drylands",
 		path = {
 			{5, 6}, {14, 6},
@@ -68,17 +48,11 @@ local maps = {
 			{10, 8}, {28, 8},
 			{28, 3}, {30, 3},
 		},
-		water = {
-			-- outer pond
-			{7, 10, 2},
-			{8, 10, 1},
-		}
 	},
 
 	{
 		id = "gauntlet",
 		nameKey = "map.gauntlet",
-		-- Packed ordinary bodies teach splash; Warcallers appear only behind escorts.
 		biome = "autumn",
 		path = {
 			{5, 11}, {19, 11},
@@ -86,7 +60,6 @@ local maps = {
 			{24, 3}, {11, 3},
 			{11, 9}, {30, 9},
 		},
-		-- intentionally dry battlefield
 	},
 
 	{
@@ -101,14 +74,6 @@ local maps = {
 			{26, 9}, {19, 9},
 			{19, 7}, {30, 7},
 		},
-		water = {
-			-- swamp edges
-			{7, 10, 2},
-			{8, 10, 1},
-
-			-- marsh basin
-			{23, 4, 2},
-		}
 	},
 
 	{
@@ -122,16 +87,11 @@ local maps = {
 			{25, 3}, {19, 3},
 			{19, 5}, {30, 5},
 		},
-		water = {
-			-- central pond
-			{14, 9, 2},
-		}
 	},
 
 	{
 		id = "lowvalley",
 		nameKey = "map.lowvalley",
-		-- Revisits durable enemies in larger mixed formations.
 		biome = "drylands",
 		path = {
 			{5, 5}, {17, 5},
@@ -140,21 +100,11 @@ local maps = {
 			{11, 11}, {22, 11},
 			{22, 6}, {30, 6},
 		},
-		water = {
-			-- main valley lake
-			{7, 8, 2},
-			{8, 9, 2},
-			{9, 8, 1},
-
-			-- small creek
-			{26, 5, 2},
-		}
 	},
 
 	{
 		id = "circuit",
 		nameKey = "map.circuit",
-		-- Revisits regeneration in larger mixed formations.
 		biome = "default",
 		path = {
 			{5, 6}, {11, 6},
@@ -164,13 +114,6 @@ local maps = {
 			{13, 3}, {25, 3},
 			{25, 6}, {30, 6},
 		},
-		water = {
-			-- corner pond
-			{7, 3, 2},
-
-			-- opposite corner
-			{26, 10, 2},
-		}
 	},
 
 	{
@@ -183,10 +126,6 @@ local maps = {
 			{18, 9}, {25, 9},
 			{25, 6}, {15, 6},
 			{15, 11}, {30, 11},
-		},
-		water = {
-			-- central pond
-			{16, 7, 2},
 		},
 	},
 
@@ -201,20 +140,11 @@ local maps = {
 			{10, 8}, {24, 8},
 			{24, 5}, {30, 5},
 		},
-		water = {
-			-- terrace basin
-			{6, 9, 2},
-
-			-- cliffside pool
-			{27, 3, 2},
-		},
 	},
 
 	{
 		id = "highridge",
-		-- Staggered mixed formations suit the long alternating path segments.
 		nameKey = "map.highridge",
-		-- Durable fronts create openings for faster enemies to pressure the exit.
 		biome = "highlands",
 		path = {
 			{5, 5}, {12, 5},
@@ -223,12 +153,10 @@ local maps = {
 			{10, 11}, {24, 11},
 			{24, 6}, {30, 6},
 		},
-		-- dry ridge terrain
 	},
 
 	{
 		id = "crossflow",
-		-- Crossflow uses tighter, overlapping groups.
 		nameKey = "map.crossflow",
 		biome = "winter",
 		path = {
@@ -238,19 +166,10 @@ local maps = {
 			{15, 8}, {23, 8},
 			{23, 5}, {30, 5},
 		},
-		water = {
-			-- crossing stream
-			{9, 4, 2},
-			{10, 4, 1},
-
-			-- downstream pool
-			{21, 9, 2},
-		}
 	},
 
 	{
 		id = "steppingstones",
-		-- Stepping Stones uses separated pockets that reward deliberate ability timing.
 		nameKey = "map.steppingstones",
 		biome = "autumn",
 		path = {
@@ -261,19 +180,10 @@ local maps = {
 			{17, 3}, {25, 3},
 			{25, 8}, {30, 8},
 		},
-		water = {
-			-- stream channel
-			{12, 6, 2},
-
-			-- broken pool
-			{19, 7, 2},
-		}
 	},
 
 	{
 		id = "twinloop",
-		-- Earlier enemy archetypes share the route with Summoners and its two-loop
-		-- pressure cycle.
 		prerequisiteMapId = "steppingstones",
 		nameKey = "map.twinloop",
 		biome = "winter",
@@ -284,11 +194,6 @@ local maps = {
 			{12, 11}, {24, 11},
 			{24, 5}, {30, 5},
 		},
-		water = {
-			-- asymmetric mirrored ponds
-			{8, 4, 2},
-			{23, 10, 2},
-		}
 	},
 }
 
