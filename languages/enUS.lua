@@ -187,7 +187,7 @@ return {
 		poison = "Poisoned",
 		barrier = "Barrier",
 		regenerationSuppressed = "Regeneration suppressed",
-		phased = "Phased: direct fire passes through",
+		phased = "Immune",
 		value = "%s / %s",
 		multiplier = "x%.2f",
 	},

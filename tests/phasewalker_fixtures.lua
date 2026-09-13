@@ -5,6 +5,10 @@ local Phase = require("world.enemy_phase")
 local EnemyDefs = require("world.enemy_defs")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local Maps = require("world.map_defs")
+local English = require("languages.enUS")
+
+assert(English.status.phased == "Immune",
+	"Phasewalker's active status should use the concise Immune label")
 
 local def = assert(EnemyDefs.boss_phasewalker, "Phasewalker definition is missing")
 assert(def.boss and def.phase, "Phasewalker must be a boss with phase configuration")
