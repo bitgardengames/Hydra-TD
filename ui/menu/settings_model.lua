@@ -26,8 +26,8 @@ local function formatPercent(value)
 	return L("settings.percentValue", math.floor(Util.clamp(value, 0, 1) * 100 + 0.5))
 end
 
-local function slider(id, label, color, get, set)
-	return {id = id, label = label, type = "slider", color = color, get = get, set = set,
+local function slider(id, label, description, color, get, set)
+	return {id = id, label = label, description = description, type = "slider", color = color, get = get, set = set,
 		valueFormatter = formatPercent}
 end
 
@@ -58,12 +58,15 @@ function Model.build(capture, options)
 	local keybindOptions = {onRestoreKeybindDefaults = onRestoreKeybindDefaults}
 	return {
 		{id = "audio", label = L("settings.tabAudio"), rows = {
-			slider("music", L("settings.music"), Theme.tower.shock,
+			slider("music", L("settings.music"), nil, Theme.tower.shock,
 				function() return Save.data.settings.musicVolume end,
 				function(v) Save.data.settings.musicVolume = v; Sound.setMusicVolume(v) end),
-			slider("sfx", L("settings.sfx"), Theme.tower.cannon,
-				function() return Save.data.settings.sfxVolume end,
-				function(v) Save.data.settings.sfxVolume = v; Sound.setSFXVolume(v) end),
+			slider("gameplay_sfx", L("settings.gameplaySounds"), L("settings.gameplaySoundsDesc"), Theme.tower.cannon,
+				function() return Save.data.settings.gameplaySfxVolume end,
+				function(v) Save.data.settings.gameplaySfxVolume = v; Sound.setSFXVolume() end),
+			slider("ui_sfx", L("settings.interfaceSounds"), L("settings.interfaceSoundsDesc"), Theme.tower.lancer,
+				function() return Save.data.settings.uiVolume end,
+				function(v) Save.data.settings.uiVolume = v; Sound.setSFXVolume() end),
 			toggle("mute_unfocused", L("settings.muteWhenUnfocused"), "muteWhenUnfocused",
 				L("settings.muteWhenUnfocusedDesc"), function(v) Sound.setMuteWhenUnfocused(v) end),
 		}},

@@ -34,6 +34,7 @@ package.loaded["core.hotkeys"] = {
 	getDefaultBindings = function() return {shop = {}, actions = {}} end,
 }
 local Save = require("core.save")
+local rewritten
 
 local function reset(seed)
 	files, directories = seed or {}, {saves = true}
@@ -52,18 +53,30 @@ for path in pairs(files) do
 	if path:match("^saves/save%.corrupt%-%d%d%d%d%d%d%d%d%-%d%d%d%d%d%d") then diagnostic = path end
 end
 check(diagnostic and files[diagnostic], "malformed primary was not preserved")
-check(Save.data.version == 6, "malformed save did not produce fresh data")
+check(Save.data.version == 7, "malformed save did not produce fresh data")
 check(Save.data.settings.muteWhenUnfocused == true,
 	"fresh saves did not enable focus muting by default")
+check(Save.data.settings.uiVolume == 0.20 and Save.data.settings.gameplaySfxVolume == 0.20,
+	"fresh saves did not receive separate sound channel defaults")
 
 -- Older saves migrate while retaining fields this version does not know about.
 reset({["saves/save.lua"] = "return { version = 1, unknownFutureField = { enabled = true } }"})
 Save.load()
-check(Save.data.version == 6, "old version was not migrated")
+check(Save.data.version == 7, "old version was not migrated")
 check(Save.data.unknownFutureField.enabled, "unknown field was discarded")
 check(files["saves/save.bak.lua"], "pre-migration save was not backed up")
 check(Save.data.settings.muteWhenUnfocused == true,
 	"old saves did not gain the persisted focus-muting default")
+
+-- The old combined SFX preference seeds both replacement channels.
+reset({["saves/save.lua"] = "return { version = 6, settings = { sfxVolume = 0.63 } }"})
+Save.load()
+check(Save.data.settings.uiVolume == 0.63 and Save.data.settings.gameplaySfxVolume == 0.63,
+	"legacy SFX volume did not migrate to both new channels")
+check(Save.data.settings.sfxVolume == nil, "legacy SFX volume remained after migration")
+rewritten = assert(love.filesystem.load("saves/save.lua"))()
+check(rewritten.settings.uiVolume == 0.63 and rewritten.settings.gameplaySfxVolume == 0.63,
+	"migrated channel volumes were not persisted")
 
 -- Retired controls are removed from both loaded state and the rewritten save.
 reset({["saves/save.lua"] = [[return {
@@ -73,7 +86,7 @@ reset({["saves/save.lua"] = [[return {
 Save.load()
 check(Save.data.settings.keybinds.actions.restartRun == nil,
 	"retired restart hotkey remained in loaded settings")
-local rewritten = assert(love.filesystem.load("saves/save.lua"))()
+rewritten = assert(love.filesystem.load("saves/save.lua"))()
 check(rewritten.settings.keybinds.actions.restartRun == nil,
 	"retired restart hotkey remained in persisted settings")
 
