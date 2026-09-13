@@ -68,7 +68,6 @@ function Model.build(capture, options)
 		{id = "video", label = L("settings.tabVideo"), rows = {
 			toggle("camera_motion", L("settings.cameraMotion"), "cameraMotion", L("settings.cameraMotionDesc")),
 			toggle("damage_numbers", L("settings.damageNumbers"), "showDamageNumbers", L("settings.damageNumbersDesc")),
-			toggle("dense_particles", L("settings.highDensityParticles"), "highDensityParticles", L("settings.highDensityParticlesDesc")),
 			toggle("fullscreen", L("settings.fullscreen"), "fullscreen", nil, function(v)
 				Save.data.settings.fullscreen = v
 				require("core.window").apply(Save.data.settings, v)

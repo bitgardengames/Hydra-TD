@@ -3,7 +3,6 @@ local Theme = require("core.theme")
 local State = require("core.state")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
-local Save = require("core.save")
 local TowerVictoryDance = require("render.tower_victory_dance")
 local random, lg = love.math.random, love.graphics
 local sqrt, sin, min, max, abs, cos = math.sqrt, math.sin, math.min, math.max, math.abs, math.cos
@@ -563,19 +562,13 @@ local function drawTowerUpgradeFlash(t, cx, renderY)
 	local fade = max(0, remaining / (UPGRADE_FLASH_DURATION - 0.045))
 	local alpha = peak * fade
 	local color = t.color or (t.def and t.def.color) or colorGood
-	local dense = not (Save.data and Save.data.settings
-		and Save.data.settings.highDensityParticles == false)
 	local oldBlend, oldAlphaMode = lg.getBlendMode()
 
 	lg.setBlendMode("add", "alphamultiply")
-	-- In reduced-particle mode omit the core pass. The base glow still hugs the
-	-- tower silhouette and communicates the upgrade with much less overdraw.
-	drawTowerBase(t.kind, cx, renderY, alpha * (dense and 0.32 or 0.18),
+	drawTowerBase(t.kind, cx, renderY, alpha * 0.32,
 		color[1], color[2], color[3])
-	if dense then
-		drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, alpha * 0.38,
-			color[1], color[2], color[3], 0)
-	end
+	drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, alpha * 0.38,
+		color[1], color[2], color[3], 0)
 	lg.setBlendMode(oldBlend, oldAlphaMode)
 end
 

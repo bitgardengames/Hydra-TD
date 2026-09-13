@@ -58,8 +58,6 @@ return {
 		cameraMotionDesc = "Controls impact-driven camera shake; turn off to keep the camera steady.",
 		damageNumbers = "Show damage numbers",
 		damageNumbersDesc = "Displays floating combat damage values.",
-		highDensityParticles = "High-density particles",
-		highDensityParticlesDesc = "Uses the full particle count for greater visual intensity. Turn off to improve performance without removing critical gameplay tells.",
 		tabAudio = "Audio",
 		tabVideo = "Video",
 		tabControls = "Controls",

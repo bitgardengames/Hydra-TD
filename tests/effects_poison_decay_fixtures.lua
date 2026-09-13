@@ -3,7 +3,7 @@
 package.path = "./?.lua;./?/init.lua;" .. package.path
 
 package.loaded["systems.sound"] = {}
-package.loaded["core.save"] = {data = {settings = {highDensityParticles = true}}}
+package.loaded["core.save"] = {data = {settings = {}}}
 package.loaded["core.camera"] = {}
 
 love = {

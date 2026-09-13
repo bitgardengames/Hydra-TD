@@ -19,7 +19,6 @@ end
 
 function Effects.particleCount(base, intensity, criticalTell)
 	if criticalTell then return math.max(1, base) end
-	if settings().highDensityParticles == false then base = base * 0.5 end
 	return math.max(intensity >= Theme.effects.intensity.strong and 1 or 0, math.floor(base + 0.5))
 end
 
