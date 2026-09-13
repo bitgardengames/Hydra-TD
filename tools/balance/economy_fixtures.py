@@ -35,19 +35,35 @@ def definitions() -> tuple[dict, dict, dict]:
                     named_entries(difficulty_root, "Difficulty.defs", ROOT / "systems/difficulty.lua").items()
                     if name in ("easy", "normal", "hard")}
     wave_root = table_body(wave_text, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua")
-    kinds = set(re.findall(r'g\("([a-z_]+)"', wave_root))
-    rewards = {kind: numeric_fields(table_body(enemy_text, kind, ROOT / "world/enemy_defs.lua"))["reward"] for kind in kinds}
+    enemy_root = table_body(enemy_text, "return", ROOT / "world/enemy_defs.lua")
+    rewards = {
+        kind: numeric_fields(body)["reward"]
+        for kind, body in named_entries(enemy_root, "return", ROOT / "world/enemy_defs.lua").items()
+        if "reward" in numeric_fields(body)
+    }
     maps = {}
     waves_root = wave_root
     for map_id, block in named_entries(waves_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua").items():
         maps[map_id] = []
-        for wave in range(1, 11):
+        wave_numbers = sorted(int(value) for value in re.findall(r"\[(\d+)\]\s*=", block))
+        if wave_numbers != list(range(1, max(wave_numbers, default=0) + 1)):
+            raise ValueError(f"{map_id} waves must be contiguous from 1")
+        for wave in wave_numbers:
             match = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)", block)
             if not match:
                 raise ValueError(f"{map_id} wave {wave} not found")
             groups = re.findall(r'g\("([a-z_]+)",\s*(\d+)', match.group(1))
             maps[map_id].append({kind: sum(int(n) for k, n in groups if k == kind)
                                  for kind in {k for k, _ in groups}})
+    boss_root = table_body(wave_text, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua")
+    for map_id, body in named_entries(
+        boss_root, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua"
+    ).items():
+        for wave, kind in re.findall(r'\[(\d+)\]\s*=\s*"([a-z_]+)"', body):
+            counts = maps[map_id][int(wave) - 1]
+            boss_count = counts.pop("boss", 0)
+            if boss_count:
+                counts[kind] = counts.get(kind, 0) + boss_count
     return difficulties, rewards, maps
 
 

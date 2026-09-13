@@ -196,6 +196,8 @@ Run the deterministic campaign player directly, or enforce its authored bands:
 python3 tools/balance/campaign_simulator.py
 python3 tools/balance/campaign_simulator.py --check
 python3 tools/balance/campaign_simulator.py --summary
+python3 tools/balance/campaign_simulator.py --difficulty hard --policy hard
+python3 tools/balance/campaign_simulator.py --difficulty hard --policy hard --map crossflow
 ```
 
 The simulator runs novice, competent, and hard policies across every campaign
@@ -210,6 +212,7 @@ positions, miss counters, mistime abilities, and spend shortsightedly; their
 damage and money are not silently multiplied by a handicap.
 
 Stable JSON records each variant's victory, lives, failed wave, unused money,
+per-wave counts, kills, leaks, money, flawless bonus, duration,
 tower composition, rebuilds, ability uses/utilization, and the victory-rate margin
 between the strongest and weakest policy. `campaign_acceptance_bands.json` owns
 the reviewed expectations: novice for Easy, competent for Normal, and a maximum

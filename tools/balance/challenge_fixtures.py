@@ -89,7 +89,10 @@ def definitions():
                     "money": int(float(number(body, "startMoney")))}
              for name, body in named_entries(diff_root, "Difficulty.defs", ROOT / "systems/difficulty.lua").items()}
     curve = {key: decimal_bp(number(curve_text, key)) for key in
-             ("localStartHp", "localEndHp", "localExponent", "finalMapHp")}
+             ("localStartHp", "localMidHp", "localEndHp", "localExponent",
+              "finalMapHp")}
+    curve["campaignMidpoint"] = int(float(number(curve_text, "campaignMidpoint")))
+    curve["campaignEnd"] = int(float(number(curve_text, "campaignEnd")))
 
     maps = {}
     wave_root = table_body(waves_text, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua")
@@ -98,7 +101,10 @@ def definitions():
     group_re = re.compile(r'g\("([a-z_]+)",\s*(\d+),\s*([0-9.]+)(?:,\s*([0-9.]+))?')
     for map_id, body in named_entries(wave_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua").items():
         maps[map_id] = []
-        for wave in range(1, 11):
+        wave_numbers = sorted(int(value) for value in re.findall(r"\[(\d+)\]\s*=", body))
+        if wave_numbers != list(range(1, max(wave_numbers, default=0) + 1)):
+            raise ValueError(f"{map_id} waves must be contiguous from 1")
+        for wave in wave_numbers:
             row = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)", body)
             if not row:
                 raise ValueError(f"missing {map_id} wave {wave}")
@@ -106,15 +112,30 @@ def definitions():
                                   "spacing_ms": half_up(decimal_bp(s) * 1000, BP),
                                   "delay_ms": half_up(decimal_bp(d or "0") * 1000, BP)}
                                  for k, c, s, d in group_re.findall(row.group(1))])
+    boss_root = table_body(waves_text, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua")
+    for map_id, body in named_entries(
+        boss_root, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua"
+    ).items():
+        for wave, kind in re.findall(r'\[(\d+)\]\s*=\s*"([a-z_]+)"', body):
+            groups = maps[map_id][int(wave) - 1]
+            for group in groups:
+                if group["kind"] == "boss":
+                    group["kind"] = kind
     return towers, enemies, diffs, curve, maps
 
 
 def curve_multiplier_bp(curve: dict, wave: int, map_index: int, diff: dict, boss: bool) -> int:
     # Evaluate authored fractional exponent once, then immediately quantize the
     # multiplier. All enemy arithmetic after this boundary is fixed point.
-    progress = (wave - 1) / 9
-    local = curve["localStartHp"] / BP + (curve["localEndHp"] - curve["localStartHp"]) / BP * \
-        progress ** (curve["localExponent"] / BP)
+    midpoint, campaign_end = curve["campaignMidpoint"], curve["campaignEnd"]
+    local_wave = min(max(1, wave), campaign_end)
+    if local_wave <= midpoint:
+        progress = (local_wave - 1) / (midpoint - 1)
+        start, end = curve["localStartHp"], curve["localMidHp"]
+    else:
+        progress = (local_wave - midpoint) / (campaign_end - midpoint)
+        start, end = curve["localMidHp"], curve["localEndHp"]
+    local = start / BP + (end - start) / BP * progress ** (curve["localExponent"] / BP)
     map_mult = 1 + (curve["finalMapHp"] / BP - 1) * min(map_index - 1, 14) / 14
     value = int(local * map_mult * diff["hp_bp"] + 0.5)
     if boss:
@@ -258,11 +279,12 @@ def checks(report: dict) -> list[str]:
     for difficulty, maps in report["difficulties"].items():
         bands = configured.get(difficulty, [])
         income_bands = income_configured.get(difficulty, [])
-        if len(bands) != 10:
-            failures.append(f"bands/{difficulty}: expected 10 wave bands, got {len(bands)}")
+        wave_count = max(len(waves) for waves in maps.values())
+        if len(bands) != wave_count:
+            failures.append(f"bands/{difficulty}: expected {wave_count} wave bands, got {len(bands)}")
             continue
-        if len(income_bands) != 10:
-            failures.append(f"income bands/{difficulty}: expected 10 wave bands, got {len(income_bands)}")
+        if len(income_bands) != wave_count:
+            failures.append(f"income bands/{difficulty}: expected {wave_count} wave bands, got {len(income_bands)}")
             continue
         for map_id, waves in maps.items():
             for row, (low, high), (income_low, income_high) in zip(waves, bands, income_bands):

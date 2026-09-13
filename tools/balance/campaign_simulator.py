@@ -336,12 +336,15 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
     towers: list[Tower] = []
     rebuilds = uses = opportunities = 0
     failed_wave = None
+    wave_results = []
     for wave_no, groups in enumerate(maps[map_id], 1):
+        lives_before = lives
+        money_before = money
         seen = composition_for(groups)
         # Purchases execute between waves. Lookahead broadens counter knowledge.
         preview = dict(seen)
         for ahead in range(1, policy["lookahead_waves"] + 1):
-            if wave_no + ahead <= 10:
+            if wave_no + ahead <= len(maps[map_id]):
                 for k, v in composition_for(maps[map_id][wave_no + ahead - 1]).items():
                     preview[k] = preview.get(k, 0) + v
         actions = 0
@@ -350,10 +353,13 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
             upgradable = [t for t in towers if t.level < 5]
             if (
                 upgradable
-                and stable_unit(
-                    policy_name, map_id, diff_name, variant, wave_no, actions, "up"
+                and (
+                    len(towers) >= 24
+                    or stable_unit(
+                        policy_name, map_id, diff_name, variant, wave_no, actions, "up"
+                    )
+                    < policy["upgrade_preference"]
                 )
-                < policy["upgrade_preference"]
             ):
                 target = max(upgradable, key=lambda t: (t.level, -abs(t.center - 0.55)))
                 cost = round(
@@ -363,6 +369,11 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                     money -= cost
                     target.level += 1
                     continue
+            # Coverage intervals are an abstraction rather than map tiles; cap
+            # them so late-game income cannot create physically impossible
+            # hundreds-of-towers defenses (or pathological fixture runtimes).
+            if len(towers) >= 24:
+                break
             kind = choose_kind(
                 policy,
                 preview,
@@ -410,6 +421,7 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
             at = spawn[-1][0]
         live = []
         cursor = 0
+        kills = leaks = 0
         now = 0.0
         ability_ready = 0.0
         wave_uses = 0
@@ -476,20 +488,42 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                     e.hp = min(e.max_hp, e.hp + e.regen * TICK)
                 if e.hp <= 0:
                     money += e.reward
+                    kills += 1
                     continue
                 speed = e.speed * (0.45 if e.slow_until > now else 1)
                 e.pos += speed * TICK / (path_len * 56)
                 if e.pos >= 1:
                     lives -= 1
+                    leaks += 1
                     continue
                 survivors.append(e)
             live = survivors
             now += TICK
+        flawless_bonus = 0
+        if not live and leaks == 0:
+            # This mirrors wave_outcome.lua for ordinary waves. Boss-package
+            # bonuses remain outside this deliberately conservative model.
+            base = {"easy": 2.0, "normal": 1.5, "hard": 1.25}[diff_name]
+            flawless_bonus = math.floor(base * (1.1 if wave_no % 5 == 0 else 1) + 0.5)
+            money += flawless_bonus
+        wave_results.append(
+            {
+                "wave": wave_no,
+                "enemy_count": len(spawn),
+                "kills": kills,
+                "leaks": leaks,
+                "lives_before": lives_before,
+                "lives_after": max(0, lives),
+                "money_before_build": money_before,
+                "money_after": money,
+                "flawless_bonus": flawless_bonus,
+                "ability_uses": wave_uses,
+                "duration_seconds": round(now, 1),
+            }
+        )
         if lives <= 0:
             failed_wave = wave_no
             break
-        if not live and wave_uses == 0 and towers:
-            money += round(float(diff_name == "easy") + 1.5)
         # A failed late defense may sell its worst placement and genuinely rebuild.
         if lives < 4 and towers and policy_name != "novice":
             worst = min(towers, key=lambda t: t.coverage)
@@ -512,13 +546,15 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
         "rebuild_count": rebuilds,
         "ability_uses": uses,
         "ability_utilization": round(uses / max(1, opportunities), 4),
+        "waves": wave_results,
     }
 
 
-def build_report():
+def build_report(difficulties=None, policies=None, map_ids=None):
     defs = definitions()
     _, _, lengths = parse_detail()
-    maps = list(defs[4])
+    all_maps = list(defs[4])
+    maps = [map_id for map_id in all_maps if not map_ids or map_id in map_ids]
     bands = json.loads(BANDS.read_text())
     report = {
         "format_version": 1,
@@ -529,26 +565,27 @@ def build_report():
         "campaigns_per_policy": bands["campaigns_per_policy"],
         "results": [],
     }
-    for mi, map_id in enumerate(maps, 1):
-        for diff in ("easy", "normal", "hard"):
-            policies = {}
-            for pname in POLICIES:
+    for map_id in maps:
+        mi = all_maps.index(map_id) + 1
+        for diff in (difficulties or ("easy", "normal", "hard")):
+            policy_results = {}
+            for pname in (policies or POLICIES):
                 runs = [
                     campaign(map_id, mi, lengths[mi - 1], diff, v, pname, defs)
                     for v in range(bands["campaigns_per_policy"])
                 ]
-                policies[pname] = {
+                policy_results[pname] = {
                     "victory_rate": round(
                         sum(r["victory"] for r in runs) / len(runs), 4
                     ),
                     "runs": runs,
                 }
-            rates = [p["victory_rate"] for p in policies.values()]
+            rates = [p["victory_rate"] for p in policy_results.values()]
             report["results"].append(
                 {
                     "map": map_id,
                     "difficulty": diff,
-                    "policies": policies,
+                    "policies": policy_results,
                     "success_failure_margin": round(max(rates) - min(rates), 4),
                 }
             )
@@ -596,9 +633,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--summary", action="store_true")
+    parser.add_argument("--difficulty", choices=("easy", "normal", "hard"))
+    parser.add_argument("--policy", choices=tuple(POLICIES))
+    parser.add_argument("--map", dest="map_id")
     args = parser.parse_args()
-    report = build_report()
-    errors = check(report)
+    report = build_report(
+        (args.difficulty,) if args.difficulty else None,
+        (args.policy,) if args.policy else None,
+        (args.map_id,) if args.map_id else None,
+    )
+    errors = check(report) if not (args.difficulty or args.policy or args.map_id) else []
     if args.summary:
         print(
             json.dumps(
