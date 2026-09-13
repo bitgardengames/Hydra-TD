@@ -16,6 +16,15 @@ return {
 		radius = 10,
 	},
 
+	tank = {
+		nameKey = "enemy.tank",
+		descriptionKey = "enemy.tankDescription",
+		hp = 51,
+		speed = 45,
+		reward = 8,
+		score = 22,
+		radius = 12,
+	},
 
 	runner = {
 		nameKey = "enemy.runner",
@@ -30,7 +39,7 @@ return {
 	regenerator = {
 		nameKey = "enemy.regenerator",
 		descriptionKey = "enemy.regeneratorDescription",
-		hp = 41, speed = 53, reward = 10, score = 28, radius = 12,
+		hp = 42, speed = 53, reward = 10, score = 28, radius = 12,
 		regeneration = { hpPerSecond = 2.5, delay = 1.25 },
 		modifiers = { poison = 1.25 },
 	},
