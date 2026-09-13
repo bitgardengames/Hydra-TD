@@ -183,8 +183,10 @@ function Backdrop.start(index)
 	-- Start wave
 	-- Scene exports record the full campaign wave number. Preserve it so the
 	-- backdrop resolves the same encounter and difficulty scaling as gameplay.
+	-- The campaign menu's selected map can differ from this shot's world map, so
+	-- pass the shot index explicitly rather than letting Waves use State.mapIndex.
 	State.wave = shot.wave or 1
-	Waves.startWave()
+	Waves.startWave(shot.map)
 
 	-- Replay the warmup on the exact same fixed clock used by live gameplay.
 	-- Besides keeping waveTime aligned, this preserves tick-sensitive targeting,

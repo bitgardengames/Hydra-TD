@@ -5,6 +5,8 @@ assert(source:find('local SimulationClock = require("core.simulation_clock")', 1
 	"backdrop replay must use the gameplay simulation clock")
 assert(source:find("State.wave = shot.wave or 1", 1, true),
 	"backdrop replay must preserve the captured campaign wave number")
+assert(source:find("Waves.startWave(shot.map)", 1, true),
+	"backdrop replay must resolve enemy composition and health against the captured map")
 assert(not source:find("% 10", 1, true),
 	"backdrop replay must not wrap captured campaign waves to waves 1-10")
 assert(source:find("Sim.update(step)", 1, true),

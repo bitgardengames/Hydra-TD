@@ -60,14 +60,14 @@ end
 
 function Waves.presentationEvent(kind, payload) Presentation.event(kind, payload) end
 
-local function startBossWave(wave, map)
+local function startBossWave(wave, map, mapIndex)
 	bossSpawnPresented, lastBossPosition = false, nil
 	Presentation.event("boss_incoming", {wave=State.wave, path=Presentation.path(map)})
 	local bossIndex = max(1, math.floor(State.wave / 10))
 	local bossKind = wave.bossArchetype or Resolver.getBossByArchetype(map, bossIndex)
 	local encounter = Resolver.resolveBossEncounterTemplate(map, bossKind, bossIndex)
-	local hpMult, spdMult = Resolver.getWaveMultipliers(State.wave, State.mapIndex, map, true)
-	local addHpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave, State.mapIndex, map and map.hpScalar)
+	local hpMult, spdMult = Resolver.getWaveMultipliers(State.wave, mapIndex, map, true)
+	local addHpMult = DifficultyCurve.getEnemyHpMultiplier(State.wave, mapIndex, map and map.hpScalar)
 	local groups = Resolver.resolveWaveGroups(wave, map, State.wave)
 	State.activeBoss, State.activeBossKind = nil, bossKind
 	for i, group in ipairs(groups or {}) do
@@ -83,16 +83,17 @@ local function startBossWave(wave, map)
 		hpMult=addHpMult * encounter.addHpMult, spdMult=spdMult * encounter.addSpdMult})
 end
 
-local function startNormalWave(wave, map)
+local function startNormalWave(wave, map, mapIndex)
 	State.activeBoss, State.activeBossKind = nil, nil
 	Spawner.configureBossAdds()
-	local hpMult, spdMult = Resolver.getWaveMultipliers(State.wave, State.mapIndex, map, false)
+	local hpMult, spdMult = Resolver.getWaveMultipliers(State.wave, mapIndex, map, false)
 	local groups = Resolver.resolveWaveGroups(wave, map, State.wave)
 	Spawner.begin(max(1, wave.count or 1), hpMult, spdMult, groups)
 end
 
-function Waves.startWave()
-	local map = Maps[State.mapIndex]
+function Waves.startWave(mapIndex)
+	mapIndex = mapIndex or State.mapIndex
+	local map = Maps[mapIndex]
 	State.waveLeaks, State.inPrep = 0, false
 	State.waveTime = 0
 	if State.mode == "game" then
@@ -100,7 +101,7 @@ function Waves.startWave()
 	end
 	local wave = getWave(map, State.wave)
 	Presentation.waveStarted(State.wave, map)
-	if wave.boss then startBossWave(wave, map) else startNormalWave(wave, map) end
+	if wave.boss then startBossWave(wave, map, mapIndex) else startNormalWave(wave, map, mapIndex) end
 	return true
 end
 
