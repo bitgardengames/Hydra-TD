@@ -51,6 +51,7 @@ local function buildGrassScatterCache(terrain, map)
 	if not map or not map.isPath then
 		grassScatterCanvas = nil
 		grassCacheMapRef = nil
+
 		return
 	end
 
@@ -69,6 +70,7 @@ local function buildGrassScatterCache(terrain, map)
 		and grassCacheG == gG
 		and grassCacheB == gB
 		and grassCacheA == gA then
+
 		return
 	end
 
@@ -133,13 +135,17 @@ local function drawGrass(targetMap)
 		for y = 1, gridH do
 			for x = 1, gridW do
 				local sparkle = hashNoise(x, y, 19)
+
 				if sparkle > 0.58 then
+
 					local sx = (x - 1 + hashNoise(x, y, 31)) * tile
 					local sy = (y - 1 + hashNoise(x, y, 47)) * tile
 					local radius = sparkle > 0.92 and 2.4 or 1.3
 					local tint = hashNoise(x, y, 67)
+
 					lg.setColor(0.72 + tint * 0.28, 0.78 + tint * 0.18, 1, 0.72 + tint * 0.28)
 					lg.circle("fill", sx, sy, radius)
+
 					if sparkle > 0.96 then
 						lg.setLineWidth(1)
 						lg.line(sx - 5, sy, sx + 5, sy)
@@ -334,6 +340,7 @@ local function buildPathGeometry(path)
 
 		if dx1 ~= dx2 or dy1 ~= dy2 then
 			local cx, cy = gridToCenter(cur[1], cur[2])
+			
 			geometry.corners[#geometry.corners + 1] = {x = cx, y = cy}
 		end
 	end
@@ -349,6 +356,7 @@ local function getPathGeometry(targetMap)
 			path = targetMap.path,
 			geometry = buildPathGeometry(targetMap.path),
 		}
+		
 		pathGeometryByMap[targetMap] = cached
 	end
 
@@ -367,9 +375,11 @@ local function drawPathGeometry(geometry, thickness, color)
 
 		if segment.orientation == "horizontal" then
 			local width = segment.x2 - segment.x1 - trimA - trimB
+			
 			lg.rectangle("fill", segment.x1 + trimA, segment.y1 - halfThickness, width, thickness)
 		else
 			local height = segment.y2 - segment.y1 - trimA - trimB
+			
 			lg.rectangle("fill", segment.x1 - halfThickness, segment.y1 + trimA, thickness, height)
 		end
 	end
@@ -389,16 +399,21 @@ local function drawPath(targetMap)
 
 	-- Each pass applies its own half-thickness to endpoint trims.
 	drawPathGeometry(geometry, outlineThickness, terrain.pathOutline)
+	
 	if terrain.pathStyle == "rainbow" and terrain.rainbow then
 		-- Nested passes form seven continuous neon bands. Because every pass uses
 		-- the same geometry, stripes stay clean through bends and endpoints.
 		local palette = terrain.rainbow
+		
 		for i = 1, #palette do
 			local width = fillThickness * (#palette - i + 1) / #palette
+			
 			drawPathGeometry(geometry, width, palette[i])
 		end
+		
 		return
 	end
+	
 	drawPathGeometry(geometry, fillThickness, terrain.path)
 end
 
