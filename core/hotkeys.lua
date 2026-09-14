@@ -97,8 +97,13 @@ end
 
 Hotkeys.applyKeyboardBindings(nil)
 
-function Hotkeys.getShopKey(kind) return Hotkeys.kb.shop[kind] end
-function Hotkeys.getActionKey(action) return Hotkeys.kb.actions[action] end
+function Hotkeys.getShopKey(kind)
+	return Hotkeys.kb.shop[kind]
+end
+
+function Hotkeys.getActionKey(action)
+	return Hotkeys.kb.actions[action]
+end
 
 -- Input routers should not need to know how bindings are stored or repeatedly
 -- scan every action and tower. Return the logical binding for a physical key.
@@ -121,6 +126,5 @@ function Hotkeys.getDisplay(action)
 
 	return key:upper()
 end
-
 
 return Hotkeys
