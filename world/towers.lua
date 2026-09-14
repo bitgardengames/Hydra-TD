@@ -66,6 +66,11 @@ local UPGRADE_COST_MULTIPLIERS = {1.25, 1.5, 1.75, 2.0}
 local RETARGET_JITTER = 0.10
 local RETARGET_MIN_FACTOR = 0.5
 local RETARGET_MAX_FACTOR = 1.5
+-- New towers fall just far enough to read as being delivered onto their tile.
+-- Keep this separate from the upgrade rise, which changes the tower's actual
+-- rendered height rather than temporarily moving the whole tower.
+local PLACEMENT_DROP_DURATION = 0.24
+local PLACEMENT_DROP_DISTANCE = Constants.TILE * 0.7
 
 -- These identifiers are part of addTower's public contract. Keep placement
 -- failures distinct so callers can present the correct explanation without
@@ -327,7 +332,9 @@ local function addTower(kind, gx, gy)
 		level = 1,
 		height = 0,
 		prevHeight = 0,
-		renderY = y,
+		renderHeight = 0,
+		renderY = y - PLACEMENT_DROP_DISTANCE,
+		placementAnim = 1,
 		range = 0,
 		range2 = 0,
 		fireRate = 0,
@@ -385,7 +392,7 @@ local function addTower(kind, gx, gy)
 	towers[#towers + 1] = t
 	setTowerIndex(t)
 
-	Floaters.add(x, t.renderY - 30, "-" .. def.cost, cwR, cwG, cwB)
+	Floaters.add(x, y - 30, "-" .. def.cost, cwR, cwG, cwB)
 
 	Effects.spawnPlacePuff(x, y)
 
@@ -637,6 +644,7 @@ end
 local function updateTowerVisuals(t, dt)
 	t.fireAnim = max(0, t.fireAnim - dt * 8)
 	t.levelUpAnim = max(0, t.levelUpAnim - dt * 3.5)
+	t.placementAnim = max(0, (t.placementAnim or 0) - dt / PLACEMENT_DROP_DURATION)
 	t.upgradeFlash = max(0, (t.upgradeFlash or 0) - dt)
 
 	local riseAnim = t.levelUpAnim or 0
@@ -650,7 +658,13 @@ local function updateTowerVisuals(t, dt)
 		animatedHeight = t.height
 	end
 
-	t.renderY = t.y - animatedHeight
+	t.renderHeight = animatedHeight
+
+	-- Ease in to mimic gravity: the tower begins nearly still, then gathers
+	-- speed and makes a decisive landing on the tile.
+	local placementRemaining = t.placementAnim or 0
+	local dropOffset = PLACEMENT_DROP_DISTANCE * (2 * placementRemaining - placementRemaining * placementRemaining)
+	t.renderY = t.y - animatedHeight - dropOffset
 
 	local recoilDecay = t.recoilDecay or 18
 	t.recoil = max(0, t.recoil - recoilDecay * dt)
