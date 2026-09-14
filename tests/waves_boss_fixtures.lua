@@ -38,7 +38,6 @@ package.loaded["world.effects"] = {presentationEvent = function() end}
 package.loaded["ui.messages"] = {presentationEvent = function() end}
 package.loaded["ui.boss_hp"] = {presentationEvent = function() end}
 package.loaded["core.constants"] = {TILE = 32}
-package.loaded["core.development_counters"] = {}
 
 local Waves = require("systems.waves")
 
