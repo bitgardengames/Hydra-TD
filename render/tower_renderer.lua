@@ -644,7 +644,13 @@ local function drawTowers()
 		lg.setColor(tsR, tsG, tsB, tsA)
 		lg.ellipse("fill", cx, t.y + size * 0.4, size * 0.85, size * 0.30)
 
-		drawTowerBase(t.kind, cx, groundY, 1, 0.2, 0.2, 0.2, groundY - renderY)
+		-- Only upgrades grow the grounded column. Placement offset moves the
+		-- complete tower, so treating it as height would stretch it to the tile
+		-- and leave a second base behind on the ground during the fall.
+		local renderHeight = t.renderHeight or (groundY - renderY)
+		if renderHeight > 0 then
+			drawTowerBase(t.kind, cx, groundY, 1, 0.2, 0.2, 0.2, renderHeight)
+		end
 
 		-- Top
 		drawTowerInstance(t, cx, renderY, i)
