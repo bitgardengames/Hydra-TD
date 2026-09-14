@@ -1,5 +1,4 @@
 local Spatial = require("world.spatial_grid")
-local DevelopmentCounters = require("core.development_counters")
 local Util = require("core.util")
 
 local Spawner = {}
@@ -42,10 +41,8 @@ end
 
 local function finalize(pending, timer, activeCap, loops, enemyCount)
 	if loops == CATCHUP_LIMIT and timer <= 0 then
-		DevelopmentCounters.add("spawnBackpressureEvents")
 		timer = 0
 	elseif pending > 0 and enemyCount >= activeCap then
-		DevelopmentCounters.add("spawnBackpressureEvents")
 		timer = max(timer, BACKPRESSURE_DELAY)
 	end
 	return timer

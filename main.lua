@@ -40,7 +40,6 @@ local CampaignUnlocks = require("systems.campaign_unlocks")
 local CampaignWaveDefs = require("systems.campaign_wave_defs")
 local GameSpeed = require("core.game_speed")
 local SimulationClock = require("core.simulation_clock")
-local DevelopmentCounters = require("core.development_counters")
 local GameplayOutcome = require("systems.gameplay_outcome")
 local RunModes = require("systems.run_modes")
 local SceneExport = require("core.scene_export")
@@ -316,9 +315,6 @@ function love.update(dt)
 	-- Clamp before stepping: time beyond the catch-up budget is discarded. This
 	-- prevents a long OS stall from forcing an effectively unbounded update loop.
 	local requestedSimulationTime = simulationAccumulator + dt * State.speed
-	if requestedSimulationTime > catchUpBudget then
-		DevelopmentCounters.add("discardedSimulationTime", requestedSimulationTime - catchUpBudget)
-	end
 	simulationAccumulator = min(requestedSimulationTime, catchUpBudget)
 	local steps = 0
 	while simulationAccumulator + 1e-12 >= step and steps < SimulationClock.maxCatchUpSteps do
@@ -326,12 +322,6 @@ function love.update(dt)
 		updateGameplayOutcome()
 		simulationAccumulator = simulationAccumulator - step
 		steps = steps + 1
-	end
-	DevelopmentCounters.add("catchUpSteps", steps)
-	DevelopmentCounters.add("fixedStepFrames")
-	DevelopmentCounters.maximum("maxCatchUpStepsInFrame", steps)
-	if steps == SimulationClock.maxCatchUpSteps then
-		DevelopmentCounters.add("framesAtCatchUpLimit")
 	end
 	State.renderAlpha = max(0, min(1, simulationAccumulator / step))
 
