@@ -127,6 +127,29 @@ local function panel(x, y, w, h, selected)
 	lg.rectangle("fill", x, y, w, h, 8)
 end
 
+local function drawLockedPreviewCover(x, y, w, h, compact)
+	-- Locked maps should remain a genuine reveal. Draw an opaque surface instead
+	-- of tinting the authored preview, so none of its path or biome is visible.
+	lg.setColor(Theme.ui.buttonDisabled)
+	lg.rectangle("fill", x, y, w, h, 7)
+
+	local scale = compact and 0.7 or 1
+	local bodyW, bodyH = 30 * scale, 24 * scale
+	local cx = x + w * 0.5
+	local bodyY = y + h * 0.5 - (compact and bodyH * 0.25 or bodyH * 0.5)
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.34)
+	lg.setLineWidth(max(2, floor(4 * scale + 0.5)))
+	lg.arc("line", "open", cx, bodyY, 10 * scale, math.pi, math.pi * 2)
+	lg.rectangle("fill", cx - bodyW * 0.5, bodyY, bodyW, bodyH, 4 * scale)
+	lg.setLineWidth(1)
+
+	if not compact then
+		Fonts.set("ui")
+		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
+		Text.printfShadow(L("campaign.locked"), x, bodyY + bodyH + 12, w, "center")
+	end
+end
+
 local function drawRewardIcon(reward, cx, cy)
 	if reward.type == "tower" then
 		lg.push("all")
@@ -366,8 +389,12 @@ local function drawMapList(l, unlockPose)
 		if entry then
 			local previewX = floor(rowX + 4 + (LIST_PREVIEW_W - previewW) * 0.5 + 0.5)
 			local previewY = floor(y + (LIST_ROW_H - previewH) * 0.5 + 0.5)
-			lg.setColor(1, 1, 1, locked and 0.28 or 0.9)
-			lg.draw(entry.canvas, previewX, previewY)
+			if locked then
+				drawLockedPreviewCover(previewX, previewY, previewW, previewH, true)
+			else
+				lg.setColor(1, 1, 1, 0.9)
+				lg.draw(entry.canvas, previewX, previewY)
+			end
 		end
 		local textX = rowX + LIST_PREVIEW_W + 12
 		Fonts.set("ui")
@@ -565,9 +592,14 @@ local function drawCenter(l, map, mapIndex)
 	if not entry then return end
 	local previewX = floor(x + (w - previewW) * 0.5 + 0.5)
 	previewY = floor(previewY + 0.5)
-	lg.setColor(1, 1, 1, isMapLocked(mapIndex) and 0.35 or 1)
-	lg.draw(entry.canvas, previewX, previewY)
-	drawPreviewRunner(entry, previewX, previewY, isMapLocked(mapIndex))
+	local locked = isMapLocked(mapIndex)
+	if locked then
+		drawLockedPreviewCover(previewX, previewY, previewW, previewH, false)
+	else
+		lg.setColor(1, 1, 1, 1)
+		lg.draw(entry.canvas, previewX, previewY)
+		drawPreviewRunner(entry, previewX, previewY, false)
+	end
 	lg.setColor(Theme.outline.color)
 	lg.setLineWidth(3)
 	lg.rectangle("line", previewX, previewY, previewW, previewH, 7)
