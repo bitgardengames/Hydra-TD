@@ -139,8 +139,19 @@ local function drawRewardIcon(reward, cx, cy)
 	end
 end
 
+-- Layout is requested by every input and presentation path. Retain the record
+-- (including its column records) so repeated requests in the same viewport do
+-- not create short-lived tables each frame.
+local campaignLayout = {left = {}, center = {}}
+
+local function invalidateLayout()
+	campaignLayout.sw = nil
+	campaignLayout.sh = nil
+end
+
 local function layout()
 	local sw, sh = lg.getDimensions()
+	if campaignLayout.sw == sw and campaignLayout.sh == sh then return campaignLayout end
 	local margin = max(18, floor(sw * 0.024))
 	local headerH = max(96, floor(sh * 0.115))
 	local footerH = max(46, floor(sh * 0.06))
@@ -153,12 +164,13 @@ local function layout()
 	local contentX = floor((sw - contentW) * 0.5)
 	local leftW = floor(contentW * 0.347)
 	local centerW = contentW - gap - leftW
-	return {
-		sw = sw, sh = sh, margin = margin, headerH = headerH, footerH = footerH,
-		gap = gap, contentY = contentY, contentH = contentH,
-		left = {x = contentX, y = contentY, w = leftW, h = contentH},
-		center = {x = contentX + leftW + gap, y = contentY, w = centerW, h = contentH},
-	}
+	local left, center = campaignLayout.left, campaignLayout.center
+	campaignLayout.sw, campaignLayout.sh = sw, sh
+	campaignLayout.margin, campaignLayout.headerH, campaignLayout.footerH = margin, headerH, footerH
+	campaignLayout.gap, campaignLayout.contentY, campaignLayout.contentH = gap, contentY, contentH
+	left.x, left.y, left.w, left.h = contentX, contentY, leftW, contentH
+	center.x, center.y, center.w, center.h = contentX + leftW + gap, contentY, centerW, contentH
+	return campaignLayout
 end
 
 local function visibleRows(l)
@@ -604,6 +616,8 @@ local function drawRight(l, map)
 end
 
 function Screen.load()
+	invalidateLayout()
+	layout()
 	buttons = {
 		play = {id = "play", label = L("campaign.playMap"), onClick = playMap},
 		back = {id = "back", label = L("menu.back"), w = 140, h = BACK_BUTTON_H, onClick = goBack},
@@ -796,6 +810,7 @@ function Screen.resize()
 	Tooltip.hide()
 	MapPreviewCache.clear()
 	Backdrop.start()
+	invalidateLayout()
 	keepSelectedVisible(layout())
 end
 
