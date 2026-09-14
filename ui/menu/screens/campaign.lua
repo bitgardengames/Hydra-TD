@@ -133,20 +133,10 @@ local function drawLockedPreviewCover(x, y, w, h, compact)
 	lg.setColor(Theme.ui.buttonDisabled)
 	lg.rectangle("fill", x, y, w, h, 7)
 
-	local scale = compact and 0.7 or 1
-	local bodyW, bodyH = 30 * scale, 24 * scale
-	local cx = x + w * 0.5
-	local bodyY = y + h * 0.5 - (compact and bodyH * 0.25 or bodyH * 0.5)
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.34)
-	lg.setLineWidth(max(2, floor(4 * scale + 0.5)))
-	lg.arc("line", "open", cx, bodyY, 10 * scale, math.pi, math.pi * 2)
-	lg.rectangle("fill", cx - bodyW * 0.5, bodyY, bodyW, bodyH, 4 * scale)
-	lg.setLineWidth(1)
-
 	if not compact then
 		Fonts.set("ui")
 		lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-		Text.printfShadow(L("campaign.locked"), x, bodyY + bodyH + 12, w, "center")
+		Text.printfShadow(L("campaign.locked"), x, y + h * 0.5 - Fonts.get("ui"):getHeight() * 0.5, w, "center")
 	end
 end
 
