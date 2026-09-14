@@ -4,8 +4,6 @@ local Steam = {
 	loaded = false
 }
 
-
-
 function Steam.load()
 	if ok and steam then
 		local init = steam.init()

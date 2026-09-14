@@ -95,18 +95,22 @@ function Util.deepCloneGraph(source)
 	local function clone(value)
 		if type(value) ~= "table" then
 			return value
-	end
+		end
 
 		local existing = seen[value]
+
 		if existing then
 			return existing
 		end
 
 		local copy = {}
+
 		seen[value] = copy
+
 		for key, nestedValue in pairs(value) do
 			copy[key] = clone(nestedValue)
 		end
+
 		return copy
 	end
 
