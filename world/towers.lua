@@ -70,7 +70,7 @@ local RETARGET_MAX_FACTOR = 1.5
 -- Keep this separate from the upgrade rise, which changes the tower's actual
 -- rendered height rather than temporarily moving the whole tower.
 local PLACEMENT_DROP_DURATION = 0.24
-local PLACEMENT_DROP_DISTANCE = Constants.TILE * 0.6
+local PLACEMENT_DROP_DISTANCE = Constants.TILE * 0.3
 
 -- These identifiers are part of addTower's public contract. Keep placement
 -- failures distinct so callers can present the correct explanation without
