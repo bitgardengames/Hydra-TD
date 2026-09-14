@@ -11,7 +11,6 @@ local EnemySupport = require("world.enemy_support")
 local Sim = {}
 
 function Sim.update(dt)
-	--if State.paused or State.gameOver then
 	if State.paused then
 		return
 	end
@@ -20,9 +19,11 @@ function Sim.update(dt)
 	-- Targeting caches use this identifier, so it advances once per simulation
 	-- tick rather than once per rendered frame.
 	State.frameId = (State.frameId or 0) + 1
+
 	if not State.inPrep then
 		State.waveTime = (State.waveTime or 0) + dt
 	end
+
 	Waves.updateSpawner(dt)
 	-- Required enemy order: DOT/death, authored mechanics, effective speed, path and
 	-- spatial update, presentation handoff, then escape removal. Movement and
@@ -36,6 +37,7 @@ function Sim.update(dt)
 	Floaters.update(dt)
 
 	local localQueryCount, localCandidateTotal = Spatial.getLocalQueryFrameStats()
+
 	State.spatialStats.localQueryCount = localQueryCount
 	State.spatialStats.localCandidateTotal = localCandidateTotal
 end
