@@ -26,6 +26,7 @@ end
 
 function Launcher.run(mode, onOverlayOpened)
 	local toolModule = TOOL_MODES[mode]
+
 	if toolModule then
 		return require(toolModule).run()
 	end

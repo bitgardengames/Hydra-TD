@@ -4,7 +4,7 @@ local SAVE_DIR = "saves"
 local SAVE_FILE = SAVE_DIR .. "/save.lua"
 local BACKUP_FILE = SAVE_DIR .. "/save.bak.lua"
 local TEMP_FILE = SAVE_DIR .. "/save.tmp.lua"
-local SAVE_VERSION = 7 -- Split interface and gameplay sound-effect levels
+local SAVE_VERSION = 7
 local DIRTY_DELAY = 0.35
 
 local Hotkeys = require("core.hotkeys")
@@ -50,14 +50,22 @@ local META_TABLES = {
 }
 
 local function defaultValue(tbl, key, value)
-	if tbl[key] ~= nil then return false end
+	if tbl[key] ~= nil then
+		return false
+	end
+
 	tbl[key] = value
+
 	return true
 end
 
 local function defaultTable(tbl, key)
-	if type(tbl[key]) == "table" then return false end
+	if type(tbl[key]) == "table" then
+		return false
+	end
+
 	tbl[key] = {}
+
 	return true
 end
 
@@ -66,6 +74,7 @@ local function ensureKeybinds(settings)
 
 	if type(settings.keybinds) ~= "table" then
 		settings.keybinds = Hotkeys.getDefaultBindings()
+
 		return true
 	end
 
@@ -77,13 +86,16 @@ local function ensureKeybinds(settings)
 	end
 
 	local defaults = Hotkeys.getDefaultBindings()
+
 	for section, sectionDefaults in pairs(defaults) do
 		if type(settings.keybinds[section]) ~= "table" then
 			settings.keybinds[section] = {}
 			changed = true
 		end
+
 		for id, defaultKey in pairs(sectionDefaults) do
 			local key = settings.keybinds[section][id]
+
 			if type(key) ~= "string" or key == "" then
 				settings.keybinds[section][id] = defaultKey
 				changed = true
@@ -96,6 +108,7 @@ end
 
 local function normalizeMapStats(mapStats)
 	local changed = false
+
 	for mapId, stats in pairs(mapStats) do
 		if type(stats) == "table" and (stats.completedDifficulty == "easy"
 			or stats.completedDifficulty == "normal" or stats.completedDifficulty == "hard"
@@ -106,10 +119,16 @@ local function normalizeMapStats(mapStats)
 				stats.medalEarnedAt = {}
 				changed = true
 			end
-			if type(stats.records) ~= "table" then stats.records = {}; changed = true end
+
+			if type(stats.records) ~= "table" then
+				stats.records = {}
+				changed = true
+			end
+
 			for key in pairs(stats) do
 				if key ~= "completedDifficulty" and key ~= "medalEarnedAt" and key ~= "records" then
-					stats[key] = nil; changed = true
+					stats[key] = nil
+					changed = true
 				end
 			end
 		else
@@ -117,17 +136,20 @@ local function normalizeMapStats(mapStats)
 			changed = true
 		end
 	end
+
 	return changed
 end
 
 local function migrateRunRecords(data)
 	local changed = false
+
 	for _, stats in pairs(data.mapStats or {}) do
 		if type(stats) == "table" and stats.completedDifficulty and type(stats.records) ~= "table" then
 			stats.records = {}
 			changed = true
 		end
 	end
+
 	return changed
 end
 
@@ -143,30 +165,51 @@ local function normalizeSettings(data)
 		settings.sfxVolume = nil
 		changed = true
 	end
+
 	for key, value in pairs(DEFAULT_SETTINGS) do
 		changed = defaultValue(settings, key, value) or changed
 	end
-	if settings.msaaQuality ~= nil then settings.msaaQuality = nil; changed = true end
-	if settings.abilityReadySound ~= nil then settings.abilityReadySound = nil; changed = true end
-	if settings.highDensityParticles ~= nil then settings.highDensityParticles = nil; changed = true end
+
+	if settings.msaaQuality ~= nil then
+		settings.msaaQuality = nil
+		changed = true
+	end
+
+	if settings.abilityReadySound ~= nil then
+		settings.abilityReadySound = nil
+		changed = true
+	end
+
+	if settings.highDensityParticles ~= nil then
+		settings.highDensityParticles = nil
+		changed = true
+	end
+
 	return ensureKeybinds(settings) or changed
 end
 
 local function normalizeMeta(data)
 	local changed = defaultTable(data, "meta")
 	local meta = data.meta
+
 	for _, key in ipairs(META_COUNTERS) do
 		changed = defaultValue(meta, key, 0) or changed
 	end
+
 	for _, key in ipairs(META_TABLES) do
 		changed = defaultTable(meta, key) or changed
 	end
+
 	return changed
 end
 
 local function migrateVersion(data)
-	if (data.version or 0) >= SAVE_VERSION then return false end
+	if (data.version or 0) >= SAVE_VERSION then
+		return false
+	end
+
 	data.version = SAVE_VERSION
+
 	return true
 end
 
@@ -218,10 +261,12 @@ local function normalizeLoadedData(data)
 	changed = defaultValue(data, "furthestIndex", 1) or changed
 	changed = defaultTable(data, "unlockedMaps") or changed
 	changed = defaultTable(data, "mapStats") or changed
+
 	if type(data.equippedAbilities) ~= "table" then
 		data.equippedAbilities = {"meteor", "frost_nova"}
 		changed = true
 	end
+
 	changed = normalizeMapStats(data.mapStats) or changed
 	changed = normalizeSettings(data) or changed
 	changed = normalizeMeta(data) or changed
@@ -231,6 +276,7 @@ local function normalizeLoadedData(data)
 		data.mapIdMigrationDone = true
 		changed = true
 	end
+
 	return changed
 end
 
@@ -240,29 +286,53 @@ local function createFreshData()
 		equippedAbilities = {"meteor", "frost_nova"},
 		mapIdMigrationDone = true,
 	}
+
 	normalizeLoadedData(data)
+
 	return data
 end
 
 local function loadTable(path)
-	if not love.filesystem.getInfo(path) then return nil, "file does not exist" end
+	if not love.filesystem.getInfo(path) then
+		return nil, "file does not exist"
+	end
+
 	local loaded, chunk, loadError = pcall(love.filesystem.load, path)
-	if not loaded or type(chunk) ~= "function" then return nil, loadError or chunk or "could not load file" end
+
+	if not loaded or type(chunk) ~= "function" then
+		return nil, loadError or chunk or "could not load file"
+	end
+
 	local ok, data = pcall(chunk)
-	if not ok or type(data) ~= "table" then return nil, ok and "save did not return a table" or data end
+
+	if not ok or type(data) ~= "table" then
+		return nil, ok and "save did not return a table" or data
+	end
+
 	return data
 end
 
 local function renameFile(from, to)
-	if love.filesystem.rename then return love.filesystem.rename(from, to) end
+	if love.filesystem.rename then
+		return love.filesystem.rename(from, to)
+	end
+
 	local root = love.filesystem.getSaveDirectory()
+
 	return os.rename(root .. "/" .. from, root .. "/" .. to)
 end
 
 local function removeFile(path)
-	if not love.filesystem.getInfo(path) then return true end
+	if not love.filesystem.getInfo(path) then
+		return true
+	end
+
 	local ok, err = love.filesystem.remove(path)
-	if ok then return true end
+
+	if ok then
+		return true
+	end
+
 	return false, err or ("could not remove " .. path)
 end
 
@@ -270,55 +340,84 @@ local function diagnosticName()
 	local stamp = os.date("!%Y%m%d-%H%M%S")
 	local path = SAVE_DIR .. "/save.corrupt-" .. stamp .. ".lua"
 	local suffix = 1
+
 	while love.filesystem.getInfo(path) do
 		path = SAVE_DIR .. "/save.corrupt-" .. stamp .. "-" .. suffix .. ".lua"
 		suffix = suffix + 1
 	end
+
 	return path
 end
 
 local function preserveCorruptPrimary()
-	if not love.filesystem.getInfo(SAVE_FILE) then return true end
+	if not love.filesystem.getInfo(SAVE_FILE) then
+		return true
+	end
+
 	return renameFile(SAVE_FILE, diagnosticName())
 end
 
 function Save.load()
 	local data = loadTable(SAVE_FILE)
+
 	if not data and love.filesystem.getInfo(SAVE_FILE) then
 		local ok, err = preserveCorruptPrimary()
-		if not ok then print("Could not preserve corrupt save: " .. tostring(err)) end
+
+		if not ok then
+			print("Could not preserve corrupt save: " .. tostring(err))
+		end
 	end
 
 	local recovered = false
+
 	if not data then
 		data = loadTable(BACKUP_FILE)
 		recovered = data ~= nil
 	end
 
 	Save.data = data or createFreshData()
+
 	local normalized = normalizeLoadedData(Save.data)
+
 	Save.dirty = false
 	Save.dirtyTimer = nil
-	if recovered or normalized then Save.flush() end
+
+	if recovered or normalized then
+		Save.flush()
+	end
 end
 
 function Save.flush()
-	if not Save.data then return false, "no save data" end
+	if not Save.data then
+		return false, "no save data"
+	end
 
 	Save.data.version = SAVE_VERSION
 
 	local serializedOk, body = pcall(Save.serialize, Save.data)
-	if not serializedOk then return false, "could not serialize save: " .. tostring(body) end
+
+	if not serializedOk then
+		return false, "could not serialize save: " .. tostring(body)
+	end
+
 	local serialized = "return " .. body
 
 	if not love.filesystem.getInfo(SAVE_DIR) then
 		local ok, err = love.filesystem.createDirectory(SAVE_DIR)
-		if not ok then return false, err or "could not create save directory" end
+
+		if not ok then
+			return false, err or "could not create save directory"
+		end
 	end
 
 	local wrote, writeError = love.filesystem.write(TEMP_FILE, serialized)
-	if not wrote then return false, writeError or "could not write temporary save" end
+
+	if not wrote then
+		return false, writeError or "could not write temporary save"
+	end
+
 	local validated, validationError = loadTable(TEMP_FILE)
+
 	if not validated then
 		return false, "temporary save validation failed: " .. tostring(validationError)
 	end
@@ -326,55 +425,87 @@ function Save.flush()
 	-- Only a valid primary may become the last known-good backup.
 	if loadTable(SAVE_FILE) then
 		local removed, removeError = removeFile(BACKUP_FILE)
-		if not removed then return false, removeError end
+
+		if not removed then
+			return false, removeError
+		end
+
 		local backedUp, backupError = renameFile(SAVE_FILE, BACKUP_FILE)
-		if not backedUp then return false, backupError or "could not replace backup" end
+
+		if not backedUp then
+			return false, backupError or "could not replace backup"
+		end
 	elseif love.filesystem.getInfo(SAVE_FILE) then
 		local preserved, preserveError = preserveCorruptPrimary()
-		if not preserved then return false, preserveError or "could not preserve corrupt save" end
+
+		if not preserved then
+			return false, preserveError or "could not preserve corrupt save"
+		end
 	end
 
 	local promoted, promoteError = renameFile(TEMP_FILE, SAVE_FILE)
+
 	if not promoted then
 		-- Best-effort restoration keeps a failed promotion from removing the primary.
 		if not love.filesystem.getInfo(SAVE_FILE) and love.filesystem.getInfo(BACKUP_FILE) then
 			local restored, restoreError = renameFile(BACKUP_FILE, SAVE_FILE)
+
 			if not restored then
-				return false, (promoteError or "could not promote temporary save")
-					.. "; backup restoration failed: " .. tostring(restoreError)
+				return false, (promoteError or "could not promote temporary save") .. "; backup restoration failed: " .. tostring(restoreError)
 			end
 		end
+
 		return false, promoteError or "could not promote temporary save"
 	end
 
 	Save.dirty = false
 	Save.dirtyTimer = nil
+
 	return true
 end
 
 function Save.markDirty()
-	if not Save.data then return false end
+	if not Save.data then
+		return false
+	end
+
 	Save.dirty = true
 	Save.dirtyTimer = DIRTY_DELAY
+
 	return true
 end
 
 function Save.update(dt)
-	if not Save.dirty then return end
+	if not Save.dirty then
+		return
+	end
+
 	Save.dirtyTimer = (Save.dirtyTimer or DIRTY_DELAY) - math.max(0, tonumber(dt) or 0)
-	if Save.dirtyTimer <= 0 then Save.flush() end
+
+	if Save.dirtyTimer <= 0 then
+		Save.flush()
+	end
 end
 
 function Save.setEquippedAbilities(abilityIds)
-	if not Save.data or type(abilityIds) ~= "table" then return false, false end
+	if not Save.data or type(abilityIds) ~= "table" then
+		return false, false
+	end
 
 	local selections = {}
+
 	for slotIndex, abilityId in ipairs(abilityIds) do
-		if slotIndex > 2 then break end
-		if type(abilityId) == "string" then selections[slotIndex] = abilityId end
+		if slotIndex > 2 then
+			break
+		end
+
+		if type(abilityId) == "string" then
+			selections[slotIndex] = abilityId
+		end
 	end
 
 	local equipped = Save.data.equippedAbilities
+
 	if type(equipped) == "table"
 		and equipped[1] == selections[1]
 		and equipped[2] == selections[2]
@@ -384,6 +515,7 @@ function Save.setEquippedAbilities(abilityIds)
 
 	Save.data.equippedAbilities = selections
 	Save.markDirty()
+
 	return true, true
 end
 
@@ -397,22 +529,29 @@ end
 
 function Save.recordMapResult(mapId, difficulty, completed)
 	local rank = {easy = 1, normal = 2, hard = 3}
-	if not completed or not rank[difficulty] then return end
+
+	if not completed or not rank[difficulty] then
+		return
+	end
 
 	local stats = Save.data.mapStats
 	local s = stats[mapId]
+
 	if not s then
 		s = {completedDifficulty = nil, medalEarnedAt = {}}
 		stats[mapId] = s
 	end
+
 	s.medalEarnedAt = type(s.medalEarnedAt) == "table" and s.medalEarnedAt or {}
 
 	local completedRank = rank[difficulty]
 	local previousRank = rank[s.completedDifficulty] or 0
+
 	if completedRank > previousRank then
 		s.completedDifficulty = difficulty
 
 		local earnedAt = os.time()
+
 		for tier, tierRank in pairs(rank) do
 			if tierRank <= completedRank and s.medalEarnedAt[tier] == nil then
 				s.medalEarnedAt[tier] = earnedAt
@@ -430,6 +569,7 @@ local RECORD_RULES = {
 
 function Save.getMapRecords(mapId, mode, difficulty)
 	local s = Save.data and Save.data.mapStats and Save.data.mapStats[mapId]
+
 	return s and s.records and s.records[mode] and s.records[mode][difficulty] or nil
 end
 
@@ -437,29 +577,48 @@ end
 -- original record and timestamp. Clear-only metrics cannot be set by a defeat;
 -- cancelled runs (restart/abandon) never reach this function.
 function Save.recordRun(mapId, mode, difficulty, result)
-	if not Save.data or type(result) ~= "table" or (result.outcome ~= "completed" and result.outcome ~= "failed") then return {} end
-	if type(mapId) ~= "string" or type(mode) ~= "string" or type(difficulty) ~= "string" then return {} end
+	if not Save.data or type(result) ~= "table" or (result.outcome ~= "completed" and result.outcome ~= "failed") then
+		return {}
+	end
+
+	if type(mapId) ~= "string" or type(mode) ~= "string" or type(difficulty) ~= "string" then
+		return {}
+	end
+
 	local stats = Save.data.mapStats[mapId] or {medalEarnedAt = {}, records = {}}
+
 	Save.data.mapStats[mapId] = stats
 	stats.records = type(stats.records) == "table" and stats.records or {}
 	stats.records[mode] = type(stats.records[mode]) == "table" and stats.records[mode] or {}
+
 	local record = stats.records[mode][difficulty] or {}
+
 	stats.records[mode][difficulty] = record
+
 	local candidates = {bestScore = result.score}
+
 	if result.outcome == "completed" then
 		candidates.fastestClear = result.duration
 		candidates.highestRemainingLives = result.remainingLives
 		candidates.fewestLeaks = result.leaks
 	end
+
 	local improved = {}
+
 	for key, value in pairs(candidates) do
 		value = tonumber(value)
 		local old, rule = record[key], RECORD_RULES[key]
+
 		if value and value >= 0 and (old == nil or (rule == "min" and value < old) or (rule == "max" and value > old)) then
 			record[key] = value; improved[#improved + 1] = key
 		end
 	end
-	if #improved > 0 then record.updatedAt = os.time(); Save.flush() end
+
+	if #improved > 0 then
+		record.updatedAt = os.time()
+		Save.flush()
+	end
+
 	return improved
 end
 
@@ -507,64 +666,103 @@ function Save.markEnemyEncountered(kind)
 
 	if not meta.encounteredEnemies[kind] then
 		meta.encounteredEnemies[kind] = true
+		
 		Save.markDirty()
 	end
 end
 
 function Save.recordEnemyResult(kind, result, killTime)
-	if not Save.data or type(kind) ~= "string" then return end
+	if not Save.data or type(kind) ~= "string" then
+		return
+	end
+
 	local meta = Save.data.meta
+
 	meta.enemyHistory = meta.enemyHistory or {}
+
 	local history = meta.enemyHistory[kind] or {kills = 0, leaks = 0}
+
 	meta.enemyHistory[kind] = history
+
 	if result == "kill" then
 		history.kills = (history.kills or 0) + 1
+
 		if killTime and (not history.fastestKill or killTime < history.fastestKill) then
 			history.fastestKill = killTime
 		end
 	elseif result == "leak" then
 		history.leaks = (history.leaks or 0) + 1
 	end
+
 	Save.markDirty()
 end
 
 local function towerHistory(kind)
-	if not Save.data or type(kind) ~= "string" then return nil end
+	if not Save.data or type(kind) ~= "string" then
+		return nil
+	end
+
 	local meta = Save.data.meta
+
 	meta.towerHistory = meta.towerHistory or {}
+
 	local history = meta.towerHistory[kind]
+
 	if type(history) ~= "table" then
 		history = {placements = 0, upgrades = 0, damage = 0, kills = 0, bestRunDamage = 0}
 		meta.towerHistory[kind] = history
 	end
+
 	return history
 end
 
 function Save.recordTowerPlacement(kind)
-	local history = towerHistory(kind); if not history then return end
+	local history = towerHistory(kind)
+
+	if not history then
+		return
+	end
+
 	history.placements = (history.placements or 0) + 1
+	
 	Save.markDirty()
 end
 
 function Save.recordTowerUpgrade(kind)
-	local history = towerHistory(kind); if not history then return end
+	local history = towerHistory(kind)
+
+	if not history then
+		return
+	end
+
 	history.upgrades = (history.upgrades or 0) + 1
+	
 	Save.markDirty()
 end
 
 function Save.recordTowerRun(kind, damage, kills)
-	local history = towerHistory(kind); if not history then return end
+	local history = towerHistory(kind)
+
+	if not history then
+		return
+	end
+
 	damage, kills = math.max(0, damage or 0), math.max(0, kills or 0)
 	history.damage = (history.damage or 0) + damage
 	history.kills = (history.kills or 0) + kills
 	history.bestRunDamage = math.max(history.bestRunDamage or 0, damage)
+	
 	Save.markDirty()
 end
 
 function Save.discoverModule(moduleId)
-	if not Save.data or not moduleId then return end
+	if not Save.data or not moduleId then
+		return
+	end
+	
 	Save.data.meta.discoveredModules = Save.data.meta.discoveredModules or {}
 	Save.data.meta.discoveredModules[moduleId] = true
+	
 	Save.markDirty()
 end
 
