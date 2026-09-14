@@ -12,6 +12,7 @@ local Dance = {}
 -- continuous can still leave a small but visible hitch as a turret sets off.
 local function smootherstep(t)
 	t = max(0, min(1, t))
+
 	return t * t * t * (t * (t * 6 - 15) + 10)
 end
 
@@ -20,6 +21,7 @@ end
 -- easing calls for every turret on every frame.
 local function smoothPulse(t)
 	local joined = t * (1 - t)
+
 	return 64 * joined * joined * joined
 end
 
@@ -32,9 +34,11 @@ local function spinMove(localTime, phase)
 	local moveLength = 0.9
 	local phaseDelay = phase / tau * cycleLength
 	local cycleTime = (localTime + phaseDelay) % cycleLength
+
 	if cycleTime < moveStart or cycleTime >= moveStart + moveLength then
 		return 0
 	end
+
 	return smootherstep((cycleTime - moveStart) / moveLength) * tau
 end
 
@@ -72,11 +76,13 @@ local function signatureMove(localTime, kind, phase)
 	local moveLength = 1.2
 	local phaseDelay = phase / tau * cycleLength
 	local cycleTime = (localTime + phaseDelay) % cycleLength
+
 	if cycleTime < moveStart or cycleTime >= moveStart + moveLength then
 		return 0, 0, 0
 	end
 
 	local progress = (cycleTime - moveStart) / moveLength
+
 	return signatureOffsets(progress, kind)
 end
 
@@ -85,10 +91,13 @@ end
 -- the same kind-specific flourish used by pose(), then settles at rest.
 function Dance.previewPose(clock, kind, motionEnabled)
 	local baseAngle = -0.65
-	if motionEnabled == false then return 0, 0, baseAngle, 1 end
+	if motionEnabled == false then
+		return 0, 0, baseAngle, 1
+	end
 
 	clock = max(0, clock or 0)
 	kind = kind or "lancer"
+
 	local entrance = smootherstep(clock / 0.42)
 	local bounce = -sin(entrance * pi) * 5
 	local scale = 0.72 + entrance * 0.28 + sin(entrance * pi) * 0.1
@@ -98,6 +107,7 @@ function Dance.previewPose(clock, kind, motionEnabled)
 
 	local signatureProgress = (clock - 1.12) / 1.2
 	local sway, bob, turn = 0, 0, 0
+
 	if signatureProgress >= 0 and signatureProgress <= 1 then
 		sway, bob, turn = signatureOffsets(signatureProgress, kind)
 	end
@@ -150,12 +160,12 @@ function Dance.pose(clock, kind, index)
 	end
 
 	local flourishX, flourishY, flourishTurn = signatureMove(localTime, kind, phase)
+
 	sway = sway + flourishX
 	bob = bob + flourishY
 	turn = turn + flourishTurn
 
-	return sway * entrance, bob * entrance,
-		(turn + spinMove(localTime, phase)) * entrance
+	return sway * entrance, bob * entrance, (turn + spinMove(localTime, phase)) * entrance
 end
 
 return Dance

@@ -4,10 +4,12 @@ local State = require("core.state")
 local Towers = require("world.towers")
 local MapMod = require("world.map")
 local TowerVictoryDance = require("render.tower_victory_dance")
+
 local random, lg = love.math.random, love.graphics
 local sqrt, sin, min, max, abs, cos = math.sqrt, math.sin, math.min, math.max, math.abs, math.cos
 local pi, HALF_PI = math.pi, math.pi / 2
 local TILE, towerDefs = Constants.TILE, Towers.TowerDefs
+
 local outlineColor, colorGood, colorBad = Theme.outline.color, Theme.ui.good, Theme.ui.bad
 local colorSelected, colorPoison, colorSlow, towerShadow = Theme.ui.selected, Theme.projectiles.poison, Theme.projectiles.slow, Theme.towerShadow
 local outR, outG, outB = outlineColor[1], outlineColor[2], outlineColor[3]
@@ -21,7 +23,9 @@ local outlineWidth = Theme.outline.width
 local darkMul = Theme.lighting.shadowMul
 local highlightOffset = Theme.lighting.highlightOffset
 local highlightScale = Theme.lighting.highlightScale
+
 local UPGRADE_FLASH_DURATION = 0.3
+
 local function getBarrelTip(t, localTipX)
 	-- apply recoil in local barrel space
 	local localX = (localTipX or 0) - (t.recoil or 0)
@@ -144,7 +148,7 @@ local function drawCannonFX(t)
 	lg.setColor(1.0, 0.9, 0.7, alpha)
 	lg.circle("line", mx, my, r)
 
-	-- Optional inner glow (very subtle, helps impact feel)
+	-- Iinner glow
 	lg.setColor(1.0, 0.8, 0.6, alpha * 0.25)
 	lg.circle("fill", mx, my, r * 0.5)
 
@@ -538,8 +542,10 @@ local function drawTowerInstance(t, cx, renderY, index)
 	local headX = cx
 	local headY = renderY
 	local headAngle = t.angle
+
 	if State.victory then
 		local sway, bob, turn = TowerVictoryDance.pose(State.victoryDanceClock, t.kind, index)
+
 		headX = headX + sway
 		headY = headY + bob
 		headAngle = headAngle + turn
@@ -548,13 +554,15 @@ local function drawTowerInstance(t, cx, renderY, index)
 	-- Keep the tower body planted while only its turret receives either pose.
 	drawTowerBase(t.kind, cx, renderY, 1, darkMul, darkMul, darkMul)
 	drawTowerBaseHighlight(t.kind, cx, renderY, 1)
-	drawTowerCore(t.kind, headX, headY, headAngle, t.recoil, 1, 1, 1, 1,
-		0)
+	drawTowerCore(t.kind, headX, headY, headAngle, t.recoil, 1, 1, 1, 1, 0)
 end
 
 local function drawTowerUpgradeFlash(t, cx, renderY)
 	local remaining = t.upgradeFlash or 0
-	if remaining <= 0 then return end
+
+	if remaining <= 0 then
+		return
+	end
 
 	local elapsed = UPGRADE_FLASH_DURATION - remaining
 	-- Reach full brightness in the first few frames, then leave a clean short tail.
@@ -565,10 +573,10 @@ local function drawTowerUpgradeFlash(t, cx, renderY)
 	local oldBlend, oldAlphaMode = lg.getBlendMode()
 
 	lg.setBlendMode("add", "alphamultiply")
-	drawTowerBase(t.kind, cx, renderY, alpha * 0.32,
-		color[1], color[2], color[3])
-	drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, alpha * 0.38,
-		color[1], color[2], color[3], 0)
+
+	drawTowerBase(t.kind, cx, renderY, alpha * 0.32, color[1], color[2], color[3])
+	drawTowerCore(t.kind, cx, renderY, t.angle, t.recoil, alpha * 0.38, color[1], color[2], color[3], 0)
+
 	lg.setBlendMode(oldBlend, oldAlphaMode)
 end
 
@@ -641,8 +649,10 @@ local function drawTowers()
 		-- Top
 		drawTowerInstance(t, cx, renderY, i)
 		drawTowerUpgradeFlash(t, cx, renderY)
+
 		if (t.suppressedTimer or 0) > 0 then
 			local pulse = 0.65 + 0.2 * sin(clock * 8 + i)
+
 			lg.setColor(1, 0.16, 0.28, pulse)
 			lg.setLineWidth(3)
 			lg.circle("line", cx, groundY, size * (0.78 + 0.07 * sin(clock * 6)))
@@ -650,6 +660,7 @@ local function drawTowers()
 			lg.circle("fill", cx, groundY, size * 0.72)
 			lg.setLineWidth(1)
 		end
+
 		drawTowerFX(t)
 
 		-- Pulse ring
@@ -663,9 +674,11 @@ end
 local function drawSuppressionProjectiles()
 	local projectiles = Towers.suppressionProjectiles
 	local clock = love.timer.getTime()
+	
 	for i = 1, #projectiles do
 		local p = projectiles[i]
 		local pulse = 1 + 0.16 * sin(clock * 12 + i)
+		
 		lg.setColor(0.42, 0.04, 0.12, 0.28)
 		lg.circle("fill", p.x, p.y, 10 * pulse)
 		lg.setColor(1, 0.12, 0.3, 0.95)
@@ -675,4 +688,4 @@ local function drawSuppressionProjectiles()
 	end
 end
 
-return { drawTowerBase = drawTowerBase, drawTowerCore = drawTowerCore, drawTowerGhost = drawTowerGhost, drawTowerVisual = drawTowerVisual, drawTowerFX = drawTowerFX, drawTowers = drawTowers, drawSuppressionProjectiles = drawSuppressionProjectiles }
+return {drawTowerBase = drawTowerBase, drawTowerCore = drawTowerCore, drawTowerGhost = drawTowerGhost, drawTowerVisual = drawTowerVisual, drawTowerFX = drawTowerFX, drawTowers = drawTowers, drawSuppressionProjectiles = drawSuppressionProjectiles}
