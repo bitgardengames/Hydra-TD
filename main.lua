@@ -42,7 +42,6 @@ local GameSpeed = require("core.game_speed")
 local SimulationClock = require("core.simulation_clock")
 local GameplayOutcome = require("systems.gameplay_outcome")
 local RunModes = require("systems.run_modes")
-local SceneExport = require("core.scene_export")
 
 local lg = love.graphics
 
@@ -446,14 +445,6 @@ function love.keypressed(key)
 		end
 
 		lg.captureScreenshot(SCREENSHOT_DIR .. "/screenshot_" .. time .. ".png")
-	end
-
-	-- Development authoring shortcut: capture the live battlefield in the same
-	-- table format consumed by scenes/backdrop.lua.
-	if key == "f7" and isWorldMode(State.mode) then
-		SceneExport.copy()
-		Messages.add("Backdrop scene copied to clipboard (F7)", 0.4, 1, 0.6, {silent = true})
-		return
 	end
 
 	if ModulePicker.isActive() then
