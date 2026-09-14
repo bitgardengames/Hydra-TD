@@ -70,7 +70,7 @@ local RETARGET_MAX_FACTOR = 1.5
 -- Keep this separate from the upgrade rise, which changes the tower's actual
 -- rendered height rather than temporarily moving the whole tower.
 local PLACEMENT_DROP_DURATION = 0.24
-local PLACEMENT_DROP_DISTANCE = Constants.TILE * 0.7
+local PLACEMENT_DROP_DISTANCE = Constants.TILE * 0.6
 
 -- These identifiers are part of addTower's public contract. Keep placement
 -- failures distinct so callers can present the correct explanation without
@@ -335,6 +335,7 @@ local function addTower(kind, gx, gy)
 		renderHeight = 0,
 		renderY = y - PLACEMENT_DROP_DISTANCE,
 		placementAnim = 1,
+		placementLandingPending = true,
 		range = 0,
 		range2 = 0,
 		fireRate = 0,
@@ -393,11 +394,6 @@ local function addTower(kind, gx, gy)
 	setTowerIndex(t)
 
 	Floaters.add(x, y - 30, "-" .. def.cost, cwR, cwG, cwB)
-
-	Effects.spawnPlacePuff(x, y)
-
-	Sound.play("towerPlaced")
-
 
 	return true
 end
@@ -665,6 +661,14 @@ local function updateTowerVisuals(t, dt)
 	local placementRemaining = t.placementAnim or 0
 	local dropOffset = PLACEMENT_DROP_DISTANCE * (2 * placementRemaining - placementRemaining * placementRemaining)
 	t.renderY = t.y - animatedHeight - dropOffset
+
+	-- The impact feedback belongs to the landing rather than the purchase. Wait
+	-- until the tower has reached its grounded render position before firing it.
+	if placementRemaining == 0 and t.placementLandingPending then
+		t.placementLandingPending = nil
+		Effects.spawnPlacePuff(t.x, t.y)
+		Sound.play("towerPlaced")
+	end
 
 	local recoilDecay = t.recoilDecay or 18
 	t.recoil = max(0, t.recoil - recoilDecay * dt)
