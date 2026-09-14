@@ -20,14 +20,14 @@ Camera.shakeStrength = 0
 local REF_W = 1920
 local REF_H = 1080
 
---local AUTHORED_ZOOM = 1.30
-local AUTHORED_ZOOM = 1.6
+local AUTHORED_ZOOM = 1.6 -- 1.30
 
 -- Clamps
 local MIN_ZOOM = 0.64
 local MAX_ZOOM = 2.5
 
 local lg = love.graphics
+local random = love.math.random
 local min = math.min
 local max = math.max
 
@@ -101,23 +101,33 @@ function Camera.begin(suppressShake)
 end
 
 function Camera.shake(strength, duration)
-	if strength <= 0 then return end
-	Camera.shakeStrength = math.max(Camera.shakeStrength, strength)
-	Camera.shakeDuration = math.max(Camera.shakeDuration, duration or 0.15)
+	if strength <= 0 then
+		return
+	end
+
+	Camera.shakeStrength = max(Camera.shakeStrength, strength)
+	Camera.shakeDuration = max(Camera.shakeDuration, duration or 0.15)
 	Camera.shakeTime = Camera.shakeDuration
 end
 
 function Camera.update(dt)
 	if Camera.shakeTime <= 0 then
 		Camera.shakeX, Camera.shakeY = 0, 0
+
 		return
 	end
-	Camera.shakeTime = math.max(0, Camera.shakeTime - dt)
+
+	Camera.shakeTime = max(0, Camera.shakeTime - dt)
+
 	local fade = Camera.shakeDuration > 0 and Camera.shakeTime / Camera.shakeDuration or 0
 	local amount = Camera.shakeStrength * fade
-	Camera.shakeX = (love.math.random() * 2 - 1) * amount
-	Camera.shakeY = (love.math.random() * 2 - 1) * amount
-	if Camera.shakeTime == 0 then Camera.shakeStrength = 0 end
+
+	Camera.shakeX = (random() * 2 - 1) * amount
+	Camera.shakeY = (random() * 2 - 1) * amount
+
+	if Camera.shakeTime == 0 then
+		Camera.shakeStrength = 0
+	end
 end
 
 function Camera.finish()
