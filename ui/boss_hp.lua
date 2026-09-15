@@ -125,7 +125,6 @@ end
 
 function BossHP.presentationEvent(kind)
 	if kind == "boss_incoming" then presentationPulse = 0.8 end
-	if kind == "boss_spawn" then presentationPulse = 0.45 end
 	if kind == "boss_defeated" then presentationPulse = 0.3 end
 end
 

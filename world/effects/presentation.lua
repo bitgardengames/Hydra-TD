@@ -18,7 +18,13 @@ return function(context)
 				local active = record.list[i]
 				if active.kind == "boss_incoming" then active.path = nil end
 			end
+			-- The enemy renderer supplies the spawn fade. Do not add a ring or a
+			-- screen-edge flash when the boss becomes active.
+			return
 		end
+		-- Regular enemies also use the renderer's spawn fade, so the start of a
+		-- wave should not create an expanding ring at their entry point.
+		if kind == "wave_start" then return end
 		local e = Shared.acquire(record.pool)
 		e.kind, e.t = kind, 0
 		e.life = opts.life or ((kind == "boss_incoming") and 0.8 or 0.45)
