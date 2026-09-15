@@ -6,7 +6,6 @@ local DifficultyCurve = require("systems.difficulty_curve")
 local Steam = require("core.steam")
 local L = require("core.localization")
 local EnemyDefs = require("world.enemy_defs")
-local Effects = require("world.effects")
 local Resolver = require("systems.wave_resolver")
 local Spawner = require("systems.wave_spawner")
 local Outcome = require("systems.wave_outcome")
@@ -115,7 +114,6 @@ spawnContext.onBossSpawn = function(enemy)
 	bossSpawnPresented = true
 	lastBossPosition = {x=enemy.x, y=enemy.y}
 	Presentation.event("boss_spawn", {wave=State.wave, x=enemy.x, y=enemy.y})
-	Effects.shake(1.1, .22)
 end
 
 function Waves.updateSpawner(dt) Spawner.update(dt, spawnContext) end
