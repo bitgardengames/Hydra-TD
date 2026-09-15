@@ -186,7 +186,9 @@ function Cactus.draw(list, targetMap)
 			w = TILE * (0.15 + c.widthBias * 0.05) * s
 		end
 
-		local radius = w
+		-- Round cacti are much shorter than their tall counterparts, so keep their
+		-- ground shadow tight to the body instead of using the full sprite width.
+		local radius = c.shape == "round" and w * 0.5 or w
 		lg.setColor(0, 0, 0, shA)
 		lg.ellipse("fill", x, baseY + 1, radius * shW, radius * shH)
 
@@ -194,8 +196,6 @@ function Cactus.draw(list, targetMap)
 			local cy = baseY - h * 0.5
 			local rx = w * 0.5
 			local ry = h * 0.5
-
-			radius = radius * 0.5
 
 			lg.setColor(style.outline)
 			lg.ellipse("fill", x, cy, rx + outlineW, ry + outlineW)
