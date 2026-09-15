@@ -777,8 +777,37 @@ local function applyHitImpulse(e, dx, dy, strength)
 	end
 
 	local inv = 1 / sqrt(len2)
-	local impulseX = dx * inv * strength
-	local impulseY = dy * inv * strength
+	local impulseX = dx * inv
+	local impulseY = dy * inv
+	local path = MapMod.map and MapMod.map.pathWorld
+	if not path then
+		return
+	end
+	local seg = min(e.pathSeg or 1, #path - 1)
+	local a = path[seg]
+	local b = path[seg + 1]
+
+	if not a or not b then
+		return
+	end
+
+	local tangentX = b[1] - a[1]
+	local tangentY = b[2] - a[2]
+	local tangentLen2 = tangentX * tangentX + tangentY * tangentY
+
+	if tangentLen2 <= EPS then
+		return
+	end
+
+	-- Keep hit reactions across the lane rather than along it. An along-path
+	-- offset made enemies appear to jump forward (or backward) even though their
+	-- gameplay progress never changed. Retaining only the perpendicular component
+	-- also naturally softens shots that arrive nearly parallel to the path.
+	local tangentInv = 1 / sqrt(tangentLen2)
+	tangentX, tangentY = tangentX * tangentInv, tangentY * tangentInv
+	local alongPath = impulseX * tangentX + impulseY * tangentY
+	impulseX = (impulseX - alongPath * tangentX) * strength
+	impulseY = (impulseY - alongPath * tangentY) * strength
 
 	-- Move the rendered offset as well as its follow target. Updating only the
 	-- target made the response lose most of its already-small distance while the
