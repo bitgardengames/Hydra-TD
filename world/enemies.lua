@@ -777,9 +777,18 @@ local function applyHitImpulse(e, dx, dy, strength)
 	end
 
 	local inv = 1 / sqrt(len2)
+	local impulseX = dx * inv * strength
+	local impulseY = dy * inv * strength
 
-	e.nudgeTargetX = e.nudgeTargetX + dx * inv * strength
-	e.nudgeTargetY = e.nudgeTargetY + dy * inv * strength
+	-- Move the rendered offset as well as its follow target. Updating only the
+	-- target made the response lose most of its already-small distance while the
+	-- target decayed, so ordinary hits were effectively sub-pixel. Both values
+	-- remain presentation-only and the follow spring still returns the enemy to
+	-- its path normally.
+	e.nudgeX = e.nudgeX + impulseX
+	e.nudgeY = e.nudgeY + impulseY
+	e.nudgeTargetX = e.nudgeTargetX + impulseX
+	e.nudgeTargetY = e.nudgeTargetY + impulseY
 
 	local n2 = e.nudgeTargetX * e.nudgeTargetX + e.nudgeTargetY * e.nudgeTargetY
 
@@ -787,6 +796,13 @@ local function applyHitImpulse(e, dx, dy, strength)
 		local s = sqrt(e.maxNudge2 / n2)
 		e.nudgeTargetX = e.nudgeTargetX * s
 		e.nudgeTargetY = e.nudgeTargetY * s
+	end
+
+	local offset2 = e.nudgeX * e.nudgeX + e.nudgeY * e.nudgeY
+	if offset2 > e.maxNudge2 then
+		local s = sqrt(e.maxNudge2 / offset2)
+		e.nudgeX = e.nudgeX * s
+		e.nudgeY = e.nudgeY * s
 	end
 end
 
