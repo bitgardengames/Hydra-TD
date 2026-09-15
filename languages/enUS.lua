@@ -100,6 +100,7 @@ return {
 		title = "CAMPAIGN",
 		selectMap = "Select a map",
 		maps = "Maps",
+		totalMedals = "Medals",
 		playMap = "Play Map",
 		difficultyDescription = "Affects enemy health and rewards",
 		difficultyEasy = "Recommended for new players",

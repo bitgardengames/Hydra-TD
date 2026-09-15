@@ -343,16 +343,20 @@ local function drawHeader(l)
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
 	Text.printShadow(L("campaign.selectMap"), l.margin, 66)
 
-	local badgeW = 150
-	panel(l.sw - l.margin - badgeW, 15, badgeW, 51)
-	-- The campaign total is medal progress, not a generic score. Show all three
-	-- finishes here so the summary uses the same bronze/silver/gold language as
-	-- the map rows and detail panel.
-	Medals.draw(l.sw - l.margin - badgeW + 10, 31, 3, 9, 5)
+	local badgeW = 174
+	local badgeX = l.sw - l.margin - badgeW
+	-- This badge counts every difficulty medal across the campaign, rather than
+	-- medals of a particular tier. A text label avoids implying that the total is
+	-- specifically bronze, silver, or gold. Use the shared screen margin on both
+	-- axes so the badge has equal clearance from the top and right edges.
+	panel(badgeX, l.margin, badgeW, 51)
+	Fonts.set("ui")
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.72)
+	Text.printShadow(L("campaign.totalMedals"), badgeX + 14, l.margin + 15)
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
 	Text.printfShadow(format("%d/%d", campaignMedalsEarned, campaignMedalsMaximum),
-		l.sw - l.margin - 68, 26, 62, "center")
+		badgeX + 92, l.margin + 11, badgeW - 104, "center")
 end
 
 local function drawMapList(l, unlockPose)
