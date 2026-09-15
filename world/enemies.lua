@@ -272,8 +272,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.nudgeY = 0
 	e.nudgeTargetX = 0
 	e.nudgeTargetY = 0
-	e.prevNudgeX = 0
-	e.prevNudgeY = 0
+	e.nudgeActive = false
 
 	e.boss = def.boss or false
 	-- Optional authored health landmarks are consumed by the boss HUD. Keeping
@@ -616,6 +615,7 @@ local function updateStatusesAndMechanics(e, dt)
 				local side = e.summonChildIndex % 2 == 0 and 1 or -1
 				child.nudgeTargetY = side * (summon.spacing or 0)
 				child.nudgeY = child.nudgeTargetY
+				child.nudgeActive = child.nudgeY ~= 0
 				e.summonPending = e.summonPending - 1
 				e.summonStaggerTimer = e.summonStaggerTimer + (summon.stagger or 0)
 			end
@@ -818,6 +818,7 @@ local function applyHitImpulse(e, dx, dy, strength)
 	e.nudgeY = e.nudgeY + impulseY
 	e.nudgeTargetX = e.nudgeTargetX + impulseX
 	e.nudgeTargetY = e.nudgeTargetY + impulseY
+	e.nudgeActive = true
 
 	local n2 = e.nudgeTargetX * e.nudgeTargetX + e.nudgeTargetY * e.nudgeTargetY
 

@@ -1,7 +1,7 @@
 local State = require("core.state")
 local Enemies = require("world.enemies")
 
-local min, max, exp = math.min, math.max, math.exp
+local min, max, abs, exp = math.min, math.max, math.abs, math.exp
 -- Matches the old 0.35 response at 60 Hz, without making draw-call count a clock.
 local EYE_RESPONSE_RATE = -math.log(1 - 0.35) * 60
 local NUDGE_IDLE_EPS = 1e-3
@@ -42,26 +42,32 @@ local function prepare(enemies, alpha, dt, timestamp)
 
 			e.prevAnimT = e.animT or 0
 			e.animT = (e.animT or 0) + presentationDt * (e.speed or 0) * 0.03
-			e.prevNudgeX, e.prevNudgeY = e.nudgeX or 0, e.nudgeY or 0
-			local tx, ty = e.nudgeTargetX or 0, e.nudgeTargetY or 0
 			local nx, ny = e.nudgeX or 0, e.nudgeY or 0
-			if math.abs(tx) > NUDGE_IDLE_EPS or math.abs(ty) > NUDGE_IDLE_EPS
-				or math.abs(nx) > NUDGE_IDLE_EPS or math.abs(ny) > NUDGE_IDLE_EPS then
+			if e.nudgeActive then
+				local tx, ty = e.nudgeTargetX or 0, e.nudgeTargetY or 0
 				local decay = exp(-(e.nudgeTargetK or 0) * presentationDt)
 				local follow = 1 - exp(-(e.nudgeFollowK or 0) * presentationDt)
 				tx, ty = tx * decay, ty * decay
 				e.nudgeTargetX, e.nudgeTargetY = tx, ty
-				e.nudgeX, e.nudgeY = nx + (tx - nx) * follow, ny + (ty - ny) * follow
-			else
-				e.nudgeTargetX, e.nudgeTargetY, e.nudgeX, e.nudgeY = 0, 0, 0, 0
+				nx, ny = nx + (tx - nx) * follow, ny + (ty - ny) * follow
+				e.nudgeX, e.nudgeY = nx, ny
+				if abs(tx) <= NUDGE_IDLE_EPS and abs(ty) <= NUDGE_IDLE_EPS
+					and abs(nx) <= NUDGE_IDLE_EPS and abs(ny) <= NUDGE_IDLE_EPS then
+					e.nudgeActive = false
+					e.nudgeTargetX, e.nudgeTargetY, e.nudgeX, e.nudgeY = 0, 0, 0, 0
+					nx, ny = 0, 0
+				end
 			end
 			local ex, ey = e.x, e.y
 			local oldRX, oldRY = e.rx or ex, e.ry or ey
 			local baseX = lerp(e.prevX or ex, ex, a)
 			local baseY = lerp(e.prevY or ey, ey, a)
-			local nx, ny = e.nudgeX or 0, e.nudgeY or 0
-			local targetX = baseX + lerp(e.prevNudgeX or nx, nx, a)
-			local targetY = baseY + lerp(e.prevNudgeY or ny, ny, a)
+			-- Nudge motion is presentation-time motion, so applying fixed-step alpha to
+			-- it made the return rate pulse whenever alpha reset on a simulation tick.
+			-- Only path movement is fixed-step interpolated; the already frame-smoothed
+			-- offset is composed directly to keep the return visually continuous.
+			local targetX = baseX + nx
+			local targetY = baseY + ny
 			e.rx, e.ry, e.prevRX, e.prevRY = targetX, targetY, oldRX, oldRY
 			local rawDX, rawDY = targetX - oldRX, targetY - oldRY
 			local eyeDX, eyeDY = e.eyeDX or rawDX, e.eyeDY or rawDY
