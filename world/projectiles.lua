@@ -337,6 +337,11 @@ local function resolveDamage(p, evt)
 	local dealt, absorbed = Enemies.applyDamage(e, amount, {
 		sourceKind = p.sourceKind,
 		chain = evt.chain == true or p.sourceKind == "shock",
+		-- Use the projectile's travel direction rather than its impact position:
+		-- homing shots commonly finish at the enemy center, which used to collapse
+		-- the nudge vector to zero.
+		nudgeDX = p.vx or cos(p.angle or 0),
+		nudgeDY = p.vy or sin(p.angle or 0),
 	})
 	local effectiveDamage = dealt + absorbed
 
