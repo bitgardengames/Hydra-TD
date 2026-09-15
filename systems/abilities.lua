@@ -61,6 +61,8 @@ local function pullEnemy(enemy, context)
 end
 
 local function damageEnemy(enemy, context)
+	abilityDamageSource.nudgeDX = enemy.x - context.x
+	abilityDamageSource.nudgeDY = enemy.y - context.y
 	Enemies.applyDamage(enemy, context.damage, abilityDamageSource)
 end
 
@@ -391,12 +393,14 @@ end
 
 local function expireGravityWell(effect)
 	gravityDamageVisitContext.damage = effect.damage
+	gravityDamageVisitContext.x, gravityDamageVisitContext.y = effect.x, effect.y
 	forEachEnemyInRadius(effect.x, effect.y, effect.radius, damageEnemy, gravityDamageVisitContext)
 	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius)
 end
 
 local function expireMeteor(effect)
 	meteorDamageVisitContext.damage = effect.damage
+	meteorDamageVisitContext.x, meteorDamageVisitContext.y = effect.x, effect.y
 	forEachEnemyInRadius(effect.x, effect.y, effect.radius, damageEnemy, meteorDamageVisitContext, true)
 	Effects.spawnCannonImpact(effect.x, effect.y, effect.radius * 1.2)
 	Effects.spawnMeteorDust(effect.x, effect.y, effect.radius)

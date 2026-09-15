@@ -32,6 +32,7 @@ local MAX_ACTIVE_ENEMIES = 180
 
 local EPS = 1e-6
 local BASE_MAX_NUDGE = 10
+local DEFAULT_HIT_NUDGE = 1.5
 local MIN_NUDGE_DAMP = 5
 local MAX_NUDGE_DAMP = 30
 local NUDGE_TARGET_DAMP_MULT = 0.35
@@ -808,6 +809,12 @@ local function applyDamage(e, amount, context)
 		e.hitSquash = HIT_SQUASH_DUR
 		e.hitSquashStrength = 1
 		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
+		-- Damage-over-time updates bypass this gateway, so only discrete hits receive
+		-- this presentation-only displacement. Gameplay path state remains unchanged.
+		if not e.boss and context.nudgeDX and context.nudgeDY then
+			applyHitImpulse(e, context.nudgeDX, context.nudgeDY,
+				context.nudgeStrength or DEFAULT_HIT_NUDGE)
+		end
 	end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
 	e.lastDamageSourceKind = context.sourceKind

@@ -47,7 +47,6 @@ B.hit_damage = {
 
 		local dmg = getStat(p, "damage", 0)
 		emitDamage(p, e, dmg)
-		emitImpulse(p, e, p.x, p.y, 1.5)
 	end
 }
 
