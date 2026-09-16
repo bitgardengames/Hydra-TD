@@ -51,6 +51,15 @@ local function prepare(enemies, alpha, dt, timestamp)
 				e.nudgeTargetX, e.nudgeTargetY = tx, ty
 				nx, ny = nx + (tx - nx) * follow, ny + (ty - ny) * follow
 				e.nudgeX, e.nudgeY = nx, ny
+				-- A hit's squash and push form one visual gesture. Once the shared
+				-- reaction envelope ends, remove the tiny exponential tail instead of
+				-- letting the enemy continue to drift after its silhouette has settled.
+				if e.nudgeHitReaction and e.hitSquash <= 0 then
+					e.nudgeHitReaction = false
+					e.nudgeActive = false
+					e.nudgeTargetX, e.nudgeTargetY, e.nudgeX, e.nudgeY = 0, 0, 0, 0
+					tx, ty, nx, ny = 0, 0, 0, 0
+				end
 				if abs(tx) <= NUDGE_IDLE_EPS and abs(ty) <= NUDGE_IDLE_EPS
 					and abs(nx) <= NUDGE_IDLE_EPS and abs(ny) <= NUDGE_IDLE_EPS then
 					e.nudgeActive = false

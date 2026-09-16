@@ -17,7 +17,8 @@ local esR, esG, esB, esA = enemyShadow[1], enemyShadow[2], enemyShadow[3], enemy
 local efR, efG, efB = enemyFace[1], enemyFace[2], enemyFace[3]
 local sr, sg, sb = colorSlow[1], colorSlow[2], colorSlow[3]
 local selR, selG, selB = colorSelected[1], colorSelected[2], colorSelected[3]
-local outlineWidth, EYE_DEADZONE, HIT_SQUASH_DUR = Theme.outline.width, 0.03, 0.12
+local outlineWidth, EYE_DEADZONE = Theme.outline.width, 0.03
+local HIT_REACTION_DURATION = Enemies.HIT_REACTION_DURATION
 
 -- Three broad growth plates give Regenerators an organic, tri-lobed outline that
 -- stays recognizable in a crowd and at portrait scale. Their bases tuck beneath
@@ -65,7 +66,10 @@ local function drawEnemy(e)
 	e.drawX = ix
 	e.drawY = iy
 	local r = e.radius
-	local squash = min(1, (e.hitSquash or 0) / HIT_SQUASH_DUR)
+	local squash = min(1, (e.hitSquash or 0) / HIT_REACTION_DURATION)
+	-- Smoothstep gives the impact pose and release a soft edge. The old linear,
+	-- 120 ms release was visually over before the accompanying nudge had settled.
+	squash = squash * squash * (3 - 2 * squash)
 	squash = squash * (e.hitSquashStrength or 1)
 
 	-- Keep the shadow anchored to the ground while the enemy body reacts to a hit.
