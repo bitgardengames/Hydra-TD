@@ -26,7 +26,9 @@ local colorMoney = Theme.ui.money
 local cmR, cmG, cmB = colorMoney[1], colorMoney[2], colorMoney[3]
 
 local POISON_TICK = 0.5 -- Seconds per poison tick
-local HIT_SQUASH_DUR = 0.12
+-- Squash and displacement are two parts of the same impact gesture. Keep the
+-- shared envelope long enough for the small positional nudge to be readable.
+local HIT_REACTION_DURATION = 0.30
 local HEALTH_BAR_HIT_DURATION = 1.0
 local MAX_ACTIVE_ENEMIES = 180
 
@@ -35,8 +37,10 @@ local BASE_MAX_NUDGE = 10
 local DEFAULT_HIT_NUDGE = 1.5
 local MIN_NUDGE_DAMP = 5
 local MAX_NUDGE_DAMP = 30
-local NUDGE_TARGET_DAMP_MULT = 0.35
-local NUDGE_FOLLOW_DAMP_MULT = 1.0
+-- These rates bring the spring below a visible offset during the shared 300 ms
+-- reaction envelope; the timer then only trims an imperceptible residual tail.
+local NUDGE_TARGET_DAMP_MULT = 1.0
+local NUDGE_FOLLOW_DAMP_MULT = 2.0
 local MIN_NUDGE_RADIUS_SCALE = 0.85
 local MAX_NUDGE_RADIUS_SCALE = 1.45
 local NUDGE_RADIUS_REF = 16
@@ -273,6 +277,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.nudgeTargetX = 0
 	e.nudgeTargetY = 0
 	e.nudgeActive = false
+	e.nudgeHitReaction = false
 
 	e.boss = def.boss or false
 	-- Optional authored health landmarks are consumed by the boss HUD. Keeping
@@ -491,7 +496,7 @@ local function updatePoison(e, dt)
 			e.lastHitTower = e.poisonSource
 		end
 		e.hitFlash = 0.03
-		e.hitSquash = HIT_SQUASH_DUR
+		e.hitSquash = HIT_REACTION_DURATION
 		e.hitSquashStrength = 0.55
 		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
 		State.addDamage("poison", damage, e.boss == true)
@@ -852,7 +857,7 @@ local function applyDamage(e, amount, context)
 	triggerHealthThresholds(e)
 	EnemySupport.detachDead(e)
 	if amount > 0 then
-		e.hitSquash = HIT_SQUASH_DUR
+		e.hitSquash = HIT_REACTION_DURATION
 		e.hitSquashStrength = 1
 		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
 		-- Damage-over-time updates bypass this gateway, so only discrete hits receive
@@ -860,6 +865,7 @@ local function applyDamage(e, amount, context)
 		if not e.boss and context.nudgeDX and context.nudgeDY then
 			applyHitImpulse(e, context.nudgeDX, context.nudgeDY,
 				context.nudgeStrength or DEFAULT_HIT_NUDGE)
+			e.nudgeHitReaction = true
 		end
 	end
 	if e.regeneration then e.regenDelay = e.regeneration.delay end
@@ -948,6 +954,7 @@ end
 return {
 	enemies = enemies,
 	EnemyDefs = EnemyDefs,
+	HIT_REACTION_DURATION = HIT_REACTION_DURATION,
 	findEnemyAt = findEnemyAt,
 	spawnEnemy = spawnEnemy,
 	updateEnemies = updateEnemies,
