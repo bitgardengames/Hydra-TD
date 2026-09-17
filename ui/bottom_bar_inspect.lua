@@ -26,6 +26,7 @@ local formatInt = Util.formatInt
 local inspectAnim = 0
 local inspectTarget = 0
 local enemyStatusBuffer = {}
+local upgradeTooltipCache = {}
 
 -- Colors
 local colorBackdrop = Theme.ui.backdrop
@@ -164,6 +165,43 @@ local function drawStatusRow(status, x, y, w)
 end
 
 local forceShow = true
+
+local function getUpgradeTooltip(t)
+	local preview = Towers.getUpgradePreview(t)
+	local localeRevision = L.getRevision()
+	if upgradeTooltipCache.tower == t
+		and upgradeTooltipCache.level == t.level
+		and upgradeTooltipCache.preview == preview
+		and upgradeTooltipCache.localeRevision == localeRevision then
+		return upgradeTooltipCache.definition
+	end
+
+	local rows = {}
+	-- Preview rows are already fully derived by Towers from tower, branch, and
+	-- module definitions; this layer only gives them a compact layout.
+	for i = 1, math.min(#(preview and preview.rows or {}), 7) do
+		local row = preview.rows[i]
+		rows[#rows + 1] = {
+			label = L(row.labelKey),
+			value = row.current,
+			delta = row.next,
+			deltaColor = row.direction == "bad" and colorBad or colorGood,
+		}
+	end
+
+	local definition = {
+		title = L("inspect.upgradeTitle", t.level + 1),
+		rows = rows,
+	}
+	upgradeTooltipCache = {
+		tower = t,
+		level = t.level,
+		preview = preview,
+		localeRevision = localeRevision,
+		definition = definition,
+	}
+	return definition
+end
 
 function Inspect.overrideAnimation(v)
 	forceShow = v
@@ -346,24 +384,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			-- Upgrade tooltip
 			if hovered and btn.id == "upgrade" and upgradeCost then
-				local preview = Towers.getUpgradePreview(t)
-				local rows = {}
-				-- Preview rows are already fully derived by Towers from tower, branch,
-				-- and module definitions; this layer only gives them a compact layout.
-				for i = 1, math.min(#(preview and preview.rows or {}), 7) do
-					local row = preview.rows[i]
-					rows[#rows + 1] = {
-						label = L(row.labelKey),
-						value = row.current,
-						delta = row.next,
-						deltaColor = row.direction == "bad" and colorBad or colorGood,
-					}
-				end
-
-				Tooltip.show({
-					title = L("inspect.upgradeTitle", t.level + 1),
-					rows = rows,
-				})
+				Tooltip.show(getUpgradeTooltip(t))
 			end
 		end
     elseif State.selectedEnemy then

@@ -339,6 +339,7 @@ function Modules.invalidateTower(tower)
 
 	cache.moduleContext = nil
 	cache.fireProfile = nil
+	cache.upgradePreview = nil
 	tower._fireProfileLocalVersion = (tower._fireProfileLocalVersion or 0) + 1
 end
 
