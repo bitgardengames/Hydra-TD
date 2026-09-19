@@ -4,6 +4,12 @@ local Recorder = require("tools.trailer.recorder")
 
 local Trailer = {}
 
+-- The trailer tool is loaded from the game entry point, before it replaces the
+-- LÖVE callbacks below. Keep those callbacks so capture advances and draws the
+-- very same runtime as an ordinary gameplay frame.
+local gameplayUpdate = love.update
+local gameplayDraw = love.draw
+
 local TRAILER_DIR = "trailer"
 local FRAMES_DIR = TRAILER_DIR .. "/frames"
 
@@ -11,6 +17,7 @@ local FIXED_DT = 1 / 120
 
 function Trailer.run()
 	require("core.bootstrap").initMinimal()
+	Director.setGameplayCallbacks(gameplayUpdate, gameplayDraw)
 
 	love.filesystem.createDirectory(TRAILER_DIR)
 	love.filesystem.createDirectory(FRAMES_DIR)
