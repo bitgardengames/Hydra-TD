@@ -321,7 +321,6 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.poisonTimer = 0
 	e.poisonTickTimer = 0
 	e.poisonDPS = 0
-	e.exposureMultiplier = 1
 	e.poisonMissingHpMult = 0
 	e.poisonRamp = 1
 	e.poisonRampPerTick = 0
@@ -460,11 +459,10 @@ local function handleEnemyEscaped(e, i, isBoss)
 end
 
 local function incomingDamageMultiplier(e)
-	local multiplier = e.exposureMultiplier or 1
 	if e.lungeWindup and e.lunge then
-		multiplier = multiplier * (e.lunge.windupDamageMultiplier or 1)
+		return e.lunge.windupDamageMultiplier or 1
 	end
-	return multiplier
+	return 1
 end
 
 local function updatePoison(e, dt)

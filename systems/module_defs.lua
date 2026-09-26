@@ -42,7 +42,7 @@ local function appendUnique(list, value)
 	list[#list + 1] = value
 end
 
-local towerKinds = require("core.constants").TOWER_LIST
+local towerKinds = { "slow", "lancer", "poison", "cannon", "shock", "plasma" }
 
 local function inferTowerKind(id)
 	for i = 1, #towerKinds do
