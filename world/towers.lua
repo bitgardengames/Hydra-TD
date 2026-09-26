@@ -291,7 +291,6 @@ local function recomputeTowerStats(t)
 	t.fireRate = def.fireRate * scaledFireMult * moduleStats.fireRateMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
 	t.range = def.range + rangeAdd * upgrades + moduleStats.rangeAdd
-	t.exposure = (def.exposure or 0) + (upgrade.exposureAdd or 0) * upgrades
 	recomputeAbilityModifiers(t)
 end
 
@@ -476,7 +475,6 @@ local function previewTowerStats(t, level)
 		damage = def.damage * (1 + ((upgrade.dmgMult or 1) - 1) * progress) * moduleStats.damageMult,
 		fireRate = def.fireRate * (1 + ((upgrade.fireMult or 1) - 1) * progress) * moduleStats.fireRateMult,
 		range = def.range + (upgrade.rangeAdd or 0) * upgrades + moduleStats.rangeAdd,
-		exposure = (def.exposure or 0) + (upgrade.exposureAdd or 0) * upgrades,
 	}
 end
 
@@ -585,9 +583,6 @@ getUpgradePreview = function(t)
 	addPreviewRow(rows, "damage", numberText(currentDamage, 1), numberText(nextDamage, 1), nextDamage > currentDamage and "good" or "bad")
 	addPreviewRow(rows, "fireRate", tostring(TowerStatDisplay.attackSpeed(currentStats.fireRate)), tostring(TowerStatDisplay.attackSpeed(nextStats.fireRate)), nextStats.fireRate > currentStats.fireRate and "good" or "bad")
 	addPreviewRow(rows, "range", tostring(TowerStatDisplay.range(currentStats.range)), tostring(TowerStatDisplay.range(nextStats.range)), nextStats.range > currentStats.range and "good" or "bad")
-	if nextStats.exposure > 0 then
-		addPreviewRow(rows, "exposure", numberText(currentStats.exposure * 100, 0, "%"), numberText(nextStats.exposure * 100, 0, "%"), "good")
-	end
 	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
 
 	return {
@@ -796,24 +791,6 @@ local function updateTowers(dt)
 	updateSuppressedTowers(dt)
 	updateSuppression(dt)
 
-	-- Exposure is a live field, not a timed status. Reset every enemy, then keep
-	-- only the strongest active Beacon covering it so overlapping fields do not stack.
-	for i = 1, #enemies do enemies[i].exposureMultiplier = 1 end
-	for i = 1, #towers do
-		local beacon = towers[i]
-		if beacon.kind == "beacon" and (beacon.suppressedTimer or 0) <= 0 then
-			local range2 = beacon.range2
-			local multiplier = 1 + (beacon.exposure or 0)
-			for j = 1, #enemies do
-				local enemy = enemies[j]
-				local dx, dy = enemy.x - beacon.x, enemy.y - beacon.y
-				if enemy.hp > 0 and not enemy.dying and dx * dx + dy * dy <= range2 then
-					enemy.exposureMultiplier = max(enemy.exposureMultiplier or 1, multiplier)
-				end
-			end
-		end
-	end
-
 	for i = 1, #towers do
 		local t = towers[i]
 		local prevWindUp = t.windUp or 0
@@ -826,41 +803,6 @@ local function updateTowers(dt)
 		if (t.suppressedTimer or 0) > 0 then
 			t.target = nil
 			t.windUp = 0
-			goto continue_tower_update
-		end
-
-		if t.kind == "beacon" then
-			goto continue_tower_update
-		end
-
-		if t.kind == "crusher" then
-			if t.cooldown <= 0 then
-				local victims = {}
-				for j = 1, #enemies do
-					local enemy = enemies[j]
-					local dx, dy = enemy.x - t.x, enemy.y - t.y
-					if enemy.hp > 0 and not enemy.dying and dx * dx + dy * dy <= t.range2 then
-						victims[#victims + 1] = enemy
-					end
-				end
-				if #victims > 0 then
-					for j = 1, #victims do
-						local enemy = victims[j]
-						local dealt, absorbed = Enemies.applyDamage(enemy, t.damage, {sourceKind = t.kind})
-						local effective = dealt + absorbed
-						t.damageDealt = t.damageDealt + effective
-						enemy.lastHitTower = t
-						enemy.hitFlash = max(enemy.hitFlash or 0, 0.05)
-						State.addDamage(t.kind, effective, enemy.boss == true)
-						RunStats.recordDamage(t, effective)
-						if effective > 0 and (not Save.data or Save.data.settings.showDamageNumbers ~= false) then
-							Floaters.add(enemy.x, enemy.y - (enemy.radius or 10), tostring(floor(effective + 0.5)), 1, 0.82, 0.45)
-						end
-					end
-					t.fireAnim, t.recoil, t.cooldown = 1, t.recoilStrength, t.fireInterval
-					Sound.play("cannon")
-				end
-			end
 			goto continue_tower_update
 		end
 

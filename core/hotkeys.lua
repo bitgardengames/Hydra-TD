@@ -10,8 +10,6 @@ Hotkeys.defaultKb = {
 		cannon = "4",
 		shock = "5",
 		plasma = "6",
-		crusher = "7",
-		beacon = "8",
 	},
 
 	actions = {

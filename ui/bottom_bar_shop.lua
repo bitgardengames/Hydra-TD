@@ -187,12 +187,12 @@ function Shop.draw(panelX, panelY, panelW, panelH, dt, now, mx, my)
 
 				if unlocked then
 					rows[1].kind = nil
-					rows[1].label = L(def.support and "stats.exposure" or "stats.damage")
-					rows[1].value = def.support and (floor(def.exposure * 100 + 0.5) .. "%") or def.damage
+					rows[1].label = L("stats.damage")
+					rows[1].value = def.damage
 
 					rows[2].kind = nil
-					rows[2].label = L(def.support and "stats.role" or "stats.fireRate")
-					rows[2].value = def.support and L("stats.support") or TowerStatDisplay.attackSpeed(def.fireRate)
+					rows[2].label = L("stats.fireRate")
+					rows[2].value = TowerStatDisplay.attackSpeed(def.fireRate)
 
 					rows[3].kind = nil
 					rows[3].label = L("stats.range")
