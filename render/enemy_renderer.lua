@@ -223,6 +223,16 @@ local function drawEnemy(e)
 		lg.circle("line", ix, iy, e.radius - 1)
 	end
 
+	-- Beacon exposure is deliberately lightweight: a small gold bracket remains
+	-- readable in crowds without obscuring health, slow, or poison feedback.
+	if (e.exposureMultiplier or 1) > 1 then
+		local pulse = 0.7 + sin(animT * 4) * 0.15
+		lg.setColor(1, 0.78, 0.22, pulse * enemyAlpha)
+		lg.setLineWidth(2)
+		lg.arc("line", "open", ix, iy, e.radius + 5, pi * 1.12, pi * 1.88)
+		lg.setLineWidth(1)
+	end
+
 	-- Status glyphs provide state, not just identity. Boosted units carry
 	-- backward speed streaks; regeneration state is communicated by the growth
 	-- plates above.

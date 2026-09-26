@@ -79,6 +79,8 @@ return {
 		controlPlaceCannon = "Place Cannon",
 		controlPlaceShock = "Place Shock",
 		controlPlacePlasma = "Place Plasma",
+		controlPlaceCrusher = "Place Crusher",
+		controlPlaceBeacon = "Place Beacon",
 		controlDamageMeter = "Toggle Damage Meter",
 		controlAbilitySlot1 = "Ability Slot 1",
 		controlAbilitySlot2 = "Ability Slot 2",
@@ -208,6 +210,8 @@ return {
 		shock = "Shock",
 		poison = "Poison",
 		plasma = "Plasma",
+		crusher = "Crusher",
+		beacon = "Beacon",
 	},
 
 	towerUnlock = {
@@ -229,6 +233,8 @@ return {
 		shock = "Chain damage that punishes tightly grouped enemies.",
 		poison = "Stacking damage over time for durable and regenerating enemies on long paths.",
 		plasma = "Sustained lane damage that rewards aiming along the route and controlling enemies in its field.",
+		crusher = "A point-blank shockwave that crushes every enemy nearby; place it tight against bends and loops.",
+		beacon = "Exposes enemies in its golden field, increasing damage they take from every tower. Beacons do not stack.",
 	},
 
 	module = {
@@ -435,6 +441,7 @@ return {
 		damage = "Damage",
 		fireRate = "Attack speed (per min)",
 		range = "Range",
+		exposure = "Damage amplification",
 		splash = "Splash radius",
 		slowStrength = "Slow strength",
 		poisonStrength = "Poison strength",
@@ -508,6 +515,9 @@ return {
 		damage = "Damage",
 		fireRate = "Attack Speed (per min)",
 		range = "Range",
+		exposure = "Damage Amplification",
+		role = "Role",
+		support = "Support",
 	},
 
 	actions = {

@@ -228,6 +228,25 @@ local function drawPoisonFX(t)
 	end
 end
 
+local function drawCrusherFX(t)
+	local a = t.fireAnim or 0
+	if a <= 0 then return end
+	local progress = 1 - a
+	lg.setLineWidth(2 + a * 2)
+	lg.setColor(1.0, 0.48, 0.25, a * a * 0.9)
+	lg.circle("line", t.x, t.renderY, max(8, t.range * progress))
+	lg.setColor(t.color[1], t.color[2], t.color[3], a * 0.14)
+	lg.circle("fill", t.x, t.renderY, t.range * progress)
+	lg.setLineWidth(1)
+end
+
+local function drawBeaconFX(t)
+	local pulse = 0.5 + 0.5 * sin(love.timer.getTime() * 2.4)
+	lg.setColor(1.0, 0.78, 0.24, 0.10 + pulse * 0.08)
+	lg.setLineWidth(1)
+	lg.circle("line", t.x, t.renderY, t.range * (0.96 + pulse * 0.025))
+end
+
 local function drawTowerFX(t)
 	local kind = t.kind
 
@@ -243,6 +262,10 @@ local function drawTowerFX(t)
 		drawPoisonFX(t)
 	elseif kind == "plasma" then
 		drawPlasmaFX(t)
+	elseif kind == "crusher" then
+		drawCrusherFX(t)
+	elseif kind == "beacon" then
+		drawBeaconFX(t)
 	end
 end
 
@@ -374,7 +397,7 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 
 		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
 		lg.rectangle("fill", -i, -i, i * 2, i * 2, rectRadius)
-	elseif kind == "plasma" then
+	elseif kind == "plasma" or kind == "crusher" or kind == "beacon" then
 		local o = size * 0.38 + outlineW * 0.5
 		local i = o - outlineW
 
@@ -494,6 +517,18 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.58, barrelH, 3, 3)
+	elseif kind == "crusher" then
+		local compression = (fireAnim or 0) * size * 0.08
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.rectangle("fill", -size * 0.27, -size * 0.27 + compression, size * 0.54, size * 0.54 - compression, 3)
+		lg.setColor(color[1], color[2], color[3], bodyA)
+		lg.rectangle("fill", -size * 0.20, -size * 0.20 + compression, size * 0.40, size * 0.40 - compression, 2)
+	elseif kind == "beacon" then
+		local pulse = 1 + sin(love.timer.getTime() * 3) * 0.08
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.circle("fill", 0, 0, size * 0.25 * pulse)
+		lg.setColor(1, 0.88, 0.38, bodyA)
+		lg.circle("fill", 0, -1, size * 0.15 * pulse)
 	end
 
 	lg.pop()
