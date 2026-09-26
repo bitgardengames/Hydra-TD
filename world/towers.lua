@@ -782,45 +782,6 @@ local function updateSuppression(dt)
 	boss.suppressionTimer = suppression.period
 end
 
-local function fireCrusher(t)
-	local hit = false
-	local range2 = t.range2
-	for i = 1, #enemies do
-		local enemy = enemies[i]
-		if enemy.hp > 0 then
-			local dx, dy = enemy.x - t.x, enemy.y - t.y
-			if dx * dx + dy * dy <= range2 then
-				local dealt, absorbed = Enemies.applyDamage(enemy, t.damage, {
-					sourceKind = t.kind,
-					nudgeDX = dx,
-					nudgeDY = dy,
-				})
-				local effectiveDamage = dealt + absorbed
-				if effectiveDamage > 0 then
-					hit = true
-					t.damageDealt = (t.damageDealt or 0) + effectiveDamage
-					enemy.lastHitTower = t
-					enemy.hitFlash = max(enemy.hitFlash or 0, 0.05)
-					State.addDamage(t.kind, effectiveDamage, enemy.boss == true)
-					RunStats.recordDamage(t, effectiveDamage)
-					if not Save.data or Save.data.settings.showDamageNumbers ~= false then
-						Floaters.add(enemy.x, enemy.y - (enemy.radius or 10),
-							tostring(floor(effectiveDamage + 0.5)), 1, 0.82, 0.45)
-					end
-				end
-			end
-		end
-	end
-
-	if hit then
-		t.fireAnim = 1
-		t.recoil = t.recoilStrength or 0
-		t.cooldown = t.fireInterval
-		Sound.play(t.kind, {pitch = 0.72})
-	end
-	return hit
-end
-
 local function updateTowers(dt)
 	-- Retire last frame's targeting keys even when no tower needs to retarget.
 	beginTargetingFrame(State.frameId)
@@ -842,16 +803,6 @@ local function updateTowers(dt)
 		if (t.suppressedTimer or 0) > 0 then
 			t.target = nil
 			t.windUp = 0
-			goto continue_tower_update
-		end
-
-		-- Crusher is omnidirectional and has no target or aiming phase. Only scan
-		-- on a ready cooldown; the hit itself confirms that an enemy was in range.
-		if t.def.isCrusher then
-			t.target = nil
-			if t.cooldown <= 0 then
-				fireCrusher(t)
-			end
 			goto continue_tower_update
 		end
 

@@ -22,7 +22,6 @@ Constants.TOWER_LIST = {
 	"cannon",
 	"shock",
 	"plasma",
-	"crusher",
 }
 
 return Constants

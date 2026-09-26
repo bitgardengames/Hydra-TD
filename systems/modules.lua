@@ -24,7 +24,6 @@ Modules.active = {
 	cannon = {},
 	shock = {},
 	plasma = {},
-	crusher = {},
 }
 
 Modules.version = 0
