@@ -187,4 +187,26 @@ return {
 			{id = "draw_plasma"}
 		}
 	},
+
+	-- Role: point-blank area damage. Excellent total output when placed beside
+	-- bends and loops, but its tiny coverage makes poor placement unforgiving.
+	crusher = {
+		nameKey = "tower.crusher",
+		descKey = "towerDesc.crusher",
+		cost = 85,
+		range = 1.25 * Constants.TILE,
+		fireRate = 0.8,
+		damage = 20,
+		recoilStrength = Constants.TILE * 0.10,
+		recoilDecay = 12,
+		color = Theme.tower.crusher,
+		canRotate = false,
+		isCrusher = true,
+		upgrade = {
+			dmgMult = 2.5,
+			rangeAdd = 0.04 * Constants.TILE,
+			fireMult = 1.2,
+		},
+		behaviors = {},
+	},
 }
