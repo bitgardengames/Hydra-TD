@@ -79,7 +79,6 @@ return {
 		controlPlaceCannon = "Place Cannon",
 		controlPlaceShock = "Place Shock",
 		controlPlacePlasma = "Place Plasma",
-		controlPlaceCrusher = "Place Crusher",
 		controlDamageMeter = "Toggle Damage Meter",
 		controlAbilitySlot1 = "Ability Slot 1",
 		controlAbilitySlot2 = "Ability Slot 2",
@@ -209,7 +208,6 @@ return {
 		shock = "Shock",
 		poison = "Poison",
 		plasma = "Plasma",
-		crusher = "Crusher",
 	},
 
 	towerUnlock = {
@@ -231,7 +229,6 @@ return {
 		shock = "Chain damage that punishes tightly grouped enemies.",
 		poison = "Stacking damage over time for durable and regenerating enemies on long paths.",
 		plasma = "Sustained lane damage that rewards aiming along the route and controlling enemies in its field.",
-		crusher = "Point-blank shockwaves damage every enemy nearby; place it beside bends and loops.",
 	},
 
 	module = {
@@ -632,7 +629,6 @@ return {
 		tower_shock_250 = "High Voltage",
 		tower_poison_250 = "It Adds Up",
 		tower_plasma_250 = "Overcharge",
-		tower_crusher_250 = "Pressure Drop",
 
 		tower_lancer_1000 = "Bullseye",
 		tower_slow_1000 = "Absolute Zero",
@@ -640,7 +636,6 @@ return {
 		tower_shock_1000 = "Chain Reaction",
 		tower_poison_1000 = "Lethal Dose",
 		tower_plasma_1000 = "Critical Mass", -- Power Overwhelming?
-		tower_crusher_1000 = "Under Pressure",
 
 		campaign_easy = "First Steps",
 		campaign_normal = "Holding the Line",
@@ -668,7 +663,6 @@ return {
 		tower_shock_250 = "Defeat 250 enemies with the Shock tower",
 		tower_poison_250 = "Defeat 250 enemies with the Poison tower",
 		tower_plasma_250 = "Defeat 250 enemies with the Plasma tower",
-		tower_crusher_250 = "Defeat 250 enemies with the Crusher",
 
 		tower_lancer_1000 = "Defeat 1,000 enemies with the Lancer",
 		tower_slow_1000 = "Defeat 1,000 enemies with the Slow tower",
@@ -676,7 +670,6 @@ return {
 		tower_shock_1000 = "Defeat 1,000 enemies with the Shock tower",
 		tower_poison_1000 = "Defeat 1,000 enemies with the Poison tower",
 		tower_plasma_1000 = "Defeat 1,000 enemies with the Plasma tower",
-		tower_crusher_1000 = "Defeat 1,000 enemies with the Crusher",
 
 		campaign_easy = "Complete the campaign on Easy",
 		campaign_normal = "Complete the campaign on Normal",

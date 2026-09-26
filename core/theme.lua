@@ -37,7 +37,6 @@ Theme.tower = {
 	shock = {0.45, 0.78, 0.98},
 	poison = {0.50, 0.82, 0.44},
 	plasma = {0.75, 0.45, 1.0},
-	crusher = {0.56, 0.22, 0.18},
 }
 
 Theme.projectiles = {
@@ -47,7 +46,6 @@ Theme.projectiles = {
 	shock = {0.45, 0.78, 0.98},
 	poison = {0.55, 0.9, 0.5},
 	plasma = {0.85, 0.55, 1.0}, -- 1.0, 0.75, 1.0
-	crusher = {0.92, 0.48, 0.30},
 }
 
 -- Shared presentation vocabulary. Gameplay tells should use `criticalTell` so

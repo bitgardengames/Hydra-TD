@@ -262,7 +262,6 @@ function Sound.load()
 		poison = { files = { "assets/sounds/poison1.ogg", "assets/sounds/poison2.ogg" }, jitter = true, bias = 0.7, cooldown = 0.07, category = "repetitive", pool = 4 },
 		shock = { files = { "assets/sounds/shock1.ogg", "assets/sounds/shock2.ogg", "assets/sounds/shock3.ogg" }, jitter = true, bias = 0.9, cooldown = 0.05, category = "important", pool = 4 },
 		plasma = { file = "assets/sounds/plasma2.ogg", jitter = true, bias = 0.82, cooldown = 0.05, category = "repetitive", pool = 3 },
-		crusher = { file = "assets/sounds/cannon.ogg", jitter = true, bias = 0.9, cooldown = 0.10, category = "repetitive", pool = 3 },
 	}
 
 	for name, def in pairs(sfxDefs) do
