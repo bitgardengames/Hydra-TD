@@ -228,6 +228,22 @@ local function drawPoisonFX(t)
 	end
 end
 
+local function drawCrusherFX(t)
+	local a = t.fireAnim
+	if not a or a <= 0 then return end
+
+	local progress = 1 - a
+	local radius = TILE * 0.30 + (t.range - TILE * 0.30) * progress
+	local alpha = a * a
+
+	lg.setLineWidth(3)
+	lg.setColor(1.0, 0.56, 0.30, alpha * 0.9)
+	lg.circle("line", t.x, t.renderY, radius)
+	lg.setLineWidth(1)
+	lg.setColor(1.0, 0.76, 0.48, alpha * 0.22)
+	lg.circle("fill", t.x, t.renderY, TILE * (0.18 + progress * 0.12))
+end
+
 local function drawTowerFX(t)
 	local kind = t.kind
 
@@ -243,6 +259,8 @@ local function drawTowerFX(t)
 		drawPoisonFX(t)
 	elseif kind == "plasma" then
 		drawPlasmaFX(t)
+	elseif kind == "crusher" then
+		drawCrusherFX(t)
 	end
 end
 
@@ -312,6 +330,10 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 	-- Base
 	lg.push()
 	lg.translate(cx, cy)
+	if kind == "crusher" then
+		local impact = fireAnim * fireAnim
+		lg.scale(1 + impact * 0.16, 1 - impact * 0.18)
+	end
 
 	if def.canRotate then
 		lg.rotate(angle)
@@ -386,6 +408,14 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 
 		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
 		lg.rectangle("fill", -i, -i, i * 2, i * 2, rectRadius)
+	elseif kind == "crusher" then
+		local rOuter = size * 0.44 + outlineW * 0.5
+		rInner = rOuter - outlineW
+
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.circle("fill", 0, 0, rOuter)
+		lg.setColor(color[1] * tintR * darkMul, color[2] * tintG * darkMul, color[3] * tintB * darkMul, bodyA)
+		lg.circle("fill", 0, 0, rInner)
 	end
 
 	lg.pop()
@@ -494,6 +524,12 @@ local function drawTowerCore(kind, cx, cy, angle, recoil, alpha, tintR, tintG, t
 
 		lg.setColor(outR, outG, outB, outlineA)
 		lg.rectangle("fill", size * 0.26, -barrelH * 0.5, size * 0.58, barrelH, 3, 3)
+	elseif kind == "crusher" then
+		local hub = size * (0.18 + fireAnim * 0.05)
+		lg.setColor(outR, outG, outB, outlineA)
+		lg.circle("fill", 0, 0, hub + outlineW)
+		lg.setColor(1.0, 0.48, 0.26, bodyA)
+		lg.circle("fill", 0, 0, hub)
 	end
 
 	lg.pop()
