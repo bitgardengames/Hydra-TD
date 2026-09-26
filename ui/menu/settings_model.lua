@@ -19,6 +19,8 @@ local keyboardControlsLayout = {
 	{kind = "shop", id = "cannon", label = "settings.controlPlaceCannon"},
 	{kind = "shop", id = "shock", label = "settings.controlPlaceShock"},
 	{kind = "shop", id = "plasma", label = "settings.controlPlacePlasma"},
+	{kind = "shop", id = "crusher", label = "settings.controlPlaceCrusher"},
+	{kind = "shop", id = "beacon", label = "settings.controlPlaceBeacon"},
 	{kind = "action", id = "toggleMeter", label = "settings.controlDamageMeter"},
 }
 

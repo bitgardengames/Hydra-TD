@@ -187,4 +187,22 @@ return {
 			{id = "draw_plasma"}
 		}
 	},
+
+	crusher = {
+		nameKey = "tower.crusher", descKey = "towerDesc.crusher", cost = 85,
+		range = 1.3 * Constants.TILE, fireRate = 0.72, damage = 24,
+		recoilStrength = 0, recoilDecay = 12,
+		color = Theme.tower.crusher, canRotate = false, directAoE = true,
+		upgrade = {dmgMult = 2.35, rangeAdd = 0.04 * Constants.TILE, fireMult = 1.20},
+		behaviors = {},
+	},
+
+	beacon = {
+		nameKey = "tower.beacon", descKey = "towerDesc.beacon", cost = 100,
+		range = 3.25 * Constants.TILE, fireRate = 0, damage = 0,
+		recoilStrength = 0, color = Theme.tower.beacon, canRotate = false,
+		exposure = 0.20, support = true,
+		upgrade = {rangeAdd = 0.18 * Constants.TILE, exposureAdd = 0.04},
+		behaviors = {},
+	},
 }

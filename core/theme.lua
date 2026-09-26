@@ -37,6 +37,8 @@ Theme.tower = {
 	shock = {0.45, 0.78, 0.98},
 	poison = {0.50, 0.82, 0.44},
 	plasma = {0.75, 0.45, 1.0},
+	crusher = {0.58, 0.20, 0.16},
+	beacon = {0.96, 0.72, 0.20},
 }
 
 Theme.projectiles = {
