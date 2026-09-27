@@ -484,7 +484,7 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                     e.hp -= e.poison_dps * TICK
                 elif e.poison_dps:
                     e.poison_dps = 0
-                if e.regen and now - e.last_hit > 1.25:
+                if e.regen and now - e.last_hit > 1.5:
                     e.hp = min(e.max_hp, e.hp + e.regen * TICK)
                 if e.hp <= 0:
                     money += e.reward
