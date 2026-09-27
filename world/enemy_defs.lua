@@ -48,7 +48,7 @@ return {
 		nameKey = "enemy.warcaller",
 		descriptionKey = "enemy.warcallerDescription",
 		hp = 41, speed = 48, reward = 10, score = 38, radius = 13,
-		support = { radius = 92, speedMultiplier = 1.32, pulsePeriod = 1.2 },
+		support = { radius = 92, speedMultiplier = 1.28, pulsePeriod = 1.2 },
 		targetPriority = 34,
 	},
 
