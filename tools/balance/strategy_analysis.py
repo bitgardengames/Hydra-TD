@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 import challenge_fixtures
+from upgrade_model import level_stats, progression, source_fingerprint
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
@@ -31,7 +32,7 @@ MIXES = {
     "lane": {"plasma": 4, "slow": 2, "lancer": 2},
 }
 REGIONS = {"choke": 11_500, "distributed": 10_700, "exit_guard": 10_250}
-BRANCHES = {"output": 11_500, "coverage": 10_900}
+BRANCH_PLANS = ("first_specialization", "second_specialization")
 ABILITIES = {"burst_control": 12_200, "formation_economy": 11_650}
 PERTURBATIONS = ("move_tower", "delay_upgrade_or_ability", "substitute_tower", "income_loss")
 
@@ -64,6 +65,18 @@ def raw_damage(towers: dict, counts: dict) -> int:
     return sum(towers[k]["sustained_damage"] * n for k, n in counts.items())
 
 
+def branch_output(counts: dict, plan: str) -> tuple[int, dict[str, str]]:
+    """Resolve real tier-five branches instead of a generic branch bonus."""
+    _, definitions = progression()
+    index = 0 if plan == "first_specialization" else 1
+    choices, output = {}, 0.0
+    for kind, count in counts.items():
+        branch = tuple(definitions[kind]["branches"])[index]
+        choices[kind] = branch
+        output += level_stats(definitions[kind], 5, branch)["dps"] * count
+    return int(output * 1000), choices
+
+
 def analyze() -> dict:
     challenge = challenge_fixtures.build_report()
     towers, _, _, _, _ = challenge_fixtures.definitions()
@@ -81,7 +94,11 @@ def analyze() -> dict:
                     spent = sum(towers[k]["cost"] * n for k, n in counts.items())
                     base = raw_damage(towers, counts)
                     for region, region_bp in REGIONS.items():
-                        for branch, branch_bp in BRANCHES.items():
+                        for branch in BRANCH_PLANS:
+                            resolved_base, specializations = branch_output(counts, branch)
+                            # Normalize branch-aware tier-five output to the old
+                            # base proxy's scale while preserving real differences.
+                            branch_bp = max(1, resolved_base * 10_000 // max(1, base * 1000))
                             for ability, ability_bp in ABILITIES.items():
                                 output = base * region_bp * branch_bp * ability_bp // 1_000_000_000_000
                                 # Tactical effects can be reused throughout a five-second
@@ -104,6 +121,7 @@ def analyze() -> dict:
                                 }
                                 passes = sum(value >= required for value in perturbed.values())
                                 candidates.append({"roles": mix, "towers": counts, "upgrade_branch": branch,
+                                                   "specializations": specializations,
                                                    "placement_region": region, "ability_loadout": ability,
                                                    "cost": spent, "margin_bp": (output - required) * 10000 // max(1, required),
                                                    "perturbation_passes": [k for k, v in perturbed.items() if v >= required],
@@ -120,7 +138,7 @@ def analyze() -> dict:
                                    "mean_perturbation_pass_bp": mean,
                                    "worst_family_margin_bp": min((c["margin_bp"] for c in families), default=-10000),
                                    "families": families})
-    source_hash = hashlib.sha256((BANDS.read_bytes() +
+    source_hash = hashlib.sha256((BANDS.read_bytes() + source_fingerprint().encode() +
         (ROOT / "world/tower_defs.lua").read_bytes() +
         (ROOT / "systems/ability_defs.lua").read_bytes() +
         (ROOT / "systems/campaign_wave_defs.lua").read_bytes())).hexdigest()

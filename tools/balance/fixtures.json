@@ -1,259 +1,46 @@
 {
-  "format_version": 1,
+  "format_version": 2,
+  "seed": 731993,
   "scenario_geometry": {
-    "lane_tiles": 12,
-    "tower_tile": "best_legal_central",
     "difficulty": "hard",
     "wave": 1,
-    "specializations": [],
-    "inventory_modules": []
+    "tower_tile": "origin",
+    "inventory_modules": [],
+    "tick_seconds": 0.01
+  },
+  "levels": [2, 4, 5],
+  "layouts": {
+    "straight": {"kind": "polyline", "points": [[-300, 0], [300, 0]], "contact_factor": 1.0},
+    "bend": {"kind": "polyline", "points": [[-300, 0], [0, 0], [0, 300]], "contact_factor": 0.82},
+    "crossing": {"kind": "polyline", "points": [[-300, -110], [180, 110], [-180, 110], [300, -110]], "contact_factor": 1.28},
+    "loop": {"kind": "polyline", "points": [[-280, 0], [-120, 0], [-120, 120], [120, 120], [120, -120], [-120, -120], [-120, 0], [280, 0]], "contact_factor": 1.42},
+    "collinear": {"kind": "formation", "offsets": [[0, 0], [24, 0], [48, 0], [72, 0]], "contact_factor": 1.35},
+    "scattered": {"kind": "formation", "offsets": [[0, 0], [70, 35], [-64, 52], [92, -48]], "contact_factor": 0.66},
+    "radial_impact": {"kind": "formation", "offsets": [[0, 0], [30, 0], [44, 0], [56, 0], [70, 0], [84, 0]], "contact_factor": 1.55}
   },
   "scenarios": [
-    {
-      "id": "single_grunt",
-      "title": "Single Grunt",
-      "subtitle": "control (1 Grunt)",
-      "enemy": "grunt",
-      "count": 1,
-      "spacing_seconds": 0,
-      "results": {
-        "slow": {
-          "base": {
-            "ttk_seconds": 4.4,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 0.9,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "lancer": {
-          "base": {
-            "ttk_seconds": 0.9,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 0.2,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "poison": {
-          "base": {
-            "ttk_seconds": 2.8,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 0.7,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "cannon": {
-          "base": {
-            "ttk_seconds": 1.5,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 0.5,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "shock": {
-          "base": {
-            "ttk_seconds": 2.9,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 0.8,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "plasma": {
-          "base": {
-            "ttk_seconds": 1.8,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 0.6,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        }
-      }
+    {"id": "isolated_grunt", "title": "Isolated Grunt", "layout": "straight", "groups": [{"enemy": "grunt", "count": 1, "spacing_seconds": 0}]},
+    {"id": "isolated_tank", "title": "Isolated Tank", "layout": "bend", "groups": [{"enemy": "tank", "count": 1, "spacing_seconds": 0}]},
+    {"id": "isolated_regenerator", "title": "Isolated Regenerator", "layout": "loop", "groups": [{"enemy": "regenerator", "count": 1, "spacing_seconds": 0}]},
+    {"id": "isolated_warcaller", "title": "Isolated Warcaller", "layout": "crossing", "groups": [{"enemy": "warcaller", "count": 1, "spacing_seconds": 0}]},
+    {"id": "isolated_summoner", "title": "Isolated Summoner", "layout": "bend", "groups": [{"enemy": "summoner", "count": 1, "spacing_seconds": 0}]},
+    {"id": "isolated_boss", "title": "Isolated Boss", "layout": "loop", "groups": [{"enemy": "boss", "count": 1, "spacing_seconds": 0}]},
+    {"id": "packed_runners", "title": "Tightly Packed Runners", "layout": "collinear", "groups": [{"enemy": "runner", "count": 16, "spacing_seconds": 0.32}]},
+    {"id": "ordinary_grunts", "title": "Ordinary Grunts", "layout": "radial_impact", "groups": [{"enemy": "grunt", "count": 12, "spacing_seconds": 0.55}]},
+    {"id": "mixed_tank_grunt", "title": "Mixed Tank and Grunts", "layout": "scattered", "groups": [{"enemy": "tank", "count": 3, "spacing_seconds": 0.8}, {"enemy": "grunt", "count": 6, "spacing_seconds": 0.4}]},
+    {"id": "warcaller_supported", "title": "Warcaller-supported Enemies", "layout": "crossing", "support": {"enemy": "warcaller", "speed_multiplier": 1.12}, "groups": [{"enemy": "warcaller", "count": 1, "spacing_seconds": 0}, {"enemy": "grunt", "count": 7, "spacing_seconds": 0.35}]},
+    {"id": "summoner_spawned_runners", "title": "Summoner with Spawned Runners", "layout": "radial_impact", "spawns": {"parent": "summoner", "enemy": "runner", "count": 8, "generation": 1}, "groups": [{"enemy": "summoner", "count": 1, "spacing_seconds": 0}, {"enemy": "runner", "count": 8, "spacing_seconds": 0.3, "generation": 1}]}
+  ],
+  "reviewed_acceptance_bands": {
+    "branch_role_margins": {
+      "slow": {"isolated_min_ratio": 1.20, "crowd_min_ratio": 1.30},
+      "lancer": {"isolated_min_ratio": 1.10, "crowd_min_ratio": 1.35},
+      "poison": {"isolated_min_ratio": 1.25, "crowd_min_ratio": 1.30},
+      "cannon": {"isolated_min_ratio": 1.30, "crowd_min_ratio": 1.00},
+      "shock": {"isolated_min_ratio": 1.15, "crowd_min_ratio": 1.30},
+      "plasma": {"straight_min_ratio": 1.15, "bend_crossing_min_ratio": 1.20}
     },
-    {
-      "id": "packed_grunts",
-      "title": "Packed Grunts",
-      "subtitle": "splash/coverage (16 Grunts, 0.32s spacing)",
-      "enemy": "grunt",
-      "count": 16,
-      "spacing_seconds": 0.32,
-      "results": {
-        "slow": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 9,
-            "coverage": 0.62
-          },
-          "maximum": {
-            "ttk_seconds": 8.9,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "lancer": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 5,
-            "coverage": 0.75
-          },
-          "maximum": {
-            "ttk_seconds": 6.8,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "poison": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 6,
-            "coverage": 0.69
-          },
-          "maximum": {
-            "ttk_seconds": 7.1,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "cannon": {
-          "base": {
-            "ttk_seconds": 7.0,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 5.4,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "shock": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 2,
-            "coverage": 0.94
-          },
-          "maximum": {
-            "ttk_seconds": 6.1,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "plasma": {
-          "base": {
-            "ttk_seconds": 6.3,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 4.8,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        }
-      }
-    },
-    {
-      "id": "regenerator",
-      "title": "Regenerator",
-      "subtitle": "attrition (4 Regenerators, 0.9s spacing)",
-      "enemy": "regenerator",
-      "count": 4,
-      "spacing_seconds": 0.9,
-      "results": {
-        "slow": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 3,
-            "coverage": 0.5
-          },
-          "maximum": {
-            "ttk_seconds": 10.4,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "lancer": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 1,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 7.4,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "poison": {
-          "base": {
-            "ttk_seconds": 9.6,
-            "leaks": 0,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 5.1,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "cannon": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 1,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 6.9,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "shock": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 2,
-            "coverage": 0.75
-          },
-          "maximum": {
-            "ttk_seconds": 9.1,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        },
-        "plasma": {
-          "base": {
-            "ttk_seconds": null,
-            "leaks": 1,
-            "coverage": 1.0
-          },
-          "maximum": {
-            "ttk_seconds": 6.6,
-            "leaks": 0,
-            "coverage": 1.0
-          }
-        }
-      }
-    }
-  ]
+    "equal_money": {"minimum_ratio": 0.24, "maximum_ratio": 1.85},
+    "universal_dominance": {"maximum_winning_context_fraction": 0.90, "maximum_dominated_opponents": 0}
+  }
 }

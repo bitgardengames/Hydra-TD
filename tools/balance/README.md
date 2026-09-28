@@ -2,8 +2,20 @@
 
 The runner is dependency-free and deterministic. It uses a fixed `0.01` second
 simulation tick and seed, reads the shipped Lua definitions, and emits stable
-JSON (including damage and kills) to stdout. Combat role and upgrade-timing
-acceptance is anchored to Hard difficulty, where the intended challenge lives.
+JSON for every specialization at paid tiers 2, 4, and 5. Each row identifies
+its tower, specialization, paid tier, total purchase cost, geometry, combat
+outcomes, target/contact counts, status uptime, and branch-specific counters.
+Combat role and upgrade-timing acceptance is anchored to Hard difficulty, where
+the intended challenge lives.
+
+`fixtures.json` is the authored schema: scenarios describe enemy groups and
+spawn generations, while layouts describe route points or formation offsets.
+The seven reviewed layouts are straight, bend, crossing, loop, collinear,
+scattered, and radial impact. `reviewed_acceptance_bands` records intentional
+role margins, equal-money bounds, and universal-dominance limits. These are
+review bands—not exact-DPS equality assertions. The emitted comparison rows
+cover opposite branches and one maximum tower versus the equal-money number of
+level-2 towers.
 
 The tick is read from `core/simulation_clock.lua`, the same source used by the
 runtime. The gate also drives a tick-authored encounter at 30, 60, and 144
