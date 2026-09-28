@@ -303,18 +303,32 @@ return {
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
-				power = {tiers = {
-					[2] = {dmgMult = 1.2875, fireMult = 1.0625, rangeAdd = 0.09 * Constants.TILE},
-					[3] = {dmgMult = 1.575, fireMult = 1.125, rangeAdd = 0.18 * Constants.TILE},
-					[4] = {dmgMult = 1.8625, fireMult = 1.1875, rangeAdd = 0.27 * Constants.TILE},
-					[5] = {dmgMult = 2.15, fireMult = 1.25, rangeAdd = 0.36 * Constants.TILE},
-				}},
-				tempo = {tiers = {
-					[2] = {dmgMult = 1.2875, fireMult = 1.0625, rangeAdd = 0.09 * Constants.TILE},
-					[3] = {dmgMult = 1.575, fireMult = 1.125, rangeAdd = 0.18 * Constants.TILE},
-					[4] = {dmgMult = 1.8625, fireMult = 1.1875, rangeAdd = 0.27 * Constants.TILE},
-					[5] = {dmgMult = 2.15, fireMult = 1.25, rangeAdd = 0.36 * Constants.TILE},
-				}},
+				accelerator = {
+					fireProfile = {
+						{id = "move_linear", data = {dist = 390}},
+						{id = "tick_damage", data = {radius = 14, rate = 0.14}},
+						{id = "draw_plasma"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.35, fireMult = 1.05, rangeAdd = 0.09 * Constants.TILE, projSpeed = 140, travelDistance = 390, tickRadius = 14, tickRate = 0.14},
+						[3] = {dmgMult = 1.65, fireMult = 1.10, rangeAdd = 0.18 * Constants.TILE, projSpeed = 155, travelDistance = 450, tickRadius = 14, tickRate = 0.14},
+						[4] = {dmgMult = 2.05, fireMult = 1.15, rangeAdd = 0.27 * Constants.TILE, projSpeed = 175, travelDistance = 520, tickRadius = 13, tickRate = 0.14},
+						[5] = {dmgMult = 2.55, fireMult = 1.20, rangeAdd = 0.36 * Constants.TILE, projSpeed = 200, travelDistance = 600, tickRadius = 12, tickRate = 0.14},
+					},
+				},
+				overcharged = {
+					fireProfile = {
+						{id = "move_linear", data = {dist = 340}},
+						{id = "tick_damage", data = {radius = 20, rate = 0.13}},
+						{id = "draw_plasma"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.18, fireMult = 1.06, rangeAdd = 0.09 * Constants.TILE, projSpeed = 112, travelDistance = 340, tickRadius = 20, tickRate = 0.13},
+						[3] = {dmgMult = 1.40, fireMult = 1.13, rangeAdd = 0.18 * Constants.TILE, projSpeed = 106, travelDistance = 350, tickRadius = 24, tickRate = 0.12},
+						[4] = {dmgMult = 1.68, fireMult = 1.20, rangeAdd = 0.27 * Constants.TILE, projSpeed = 100, travelDistance = 360, tickRadius = 28, tickRate = 0.11},
+						[5] = {dmgMult = 2.00, fireMult = 1.28, rangeAdd = 0.36 * Constants.TILE, projSpeed = 94, travelDistance = 370, tickRadius = 32, tickRate = 0.10},
+					},
+				},
 			},
 		},
 		behaviors = {

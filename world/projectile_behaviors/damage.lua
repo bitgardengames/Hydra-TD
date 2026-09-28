@@ -513,10 +513,16 @@ B.tick_damage = {
 		p.allowRepeatHits = true
 		p._tickStates = p._tickStates or {}
 		local key = data or "__default_tick"
+		local radius = (data and data.radius) or p.hitRadius or 12
+		p.hitRadius = radius
+		p.hitRadius2 = radius * radius
+		-- Plasma's authored 16 px tick radius is the visual baseline. Keeping the
+		-- same ratio makes branch size communicate its actual collision footprint.
+		p.visualScale = radius / 16
 		p._tickStates[key] = {
 			timer = 0,
-			rate = data.rate or 0.5,
-			radius = data.radius or p.hitRadius or 12
+			rate = (data and data.rate) or 0.5,
+			radius = radius
 		}
 	end,
 
@@ -542,7 +548,7 @@ B.tick_damage = {
 			return
 		end
 
-		local radius = data.radius or t.radius or p.hitRadius or 12
+		local radius = (data and data.radius) or t.radius or p.hitRadius or 12
 		radiusVisitContext.p, radiusVisitContext.op = p, "tick"
 		radiusVisitContext.data = data
 		Spatial.visitRadius(p.x, p.y, radius, radiusVisitor, radiusVisitContext,
