@@ -103,7 +103,10 @@ local function rebuildLayout()
 	local gap = Util.clamp(sw * 0.022, 18, 30)
 	local cardW = Util.clamp((sw - 180 - gap * (count - 1)) / max(count, 1), 232, 300)
 	local specialization = State.modulePicker.mode == "specialization"
-	local cardH = specialization and Util.clamp(sh * 0.50, 300, 360) or Util.clamp(sh * 0.40, 224, 264)
+	-- Specializations only need enough room to explain the branch's identity.
+	-- Keeping these cards short makes the choice easier to scan than the old
+	-- seven-row stat comparison.
+	local cardH = specialization and Util.clamp(sh * 0.30, 200, 228) or Util.clamp(sh * 0.40, 224, 264)
 	local totalW = count * cardW + (count - 1) * gap
 	local startX = (sw - totalW) * 0.5
 	local y = sh * 0.5 - cardH * 0.24
@@ -240,12 +243,10 @@ function ModulePicker.openSpecialization(tower)
 	if not branches then return false end
 	local choices = {}
 	for branchId in pairs(branches) do
-		local preview = Towers.getUpgradePreview(tower, branchId)
-		if preview then
+		if Towers.getUpgradePreview(tower, branchId) then
 			choices[#choices + 1] = {
 				branchId = branchId,
 				target = tower.kind,
-				preview = preview,
 			}
 		end
 	end
@@ -448,21 +449,17 @@ function ModulePicker.draw()
 			local choiceDesc = specialization and L("branch." .. choice.branchId .. ".desc") or getModuleDesc(mod)
 			lg.printf(choiceDesc, drawX + 18, bodyY + 56, drawW - 36, "left")
 
-			if specialization then
-				local rowY = bodyY + 104
-				for rowIndex = 1, math.min(#(choice.preview.rows or {}), 7) do
-					local row = choice.preview.rows[rowIndex]
-					lg.setColor(1, 1, 1, 0.72 * alpha)
-					lg.printf(L(row.labelKey), drawX + 18, rowY, drawW * 0.48, "left")
-					lg.setColor(Theme.ui.good)
-					lg.printf(row.current .. "  →  " .. row.next, drawX + drawW * 0.45, rowY, drawW * 0.48 - 18, "right")
-					rowY = rowY + 18
-				end
-			end
-
 			if choice.statusText then
 				lg.setColor(choice.disabled and 1 or towerColor[1], choice.disabled and 0.5 or towerColor[2], choice.disabled and 0.35 or towerColor[3], 0.86 * alpha)
 				lg.printf(choice.statusText, drawX + 18, drawY + drawH - 54, drawW - 36, "left")
+			end
+
+			if specialization then
+				local pulse = hovered and (0.5 + 0.5 * math.sin(now * 8 + i)) or 0
+				lg.setColor(1, 1, 1, (0.56 + hoverT * 0.16 + pulse * 0.08) * alpha)
+				Fonts.set("ui")
+				lg.printf(L("modulePicker.specializeCta", Towers.getUpgradeCost(picker.tower) or 0),
+					drawX + 18, drawY + drawH - 32, drawW - 36, "right")
 			end
 
 			if hovered then
@@ -470,13 +467,14 @@ function ModulePicker.draw()
 				lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.14 + 0.08 * pulse) * alpha)
 				lg.rectangle("line", drawX - 2, drawY - 2, drawW + 4, drawH + 4, innerRadius + 2, innerRadius + 2)
 
-				local ctaKey = modeCtas[picker.mode]
-				local cta = choice.disabled and (choice.statusText or "Unavailable")
-					or (ctaKey and L(ctaKey) or "Click to Claim")
-				if specialization then cta = L("modulePicker.specializeCta", Towers.getUpgradeCost(picker.tower) or 0) end
-				lg.setColor(1, 1, 1, (0.72 + 0.20 * pulse) * alpha)
-				Fonts.set("ui")
-				lg.printf(cta, drawX + 18, drawY + drawH - 30, drawW - 36, "right")
+				if not specialization then
+					local ctaKey = modeCtas[picker.mode]
+					local cta = choice.disabled and (choice.statusText or "Unavailable")
+						or (ctaKey and L(ctaKey) or "Click to Claim")
+					lg.setColor(1, 1, 1, (0.72 + 0.20 * pulse) * alpha)
+					Fonts.set("ui")
+					lg.printf(cta, drawX + 18, drawY + drawH - 30, drawW - 36, "right")
+				end
 			end
 		end
 	end
