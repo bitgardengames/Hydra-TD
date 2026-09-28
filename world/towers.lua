@@ -449,6 +449,9 @@ local function upgradeTower(t, specialization)
 
 	if currentLevel == 1 then
 		t.specialization = specialization
+		RunStats.recordSpecialization(t, specialization, cost)
+	else
+		RunStats.recordInvestment(t, cost)
 	end
 	t.level = t.level + 1
 	t.prevHeight = t.height
@@ -528,8 +531,8 @@ local function numberText(value, decimals, suffix)
 	return format("%." .. decimals .. "f%s", value, suffix or "")
 end
 
-local function addPreviewRow(rows, key, current, nextValue, direction)
-	if current ~= nextValue then
+local function addPreviewRow(rows, key, current, nextValue, direction, always)
+	if always or current ~= nextValue then
 		rows[#rows + 1] = {
 			key = key,
 			labelKey = "upgradePreview." .. key,
@@ -576,6 +579,29 @@ local function addBehaviorRows(rows, before, after)
 	end
 end
 
+local function addTierMechanicRows(rows, currentTier, nextTier, branch)
+	local mechanics = {
+		{"fieldRadius", "fieldRadius", 0, " px"}, {"fieldLifetime", "fieldLifetime", 1, "s"},
+		{"spreadRadius", "spreadRadius", 0, " px"}, {"transferFraction", "transferFraction", 0, "%", 100},
+		{"recipients", "recipientCap", 0}, {"chainRadius", "chainRadius", 0, " px"},
+		{"chainRetention", "chainFalloff", 0, "%", 100}, {"capacitorThreshold", "capacitorThreshold", 0},
+		{"dischargeDamage", "dischargeMult", 0, "%", 100}, {"projectileSpeed", "projSpeed", 0, " px/s"},
+		{"travelDistance", "travelDistance", 0, " px"}, {"tickRadius", "tickRadius", 0, " px"},
+	}
+	if branch and branch.targetingPolicy then
+		addPreviewRow(rows, "targeting", "—", L("upgradePreview.targetingDurable"), "good")
+	end
+	for i = 1, #mechanics do
+		local item = mechanics[i]
+		local before, after = currentTier and currentTier[item[2]], nextTier and nextTier[item[2]]
+		if after and before ~= after then
+			local mult = item[5] or 1
+			addPreviewRow(rows, item[1], before and numberText(before * mult, item[3], item[4]) or "—",
+				numberText(after * mult, item[3], item[4]), "good")
+		end
+	end
+end
+
 getUpgradePreview = function(t, specialization)
 	if not t or not t.def then
 		return nil
@@ -587,7 +613,7 @@ getUpgradePreview = function(t, specialization)
 	if level == 1 and not specialization then
 		return nil
 	end
-	currentClone.specialization = currentClone.specialization or specialization
+	if level > 1 then currentClone.specialization = currentClone.specialization or specialization end
 	nextClone.specialization = nextClone.specialization or specialization
 	local currentStats = previewTowerStats(currentClone, level, specialization)
 	local nextStats = previewTowerStats(nextClone, nextLevel, specialization)
@@ -601,10 +627,16 @@ getUpgradePreview = function(t, specialization)
 	currentStats.mechanics = currentBehaviors
 	nextStats.directDamage = nextDamage
 	nextStats.mechanics = nextBehaviors
-	addPreviewRow(rows, "damage", numberText(currentDamage, 1), numberText(nextDamage, 1), nextDamage > currentDamage and "good" or "bad")
-	addPreviewRow(rows, "fireRate", tostring(TowerStatDisplay.attackSpeed(currentStats.fireRate)), tostring(TowerStatDisplay.attackSpeed(nextStats.fireRate)), nextStats.fireRate > currentStats.fireRate and "good" or "bad")
-	addPreviewRow(rows, "range", tostring(TowerStatDisplay.range(currentStats.range)), tostring(TowerStatDisplay.range(nextStats.range)), nextStats.range > currentStats.range and "good" or "bad")
+	addPreviewRow(rows, "damage", numberText(currentDamage, 1), numberText(nextDamage, 1), nextDamage > currentDamage and "good" or "bad", true)
+	addPreviewRow(rows, "fireRate", tostring(TowerStatDisplay.attackSpeed(currentStats.fireRate)), tostring(TowerStatDisplay.attackSpeed(nextStats.fireRate)), nextStats.fireRate > currentStats.fireRate and "good" or "bad", true)
+	addPreviewRow(rows, "range", tostring(TowerStatDisplay.range(currentStats.range)), tostring(TowerStatDisplay.range(nextStats.range)), nextStats.range > currentStats.range and "good" or "bad", true)
 	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
+	local upgrade = t.def.upgrade or {}
+	local branchId = t.specialization or specialization
+	local branch = branchId and upgrade.branches and upgrade.branches[branchId]
+	local currentTier = level > 1 and branch and branch.tiers[level] or nil
+	local nextTier = branch and branch.tiers[nextLevel]
+	addTierMechanicRows(rows, currentTier, nextTier, branch)
 
 	return {
 		nextLevel = nextLevel,

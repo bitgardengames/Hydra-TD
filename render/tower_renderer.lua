@@ -26,6 +26,43 @@ local highlightScale = Theme.lighting.highlightScale
 
 local UPGRADE_FLASH_DURATION = 0.3
 
+local branchColors = {
+	marksman = {1.00, 0.84, 0.35}, rupture = {1.00, 0.46, 0.36},
+	deep_freeze = {0.76, 0.96, 1.00}, cold_field = {0.38, 0.78, 1.00},
+	virulent = {0.78, 1.00, 0.30}, contagion = {0.30, 0.92, 0.62},
+	forked_lightning = {0.72, 0.90, 1.00}, capacitor = {1.00, 0.88, 0.28},
+	siege = {1.00, 0.58, 0.28}, bombardment = {1.00, 0.78, 0.38},
+	accelerator = {0.72, 0.58, 1.00}, overcharged = {1.00, 0.42, 0.92},
+}
+
+local function drawBranchAccent(t, x, y)
+	local branch = t.specialization
+	local color = branch and branchColors[branch]
+	if not color then return end
+	local clock = love.timer.getTime()
+	local fast = branch == "capacitor" or branch == "overcharged"
+	local pulse = 1 + sin(clock * (fast and 7 or 3) + (t.runStatsId or 0)) * 0.10
+	local radius = 4.2 * pulse
+	lg.setColor(outR, outG, outB, 0.95)
+	if branch == "rupture" or branch == "forked_lightning" or branch == "bombardment" or branch == "cold_field" or branch == "contagion" or branch == "overcharged" then
+		lg.setLineWidth(2.5)
+		lg.line(x - radius, y, x, y - radius, x + radius, y)
+		lg.line(x, y - radius, x, y + radius)
+		lg.setLineWidth(1)
+	else
+		lg.circle("fill", x, y, radius + 1.5)
+	end
+	lg.setColor(color[1], color[2], color[3], 1)
+	if branch == "rupture" or branch == "forked_lightning" or branch == "bombardment" or branch == "cold_field" or branch == "contagion" or branch == "overcharged" then
+		lg.setLineWidth(1.5)
+		lg.line(x - radius, y, x, y - radius, x + radius, y)
+		lg.line(x, y - radius, x, y + radius)
+		lg.setLineWidth(1)
+	else
+		lg.circle("fill", x, y, radius)
+	end
+end
+
 local function getBarrelTip(t, localTipX)
 	-- apply recoil in local barrel space
 	local localX = (localTipX or 0) - (t.recoil or 0)
@@ -555,6 +592,7 @@ local function drawTowerInstance(t, cx, renderY, index)
 	drawTowerBase(t.kind, cx, renderY, 1, darkMul, darkMul, darkMul)
 	drawTowerBaseHighlight(t.kind, cx, renderY, 1)
 	drawTowerCore(t.kind, headX, headY, headAngle, t.recoil, 1, 1, 1, 1, 0)
+	drawBranchAccent(t, cx, renderY + size * 0.45)
 end
 
 local function drawTowerUpgradeFlash(t, cx, renderY)

@@ -740,7 +740,7 @@ function Save.recordTowerUpgrade(kind)
 	Save.markDirty()
 end
 
-function Save.recordTowerRun(kind, damage, kills)
+function Save.recordTowerRun(kind, damage, kills, bossDamage, investment)
 	local history = towerHistory(kind)
 
 	if not history then
@@ -751,7 +751,31 @@ function Save.recordTowerRun(kind, damage, kills)
 	history.damage = (history.damage or 0) + damage
 	history.kills = (history.kills or 0) + kills
 	history.bestRunDamage = math.max(history.bestRunDamage or 0, damage)
+	history.bossDamage = (history.bossDamage or 0) + math.max(0, bossDamage or 0)
+	history.investment = (history.investment or 0) + math.max(0, investment or 0)
 	
+	Save.markDirty()
+end
+
+-- Branch records intentionally live below the original base-kind object. This
+-- preserves every legacy key and lets old saves/UI continue reading flat totals.
+function Save.recordTowerBranchRun(kind, branch, totals)
+	local history = towerHistory(kind)
+	if not history or type(branch) ~= "string" then return end
+	history.branches = type(history.branches) == "table" and history.branches or {}
+	local entry = history.branches[branch]
+	if type(entry) ~= "table" then
+		entry = {placements = 0, investment = 0, damage = 0, bossDamage = 0, kills = 0, bestRunDamage = 0}
+		history.branches[branch] = entry
+	end
+	totals = totals or {}
+	local damage = math.max(0, totals.damage or 0)
+	entry.placements = (entry.placements or 0) + math.max(0, totals.placements or 0)
+	entry.investment = (entry.investment or 0) + math.max(0, totals.investment or 0)
+	entry.damage = (entry.damage or 0) + damage
+	entry.bossDamage = (entry.bossDamage or 0) + math.max(0, totals.bossDamage or 0)
+	entry.kills = (entry.kills or 0) + math.max(0, totals.kills or 0)
+	entry.bestRunDamage = math.max(entry.bestRunDamage or 0, damage)
 	Save.markDirty()
 end
 

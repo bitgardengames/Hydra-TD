@@ -358,7 +358,7 @@ local function resolveDamage(p, evt)
 	end
 
 	State.addDamage(p.sourceKind, effectiveDamage, e.boss == true)
-	RunStats.recordDamage(t, effectiveDamage)
+	RunStats.recordDamage(t, effectiveDamage, e.boss == true)
 	if effectiveDamage > 0 and (not Save.data or Save.data.settings.showDamageNumbers ~= false) then
 		Floaters.add(e.x, e.y - (e.radius or 10), tostring(math.floor(effectiveDamage + 0.5)), 1, 0.82, 0.45)
 	end
@@ -384,7 +384,7 @@ local function resolveDamage(p, evt)
 			if dischargeDamage > 0 then
 				t.damageDealt = (t.damageDealt or 0) + dischargeDamage
 				State.addDamage(p.sourceKind, dischargeDamage, e.boss == true)
-				RunStats.recordDamage(t, dischargeDamage)
+				RunStats.recordDamage(t, dischargeDamage, e.boss == true)
 				if not Save.data or Save.data.settings.showDamageNumbers ~= false then
 					Floaters.add(e.x, e.y - (e.radius or 10), tostring(math.floor(dischargeDamage + 0.5)), 0.72, 0.94, 1)
 				end

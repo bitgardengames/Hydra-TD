@@ -263,6 +263,13 @@ end
 -- visual stuff
 local function getProjectileColor(p, fallback)
 	local t = p.sourceTower
+	local branchColors = {
+		marksman={1,0.84,0.35}, rupture={1,0.46,0.36}, deep_freeze={0.76,0.96,1}, cold_field={0.38,0.78,1},
+		virulent={0.78,1,0.3}, contagion={0.3,0.92,0.62}, forked_lightning={0.72,0.9,1}, capacitor={1,0.88,0.28},
+		siege={1,0.58,0.28}, bombardment={1,0.78,0.38}, accelerator={0.72,0.58,1}, overcharged={1,0.42,0.92},
+	}
+	local branchColor = t and branchColors[t.specialization]
+	if branchColor then return branchColor[1], branchColor[2], branchColor[3] end
 	local c = t and t.color
 
 	if c then

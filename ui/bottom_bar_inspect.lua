@@ -106,7 +106,11 @@ inspectButtons = {
 
 			-- Only upgrade if affordable
 			if upgradeCost and State.money >= upgradeCost then
-				ModulePicker.openTowerUpgrade(t)
+				if (t.level or 1) == 1 then
+					ModulePicker.openSpecialization(t)
+				else
+					ModulePicker.openTowerUpgrade(t)
+				end
 			else
 				showUpgradeFailure(t, upgradeCost and "floater.needMoney" or "floater.maxLevel")
 			end
@@ -231,7 +235,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 		local t = State.selectedTower
 
 		-- Title
-		Text.printShadow(L("inspect.towerTitle", L(t.def.nameKey), t.level), titleX, titleY)
+		Text.printShadow(L.towerTitle(t), titleX, titleY)
 
 		Text.printShadow(L("inspect.damage", formatInt(t.damageDealt)), bodyX, bodyY)
 
@@ -323,7 +327,8 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 
 			local ty = fy + (bh - textH) * 0.5
 			local action = btn.id
-			local baseLabel = L("actions." .. action)
+			local labelKey = action == "upgrade" and (t.level == 1 and "actions.specialize" or "actions.upgrade") or ("actions." .. action)
+			local baseLabel = L(labelKey)
 
 			local nameX = bx + PAD
 
@@ -345,7 +350,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 			end
 
 			-- Upgrade tooltip
-			if hovered and btn.id == "upgrade" and upgradeCost then
+			if hovered and btn.id == "upgrade" and upgradeCost and t.level > 1 then
 				local preview = Towers.getUpgradePreview(t)
 				local rows = {}
 				-- Preview rows are already fully derived by Towers from tower, branch,

@@ -429,6 +429,25 @@ return {
 		applyCta = "Click to Apply",
 		noSpec = "No experimental module selected.",
 		currentSpec = "Experimental module: %s",
+		specializeTitle = "Specialize %s",
+		specializeSubtitle = "Choose a permanent combat branch",
+		specializeHint = "Press 1 or 2 • Click a card",
+		specializeCta = "Specialize — $%d",
+	},
+
+	branch = {
+		marksman = {name = "Marksman", desc = "Heavy precision shots prioritize durable targets."},
+		rupture = {name = "Rupture", desc = "Piercing bolts pass through multiple enemies."},
+		deep_freeze = {name = "Deep Freeze", desc = "Stronger, longer slows lock down priority targets."},
+		cold_field = {name = "Cold Field", desc = "Impacts leave a persistent slowing field."},
+		virulent = {name = "Virulent", desc = "Potent poison builds more damaging stacks."},
+		contagion = {name = "Contagion", desc = "Poison spreads to enemies near the victim."},
+		forked_lightning = {name = "Forked Lightning", desc = "Lightning reaches a larger chain of targets."},
+		capacitor = {name = "Capacitor", desc = "Stored charge periodically discharges into a target."},
+		siege = {name = "Siege", desc = "Dense shells deliver exceptional impact damage."},
+		bombardment = {name = "Bombardment", desc = "Wide blasts cover larger enemy groups."},
+		accelerator = {name = "Accelerator", desc = "Fast plasma travels farther in a narrow lane."},
+		overcharged = {name = "Overcharged", desc = "Growing plasma burns a broad path through enemies."},
 	},
 
 	upgradePreview = {
@@ -445,6 +464,20 @@ return {
 		chains = "Chains",
 		impactFragments = "Impact fragments",
 		pierce = "Pierce hits",
+		targeting = "Targeting",
+		targetingDurable = "Durable priority",
+		fieldRadius = "Field radius",
+		fieldLifetime = "Field lifetime",
+		spreadRadius = "Spread radius",
+		transferFraction = "Stacks transferred",
+		recipients = "Spread targets",
+		chainRadius = "Chain radius",
+		chainRetention = "Chain retention",
+		capacitorThreshold = "Charge threshold",
+		dischargeDamage = "Discharge damage",
+		projectileSpeed = "Projectile speed",
+		travelDistance = "Travel distance",
+		tickRadius = "Damage radius",
 	},
 
 	enemy = {
@@ -495,7 +528,8 @@ return {
 	},
 
 	inspect = {
-		towerTitle = "%s level %d",
+		towerTitle = "%s — Lv %d",
+		specializedTowerTitle = "%s %s — Lv %d",
 		upgradeTitle = "Upgrade to level %d",
 		damage = "Damage: %s",
 		kills = "Kills: %d",
@@ -512,6 +546,7 @@ return {
 
 	actions = {
 		upgrade = "Upgrade",
+		specialize = "Specialize",
 		sell = "Sell",
 		codex = "Codex",
 	},
