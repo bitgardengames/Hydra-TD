@@ -15,7 +15,8 @@ class PoisonBranchBenchmarkTest(unittest.TestCase):
 
     def test_runtime_tiers_and_recipient_caps_match(self):
         source = (ROOT / "world/tower_defs.lua").read_text()
-        self.assertIn("virulent = {tiers", source)
+        self.assertIn("virulent = {", source)
+        self.assertIn('id = "virulent"', source)
         self.assertIn("contagion = {", source)
         for level, (_, _, _, radius, fraction, cap) in CONTAGION.items():
             needle = (f"spreadRadius = {radius}, transferFraction = {fraction:.2f}, "

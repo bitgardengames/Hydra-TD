@@ -4,7 +4,7 @@ local Theme = require("core.theme")
 -- Costs, output, and upgrade curves below are the checked-in simulated baseline.
 -- Keep role tradeoffs intact and regenerate the balance fixtures after tuning.
 
-return {
+local definitions = {
 	-- Role: control and runner/boss support. Low damage and modest scaling keep
 	-- it from replacing damage towers, while long reach and growing slow uptime
 	-- make it a force multiplier against fast enemies and durable targets.
@@ -25,6 +25,7 @@ return {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0, slowDurAdd = 0},
 			branches = {
 				deep_freeze = {
+					id = "deep_freeze",
 					fireProfile = {
 						{id = "move_homing"},
 						{id = "hit_damage"},
@@ -39,6 +40,7 @@ return {
 					},
 				},
 				cold_field = {
+					id = "cold_field",
 					fireProfile = {
 						{id = "move_homing"},
 						{id = "hit_damage"},
@@ -84,6 +86,7 @@ return {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
 				marksman = {
+					id = "marksman",
 					targetingPolicy = "durable_priority",
 					tiers = {
 						[2] = {dmgMult = 1.55, fireMult = 1.00, rangeAdd = 0.12 * Constants.TILE},
@@ -93,6 +96,7 @@ return {
 					},
 				},
 				rupture = {
+					id = "rupture",
 					fireProfile = {
 						{id = "move_linear"},
 						{id = "hit_circle", data = {radius = 12}},
@@ -138,13 +142,17 @@ return {
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
-				virulent = {tiers = {
+				virulent = {
+					id = "virulent",
+					tiers = {
 					[2] = {dmgMult = 1.25, fireMult = 1.05, rangeAdd = 0.09 * Constants.TILE, poisonDPS = 6.0, poisonDuration = 5.0, poisonStackCap = 10, spreadRadius = 0, transferFraction = 0, recipientCap = 0},
 					[3] = {dmgMult = 1.50, fireMult = 1.10, rangeAdd = 0.18 * Constants.TILE, poisonDPS = 7.0, poisonDuration = 5.5, poisonStackCap = 12, spreadRadius = 0, transferFraction = 0, recipientCap = 0},
 					[4] = {dmgMult = 1.75, fireMult = 1.15, rangeAdd = 0.27 * Constants.TILE, poisonDPS = 8.5, poisonDuration = 6.0, poisonStackCap = 14, spreadRadius = 0, transferFraction = 0, recipientCap = 0},
 					[5] = {dmgMult = 2.00, fireMult = 1.20, rangeAdd = 0.36 * Constants.TILE, poisonDPS = 10.0, poisonDuration = 6.5, poisonStackCap = 16, spreadRadius = 0, transferFraction = 0, recipientCap = 0},
-				}},
+					},
+				},
 				contagion = {
+					id = "contagion",
 					fireProfile = {
 						{id = "move_homing"},
 						{id = "hit_circle", data = {radius = 12}},
@@ -195,6 +203,7 @@ return {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
 				siege = {
+					id = "siege",
 					fireProfile = {
 						{id = "move_to_target_point"},
 						{id = "aoe_damage", data = {radius = 50, falloff = 0.68}},
@@ -208,6 +217,7 @@ return {
 					},
 				},
 				bombardment = {
+					id = "bombardment",
 					fireProfile = {
 						{id = "move_to_target_point"},
 						{id = "aoe_damage", data = {radius = 64, falloff = 0.72}},
@@ -247,6 +257,7 @@ return {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
 				capacitor = {
+					id = "capacitor",
 					fireProfile = {
 						{id = "capacitor", data = {threshold = 4, dischargeMult = 1.0}},
 						{id = "emit_on_target"},
@@ -263,6 +274,7 @@ return {
 					},
 				},
 				forked_lightning = {
+					id = "forked_lightning",
 					fireProfile = {
 						{id = "emit_on_target"},
 						{id = "hit_chain", data = {jumps = 5, radius = 70, falloff = 0.88}},
@@ -304,6 +316,7 @@ return {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
 				accelerator = {
+					id = "accelerator",
 					fireProfile = {
 						{id = "move_linear", data = {dist = 390}},
 						{id = "tick_damage", data = {radius = 14, rate = 0.14}},
@@ -317,6 +330,7 @@ return {
 					},
 				},
 				overcharged = {
+					id = "overcharged",
 					fireProfile = {
 						{id = "move_linear", data = {dist = 340}},
 						{id = "tick_damage", data = {radius = 20, rate = 0.13}},
@@ -338,3 +352,6 @@ return {
 		}
 	},
 }
+
+require("systems.branch_tier_resolver").validate(definitions)
+return definitions

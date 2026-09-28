@@ -21,13 +21,13 @@ class CannonBranchBenchmarkTest(unittest.TestCase):
         self.assertNotIn('{id = "hit_damage"}', cannon)
         for level in (2, 3, 4, 5):
             self.assertIn(f"[{level}] = {{", cannon)
-        modules = (ROOT / "systems/modules.lua").read_text()
-        self.assertIn("if splashRadius then data.radius = splashRadius", modules)
-        self.assertIn("if splashFalloff then data.falloff = splashFalloff", modules)
+        resolver = (ROOT / "systems/branch_tier_resolver.lua").read_text()
+        self.assertIn("if tier.splashRadius then data.radius = tier.splashRadius", resolver)
+        self.assertIn("if tier.splashFalloff then data.falloff = tier.splashFalloff", resolver)
 
     def test_projectile_speed_is_part_of_splash_lead_prediction(self):
         towers = (ROOT / "world/towers.lua").read_text()
-        self.assertIn("t.projSpeed = tier.projSpeed or def.projSpeed", towers)
+        self.assertIn("t.projSpeed = resolved.stats.projSpeed", towers)
         self.assertIn("(t.def.projSpeed or t.projSpeed) / max(1, t.projSpeed or 1)",
                       towers)
 

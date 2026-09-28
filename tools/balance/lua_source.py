@@ -66,6 +66,11 @@ def table_body(text: str, declaration: str, source_path: str | Path) -> str:
         pattern = (r"(?:^|\n)\s*(?:local\s+)?" + re.escape(declaration)
                    + r"\s*(?:=\s*)?\{")
     match = re.search(pattern, text)
+    # Tower definitions are validated before export, so their root table has a
+    # name and the final return references it. Treat that form identically.
+    if not match and declaration == "return":
+        pattern = r"(?:^|\n)\s*local\s+definitions\s*=\s*\{"
+        match = re.search(pattern, text)
     if not match:
         raise ValueError(
             f"missing Lua table declaration {declaration!r} in {_where(source_path)}"

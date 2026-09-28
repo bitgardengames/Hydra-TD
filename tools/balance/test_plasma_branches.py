@@ -21,12 +21,12 @@ class PlasmaBranchBenchmarkTest(unittest.TestCase):
             self.assertNotIn(forbidden, plasma)
 
     def test_selected_tier_scales_projectile_geometry(self):
-        modules = (ROOT / "systems/modules.lua").read_text()
-        self.assertIn("if travelDistance then data.dist = travelDistance end", modules)
-        self.assertIn("if tickRadius then data.radius = tickRadius end", modules)
-        self.assertIn("if tickRate then data.rate = tickRate end", modules)
+        resolver = (ROOT / "systems/branch_tier_resolver.lua").read_text()
+        self.assertIn("tier.travelDistance then data.dist = tier.travelDistance", resolver)
+        self.assertIn("tier.tickRadius then data.radius = tier.tickRadius", resolver)
+        self.assertIn("tier.tickRate then data.rate = tier.tickRate", resolver)
         towers = (ROOT / "world/towers.lua").read_text()
-        self.assertIn("t.projSpeed = tier.projSpeed or def.projSpeed", towers)
+        self.assertIn("t.projSpeed = resolved.stats.projSpeed", towers)
         damage_source = (ROOT / "world/projectile_behaviors/damage.lua").read_text()
         self.assertIn("p.visualScale = radius / 16", damage_source)
 

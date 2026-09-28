@@ -1,6 +1,7 @@
 local ModuleDefs = require("systems.module_defs")
 local State = require("core.state")
 local BehaviorContext = require("systems.behavior_context")
+local BranchTierResolver = require("systems.branch_tier_resolver")
 
 local Modules = {}
 
@@ -339,100 +340,9 @@ function Modules.invalidateTower(tower)
 
 	cache.moduleContext = nil
 	cache.fireProfile = nil
+	cache.statModifiers = nil
+	cache.branchTier = nil
 	tower._fireProfileLocalVersion = (tower._fireProfileLocalVersion or 0) + 1
-end
-
--- CONTEXT BUILDER
-local function applyTowerUpgradeBehaviorScaling(ctx, tower)
-	if not tower or not tower.def then
-		return
-	end
-
-	local upgrade = tower.def.upgrade or {}
-	local level = math.max(1, tower.level or 1)
-	if level <= 1 then
-		return
-	end
-	local branch = tower.specialization and upgrade.branches and upgrade.branches[tower.specialization]
-	local tier = branch and branch.tiers[level]
-	if not tier then return end
-
-	local slowDurAdd = tier.slowDurAdd or 0
-	local poisonDurAdd = tier.poisonDurAdd or 0
-	local poisonDpsMult = tier.poisonDpsMult or 1
-	local stackAdd = tier.stackAdd or 0
-	local splashAdd = tier.splashAdd or 0
-	local splashRadius = tier.splashRadius
-	local splashFalloff = tier.splashFalloff
-	local pierceMaxHits = tier.pierceMaxHits
-	local slowFactor = tier.slowFactor
-	local fieldRadius = tier.fieldRadius
-	local fieldLifetime = tier.fieldLifetime
-	local fieldFactor = tier.fieldFactor
-	local poisonDPS = tier.poisonDPS
-	local poisonDuration = tier.poisonDuration
-	local poisonStackCap = tier.poisonStackCap
-	local spreadRadius = tier.spreadRadius
-	local transferFraction = tier.transferFraction
-	local recipientCap = tier.recipientCap
-	local chainJumps = tier.chainJumps
-	local chainRadius = tier.chainRadius
-	local chainFalloff = tier.chainFalloff
-	local capacitorThreshold = tier.capacitorThreshold
-	local dischargeMult = tier.dischargeMult
-	local travelDistance = tier.travelDistance
-	local tickRadius = tier.tickRadius
-	local tickRate = tier.tickRate
-
-	for i = 1, #ctx.behaviors do
-		local b = ctx.behaviors[i]
-		local data = b.data
-		if data then
-			if b.id == "move_linear" then
-				if travelDistance then data.dist = travelDistance end
-			elseif b.id == "tick_damage" then
-				if tickRadius then data.radius = tickRadius end
-				if tickRate then data.rate = tickRate end
-			elseif b.id == "apply_slow" then
-				if slowDurAdd ~= 0 then data.dur = (data.dur or 0) + slowDurAdd end
-				if slowFactor then data.factor = slowFactor end
-			elseif b.id == "slow_field" then
-				if fieldRadius then data.radius = fieldRadius end
-				if fieldLifetime then data.life = fieldLifetime end
-				if fieldFactor then data.factor = fieldFactor end
-			elseif b.id == "apply_poison" then
-				if poisonDPS then data.dps = poisonDPS end
-				if poisonDuration then data.dur = poisonDuration end
-				if poisonStackCap then data.maxStacks = poisonStackCap end
-				if poisonDurAdd ~= 0 then
-					data.dur = (data.dur or 0) + poisonDurAdd
-				end
-				if poisonDpsMult ~= 1 then
-					data.dps = (data.dps or 0) * poisonDpsMult
-				end
-				if stackAdd ~= 0 then
-					data.maxStacks = math.max(1, (data.maxStacks or 1) + stackAdd)
-				end
-			elseif b.id == "infect_spread" then
-				if spreadRadius then data.radius = spreadRadius end
-				if transferFraction then data.stackMult = transferFraction end
-				if recipientCap then data.recipientCap = recipientCap end
-			elseif b.id == "aoe_damage" then
-				if splashRadius then data.radius = splashRadius
-				elseif splashAdd ~= 0 then data.radius = math.max(1, (data.radius or 1) + splashAdd) end
-				if splashFalloff then data.falloff = splashFalloff end
-			elseif b.id == "pierce" and pierceMaxHits then
-				data.maxHits = pierceMaxHits
-			elseif b.id == "hit_chain" then
-				if chainJumps then data.jumps = chainJumps end
-				if chainRadius then data.radius = chainRadius end
-				if chainFalloff then data.falloff = chainFalloff end
-			elseif b.id == "capacitor" then
-				if capacitorThreshold then data.threshold = capacitorThreshold end
-				if dischargeMult then data.dischargeMult = dischargeMult end
-			end
-		end
-	end
 end
 
 function Modules.buildContext(tower)
@@ -447,10 +357,10 @@ function Modules.buildContext(tower)
 		end
 	end
 
-	local upgrade = tower.def.upgrade or {}
-	local branch = tower.specialization and upgrade.branches and upgrade.branches[tower.specialization]
-	local base = branch and branch.fireProfile or tower.def.behaviors
+	local resolved = BranchTierResolver.resolve(tower)
+	local base = resolved.profile.behaviors
 	local ctx = BehaviorContext.new(base)
+	ctx.output = resolved.profile.output or ctx.output
 
 	local candidates = experimental and collectTowerModules(tower) or {}
 	ctx.exclusiveResolutions = resolveModules(candidates, function(mod)
@@ -458,7 +368,6 @@ function Modules.buildContext(tower)
 	end)
 
 	ctx:restoreRequiredBehaviors(base)
-	applyTowerUpgradeBehaviorScaling(ctx, tower)
 
 	-- Normalize/validate post-module behavior list in one pass.
 	local outputIsBeam = ctx.output == "beam"
