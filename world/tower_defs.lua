@@ -232,18 +232,35 @@ return {
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
-				power = {tiers = {
-					[2] = {dmgMult = 1.275, fireMult = 1.05, rangeAdd = 0.11 * Constants.TILE},
-					[3] = {dmgMult = 1.55, fireMult = 1.1, rangeAdd = 0.22 * Constants.TILE},
-					[4] = {dmgMult = 1.825, fireMult = 1.15, rangeAdd = 0.33 * Constants.TILE},
-					[5] = {dmgMult = 2.1, fireMult = 1.2, rangeAdd = 0.44 * Constants.TILE},
-				}},
-				tempo = {tiers = {
-					[2] = {dmgMult = 1.275, fireMult = 1.05, rangeAdd = 0.11 * Constants.TILE},
-					[3] = {dmgMult = 1.55, fireMult = 1.1, rangeAdd = 0.22 * Constants.TILE},
-					[4] = {dmgMult = 1.825, fireMult = 1.15, rangeAdd = 0.33 * Constants.TILE},
-					[5] = {dmgMult = 2.1, fireMult = 1.2, rangeAdd = 0.44 * Constants.TILE},
-				}},
+				capacitor = {
+					fireProfile = {
+						{id = "capacitor", data = {threshold = 4, dischargeMult = 1.0}},
+						{id = "emit_on_target"},
+						-- Two jumps means three total contacts. Discharge is deliberately
+						-- resolved only on contact one during the initial tuning pass.
+						{id = "hit_chain", data = {jumps = 2, radius = 62, falloff = 0.82}},
+						{id = "chain_zap_fx"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.45, fireMult = 1.02, rangeAdd = 0.11 * Constants.TILE, chainJumps = 2, chainRadius = 62, chainFalloff = 0.82, capacitorThreshold = 4, dischargeMult = 1.00},
+						[3] = {dmgMult = 1.90, fireMult = 1.05, rangeAdd = 0.22 * Constants.TILE, chainJumps = 2, chainRadius = 64, chainFalloff = 0.83, capacitorThreshold = 4, dischargeMult = 1.05},
+						[4] = {dmgMult = 2.35, fireMult = 1.08, rangeAdd = 0.33 * Constants.TILE, chainJumps = 2, chainRadius = 66, chainFalloff = 0.84, capacitorThreshold = 4, dischargeMult = 1.10},
+						[5] = {dmgMult = 3.00, fireMult = 1.12, rangeAdd = 0.44 * Constants.TILE, chainJumps = 2, chainRadius = 68, chainFalloff = 0.85, capacitorThreshold = 3, dischargeMult = 1.20},
+					},
+				},
+				forked_lightning = {
+					fireProfile = {
+						{id = "emit_on_target"},
+						{id = "hit_chain", data = {jumps = 5, radius = 70, falloff = 0.88}},
+						{id = "chain_zap_fx"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.20, fireMult = 1.06, rangeAdd = 0.11 * Constants.TILE, chainJumps = 5, chainRadius = 70, chainFalloff = 0.88},
+						[3] = {dmgMult = 1.47, fireMult = 1.12, rangeAdd = 0.22 * Constants.TILE, chainJumps = 6, chainRadius = 78, chainFalloff = 0.89},
+						[4] = {dmgMult = 1.75, fireMult = 1.18, rangeAdd = 0.33 * Constants.TILE, chainJumps = 7, chainRadius = 86, chainFalloff = 0.90},
+						[5] = {dmgMult = 2.15, fireMult = 1.24, rangeAdd = 0.44 * Constants.TILE, chainJumps = 8, chainRadius = 94, chainFalloff = 0.92},
+					},
+				},
 			},
 		},
 		behaviors = {

@@ -48,6 +48,7 @@ return function(context)
 		z.y = nil
 		z.t = nil
 		z.life = nil
+		z.discharge = nil
 
 		record.pool[#record.pool + 1] = z
 	end
@@ -116,10 +117,24 @@ return function(context)
 		z.y = y
 		z.t = 0
 		z.life = 0.16
+		z.discharge = false
 
 		record.list[#record.list + 1] = z
 
 		Sound.play("shock")
+	end
+
+	local function spawnCapacitorDischarge(fx)
+		local z = Shared.acquire(record.pool, zapFactory)
+		clearZapSegs(z.segs)
+		local seg = acquireZapSeg()
+		seg.x1, seg.y1 = fx.x, fx.y
+		seg.x2, seg.y2 = fx.targetX, fx.targetY
+		z.segs = z.segs or {}
+		z.segs[1] = seg
+		z.x, z.y, z.t, z.life = fx.x, fx.y, 0, 0.28
+		z.discharge = true
+		record.list[#record.list + 1] = z
 	end
 
 
@@ -142,16 +157,17 @@ return function(context)
 
 					local t = (s - 1) / d
 					local jumpA = 1.0 - 0.16 * (s - 1)
+					local dischargeScale = z.discharge and 1.8 or 1
 
 					local jx = jitter(halfJitter)
 					local jy = jitter(halfJitter)
 
 					-- Spark
-					local radius = 2.5 * (1 - t) + 1
-					lg.setColor(0.7, 0.95, 1.0, 0.7 * a * jumpA)
+					local radius = (2.5 * (1 - t) + 1) * dischargeScale
+					lg.setColor(z.discharge and 1 or 0.7, 0.95, z.discharge and 0.55 or 1.0, 0.7 * a * jumpA)
 					lg.circle("fill", x2 + jx, y2 + jy, radius)
 
-					local w = (3 * (1 - t) + 1) * (0.9 - 0.35 * u)
+					local w = (3 * (1 - t) + 1) * (0.9 - 0.35 * u) * dischargeScale
 
 					-- Soft glow
 					lg.setLineWidth(w * 2.4)
@@ -276,7 +292,10 @@ return function(context)
 	record.draw = draw
 	record.release = releaseZap
 	record.reset = releaseZap
-	record.ids = {zap = function(fx) return spawnZapEffect(fx.x, fx.y, fx.chain) end}
+	record.ids = {
+		zap = function(fx) return spawnZapEffect(fx.x, fx.y, fx.chain) end,
+		capacitor_discharge = spawnCapacitorDischarge,
+	}
 	Effects.spawnZapEffect = spawnZapEffect
 	return record
 end

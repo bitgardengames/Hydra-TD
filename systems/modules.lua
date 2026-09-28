@@ -373,6 +373,11 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	local spreadRadius = tier.spreadRadius
 	local transferFraction = tier.transferFraction
 	local recipientCap = tier.recipientCap
+	local chainJumps = tier.chainJumps
+	local chainRadius = tier.chainRadius
+	local chainFalloff = tier.chainFalloff
+	local capacitorThreshold = tier.capacitorThreshold
+	local dischargeMult = tier.dischargeMult
 
 	for i = 1, #ctx.behaviors do
 		local b = ctx.behaviors[i]
@@ -406,6 +411,13 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 				data.radius = math.max(1, (data.radius or 1) + splashAdd)
 			elseif b.id == "pierce" and pierceMaxHits then
 				data.maxHits = pierceMaxHits
+			elseif b.id == "hit_chain" then
+				if chainJumps then data.jumps = chainJumps end
+				if chainRadius then data.radius = chainRadius end
+				if chainFalloff then data.falloff = chainFalloff end
+			elseif b.id == "capacitor" then
+				if capacitorThreshold then data.threshold = capacitorThreshold end
+				if dischargeMult then data.dischargeMult = dischargeMult end
 			end
 		end
 	end

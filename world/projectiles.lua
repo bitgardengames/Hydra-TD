@@ -125,7 +125,7 @@ local reusableFields = {
 	"_didExpireHook",
 	"allowRepeatHits", "consumeOnHit", "pierce", "dead", "radius", "visualScale",
 	"cx", "cy", "orbitSpeed", "onEvent", "_baseDamage", "_beam", "_boom",
-	"_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
+	"_capacitor", "_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
 	"_chainVisited", "_claimedScratch", "_conductRadius", "_delayedBlast",
 	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
 	"_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
@@ -361,6 +361,37 @@ local function resolveDamage(p, evt)
 	RunStats.recordDamage(t, effectiveDamage)
 	if effectiveDamage > 0 and (not Save.data or Save.data.settings.showDamageNumbers ~= false) then
 		Floaters.add(e.x, e.y - (e.radius or 10), tostring(math.floor(effectiveDamage + 0.5)), 1, 0.82, 0.45)
+	end
+
+	-- Capacitor is attached only to the primary hit event by hit_chain. Resolve
+	-- charge after damage so an absorbed hit counts, while a rejected hit does
+	-- not. The discharge is a direct second hit and is never inserted into the
+	-- chain graph.
+	if effectiveDamage > 0 and evt.capacitor and t then
+		local capacitor = evt.capacitor
+		local threshold = math.max(1, capacitor.threshold or 4)
+		t._capacitorCharge = (t._capacitorCharge or 0) + 1
+		if t._capacitorCharge >= threshold then
+			t._capacitorCharge = 0
+			local dischargeAmount = (p.damage or evt.amount or 0) * (capacitor.dischargeMult or 1)
+			local dischargeDealt, dischargeAbsorbed = Enemies.applyDamage(e, dischargeAmount, {
+				sourceKind = p.sourceKind,
+				chain = false,
+				nudgeDX = p.vx or cos(p.angle or 0),
+				nudgeDY = p.vy or sin(p.angle or 0),
+			})
+			local dischargeDamage = dischargeDealt + dischargeAbsorbed
+			if dischargeDamage > 0 then
+				t.damageDealt = (t.damageDealt or 0) + dischargeDamage
+				State.addDamage(p.sourceKind, dischargeDamage, e.boss == true)
+				RunStats.recordDamage(t, dischargeDamage)
+				if not Save.data or Save.data.settings.showDamageNumbers ~= false then
+					Floaters.add(e.x, e.y - (e.radius or 10), tostring(math.floor(dischargeDamage + 0.5)), 0.72, 0.94, 1)
+				end
+				Effects.spawnFX({id = "capacitor_discharge", x = t.x, y = t.renderY or t.y,
+					targetX = e.rx or e.x, targetY = e.ry or e.y})
+			end
+		end
 	end
 end
 
