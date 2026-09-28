@@ -128,7 +128,7 @@ local reusableFields = {
 	"_capacitor", "_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
 	"_chainVisited", "_claimedScratch", "_conductRadius", "_delayedBlast",
 	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
-	"_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
+	"_linear", "_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
 	"_slowAuraRadius", "_slowAuraTick", "_slowAuraTimer", "_snowballBaseDamage",
 	"_slowFieldRadius", "_slowFieldFactor", "_slowFieldTick", "_slowFieldTimer", "_slowFieldDuration",
 	"_snowballHits", "_snowballStacks", "_spiral", "_supernovaBurstDone", "_suspend",

@@ -151,16 +151,32 @@ B.move_homing = {
 B.move_linear = {
 	type = "movement",
 
-	init = function(p)
+	init = function(p, data)
 		local ang = p.angle or p.sourceTower.angle or 0
 		p.vx = cos(ang)
 		p.vy = sin(ang)
 		p.rotation = ang
+		p._linear = { traveled = 0, maxDistance = data and data.dist }
+		if data and data.dist and p.speed > 0 then
+			p.life = max(p.life, data.dist / p.speed + 0.01)
+		end
 	end,
 
 	update = function(p, dt)
-		p.x = p.x + p.vx * p.speed * dt
-		p.y = p.y + p.vy * p.speed * dt
+		local step = p.speed * dt
+		local linear = p._linear
+		if linear and linear.maxDistance then
+			local remaining = linear.maxDistance - linear.traveled
+			if remaining <= step then
+				p.x = p.x + p.vx * remaining
+				p.y = p.y + p.vy * remaining
+				linear.traveled = linear.maxDistance
+				return "consume"
+			end
+			linear.traveled = linear.traveled + step
+		end
+		p.x = p.x + p.vx * step
+		p.y = p.y + p.vy * step
 	end
 }
 

@@ -380,12 +380,20 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	local chainFalloff = tier.chainFalloff
 	local capacitorThreshold = tier.capacitorThreshold
 	local dischargeMult = tier.dischargeMult
+	local travelDistance = tier.travelDistance
+	local tickRadius = tier.tickRadius
+	local tickRate = tier.tickRate
 
 	for i = 1, #ctx.behaviors do
 		local b = ctx.behaviors[i]
 		local data = b.data
 		if data then
-			if b.id == "apply_slow" then
+			if b.id == "move_linear" then
+				if travelDistance then data.dist = travelDistance end
+			elseif b.id == "tick_damage" then
+				if tickRadius then data.radius = tickRadius end
+				if tickRate then data.rate = tickRate end
+			elseif b.id == "apply_slow" then
 				if slowDurAdd ~= 0 then data.dur = (data.dur or 0) + slowDurAdd end
 				if slowFactor then data.factor = slowFactor end
 			elseif b.id == "slow_field" then

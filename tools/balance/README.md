@@ -265,3 +265,15 @@ current map compositions introduce Regenerators on Outerloop and use them in
 later specialist slots; authored campaign waves no longer deploy Warcallers. The
 challenge report records the resulting per-wave effective and peak five-second
 threat budgets.
+
+## Plasma branch geometry benchmark
+
+```sh
+python3 tools/balance/plasma_branch_benchmark.py
+python3 -m unittest tools.balance.test_plasma_branches
+```
+
+This focused benchmark holds enemy HP, count, and exposure distance constant
+across a straight lane, 90-degree bend, crossing, and loop. It covers levels 2,
+4, and 5 and includes equal-budget normalized groups of lower-level Plasma
+towers.
