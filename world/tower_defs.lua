@@ -24,18 +24,35 @@ return {
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0, slowDurAdd = 0},
 			branches = {
-				power = {tiers = {
-					[2] = {dmgMult = 1.175, fireMult = 1.0875, rangeAdd = 0.16 * Constants.TILE, slowDurAdd = 0.45},
-					[3] = {dmgMult = 1.35, fireMult = 1.175, rangeAdd = 0.32 * Constants.TILE, slowDurAdd = 0.90},
-					[4] = {dmgMult = 1.525, fireMult = 1.2625, rangeAdd = 0.48 * Constants.TILE, slowDurAdd = 1.35},
-					[5] = {dmgMult = 1.7, fireMult = 1.35, rangeAdd = 0.64 * Constants.TILE, slowDurAdd = 1.80},
-				}},
-				tempo = {tiers = {
-					[2] = {dmgMult = 1.175, fireMult = 1.0875, rangeAdd = 0.16 * Constants.TILE, slowDurAdd = 0.45},
-					[3] = {dmgMult = 1.35, fireMult = 1.175, rangeAdd = 0.32 * Constants.TILE, slowDurAdd = 0.90},
-					[4] = {dmgMult = 1.525, fireMult = 1.2625, rangeAdd = 0.48 * Constants.TILE, slowDurAdd = 1.35},
-					[5] = {dmgMult = 1.7, fireMult = 1.35, rangeAdd = 0.64 * Constants.TILE, slowDurAdd = 1.80},
-				}},
+				deep_freeze = {
+					fireProfile = {
+						{id = "move_homing"},
+						{id = "hit_damage"},
+						{id = "apply_slow", data = {factor = 0.58, dur = 1.7}},
+						{id = "draw_slow"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.15, fireMult = 1.05, rangeAdd = 0.18 * Constants.TILE, slowDurAdd = 0.55, slowFactor = 0.58},
+						[3] = {dmgMult = 1.30, fireMult = 1.10, rangeAdd = 0.36 * Constants.TILE, slowDurAdd = 0.55, slowFactor = 0.63},
+						[4] = {dmgMult = 1.45, fireMult = 1.15, rangeAdd = 0.54 * Constants.TILE, slowDurAdd = 0.55, slowFactor = 0.68},
+						[5] = {dmgMult = 1.60, fireMult = 1.20, rangeAdd = 0.72 * Constants.TILE, slowDurAdd = 0.55, slowFactor = 0.72},
+					},
+				},
+				cold_field = {
+					fireProfile = {
+						{id = "move_homing"},
+						{id = "hit_damage"},
+						{id = "apply_slow", data = {factor = 0.45, dur = 1.7}},
+						{id = "slow_field", data = {radius = 62, life = 2.4, factor = 0.36, tick = 0.25, dur = 0.4}},
+						{id = "draw_slow"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.10, fireMult = 1.08, rangeAdd = 0.14 * Constants.TILE, slowDurAdd = 0.35, fieldRadius = 62, fieldLifetime = 2.4, fieldFactor = 0.36},
+						[3] = {dmgMult = 1.20, fireMult = 1.16, rangeAdd = 0.28 * Constants.TILE, slowDurAdd = 0.70, fieldRadius = 68, fieldLifetime = 2.8, fieldFactor = 0.39},
+						[4] = {dmgMult = 1.30, fireMult = 1.24, rangeAdd = 0.42 * Constants.TILE, slowDurAdd = 1.05, fieldRadius = 74, fieldLifetime = 3.2, fieldFactor = 0.42},
+						[5] = {dmgMult = 1.40, fireMult = 1.32, rangeAdd = 0.56 * Constants.TILE, slowDurAdd = 1.40, fieldRadius = 82, fieldLifetime = 3.6, fieldFactor = 0.45},
+					},
+				},
 			},
 		},
 		behaviors = {

@@ -363,13 +363,22 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	local stackAdd = tier.stackAdd or 0
 	local splashAdd = tier.splashAdd or 0
 	local pierceMaxHits = tier.pierceMaxHits
+	local slowFactor = tier.slowFactor
+	local fieldRadius = tier.fieldRadius
+	local fieldLifetime = tier.fieldLifetime
+	local fieldFactor = tier.fieldFactor
 
 	for i = 1, #ctx.behaviors do
 		local b = ctx.behaviors[i]
 		local data = b.data
 		if data then
-			if b.id == "apply_slow" and slowDurAdd ~= 0 then
-				data.dur = (data.dur or 0) + slowDurAdd
+			if b.id == "apply_slow" then
+				if slowDurAdd ~= 0 then data.dur = (data.dur or 0) + slowDurAdd end
+				if slowFactor then data.factor = slowFactor end
+			elseif b.id == "slow_field" then
+				if fieldRadius then data.radius = fieldRadius end
+				if fieldLifetime then data.life = fieldLifetime end
+				if fieldFactor then data.factor = fieldFactor end
 			elseif b.id == "apply_poison" then
 				if poisonDurAdd ~= 0 then
 					data.dur = (data.dur or 0) + poisonDurAdd

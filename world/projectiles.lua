@@ -130,6 +130,7 @@ local reusableFields = {
 	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
 	"_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
 	"_slowAuraRadius", "_slowAuraTick", "_slowAuraTimer", "_snowballBaseDamage",
+	"_slowFieldRadius", "_slowFieldFactor", "_slowFieldTick", "_slowFieldTimer", "_slowFieldDuration",
 	"_snowballHits", "_snowballStacks", "_spiral", "_supernovaBurstDone", "_suspend",
 	"_targetPointX", "_targetPointY", "_tickStates", "_wave", "_zap",
 }
@@ -396,6 +397,25 @@ local function resolveConsume(p)
 	p._consumed = true
 end
 
+local function resolveSpawnSlowField(p, evt)
+	local life = evt.life or 2.4
+	local radius = evt.radius or 62
+	local source = evt.source or p.sourceTower
+	local field = createProjectile(source, {
+		x = evt.x, y = evt.y, life = life, speed = 0, hitOrigin = "slow_field",
+		behaviors = {
+			{id = "stationary"},
+			{id = "slow_field", data = {
+				radius = radius, factor = evt.factor, tick = evt.tick, dur = evt.duration,
+			}},
+		},
+	})
+	if field then
+		Effects.spawnFX({id = "frost_field", x = field.x, y = field.y,
+			radius = radius, life = life, color = source and source.color})
+	end
+end
+
 local eventDispatch = {
 	spawn_projectile = resolveSpawnProjectile,
 	damage = resolveDamage,
@@ -407,6 +427,7 @@ local eventDispatch = {
 	end,
 	hit = resolveHit,
 	consume = resolveConsume,
+	spawn_slow_field = resolveSpawnSlowField,
 }
 
 local function resolveEvents(p)

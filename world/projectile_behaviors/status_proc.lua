@@ -446,6 +446,47 @@ B.apply_slow = {
 	end
 }
 
+-- An impact proc, rather than an aura: the successful shot fixes the field's
+-- world position, and the spawned projectile owns its finite combat lifetime.
+B.slow_field = {
+	onHit = function(p, e, data)
+		if not e or e.hp <= 0 or p.hitOrigin == "slow_field" then return end
+		data = data or {}
+		local evt = emitEvent(p, "spawn_slow_field")
+		evt.x, evt.y = p.x, p.y
+		evt.source = p.sourceTower
+		evt.life = data.life or 2.4
+		evt.radius = data.radius or 62
+		evt.factor = data.factor or 0.36
+		evt.tick = data.tick or 0.25
+		evt.duration = data.dur or 0.4
+	end,
+
+	on_shot = function(p, data)
+		if p.hitOrigin ~= "slow_field" then return end
+		p._slowFieldTimer = 0
+		p._slowFieldRadius = data.radius
+		p._slowFieldFactor = data.factor
+		p._slowFieldTick = data.tick
+		p._slowFieldDuration = data.dur
+	end,
+
+	on_tick = function(p, dt)
+		if p.hitOrigin ~= "slow_field" then return end
+		p._slowFieldTimer = (p._slowFieldTimer or 0) - dt
+		if p._slowFieldTimer > 0 then return end
+
+		local radius = p._slowFieldRadius or 62
+		radiusVisitContext.op = "slow"
+		radiusVisitContext.factor = 1 - min(p._slowFieldFactor or 0.36, 0.9)
+		radiusVisitContext.duration = p._slowFieldDuration or 0.4
+		radiusVisitContext.exclude, radiusVisitContext.limit = nil, nil
+		Spatial.visitRadius(p.x, p.y, radius, statusRadiusVisitor, radiusVisitContext,
+			spatialQueryContext, Spatial.radiusOptions.livingCollision)
+		p._slowFieldTimer = p._slowFieldTick or 0.25
+	end,
+}
+
 B.slow_aura = {
 	on_shot = function(p, data)
 		p._slowAuraTimer = 0
