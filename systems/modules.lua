@@ -362,6 +362,8 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	local poisonDpsMult = tier.poisonDpsMult or 1
 	local stackAdd = tier.stackAdd or 0
 	local splashAdd = tier.splashAdd or 0
+	local splashRadius = tier.splashRadius
+	local splashFalloff = tier.splashFalloff
 	local pierceMaxHits = tier.pierceMaxHits
 	local slowFactor = tier.slowFactor
 	local fieldRadius = tier.fieldRadius
@@ -407,8 +409,10 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 				if spreadRadius then data.radius = spreadRadius end
 				if transferFraction then data.stackMult = transferFraction end
 				if recipientCap then data.recipientCap = recipientCap end
-			elseif b.id == "aoe_damage" and splashAdd ~= 0 then
-				data.radius = math.max(1, (data.radius or 1) + splashAdd)
+			elseif b.id == "aoe_damage" then
+				if splashRadius then data.radius = splashRadius
+				elseif splashAdd ~= 0 then data.radius = math.max(1, (data.radius or 1) + splashAdd) end
+				if splashFalloff then data.falloff = splashFalloff end
 			elseif b.id == "pierce" and pierceMaxHits then
 				data.maxHits = pierceMaxHits
 			elseif b.id == "hit_chain" then
