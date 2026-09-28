@@ -23,6 +23,36 @@ local function updateBest(e, c, score)
 	end
 end
 
+local DURABLE_ARCHETYPES = {
+	tank = true,
+	regenerator = true,
+}
+
+local function priorityRank(e)
+	local def = e.def or {}
+	return def.boss and 1 or 0, def.targetPriority or 0,
+		DURABLE_ARCHETYPES[e.kind] and 1 or 0
+end
+
+local function updatePolicyBest(e, c)
+	local boss, priority, durable = priorityRank(e)
+	local best = c.best
+	if not best then
+		c.best, c.bestBoss, c.bestPriority, c.bestDurable = e, boss, priority, durable
+		return
+	end
+
+	local wins = boss > c.bestBoss
+		or (boss == c.bestBoss and priority > c.bestPriority)
+		or (boss == c.bestBoss and priority == c.bestPriority and durable > c.bestDurable)
+		or (boss == c.bestBoss and priority == c.bestPriority and durable == c.bestDurable
+			and (e.dist > best.dist + EPS
+				or (e.dist >= best.dist - EPS and e.id < best.id)))
+	if wins then
+		c.best, c.bestBoss, c.bestPriority, c.bestDurable = e, boss, priority, durable
+	end
+end
+
 local function evaluateCandidate(e, c)
 	if e.hp <= 0 or e.dying or not EnemyPhase.canDirectHit(e) then
 		return
@@ -35,7 +65,11 @@ local function evaluateCandidate(e, c)
 		return
 	end
 
-	updateBest(e, c, e.dist)
+	if c.policy == "durable_priority" then
+		updatePolicyBest(e, c)
+	else
+		updateBest(e, c, e.dist)
+	end
 end
 
 function Targeting.beginFrame(frameId)
@@ -134,6 +168,7 @@ function Targeting.findTarget(tower)
 	ctx.r2 = tower.range2
 	ctx.tx = tower.x
 	ctx.ty = tower.y
+	ctx.policy = tower.targetingPolicy
 	local candidates, count = getCandidatesForTower(tower)
 	for i = 1, count do
 		evaluateCandidate(candidates[i], ctx)

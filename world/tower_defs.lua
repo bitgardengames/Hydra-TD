@@ -66,18 +66,31 @@ return {
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
-				power = {tiers = {
-					[2] = {dmgMult = 1.4125, fireMult = 1.045, rangeAdd = 0.08 * Constants.TILE},
-					[3] = {dmgMult = 1.825, fireMult = 1.09, rangeAdd = 0.16 * Constants.TILE},
-					[4] = {dmgMult = 2.2375, fireMult = 1.135, rangeAdd = 0.24 * Constants.TILE},
-					[5] = {dmgMult = 2.65, fireMult = 1.18, rangeAdd = 0.32 * Constants.TILE},
-				}},
-				tempo = {tiers = {
-					[2] = {dmgMult = 1.4125, fireMult = 1.045, rangeAdd = 0.08 * Constants.TILE},
-					[3] = {dmgMult = 1.825, fireMult = 1.09, rangeAdd = 0.16 * Constants.TILE},
-					[4] = {dmgMult = 2.2375, fireMult = 1.135, rangeAdd = 0.24 * Constants.TILE},
-					[5] = {dmgMult = 2.65, fireMult = 1.18, rangeAdd = 0.32 * Constants.TILE},
-				}},
+				marksman = {
+					targetingPolicy = "durable_priority",
+					tiers = {
+						[2] = {dmgMult = 1.55, fireMult = 1.00, rangeAdd = 0.12 * Constants.TILE},
+						[3] = {dmgMult = 2.10, fireMult = 1.02, rangeAdd = 0.24 * Constants.TILE},
+						[4] = {dmgMult = 2.75, fireMult = 1.04, rangeAdd = 0.36 * Constants.TILE},
+						[5] = {dmgMult = 3.50, fireMult = 1.06, rangeAdd = 0.48 * Constants.TILE},
+					},
+				},
+				rupture = {
+					fireProfile = {
+						{id = "move_linear"},
+						{id = "hit_circle", data = {radius = 12}},
+						{id = "hit_damage"},
+						{id = "pierce", data = {maxHits = 2}},
+						{id = "lancer_hit_fx"},
+						{id = "draw_lancer"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.30, fireMult = 1.045, rangeAdd = 0.08 * Constants.TILE, pierceMaxHits = 2},
+						[3] = {dmgMult = 1.70, fireMult = 1.09, rangeAdd = 0.16 * Constants.TILE, pierceMaxHits = 3},
+						[4] = {dmgMult = 2.15, fireMult = 1.135, rangeAdd = 0.24 * Constants.TILE, pierceMaxHits = 3},
+						[5] = {dmgMult = 2.65, fireMult = 1.18, rangeAdd = 0.32 * Constants.TILE, pierceMaxHits = 4},
+					},
+				},
 			},
 		},
 		behaviors = {

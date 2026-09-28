@@ -283,6 +283,7 @@ local function recomputeTowerStats(t)
 	t.fireRate = def.fireRate * (tier.fireMult or 1) * moduleStats.fireRateMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
 	t.range = def.range + (tier.rangeAdd or 0) + moduleStats.rangeAdd
+	t.targetingPolicy = branch and branch.targetingPolicy or nil
 	recomputeAbilityModifiers(t)
 end
 

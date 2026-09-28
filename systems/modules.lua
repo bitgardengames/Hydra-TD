@@ -362,6 +362,7 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	local poisonDpsMult = tier.poisonDpsMult or 1
 	local stackAdd = tier.stackAdd or 0
 	local splashAdd = tier.splashAdd or 0
+	local pierceMaxHits = tier.pierceMaxHits
 
 	for i = 1, #ctx.behaviors do
 		local b = ctx.behaviors[i]
@@ -381,6 +382,8 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 				end
 			elseif b.id == "aoe_damage" and splashAdd ~= 0 then
 				data.radius = math.max(1, (data.radius or 1) + splashAdd)
+			elseif b.id == "pierce" and pierceMaxHits then
+				data.maxHits = pierceMaxHits
 			end
 		end
 	end
@@ -398,7 +401,9 @@ function Modules.buildContext(tower)
 		end
 	end
 
-	local base = tower.def.behaviors
+	local upgrade = tower.def.upgrade or {}
+	local branch = tower.specialization and upgrade.branches and upgrade.branches[tower.specialization]
+	local base = branch and branch.fireProfile or tower.def.behaviors
 	local ctx = BehaviorContext.new(base)
 
 	local candidates = experimental and collectTowerModules(tower) or {}
