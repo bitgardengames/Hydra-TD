@@ -4,7 +4,7 @@ local lg, random = Shared.graphics, Shared.random
 local sin, cos, min, max, sqrt, pi = Shared.sin, Shared.cos, Shared.min, Shared.max, Shared.sqrt, Shared.pi
 
 return function(context)
-	local record = Shared.family("frost", 288, nil, {'x','y','vx','vy','r','rot','vr','t','life'})
+	local record = Shared.family("frost", 288, nil, {'x','y','vx','vy','r','rot','vr','t','life','kind','radius','color'})
 	local Effects = context.Effects
 	local function spawnFrostBurst(x, y)
 		for i = 1, context.particleCount(9, Theme.effects.intensity.normal) do
@@ -26,6 +26,13 @@ return function(context)
 			record.list[#record.list + 1] = f
 		end
 	end
+	local function spawnFrostField(fx)
+		local f = Shared.acquire(record.pool)
+		f.x, f.y = fx.x, fx.y
+		f.t, f.life = 0, fx.life or 2.4
+		f.kind, f.radius, f.color = "field", fx.radius or 62, fx.color
+		record.list[#record.list + 1] = f
+	end
 
 
 	local function draw(list)
@@ -33,29 +40,42 @@ return function(context)
 		for i = 1, #list do
 			local f = list[i]
 			local t = f.t / f.life
+			if f.kind == "field" then
+				local fade = min(1, (1 - t) * 5)
+				local pulse = 0.96 + 0.04 * sin(f.t * pi * 4)
+				local c = f.color or Theme.tower.slow
+				lg.setColor(c[1], c[2], c[3], 0.13 * fade)
+				lg.circle("fill", f.x, f.y, f.radius * pulse)
+				lg.setColor(0.76, 0.92, 1, 0.62 * fade)
+				lg.setLineWidth(2)
+				lg.circle("line", f.x, f.y, f.radius * pulse)
+			else
+				local alpha = 1 - t
+				local size = f.r * (1 - t * 0.4)
 
-			local alpha = 1 - t
-			local size = f.r * (1 - t * 0.4)
+				lg.setColor(0.7, 0.9, 1.0, alpha)
 
-			lg.setColor(0.7, 0.9, 1.0, alpha)
+				lg.push()
+				lg.translate(f.x, f.y)
+				lg.rotate(f.rot)
 
-			lg.push()
-			lg.translate(f.x, f.y)
-			lg.rotate(f.rot)
+				lg.rectangle("fill", -size * 0.4, -size * 0.6, size * 0.8, size * 1.2)
 
-			lg.rectangle("fill", -size * 0.4, -size * 0.6, size * 0.8, size * 1.2)
-
-			lg.pop()
+				lg.pop()
+			end
 		end
 	end
 
 
 	function record.update(o, dt, _, drag96)
-		Shared.drag(o, dt, drag96); o.rot = o.rot + o.vr * dt
+		if o.kind ~= "field" then Shared.drag(o, dt, drag96); o.rot = o.rot + o.vr * dt end
 	end
 	record.spawn = spawnFrostBurst
 	record.draw = draw
-	record.ids = {['frost_burst'] = function(fx) return spawnFrostBurst(fx.x, fx.y) end}
+	record.ids = {
+		['frost_burst'] = function(fx) return spawnFrostBurst(fx.x, fx.y) end,
+		['frost_field'] = spawnFrostField,
+	}
 	Effects.spawnFrostBurst = spawnFrostBurst
 	return record
 end
