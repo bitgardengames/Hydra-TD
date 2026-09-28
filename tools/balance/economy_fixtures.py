@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from lua_source import named_entries, numeric_fields, table_body
+from upgrade_model import progression
 
 ROOT = Path(__file__).resolve().parents[2]
 BANDS = Path(__file__).with_name("economy_bands.json")
@@ -76,10 +77,24 @@ def flawless_bonus(diff: dict, wave: int) -> int:
 
 def build_report() -> dict:
     difficulties, rewards, maps = definitions()
-    report = {"format_version": 1, "assumptions": {
+    upgrade_costs, tower_defs = progression()
+    upgrade_anchors = {
+        kind: {
+            # Tier two is the specialization decision, not an extra purchase.
+            "first_specialization": round(tower["cost"] * upgrade_costs[0]),
+            "tier_3_total": round(tower["cost"] * (1 + sum(upgrade_costs[:2]))),
+            "tier_4_total": round(tower["cost"] * (1 + sum(upgrade_costs[:3]))),
+            "tier_5_total": round(tower["cost"] * (1 + sum(upgrade_costs))),
+        }
+        for kind, tower in tower_defs.items()
+    }
+    report = {"format_version": 2, "assumptions": {
         "curves": {k: {"kill_share": v[0], "flawless_chance": v[1],
                         "early_call_chance": v[2]} for k, v in CURVES.items()},
-        "early_call_reward": 0, "tier_anchors": TIER_ANCHORS}, "difficulties": {}}
+        "early_call_reward": 0, "tier_anchors": TIER_ANCHORS,
+        "upgrade_anchors": upgrade_anchors,
+        "upgrade_purchase_sequence": ["base_tower", "first_specialization", "tier_3",
+                                      "tier_4", "tier_5"]}, "difficulties": {}}
     for diff_name, diff in difficulties.items():
         curves = {}
         for curve_name, (kill_share, flawless_chance, early_chance) in CURVES.items():
@@ -102,6 +117,15 @@ def build_report() -> dict:
                                  "flawless_income": flawless, "early_call_income": early,
                                  "cumulative_purchasing_power": power})
                 map_rows[map_id] = {"waves": rows, "affordable_wave": affordable}
+                map_rows[map_id]["upgrade_affordable_wave"] = {
+                    kind: {
+                        label: next((row["wave"] for row in rows
+                                     if row["cumulative_purchasing_power"] >= cost),
+                                    0 if diff["startMoney"] >= cost else None)
+                        for label, cost in anchors.items()
+                    }
+                    for kind, anchors in upgrade_anchors.items()
+                }
             curves[curve_name] = map_rows
         loss = {name: cost - math.floor(cost * diff["sellRefund"])
                 for name, cost in {"slow": 50, "lancer": 60, "plasma": 120}.items()}

@@ -207,9 +207,17 @@ def affordability_metrics() -> dict:
     import economy_fixtures
     economy = economy_fixtures.build_report()
     multipliers, towers = progression()
-    anchors = {kind: {"first_upgrade": round(tower["cost"] * multipliers[0]),
-                      "final_tier_total": round(tower["cost"] * (1 + sum(multipliers)))}
-               for kind, tower in towers.items()}
+    anchors = {
+        kind: {
+            # The first paid upgrade is the branch purchase. Tiers 3--5 retain
+            # it, so they are later timings rather than a synthetic fifth step.
+            "first_specialization": round(tower["cost"] * multipliers[0]),
+            "tier_3_total": round(tower["cost"] * (1 + sum(multipliers[:2]))),
+            "tier_4_total": round(tower["cost"] * (1 + sum(multipliers[:3]))),
+            "tier_5_total": round(tower["cost"] * (1 + sum(multipliers))),
+        }
+        for kind, tower in towers.items()
+    }
     result = {}
     for difficulty, data in economy["difficulties"].items():
         maps = data["curves"]["balanced"]
@@ -229,7 +237,7 @@ def affordability_metrics() -> dict:
 
 
 def build() -> dict:
-    return {"format_version": 1, "waves": wave_metrics(), "event_rates": event_rates(),
+    return {"format_version": 2, "waves": wave_metrics(), "event_rates": event_rates(),
             "abilities": ability_metrics(), "wave_preview": preview_metrics(),
             "hud_bounds": hud_metrics(), "message_tips": message_tip_metrics(),
             "upgrade_affordability": affordability_metrics()}
@@ -254,8 +262,11 @@ def checks(data: dict) -> list[tuple[str, bool, str]]:
     alarm("hud/message_tips", data["message_tips"]["layout_failures"], b["hud_overflow_pixels"])
     target = data["upgrade_affordability"]["difficulties"][TARGET_DIFFICULTY]
     for kind, row in target.items():
-        alarm("upgrade/first/"+kind, row["affordable_wave_range"]["first_upgrade"][1], b["balanced_first_upgrade_wave"])
-        alarm("upgrade/final/"+kind, row["affordable_wave_range"]["final_tier_total"][1], b["balanced_final_tier_wave"])
+        alarm("upgrade/first_specialization/"+kind,
+              row["affordable_wave_range"]["first_specialization"][1],
+              b["balanced_first_upgrade_wave"])
+        alarm("upgrade/final/"+kind, row["affordable_wave_range"]["tier_5_total"][1],
+              b["balanced_final_tier_wave"])
     return out
 
 
