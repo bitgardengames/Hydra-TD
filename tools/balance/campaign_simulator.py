@@ -199,6 +199,19 @@ class Tower:
     level: int = 1
     specialization: str | None = None
     cooldown: float = 0.0
+    investment: int = 0
+
+
+def tower_state(tower: Tower) -> dict:
+    """Return the branch-aware state used by reports and rebuild accounting."""
+    return {
+        "tower": tower.kind,
+        "specialization": tower.specialization,
+        "level": tower.level,
+        "investment": tower.investment,
+        "center": round(tower.center, 4),
+        "coverage": round(tower.coverage, 4),
+    }
 
 
 def select_tower_targets(
@@ -340,6 +353,7 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
     money, lives = diff["money"], {"easy": 25, "normal": 20, "hard": 15}[diff_name]
     towers: list[Tower] = []
     rebuilds = uses = opportunities = 0
+    sales = []
     failed_wave = None
     wave_results = []
     for wave_no, groups in enumerate(maps[map_id], 1):
@@ -353,9 +367,26 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 for k, v in composition_for(maps[map_id][wave_no + ahead - 1]).items():
                     preview[k] = preview.get(k, 0) + v
         actions = 0
+        build_actions = []
+        considered_actions = []
         while actions < policy["search_budget"]:
             actions += 1
             upgradable = [t for t in towers if t.level < 5]
+            upgrade_candidates = []
+            for tower_index, tower in enumerate(towers):
+                if tower.level >= 5:
+                    continue
+                branches = ((tower.specialization,) if tower.specialization else
+                            tuple(detail_towers[tower.kind]["branches"]))
+                for branch in branches:
+                    upgrade_candidates.append({
+                        "action": "upgrade", "tower_index": tower_index,
+                        "tower": tower.kind, "specialization": branch,
+                        "from_level": tower.level, "to_level": tower.level + 1,
+                        "cost": round(detail_towers[tower.kind]["cost"] *
+                                      upgrade_cost[tower.level - 1]),
+                    })
+            considered_actions.extend(upgrade_candidates)
             if (
                 upgradable
                 and (
@@ -367,19 +398,22 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 )
             ):
                 target = max(upgradable, key=lambda t: (t.level, -abs(t.center - 0.55)))
-                cost = round(
-                    detail_towers[target.kind]["cost"] * upgrade_cost[target.level - 1]
-                )
+                target_index = towers.index(target)
+                candidates = [candidate for candidate in upgrade_candidates
+                              if candidate["tower_index"] == target_index]
+                if target.specialization is None:
+                    pick = int(stable_unit(policy_name, map_id, wave_no,
+                                           target.kind, tuple(sorted(preview))) * len(candidates))
+                    selected_upgrade = candidates[pick]
+                else:
+                    selected_upgrade = candidates[0]
+                cost = selected_upgrade["cost"]
                 if money >= cost:
                     money -= cost
-                    if target.specialization is None:
-                        branches = tuple(detail_towers[target.kind]["branches"])
-                        # Stable policy choice, influenced by the encounter but
-                        # never collapsed into a generic output/coverage curve.
-                        pick = int(stable_unit(policy_name, map_id, wave_no,
-                                               target.kind, tuple(sorted(preview))) * len(branches))
-                        target.specialization = branches[pick]
+                    target.specialization = selected_upgrade["specialization"]
                     target.level += 1
+                    target.investment += cost
+                    build_actions.append(selected_upgrade)
                     continue
             # Coverage intervals are an abstraction rather than map tiles; cap
             # them so late-game income cannot create physically impossible
@@ -423,7 +457,11 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 cost = detail_towers[kind]["cost"]
             center = placement(policy_name, policy, path_len, len(towers), variant)
             coverage = min(0.22, detail_towers[kind]["range"] * 2 / max(12, path_len))
-            towers.append(Tower(kind, center, coverage))
+            purchase = {"action": "purchase", "tower": kind,
+                        "specialization": None, "level": 1, "cost": cost}
+            considered_actions.append(purchase)
+            towers.append(Tower(kind, center, coverage, investment=cost))
+            build_actions.append(purchase)
             money -= cost
         spawn, at = [], 0.0
         for group in groups:
@@ -531,6 +569,9 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 "flawless_bonus": flawless_bonus,
                 "ability_uses": wave_uses,
                 "duration_seconds": round(now, 1),
+                "candidate_actions": considered_actions,
+                "build_actions": build_actions,
+                "tower_state": [tower_state(tower) for tower in towers],
             }
         )
         if lives <= 0:
@@ -539,22 +580,29 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
         # A failed late defense may sell its worst placement and genuinely rebuild.
         if lives < 4 and towers and policy_name != "novice":
             worst = min(towers, key=lambda t: t.coverage)
-            refund = int(
-                detail_towers[worst.kind]["cost"]
-                * ({"easy": 0.85, "normal": 0.75, "hard": 0.6}[diff_name])
-            )
+            refund = int(worst.investment *
+                         ({"easy": 0.85, "normal": 0.75, "hard": 0.6}[diff_name]))
+            sale = {**tower_state(worst), "after_wave": wave_no, "refund": refund}
             towers.remove(worst)
             money += refund
             rebuilds += 1
-    comp = {}
+            sales.append(sale)
+            wave_results[-1]["sale"] = sale
+    comp, branches = {}, {}
     for t in towers:
         comp[t.kind] = comp.get(t.kind, 0) + 1
+        identity = f"{t.kind}/{t.specialization or 'base'}"
+        branches[identity] = branches.get(identity, 0) + 1
     return {
         "victory": failed_wave is None,
         "lives_remaining": max(0, lives),
         "failed_wave": failed_wave,
         "unused_money": money,
         "tower_composition": dict(sorted(comp.items())),
+        "tower_branch_composition": dict(sorted(branches.items())),
+        "tower_state": [tower_state(tower) for tower in towers],
+        "sales": sales,
+        "rebuilds": sales,
         "rebuild_count": rebuilds,
         "ability_uses": uses,
         "ability_utilization": round(uses / max(1, opportunities), 4),
@@ -569,7 +617,7 @@ def build_report(difficulties=None, policies=None, map_ids=None):
     maps = [map_id for map_id in all_maps if not map_ids or map_id in map_ids]
     bands = json.loads(BANDS.read_text())
     report = {
-        "format_version": 1,
+        "format_version": 2,
         "definition_sha256": fingerprint(),
         "definition_files": list(DEFINITION_FILES),
         "tick_seconds": TICK,
@@ -592,6 +640,11 @@ def build_report(difficulties=None, policies=None, map_ids=None):
                     ),
                     "runs": runs,
                 }
+                branch_totals = {}
+                for run in runs:
+                    for identity, count in run["tower_branch_composition"].items():
+                        branch_totals[identity] = branch_totals.get(identity, 0) + count
+                policy_results[pname]["branch_selection"] = dict(sorted(branch_totals.items()))
             rates = [p["victory_rate"] for p in policy_results.values()]
             report["results"].append(
                 {
@@ -656,12 +709,18 @@ def main():
     )
     errors = check(report) if not (args.difficulty or args.policy or args.map_id) else []
     if args.summary:
+        branch_selection = {}
+        for row in report["results"]:
+            for policy in row["policies"].values():
+                for identity, count in policy["branch_selection"].items():
+                    branch_selection[identity] = branch_selection.get(identity, 0) + count
         print(
             json.dumps(
                 {
                     "definition_sha256": report["definition_sha256"],
                     "campaigns": len(report["results"]),
                     "failures": errors,
+                    "branch_selection": dict(sorted(branch_selection.items())),
                 },
                 sort_keys=True,
                 separators=(",", ":"),

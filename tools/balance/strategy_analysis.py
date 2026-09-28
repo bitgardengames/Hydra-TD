@@ -32,7 +32,7 @@ MIXES = {
     "lane": {"plasma": 4, "slow": 2, "lancer": 2},
 }
 REGIONS = {"choke": 11_500, "distributed": 10_700, "exit_guard": 10_250}
-BRANCH_PLANS = ("first_specialization", "second_specialization")
+BRANCH_PLANS = ("first_specialization", "second_specialization", "mixed_specializations")
 ABILITIES = {"burst_control": 12_200, "formation_economy": 11_650}
 PERTURBATIONS = ("move_tower", "delay_upgrade_or_ability", "substitute_tower", "income_loss")
 
@@ -65,16 +65,28 @@ def raw_damage(towers: dict, counts: dict) -> int:
     return sum(towers[k]["sustained_damage"] * n for k, n in counts.items())
 
 
-def branch_output(counts: dict, plan: str) -> tuple[int, dict[str, str]]:
+def branch_output(counts: dict, plan: str) -> tuple[int, dict[str, dict[str, int]]]:
     """Resolve real tier-five branches instead of a generic branch bonus."""
     _, definitions = progression()
-    index = 0 if plan == "first_specialization" else 1
     choices, output = {}, 0.0
     for kind, count in counts.items():
-        branch = tuple(definitions[kind]["branches"])[index]
-        choices[kind] = branch
-        output += level_stats(definitions[kind], 5, branch)["dps"] * count
+        available = tuple(definitions[kind]["branches"])
+        if plan == "mixed_specializations" and count > 1:
+            allocations = {available[0]: (count + 1) // 2,
+                           available[1]: count // 2}
+        else:
+            branch = available[0 if plan == "first_specialization" else 1]
+            allocations = {branch: count}
+        choices[kind] = allocations
+        output += sum(level_stats(definitions[kind], 5, branch)["dps"] * amount
+                      for branch, amount in allocations.items())
     return int(output * 1000), choices
+
+
+def branch_identity(specializations: dict) -> tuple:
+    """Canonicalize allocation order while retaining every branch identity."""
+    return tuple((kind, tuple(sorted(branches.items())))
+                 for kind, branches in sorted(specializations.items()))
 
 
 def analyze() -> dict:
@@ -122,28 +134,61 @@ def analyze() -> dict:
                                 passes = sum(value >= required for value in perturbed.values())
                                 candidates.append({"roles": mix, "towers": counts, "upgrade_branch": branch,
                                                    "specializations": specializations,
+                                                   "mixed_branches": any(len(x) > 1 for x in specializations.values()),
                                                    "placement_region": region, "ability_loadout": ability,
                                                    "cost": spent, "margin_bp": (output - required) * 10000 // max(1, required),
                                                    "perturbation_passes": [k for k, v in perturbed.items() if v >= required],
                                                    "perturbation_pass_bp": passes * 10000 // len(PERTURBATIONS)})
                 # Canonical fields intentionally omit purchase order.
-                unique = {(c["roles"], tuple(sorted(c["towers"].items())), c["upgrade_branch"],
+                unique = {(c["roles"], tuple(sorted(c["towers"].items())),
+                           branch_identity(c["specializations"]),
                            c["placement_region"], c["ability_loadout"]): c for c in candidates}
                 families = sorted(unique.values(), key=lambda c: (-c["perturbation_pass_bp"], -c["margin_bp"],
                                                                   c["roles"], c["placement_region"], c["upgrade_branch"], c["ability_loadout"]))
                 robust = sum(c["perturbation_pass_bp"] >= 5000 for c in families)
                 mean = sum(c["perturbation_pass_bp"] for c in families) // max(1, len(families))
+                branch_counts = {}
+                branch_total = 0
+                for family in families:
+                    for kind, allocations in family["specializations"].items():
+                        for branch_name, count in allocations.items():
+                            identity = f"{kind}/{branch_name}"
+                            branch_counts[identity] = branch_counts.get(identity, 0) + count
+                            branch_total += count
                 encounters.append({"id": encounter_id, "puzzle": encounter_id in puzzles,
                                    "viable_family_count": len(families), "robust_family_count": robust,
                                    "mean_perturbation_pass_bp": mean,
                                    "worst_family_margin_bp": min((c["margin_bp"] for c in families), default=-10000),
+                                   "branch_selection_share": {
+                                       identity: round(count / max(1, branch_total), 4)
+                                       for identity, count in sorted(branch_counts.items())},
+                                   "mixed_branch_plan_count": sum(c["mixed_branches"] for c in families),
                                    "families": families})
     source_hash = hashlib.sha256((BANDS.read_bytes() + source_fingerprint().encode() +
         (ROOT / "world/tower_defs.lua").read_bytes() +
         (ROOT / "systems/ability_defs.lua").read_bytes() +
         (ROOT / "systems/campaign_wave_defs.lua").read_bytes())).hexdigest()
-    return {"format_version": 1, "definition_sha256": source_hash,
+    map_coverage = {}
+    all_branches = {f"{kind}/{branch}" for kind, tower in progression()[1].items()
+                    for branch in tower["branches"]}
+    for map_id in challenge["difficulties"][next(iter(challenge["difficulties"]))]:
+        relevant = [row for row in encounters if f"/{map_id}/" in row["id"]]
+        placements = {identity: set() for identity in all_branches}
+        for row in relevant:
+            for family in row["families"]:
+                if family["perturbation_pass_bp"] < 5000:
+                    continue
+                for kind, allocations in family["specializations"].items():
+                    for branch, count in allocations.items():
+                        if count:
+                            placements[f"{kind}/{branch}"].add(family["placement_region"])
+        map_coverage[map_id] = {
+            "robust_placement_regions": {key: sorted(value) for key, value in sorted(placements.items())},
+            "branches_without_robust_placement": sorted(key for key, value in placements.items() if not value),
+        }
+    return {"format_version": 2, "definition_sha256": source_hash,
             "perturbations": list(PERTURBATIONS), "bands": config,
+            "map_branch_coverage": map_coverage,
             "encounters": encounters}
 
 
@@ -165,11 +210,22 @@ def failures(report: dict) -> list[str]:
 
 def summary(report: dict) -> dict:
     rows = report["encounters"]
+    branch_totals = {}
+    for row in rows:
+        for identity, share in row["branch_selection_share"].items():
+            branch_totals[identity] = branch_totals.get(identity, 0) + share
     return {"encounters": len(rows), "minimum_viable_families": min(r["viable_family_count"] for r in rows),
             "minimum_robust_families": min(r["robust_family_count"] for r in rows),
             "mean_viable_families": sum(r["viable_family_count"] for r in rows) // len(rows),
             "mean_perturbation_pass_bp": sum(r["mean_perturbation_pass_bp"] for r in rows) // len(rows),
-            "puzzles": sum(r["puzzle"] for r in rows)}
+            "puzzles": sum(r["puzzle"] for r in rows),
+            "branch_selection_share": {key: round(value / len(rows), 4)
+                                       for key, value in sorted(branch_totals.items())},
+            "mixed_branch_plans": sum(r["mixed_branch_plan_count"] for r in rows),
+            "maps_with_missing_robust_branch_placement": {
+                map_id: data["branches_without_robust_placement"]
+                for map_id, data in report["map_branch_coverage"].items()
+                if data["branches_without_robust_placement"]}}
 
 
 def main() -> int:
