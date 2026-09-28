@@ -138,18 +138,28 @@ return {
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
-				power = {tiers = {
-					[2] = {dmgMult = 1.25, fireMult = 1.05, rangeAdd = 0.09 * Constants.TILE, poisonDurAdd = 0.4, poisonDpsMult = 1.18, stackAdd = 1},
-					[3] = {dmgMult = 1.5, fireMult = 1.1, rangeAdd = 0.18 * Constants.TILE, poisonDurAdd = 0.8, poisonDpsMult = 1.3924, stackAdd = 2},
-					[4] = {dmgMult = 1.75, fireMult = 1.15, rangeAdd = 0.27 * Constants.TILE, poisonDurAdd = 1.2, poisonDpsMult = 1.643032, stackAdd = 3},
-					[5] = {dmgMult = 2, fireMult = 1.2, rangeAdd = 0.36 * Constants.TILE, poisonDurAdd = 1.6, poisonDpsMult = 1.9387778, stackAdd = 4},
+				virulent = {tiers = {
+					[2] = {dmgMult = 1.25, fireMult = 1.05, rangeAdd = 0.09 * Constants.TILE, poisonDPS = 6.0, poisonDuration = 5.0, poisonStackCap = 10, spreadRadius = 0, transferFraction = 0, recipientCap = 0},
+					[3] = {dmgMult = 1.50, fireMult = 1.10, rangeAdd = 0.18 * Constants.TILE, poisonDPS = 7.0, poisonDuration = 5.5, poisonStackCap = 12, spreadRadius = 0, transferFraction = 0, recipientCap = 0},
+					[4] = {dmgMult = 1.75, fireMult = 1.15, rangeAdd = 0.27 * Constants.TILE, poisonDPS = 8.5, poisonDuration = 6.0, poisonStackCap = 14, spreadRadius = 0, transferFraction = 0, recipientCap = 0},
+					[5] = {dmgMult = 2.00, fireMult = 1.20, rangeAdd = 0.36 * Constants.TILE, poisonDPS = 10.0, poisonDuration = 6.5, poisonStackCap = 16, spreadRadius = 0, transferFraction = 0, recipientCap = 0},
 				}},
-				tempo = {tiers = {
-					[2] = {dmgMult = 1.25, fireMult = 1.05, rangeAdd = 0.09 * Constants.TILE, poisonDurAdd = 0.4, poisonDpsMult = 1.18, stackAdd = 1},
-					[3] = {dmgMult = 1.5, fireMult = 1.1, rangeAdd = 0.18 * Constants.TILE, poisonDurAdd = 0.8, poisonDpsMult = 1.3924, stackAdd = 2},
-					[4] = {dmgMult = 1.75, fireMult = 1.15, rangeAdd = 0.27 * Constants.TILE, poisonDurAdd = 1.2, poisonDpsMult = 1.643032, stackAdd = 3},
-					[5] = {dmgMult = 2, fireMult = 1.2, rangeAdd = 0.36 * Constants.TILE, poisonDurAdd = 1.6, poisonDpsMult = 1.9387778, stackAdd = 4},
-				}},
+				contagion = {
+					fireProfile = {
+						{id = "move_homing"},
+						{id = "hit_circle", data = {radius = 12}},
+						{id = "hit_damage"},
+						{id = "apply_poison", data = {dps = 4, dur = 4.5, maxStacks = 8}},
+						{id = "infect_spread", data = {radius = 64, stackMult = 0.5, recipientCap = 3}},
+						{id = "draw_poison"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.18, fireMult = 1.08, rangeAdd = 0.09 * Constants.TILE, poisonDPS = 4.5, poisonDuration = 4.8, poisonStackCap = 9, spreadRadius = 64, transferFraction = 0.50, recipientCap = 3},
+						[3] = {dmgMult = 1.35, fireMult = 1.16, rangeAdd = 0.18 * Constants.TILE, poisonDPS = 5.0, poisonDuration = 5.2, poisonStackCap = 10, spreadRadius = 76, transferFraction = 0.55, recipientCap = 3},
+						[4] = {dmgMult = 1.52, fireMult = 1.24, rangeAdd = 0.27 * Constants.TILE, poisonDPS = 5.5, poisonDuration = 5.6, poisonStackCap = 11, spreadRadius = 88, transferFraction = 0.60, recipientCap = 4},
+						[5] = {dmgMult = 1.70, fireMult = 1.32, rangeAdd = 0.36 * Constants.TILE, poisonDPS = 6.0, poisonDuration = 6.0, poisonStackCap = 12, spreadRadius = 104, transferFraction = 0.70, recipientCap = 5},
+					},
+				},
 			},
 		},
 		behaviors = {

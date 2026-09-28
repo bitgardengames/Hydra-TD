@@ -286,8 +286,14 @@ B.infect_spread = {
 
 		spread.radius = data.radius or 48
 		spread.stackMult = data.stackMult or 1
-		spread.loop = data.loop == true
+		spread.recipientCap = data.recipientCap or 3
 		spread.source = p.sourceTower
+		-- A direct Contagion projectile is the only way to make poison eligible
+		-- for a death transfer. Transferred poison is always generation one.
+		e.poisonGeneration = 0
+		e.poisonOriginSpecialization = "contagion"
+		e.poisonOriginTower = p.sourceTower
+		e._infectDidSpread = false
 	end
 }
 
@@ -542,6 +548,8 @@ B.apply_poison = {
 			e.poisonTimer = max(e.poisonTimer or 0, data.dur)
 			e.poisonDuration = max(e.poisonDuration or 0, data.dur)
 			e.poisonSource = p.sourceTower
+			e.poisonOriginTower = p.sourceTower
+			e.poisonOriginSpecialization = p.sourceTower and p.sourceTower.specialization or nil
 		end
 
 		local evt = emitFX(p, "poison_splash")

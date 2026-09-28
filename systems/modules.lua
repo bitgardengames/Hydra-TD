@@ -367,6 +367,12 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 	local fieldRadius = tier.fieldRadius
 	local fieldLifetime = tier.fieldLifetime
 	local fieldFactor = tier.fieldFactor
+	local poisonDPS = tier.poisonDPS
+	local poisonDuration = tier.poisonDuration
+	local poisonStackCap = tier.poisonStackCap
+	local spreadRadius = tier.spreadRadius
+	local transferFraction = tier.transferFraction
+	local recipientCap = tier.recipientCap
 
 	for i = 1, #ctx.behaviors do
 		local b = ctx.behaviors[i]
@@ -380,6 +386,9 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 				if fieldLifetime then data.life = fieldLifetime end
 				if fieldFactor then data.factor = fieldFactor end
 			elseif b.id == "apply_poison" then
+				if poisonDPS then data.dps = poisonDPS end
+				if poisonDuration then data.dur = poisonDuration end
+				if poisonStackCap then data.maxStacks = poisonStackCap end
 				if poisonDurAdd ~= 0 then
 					data.dur = (data.dur or 0) + poisonDurAdd
 				end
@@ -389,6 +398,10 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 				if stackAdd ~= 0 then
 					data.maxStacks = math.max(1, (data.maxStacks or 1) + stackAdd)
 				end
+			elseif b.id == "infect_spread" then
+				if spreadRadius then data.radius = spreadRadius end
+				if transferFraction then data.stackMult = transferFraction end
+				if recipientCap then data.recipientCap = recipientCap end
 			elseif b.id == "aoe_damage" and splashAdd ~= 0 then
 				data.radius = math.max(1, (data.radius or 1) + splashAdd)
 			elseif b.id == "pierce" and pierceMaxHits then
