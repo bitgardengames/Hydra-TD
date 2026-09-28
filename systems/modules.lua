@@ -350,35 +350,37 @@ local function applyTowerUpgradeBehaviorScaling(ctx, tower)
 
 	local upgrade = tower.def.upgrade or {}
 	local level = math.max(1, tower.level or 1)
-	local upgrades = math.max(0, level - 1)
-	if upgrades <= 0 then
+	if level <= 1 then
 		return
 	end
+	local branch = tower.specialization and upgrade.branches and upgrade.branches[tower.specialization]
+	local tier = branch and branch.tiers[level]
+	if not tier then return end
 
-	local slowDurAdd = upgrade.slowDurAdd or 0
-	local poisonDurAdd = upgrade.poisonDurAdd or 0
-	local poisonDpsMult = upgrade.poisonDpsMult or 1
-	local stackAdd = upgrade.stackAdd or 0
-	local splashAdd = upgrade.splashAdd or 0
+	local slowDurAdd = tier.slowDurAdd or 0
+	local poisonDurAdd = tier.poisonDurAdd or 0
+	local poisonDpsMult = tier.poisonDpsMult or 1
+	local stackAdd = tier.stackAdd or 0
+	local splashAdd = tier.splashAdd or 0
 
 	for i = 1, #ctx.behaviors do
 		local b = ctx.behaviors[i]
 		local data = b.data
 		if data then
 			if b.id == "apply_slow" and slowDurAdd ~= 0 then
-				data.dur = (data.dur or 0) + slowDurAdd * upgrades
+				data.dur = (data.dur or 0) + slowDurAdd
 			elseif b.id == "apply_poison" then
 				if poisonDurAdd ~= 0 then
-					data.dur = (data.dur or 0) + poisonDurAdd * upgrades
+					data.dur = (data.dur or 0) + poisonDurAdd
 				end
 				if poisonDpsMult ~= 1 then
-					data.dps = (data.dps or 0) * (poisonDpsMult ^ upgrades)
+					data.dps = (data.dps or 0) * poisonDpsMult
 				end
 				if stackAdd ~= 0 then
-					data.maxStacks = math.max(1, (data.maxStacks or 1) + stackAdd * upgrades)
+					data.maxStacks = math.max(1, (data.maxStacks or 1) + stackAdd)
 				end
 			elseif b.id == "aoe_damage" and splashAdd ~= 0 then
-				data.radius = math.max(1, (data.radius or 1) + splashAdd * upgrades)
+				data.radius = math.max(1, (data.radius or 1) + splashAdd)
 			end
 		end
 	end

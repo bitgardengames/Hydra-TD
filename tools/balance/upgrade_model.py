@@ -28,14 +28,21 @@ def progression() -> tuple[tuple[float, ...], dict[str, dict[str, float]]]:
     for kind in TOWERS:
         raw = table_body(definitions, kind, ROOT / "world/tower_defs.lua")
         upgrade = table_body(raw, "upgrade", ROOT / "world/tower_defs.lua")
+        # Both authored branches retain the checked-in baseline curve. Read one
+        # branch's explicit endpoint and first paid tier for the legacy aggregate
+        # model, which represents range growth as a per-tier increment.
+        tier_2 = re.search(r"\[2\]\s*=\s*\{([^{}]*)\}", upgrade)
+        tier_5 = re.search(r"\[5\]\s*=\s*\{([^{}]*)\}", upgrade)
+        if not tier_2 or not tier_5:
+            raise ValueError(f"missing explicit upgrade tiers for {kind}")
         number = lambda body, key, default=None: numeric_field(
             body, key, ROOT / "world/tower_defs.lua", kind, default)
         towers[kind] = {
             "cost": number(raw, "cost"), "damage": number(raw, "damage"),
             "fireRate": number(raw, "fireRate"), "range": number(raw, "range"),
-            "dmgMult": number(upgrade, "dmgMult", 1),
-            "fireMult": number(upgrade, "fireMult", 1),
-            "rangeAdd": number(upgrade, "rangeAdd", 0),
+            "dmgMult": number(tier_5.group(1), "dmgMult", 1),
+            "fireMult": number(tier_5.group(1), "fireMult", 1),
+            "rangeAdd": number(tier_2.group(1), "rangeAdd", 0),
         }
     return costs, towers
 
