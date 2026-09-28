@@ -1,90 +1,128 @@
-"""Parse the shipped, stat-only tower progression model.
+"""Parse the shipped branch-aware tower progression model.
 
-Canonical balance and replay fixtures import this module rather than copying
-upgrade prices or consulting the experimental module definitions.
+The public helpers in this module are shared by all balance simulations.  In
+particular, callers must select a specialization for paid tiers; silently
+interpolating one tier-five ``dmgMult`` curve used to erase most of the authored
+branch behaviour.
 """
 from __future__ import annotations
 
+import hashlib
 import re
+from functools import cache
 from pathlib import Path
 
-from lua_source import numeric_field, table_body
+from lua_source import named_entries, numeric_field, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
+SOURCE_FILES = ("world/tower_defs.lua", "world/towers.lua",
+                "world/projectiles.lua", "world/projectile_behaviors.lua")
 
 
-def progression() -> tuple[tuple[float, ...], dict[str, dict[str, float]]]:
-    runtime = (ROOT / "world/towers.lua").read_text()
-    raw_costs = table_body(runtime, "UPGRADE_COST_MULTIPLIERS", ROOT / "world/towers.lua")
+def source_fingerprint() -> str:
+    digest = hashlib.sha256()
+    for rel in SOURCE_FILES:
+        digest.update(rel.encode() + b"\0")
+        digest.update((ROOT / rel).read_bytes())
+    return digest.hexdigest()
+
+
+def _fields(body: str, context: str) -> dict[str, float]:
+    """Return numeric scalar fields, including values expressed in tiles."""
+    result = {}
+    for key, value in re.findall(r"\b(\w+)\s*=\s*([0-9.]+)(?:\s*\*\s*Constants\.TILE)?", body):
+        result[key] = float(value)
+        if re.search(rf"\b{re.escape(key)}\s*=\s*{re.escape(value)}\s*\*\s*Constants\.TILE", body):
+            result[key] *= 48
+    return result
+
+
+@cache
+def progression() -> tuple[tuple[float, ...], dict[str, dict]]:
+    runtime_path = ROOT / "world/towers.lua"
+    runtime = runtime_path.read_text()
+    raw_costs = table_body(runtime, "UPGRADE_COST_MULTIPLIERS", runtime_path)
     costs = tuple(float(value) for value in re.findall(r"[0-9.]+", raw_costs))
-    if len(costs) != 4:
-        raise ValueError("expected four runtime upgrade cost multipliers")
-    if costs[0] <= 1 or any(current <= previous for previous, current in zip(costs, costs[1:])):
-        raise ValueError("upgrade costs must exceed the base tower cost and increase each tier")
+    if len(costs) != 4 or costs[0] <= 1 or any(a >= b for a, b in zip(costs, costs[1:])):
+        raise ValueError("expected four increasing paid-tier cost multipliers")
 
-    definitions = (ROOT / "world/tower_defs.lua").read_text()
+    path = ROOT / "world/tower_defs.lua"
+    definitions = path.read_text()
+    root = table_body(definitions, "return", path)
     towers = {}
-    for kind in TOWERS:
-        raw = table_body(definitions, kind, ROOT / "world/tower_defs.lua")
-        upgrade = table_body(raw, "upgrade", ROOT / "world/tower_defs.lua")
-        # Both authored branches retain the checked-in baseline curve. Read one
-        # branch's explicit endpoint and first paid tier for the legacy aggregate
-        # model, which represents range growth as a per-tier increment.
-        tier_2 = re.search(r"\[2\]\s*=\s*\{([^{}]*)\}", upgrade)
-        tier_5 = re.search(r"\[5\]\s*=\s*\{([^{}]*)\}", upgrade)
-        if not tier_2 or not tier_5:
-            raise ValueError(f"missing explicit upgrade tiers for {kind}")
-        number = lambda body, key, default=None: numeric_field(
-            body, key, ROOT / "world/tower_defs.lua", kind, default)
+    for kind, raw in named_entries(root, "return", path).items():
+        if kind not in TOWERS:
+            continue
+        upgrade = table_body(raw, "upgrade", path)
+        branches_body = table_body(upgrade, "branches", path)
+        branches = {}
+        for branch, branch_body in named_entries(branches_body, "branches", path).items():
+            tiers_body = table_body(branch_body, "tiers", path)
+            tiers = {}
+            for level in range(2, 6):
+                match = re.search(rf"\[{level}\]\s*=\s*\{{([^{{}}]*)\}}", tiers_body)
+                if not match:
+                    raise ValueError(f"missing {kind}/{branch} paid tier {level}")
+                tiers[level] = _fields(match.group(1), f"{kind}/{branch}/{level}")
+            branches[branch] = {"tiers": tiers}
         towers[kind] = {
-            "cost": number(raw, "cost"), "damage": number(raw, "damage"),
-            "fireRate": number(raw, "fireRate"), "range": number(raw, "range"),
-            "dmgMult": number(tier_5.group(1), "dmgMult", 1),
-            "fireMult": number(tier_5.group(1), "fireMult", 1),
-            "rangeAdd": number(tier_2.group(1), "rangeAdd", 0),
+            "cost": numeric_field(raw, "cost", path, kind),
+            "damage": numeric_field(raw, "damage", path, kind),
+            "fireRate": numeric_field(raw, "fireRate", path, kind),
+            "range": numeric_field(raw, "range", path, kind),
+            "branches": branches,
         }
     return costs, towers
 
 
-def level_stats(tower: dict[str, float], level: int) -> dict[str, float]:
-    """Mirror recomputeTowerStats: multipliers are max-level, range is per tier."""
-    progress = (level - 1) / 4
-    damage = tower["damage"] * (1 + (tower["dmgMult"] - 1) * progress)
-    rate = tower["fireRate"] * (1 + (tower["fireMult"] - 1) * progress)
-    return {"damage": damage, "fireRate": rate, "dps": damage * rate,
-            "range": tower["range"] + tower["rangeAdd"] * (level - 1)}
+def level_stats(tower: dict, level: int, branch: str | None = None) -> dict[str, float]:
+    """Resolve an explicit authored tier; level one is the unbranched base."""
+    if level not in range(1, 6):
+        raise ValueError("tower level must be 1..5")
+    stats = {"damage": tower["damage"], "fireRate": tower["fireRate"],
+             "range": tower["range"]}
+    if level == 1:
+        stats["dps"] = stats["damage"] * stats["fireRate"]
+        return stats
+    # Compatibility for presentation-only callers: this still resolves an
+    # authored branch tier (never an interpolated aggregate curve). Simulators
+    # pass their specialization explicitly.
+    if not branch:
+        branch = next(iter(tower["branches"]))
+    try:
+        tier = tower["branches"][branch]["tiers"][level]
+    except KeyError as exc:
+        raise ValueError(f"unknown specialization {branch!r} at level {level}") from exc
+    stats.update(tier)
+    stats["damage"] = tower["damage"] * tier.get("dmgMult", 1)
+    stats["fireRate"] = tower["fireRate"] * tier.get("fireMult", 1)
+    stats["range"] = tower["range"] + tier.get("rangeAdd", 0)
+    stats["dps"] = stats["damage"] * stats["fireRate"]
+    return stats
+
+
+def purchase_cost(tower: dict, level: int, costs: tuple[float, ...]) -> int:
+    return round(tower["cost"] * (1 + sum(costs[:level - 1])))
 
 
 def expansion_comparisons() -> list[dict]:
-    """Compare every tier with equal-money base-tower expansion.
-
-    Open placement uses raw output. Constrained placement credits the upgraded
-    tower for retaining the best tile, continuous focus, less overkill, and its
-    role; the bounded factors are explicit fixture assumptions, not runtime
-    inputs.
-    """
     costs, towers = progression()
-    role_factor = {"slow": 1.28, "lancer": 1.05, "poison": 1.18,
-                   "cannon": 1.16, "shock": 1.15, "plasma": 1.12}
     rows = []
     for kind, tower in towers.items():
         base = level_stats(tower, 1)
-        previous = base
-        for tier, multiplier in enumerate(costs, 2):
-            current = level_stats(tower, tier)
-            marginal = current["dps"] - previous["dps"]
-            expansion = base["dps"] * multiplier
-            raw = marginal / expansion
-            range_gain = current["range"] / previous["range"]
-            # A second tower averages 72% useful uptime after legal-tile/coverage
-            # loss and 88% after target switching/overkill. Scarcity rises by tier.
-            constrained = raw * role_factor[kind] * range_gain / (.72 * .88) * (1 + .08*(tier-2))
-            rows.append({"tower": kind, "tier": tier,
-                         "upgrade_cost": round(tower["cost"] * multiplier),
-                         "base_tower_equivalents": multiplier,
-                         "open_placement_output_ratio": round(raw, 3),
-                         "constrained_utility_ratio": round(constrained, 3),
-                         "range_tiles": round(current["range"], 3)})
-            previous = current
+        for branch in tower["branches"]:
+            for tier in range(2, 6):
+                current = level_stats(tower, tier, branch)
+                previous = level_stats(tower, tier - 1, branch) if tier > 2 else base
+                marginal = current["dps"] - previous["dps"]
+                raw = marginal / (base["dps"] * costs[tier - 2])
+                constrained = raw * (current["range"] / previous["range"]) / (.72 * .88) * (1 + .08*(tier-2))
+                rows.append({"tower": kind, "specialization": branch, "tier": tier,
+                             "upgrade_cost": round(tower["cost"] * costs[tier - 2]),
+                             "total_purchase_cost": purchase_cost(tower, tier, costs),
+                             "base_tower_equivalents": costs[tier - 2],
+                             "open_placement_output_ratio": round(raw, 3),
+                             "constrained_utility_ratio": round(constrained, 3),
+                             "range_tiles": round(current["range"] / 48, 3)})
     return rows

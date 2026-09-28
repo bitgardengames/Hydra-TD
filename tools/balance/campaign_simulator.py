@@ -49,6 +49,7 @@ DEFINITION_FILES = (
     "systems/difficulty.lua",
     "systems/difficulty_curve.lua",
     "systems/campaign_unlocks.lua",
+    "tools/balance/upgrade_model.py",
 )
 
 POLICIES = {
@@ -103,6 +104,7 @@ def fingerprint() -> str:
 
 @cache
 def parse_detail():
+    from upgrade_model import progression
     tower_text = (ROOT / "world/tower_defs.lua").read_text()
     enemy_text = (ROOT / "world/enemy_defs.lua").read_text()
     towers = {}
@@ -116,13 +118,6 @@ def parse_detail():
         def n(key, default):
             return float(number(body, key, str(default)))
 
-        tier_5 = re.search(r"\[5\]\s*=\s*\{([^{}]*)\}", body)
-        if not tier_5:
-            raise ValueError(f"missing explicit upgrade tier 5 for {kind}")
-
-        def tier_n(key, default):
-            return float(number(tier_5.group(1), key, str(default)))
-
         towers[kind] = {
             "cost": int(n("cost", 1)),
             "damage": n("damage", 1),
@@ -132,8 +127,6 @@ def parse_detail():
                 if "Constants.TILE" not in number(body, "range", "0")
                 else 3.5
             ),
-            "dmg_mult": tier_n("dmgMult", 1),
-            "fire_mult": tier_n("fireMult", 1),
         }
         towers[kind]["range"] = float(
             re.search(r"range\s*=\s*([0-9.]+)", body).group(1)
@@ -146,6 +139,9 @@ def parse_detail():
             towers[kind]["chain"] = 4.0
         if kind == "plasma":
             towers[kind]["tick"] = 0.14
+    _, branch_towers = progression()
+    for kind, parsed in towers.items():
+        parsed["branches"] = branch_towers[kind]["branches"]
     enemies = {}
     enemy_root = table_body(enemy_text, "return", ROOT / "world/enemy_defs.lua")
     for kind, body in named_entries(
@@ -201,6 +197,7 @@ class Tower:
     center: float
     coverage: float
     level: int = 1
+    specialization: str | None = None
     cooldown: float = 0.0
 
 
@@ -260,9 +257,10 @@ def resolve_tower_attack(
     now: float,
 ) -> None:
     """Apply one tower attack and advance its cooldown."""
-    progress = (tower.level - 1) / 4
-    damage = tower_def["damage"] * (1 + (tower_def["dmg_mult"] - 1) * progress)
-    rate = tower_def["rate"] * (1 + (tower_def["fire_mult"] - 1) * progress)
+    tier = (tower_def["branches"][tower.specialization]["tiers"][tower.level]
+            if tower.level > 1 else {})
+    damage = tower_def["damage"] * tier.get("dmgMult", 1)
+    rate = tower_def["rate"] * tier.get("fireMult", 1)
 
     def apply_hit(enemy: Enemy, index: int) -> None:
         hit = damage * (0.82**index if tower.kind == "shock" else 1)
@@ -374,6 +372,13 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 )
                 if money >= cost:
                     money -= cost
+                    if target.specialization is None:
+                        branches = tuple(detail_towers[target.kind]["branches"])
+                        # Stable policy choice, influenced by the encounter but
+                        # never collapsed into a generic output/coverage curve.
+                        pick = int(stable_unit(policy_name, map_id, wave_no,
+                                               target.kind, tuple(sorted(preview))) * len(branches))
+                        target.specialization = branches[pick]
                     target.level += 1
                     continue
             # Coverage intervals are an abstraction rather than map tiles; cap
