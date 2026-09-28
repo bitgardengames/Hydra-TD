@@ -194,18 +194,32 @@ return {
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
 			branches = {
-				power = {tiers = {
-					[2] = {dmgMult = 1.3625, fireMult = 1.03, rangeAdd = 0.08 * Constants.TILE, splashAdd = 5},
-					[3] = {dmgMult = 1.725, fireMult = 1.06, rangeAdd = 0.16 * Constants.TILE, splashAdd = 10},
-					[4] = {dmgMult = 2.0875, fireMult = 1.09, rangeAdd = 0.24 * Constants.TILE, splashAdd = 15},
-					[5] = {dmgMult = 2.45, fireMult = 1.12, rangeAdd = 0.32 * Constants.TILE, splashAdd = 20},
-				}},
-				tempo = {tiers = {
-					[2] = {dmgMult = 1.3625, fireMult = 1.03, rangeAdd = 0.08 * Constants.TILE, splashAdd = 5},
-					[3] = {dmgMult = 1.725, fireMult = 1.06, rangeAdd = 0.16 * Constants.TILE, splashAdd = 10},
-					[4] = {dmgMult = 2.0875, fireMult = 1.09, rangeAdd = 0.24 * Constants.TILE, splashAdd = 15},
-					[5] = {dmgMult = 2.45, fireMult = 1.12, rangeAdd = 0.32 * Constants.TILE, splashAdd = 20},
-				}},
+				siege = {
+					fireProfile = {
+						{id = "move_to_target_point"},
+						{id = "aoe_damage", data = {radius = 50, falloff = 0.68}},
+						{id = "draw_cannon"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.80, fireMult = 1.02, rangeAdd = 0.08 * Constants.TILE, splashRadius = 50, splashFalloff = 0.68},
+						[3] = {dmgMult = 2.35, fireMult = 1.04, rangeAdd = 0.16 * Constants.TILE, splashRadius = 52, splashFalloff = 0.69},
+						[4] = {dmgMult = 2.90, fireMult = 1.06, rangeAdd = 0.24 * Constants.TILE, splashRadius = 54, splashFalloff = 0.70},
+						[5] = {dmgMult = 3.55, fireMult = 1.08, rangeAdd = 0.32 * Constants.TILE, splashRadius = 56, splashFalloff = 0.72},
+					},
+				},
+				bombardment = {
+					fireProfile = {
+						{id = "move_to_target_point"},
+						{id = "aoe_damage", data = {radius = 64, falloff = 0.72}},
+						{id = "draw_cannon"},
+					},
+					tiers = {
+						[2] = {dmgMult = 1.35, fireMult = 1.04, rangeAdd = 0.08 * Constants.TILE, splashRadius = 64, splashFalloff = 0.72},
+						[3] = {dmgMult = 1.60, fireMult = 1.08, rangeAdd = 0.16 * Constants.TILE, splashRadius = 70, splashFalloff = 0.74},
+						[4] = {dmgMult = 1.95, fireMult = 1.12, rangeAdd = 0.24 * Constants.TILE, splashRadius = 78, splashFalloff = 0.76},
+						[5] = {dmgMult = 2.30, fireMult = 1.16, rangeAdd = 0.32 * Constants.TILE, splashRadius = 84, splashFalloff = 0.78},
+					},
+				},
 			},
 		},
 		behaviors = {

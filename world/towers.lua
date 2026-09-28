@@ -283,6 +283,7 @@ local function recomputeTowerStats(t)
 	t.fireRate = def.fireRate * (tier.fireMult or 1) * moduleStats.fireRateMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
 	t.range = def.range + (tier.rangeAdd or 0) + moduleStats.rangeAdd
+	t.projSpeed = tier.projSpeed or def.projSpeed
 	t.targetingPolicy = branch and branch.targetingPolicy or nil
 	recomputeAbilityModifiers(t)
 end
@@ -887,7 +888,10 @@ local function updateTowers(dt)
 				local targetSpeed = target.speed or 0
 				if t.splash and targetSpeed > SPLASH_LEAD_SPEED_THRESHOLD then
 					local speedFactor = min(targetSpeed / 120, 0.18)
-					local leadTime = 0.28 + speedFactor
+					-- Preserve the tuned lead at the authored base speed, while making a
+					-- future branch-specific shell speed participate in prediction.
+					local projectileLeadScale = (t.def.projSpeed or t.projSpeed) / max(1, t.projSpeed or 1)
+					local leadTime = (0.28 + speedFactor) * projectileLeadScale
 
 					if target.slowTimer and target.slowTimer > 0 then
 						leadTime = leadTime * 0.85
