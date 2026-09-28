@@ -661,6 +661,8 @@ local function sellTower(t)
 	end
 
 	Floaters.add(t.x, t.renderY - 30, "+" .. t.sellValue, cgR, cgG, cgB)
+	Effects.spawnSellSmoke(t.x, t.renderY)
+	Effects.shake(1.5, 0.12)
 	State.selectedTower = nil
 
 	Sound.play("towerSold")
