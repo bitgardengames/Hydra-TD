@@ -163,6 +163,7 @@ local function emitDamage(p, e, dmg)
 	-- Damage resolution uses these semantic hints to make successful counters
 	-- visibly distinct from ordinary hits without coupling visuals to a tower.
 		or (e and e.armor and (p.sourceKind == "cannon" or p.sourceKind == "lancer") and "armor_heavy")
+	return evt
 end
 
 local function beginChainDamageBudget(p)

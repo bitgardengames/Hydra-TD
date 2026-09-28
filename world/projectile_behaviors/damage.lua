@@ -206,7 +206,10 @@ B.hit_chain = {
 				dealt = consumeChainDamageBudget(p, dmg)
 			end
 			if dealt > 0 then
-				emitDamage(p, current, dealt)
+				local damageEvent = emitDamage(p, current, dealt)
+				if i == 1 and p._capacitor then
+					damageEvent.capacitor = p._capacitor
+				end
 			end
 			emitImpulse(p, current, p.x, p.y, 1.25)
 
@@ -249,6 +252,16 @@ B.hit_chain = {
 		-- store for FX (array reused across hits to reduce churn)
 		p._chain = chain
 	end
+}
+
+-- Arms the primary chain contact for the resolver. Charge is awarded only after
+-- authoritative damage succeeds, so misses, dead targets, and secondary arcs
+-- can never advance the tower's individual counter.
+B.capacitor = {
+	type = "damage",
+	onHit = function(p, _, data)
+		p._capacitor = data or {}
+	end,
 }
 
 B.chain_static_surge = {
