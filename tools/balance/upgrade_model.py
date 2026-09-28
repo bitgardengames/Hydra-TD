@@ -17,7 +17,8 @@ from lua_source import named_entries, numeric_field, table_body
 ROOT = Path(__file__).resolve().parents[2]
 TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
 SOURCE_FILES = ("world/tower_defs.lua", "world/towers.lua",
-                "world/projectiles.lua", "world/projectile_behaviors.lua")
+                "systems/branch_tier_resolver.lua", "world/projectiles.lua",
+                "world/projectile_behaviors.lua")
 
 
 def source_fingerprint() -> str:
@@ -66,6 +67,8 @@ def progression() -> tuple[tuple[float, ...], dict[str, dict]]:
                     raise ValueError(f"missing {kind}/{branch} paid tier {level}")
                 tiers[level] = _fields(match.group(1), f"{kind}/{branch}/{level}")
             branches[branch] = {"tiers": tiers}
+        if len(branches) != 2:
+            raise ValueError(f"{kind} must define exactly two branches")
         towers[kind] = {
             "cost": numeric_field(raw, "cost", path, kind),
             "damage": numeric_field(raw, "damage", path, kind),
@@ -73,6 +76,9 @@ def progression() -> tuple[tuple[float, ...], dict[str, dict]]:
             "range": numeric_field(raw, "range", path, kind),
             "branches": branches,
         }
+    branch_ids = [branch for tower in towers.values() for branch in tower["branches"]]
+    if len(branch_ids) != len(set(branch_ids)):
+        raise ValueError("branch identifiers must be globally unique and stable")
     return costs, towers
 
 

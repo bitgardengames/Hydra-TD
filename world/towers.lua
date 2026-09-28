@@ -17,6 +17,7 @@ local Modules = require("systems.modules")
 local RunStats = require("systems.run_stats")
 local Save = require("core.save")
 local CampaignUnlocks = require("systems.campaign_unlocks")
+local BranchTierResolver = require("systems.branch_tier_resolver")
 
 local towers = {}
 local towersByCell = {}
@@ -272,19 +273,14 @@ local function recomputeTowerStats(t)
 		return
 	end
 
-	local level = max(1, t.level or 1)
-	local upgrade = def.upgrade or {}
-	local branch = t.specialization and upgrade.branches and upgrade.branches[t.specialization]
-	local tier = level == 1 and upgrade.base or (branch and branch.tiers[level])
-	tier = tier or upgrade.base or {}
 	local moduleStats = Modules.getTowerStatModifiers(t)
-
-	t.damage = def.damage * (tier.dmgMult or 1) * moduleStats.damageMult
-	t.fireRate = def.fireRate * (tier.fireMult or 1) * moduleStats.fireRateMult
+	local resolved = BranchTierResolver.resolve(t, {modifiers = moduleStats})
+	t.damage = resolved.stats.damage
+	t.fireRate = resolved.stats.fireRate
 	t.fireInterval = 1 / max(0.001, t.fireRate)
-	t.range = def.range + (tier.rangeAdd or 0) + moduleStats.rangeAdd
-	t.projSpeed = tier.projSpeed or def.projSpeed
-	t.targetingPolicy = branch and branch.targetingPolicy or nil
+	t.range = resolved.stats.range
+	t.projSpeed = resolved.stats.projSpeed
+	t.targetingPolicy = resolved.targetingPolicy
 	recomputeAbilityModifiers(t)
 end
 
@@ -454,6 +450,9 @@ local function upgradeTower(t, specialization)
 		RunStats.recordInvestment(t, cost)
 	end
 	t.level = t.level + 1
+	-- Specialization and tier are now final: invalidate before any derived stat
+	-- or fire profile can be observed in this frame.
+	Modules.invalidateTower(t)
 	t.prevHeight = t.height
 	t.height = (t.level - 1) * 4
 	t.levelUpAnim = 1
@@ -461,7 +460,6 @@ local function upgradeTower(t, specialization)
 	t.upgradeFlash = 0.3
 	Save.recordTowerUpgrade(t.kind)
 	recomputeTowerStats(t)
-	Modules.invalidateTower(t)
 	t.sellValue = t.sellValue + floor(cost * diff.sellRefund)
 	t._upgradePreview = t._upgradePreview or {}
 	t._upgradePreview.nextLevel = t.level + 1
@@ -482,22 +480,11 @@ local function upgradeTower(t, specialization)
 end
 
 local function previewTowerStats(t, level, specialization)
-	local def = t.def
-	local upgrade = def.upgrade or {}
-	local branchId = t.specialization or specialization
-	local branch = branchId and upgrade.branches and upgrade.branches[branchId]
-	local tier = level == 1 and upgrade.base or (branch and branch.tiers[level])
-	tier = tier or upgrade.base or {}
-
 	local moduleStats = Modules.getTowerStatModifiers(t)
-	return {
-		damage = def.damage * (tier.dmgMult or 1) * moduleStats.damageMult,
-		fireRate = def.fireRate * (tier.fireMult or 1) * moduleStats.fireRateMult,
-		range = def.range + (tier.rangeAdd or 0) + moduleStats.rangeAdd,
-	}
+	return BranchTierResolver.resolve(t, {level = level, specialization = specialization, modifiers = moduleStats}).stats
 end
 
-local function cloneForPreview(t, level)
+local function cloneForPreview(t, level, specialization)
 	local clone = {}
 	for k, v in pairs(t) do
 		-- Module resolution only writes caches. Keeping them off the clone makes the
@@ -507,6 +494,7 @@ local function cloneForPreview(t, level)
 		end
 	end
 	clone.level = level
+	clone.specialization = specialization == nil and t.specialization or specialization
 	clone._cache = {}
 	return clone
 end
@@ -608,8 +596,8 @@ getUpgradePreview = function(t, specialization)
 	end
 	local level = max(1, t.level or 1)
 	local nextLevel = level + 1
-	local currentClone = cloneForPreview(t, level)
-	local nextClone = cloneForPreview(t, nextLevel)
+	local currentClone = cloneForPreview(t, level, level > 1 and (t.specialization or specialization) or nil)
+	local nextClone = cloneForPreview(t, nextLevel, t.specialization or specialization)
 	if level == 1 and not specialization then
 		return nil
 	end
