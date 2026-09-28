@@ -319,8 +319,16 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	e.slowTimer = 0
 	e.poisonStacks = 0
 	e.poisonTimer = 0
+	e.poisonDuration = 0
 	e.poisonTickTimer = 0
 	e.poisonDPS = 0
+	e.poisonMaxStacks = 0
+	e.poisonSource = nil
+	e.poisonGeneration = nil
+	e.poisonOriginSpecialization = nil
+	e.poisonOriginTower = nil
+	e._infectSpread = nil
+	e._infectDidSpread = nil
 	e.poisonMissingHpMult = 0
 	e.poisonRamp = 1
 	e.poisonRampPerTick = 0
@@ -507,34 +515,45 @@ local function updatePoison(e, dt)
 		e.poisonTimer, e.poisonDuration, e.poisonStacks, e.poisonDPS = 0, 0, 0, 0
 		e.poisonSource, e.poisonTickTimer, e.poisonMissingHpMult = nil, 0, 0
 		e.poisonRamp, e.poisonRampPerTick, e.poisonRampMax = 1, 0, 1
+		e.poisonGeneration, e.poisonOriginSpecialization, e.poisonOriginTower = nil, nil, nil
+		e._infectSpread, e._infectDidSpread = nil, nil
 	end
 end
 
-local function spreadInfectionVisitor(other, context)
-	local source, infect = context.source, context.infect
-	if other ~= source then
-		other.poisonStacks = (other.poisonStacks or 0) + context.spreadStacks
-		other.poisonDPS = max(other.poisonDPS or 0, source.poisonDPS or 0)
-		other.poisonTimer = max(other.poisonTimer or 0, source.poisonTimer or 0)
-		other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, source.poisonMissingHpMult or 0)
-		other.poisonRamp = max(other.poisonRamp or 1, source.poisonRamp or 1)
-		other.poisonRampPerTick = max(other.poisonRampPerTick or 0, source.poisonRampPerTick or 0)
-		other.poisonRampMax = max(other.poisonRampMax or 1, source.poisonRampMax or 1)
-		other.poisonSource = source.poisonSource
-
-		if infect.loop == true then
-			other._infectSpread = other._infectSpread or {}
-			other._infectSpread.radius = infect.radius
-			other._infectSpread.stackMult = infect.stackMult
-			other._infectSpread.loop = true
-			other._infectSpread.source = source.poisonSource
-			other._infectDidSpread = false
-		end
+local function collectInfectionCandidate(other, context, distanceSquared)
+	if other ~= context.source then
+		context.candidates[#context.candidates + 1] = {
+			enemy = other,
+			distanceSquared = distanceSquared,
+		}
 	end
+end
+
+local function applyTransferredInfection(other, context)
+	local source = context.source
+	other.poisonMaxStacks = max(other.poisonMaxStacks or 0, source.poisonMaxStacks or 0)
+	other.poisonStacks = min((other.poisonStacks or 0) + context.spreadStacks,
+		other.poisonMaxStacks or math.huge)
+	other.poisonDPS = max(other.poisonDPS or 0, source.poisonDPS or 0)
+	local duration = min(source.poisonTimer or 0, 3)
+	other.poisonTimer = max(other.poisonTimer or 0, duration)
+	other.poisonDuration = max(other.poisonDuration or 0, duration)
+	other.poisonMissingHpMult = max(other.poisonMissingHpMult or 0, source.poisonMissingHpMult or 0)
+	other.poisonRamp = max(other.poisonRamp or 1, source.poisonRamp or 1)
+	other.poisonRampPerTick = max(other.poisonRampPerTick or 0, source.poisonRampPerTick or 0)
+	other.poisonRampMax = max(other.poisonRampMax or 1, source.poisonRampMax or 1)
+	other.poisonSource = source.poisonSource
+	other.poisonGeneration = 1
+	other.poisonOriginSpecialization = source.poisonOriginSpecialization
+	other.poisonOriginTower = source.poisonOriginTower or source.poisonSource
+	-- Deliberately do not copy _infectSpread: generation-one poison cannot
+	-- transfer, even when it lands the killing tick.
 end
 
 local function spreadInfection(e)
-	if not (e._infectSpread and not e._infectDidSpread and e.hp <= 0 and e.poisonStacks and e.poisonStacks > 0) then
+	if not (e._infectSpread and not e._infectDidSpread and e.poisonGeneration == 0
+		and e.poisonOriginSpecialization == "contagion" and e.hp <= 0
+		and e.poisonStacks and e.poisonStacks > 0) then
 		return
 	end
 
@@ -545,8 +564,21 @@ local function spreadInfection(e)
 		infectionVisitContext.source = e
 		infectionVisitContext.infect = infect
 		infectionVisitContext.spreadStacks = spreadStacks
-		Spatial.visitRadius(e.x, e.y, infect.radius, spreadInfectionVisitor,
+		local candidates = infectionVisitContext.candidates or {}
+		infectionVisitContext.candidates = candidates
+		for i = #candidates, 1, -1 do candidates[i] = nil end
+		Spatial.visitRadius(e.x, e.y, infect.radius, collectInfectionCandidate,
 			infectionVisitContext, enemyQueryContext, Spatial.radiusOptions.living)
+		table.sort(candidates, function(a, b)
+			local aStacks = a.enemy.poisonStacks or 0
+			local bStacks = b.enemy.poisonStacks or 0
+			if aStacks ~= bStacks then return aStacks < bStacks end
+			if a.distanceSquared ~= b.distanceSquared then return a.distanceSquared < b.distanceSquared end
+			return (a.enemy.id or 0) < (b.enemy.id or 0)
+		end)
+		for i = 1, min(#candidates, infect.recipientCap or 3) do
+			applyTransferredInfection(candidates[i].enemy, infectionVisitContext)
+		end
 	end
 	Effects.spawnPoisonSplash(e.x, e.y)
 end
