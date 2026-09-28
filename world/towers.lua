@@ -273,24 +273,16 @@ local function recomputeTowerStats(t)
 	end
 
 	local level = max(1, t.level or 1)
-	local upgrades = max(0, level - 1)
 	local upgrade = def.upgrade or {}
-	local progress = min(1, upgrades / MAX_UPGRADES)
-
-	local dmgMult = upgrade.dmgMult or 1
-	local fireMult = upgrade.fireMult or 1
-	local rangeAdd = upgrade.rangeAdd or 0
-
-	-- Upgrade multipliers are interpreted as "at max upgrade" values so they scale
-	-- smoothly as levels are gained.
-	local scaledDamageMult = 1 + (dmgMult - 1) * progress
-	local scaledFireMult = 1 + (fireMult - 1) * progress
+	local branch = t.specialization and upgrade.branches and upgrade.branches[t.specialization]
+	local tier = level == 1 and upgrade.base or (branch and branch.tiers[level])
+	tier = tier or upgrade.base or {}
 	local moduleStats = Modules.getTowerStatModifiers(t)
 
-	t.damage = def.damage * scaledDamageMult * moduleStats.damageMult
-	t.fireRate = def.fireRate * scaledFireMult * moduleStats.fireRateMult
+	t.damage = def.damage * (tier.dmgMult or 1) * moduleStats.damageMult
+	t.fireRate = def.fireRate * (tier.fireMult or 1) * moduleStats.fireRateMult
 	t.fireInterval = 1 / max(0.001, t.fireRate)
-	t.range = def.range + rangeAdd * upgrades + moduleStats.rangeAdd
+	t.range = def.range + (tier.rangeAdd or 0) + moduleStats.rangeAdd
 	recomputeAbilityModifiers(t)
 end
 
@@ -330,6 +322,7 @@ local function addTower(kind, gx, gy)
 		x = x,
 		y = y,
 		level = 1,
+		specialization = nil,
 		height = 0,
 		prevHeight = 0,
 		renderHeight = 0,
@@ -414,7 +407,7 @@ end
 
 local getUpgradePreview
 
-local function upgradeTower(t)
+local function upgradeTower(t, specialization)
 	if not t then
 		return false, "missing_tower"
 	end
@@ -425,6 +418,22 @@ local function upgradeTower(t)
 		return false, "max_level"
 	end
 
+	local currentLevel = t.level or 1
+	local branches = t.def.upgrade and t.def.upgrade.branches
+	if currentLevel == 1 then
+		-- The first paid tier is the one and only branch decision. Do not mutate
+		-- the tower (or charge it) until a valid specialization was supplied.
+		if type(specialization) ~= "string" or not branches or not branches[specialization]
+			or not branches[specialization].tiers[2] then
+			return false, "specialization_required"
+		end
+	elseif not t.specialization or not branches or not branches[t.specialization]
+		or not branches[t.specialization].tiers[currentLevel + 1] then
+		return false, "invalid_specialization"
+	elseif specialization and specialization ~= t.specialization then
+		return false, "specialization_locked"
+	end
+
 	if State.money < cost then
 		return false, "money"
 	end
@@ -432,10 +441,13 @@ local function upgradeTower(t)
 	local diff = Difficulty.get()
 	-- Capture the same derived data used by the UI before mutating the tower. This
 	-- keeps the cosmetic response tied to real authored stats and module effects.
-	local transformationPreview = getUpgradePreview and getUpgradePreview(t)
+	local transformationPreview = getUpgradePreview and getUpgradePreview(t, specialization)
 
 	State.money = State.money - cost
 
+	if currentLevel == 1 then
+		t.specialization = specialization
+	end
 	t.level = t.level + 1
 	t.prevHeight = t.height
 	t.height = (t.level - 1) * 4
@@ -464,17 +476,19 @@ local function upgradeTower(t)
 	return true
 end
 
-local function previewTowerStats(t, level)
+local function previewTowerStats(t, level, specialization)
 	local def = t.def
-	local upgrades = max(0, level - 1)
-	local progress = min(1, upgrades / MAX_UPGRADES)
 	local upgrade = def.upgrade or {}
+	local branchId = t.specialization or specialization
+	local branch = branchId and upgrade.branches and upgrade.branches[branchId]
+	local tier = level == 1 and upgrade.base or (branch and branch.tiers[level])
+	tier = tier or upgrade.base or {}
 
 	local moduleStats = Modules.getTowerStatModifiers(t)
 	return {
-		damage = def.damage * (1 + ((upgrade.dmgMult or 1) - 1) * progress) * moduleStats.damageMult,
-		fireRate = def.fireRate * (1 + ((upgrade.fireMult or 1) - 1) * progress) * moduleStats.fireRateMult,
-		range = def.range + (upgrade.rangeAdd or 0) * upgrades + moduleStats.rangeAdd,
+		damage = def.damage * (tier.dmgMult or 1) * moduleStats.damageMult,
+		fireRate = def.fireRate * (tier.fireMult or 1) * moduleStats.fireRateMult,
+		range = def.range + (tier.rangeAdd or 0) + moduleStats.rangeAdd,
 	}
 end
 
@@ -560,7 +574,7 @@ local function addBehaviorRows(rows, before, after)
 	end
 end
 
-getUpgradePreview = function(t)
+getUpgradePreview = function(t, specialization)
 	if not t or not t.def then
 		return nil
 	end
@@ -568,8 +582,13 @@ getUpgradePreview = function(t)
 	local nextLevel = level + 1
 	local currentClone = cloneForPreview(t, level)
 	local nextClone = cloneForPreview(t, nextLevel)
-	local currentStats = previewTowerStats(currentClone, level)
-	local nextStats = previewTowerStats(nextClone, nextLevel)
+	if level == 1 and not specialization then
+		return nil
+	end
+	currentClone.specialization = currentClone.specialization or specialization
+	nextClone.specialization = nextClone.specialization or specialization
+	local currentStats = previewTowerStats(currentClone, level, specialization)
+	local nextStats = previewTowerStats(nextClone, nextLevel, specialization)
 	local currentBehaviors = behaviorMap(Modules.getFireProfile(currentClone))
 	local nextBehaviors = behaviorMap(Modules.getFireProfile(nextClone))
 	local rows = {}

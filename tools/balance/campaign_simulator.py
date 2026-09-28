@@ -116,6 +116,13 @@ def parse_detail():
         def n(key, default):
             return float(number(body, key, str(default)))
 
+        tier_5 = re.search(r"\[5\]\s*=\s*\{([^{}]*)\}", body)
+        if not tier_5:
+            raise ValueError(f"missing explicit upgrade tier 5 for {kind}")
+
+        def tier_n(key, default):
+            return float(number(tier_5.group(1), key, str(default)))
+
         towers[kind] = {
             "cost": int(n("cost", 1)),
             "damage": n("damage", 1),
@@ -125,8 +132,8 @@ def parse_detail():
                 if "Constants.TILE" not in number(body, "range", "0")
                 else 3.5
             ),
-            "dmg_mult": n("dmgMult", 1),
-            "fire_mult": n("fireMult", 1),
+            "dmg_mult": tier_n("dmgMult", 1),
+            "fire_mult": tier_n("fireMult", 1),
         }
         towers[kind]["range"] = float(
             re.search(r"range\s*=\s*([0-9.]+)", body).group(1)

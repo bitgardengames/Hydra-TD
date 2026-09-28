@@ -22,10 +22,21 @@ return {
 		color = Theme.tower.slow,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 1.7,
-			rangeAdd = 0.16 * Constants.TILE,
-			fireMult = 1.35,
-			slowDurAdd = 0.45,
+			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0, slowDurAdd = 0},
+			branches = {
+				power = {tiers = {
+					[2] = {dmgMult = 1.175, fireMult = 1.0875, rangeAdd = 0.16 * Constants.TILE, slowDurAdd = 0.45},
+					[3] = {dmgMult = 1.35, fireMult = 1.175, rangeAdd = 0.32 * Constants.TILE, slowDurAdd = 0.90},
+					[4] = {dmgMult = 1.525, fireMult = 1.2625, rangeAdd = 0.48 * Constants.TILE, slowDurAdd = 1.35},
+					[5] = {dmgMult = 1.7, fireMult = 1.35, rangeAdd = 0.64 * Constants.TILE, slowDurAdd = 1.80},
+				}},
+				tempo = {tiers = {
+					[2] = {dmgMult = 1.175, fireMult = 1.0875, rangeAdd = 0.16 * Constants.TILE, slowDurAdd = 0.45},
+					[3] = {dmgMult = 1.35, fireMult = 1.175, rangeAdd = 0.32 * Constants.TILE, slowDurAdd = 0.90},
+					[4] = {dmgMult = 1.525, fireMult = 1.2625, rangeAdd = 0.48 * Constants.TILE, slowDurAdd = 1.35},
+					[5] = {dmgMult = 1.7, fireMult = 1.35, rangeAdd = 0.64 * Constants.TILE, slowDurAdd = 1.80},
+				}},
+			},
 		},
 		behaviors = {
 			{id = "move_homing"},
@@ -53,9 +64,21 @@ return {
 		color = Theme.tower.lancer,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 2.65,
-			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.18,
+			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			branches = {
+				power = {tiers = {
+					[2] = {dmgMult = 1.4125, fireMult = 1.045, rangeAdd = 0.08 * Constants.TILE},
+					[3] = {dmgMult = 1.825, fireMult = 1.09, rangeAdd = 0.16 * Constants.TILE},
+					[4] = {dmgMult = 2.2375, fireMult = 1.135, rangeAdd = 0.24 * Constants.TILE},
+					[5] = {dmgMult = 2.65, fireMult = 1.18, rangeAdd = 0.32 * Constants.TILE},
+				}},
+				tempo = {tiers = {
+					[2] = {dmgMult = 1.4125, fireMult = 1.045, rangeAdd = 0.08 * Constants.TILE},
+					[3] = {dmgMult = 1.825, fireMult = 1.09, rangeAdd = 0.16 * Constants.TILE},
+					[4] = {dmgMult = 2.2375, fireMult = 1.135, rangeAdd = 0.24 * Constants.TILE},
+					[5] = {dmgMult = 2.65, fireMult = 1.18, rangeAdd = 0.32 * Constants.TILE},
+				}},
+			},
 		},
 		behaviors = {
 			{id = "move_homing"},
@@ -83,12 +106,21 @@ return {
 		color = Theme.tower.poison,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 2.0,
-			rangeAdd = 0.09 * Constants.TILE,
-			fireMult = 1.2,
-			poisonDurAdd = 0.4,
-			poisonDpsMult = 1.18,
-			stackAdd = 1,
+			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			branches = {
+				power = {tiers = {
+					[2] = {dmgMult = 1.25, fireMult = 1.05, rangeAdd = 0.09 * Constants.TILE, poisonDurAdd = 0.4, poisonDpsMult = 1.18, stackAdd = 1},
+					[3] = {dmgMult = 1.5, fireMult = 1.1, rangeAdd = 0.18 * Constants.TILE, poisonDurAdd = 0.8, poisonDpsMult = 1.3924, stackAdd = 2},
+					[4] = {dmgMult = 1.75, fireMult = 1.15, rangeAdd = 0.27 * Constants.TILE, poisonDurAdd = 1.2, poisonDpsMult = 1.643032, stackAdd = 3},
+					[5] = {dmgMult = 2, fireMult = 1.2, rangeAdd = 0.36 * Constants.TILE, poisonDurAdd = 1.6, poisonDpsMult = 1.9387778, stackAdd = 4},
+				}},
+				tempo = {tiers = {
+					[2] = {dmgMult = 1.25, fireMult = 1.05, rangeAdd = 0.09 * Constants.TILE, poisonDurAdd = 0.4, poisonDpsMult = 1.18, stackAdd = 1},
+					[3] = {dmgMult = 1.5, fireMult = 1.1, rangeAdd = 0.18 * Constants.TILE, poisonDurAdd = 0.8, poisonDpsMult = 1.3924, stackAdd = 2},
+					[4] = {dmgMult = 1.75, fireMult = 1.15, rangeAdd = 0.27 * Constants.TILE, poisonDurAdd = 1.2, poisonDpsMult = 1.643032, stackAdd = 3},
+					[5] = {dmgMult = 2, fireMult = 1.2, rangeAdd = 0.36 * Constants.TILE, poisonDurAdd = 1.6, poisonDpsMult = 1.9387778, stackAdd = 4},
+				}},
+			},
 		},
 		behaviors = {
 			{id = "move_homing"},
@@ -120,12 +152,21 @@ return {
 		color = Theme.tower.cannon,
 		canRotate = true,
 		upgrade = {
-			-- Match Lancer's damage curve instead of letting Cannon's splash scale
-			-- faster at the levels where packed waves are largest.
-			dmgMult = 2.45,
-			rangeAdd = 0.08 * Constants.TILE,
-			fireMult = 1.12,
-			splashAdd = 5, -- increase AoE radius per upgrade
+			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			branches = {
+				power = {tiers = {
+					[2] = {dmgMult = 1.3625, fireMult = 1.03, rangeAdd = 0.08 * Constants.TILE, splashAdd = 5},
+					[3] = {dmgMult = 1.725, fireMult = 1.06, rangeAdd = 0.16 * Constants.TILE, splashAdd = 10},
+					[4] = {dmgMult = 2.0875, fireMult = 1.09, rangeAdd = 0.24 * Constants.TILE, splashAdd = 15},
+					[5] = {dmgMult = 2.45, fireMult = 1.12, rangeAdd = 0.32 * Constants.TILE, splashAdd = 20},
+				}},
+				tempo = {tiers = {
+					[2] = {dmgMult = 1.3625, fireMult = 1.03, rangeAdd = 0.08 * Constants.TILE, splashAdd = 5},
+					[3] = {dmgMult = 1.725, fireMult = 1.06, rangeAdd = 0.16 * Constants.TILE, splashAdd = 10},
+					[4] = {dmgMult = 2.0875, fireMult = 1.09, rangeAdd = 0.24 * Constants.TILE, splashAdd = 15},
+					[5] = {dmgMult = 2.45, fireMult = 1.12, rangeAdd = 0.32 * Constants.TILE, splashAdd = 20},
+				}},
+			},
 		},
 		behaviors = {
 			{id = "move_to_target_point"},
@@ -149,9 +190,21 @@ return {
 		color = Theme.tower.shock,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 2.1,
-			rangeAdd = 0.11 * Constants.TILE,
-			fireMult = 1.2,
+			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			branches = {
+				power = {tiers = {
+					[2] = {dmgMult = 1.275, fireMult = 1.05, rangeAdd = 0.11 * Constants.TILE},
+					[3] = {dmgMult = 1.55, fireMult = 1.1, rangeAdd = 0.22 * Constants.TILE},
+					[4] = {dmgMult = 1.825, fireMult = 1.15, rangeAdd = 0.33 * Constants.TILE},
+					[5] = {dmgMult = 2.1, fireMult = 1.2, rangeAdd = 0.44 * Constants.TILE},
+				}},
+				tempo = {tiers = {
+					[2] = {dmgMult = 1.275, fireMult = 1.05, rangeAdd = 0.11 * Constants.TILE},
+					[3] = {dmgMult = 1.55, fireMult = 1.1, rangeAdd = 0.22 * Constants.TILE},
+					[4] = {dmgMult = 1.825, fireMult = 1.15, rangeAdd = 0.33 * Constants.TILE},
+					[5] = {dmgMult = 2.1, fireMult = 1.2, rangeAdd = 0.44 * Constants.TILE},
+				}},
+			},
 		},
 		behaviors = {
 			{id = "emit_on_target"},
@@ -177,9 +230,21 @@ return {
 		color = Theme.tower.plasma,
 		canRotate = true,
 		upgrade = {
-			dmgMult = 2.15,
-			rangeAdd = 0.09 * Constants.TILE,
-			fireMult = 1.25,
+			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			branches = {
+				power = {tiers = {
+					[2] = {dmgMult = 1.2875, fireMult = 1.0625, rangeAdd = 0.09 * Constants.TILE},
+					[3] = {dmgMult = 1.575, fireMult = 1.125, rangeAdd = 0.18 * Constants.TILE},
+					[4] = {dmgMult = 1.8625, fireMult = 1.1875, rangeAdd = 0.27 * Constants.TILE},
+					[5] = {dmgMult = 2.15, fireMult = 1.25, rangeAdd = 0.36 * Constants.TILE},
+				}},
+				tempo = {tiers = {
+					[2] = {dmgMult = 1.2875, fireMult = 1.0625, rangeAdd = 0.09 * Constants.TILE},
+					[3] = {dmgMult = 1.575, fireMult = 1.125, rangeAdd = 0.18 * Constants.TILE},
+					[4] = {dmgMult = 1.8625, fireMult = 1.1875, rangeAdd = 0.27 * Constants.TILE},
+					[5] = {dmgMult = 2.15, fireMult = 1.25, rangeAdd = 0.36 * Constants.TILE},
+				}},
+			},
 		},
 		behaviors = {
 			{id = "move_linear", data = {dist = 330}},
