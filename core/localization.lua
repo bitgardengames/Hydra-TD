@@ -57,6 +57,18 @@ function Localization.get(key, ...)
 	return str or key
 end
 
+-- Tower titles are kept here so every UI surface applies branch naming and
+-- punctuation consistently, while older/localized tower names still fall back.
+function Localization.towerTitle(tower)
+	if not tower then return "" end
+	local base = Localization.get(tower.def.nameKey)
+	if tower.specialization then
+		return Localization.get("inspect.specializedTowerTitle",
+			Localization.get("branch." .. tower.specialization .. ".name"), base, tower.level or 1)
+	end
+	return Localization.get("inspect.towerTitle", base, tower.level or 1)
+end
+
 return setmetatable(Localization, {
 	__call = function(_, ...)
 		return Localization.get(...)

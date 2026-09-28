@@ -508,7 +508,7 @@ local function updatePoison(e, dt)
 		e.hitSquashStrength = 0.55
 		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
 		State.addDamage("poison", damage, e.boss == true)
-		RunStats.recordDamage(e.poisonSource, damage)
+		RunStats.recordDamage(e.poisonSource, damage, e.boss == true)
 	end
 
 	if e.poisonTimer <= 0 then

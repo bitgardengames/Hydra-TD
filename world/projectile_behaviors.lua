@@ -109,6 +109,15 @@ function ProjectileBehaviors.hit(p, e, ctx)
 end
 function ProjectileBehaviors.draw(p, a)
 	local handlers = p._drawHandlers
-	if handlers then for i = 1, #handlers do handlers[i].fn(p, a, handlers[i].data) end end
+	if handlers then
+		local branch = p.sourceTower and p.sourceTower.specialization
+		local broad = branch == "rupture" or branch == "cold_field" or branch == "contagion"
+			or branch == "bombardment" or branch == "overcharged" or branch == "forked_lightning"
+		local scale = branch and (broad and 1.18 or 0.88) or 1
+		love.graphics.push()
+		love.graphics.scale(scale, scale)
+		for i = 1, #handlers do handlers[i].fn(p, a, handlers[i].data) end
+		love.graphics.pop()
+	end
 end
 return ProjectileBehaviors
