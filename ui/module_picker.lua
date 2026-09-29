@@ -7,6 +7,7 @@ local Modules = require("systems.modules")
 local Towers = require("world.towers")
 local L = require("core.localization")
 local Util = require("core.util")
+local SpecializationPreview = require("ui.specialization_preview")
 
 local lg = love.graphics
 local lm = love.mouse
@@ -14,6 +15,7 @@ local lm = love.mouse
 local ModulePicker = {}
 
 local cards = {}
+local previews = {}
 local openedAt = 0
 local layoutWidth, layoutHeight
 
@@ -103,10 +105,9 @@ local function rebuildLayout()
 	local gap = Util.clamp(sw * 0.022, 18, 30)
 	local cardW = Util.clamp((sw - 180 - gap * (count - 1)) / max(count, 1), 232, 300)
 	local specialization = State.modulePicker.mode == "specialization"
-	-- Specializations only need enough room to explain the branch's identity.
-	-- Keeping these cards short makes the choice easier to scan than the old
-	-- seven-row stat comparison.
-	local cardH = specialization and Util.clamp(sh * 0.30, 200, 228) or Util.clamp(sh * 0.40, 224, 264)
+	-- Specializations reserve a responsive band for their render canvas while
+	-- leaving localized copy and the CTA independent at supported resolutions.
+	local cardH = specialization and Util.clamp(sh * 0.48, 342, 410) or Util.clamp(sh * 0.40, 224, 264)
 	local totalW = count * cardW + (count - 1) * gap
 	local startX = (sw - totalW) * 0.5
 	local y = sh * 0.5 - cardH * 0.24
@@ -161,6 +162,11 @@ function ModulePicker.open(options)
 	State.modulePicker.tower = options and options.tower or nil
 	openedAt = love.timer.getTime()
 	rebuildLayout()
+	for i = 1, #previews do SpecializationPreview.release(previews[i]) end
+	previews = {}
+	if State.modulePicker.mode == "specialization" then
+		for i = 1, #choices do previews[i] = SpecializationPreview.new(choices[i].branchId) end
+	end
 
 	return true
 end
@@ -172,6 +178,8 @@ local pickerDefaults = {
 local pickerKeys = { "active", "choices", "mode", "title", "subtitle", "hint", "tower" }
 
 local function clearPicker()
+	for i = 1, #previews do SpecializationPreview.release(previews[i]) end
+	previews = {}
 	for i = 1, #pickerKeys do
 		local key = pickerKeys[i]
 		State.modulePicker[key] = pickerDefaults[key]
@@ -327,6 +335,9 @@ end
 function ModulePicker.update(dt)
 	if not ModulePicker.isActive() then return end
 	ensureLayout()
+	if State.modulePicker.mode == "specialization" then
+		for i = 1, #previews do SpecializationPreview.update(previews[i], dt) end
+	end
 	local now = love.timer.getTime()
 	local mx, my = lm.getPosition()
 	local response = -60 * math.log(0.8)
@@ -447,7 +458,15 @@ function ModulePicker.draw()
 			Fonts.set("ui")
 			lg.setColor(1, 1, 1, choice.disabled and 0.46 * alpha or 0.84 * alpha)
 			local choiceDesc = specialization and L("branch." .. choice.branchId .. ".desc") or getModuleDesc(mod)
-			lg.printf(choiceDesc, drawX + 18, bodyY + 56, drawW - 36, "left")
+			local descY = bodyY + 56
+			if specialization then
+				local previewX, previewY = drawX + 18, bodyY + 48
+				local previewW, previewH = drawW - 36, math.min(132, drawH * 0.35)
+				SpecializationPreview.draw(previews[i], previewX, previewY, previewW, previewH, 8)
+				descY = previewY + previewH + 12
+			end
+			lg.setColor(1, 1, 1, choice.disabled and 0.46 * alpha or 0.84 * alpha)
+			lg.printf(choiceDesc, drawX + 18, descY, drawW - 36, "left")
 
 			if choice.statusText then
 				lg.setColor(choice.disabled and 1 or towerColor[1], choice.disabled and 0.5 or towerColor[2], choice.disabled and 0.35 or towerColor[3], 0.86 * alpha)
