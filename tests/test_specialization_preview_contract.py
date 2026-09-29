@@ -54,6 +54,7 @@ def test_preview_requests_stencil_buffer_when_setting_render_target():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     canvas_settings = re.search(r"newCanvas\([^\n]+\{([^}]*)}", preview).group(1)
     assert "stencil" not in canvas_settings
+    assert re.search(r"\bmsaa\s*=\s*8\b", canvas_settings)
     assert re.search(r"setCanvas\(\{p\.canvas,\s*stencil\s*=\s*true}", preview)
     assert "lg.stencil(drawCanvasClip" in preview
 
