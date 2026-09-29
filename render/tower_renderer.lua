@@ -614,13 +614,17 @@ end
 
 local function drawTowers()
 	local selected = State.selectedTower
+	local choosingSpecialization = State.modulePicker.active
+		and State.modulePicker.mode == "specialization"
 
 	if selected then
-		lg.setColor(selR, selG, selB, 0.18)
-		lg.circle("fill", selected.x, selected.y, selected.range)
+		if not choosingSpecialization then
+			lg.setColor(selR, selG, selB, 0.18)
+			lg.circle("fill", selected.x, selected.y, selected.range)
 
-		lg.setColor(selR, selG, selB)
-		lg.circle("line", selected.x, selected.y, selected.range)
+			lg.setColor(selR, selG, selB)
+			lg.circle("line", selected.x, selected.y, selected.range)
+		end
 
 		lg.setLineWidth(2)
 

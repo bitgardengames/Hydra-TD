@@ -42,6 +42,17 @@ def test_picker_lifecycle_owns_preview_updates_and_release():
     )
 
 
+def test_specialization_picker_hides_selected_tower_range_without_extra_bars():
+    picker = (ROOT / "ui/module_picker.lua").read_text()
+    renderer = (ROOT / "render/tower_renderer.lua").read_text()
+    assert 'State.modulePicker.mode == "specialization"' in renderer
+    assert "if not choosingSpecialization then" in renderer
+    assert renderer.index("if not choosingSpecialization then") < renderer.index(
+        'lg.circle("fill", selected.x, selected.y, selected.range)'
+    )
+    assert "drawBackdropEffects" not in picker
+
+
 def test_preview_does_not_require_transform_query_api():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     assert "lg.getTransform" not in preview
