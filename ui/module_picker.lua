@@ -103,11 +103,13 @@ local function rebuildLayout()
 	local count = #State.modulePicker.choices
 
 	local gap = Util.clamp(sw * 0.022, 18, 30)
-	local cardW = Util.clamp((sw - 180 - gap * (count - 1)) / max(count, 1), 232, 300)
 	local specialization = State.modulePicker.mode == "specialization"
-	-- Specializations reserve a responsive band for their render canvas while
-	-- leaving localized copy and the CTA independent at supported resolutions.
-	local cardH = specialization and Util.clamp(sh * 0.48, 342, 410) or Util.clamp(sh * 0.40, 224, 264)
+	local availableCardW = (sw - 180 - gap * (count - 1)) / max(count, 1)
+	local cardW = specialization and Util.clamp(availableCardW, 248, 324)
+		or Util.clamp(availableCardW, 232, 300)
+	-- Give specialization canvases a little more width while trimming the empty
+	-- space that used to collect between their descriptions and CTAs.
+	local cardH = specialization and Util.clamp(sh * 0.42, 320, 360) or Util.clamp(sh * 0.40, 224, 264)
 	local totalW = count * cardW + (count - 1) * gap
 	local startX = (sw - totalW) * 0.5
 	local y = sh * 0.5 - cardH * 0.24
@@ -461,7 +463,7 @@ function ModulePicker.draw()
 			local descY = bodyY + 56
 			if specialization then
 				local previewX, previewY = drawX + 18, bodyY + 48
-				local previewW, previewH = drawW - 36, math.min(132, drawH * 0.35)
+				local previewW, previewH = drawW - 36, math.min(148, drawH * 0.43)
 				SpecializationPreview.draw(previews[i], previewX, previewY, previewW, previewH, 8)
 				descY = previewY + previewH + 12
 			end
