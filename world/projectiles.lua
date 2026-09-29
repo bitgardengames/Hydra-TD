@@ -115,15 +115,24 @@ local function acquire()
 	return { _retained = retained }
 end
 
--- Fields owned by the projectile runtime. Behavior-owned fields are declared by
--- their descriptors and compiled into a reset plan by the behavior registry.
-local coreFields = {
+-- These are shot-owned values. Retained containers live in p._retained and are
+-- deliberately not mixed into this list.
+local reusableFields = {
 	"x", "y", "r", "baseR", "scale", "life", "t", "sourceTower", "sourceKind",
 	"speed", "damage", "hitOrigin", "target", "targetID", "ignoreTarget", "angle",
 	"rotation", "vx", "vy", "hitRadius", "hitRadius2", "lastTX", "lastTY",
 	"behaviors", "hit", "_consumed", "_hooks", "_drawHandlers", "_canHitPredicates",
 	"_didExpireHook",
-	"onEvent",
+	"allowRepeatHits", "consumeOnHit", "pierce", "dead", "radius", "visualScale",
+	"cx", "cy", "orbitSpeed", "onEvent", "_baseDamage", "_beam", "_boom",
+	"_capacitor", "_carpetFire", "_chain", "_chainBudgetUsed", "_chainSecondaryHitCount",
+	"_chainVisited", "_claimedScratch", "_conductRadius", "_delayedBlast",
+	"_endpointScratch", "_forksScratch", "_growthScale", "_hasOutgoingScratch",
+	"_linear", "_orbit", "_orbitE", "_overdriveRound", "_procCooldowns", "_railMomentumStacks",
+	"_slowAuraRadius", "_slowAuraTick", "_slowAuraTimer", "_snowballBaseDamage",
+	"_slowFieldRadius", "_slowFieldFactor", "_slowFieldTick", "_slowFieldTimer", "_slowFieldDuration",
+	"_snowballHits", "_snowballStacks", "_spiral", "_supernovaBurstDone", "_suspend",
+	"_targetPointX", "_targetPointY", "_tickStates", "_wave", "_zap",
 }
 
 local function resetReusableState(p)
@@ -141,10 +150,9 @@ local function resetReusableState(p)
 	Util.clearTable(retained.defaultHitCtx)
 	retained.eventPoolCount = p._eventPoolCount or retained.eventPoolCount
 
-	for i = 1, #coreFields do
-		p[coreFields[i]] = nil
+	for i = 1, #reusableFields do
+		p[reusableFields[i]] = nil
 	end
-	PB.registry.resetProjectile(p)
 
 	p.eventRead = nil
 	p.eventCount = nil

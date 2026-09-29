@@ -561,23 +561,5 @@ B.beam = {
 -- STATUS
 -- =========================
 
-local fields = {
-	emit_on_target = {}, cannon_carpet_fire = { "_carpetFire" },
-	fork_chain = {}, split_on_hit = {}, lancer_ricochet = {},
-	lancer_sustained_barrage = {}, frost_shatter = {}, spawn_static_field = {},
-	spawn_orbital_on_hit = {}, poison_burst_on_death = {}, beam = { "_beam" },
-}
-local function resetForkScratch(p)
-	if p._forksScratch then clearArray(p._forksScratch) end
-	if p._claimedScratch then clearMap(p._claimedScratch) end
-end
-local function resetProcCooldowns(p)
-	if p._procCooldowns then clearMap(p._procCooldowns) end
-end
-for id, handlers in pairs(B) do
-	local reset = id == "fork_chain" and resetForkScratch or nil
-	if id == "split_on_hit" or id == "spawn_orbital_on_hit" then reset = resetProcCooldowns end
-	register({ id = id, role = "emission", handlers = handlers, fields = fields[id],
-		reset = reset })
-end
+for id, handlers in pairs(B) do register({ id = id, role = "emission", handlers = handlers }) end
 end
