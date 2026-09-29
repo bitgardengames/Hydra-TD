@@ -314,6 +314,16 @@ function Spatial.setEnemyLifecycleHooks(onCellChanged, onRemoved)
 end
 
 function Spatial.clear()
+	-- An entity's cell coordinates are part of this index's state. Leaving them
+	-- behind makes a subsequent rebuild at the same position look like a no-op,
+	-- even though the cell tables below have been emptied. This matters whenever
+	-- isolated gameplay worlds temporarily exchange the active enemy collection.
+	for enemy in pairs(indexedEnemyRadii) do
+		enemy.cell = nil
+		enemy.cellIndex = nil
+		enemy.cellX = nil
+		enemy.cellY = nil
+	end
 	clearTable(grid)
 	clearTable(enemyRadiusCounts)
 	clearTable(indexedEnemyRadii)

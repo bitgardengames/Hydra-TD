@@ -49,9 +49,9 @@ end
 
 local function drawWorld(map)
 	local lg=love.graphics
-	lg.setColor(.075,.11,.09,1); lg.rectangle("fill",0,0,W,H)
-	lg.setColor(.12,.17,.13,1)
-	for x=0,W,24 do for y=0,H,24 do lg.circle("fill",x+8,y+10,1.2) end end
+	-- Match the game's palette without asking the full-map grass renderer to
+	-- build decorations for this deliberately tiny scene.
+	lg.setColor(map.biome.terrain.grass); lg.rectangle("fill",0,0,W,H)
 	DrawWorld.drawPath(map)
 end
 local clipW,clipH,clipRadius

@@ -68,7 +68,21 @@ def test_preview_uses_a_straight_lane_and_the_gameplay_path_renderer():
     assert "lg.line" not in preview
 
 
+def test_preview_background_uses_the_default_biome_grass_palette():
+    preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    assert "lg.setColor(map.biome.terrain.grass)" in preview
+    assert "lg.circle" not in preview
+
+
 def test_preview_targeting_cache_is_isolated_between_cards():
     sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
     assert 'require("world.targeting")' in sandbox
     assert sandbox.count("Targeting.clearFrameCache()") >= 2
+
+
+def test_spatial_clear_invalidates_entity_membership_before_a_rebuild():
+    spatial = (ROOT / "world/spatial_grid.lua").read_text()
+    clear_body = spatial[spatial.index("function Spatial.clear()"):
+                         spatial.index("function Spatial.beginFrame()")]
+    for field in ("cell", "cellIndex", "cellX", "cellY"):
+        assert f"enemy.{field} = nil" in clear_body
