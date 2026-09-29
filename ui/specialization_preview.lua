@@ -170,12 +170,14 @@ function Preview.draw(p, x, y, w, h, radius)
 	end
 	local oldCanvas, oldShader = lg.getCanvas(), lg.getShader()
 	local bm,am=lg.getBlendMode(); local r,g,b,a=lg.getColor(); local lw=lg.getLineWidth()
-	local sx,sy,sw,sh=lg.getScissor(); local transform=lg.getTransform()
+	local sx,sy,sw,sh=lg.getScissor()
 	lg.push("all"); lg.setCanvas(p.canvas); lg.origin(); lg.clear(0,0,0,0)
 	clipW,clipH,clipRadius=cw,ch,(radius or 8)
 	lg.stencil(drawCanvasClip,"replace",1); lg.setStencilTest("greater",0)
 	lg.scale(cw/W,ch/H); renderCanvas(p); lg.setStencilTest(); lg.pop()
-	lg.setCanvas(oldCanvas); lg.setShader(oldShader); lg.setBlendMode(bm,am); lg.setColor(r,g,b,a); lg.setLineWidth(lw); lg.replaceTransform(transform)
+	-- push("all")/pop restores the caller's transform without relying on
+	-- getTransform, which is unavailable on some supported LÖVE runtimes.
+	lg.setCanvas(oldCanvas); lg.setShader(oldShader); lg.setBlendMode(bm,am); lg.setColor(r,g,b,a); lg.setLineWidth(lw)
 	if sx then lg.setScissor(max(x,sx),max(y,sy),min(x+w,sx+sw)-max(x,sx),min(y+h,sy+sh)-max(y,sy)) else lg.setScissor(x,y,w,h) end
 	lg.setColor(1,1,1,1); lg.draw(p.canvas,x,y,0,w/cw,h/ch)
 	if sx then lg.setScissor(sx,sy,sw,sh) else lg.setScissor() end
