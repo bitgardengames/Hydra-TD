@@ -2,6 +2,7 @@
 package.path = "./?.lua;./?/init.lua;" .. package.path
 
 local Preview = require("ui.specialization_preview")
+local EnemyDefs = require("world.enemy_defs")
 local expected = {
 	"marksman", "rupture", "deep_freeze", "cold_field", "virulent", "contagion",
 	"siege", "bombardment", "capacitor", "forked_lightning", "accelerator", "overcharged",
@@ -11,6 +12,10 @@ for i = 1, #expected do
 	local id, def = expected[i], Preview.definitions[expected[i]]
 	assert(def, "missing definition for " .. id)
 	assert(def.duration and def.tower and def.enemies and def.shots and def.speed and def.impact and def.effect)
+	for enemyIndex = 1, #def.enemies do
+		local kind = def.enemies[enemyIndex][1]
+		assert(EnemyDefs[kind], id .. " preview uses unknown enemy kind " .. tostring(kind))
+	end
 end
 
 local function snapshot(p)

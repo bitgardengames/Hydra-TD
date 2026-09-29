@@ -14,18 +14,18 @@ end
 -- {kind, start x/y, end x/y, durable}.  The remaining values describe projectile
 -- motion, impact size, and the branch-specific treatment drawn at impact.
 Preview.definitions = {
-	marksman = {duration=3.2,tower={28,78,"lancer"}, enemies=enemies({"armored",205,58,150,58,true},{"runner",180,91,95,91}), shots={0.72}, speed=250, impact=20,effect="priority"},
+	marksman = {duration=3.2,tower={28,78,"lancer"}, enemies=enemies({"tank",205,58,150,58,true},{"runner",180,91,95,91}), shots={0.72}, speed=250, impact=20,effect="priority"},
 	rupture = {duration=3.0,tower={25,76,"lancer"}, enemies=enemies({"grunt",105,68,78,68},{"grunt",150,68,123,68},{"grunt",197,68,170,68}), shots={0.62}, speed=230, impact=12,effect="pierce"},
-	deep_freeze = {duration=3.4,tower={28,83,"slow"}, enemies=enemies({"armored",202,65,102,65,true},{"runner",202,96,82,96}), shots={0.62}, speed=185, impact=25,effect="freeze"},
+	deep_freeze = {duration=3.4,tower={28,83,"slow"}, enemies=enemies({"tank",202,65,102,65,true},{"runner",202,96,82,96}), shots={0.62}, speed=185, impact=25,effect="freeze"},
 	cold_field = {duration=3.5,tower={27,83,"slow"}, enemies=enemies({"grunt",142,55,91,55},{"runner",204,75,112,75},{"grunt",174,97,104,97}), shots={0.55}, speed=180, impact=48,effect="field"},
-	virulent = {duration=3.6,tower={28,81,"poison"}, enemies=enemies({"armored",190,70,142,70,true}), shots={0.45,0.95,1.45,1.95}, speed=195, impact=12,effect="stacks"},
+	virulent = {duration=3.6,tower={28,81,"poison"}, enemies=enemies({"tank",190,70,142,70,true}), shots={0.45,0.95,1.45,1.95}, speed=195, impact=12,effect="stacks"},
 	contagion = {duration=3.5,tower={27,82,"poison"}, enemies=enemies({"grunt",147,70,114,70},{"grunt",190,48,157,48},{"runner",202,94,163,94}), shots={0.55}, speed=185, impact=52,effect="spread"},
-	siege = {duration=3.5,tower={28,84,"cannon"}, enemies=enemies({"armored",190,68,152,68,true}), shots={0.65}, speed=145, impact=28,effect="siege"},
+	siege = {duration=3.5,tower={28,84,"cannon"}, enemies=enemies({"tank",190,68,152,68,true}), shots={0.65}, speed=145, impact=28,effect="siege"},
 	bombardment = {duration=3.5,tower={28,84,"cannon"}, enemies=enemies({"grunt",128,48,103,48},{"grunt",180,67,150,67},{"runner",211,94,170,94},{"grunt",145,99,116,99}), shots={0.58}, speed=140, impact=62,effect="blast"},
-	capacitor = {duration=3.8,tower={31,81,"shock"}, enemies=enemies({"armored",184,68,142,68,true}), shots={0.38,0.78,1.18,1.58}, speed=999, impact=24,effect="charge"},
+	capacitor = {duration=3.8,tower={31,81,"shock"}, enemies=enemies({"tank",184,68,142,68,true}), shots={0.38,0.78,1.18,1.58}, speed=999, impact=24,effect="charge"},
 	forked_lightning = {duration=3.4,tower={29,82,"shock"}, enemies=enemies({"grunt",112,65,91,65},{"grunt",148,43,126,43},{"runner",177,73,151,73},{"grunt",208,49,179,49},{"runner",211,98,180,98}), shots={0.66}, speed=999, impact=15,effect="fork"},
 	accelerator = {duration=3.0,tower={25,76,"plasma"}, enemies=enemies({"grunt",105,68,78,68},{"grunt",153,68,126,68},{"grunt",202,68,175,68}), shots={0.48}, speed=330, impact=12,effect="lane"},
-	overcharged = {duration=3.8,tower={28,78,"plasma"}, enemies=enemies({"grunt",122,49,98,49},{"armored",165,70,137,70,true},{"grunt",207,91,174,91},{"runner",210,48,174,48}), shots={0.65}, speed=125, impact=34,effect="grow"},
+	overcharged = {duration=3.8,tower={28,78,"plasma"}, enemies=enemies({"grunt",122,49,98,49},{"tank",165,70,137,70,true},{"grunt",207,91,174,91},{"runner",210,48,174,48}), shots={0.65}, speed=125, impact=34,effect="grow"},
 }
 
 local function resetRecords(p, looping)
