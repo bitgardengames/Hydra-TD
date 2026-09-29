@@ -30,3 +30,11 @@ def test_picker_lifecycle_owns_preview_updates_and_release():
     assert picker.index("if not ModulePicker.isActive() then return end") < picker.index(
         "SpecializationPreview.update(previews[i], dt)"
     )
+
+
+def test_preview_does_not_require_transform_query_api():
+    preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    assert "lg.getTransform" not in preview
+    assert "lg.replaceTransform" not in preview
+    assert 'lg.push("all")' in preview
+    assert "lg.pop()" in preview
