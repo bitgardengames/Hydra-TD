@@ -562,5 +562,32 @@ B.tick_damage = {
 -- VISUALS (NOW MODULAR)
 -- =========================
 
-for id, handlers in pairs(B) do register({ id = id, role = "damage", handlers = handlers }) end
+local fields = {
+	hit_damage = {}, aoe_damage = {}, cannon_shockwave = {}, cannon_damage_scale = {},
+	cannon_delayed_blast = { "_delayedBlast", "dead" },
+	hit_chain = { "_chainSecondaryHitCount", "_chainBudgetUsed" }, capacitor = { "_capacitor" },
+	chain_static_surge = {}, chain_endpoint_burst = {}, tick_zap = { "_zap" },
+	explode_on_hit = {}, slow_pop = {}, shatter_bonus = {},
+	snowball_ramp = { "_snowballBaseDamage", "_snowballStacks" },
+	plasma_supernova_burst = { "_supernovaBurstDone" },
+	tick_damage = { "allowRepeatHits", "visualScale" },
+}
+local retainedByBehavior = {
+	hit_chain = { "_chain", "_chainVisited" },
+	chain_endpoint_burst = { "_endpointScratch", "_hasOutgoingScratch" },
+	snowball_ramp = { "_snowballHits" }, tick_damage = { "_tickStates" },
+}
+local function makeReset(names)
+	return function(p)
+		for i = 1, #names do
+			local value = p[names[i]]
+			if value then clearMap(value) end
+		end
+	end
+end
+for id, handlers in pairs(B) do
+	local retained = retainedByBehavior[id]
+	register({ id = id, role = "damage", handlers = handlers, fields = fields[id],
+		reset = retained and makeReset(retained) or nil })
+end
 end
