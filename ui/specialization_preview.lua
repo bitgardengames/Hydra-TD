@@ -46,12 +46,17 @@ end
 
 local function drawPath(points)
 	local lg=love.graphics
+	local vertices={}
+	for i=1,#points do
+		vertices[#vertices+1]=points[i][1]
+		vertices[#vertices+1]=points[i][2]
+	end
 	lg.setColor(.075,.11,.09,1); lg.rectangle("fill",0,0,W,H)
 	lg.setColor(.12,.17,.13,1)
 	for x=0,W,24 do for y=0,H,24 do lg.circle("fill",x+8,y+10,1.2) end end
-	lg.setLineJoin("bevel"); lg.setLineWidth(31); lg.setColor(.09,.075,.065,1); lg.line(points)
-	lg.setLineWidth(25); lg.setColor(.27,.23,.18,1); lg.line(points)
-	lg.setLineWidth(2); lg.setColor(.38,.32,.24,.55); lg.line(points)
+	lg.setLineJoin("bevel"); lg.setLineWidth(31); lg.setColor(.09,.075,.065,1); lg.line(vertices)
+	lg.setLineWidth(25); lg.setColor(.27,.23,.18,1); lg.line(vertices)
+	lg.setLineWidth(2); lg.setColor(.38,.32,.24,.55); lg.line(vertices)
 end
 local clipW,clipH,clipRadius
 local function drawCanvasClip() love.graphics.rectangle("fill",0,0,clipW,clipH,clipRadius,clipRadius) end

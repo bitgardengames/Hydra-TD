@@ -56,3 +56,11 @@ def test_preview_requests_stencil_buffer_when_setting_render_target():
     assert "stencil" not in canvas_settings
     assert re.search(r"setCanvas\(\{p\.canvas,\s*stencil\s*=\s*true}", preview)
     assert "lg.stencil(drawCanvasClip" in preview
+
+
+def test_preview_flattens_path_points_for_love_line():
+    preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    assert "vertices[#vertices+1]=points[i][1]" in preview
+    assert "vertices[#vertices+1]=points[i][2]" in preview
+    assert "lg.line(points)" not in preview
+    assert preview.count("lg.line(vertices)") == 3
