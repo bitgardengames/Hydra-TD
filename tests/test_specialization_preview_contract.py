@@ -69,6 +69,22 @@ def test_preview_uses_a_straight_lane_and_the_gameplay_path_renderer():
     assert "lg.line" not in preview
 
 
+def test_preview_composition_puts_the_tower_above_the_lowered_lane():
+    preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    lane = re.search(r"local path = \{\{[^,]+,([^}]+)\},\{[^,]+,([^}]+)\}\}", preview)
+    towers = re.findall(r'tower=\{kind="[^"]+",x=(\d+),y=(\d+)\}', preview)
+    assert lane and int(lane.group(1)) == 82
+    assert towers
+    assert all(110 <= int(x) <= 130 and int(y) < 82 for x, y in towers)
+
+
+def test_specialization_cards_prioritize_preview_area_without_extra_height():
+    picker = (ROOT / "ui/module_picker.lua").read_text()
+    assert "Util.clamp(availableCardW, 256, 336)" in picker
+    assert "Util.clamp(sh * 0.40, 312, 350)" in picker
+    assert "math.min(156, drawH * 0.46)" in picker
+
+
 def test_preview_background_uses_the_default_biome_grass_palette():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     assert "lg.setColor(map.biome.terrain.grass)" in preview

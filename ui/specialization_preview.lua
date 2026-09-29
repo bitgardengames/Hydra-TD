@@ -7,7 +7,7 @@ local Preview = {}
 local W, H = 240, 116
 -- Keep the vignette deliberately simple: this is one real, horizontal gameplay
 -- lane rather than a decorative polyline that only resembles a path.
-local path = {{-28,72},{268,72}}
+local path = {{-28,82},{268,82}}
 local function cast(...)
 	local kinds={...}; local result={}
 	for i=1,#kinds do result[i]={kind=kinds[i],distance=(i-1)*30} end
@@ -15,18 +15,18 @@ local function cast(...)
 end
 
 Preview.definitions = {
-	marksman={duration=5.2,tower={kind="lancer",x=82,y=104},enemies={{kind="tank",hpScale=7,distance=15},{kind="runner",hpScale=4,distance=62}}},
-	rupture={duration=4.8,tower={kind="lancer",x=76,y=105},enemies=cast("grunt","grunt","grunt")},
-	deep_freeze={duration=5.4,tower={kind="slow",x=82,y=105},enemies={{kind="tank",hpScale=7,distance=18}}},
-	cold_field={duration=5.4,tower={kind="slow",x=82,y=105},enemies=cast("grunt","runner","grunt","grunt")},
-	virulent={duration=5.8,tower={kind="poison",x=82,y=105},enemies={{kind="tank",hpScale=6,distance=18}}},
-	contagion={duration=5.8,tower={kind="poison",x=82,y=105},enemies=cast("grunt","grunt","runner","grunt")},
-	siege={duration=5.4,tower={kind="cannon",x=82,y=105},enemies={{kind="tank",hpScale=8,distance=20}}},
-	bombardment={duration=5.4,tower={kind="cannon",x=82,y=105},enemies=cast("grunt","grunt","runner","grunt","grunt")},
-	capacitor={duration=5.8,tower={kind="shock",x=82,y=105},enemies={{kind="tank",hpScale=8,distance=20}}},
-	forked_lightning={duration=5.4,tower={kind="shock",x=82,y=105},enemies=cast("grunt","grunt","runner","grunt","runner")},
-	accelerator={duration=5.0,tower={kind="plasma",x=78,y=105},enemies=cast("grunt","grunt","grunt")},
-	overcharged={duration=5.8,tower={kind="plasma",x=82,y=105},enemies=cast("grunt","tank","grunt","runner")},
+	marksman={duration=5.2,tower={kind="lancer",x=120,y=48},enemies={{kind="tank",hpScale=7,distance=15},{kind="runner",hpScale=4,distance=62}}},
+	rupture={duration=4.8,tower={kind="lancer",x=116,y=48},enemies=cast("grunt","grunt","grunt")},
+	deep_freeze={duration=5.4,tower={kind="slow",x=120,y=48},enemies={{kind="tank",hpScale=7,distance=18}}},
+	cold_field={duration=5.4,tower={kind="slow",x=120,y=48},enemies=cast("grunt","runner","grunt","grunt")},
+	virulent={duration=5.8,tower={kind="poison",x=120,y=48},enemies={{kind="tank",hpScale=6,distance=18}}},
+	contagion={duration=5.8,tower={kind="poison",x=120,y=48},enemies=cast("grunt","grunt","runner","grunt")},
+	siege={duration=5.4,tower={kind="cannon",x=120,y=48},enemies={{kind="tank",hpScale=8,distance=20}}},
+	bombardment={duration=5.4,tower={kind="cannon",x=120,y=48},enemies=cast("grunt","grunt","runner","grunt","grunt")},
+	capacitor={duration=5.8,tower={kind="shock",x=120,y=48},enemies={{kind="tank",hpScale=8,distance=20}}},
+	forked_lightning={duration=5.4,tower={kind="shock",x=120,y=48},enemies=cast("grunt","grunt","runner","grunt","runner")},
+	accelerator={duration=5.0,tower={kind="plasma",x=116,y=48},enemies=cast("grunt","grunt","grunt")},
+	overcharged={duration=5.8,tower={kind="plasma",x=120,y=48},enemies=cast("grunt","tank","grunt","runner")},
 }
 
 local function createWorld(branchId, def)
