@@ -166,7 +166,9 @@ function Preview.draw(p, x, y, w, h, radius)
 	local cw,ch=max(1,math.floor(w+.5)),max(1,math.floor(h+.5))
 	if not p.canvas or p.canvasW~=cw or p.canvasH~=ch then
 		if p.canvas and p.canvas.release then p.canvas:release() end
-		p.canvas=lg.newCanvas(cw,ch,{dpiscale=1}); p.canvasW,p.canvasH=cw,ch
+		-- The rounded preview clip writes to the stencil buffer below, so the
+		-- off-screen canvas must explicitly allocate stencil storage.
+		p.canvas=lg.newCanvas(cw,ch,{dpiscale=1,stencil=true}); p.canvasW,p.canvasH=cw,ch
 	end
 	local oldCanvas, oldShader = lg.getCanvas(), lg.getShader()
 	local bm,am=lg.getBlendMode(); local r,g,b,a=lg.getColor(); local lw=lg.getLineWidth()
