@@ -139,12 +139,6 @@ local function ensureLayout()
 	end
 end
 
-local function drawBackdropEffects(sw, sh, alpha)
-	lg.setColor(0, 0, 0, 0.22 * alpha)
-	lg.rectangle("fill", 0, 0, sw, sh * 0.19)
-	lg.rectangle("fill", 0, sh * 0.81, sw, sh * 0.19)
-end
-
 function ModulePicker.open(options)
 	if not Modules.isEnabled() and not (options and options.mode == "specialization") then
 		return false
@@ -400,7 +394,6 @@ function ModulePicker.draw()
 
 	lg.setColor(dim[1], dim[2], dim[3], 0.84 * overlayT)
 	lg.rectangle("fill", 0, 0, sw, sh)
-	drawBackdropEffects(sw, sh, overlayT)
 
 	local picker = State.modulePicker
 	local title = picker.title or "Wave Reward"
