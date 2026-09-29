@@ -1,10 +1,13 @@
 -- Specialization cards host the same entities and combat systems as a match.
 -- This module authors only the tiny map and cast; GameplaySandbox owns isolation.
 local GameplaySandbox = require("world.gameplay_sandbox")
+local DrawWorld = require("render.draw_world")
 local Preview = {}
 
 local W, H = 240, 116
-local path = {{-28,72},{72,72},{120,48},{268,48}}
+-- Keep the vignette deliberately simple: this is one real, horizontal gameplay
+-- lane rather than a decorative polyline that only resembles a path.
+local path = {{-28,72},{268,72}}
 local function cast(...)
 	local kinds={...}; local result={}
 	for i=1,#kinds do result[i]={kind=kinds[i],distance=(i-1)*30} end
@@ -44,19 +47,12 @@ function Preview.update(p,dt)
 	end
 end
 
-local function drawPath(points)
+local function drawWorld(map)
 	local lg=love.graphics
-	local vertices={}
-	for i=1,#points do
-		vertices[#vertices+1]=points[i][1]
-		vertices[#vertices+1]=points[i][2]
-	end
 	lg.setColor(.075,.11,.09,1); lg.rectangle("fill",0,0,W,H)
 	lg.setColor(.12,.17,.13,1)
 	for x=0,W,24 do for y=0,H,24 do lg.circle("fill",x+8,y+10,1.2) end end
-	lg.setLineJoin("bevel"); lg.setLineWidth(31); lg.setColor(.09,.075,.065,1); lg.line(vertices)
-	lg.setLineWidth(25); lg.setColor(.27,.23,.18,1); lg.line(vertices)
-	lg.setLineWidth(2); lg.setColor(.38,.32,.24,.55); lg.line(vertices)
+	DrawWorld.drawPath(map)
 end
 local clipW,clipH,clipRadius
 local function drawCanvasClip() love.graphics.rectangle("fill",0,0,clipW,clipH,clipRadius,clipRadius) end
@@ -66,7 +62,7 @@ function Preview.draw(p,x,y,w,h,radius)
 	if not p.canvas or p.canvasW~=cw or p.canvasH~=ch then if p.canvas and p.canvas.release then p.canvas:release() end; p.canvas=lg.newCanvas(cw,ch,{dpiscale=1}); p.canvasW,p.canvasH=cw,ch end
 	local old=lg.getCanvas(); lg.push("all"); lg.setCanvas({p.canvas,stencil=true}); lg.origin(); lg.clear(0,0,0,0)
 	clipW,clipH,clipRadius=cw,ch,radius or 8; lg.stencil(drawCanvasClip,"replace",1); lg.setStencilTest("greater",0); lg.scale(cw/W,ch/H)
-	p.world:draw(drawPath); lg.setStencilTest(); lg.pop(); lg.setCanvas(old)
+	p.world:draw(drawWorld); lg.setStencilTest(); lg.pop(); lg.setCanvas(old)
 	lg.push("all"); lg.setScissor(x,y,w,h); lg.setColor(1,1,1,1); lg.draw(p.canvas,x,y,0,w/cw,h/ch); lg.pop()
 end
 function Preview.release(p) if p and p.canvas and p.canvas.release then p.canvas:release() end; if p then p.canvas=nil end end

@@ -58,9 +58,17 @@ def test_preview_requests_stencil_buffer_when_setting_render_target():
     assert "lg.stencil(drawCanvasClip" in preview
 
 
-def test_preview_flattens_path_points_for_love_line():
+def test_preview_uses_a_straight_lane_and_the_gameplay_path_renderer():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
-    assert "vertices[#vertices+1]=points[i][1]" in preview
-    assert "vertices[#vertices+1]=points[i][2]" in preview
-    assert "lg.line(points)" not in preview
-    assert preview.count("lg.line(vertices)") == 3
+    assert 'require("render.draw_world")' in preview
+    assert "DrawWorld.drawPath(map)" in preview
+    path = re.search(r"local path = \{\{([^}]+)\},\{([^}]+)\}\}", preview)
+    assert path
+    assert path.group(1).split(",")[1] == path.group(2).split(",")[1]
+    assert "lg.line" not in preview
+
+
+def test_preview_targeting_cache_is_isolated_between_cards():
+    sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
+    assert 'require("world.targeting")' in sandbox
+    assert sandbox.count("Targeting.clearFrameCache()") >= 2
