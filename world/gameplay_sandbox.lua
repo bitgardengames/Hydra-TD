@@ -11,6 +11,9 @@ local Spatial = require("world.spatial_grid")
 local Modules = require("systems.modules")
 local BranchTierResolver = require("systems.branch_tier_resolver")
 local EnemyRenderState = require("render.enemy_render_state")
+local Targeting = require("world.targeting")
+local Biomes = require("world.biomes")
+local Constants = require("core.constants")
 
 local Sandbox = {}
 Sandbox.__index = Sandbox
@@ -29,7 +32,19 @@ local function exchange(a, b)
 end
 
 local function buildPath(points)
-	local path = {blocked={}, isPath={}, path={}, pathWorld=points, pathSegLen={}, samples={}, sampleStep=1}
+	local path = {
+		blocked={}, isPath={}, path={}, pathWorld=points, pathSegLen={}, samples={}, sampleStep=1,
+		biome=Biomes.defs.default,
+	}
+	-- DrawWorld consumes the grid-space path used by a real map. Preserve the
+	-- authored world-space lane for movement while deriving that same geometry
+	-- for the gameplay path renderer.
+	for i = 1, #points do
+		path.path[i] = {
+			points[i][1] / Constants.TILE + 0.5,
+			points[i][2] / Constants.TILE + 0.5,
+		}
+	end
 	local total = 0
 	for i = 1, #points - 1 do
 		local a, b = points[i], points[i + 1]
@@ -99,6 +114,11 @@ function Sandbox:withWorld(fn)
 	local oldPreview, oldFrame = State.previewSandbox, State.frameId
 	local randomState = love.math.getRandomState and love.math.getRandomState()
 	State.previewSandbox = true
+	-- The live targeting cache is keyed by State.frameId. Preview sandboxes all
+	-- restore that value after ticking, so sharing the cache could leave a card
+	-- targeting another card's enemies (or no enemy at all). Give every sandbox
+	-- tick a clean gameplay query without retaining preview entities afterward.
+	Targeting.clearFrameCache()
 	Spatial.clear()
 	for i=1,#Enemies.enemies do Spatial.updateEnemy(Enemies.enemies[i]) end
 	local ok, err = pcall(fn)
@@ -110,6 +130,7 @@ function Sandbox:withWorld(fn)
 	for key in pairs(map) do map[key] = nil end
 	for key, value in pairs(savedMap) do map[key] = value end
 	for i=1,#Enemies.enemies do Spatial.updateEnemy(Enemies.enemies[i]) end
+	Targeting.clearFrameCache()
 	State.previewSandbox, State.frameId = oldPreview, oldFrame
 	if randomState and love.math.setRandomState then love.math.setRandomState(randomState) end
 	if not ok then error(err, 0) end
@@ -135,10 +156,10 @@ function Sandbox:reset()
 	setmetatable(self, Sandbox)
 end
 
-function Sandbox:draw(drawPath)
+function Sandbox:draw(drawWorld)
 	local EnemyRenderer = require("render.enemy_renderer")
 	local TowerRenderer = require("render.tower_renderer")
-	drawPath(self.map.pathWorld)
+	drawWorld(self.map)
 	local tower = self.towers[1]
 	TowerRenderer.drawTowerVisual(tower.kind, tower.x, tower.renderY, tower.angle, tower.recoil, tower.level)
 	TowerRenderer.drawTowerFX(tower)
