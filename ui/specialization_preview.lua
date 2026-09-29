@@ -166,14 +166,14 @@ function Preview.draw(p, x, y, w, h, radius)
 	local cw,ch=max(1,math.floor(w+.5)),max(1,math.floor(h+.5))
 	if not p.canvas or p.canvasW~=cw or p.canvasH~=ch then
 		if p.canvas and p.canvas.release then p.canvas:release() end
-		-- The rounded preview clip writes to the stencil buffer below, so the
-		-- off-screen canvas must explicitly allocate stencil storage.
-		p.canvas=lg.newCanvas(cw,ch,{dpiscale=1,stencil=true}); p.canvasW,p.canvasH=cw,ch
+		p.canvas=lg.newCanvas(cw,ch,{dpiscale=1}); p.canvasW,p.canvasH=cw,ch
 	end
 	local oldCanvas, oldShader = lg.getCanvas(), lg.getShader()
 	local bm,am=lg.getBlendMode(); local r,g,b,a=lg.getColor(); local lw=lg.getLineWidth()
 	local sx,sy,sw,sh=lg.getScissor()
-	lg.push("all"); lg.setCanvas(p.canvas); lg.origin(); lg.clear(0,0,0,0)
+	-- Stencil is a render-target attachment option, not a Canvas setting.
+	-- Request a temporary stencil buffer while drawing the rounded preview.
+	lg.push("all"); lg.setCanvas({p.canvas,stencil=true}); lg.origin(); lg.clear(0,0,0,0)
 	clipW,clipH,clipRadius=cw,ch,(radius or 8)
 	lg.stencil(drawCanvasClip,"replace",1); lg.setStencilTest("greater",0)
 	lg.scale(cw/W,ch/H); renderCanvas(p); lg.setStencilTest(); lg.pop()

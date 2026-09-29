@@ -40,7 +40,9 @@ def test_preview_does_not_require_transform_query_api():
     assert "lg.pop()" in preview
 
 
-def test_preview_canvas_allocates_the_stencil_buffer_used_for_clipping():
+def test_preview_requests_stencil_buffer_when_setting_render_target():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
-    assert re.search(r"newCanvas\([^\n]+\{[^}]*stencil\s*=\s*true", preview)
+    canvas_settings = re.search(r"newCanvas\([^\n]+\{([^}]*)}", preview).group(1)
+    assert "stencil" not in canvas_settings
+    assert re.search(r"setCanvas\(\{p\.canvas,\s*stencil\s*=\s*true}", preview)
     assert "lg.stencil(drawCanvasClip" in preview
