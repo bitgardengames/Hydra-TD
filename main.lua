@@ -382,10 +382,12 @@ function love.draw()
 end
 
 function love.mousepressed(x, y, button)
-	if State.mode == "pause" then
-		if Menu.mousepressedPause(x, y, button) then
-			return
-		end
+	-- Menu screens are the top-most input layer. Gameplay modals such as the
+	-- specialization picker may remain active behind the pause menu, but they
+	-- must never intercept a menu interaction.
+	if State.mode ~= "game" then
+		Menu.mousepressed(x, y, button)
+		return
 	end
 
 	if ModulePicker.isActive() then
@@ -397,12 +399,6 @@ function love.mousepressed(x, y, button)
 		Overlay.mousepressed(x, y, button)
 		return
 	end
-
-	if State.mode ~= "game" then
-		Menu.mousepressed(x, y, button)
-		return
-	end
-
 
 	if Messages.mousepressed(x, y, button) then
 		return
@@ -418,14 +414,14 @@ function love.wheelmoved(x, y)
 end
 
 function love.mousereleased(x, y, button)
-	if ModulePicker.isActive() then return end
-	if Overlay.isActive() then
-		Overlay.mousereleased(x, y, button)
+	if State.mode ~= "game" then
+		Menu.mousereleased(x, y, button)
 		return
 	end
 
-	if State.mode ~= "game" then
-		Menu.mousereleased(x, y, button)
+	if ModulePicker.isActive() then return end
+	if Overlay.isActive() then
+		Overlay.mousereleased(x, y, button)
 		return
 	end
 
@@ -447,6 +443,12 @@ function love.keypressed(key)
 		lg.captureScreenshot(SCREENSHOT_DIR .. "/screenshot_" .. time .. ".png")
 	end
 
+	if State.mode ~= "game" then
+		Menu.keypressed(key)
+
+		return
+	end
+
 	if ModulePicker.isActive() then
 		ModulePicker.keypressed(key)
 		return
@@ -454,12 +456,6 @@ function love.keypressed(key)
 
 	if Overlay.isActive() then
 		Overlay.keypressed(key)
-		return
-	end
-
-	if State.mode ~= "game" then
-		Menu.keypressed(key)
-
 		return
 	end
 
