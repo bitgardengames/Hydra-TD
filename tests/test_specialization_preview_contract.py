@@ -22,6 +22,19 @@ def test_every_tower_branch_has_an_authored_preview():
     assert preview_ids == branch_ids
 
 
+def test_preview_enemy_kinds_have_render_definitions():
+    preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    enemy_defs = (ROOT / "world/enemy_defs.lua").read_text()
+    defined_kinds = set(re.findall(r"^\t([a-z_]+)\s*=\s*{", enemy_defs, re.M))
+    preview_groups = re.findall(r"enemies=enemies\((.*?)\), shots=", preview)
+    preview_kinds = {
+        kind
+        for group in preview_groups
+        for kind in re.findall(r'{"([a-z_]+)"', group)
+    }
+    assert preview_kinds <= defined_kinds
+
+
 def test_picker_lifecycle_owns_preview_updates_and_release():
     picker = (ROOT / "ui/module_picker.lua").read_text()
     assert 'State.modulePicker.mode == "specialization"' in picker
