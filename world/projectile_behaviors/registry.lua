@@ -3,8 +3,6 @@ local Shared = require("world.projectile_behaviors.shared")
 local Registry = {}
 local descriptors = {}
 local definitions = {}
-local resetFields = {}
-local resetHooks = {}
 local validRoles = {
 	movement = true, collision = true, damage = true,
 	status_proc = true, emission = true, drawing = true,
@@ -19,8 +17,6 @@ local function validateDescriptor(descriptor, known)
 	assert(type(descriptor.id) == "string" and descriptor.id ~= "", "behavior descriptor requires an id")
 	assert(not (known or descriptors)[descriptor.id], "duplicate projectile behavior id: " .. descriptor.id)
 	assert(validRoles[descriptor.role], "unknown projectile behavior role for " .. descriptor.id .. ": " .. tostring(descriptor.role))
-	assert(type(descriptor.fields) == "table" or type(descriptor.reset) == "function",
-		descriptor.id .. " must declare projectile fields or a reset hook")
 	local handlers = descriptor.handlers or {}
 	if descriptor.hooks then
 		for i = 1, #descriptor.hooks do
@@ -66,31 +62,6 @@ end
 for _, moduleName in ipairs({ "movement", "collision", "damage", "status_proc", "emission", "drawing" }) do
 	require("world.projectile_behaviors." .. moduleName)(Shared, register)
 end
-
--- Compile pooling metadata once, after registration.  Resetting a projectile is
--- deliberately just two tight array walks; behavior discovery never happens in
--- the update or release paths.
-do
-	local seen = {}
-	for _, descriptor in pairs(descriptors) do
-		for i = 1, #(descriptor.fields or {}) do
-			local field = descriptor.fields[i]
-			assert(type(field) == "string" and field ~= "", descriptor.id .. " has an invalid projectile field")
-			if not seen[field] then
-				seen[field] = true
-				resetFields[#resetFields + 1] = field
-			end
-		end
-		if descriptor.reset then resetHooks[#resetHooks + 1] = descriptor.reset end
-	end
-end
-
-function Registry.resetProjectile(p)
-	for i = 1, #resetFields do p[resetFields[i]] = nil end
-	for i = 1, #resetHooks do resetHooks[i](p) end
-end
-
-function Registry.resetFields() return resetFields end
 
 function Registry.get(id) return descriptors[id] end
 Registry.validateDescriptor = validateDescriptor
