@@ -1,4 +1,5 @@
 local Save = require("core.save")
+local State = require("core.state")
 local Camera = require("core.camera")
 local Theme = require("core.theme")
 local Shared = require("world.effects.shared")
@@ -23,6 +24,7 @@ function Effects.particleCount(base, intensity, criticalTell)
 end
 
 function Effects.shake(amount, duration)
+	if State.previewSandbox then return end
 	local s = settings()
 	local shakeScale = (s.screenShake == false or s.cameraMotion == false) and 0 or 1
 	Camera.shake((amount or 0.8) * shakeScale, duration or 0.14)

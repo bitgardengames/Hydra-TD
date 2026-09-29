@@ -236,7 +236,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 	opts = opts or EMPTY_SPAWN_OPTIONS
 	assert(def, "unknown enemy kind: " .. tostring(kind))
 
-	Save.markEnemyEncountered(kind)
+	-- Sandboxes use the real enemy constructor, but are presentation-only.  Keep
+	-- persistence out of that path without maintaining a second fake enemy type.
+	if not State.previewSandbox then Save.markEnemyEncountered(kind) end
 
 	local x, y
 
@@ -391,7 +393,7 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 end
 
 local function handleEnemyKilled(e, i, isBoss)
-	Save.recordEnemyResult(e.kind, "kill", e.combatAge)
+	if not State.previewSandbox then Save.recordEnemyResult(e.kind, "kill", e.combatAge) end
 	if isBoss then
 		State.activeBoss = nil
 		State.activeBossKind = nil
@@ -406,18 +408,20 @@ local function handleEnemyKilled(e, i, isBoss)
 	end
 
 	local reward = e.reward
-	State.money = State.money + reward
-	State.score = State.score + (e.score or 0)
-	State.totalKills = (State.totalKills or 0) + 1
+	if not State.previewSandbox then
+		State.money = State.money + reward
+		State.score = State.score + (e.score or 0)
+		State.totalKills = (State.totalKills or 0) + 1
+	end
 	if e.scheduledWaveEnemy then
 		State.spawnedKills = (State.spawnedKills or 0) + 1
 	end
-	Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
+	if not State.previewSandbox then Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true) end
 
-	Achievements.increment("ENEMIES_KILLED")
+	if not State.previewSandbox then Achievements.increment("ENEMIES_KILLED") end
 
 	if isBoss then
-		Achievements.increment("BOSSES_KILLED")
+		if not State.previewSandbox then Achievements.increment("BOSSES_KILLED") end
 	end
 
 	require("systems.waves").onScheduledEnemyRemoved(e)
@@ -432,6 +436,7 @@ local function recordKiller(e)
 		return
 	end
 
+	if State.previewSandbox then return end
 	killer.kills = killer.kills + 1
 	killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
 	Achievements.increment(killer._killsStatName)
@@ -507,8 +512,10 @@ local function updatePoison(e, dt)
 		e.hitSquash = HIT_REACTION_DURATION
 		e.hitSquashStrength = 0.55
 		e.healthBarHitTimer = HEALTH_BAR_HIT_DURATION
-		State.addDamage("poison", damage, e.boss == true)
-		RunStats.recordDamage(e.poisonSource, damage, e.boss == true)
+		if not State.previewSandbox then
+			State.addDamage("poison", damage, e.boss == true)
+			RunStats.recordDamage(e.poisonSource, damage, e.boss == true)
+		end
 	end
 
 	if e.poisonTimer <= 0 then
