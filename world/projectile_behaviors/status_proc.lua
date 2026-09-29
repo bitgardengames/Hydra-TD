@@ -561,5 +561,19 @@ B.apply_poison = {
 
 -- Temp, not sure if this type of effect should be handled like this or not
 
-for id, handlers in pairs(B) do register({ id = id, role = "status_proc", handlers = handlers }) end
+local fields = {
+	cannon_long_fuse = {}, slow_burst_cleave = {},
+	lancer_overdrive = { "_overdriveRound" }, lancer_focus_fire = {},
+	lancer_rail_momentum = { "_railMomentumStacks" }, lancer_opening_strike = {},
+	chaos_bounce = {}, link_projectiles = {}, plasma_conductor = { "_conductRadius" },
+	infect_spread = {}, poison_neurotoxin = {}, poison_cull_weak = {},
+	poison_corrupt_strong = {}, poison_hemotoxin = {},
+	growing_projectile = { "_baseDamage", "_growthScale" },
+	projectile_visual_scale = { "visualScale" }, apply_slow = {},
+	slow_field = { "_slowFieldTimer", "_slowFieldRadius", "_slowFieldFactor", "_slowFieldTick", "_slowFieldDuration" },
+	slow_aura = { "_slowAuraTimer", "_slowAuraTick", "_slowAuraRadius" }, apply_poison = {},
+}
+for id, handlers in pairs(B) do
+	register({ id = id, role = "status_proc", handlers = handlers, fields = fields[id] })
+end
 end

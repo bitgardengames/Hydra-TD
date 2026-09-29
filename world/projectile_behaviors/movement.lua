@@ -478,5 +478,16 @@ B.stationary = {
 	update = function() end
 }
 
-for id, handlers in pairs(B) do register({ id = id, role = "movement", handlers = handlers }) end
+local fields = {
+	retarget_on_spawn = {}, move_homing = {},
+	move_linear = { "_linear" },
+	move_to_target_point = { "_targetPointX", "_targetPointY" },
+	move_boomerang = { "_boom" },
+	move_orbit = { "cx", "cy", "radius", "orbitSpeed", "_orbit" },
+	move_enemy_orbit = { "_orbitE" }, move_spiral = { "_spiral" },
+	move_wave = { "_wave" }, move_suspend = { "_suspend" }, stationary = {},
+}
+for id, handlers in pairs(B) do
+	register({ id = id, role = "movement", handlers = handlers, fields = fields[id] })
+end
 end

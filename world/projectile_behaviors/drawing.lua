@@ -213,5 +213,7 @@ B.draw_frost_shard = {
 	end
 }
 
-for id, handlers in pairs(B) do register({ id = id, role = "drawing", handlers = handlers }) end
+for id, handlers in pairs(B) do
+	register({ id = id, role = "drawing", handlers = handlers, fields = {} })
+end
 end

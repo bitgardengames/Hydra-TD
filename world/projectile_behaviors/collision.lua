@@ -76,12 +76,11 @@ B.instant_hit = {
 B.pierce = {
 	init = function(p, data)
 		data = data or {}
-
-		p.pierce = {
-			maxHits = data.maxHits or -1, -- -1 = infinite
-			hits = 0,
-			hitTargets = {}
-		}
+		local pierce = p.pierce
+		if not pierce then pierce = { hitTargets = {} }; p.pierce = pierce end
+		pierce.maxHits = data.maxHits or -1 -- -1 = infinite
+		pierce.hits = 0
+		clearMap(pierce.hitTargets)
 
 		p.allowRepeatHits = true
 		p.consumeOnHit = false
@@ -125,5 +124,19 @@ B.projectile_radius = {
 	end
 }
 
-for id, handlers in pairs(B) do register({ id = id, role = "collision", handlers = handlers }) end
+local fields = {
+	hit_circle = {}, instant_hit = {},
+	pierce = { "allowRepeatHits", "consumeOnHit", "dead" }, projectile_radius = {},
+}
+local function resetPierce(p)
+	local pierce = p.pierce
+	if pierce then
+		clearMap(pierce.hitTargets)
+		pierce.maxHits, pierce.hits = nil, nil
+	end
+end
+for id, handlers in pairs(B) do
+	register({ id = id, role = "collision", handlers = handlers, fields = fields[id],
+		reset = id == "pierce" and resetPierce or nil })
+end
 end
