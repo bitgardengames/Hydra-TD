@@ -13,7 +13,7 @@ def _branch_ids(source):
 def test_every_tower_branch_has_an_authored_preview():
     tower_ids = _branch_ids((ROOT / "world/tower_defs.lua").read_text())
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
-    preview_ids = set(re.findall(r"^\t([a-z_]+)\s*=\s*\{duration=", preview, re.M))
+    preview_ids = set(re.findall(r"^\t([a-z_]+)\s*=\{duration=", preview, re.M))
     branch_ids = {
         "marksman", "rupture", "deep_freeze", "cold_field", "virulent", "contagion",
         "siege", "bombardment", "capacitor", "forked_lightning", "accelerator", "overcharged",
@@ -22,17 +22,14 @@ def test_every_tower_branch_has_an_authored_preview():
     assert preview_ids == branch_ids
 
 
-def test_preview_enemy_kinds_have_render_definitions():
+def test_preview_uses_real_gameplay_sandbox():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
-    enemy_defs = (ROOT / "world/enemy_defs.lua").read_text()
-    defined_kinds = set(re.findall(r"^\t([a-z_]+)\s*=\s*{", enemy_defs, re.M))
-    preview_groups = re.findall(r"enemies=enemies\((.*?)\), shots=", preview)
-    preview_kinds = {
-        kind
-        for group in preview_groups
-        for kind in re.findall(r'{"([a-z_]+)"', group)
-    }
-    assert preview_kinds <= defined_kinds
+    sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
+    assert 'require("world.gameplay_sandbox")' in preview
+    for system in ("Enemies.updateEnemies", "Towers.updateTowers", "Projectiles.update", "Effects.update"):
+        assert system in sandbox
+    assert "drawProjectile" not in preview
+    assert "drawEffect" not in preview
 
 
 def test_picker_lifecycle_owns_preview_updates_and_release():
