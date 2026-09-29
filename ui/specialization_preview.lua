@@ -59,7 +59,7 @@ local function drawCanvasClip() love.graphics.rectangle("fill",0,0,clipW,clipH,c
 function Preview.draw(p,x,y,w,h,radius)
 	if not p or w<1 or h<1 then return end
 	local lg=love.graphics; local cw,ch=math.max(1,math.floor(w+.5)),math.max(1,math.floor(h+.5))
-	if not p.canvas or p.canvasW~=cw or p.canvasH~=ch then if p.canvas and p.canvas.release then p.canvas:release() end; p.canvas=lg.newCanvas(cw,ch,{dpiscale=1}); p.canvasW,p.canvasH=cw,ch end
+	if not p.canvas or p.canvasW~=cw or p.canvasH~=ch then if p.canvas and p.canvas.release then p.canvas:release() end; p.canvas=lg.newCanvas(cw,ch,{dpiscale=1,msaa=8}); p.canvasW,p.canvasH=cw,ch end
 	local old=lg.getCanvas(); lg.push("all"); lg.setCanvas({p.canvas,stencil=true}); lg.origin(); lg.clear(0,0,0,0)
 	clipW,clipH,clipRadius=cw,ch,radius or 8; lg.stencil(drawCanvasClip,"replace",1); lg.setStencilTest("greater",0); lg.scale(cw/W,ch/H)
 	p.world:draw(drawWorld); lg.setStencilTest(); lg.pop(); lg.setCanvas(old)
