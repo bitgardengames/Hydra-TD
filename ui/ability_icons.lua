@@ -80,13 +80,19 @@ local function unknown(cx, cy, scale, alpha)
 end
 
 local function stateName(state)
-	if type(state) == "string" then return state end
-	if type(state) == "table" then return state.kind or state.status or state.state end
+	if type(state) == "string" then
+		return state
+	end
+	if type(state) == "table" then
+		return state.kind or state.status or state.state
+	end
 	return nil
 end
 
 local function drawAccent(kind, cx, cy, scale, alpha)
-	if not kind then return end
+	if not kind then
+		return
+	end
 	local radius = 22 * scale
 	lg.setLineWidth(2.5 * scale)
 

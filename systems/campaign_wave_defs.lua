@@ -472,17 +472,25 @@ for mapId, bossArchetypes in pairs(bossArchetypesByMapId) do
 end
 
 local function mapIdOf(mapOrId)
-	if type(mapOrId) == "table" then return mapOrId.id end
-	if type(mapOrId) == "string" then return mapOrId end
+	if type(mapOrId) == "table" then
+		return mapOrId.id
+	end
+	if type(mapOrId) == "string" then
+		return mapOrId
+	end
 	return nil
 end
 
 function CampaignWaveDefs.get(mapOrId, waveIndex)
 	local waves = wavesByMapId[mapIdOf(mapOrId)]
-	if not waves then return nil end
+	if not waves then
+		return nil
+	end
 	waveIndex = math.max(1, math.floor(tonumber(waveIndex) or 1))
 	local groups = waves[waveIndex]
-	if not groups then return nil end
+	if not groups then
+		return nil
+	end
 
 	local count = 0
 	for _, group in ipairs(groups) do
@@ -506,7 +514,9 @@ end
 -- future procedural enemies are intentionally not folded into this summary.
 function CampaignWaveDefs.getTotalEnemyCount(mapOrId)
 	local waves = wavesByMapId[mapIdOf(mapOrId)]
-	if not waves then return nil end
+	if not waves then
+		return nil
+	end
 	local total = 0
 	for _, wave in ipairs(waves) do
 		for _, group in ipairs(wave) do

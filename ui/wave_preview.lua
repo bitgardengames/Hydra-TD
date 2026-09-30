@@ -100,7 +100,9 @@ local function refreshPreview()
 	previewCache.total = L("hud.waveTotal", preview.count)
 
 	local entries = previewCache.entries
-	for i = #entries, 1, -1 do entries[i] = nil end
+	for i = #entries, 1, -1 do
+		entries[i] = nil
+	end
 	for i = 1, #preview.composition do
 		local group = preview.composition[i]
 		entries[i] = {
@@ -126,7 +128,9 @@ end
 local function updateCombatProgress(now)
 	local progress = Waves.getProgress(waveProgressSnapshot)
 	local total = progress.totalScheduled
-	if total <= 0 then return nil end
+	if total <= 0 then
+		return nil
+	end
 	local cleared = math.min(total, progress.clearedCount)
 	local clearedFrac = cleared / total
 
@@ -200,7 +204,9 @@ end
 
 local function drawCombat(now)
 	local progress = updateCombatProgress(now)
-	if not progress then return end
+	if not progress then
+		return
+	end
 	local innerX, innerW, headerY = drawHeader(progress.title, progress.count)
 	local barY = headerY + HEADER_H + HEADER_GAP
 	lg.setColor(colorPanel)
@@ -254,7 +260,9 @@ function WavePreview.draw()
 		panel.height = targetHeight
 		panel.targetHeight = targetHeight
 	elseif panel.mode ~= mode or panel.targetHeight ~= targetHeight then
-		if panel.mode == "combat" and mode == "preview" then panel.completedAt = now end
+		if panel.mode == "combat" and mode == "preview" then
+			panel.completedAt = now
+		end
 		panel.mode = mode
 		panel.startHeight = panel.height
 		panel.targetHeight = targetHeight
@@ -274,7 +282,9 @@ function WavePreview.draw()
 	local pulse = 0
 	if panel.completedAt then
 		local pulseT = (now - panel.completedAt) / COMPLETE_PULSE_DURATION
-		if pulseT < 1 then pulse = math.sin(pulseT * math.pi) else panel.completedAt = nil end
+		if pulseT < 1 then
+			pulse = math.sin(pulseT * math.pi) else panel.completedAt = nil
+		end
 	end
 	drawPanel(panel.height, pulse)
 
@@ -283,8 +293,12 @@ function WavePreview.draw()
 	-- second panel or lets its contents escape the animated bounds.
 	local sx, sy, sw, sh = lg.getScissor()
 	lg.setScissor(SCREEN_PAD, SCREEN_PAD, PANEL_W, panel.height)
-	if mode == "preview" then drawPreview() else drawCombat(now) end
-	if sx then lg.setScissor(sx, sy, sw, sh) else lg.setScissor() end
+	if mode == "preview" then
+		drawPreview() else drawCombat(now)
+	end
+	if sx then
+		lg.setScissor(sx, sy, sw, sh) else lg.setScissor()
+	end
 end
 
 return WavePreview

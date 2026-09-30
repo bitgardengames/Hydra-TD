@@ -57,7 +57,10 @@ end
 
 local function setBlockedForMap(targetMap, gx, gy)
 	local col = targetMap.blocked[gx]
-	if not col then col = {}; targetMap.blocked[gx] = col end
+	if not col then
+		col = {}
+		targetMap.blocked[gx] = col
+	end
 	col[gy] = true
 end
 

@@ -10,7 +10,9 @@ local canvas = nil
 local cachedScale = nil
 
 local function releaseCanvas()
-	if canvas then canvas:release() end
+	if canvas then
+		canvas:release()
+	end
 	canvas = nil
 	cachedScale = nil
 end

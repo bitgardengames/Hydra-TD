@@ -118,7 +118,9 @@ end
 -- Subject Bounds
 function HeroExport.getSubjectBounds()
 	local s = HeroExport.subject
-	if not s then return nil end
+	if not s then
+		return nil
+	end
 
 	if HeroExport.subjectType == "tower" then
 		local r =

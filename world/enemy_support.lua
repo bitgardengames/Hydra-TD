@@ -63,7 +63,9 @@ local function detachCoveredCell(source, entry)
 	if #cell == 0 then
 		local column = coveredSources[entry.cx]
 		column[entry.cy] = nil
-		if next(column) == nil then coveredSources[entry.cx] = nil end
+		if next(column) == nil then
+			coveredSources[entry.cx] = nil
+		end
 	end
 
 	local entries = source._supportCoveredCells
@@ -76,7 +78,9 @@ local function detachCoveredCell(source, entry)
 	local columns = source._supportCoveredCellColumns
 	local sourceColumn = columns[entry.cx]
 	sourceColumn[entry.cy] = nil
-	if next(sourceColumn) == nil then columns[entry.cx] = nil end
+	if next(sourceColumn) == nil then
+		columns[entry.cx] = nil
+	end
 	entry.cell = nil
 	entry.index = nil
 	entry.sourceIndex = nil
@@ -86,7 +90,9 @@ end
 -- changes reconcile in place so the source retains and recycles its entry tables.
 local function removeCoveredCells(source)
 	local entries = source._supportCoveredCells
-	if not entries then return end
+	if not entries then
+		return
+	end
 	while #entries > 0 do
 		local entry = entries[#entries]
 		detachCoveredCell(source, entry)
@@ -154,21 +160,29 @@ local function indexCoveredCells(source)
 	local pending = source._supportPendingCells
 	for i = 1, #pending, 2 do
 		local entry = pool[#pool]
-		if entry then pool[#pool] = nil end
+		if entry then
+			pool[#pool] = nil
+		end
 		insertCoveredCell(pending[i], pending[i + 1], source, entry)
 		pending[i], pending[i + 1] = nil, nil
 	end
 end
 
 local function markCellSources(cx, cy, excluded)
-	if cx == nil then return end
+	if cx == nil then
+		return
+	end
 	local column = coveredSources[cx]
 	local cell = column and column[cy]
-	if not cell then return end
+	if not cell then
+		return
+	end
 	for i = 1, #cell do
 		local source = cell[i].source
 		lifecycleStats.sourceCandidatesExamined = lifecycleStats.sourceCandidatesExamined + 1
-		if source ~= excluded then markDirty(source) end
+		if source ~= excluded then
+			markDirty(source)
+		end
 	end
 end
 
@@ -256,7 +270,9 @@ end
 
 local function refreshTargetVisitor(target, context)
 	local source, aura = context.source, context.aura
-	if target == source then return end
+	if target == source then
+		return
+	end
 	local affected = source.supportAffected
 	affected[target] = true
 	local contributions = target.supportContributions

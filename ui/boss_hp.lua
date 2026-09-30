@@ -49,22 +49,34 @@ end
 
 local function resolveBoss()
 	local boss = State.activeBoss
-	if type(boss) ~= "table" then return nil end
-	if type(boss.hp) ~= "number" or type(boss.maxHp) ~= "number" then return nil end
-	if boss.hp <= 0 or boss.maxHp <= 0 then return nil end
+	if type(boss) ~= "table" then
+		return nil
+	end
+	if type(boss.hp) ~= "number" or type(boss.maxHp) ~= "number" then
+		return nil
+	end
+	if boss.hp <= 0 or boss.maxHp <= 0 then
+		return nil
+	end
 	return boss
 end
 
 local function meaningfulThresholds(boss, maxHp)
 	-- Boss definitions may opt in with ratios (0..1) or authored HP values.
 	local source = boss.healthThresholds or boss.phaseThresholds or boss.thresholds
-	if type(source) ~= "table" then return nil end
+	if type(source) ~= "table" then
+		return nil
+	end
 	local result = {}
 	for _, value in ipairs(source) do
-		if type(value) == "table" then value = value.hpFraction or value.fraction or value.hp end
+		if type(value) == "table" then
+			value = value.hpFraction or value.fraction or value.hp
+		end
 		if type(value) == "number" then
 			local fraction = value <= 1 and value or value / maxHp
-			if fraction > 0 and fraction < 1 then result[#result + 1] = fraction end
+			if fraction > 0 and fraction < 1 then
+				result[#result + 1] = fraction
+			end
 		end
 	end
 	return #result > 0 and result or nil
@@ -106,11 +118,15 @@ function BossHP.update(dt)
 		end
 		dt = max(0, dt or 0)
 		cache.visibility = max(0, cache.visibility - dt / EXIT_DURATION)
-		if cache.visibility == 0 then clear() end
+		if cache.visibility == 0 then
+			clear()
+		end
 		return
 	end
 
-	if cache.identity ~= boss or cache.maxHp ~= maxHp then reset(boss, hp, maxHp) end
+	if cache.identity ~= boss or cache.maxHp ~= maxHp then
+		reset(boss, hp, maxHp)
+	end
 	dt = max(0, dt or 0)
 	cache.visibility = motionEnabled() and min(1, cache.visibility + dt / ENTRANCE_DURATION) or 1
 	local oldDisplay = cache.displayHp
@@ -124,8 +140,12 @@ function BossHP.update(dt)
 end
 
 function BossHP.presentationEvent(kind)
-	if kind == "boss_incoming" then presentationPulse = 0.8 end
-	if kind == "boss_defeated" then presentationPulse = 0.3 end
+	if kind == "boss_incoming" then
+		presentationPulse = 0.8
+	end
+	if kind == "boss_defeated" then
+		presentationPulse = 0.3
+	end
 end
 
 function BossHP.draw()
@@ -138,7 +158,9 @@ function BossHP.draw()
 		reset(boss, hp, maxHp)
 		cache.visibility = motionEnabled() and 0 or 1
 	end
-	if cache.identity == nil or cache.visibility <= 0 then return end
+	if cache.identity == nil or cache.visibility <= 0 then
+		return
+	end
 	maxHp = cache.maxHp
 
 	local motion = motionEnabled()
@@ -150,7 +172,9 @@ function BossHP.draw()
 	local x = floor((sw - barW) * 0.5)
 	local fy = y - idleLift
 	local alpha = reveal
-	if presentationPulse > 0 then alpha = min(1, alpha + presentationPulse * 0.35) end
+	if presentationPulse > 0 then
+		alpha = min(1, alpha + presentationPulse * 0.35)
+	end
 	local r, g, b, a = colorBase[1], colorBase[2], colorBase[3], (colorBase[4] or 1) * alpha
 
 	-- Both layers unfold together so the raised cutaway remains intact throughout.
@@ -201,7 +225,9 @@ function BossHP.draw()
 			if tickX + tickW > textLeft and tickX < textRight then
 				local topH = max(0, textTop - tickTop)
 				local bottomY = min(tickBottom, textBottom)
-				if topH > 0 then lg.rectangle("fill", tickX, tickTop, tickW, topH) end
+				if topH > 0 then
+					lg.rectangle("fill", tickX, tickTop, tickW, topH)
+				end
 				if bottomY < tickBottom then
 					lg.rectangle("fill", tickX, bottomY, tickW, tickBottom - bottomY)
 				end

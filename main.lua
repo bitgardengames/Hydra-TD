@@ -56,7 +56,9 @@ local SCREENSHOT_DIR = "screenshots"
 local simulationAccumulator = 0
 
 function resetGame()
-	if RunStats.data and not RunStats.final and State.mode == "game" then GameplayOutcome.cancel("restart") end
+	if RunStats.data and not RunStats.final and State.mode == "game" then
+		GameplayOutcome.cancel("restart")
+	end
 	simulationAccumulator = 0
 	--State.worldMapIndex = 1 -- Map override
 
@@ -273,7 +275,9 @@ function love.update(dt)
 	Camera.update(dt)
 
 	local mode = State.mode
-	if mode == "game" and not State.paused then RunStats.update(dt) end
+	if mode == "game" and not State.paused then
+		RunStats.update(dt)
+	end
 	local target = (mode == "pause" or mode == "settings_gameplay") and 1 or 0
 
 	State.pauseT = State.pauseT + (target - State.pauseT) * min(1, dt * 14)
@@ -419,7 +423,9 @@ function love.mousereleased(x, y, button)
 		return
 	end
 
-	if ModulePicker.isActive() then return end
+	if ModulePicker.isActive() then
+		return
+	end
 	if Overlay.isActive() then
 		Overlay.mousereleased(x, y, button)
 		return

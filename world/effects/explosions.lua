@@ -73,7 +73,9 @@ return function(context)
 
 
 	function record.update(o, dt, _, drag96)
-		if o.type ~= "ring" then Shared.drag(o, dt, drag96) end
+		if o.type ~= "ring" then
+			Shared.drag(o, dt, drag96)
+		end
 	end
 	record.spawn = spawnBossDeathExplosion
 	record.spawnImpactParticles = spawnImpactParticles

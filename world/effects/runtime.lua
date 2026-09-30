@@ -8,7 +8,9 @@ local Registry = require("world.effects.registry")
 local Effects = {}
 
 function Effects.expirationPulse(remaining, clock)
-	if not remaining or remaining > 1 then return 1 end
+	if not remaining or remaining > 1 then
+		return 1
+	end
 	local fade = math.max(0, remaining)
 	local pulse = 0.45 + 0.55 * math.abs(math.sin((clock or 0) * math.pi * 6))
 	return fade * pulse
@@ -19,12 +21,16 @@ local function settings()
 end
 
 function Effects.particleCount(base, intensity, criticalTell)
-	if criticalTell then return math.max(1, base) end
+	if criticalTell then
+		return math.max(1, base)
+	end
 	return math.max(intensity >= Theme.effects.intensity.strong and 1 or 0, math.floor(base + 0.5))
 end
 
 function Effects.shake(amount, duration)
-	if State.previewSandbox then return end
+	if State.previewSandbox then
+		return
+	end
 	local s = settings()
 	local shakeScale = (s.screenShake == false or s.cameraMotion == false) and 0 or 1
 	Camera.shake((amount or 0.8) * shakeScale, duration or 0.14)
@@ -48,7 +54,9 @@ local drawOrder = {
 	"zapLines", "frost", "poison", "lancer", "gatecrasher", "plasmaParticles", "placePuffs", "sellSmoke", "death",
 }
 local families = {}
-for i = 1, #drawOrder do families[i] = byName[drawOrder[i]] end
+for i = 1, #drawOrder do
+	families[i] = byName[drawOrder[i]]
+end
 local registry = Registry.new(families, Shared.graphics)
 
 function Effects.update(dt) registry:update(dt) end

@@ -135,7 +135,9 @@ return function(ctx, register)
 		type = "damage",
 
 		onHit = function(p, e, data)
-			if not p._chain then return end
+			if not p._chain then
+				return
+			end
 			data = data or {}
 			local radius = data.radius or 48
 			local radius2 = radius * radius
@@ -435,7 +437,9 @@ return function(ctx, register)
 	B.poison_burst_on_death = {
 		onDeath = function(e)
 			local spread = e._infectSpread
-			if not spread then return end
+			if not spread then
+				return
+			end
 
 			radiusVisitContext.op, radiusVisitContext.exclude = "poison", e
 			radiusVisitContext.stacks = e.poisonStacks or 0
@@ -469,7 +473,9 @@ return function(ctx, register)
 			local t = p.sourceTower
 			local e = p.target
 
-			if not t then return end
+			if not t then
+				return
+			end
 
 			local scale = p._growthScale or 1
 			local width = b.width * scale
@@ -532,12 +538,16 @@ return function(ctx, register)
 
 		draw = function(p, a)
 			local beam = p._beam
-			if not beam then return end
+			if not beam then
+				return
+			end
 
 			local scale = p._growthScale or 1
 			local width = beam.width * scale
 			local len = beam.length or 0
-			if len <= 0 then return end
+			if len <= 0 then
+				return
+			end
 
 			local tower = p.sourceTower
 			local c = tower and tower.color or {1, 1, 1}

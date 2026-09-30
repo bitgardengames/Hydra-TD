@@ -361,7 +361,9 @@ return function(ctx, register)
 			local o = p._orbitE
 			local e = o.target
 
-			if not e or e.hp <= 0 then return end
+			if not e or e.hp <= 0 then
+				return
+			end
 
 			o.angle = o.angle + 4 * dt
 

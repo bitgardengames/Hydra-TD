@@ -246,9 +246,13 @@ function Screen.draw()
 end
 
 function Screen.mousepressed(x, y, button)
-	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
+	if confirmation:isOpen() then
+		return confirmation:mousepressed(x, y, button)
+	end
 	for _, btn in ipairs(buttons) do
-		if Button.mousepressed(btn, x, y, button) then return true end
+		if Button.mousepressed(btn, x, y, button) then
+			return true
+		end
 	end
 
 	if storeButton and Button.mousepressed(storeButton, x, y, button) then
@@ -257,9 +261,13 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
-	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
+	if confirmation:isOpen() then
+		return confirmation:mousereleased(x, y, button)
+	end
 	for _, btn in ipairs(buttons) do
-		if Button.mousereleased(btn, x, y, button) then return true end
+		if Button.mousereleased(btn, x, y, button) then
+			return true
+		end
 	end
 
 	if storeButton and Button.mousereleased(storeButton, x, y, button) then
@@ -268,7 +276,9 @@ function Screen.mousereleased(x, y, button)
 end
 
 function Screen.keypressed(key)
-	if confirmation:isOpen() then return confirmation:keypressed(key) end
+	if confirmation:isOpen() then
+		return confirmation:keypressed(key)
+	end
 	if key == "escape" then
 		confirmQuit()
 	end

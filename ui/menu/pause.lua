@@ -173,7 +173,9 @@ function Page.update(dt)
 		btn.y = startY + (i - 1) * gap
 	end
 
-	if confirmation:isOpen() then confirmation:update(dt) else Button.updateList(buttons, dt) end
+	if confirmation:isOpen() then
+		confirmation:update(dt) else Button.updateList(buttons, dt)
+	end
 end
 
 function Page.draw()
@@ -223,17 +225,23 @@ function Page.draw()
 end
 
 function Page.mousepressed(x, y, button)
-	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
+	if confirmation:isOpen() then
+		return confirmation:mousepressed(x, y, button)
+	end
 	return Button.mousepressedList(buttons, x, y, button)
 end
 
 function Page.mousereleased(x, y, button)
-	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
+	if confirmation:isOpen() then
+		return confirmation:mousereleased(x, y, button)
+	end
 	return Button.mousereleasedList(buttons, x, y, button)
 end
 
 function Page.keypressed(key)
-	if confirmation:isOpen() then return confirmation:keypressed(key) end
+	if confirmation:isOpen() then
+		return confirmation:keypressed(key)
+	end
 	if key == Hotkeys.getActionKey("escape") then
 		State.mode = "game"
 		Sound.exitPause()

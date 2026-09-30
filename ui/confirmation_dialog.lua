@@ -47,7 +47,9 @@ function ConfirmationDialog:show(options)
 end
 
 function ConfirmationDialog:confirm()
-	if self.state ~= "open" and not (self.state == "opening" and self:pose().pointerReady) then return false end
+	if self.state ~= "open" and not (self.state == "opening" and self:pose().pointerReady) then
+		return false
+	end
 	self.state = "closing"
 	self.closeReason = "confirm"
 	self.elapsed = 0
@@ -55,7 +57,9 @@ function ConfirmationDialog:confirm()
 end
 
 function ConfirmationDialog:cancel()
-	if self.state ~= "open" and self.state ~= "opening" then return false end
+	if self.state ~= "open" and self.state ~= "opening" then
+		return false
+	end
 	self.state = "closing"
 	self.closeReason = "cancel"
 	self.elapsed = 0
@@ -77,11 +81,15 @@ function ConfirmationDialog:_finishClosing()
 	self.elapsed = 0
 	self.title, self.titleFont, self.description, self.onConfirm = nil, nil, nil, nil
 	self.buttons = {}
-	if callback then callback() end
+	if callback then
+		callback()
+	end
 end
 
 function ConfirmationDialog:update(dt)
-	if not self.open then return end
+	if not self.open then
+		return
+	end
 	self.elapsed = self.elapsed + dt
 	local pose = self:pose()
 	if self.state ~= "open" and pose.complete then
@@ -117,7 +125,9 @@ function ConfirmationDialog:update(dt)
 end
 
 function ConfirmationDialog:draw()
-	if not self.open then return end
+	if not self.open then
+		return
+	end
 	local sw, sh = lg.getDimensions()
 	local panelW, panelH = math.min(540, sw - 48), 230
 	local x, y = (sw - panelW) * 0.5, (sh - panelH) * 0.5
@@ -144,13 +154,17 @@ function ConfirmationDialog:draw()
 	lg.setColor(textColor[1], textColor[2], textColor[3], (textColor[4] or 1) * pose.panelAlpha)
 	Text.printfShadow(self.description, x + 36, y + 82, panelW - 72, "center")
 	Fonts.set("menu")
-	for _, button in ipairs(self.buttons) do button.drawAlpha = pose.panelAlpha end
+	for _, button in ipairs(self.buttons) do
+		button.drawAlpha = pose.panelAlpha
+	end
 	Button.drawList(self.buttons)
 	lg.pop()
 end
 
 function ConfirmationDialog:keypressed(key)
-	if not self.open then return false end
+	if not self.open then
+		return false
+	end
 	if key == "escape" then
 		self:cancel()
 	end
@@ -158,9 +172,13 @@ function ConfirmationDialog:keypressed(key)
 end
 
 function ConfirmationDialog:mousepressed(x, y, button)
-	if not self.open then return false end
+	if not self.open then
+		return false
+	end
 	local pose = self:pose()
-	if not pose.pointerReady then return true end
+	if not pose.pointerReady then
+		return true
+	end
 	local sw, sh = lg.getDimensions()
 	x = sw * 0.5 + (x - sw * 0.5) / pose.scale
 	y = sh * 0.5 + (y - sh * 0.5 - pose.offsetY) / pose.scale
@@ -169,9 +187,13 @@ function ConfirmationDialog:mousepressed(x, y, button)
 end
 
 function ConfirmationDialog:mousereleased(x, y, button)
-	if not self.open then return false end
+	if not self.open then
+		return false
+	end
 	local pose = self:pose()
-	if not pose.pointerReady then return true end
+	if not pose.pointerReady then
+		return true
+	end
 	local sw, sh = lg.getDimensions()
 	x = sw * 0.5 + (x - sw * 0.5) / pose.scale
 	y = sh * 0.5 + (y - sh * 0.5 - pose.offsetY) / pose.scale

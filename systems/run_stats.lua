@@ -25,11 +25,15 @@ function RunStats.reset()
 end
 
 function RunStats.update(dt)
-	if not RunStats.final then RunStats.elapsed = RunStats.elapsed + math.max(0, tonumber(dt) or 0) end
+	if not RunStats.final then
+		RunStats.elapsed = RunStats.elapsed + math.max(0, tonumber(dt) or 0)
+	end
 end
 
 function RunStats.finish(outcome, state)
-	if RunStats.final then return RunStats.final end
+	if RunStats.final then
+		return RunStats.final
+	end
 	state = state or {}
 	local data = RunStats.data or {}
 	RunStats.final = {outcome = outcome, duration = RunStats.elapsed, score = state.score or 0,
@@ -60,12 +64,16 @@ function RunStats.recordPurchase(tower)
 end
 
 function RunStats.recordSpecialization(tower, branch, cost)
-	if not tower or not tower.runStatsId or type(branch) ~= "string" then return end
+	if not tower or not tower.runStatsId or type(branch) ~= "string" then
+		return
+	end
 	local data = getData()
 	data.towerBranches[tower.runStatsId] = branch
 	addCount(data.investmentByTower, tower.runStatsId, cost or 0)
 	local baseAggregate = data.byTowerKind[tower.kind]
-	if baseAggregate then baseAggregate.investment = baseAggregate.investment + math.max(0, cost or 0) end
+	if baseAggregate then
+		baseAggregate.investment = baseAggregate.investment + math.max(0, cost or 0)
+	end
 	local key = tower.kind .. "/" .. branch
 	local aggregate = data.byTowerKind[key] or {damage = 0, bossDamage = 0, kills = 0, placements = 0, investment = 0}
 	aggregate.placements = aggregate.placements + 1
@@ -83,7 +91,9 @@ function RunStats.recordInvestment(tower, cost)
 		for _, key in ipairs({tower.kind, tower.specialization and (tower.kind .. "/" .. tower.specialization)}) do
 			if key then
 				local total = data.byTowerKind[key]
-				if total then total.investment = total.investment + math.max(0, cost or 0) end
+				if total then
+					total.investment = total.investment + math.max(0, cost or 0)
+				end
 			end
 		end
 	end
@@ -98,12 +108,16 @@ function RunStats.recordDamage(tower, amount, isBoss)
 	local data = getData()
 	if tower then
 		addCount(data.damageByTower, tower.runStatsId or tower.kind, amount)
-		if isBoss then addCount(data.bossDamageByTower, tower.runStatsId or tower.kind, amount) end
+		if isBoss then
+			addCount(data.bossDamageByTower, tower.runStatsId or tower.kind, amount)
+		end
 		for _, key in ipairs({tower.kind, tower.specialization and (tower.kind .. "/" .. tower.specialization)}) do
 			local total = key and data.byTowerKind[key]
 			if total then
 				total.damage = total.damage + math.max(0, amount or 0)
-				if isBoss then total.bossDamage = total.bossDamage + math.max(0, amount or 0) end
+				if isBoss then
+					total.bossDamage = total.bossDamage + math.max(0, amount or 0)
+				end
 			end
 		end
 	end
@@ -114,9 +128,13 @@ function RunStats.recordKill(tower)
 		local data = getData()
 		addCount(data.killsByTower, tower.runStatsId or tower.kind, 1)
 		local base = data.byTowerKind[tower.kind]
-		if base then base.kills = base.kills + 1 end
+		if base then
+			base.kills = base.kills + 1
+		end
 		local branch = tower.specialization and data.byTowerKind[tower.kind .. "/" .. tower.specialization]
-		if branch then branch.kills = branch.kills + 1 end
+		if branch then
+			branch.kills = branch.kills + 1
+		end
 	end
 end
 

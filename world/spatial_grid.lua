@@ -94,7 +94,9 @@ local function walkCells(centerX, centerY, cellRadius, visitCell, context)
 		if col then
 			for dy = -cellRadius, cellRadius do
 				local cell = col[centerY + dy]
-				if cell and visitCell(cell, context) == false then return false end
+				if cell and visitCell(cell, context) == false then
+					return false
+				end
 			end
 		end
 	end
@@ -108,7 +110,9 @@ local function collectCell(cell, ctx)
 		local enemy = cell[i]
 		local id = enemy.id
 		if not (useDedupe and id and seen[id] == stamp) then
-			if useDedupe and id then seen[id] = stamp end
+			if useDedupe and id then
+				seen[id] = stamp
+			end
 			count = count + 1
 			results[count] = enemy
 		end
@@ -144,9 +148,13 @@ local function callbackCell(cell, ctx)
 		local enemy = cell[i]
 		local id = enemy.id
 		if not (useDedupe and id and seen[id] == stamp) then
-			if useDedupe and id then seen[id] = stamp end
+			if useDedupe and id then
+				seen[id] = stamp
+			end
 			ctx.count = ctx.count + 1
-			if ctx.callback(enemy, ctx.callbackContext) == false then return false end
+			if ctx.callback(enemy, ctx.callbackContext) == false then
+				return false
+			end
 		end
 	end
 end
@@ -155,7 +163,9 @@ local function traverseSquareCandidatesCallback(x, y, radius, fn, context, query
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
 	local cellRadius = queryCellFootprint(radius)
-	if queryContext.dedupeById then nextStamp(queryContext) end
+	if queryContext.dedupeById then
+		nextStamp(queryContext)
+	end
 	queryContext.callback = fn
 	queryContext.callbackContext = context
 	queryContext.count = 0
@@ -181,17 +191,23 @@ local function radiusCell(cell, ctx)
 		local enemy = cell[i]
 		local id = enemy.id
 		if not (dedupe and id and seen[id] == stamp) then
-			if dedupe and id then seen[id] = stamp end
+			if dedupe and id then
+				seen[id] = stamp
+			end
 			if not options.livingOnly or enemy.hp > 0 then
 				local ex = options.renderedPosition and (enemy.rx or enemy.x) or enemy.x
 				local ey = options.renderedPosition and (enemy.ry or enemy.y) or enemy.y
 				local ddx, ddy = ex - x, ey - y
 				local distanceSquared = ddx * ddx + ddy * ddy
 				local exactRadius = ctx.queryRadius
-				if options.includeCollisionRadius then exactRadius = exactRadius + (enemy.radius or 0) end
+				if options.includeCollisionRadius then
+					exactRadius = exactRadius + (enemy.radius or 0)
+				end
 				if distanceSquared <= (options.includeCollisionRadius and exactRadius * exactRadius or ctx.radiusSquared) then
 					ctx.count = ctx.count + 1
-					if ctx.radiusVisitor(enemy, ctx.radiusVisitorContext, distanceSquared) == false then return false end
+					if ctx.radiusVisitor(enemy, ctx.radiusVisitorContext, distanceSquared) == false then
+						return false
+					end
 				end
 			end
 		end
@@ -202,7 +218,9 @@ local function traverseRadius(x, y, radius, visitor, visitorContext, queryContex
 	local cx = floor(x * INV_CELL)
 	local cy = floor(y * INV_CELL)
 	local cellRadius = queryCellFootprint(radius + (options.includeCollisionRadius and maxEnemyRadius or 0))
-	if options.dedupeById then nextStamp(queryContext) end
+	if options.dedupeById then
+		nextStamp(queryContext)
+	end
 	queryContext.queryX, queryContext.queryY = x, y
 	queryContext.queryRadius, queryContext.radiusSquared = radius, radius * radius
 	queryContext.radiusVisitor, queryContext.radiusVisitorContext = visitor, visitorContext

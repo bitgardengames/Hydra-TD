@@ -151,7 +151,9 @@ local function drawStatusRow(status, x, y, w)
 	local color = status.color or colorText
 	lg.setColor(color)
 	local label = status.label
-	if status.stacks then label = label .. " x" .. status.stacks end
+	if status.stacks then
+		label = label .. " x" .. status.stacks
+	end
 	Text.printShadow(label, x, y)
 	if status.value then
 		lg.setColor(ct1, ct2, ct3, 1)

@@ -52,7 +52,9 @@ return function(context)
 	function record.update(o, dt, frameExponent)
 		Shared.integrate(o, dt)
 		local drag = o.dragMultiplier
-		if dt ~= Shared.fixedStep then drag = o.drag ^ frameExponent end
+		if dt ~= Shared.fixedStep then
+			drag = o.drag ^ frameExponent
+		end
 		o.vx, o.vy = o.vx * drag, o.vy * drag
 	end
 	record.spawn = spawnPoisonSplash

@@ -15,10 +15,18 @@ local function smooth(value)
 end
 
 function Presentation.duration(state, reducedMotion, closeReason)
-	if reducedMotion then return Presentation.REDUCED_DURATION end
-	if state == "opening" then return Presentation.OPEN_DURATION end
-	if state == "closing" and closeReason == "confirm" then return Presentation.CONFIRM_DURATION end
-	if state == "closing" then return Presentation.CANCEL_DURATION end
+	if reducedMotion then
+		return Presentation.REDUCED_DURATION
+	end
+	if state == "opening" then
+		return Presentation.OPEN_DURATION
+	end
+	if state == "closing" and closeReason == "confirm" then
+		return Presentation.CONFIRM_DURATION
+	end
+	if state == "closing" then
+		return Presentation.CANCEL_DURATION
+	end
 	return 0
 end
 

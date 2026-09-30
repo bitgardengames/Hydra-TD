@@ -46,7 +46,9 @@ local function getDisplayedAbilities()
 	local displayed = {}
 	local unlockedSlots = CampaignUnlocks.getUnlockedAbilitySlots()
 	for _, abilityId in ipairs(State.equippedAbilities or {}) do
-		if #displayed >= unlockedSlots then break end
+		if #displayed >= unlockedSlots then
+			break
+		end
 		if CampaignUnlocks.isAbilityUnlocked(abilityId) then
 			displayed[#displayed + 1] = abilityId
 		end
@@ -213,7 +215,9 @@ function AbilityBar.update(dt, mx, my)
 			updateButton(button, hovered, dt)
 		end
 	end
-	for i = count + 1, #buttons do buttons[i] = nil end
+	for i = count + 1, #buttons do
+		buttons[i] = nil
+	end
 end
 
 function AbilityBar.draw()
@@ -238,7 +242,9 @@ function AbilityBar.draw()
 		local def = AbilityDefs[button.abilityId]
 		if def then
 			drawButton(button, def, activeRemaining[button.abilityId])
-			if button.hovered then AbilityTooltip.show(button.abilityId) end
+			if button.hovered then
+				AbilityTooltip.show(button.abilityId)
+			end
 		end
 	end
 end

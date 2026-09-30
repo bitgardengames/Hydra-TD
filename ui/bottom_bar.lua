@@ -108,7 +108,9 @@ function BottomBar.resize(w, h)
 	-- Child panels derive positions from the current dimensions every draw. This
 	-- hook makes that contract explicit and lets cached children opt in later.
 	for _, panel in ipairs({Hud, Shop, Inspect}) do
-		if panel.resize then panel.resize(w, h) end
+		if panel.resize then
+			panel.resize(w, h)
+		end
 	end
 end
 

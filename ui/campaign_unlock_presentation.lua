@@ -39,8 +39,12 @@ end
 -- campaign partway through cannot lose the presentation, while later entries
 -- cannot reconstruct it forever from stale victory state.
 function Presentation.capture(controller, state, mapCount, reducedMotion)
-	if controller.active then return controller.active end
-	if not state.wasFirstClear then return nil end
+	if controller.active then
+		return controller.active
+	end
+	if not state.wasFirstClear then
+		return nil
+	end
 
 	local sourceIndex = tonumber(state.worldMapIndex) or tonumber(state.mapIndex) or 1
 	local targetIndex = math.min(mapCount, sourceIndex + 1)
@@ -65,15 +69,21 @@ end
 
 function Presentation.update(controller, dt)
 	local event = controller.active
-	if not event then return end
+	if not event then
+		return
+	end
 	event.elapsed = event.elapsed + math.max(0, dt or 0)
-	if Presentation.isComplete(event) then controller.active = nil end
+	if Presentation.isComplete(event) then
+		controller.active = nil
+	end
 end
 
 -- Completion is kept separate from sampling so update does not build a pose
 -- that will be discarded before the draw path samples the event.
 function Presentation.isComplete(event)
-	if not event then return true end
+	if not event then
+		return true
+	end
 
 	local baseDuration = event.reducedMotion
 		and Presentation.REDUCED_HIGHLIGHT_DURATION or Presentation.ROW_DURATION
@@ -87,7 +97,9 @@ function Presentation.isComplete(event)
 end
 
 function Presentation.sample(event)
-	if not event then return {complete = true, row = 0, rewards = {}} end
+	if not event then
+		return {complete = true, row = 0, rewards = {}}
+	end
 	local elapsed = event.elapsed
 	local row
 	if event.reducedMotion then

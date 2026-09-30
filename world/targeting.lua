@@ -81,7 +81,9 @@ function Targeting.clearFrameCache()
 	for cellX, xEntries in pairs(frameCache.entries) do
 		for _, yEntries in pairs(xEntries) do
 			for _, entry in pairs(yEntries) do
-				for i = 1, entry.count do entry.list[i] = nil end
+				for i = 1, entry.count do
+					entry.list[i] = nil
+				end
 				entry.count = 0
 				entry.fillCount = nil
 				entry.frameId = nil

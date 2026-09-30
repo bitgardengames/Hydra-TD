@@ -143,7 +143,9 @@ function Messages.add(text, r, g, b, opts)
 		removeAt(1)
 	end
 
-	if not opts.silent then Sound.play("message", opts.sound) end
+	if not opts.silent then
+		Sound.play("message", opts.sound)
+	end
 end
 
 function Messages.presentationEvent(kind, payload)
@@ -153,7 +155,9 @@ function Messages.presentationEvent(kind, payload)
 	}
 	local text
 	if kind == "wave_cleared" then
-		if not payload.perfectWaveBonus then return end
+		if not payload.perfectWaveBonus then
+			return
+		end
 		text = L("messages.perfectWaveCleared", payload.wave, payload.perfectWaveBonus)
 	elseif keys[kind] then
 		text = L(keys[kind], payload.wave)
@@ -323,7 +327,9 @@ function Messages.mousereleased(x, y, button)
 		local callback = activeTip.onDismiss
 		clearTipState()
 		Sound.play("uiConfirm")
-		if callback then callback() end
+		if callback then
+			callback()
+		end
 
 		return true
 	end

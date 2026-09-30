@@ -158,10 +158,14 @@ function ModulePicker.open(options)
 	State.modulePicker.tower = options and options.tower or nil
 	openedAt = love.timer.getTime()
 	rebuildLayout()
-	for i = 1, #previews do SpecializationPreview.release(previews[i]) end
+	for i = 1, #previews do
+		SpecializationPreview.release(previews[i])
+	end
 	previews = {}
 	if State.modulePicker.mode == "specialization" then
-		for i = 1, #choices do previews[i] = SpecializationPreview.new(choices[i].branchId) end
+		for i = 1, #choices do
+			previews[i] = SpecializationPreview.new(choices[i].branchId)
+		end
 	end
 
 	return true
@@ -174,7 +178,9 @@ local pickerDefaults = {
 local pickerKeys = { "active", "choices", "mode", "title", "subtitle", "hint", "tower" }
 
 local function clearPicker()
-	for i = 1, #previews do SpecializationPreview.release(previews[i]) end
+	for i = 1, #previews do
+		SpecializationPreview.release(previews[i])
+	end
 	previews = {}
 	for i = 1, #pickerKeys do
 		local key = pickerKeys[i]
@@ -242,9 +248,13 @@ function ModulePicker.openTowerUpgrade(tower)
 end
 
 function ModulePicker.openSpecialization(tower)
-	if not tower or (tower.level or 1) ~= 1 then return false end
+	if not tower or (tower.level or 1) ~= 1 then
+		return false
+	end
 	local branches = tower.def.upgrade and tower.def.upgrade.branches
-	if not branches then return false end
+	if not branches then
+		return false
+	end
 	local choices = {}
 	for branchId in pairs(branches) do
 		if Towers.getUpgradePreview(tower, branchId) then
@@ -332,7 +342,9 @@ function ModulePicker.update(dt)
 	if not ModulePicker.isActive() then return end
 	ensureLayout()
 	if State.modulePicker.mode == "specialization" then
-		for i = 1, #previews do SpecializationPreview.update(previews[i], dt) end
+		for i = 1, #previews do
+			SpecializationPreview.update(previews[i], dt)
+		end
 	end
 	local now = love.timer.getTime()
 	local mx, my = lm.getPosition()
@@ -380,9 +392,7 @@ function ModulePicker.keypressed(key)
 end
 
 function ModulePicker.draw()
-	if not ModulePicker.isActive() then
-		return
-	end
+	if not ModulePicker.isActive() then return end
 	local sw, sh = lg.getDimensions()
 	local text = Theme.ui.text
 	local dim = Theme.ui.screenDim

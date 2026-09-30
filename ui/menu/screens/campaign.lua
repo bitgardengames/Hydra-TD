@@ -107,13 +107,17 @@ end
 
 local function difficultyIndex(key)
 	for i, value in ipairs(DIFFICULTIES) do
-		if value == key then return i end
+		if value == key then
+			return i
+		end
 	end
 	return 2
 end
 
 local function selectDifficulty(key)
-	if Save.data.settings.difficulty == key then return end
+	if Save.data.settings.difficulty == key then
+		return
+	end
 	Save.data.settings.difficulty = key
 	Difficulty.set(key)
 	Save.markDirty()
@@ -164,7 +168,9 @@ end
 
 local function layout()
 	local sw, sh = lg.getDimensions()
-	if campaignLayout.sw == sw and campaignLayout.sh == sh then return campaignLayout end
+	if campaignLayout.sw == sw and campaignLayout.sh == sh then
+		return campaignLayout
+	end
 	local margin = max(18, floor(sw * 0.024))
 	local headerH = max(96, floor(sh * 0.115))
 	local footerH = max(46, floor(sh * 0.06))
@@ -193,7 +199,9 @@ end
 
 local function scrollbarGeometry(l)
 	local _, count = visibleRows(l)
-	if #Maps <= count then return nil end
+	if #Maps <= count then
+		return nil
+	end
 	local trackX = l.left.x + l.left.w - 13
 	local trackY = l.left.y + SECTION_INSET + LIST_HEADER_H
 	local trackH = l.left.h - SECTION_INSET - LIST_HEADER_H - BUTTON_BOTTOM_GAP - BACK_BUTTON_H - SPACE
@@ -205,7 +213,9 @@ end
 
 local function scrollToThumb(l, thumbY)
 	local _, trackY, _, trackH, _, thumbH, maxOffset = scrollbarGeometry(l)
-	if not trackY then return end
+	if not trackY then
+		return
+	end
 	local travel = trackH - thumbH
 	local progress = travel > 0 and (thumbY - trackY) / travel or 0
 	listOffset = floor(max(0, min(1, progress)) * maxOffset + 0.5)
@@ -213,8 +223,12 @@ end
 
 local function keepSelectedVisible(l)
 	local _, count = visibleRows(l)
-	if State.mapIndex <= listOffset then listOffset = State.mapIndex - 1 end
-	if State.mapIndex > listOffset + count then listOffset = State.mapIndex - count end
+	if State.mapIndex <= listOffset then
+		listOffset = State.mapIndex - 1
+	end
+	if State.mapIndex > listOffset + count then
+		listOffset = State.mapIndex - count
+	end
 	listOffset = max(0, min(listOffset, max(0, #Maps - count)))
 end
 
@@ -223,7 +237,9 @@ local function reducedMotion()
 end
 
 local function selectMap(index)
-	if index == State.mapIndex then return end
+	if index == State.mapIndex then
+		return
+	end
 	State.mapIndex = index
 	previewRunnerTime = 0
 	previewRunnerMapId = Maps[index].id
@@ -231,8 +247,12 @@ end
 
 local function pointAlongPreviewPath(path, distance)
 	local points = path and path.points
-	if not points or #points == 0 then return nil end
-	if distance <= 0 then return points[1].x, points[1].y end
+	if not points or #points == 0 then
+		return nil
+	end
+	if distance <= 0 then
+		return points[1].x, points[1].y
+	end
 
 	for i = 2, #points do
 		local point = points[i]
@@ -251,14 +271,18 @@ end
 
 local function drawPreviewRunner(entry, previewX, previewY, locked)
 	local path = entry.previewPath
-	if locked or not path or path.totalLength <= 0 then return end
+	if locked or not path or path.totalLength <= 0 then
+		return
+	end
 
 	-- Keep the runner inside the route at both ends so its appearance and
 	-- disappearance happen over path tiles instead of beyond the map entrances.
 	local startDistance = PREVIEW_RUNNER_ENTRY_TRIM_TILES * path.tileLength
 	local endDistance = path.totalLength - PREVIEW_RUNNER_EXIT_TRIM_TILES * path.tileLength
 	local travelLength = max(0, endDistance - startDistance)
-	if travelLength <= 0 then return end
+	if travelLength <= 0 then
+		return
+	end
 
 	local travelDuration = travelLength / PREVIEW_RUNNER_SPEED
 	-- Fade during the final part of the trip, rather than parking an opaque
@@ -269,7 +293,9 @@ local function drawPreviewRunner(entry, previewX, previewY, locked)
 	local cycleTime = previewRunnerTime % cycleDuration
 	local distance = startDistance + min(cycleTime, travelDuration) * PREVIEW_RUNNER_SPEED
 	local x, y = pointAlongPreviewPath(path, distance)
-	if not x then return end
+	if not x then
+		return
+	end
 
 	local alpha = min(1, cycleTime / PREVIEW_RUNNER_FADE_DURATION)
 	if cycleTime >= fadeOutStart then
@@ -305,8 +331,13 @@ end
 
 local function navigateTo(index)
 	index = max(1, min(#Maps, index))
-	while index > State.mapIndex and isMapLocked(index) do index = index - 1 end
-	if index == State.mapIndex then Sound.play("uiError"); return end
+	while index > State.mapIndex and isMapLocked(index) do
+		index = index - 1
+	end
+	if index == State.mapIndex then
+		Sound.play("uiError")
+		return
+	end
 	Tooltip.hide()
 	selectMap(State.resolveMapIndex(index))
 	keepSelectedVisible(layout())
@@ -314,7 +345,10 @@ local function navigateTo(index)
 end
 
 local function playMap()
-	if isMapLocked(State.mapIndex) then Sound.play("uiError"); return end
+	if isMapLocked(State.mapIndex) then
+		Sound.play("uiError")
+		return
+	end
 	Tooltip.hide()
 	Sound.play("uiConfirm")
 	State.worldMapIndex = State.mapIndex
@@ -369,7 +403,9 @@ local function drawMapList(l, unlockPose)
 	for visible = 1, count do
 		local index = listOffset + visible
 		local map = Maps[index]
-		if not map then break end
+		if not map then
+			break
+		end
 		local y = l.left.y + SECTION_INSET + LIST_HEADER_H + (visible - 1) * rowH
 		local selected = index == State.mapIndex
 		local locked = isMapLocked(index)
@@ -418,7 +454,9 @@ local function rewardDestination(l, count, index)
 end
 
 local function drawUnlockRewards(l, event, pose)
-	if not event then return end
+	if not event then
+		return
+	end
 	for index, reward in ipairs(event.rewards) do
 		local rewardPose = pose.rewards[index]
 		if rewardPose and rewardPose.visible then
@@ -471,7 +509,9 @@ local function drawAbilityCard(x, y, w, h, slot, abilityId, unlocked, hovered)
 end
 
 local function abilityCardGeometry(l, entry, slot)
-	if not entry then return nil end
+	if not entry then
+		return nil
+	end
 	local pad = 20
 	local x, y, w = l.center.x + pad, l.center.y + SECTION_INSET, l.center.w - pad * 2
 	local previewY = y + 77
@@ -488,7 +528,9 @@ end
 local function availableAbilities()
 	local abilities = {}
 	for _, abilityId in ipairs(AbilityDefs.order) do
-		if CampaignUnlocks.isAbilityUnlocked(abilityId) then abilities[#abilities + 1] = abilityId end
+		if CampaignUnlocks.isAbilityUnlocked(abilityId) then
+			abilities[#abilities + 1] = abilityId
+		end
 	end
 	return abilities
 end
@@ -511,7 +553,9 @@ local function abilityChoiceGeometry(l, index)
 end
 
 local function equipAbility(abilityId)
-	if not selectedAbilitySlot or not CampaignUnlocks.isAbilityUnlocked(abilityId) then return end
+	if not selectedAbilitySlot or not CampaignUnlocks.isAbilityUnlocked(abilityId) then
+		return
+	end
 	local equipped = CampaignUnlocks.getEquippedAbilities()
 	for slot, equippedId in ipairs(equipped) do
 		if equippedId == abilityId and slot ~= selectedAbilitySlot then
@@ -527,7 +571,9 @@ local function equipAbility(abilityId)
 end
 
 local function drawAbilityPicker(l)
-	if not selectedAbilitySlot then return end
+	if not selectedAbilitySlot then
+		return
+	end
 	local x, y, w, h, abilities = abilityPickerGeometry(l)
 	lg.setColor(Theme.ui.screenDim)
 	lg.rectangle("fill", l.center.x + 2, l.center.y + 2, l.center.w - 4, l.center.h - 4)
@@ -541,7 +587,10 @@ local function drawAbilityPicker(l)
 		local ix, iy, iw, ih = abilityChoiceGeometry(l, index)
 		local equippedSlot
 		for slot, equippedId in ipairs(equipped) do
-			if equippedId == abilityId then equippedSlot = slot; break end
+			if equippedId == abilityId then
+				equippedSlot = slot
+				break
+			end
 		end
 		local unavailable = equippedSlot and equippedSlot ~= selectedAbilitySlot
 		local hovered = hoveredAbilityChoice == index
@@ -583,7 +632,9 @@ local function drawCenter(l, map, mapIndex)
 	local previewY = y + 70
 	local maxPreviewH = max(120, l.center.h - (previewY - l.center.y) - 190)
 	local entry, previewW, previewH = MapPreviewCache.getFitted(map.id, w, maxPreviewH)
-	if not entry then return end
+	if not entry then
+		return
+	end
 	local previewX = floor(x + (w - previewW) * 0.5 + 0.5)
 	previewY = floor(previewY + 0.5)
 	local locked = isMapLocked(mapIndex)
@@ -679,7 +730,9 @@ function Screen.update(dt)
 	buttons.play.h = PLAY_BUTTON_H
 	buttons.play.enabled = not isMapLocked(State.mapIndex)
 	local mx, my = love.mouse.getPosition()
-	for _, button in pairs(buttons) do Button.update(button, mx, my, dt) end
+	for _, button in pairs(buttons) do
+		Button.update(button, mx, my, dt)
+	end
 
 	local map = Maps[State.mapIndex]
 	hoveredAbilitySlot = nil
@@ -760,11 +813,16 @@ end
 
 function Screen.gamepadpressed(_, button)
 	local key = ({dpup = "up", dpdown = "down", dpleft = "left", dpright = "right", a = "return", b = "escape"})[button]
-	if key then Screen.keypressed(key); return true end
+	if key then
+		Screen.keypressed(key)
+		return true
+	end
 end
 
 function Screen.mousepressed(x, y, button)
-	if button ~= 1 then return end
+	if button ~= 1 then
+		return
+	end
 	local l = layout()
 	if selectedAbilitySlot then
 		local px, py, pw, ph, abilities = abilityPickerGeometry(l)
@@ -809,7 +867,10 @@ function Screen.mousepressed(x, y, button)
 	local cardW = (dw - labelW - SPACE * 2) / 3
 	for i, key in ipairs(DIFFICULTIES) do
 		local cx = choicesX + (i - 1) * (cardW + SPACE)
-		if x >= cx and x <= cx + cardW and y >= dy and y <= dy + DIFFICULTY_CARD_H then selectDifficulty(key); return true end
+		if x >= cx and x <= cx + cardW and y >= dy and y <= dy + DIFFICULTY_CARD_H then
+			selectDifficulty(key)
+			return true
+		end
 	end
 	for _, item in pairs(buttons) do if Button.mousepressed(item, x, y, button) then return true end end
 end

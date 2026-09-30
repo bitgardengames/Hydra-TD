@@ -24,7 +24,9 @@ end
 function RunModes._setExperimentalModulesForPlaytest(state, enabled)
 	state.runRules = state.runRules or {}
 	state.runRules.experimentalModules = enabled == true
-	if enabled == true then state.runMode = RunModes.MODULE_PLAYTEST end
+	if enabled == true then
+		state.runMode = RunModes.MODULE_PLAYTEST
+	end
 	return state.runRules.experimentalModules
 end
 

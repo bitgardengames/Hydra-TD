@@ -40,10 +40,18 @@ function Scatter.generateForBiome(biome)
 	Trees.list, Trees.occupied = bundle.trees, bundle.treeOccupied
 	Cacti.list, Mushrooms.list = bundle.cacti, bundle.mushrooms
 	-- Preserve clear() calls and their module-specific semantics for disabled live state.
-	if not (config.rocks and config.rocks.enabled) then Rocks.clear() end
-	if not (config.trees and config.trees.enabled) then Trees.clear() end
-	if not (config.cactus and config.cactus.enabled) then Cacti.clear() end
-	if not (config.mushrooms and config.mushrooms.enabled) then Mushrooms.clear() end
+	if not (config.rocks and config.rocks.enabled) then
+		Rocks.clear()
+	end
+	if not (config.trees and config.trees.enabled) then
+		Trees.clear()
+	end
+	if not (config.cactus and config.cactus.enabled) then
+		Cacti.clear()
+	end
+	if not (config.mushrooms and config.mushrooms.enabled) then
+		Mushrooms.clear()
+	end
 	return bundle
 end
 

@@ -100,14 +100,18 @@ end
 
 function Mushrooms.draw(list, targetMap)
 	list = list or Mushrooms.list
-	if #list == 0 then return end
+	if #list == 0 then
+		return
+	end
 
 	local styles = getMushroomStyles(targetMap or Map.map)
 
 	for i = 1, #list do
 		local m = list[i]
 		local style = styles[m.style]
-		if not style then goto continue end
+		if not style then
+			goto continue
+		end
 
 		local s = m.scale
 		local x = m.x

@@ -13,22 +13,32 @@ local HOOKS = { "on_shot", "on_tick", "on_hit", "on_kill", "on_expire" }
 local compiledPlans = setmetatable({}, { __mode = "k" })
 
 local function hookIsDeclared(declared, hook)
-	if not declared then return true end
+	if not declared then
+		return true
+	end
 	for i = 1, #declared do
-		if declared[i] == hook then return true end
+		if declared[i] == hook then
+			return true
+		end
 	end
 	return false
 end
 
 local function compilePlan(behaviors)
 	local hooks, drawHandlers, canHitPredicates = {}, {}, {}
-	for i = 1, #HOOKS do hooks[HOOKS[i]] = {} end
+	for i = 1, #HOOKS do
+		hooks[HOOKS[i]] = {}
+	end
 	for i = 1, #behaviors do
 		local behavior = behaviors[i]
 		local def = B[behavior.id]
 		if def then
-			if def.draw then drawHandlers[#drawHandlers + 1] = { fn = def.draw, data = behavior.data } end
-			if def.canHit then canHitPredicates[#canHitPredicates + 1] = { fn = def.canHit, data = behavior.data } end
+			if def.draw then
+				drawHandlers[#drawHandlers + 1] = { fn = def.draw, data = behavior.data }
+			end
+			if def.canHit then
+				canHitPredicates[#canHitPredicates + 1] = { fn = def.canHit, data = behavior.data }
+			end
 			for j = 1, #HOOKS do
 				local hook = HOOKS[j]
 				if def[hook] and hookIsDeclared(behavior.hooks, hook) then
@@ -73,11 +83,17 @@ function ProjectileBehaviors.buildChildBehaviors(parentBehaviors)
 		if not behavior.noInherit then
 			out[#out + 1] = BehaviorContext.cloneBehavior(behavior)
 			local role = Registry.getRole(behavior.id)
-			if hasRole[role] ~= nil then hasRole[role] = true end
+			if hasRole[role] ~= nil then
+				hasRole[role] = true
+			end
 		end
 	end
-	if not hasRole.collision then out[#out + 1] = { id = "hit_circle", data = { radius = 10 } } end
-	if not hasRole.damage then out[#out + 1] = { id = "hit_damage" } end
+	if not hasRole.collision then
+		out[#out + 1] = { id = "hit_circle", data = { radius = 10 } }
+	end
+	if not hasRole.damage then
+		out[#out + 1] = { id = "hit_damage" }
+	end
 	return out
 end
 
@@ -89,14 +105,20 @@ function ProjectileBehaviors.update(p, dt)
 	local hooks = p._hooks and p._hooks.on_tick
 	if hooks then for i = 1, #hooks do
 		local result = hooks[i].fn(p, dt, hooks[i].data)
-		if result == "consume" then return consumeProjectile(p) end
-		if result then return result end
+		if result == "consume" then
+			return consumeProjectile(p)
+		end
+		if result then
+			return result
+		end
 	end end
 end
 function ProjectileBehaviors.hit(p, e, ctx)
 	ctx = ctx or p._defaultHitCtx or { origin = p.hitOrigin or "primary" }
 	local oldX, oldY = p.x, p.y
-	if ctx.hitX and ctx.hitY then p.x, p.y = ctx.hitX, ctx.hitY end
+	if ctx.hitX and ctx.hitY then
+		p.x, p.y = ctx.hitX, ctx.hitY
+	end
 	local shouldConsume = false
 	local hooks = p._hooks and p._hooks.on_hit
 	if hooks then for i = 1, #hooks do if hooks[i].fn(p, e, hooks[i].data, ctx) == "consume" then shouldConsume = true end end end
@@ -105,7 +127,9 @@ function ProjectileBehaviors.hit(p, e, ctx)
 		if hooks then for i = 1, #hooks do hooks[i].fn(p, e, hooks[i].data, ctx) end end
 	end
 	p.x, p.y = oldX, oldY
-	if shouldConsume then return consumeProjectile(p) end
+	if shouldConsume then
+		return consumeProjectile(p)
+	end
 end
 function ProjectileBehaviors.draw(p, a)
 	local handlers = p._drawHandlers
@@ -116,7 +140,9 @@ function ProjectileBehaviors.draw(p, a)
 		local scale = branch and (broad and 1.18 or 0.88) or 1
 		love.graphics.push()
 		love.graphics.scale(scale, scale)
-		for i = 1, #handlers do handlers[i].fn(p, a, handlers[i].data) end
+		for i = 1, #handlers do
+			handlers[i].fn(p, a, handlers[i].data)
+		end
 		love.graphics.pop()
 	end
 end

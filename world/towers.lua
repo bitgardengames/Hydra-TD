@@ -132,7 +132,9 @@ end
 
 local function untrackAbilityBuffTower(t)
 	local index = t and t._activeAbilityBuffIndex
-	if not index then return end
+	if not index then
+		return
+	end
 
 	local moved = activeAbilityBuffTowers[#activeAbilityBuffTowers]
 	swapRemove(activeAbilityBuffTowers, index)
@@ -143,7 +145,9 @@ local function untrackAbilityBuffTower(t)
 end
 
 local function addAbilityBuff(t, buff)
-	if not t or not buff then return false end
+	if not t or not buff then
+		return false
+	end
 	t.abilityBuffs = t.abilityBuffs or {}
 	t.abilityBuffs[#t.abilityBuffs + 1] = buff
 	if not t._activeAbilityBuffIndex then
@@ -155,7 +159,9 @@ local function addAbilityBuff(t, buff)
 end
 
 local function clearAbilityBuffs(t)
-	if not t then return end
+	if not t then
+		return
+	end
 	untrackAbilityBuffTower(t)
 	t.abilityBuffs = nil
 	recomputeAbilityModifiers(t)
@@ -174,12 +180,16 @@ local function expireAbilityBuffs(now)
 			end
 		end
 		local changed = write <= #buffs
-		for i = #buffs, write, -1 do buffs[i] = nil end
+		for i = #buffs, write, -1 do
+			buffs[i] = nil
+		end
 		if #buffs == 0 then
 			untrackAbilityBuffTower(t)
 			t.abilityBuffs = nil
 		end
-		if changed then recomputeAbilityModifiers(t) end
+		if changed then
+			recomputeAbilityModifiers(t)
+		end
 	end
 end
 
@@ -286,7 +296,9 @@ end
 
 local function addTower(kind, gx, gy)
 	local def = TowerDefs[kind]
-	if not def then return false, PLACEMENT_FAILURE.UNKNOWN_TOWER end
+	if not def then
+		return false, PLACEMENT_FAILURE.UNKNOWN_TOWER
+	end
 
 	if not CampaignUnlocks.isTowerUnlocked(kind) then
 		return false, PLACEMENT_FAILURE.TOWER_LOCKED
@@ -510,8 +522,12 @@ end
 
 local function effectiveDamage(stats, behaviors)
 	local mult = 1
-	if behaviors.hit_damage then mult = mult * (behaviors.hit_damage.mult or 1) end
-	if behaviors.cannon_damage_scale then mult = mult * (behaviors.cannon_damage_scale.mult or 1) end
+	if behaviors.hit_damage then
+		mult = mult * (behaviors.hit_damage.mult or 1)
+	end
+	if behaviors.cannon_damage_scale then
+		mult = mult * (behaviors.cannon_damage_scale.mult or 1)
+	end
 	return stats.damage * mult
 end
 
@@ -601,7 +617,9 @@ getUpgradePreview = function(t, specialization)
 	if level == 1 and not specialization then
 		return nil
 	end
-	if level > 1 then currentClone.specialization = currentClone.specialization or specialization end
+	if level > 1 then
+		currentClone.specialization = currentClone.specialization or specialization
+	end
 	nextClone.specialization = nextClone.specialization or specialization
 	local currentStats = previewTowerStats(currentClone, level, specialization)
 	local nextStats = previewTowerStats(nextClone, nextLevel, specialization)
@@ -729,7 +747,9 @@ local function isTowerActive(t)
 end
 
 local function applySuppression(target, duration)
-	if not isTowerActive(target) then return end
+	if not isTowerActive(target) then
+		return
+	end
 	target.suppressedTimer = duration
 	if duration > 0 and not target._suppressedTowerIndex then
 		suppressedTowers[#suppressedTowers + 1] = target
@@ -807,13 +827,19 @@ local function updateSuppression(dt)
 
 	local boss = State.activeBoss
 	local suppression = boss and boss.suppression
-	if not suppression or boss.dying or (boss.hp or 0) <= 0 then return end
+	if not suppression or boss.dying or (boss.hp or 0) <= 0 then
+		return
+	end
 
 	boss.suppressionTimer = (boss.suppressionTimer or suppression.period) - dt
-	if boss.suppressionTimer > 0 or #towers == 0 then return end
+	if boss.suppressionTimer > 0 or #towers == 0 then
+		return
+	end
 
 	local target = findSuppressionTarget(boss, suppression)
-	if not target then return end
+	if not target then
+		return
+	end
 	suppressionProjectiles[#suppressionProjectiles + 1] = {
 		x = boss.x,
 		y = boss.y,

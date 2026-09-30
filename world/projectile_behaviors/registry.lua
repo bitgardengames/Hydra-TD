@@ -49,10 +49,16 @@ local function register(descriptor)
 		declared = {}
 		for i = 1, #canonicalHooks do
 			local hook = canonicalHooks[i]
-			if handlers[hook] then declared[#declared + 1] = hook end
+			if handlers[hook] then
+				declared[#declared + 1] = hook
+			end
 		end
-		if handlers.draw then declared[#declared + 1] = "draw" end
-		if handlers.canHit then declared[#declared + 1] = "canHit" end
+		if handlers.draw then
+			declared[#declared + 1] = "draw"
+		end
+		if handlers.canHit then
+			declared[#declared + 1] = "canHit"
+		end
 	end
 	descriptor.hooks = declared
 	descriptors[descriptor.id] = descriptor

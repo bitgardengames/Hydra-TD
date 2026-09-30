@@ -53,7 +53,9 @@ function Waves.getWavePreview(waveNumber)
 		end
 	end
 	local counts = {}
-	for _, group in ipairs(descriptions) do counts[group.kind] = (counts[group.kind] or 0) + group.count end
+	for _, group in ipairs(descriptions) do
+		counts[group.kind] = (counts[group.kind] or 0) + group.count
+	end
 	return {count=wave.count or 0, total=wave.count or 0, totalCount=wave.count or 0, counts=counts, composition=descriptions}
 end
 
@@ -74,7 +76,10 @@ local function startBossWave(wave, map, mapIndex)
 		group.spdMult = spdMult * (group.spdMult or 1)
 	end
 	Spawner.begin(wave.count or 1, hpMult, spdMult, groups)
-	if not encounter then Spawner.configureBossAdds(); return end
+	if not encounter then
+		Spawner.configureBossAdds()
+		return
+	end
 	Spawner.configureBossAdds({active=true, kind=encounter.flankKind,
 		burst=min(8, encounter.flankBurst + math.floor(bossIndex / 2)),
 		timer=max(1.5, encounter.initialDelay - bossIndex * .12), interval=max(3, encounter.interval * (.96 ^ bossIndex)),
@@ -100,7 +105,9 @@ function Waves.startWave(mapIndex)
 	end
 	local wave = getWave(map, State.wave)
 	Presentation.waveStarted(State.wave, map)
-	if wave.boss then startBossWave(wave, map, mapIndex) else startNormalWave(wave, map, mapIndex) end
+	if wave.boss then
+		startBossWave(wave, map, mapIndex) else startNormalWave(wave, map, mapIndex)
+	end
 	return true
 end
 
@@ -110,7 +117,9 @@ spawnContext.enemyCount = function() return #Enemies.enemies end
 spawnContext.activeBoss = function() return State.activeBoss end
 spawnContext.onBossPosition = function(boss) lastBossPosition = {x=boss.x, y=boss.y} end
 spawnContext.onBossSpawn = function(enemy)
-	if bossSpawnPresented then return end
+	if bossSpawnPresented then
+		return
+	end
 	bossSpawnPresented = true
 	lastBossPosition = {x=enemy.x, y=enemy.y}
 	Presentation.event("boss_spawn", {wave=State.wave, x=enemy.x, y=enemy.y})

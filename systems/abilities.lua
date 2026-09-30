@@ -116,7 +116,9 @@ end
 -- ability-caused kills are excluded to prevent farming and self-recharging
 -- area abilities; a boss is explicitly worth several normal enemies.
 function Abilities.chargeFromKill(enemy, sourceKind)
-	if not enemy or enemy.summoned or sourceKind == "ability" then return 0 end
+	if not enemy or enemy.summoned or sourceKind == "ability" then
+		return 0
+	end
 	local amount = (enemy.boss or (enemy.def and enemy.def.boss)) and AbilityDefs.bossCharge or 1
 	for _, id in ipairs(State.equippedAbilities or {}) do
 		local def = AbilityDefs[id]
@@ -261,7 +263,9 @@ end
 
 local function collectAffected(entityKind, effect, x, y, affected, occupied)
 	clearBuffer(affected, occupied)
-	if not entityKind or not effect.radius or not x or not y then return 0 end
+	if not entityKind or not effect.radius or not x or not y then
+		return 0
+	end
 	local count = 0
 	if entityKind == "enemies" then
 		local context = affectedQueryContext
@@ -285,7 +289,9 @@ end
 function Abilities.getTargetPreview(x, y)
 	local target = State.abilityTargeting
 	local def = target and Abilities.getEquipped(target.abilityId)
-	if not def then return nil end
+	if not def then
+		return nil
+	end
 	local effect = getEffect(def)
 	previewAffectedCount = collectAffected(def.target and def.target.entities, effect,
 		x, y, previewAffected, previewAffectedCount)
@@ -336,7 +342,9 @@ local function isLiveEnemy(enemy)
 end
 
 local function markLastStandEnemy(enemy, context)
-	if isLiveEnemy(enemy) then context.inside[enemy] = true end
+	if isLiveEnemy(enemy) then
+		context.inside[enemy] = true
+	end
 end
 
 local function triggerVolley(effect, enemy)
@@ -439,7 +447,9 @@ function Abilities.update(dt)
 end
 
 function Abilities.getEntitiesInActiveArea(effect, entityKind)
-	if not effect then return nil, 0 end
+	if not effect then
+		return nil, 0
+	end
 	effect._affectedCaches = effect._affectedCaches or {}
 	local cache = effect._affectedCaches[entityKind]
 	if not cache then
@@ -489,7 +499,9 @@ function Abilities.reset()
 	State.abilityCharges = State.abilityCharges or {}
 	for _, id in ipairs(State.equippedAbilities or {}) do
 		local def = AbilityDefs[id]
-		if def then State.abilityCharges[id] = 0 end
+		if def then
+			State.abilityCharges[id] = 0
+		end
 	end
 end
 

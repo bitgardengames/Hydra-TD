@@ -10,16 +10,23 @@ local Shared = {
 
 function Shared.acquire(pool, factory)
 	local object = pool[#pool]
-	if object then pool[#pool] = nil; return object end
+	if object then
+		pool[#pool] = nil
+		return object
+	end
 	return factory and factory() or {}
 end
 
 function Shared.reserve(pool, count, factory)
-	for _ = 1, count do pool[#pool + 1] = factory() end
+	for _ = 1, count do
+		pool[#pool + 1] = factory()
+	end
 end
 
 function Shared.clear(object, fields)
-	for i = 1, #fields do object[fields[i]] = nil end
+	for i = 1, #fields do
+		object[fields[i]] = nil
+	end
 end
 
 function Shared.integrate(object, dt)
