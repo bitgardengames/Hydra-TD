@@ -12,8 +12,7 @@ local Modules = require("systems.modules")
 local BranchTierResolver = require("systems.branch_tier_resolver")
 local EnemyRenderState = require("render.enemy_render_state")
 local Targeting = require("world.targeting")
-local Biomes = require("world.biomes")
-local Constants = require("core.constants")
+local EnemyDefs = require("world.enemy_defs")
 
 local Sandbox = {}
 Sandbox.__index = Sandbox
@@ -31,42 +30,17 @@ local function exchange(a, b)
 	for i = 1, #temporary do b[i] = temporary[i] end
 end
 
-local function buildPath(points)
-	local path = {
-		blocked={}, isPath={}, path={}, pathWorld=points, pathSegLen={}, samples={}, sampleStep=1,
-		biome=Biomes.defs.default,
-	}
-	-- DrawWorld consumes the grid-space path used by a real map. Preserve the
-	-- authored world-space lane for movement while deriving that same geometry
-	-- for the gameplay path renderer.
-	for i = 1, #points do
-		path.path[i] = {
-			points[i][1] / Constants.TILE + 0.5,
-			points[i][2] / Constants.TILE + 0.5,
-		}
-	end
-	local total = 0
-	for i = 1, #points - 1 do
-		local a, b = points[i], points[i + 1]
-		local dx, dy = b[1] - a[1], b[2] - a[2]
-		local length = math.sqrt(dx * dx + dy * dy)
-		path.pathSegLen[i] = length
-		for d = 0, math.max(0, math.ceil(length) - 1) do
-			local t = length > 0 and d / length or 0
-			path.samples[#path.samples + 1] = {a[1] + dx*t, a[2] + dy*t}
-		end
-		total = total + length
-	end
-	path.samples[#path.samples + 1] = {points[#points][1], points[#points][2]}
-	path.sampleCount, path.totalWorldLength = #path.samples, total
-	path.lastSecondThreshold = math.max(0, total - 100)
-	return path
+local function buildPath(points, biome)
+	-- Preview paths are ordinary grid paths. Map owns tile-to-world conversion,
+	-- segment lengths, centerline samples, path width assumptions and biome.
+	return Map.createRenderContext({path=points, biome=biome or "default"}).map
 end
 
-local function makeTower(kind, specialization, x, y)
+local function makeTower(kind, specialization, gx, gy)
 	local def = assert(Towers.TowerDefs[kind])
+	local x, y = Map.gridToCenter(gx, gy)
 	local t = {
-		kind=kind, def=def, gx=1, gy=1, x=x, y=y, renderY=y, level=2,
+		kind=kind, def=def, gx=gx, gy=gy, x=x, y=y, renderY=y, level=2,
 		specialization=specialization, height=4, prevHeight=4, renderHeight=4,
 		placementAnim=0, range=0, range2=0, fireRate=0, fireInterval=0,
 		damage=0, projSpeed=def.projSpeed, cooldown=0.2, damageDealt=0, kills=0,
@@ -88,19 +62,43 @@ end
 
 function Sandbox.new(config)
 	local self = setmetatable({
-		map=buildPath(config.path), enemies={}, towers={}, projectiles={}, effects={},
-		time=0, duration=config.duration or 5, config=config,
+		map=buildPath(config.path, config.biome), enemies={}, towers={}, projectiles={}, effects={},
+		pendingEnemies={}, time=0, duration=config.duration or 5, config=config,
 	}, Sandbox)
 	for _, name in ipairs(effectNames) do self.effects[name] = {} end
 	self.towers[1] = makeTower(config.tower.kind, config.branchId, config.tower.x, config.tower.y)
+	for _, authored in ipairs(config.enemies) do
+		local count = authored.count or 1
+		local spacing = authored.spacing or 0
+		local initialDistance = authored.distance or authored.initialDistance or authored.spawnDistance or 0
+		for i=1,count do
+			local spawn={}
+			for key,value in pairs(authored) do spawn[key]=value end
+			spawn.distance=initialDistance+(i-1)*spacing
+			spawn.spawnTime=(authored.spawnTime or 0)+(i-1)*(authored.spawnInterval or 0)
+			self.pendingEnemies[#self.pendingEnemies+1]=spawn
+		end
+	end
+	table.sort(self.pendingEnemies, function(a,b) return (a.spawnTime or 0) < (b.spawnTime or 0) end)
+	self:spawnDueEnemies(0)
+	return self
+end
+
+function Sandbox:spawnDueEnemies(now)
 	self:withWorld(function()
-		for i, spawn in ipairs(config.enemies) do
-			local e = Enemies.spawnEnemy(spawn.kind, spawn.hpScale or 3, spawn.speedScale or 0.42,
-				config.path[1][1], config.path[1][2], 1, nil, spawn.distance or ((i-1)*24), 0)
-			Enemies.setPathDistance(e, spawn.distance or ((i-1)*24))
+		while self.pendingEnemies[1] and (self.pendingEnemies[1].spawnTime or 0) <= now do
+			local spawn = table.remove(self.pendingEnemies, 1)
+			local distance = math.max(0, spawn.distance or 0)
+			local start = self.map.pathWorld[1]
+			local speedScale=spawn.speedScale or 1
+			if spawn.speedOverride then speedScale=spawn.speedOverride/assert(EnemyDefs[spawn.kind]).speed end
+			local e = Enemies.spawnEnemy(spawn.kind, spawn.hpScale or 1, speedScale,
+				start[1], start[2], 1, nil, distance, 0)
+			Enemies.setPathDistance(e, distance)
+			local health=spawn.healthOverride or spawn.health
+			if health then e.hp=health; e.maxHp=health end
 		end
 	end)
-	return self
 end
 
 function Sandbox:withWorld(fn)
@@ -137,6 +135,7 @@ function Sandbox:withWorld(fn)
 end
 
 function Sandbox:update(dt)
+	self:spawnDueEnemies(self.time + dt)
 	self:withWorld(function()
 		State.frameId = (State.frameId or 0) + 1
 		Enemies.updateEnemies(dt)
