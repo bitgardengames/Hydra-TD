@@ -86,7 +86,7 @@ def test_preview_composition_puts_the_tower_above_the_lowered_lane():
     towers = re.findall(r'tower=\{kind="[^"]+",x=(\d+),y=(\d+)\}', preview)
     assert lane and int(lane.group(1)) == 82
     assert towers
-    assert all(110 <= int(x) <= 130 and int(y) < 82 for x, y in towers)
+    assert all(132 <= int(x) <= 136 and int(y) == 36 for x, y in towers)
 
 
 def test_specialization_cards_prioritize_preview_area_without_extra_height():
