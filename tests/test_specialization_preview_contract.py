@@ -112,6 +112,12 @@ def test_preview_camera_is_uniform_and_objects_have_no_preview_scale():
         assert duplicated_scale not in preview
 
 
+def test_authored_specialization_cameras_use_two_x_zoom():
+    preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    camera_zooms = re.findall(r"local (?:straight|bend)Camera = \{[^}]*zoom=([\d.]+)\}", preview)
+    assert camera_zooms == ["2", "2"]
+
+
 def test_sandbox_supports_authored_real_enemy_staging():
     sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
     for field in ("initialDistance", "spawnDistance", "spawnTime", "spacing", "count", "healthOverride", "speedOverride"):
