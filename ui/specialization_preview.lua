@@ -18,8 +18,8 @@ end
 -- to card pixels.
 local lane = {{1,3},{8,3}}
 local bend = {{1,2},{5,2},{5,5},{8,5}}
-local straightCamera = {centerX=4.5,centerY=2.5,zoom=2}
-local bendCamera = {centerX=4.5,centerY=3,zoom=2}
+local straightCamera = {centerX=4.5,centerY=2.5,zoom=1}
+local bendCamera = {centerX=4.5,centerY=3,zoom=1}
 Preview.definitions = {
 	marksman={duration=5.2,path=lane,camera=straightCamera,tower={kind="lancer",x=5,y=2},enemies={{kind="tank",hpScale=7,distance=.3*TILE},{kind="runner",hpScale=4,distance=1.4*TILE}}},
 	rupture={duration=4.8,path=lane,camera=straightCamera,tower={kind="lancer",x=5,y=2},enemies=cast(.72,"grunt","grunt","grunt")},
