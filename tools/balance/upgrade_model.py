@@ -5,6 +5,7 @@ particular, callers must select a specialization for paid tiers; silently
 interpolating one tier-five ``dmgMult`` curve used to erase most of the authored
 branch behaviour.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -16,9 +17,13 @@ from lua_source import named_entries, numeric_field, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 TOWERS = ("slow", "lancer", "poison", "cannon", "shock", "plasma")
-SOURCE_FILES = ("world/tower_defs.lua", "world/towers.lua",
-                "systems/branch_tier_resolver.lua", "world/projectiles.lua",
-                "world/projectile_behaviors.lua")
+SOURCE_FILES = (
+    "world/tower_defs.lua",
+    "world/towers.lua",
+    "systems/branch_tier_resolver.lua",
+    "world/projectiles.lua",
+    "world/projectile_behaviors.lua",
+)
 
 
 def source_fingerprint() -> str:
@@ -86,8 +91,7 @@ def level_stats(tower: dict, level: int, branch: str | None = None) -> dict[str,
     """Resolve an explicit authored tier; level one is the unbranched base."""
     if level not in range(1, 6):
         raise ValueError("tower level must be 1..5")
-    stats = {"damage": tower["damage"], "fireRate": tower["fireRate"],
-             "range": tower["range"]}
+    stats = {"damage": tower["damage"], "fireRate": tower["fireRate"], "range": tower["range"]}
     if level == 1:
         stats["dps"] = stats["damage"] * stats["fireRate"]
         return stats
@@ -109,7 +113,7 @@ def level_stats(tower: dict, level: int, branch: str | None = None) -> dict[str,
 
 
 def purchase_cost(tower: dict, level: int, costs: tuple[float, ...]) -> int:
-    return round(tower["cost"] * (1 + sum(costs[:level - 1])))
+    return round(tower["cost"] * (1 + sum(costs[: level - 1])))
 
 
 def expansion_comparisons() -> list[dict]:
@@ -123,12 +127,23 @@ def expansion_comparisons() -> list[dict]:
                 previous = level_stats(tower, tier - 1, branch) if tier > 2 else base
                 marginal = current["dps"] - previous["dps"]
                 raw = marginal / (base["dps"] * costs[tier - 2])
-                constrained = raw * (current["range"] / previous["range"]) / (.72 * .88) * (1 + .08*(tier-2))
-                rows.append({"tower": kind, "specialization": branch, "tier": tier,
-                             "upgrade_cost": round(tower["cost"] * costs[tier - 2]),
-                             "total_purchase_cost": purchase_cost(tower, tier, costs),
-                             "base_tower_equivalents": costs[tier - 2],
-                             "open_placement_output_ratio": round(raw, 3),
-                             "constrained_utility_ratio": round(constrained, 3),
-                             "range_tiles": round(current["range"] / 48, 3)})
+                constrained = (
+                    raw
+                    * (current["range"] / previous["range"])
+                    / (0.72 * 0.88)
+                    * (1 + 0.08 * (tier - 2))
+                )
+                rows.append(
+                    {
+                        "tower": kind,
+                        "specialization": branch,
+                        "tier": tier,
+                        "upgrade_cost": round(tower["cost"] * costs[tier - 2]),
+                        "total_purchase_cost": purchase_cost(tower, tier, costs),
+                        "base_tower_equivalents": costs[tier - 2],
+                        "open_placement_output_ratio": round(raw, 3),
+                        "constrained_utility_ratio": round(constrained, 3),
+                        "range_tiles": round(current["range"] / 48, 3),
+                    }
+                )
     return rows

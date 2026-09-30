@@ -22,7 +22,7 @@ from functools import cache
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from challenge_fixtures import BP, curve_multiplier_bp, definitions, half_up, number
+from challenge_fixtures import BP, curve_multiplier_bp, definitions, number
 from lua_source import named_entries, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -105,13 +105,12 @@ def fingerprint() -> str:
 @cache
 def parse_detail():
     from upgrade_model import progression
+
     tower_text = (ROOT / "world/tower_defs.lua").read_text()
     enemy_text = (ROOT / "world/enemy_defs.lua").read_text()
     towers = {}
     tower_root = table_body(tower_text, "return", ROOT / "world/tower_defs.lua")
-    for kind, body in named_entries(
-        tower_root, "return", ROOT / "world/tower_defs.lua"
-    ).items():
+    for kind, body in named_entries(tower_root, "return", ROOT / "world/tower_defs.lua").items():
         if "cost" not in body:
             continue
 
@@ -123,14 +122,10 @@ def parse_detail():
             "damage": n("damage", 1),
             "rate": n("fireRate", 1),
             "range": (
-                n("range", 3) / 56
-                if "Constants.TILE" not in number(body, "range", "0")
-                else 3.5
+                n("range", 3) / 56 if "Constants.TILE" not in number(body, "range", "0") else 3.5
             ),
         }
-        towers[kind]["range"] = float(
-            re.search(r"range\s*=\s*([0-9.]+)", body).group(1)
-        )
+        towers[kind]["range"] = float(re.search(r"range\s*=\s*([0-9.]+)", body).group(1))
         if kind == "poison":
             towers[kind]["poison"] = 4.0
         if kind == "cannon":
@@ -144,9 +139,7 @@ def parse_detail():
         parsed["branches"] = branch_towers[kind]["branches"]
     enemies = {}
     enemy_root = table_body(enemy_text, "return", ROOT / "world/enemy_defs.lua")
-    for kind, body in named_entries(
-        enemy_root, "return", ROOT / "world/enemy_defs.lua"
-    ).items():
+    for kind, body in named_entries(enemy_root, "return", ROOT / "world/enemy_defs.lua").items():
         if "hp" not in body:
             continue
 
@@ -167,10 +160,7 @@ def parse_detail():
         points = [(int(a), int(b)) for a, b in re.findall(r"\{(\d+),\s*(\d+)\}", path)]
         if points:
             lengths.append(
-                sum(
-                    abs(b[0] - a[0]) + abs(b[1] - a[1])
-                    for a, b in zip(points, points[1:])
-                )
+                sum(abs(b[0] - a[0]) + abs(b[1] - a[1]) for a, b in zip(points, points[1:]))
             )
     return towers, enemies, lengths
 
@@ -249,16 +239,10 @@ def select_tower_targets(
             for enemy in splash_candidates
             if enemy is not primary and abs(enemy.pos - primary.pos) < 0.035
         )
-        return primary, tuple(
-            sorted(splash_targets, key=lambda enemy: enemy.pos, reverse=True)
-        )
+        return primary, tuple(sorted(splash_targets, key=lambda enemy: enemy.pos, reverse=True))
     if chain_candidates is not None:
-        ranked_targets = sorted(
-            chain_candidates, key=lambda item: item[:2], reverse=True
-        )
-        return primary, tuple(
-            item[2] for item in ranked_targets if item[2] is not primary
-        )
+        ranked_targets = sorted(chain_candidates, key=lambda item: item[:2], reverse=True)
+        return primary, tuple(item[2] for item in ranked_targets if item[2] is not primary)
     return primary, ()
 
 
@@ -270,8 +254,9 @@ def resolve_tower_attack(
     now: float,
 ) -> None:
     """Apply one tower attack and advance its cooldown."""
-    tier = (tower_def["branches"][tower.specialization]["tiers"][tower.level]
-            if tower.level > 1 else {})
+    tier = (
+        tower_def["branches"][tower.specialization]["tiers"][tower.level] if tower.level > 1 else {}
+    )
     damage = tower_def["damage"] * tier.get("dmgMult", 1)
     rate = tower_def["rate"] * tier.get("fireMult", 1)
 
@@ -328,9 +313,7 @@ def placement(policy_name, policy, path_len, tower_no, variant):
     best = None
     candidates = policy["placement_candidates"]
     for candidate in range(candidates):
-        center = 0.12 + 0.76 * stable_unit(
-            policy_name, path_len, tower_no, variant, candidate
-        )
+        center = 0.12 + 0.76 * stable_unit(policy_name, path_len, tower_no, variant, candidate)
         # Interior bends and central route coverage are useful. Noise causes real
         # bad locations, rather than reducing the tower's damage behind the scenes.
         score = 1 - abs(center - 0.55) + 0.18 * math.sin(center * path_len)
@@ -376,34 +359,45 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
             for tower_index, tower in enumerate(towers):
                 if tower.level >= 5:
                     continue
-                branches = ((tower.specialization,) if tower.specialization else
-                            tuple(detail_towers[tower.kind]["branches"]))
-                for branch in branches:
-                    upgrade_candidates.append({
-                        "action": "upgrade", "tower_index": tower_index,
-                        "tower": tower.kind, "specialization": branch,
-                        "from_level": tower.level, "to_level": tower.level + 1,
-                        "cost": round(detail_towers[tower.kind]["cost"] *
-                                      upgrade_cost[tower.level - 1]),
-                    })
-            considered_actions.extend(upgrade_candidates)
-            if (
-                upgradable
-                and (
-                    len(towers) >= 24
-                    or stable_unit(
-                        policy_name, map_id, diff_name, variant, wave_no, actions, "up"
-                    )
-                    < policy["upgrade_preference"]
+                branches = (
+                    (tower.specialization,)
+                    if tower.specialization
+                    else tuple(detail_towers[tower.kind]["branches"])
                 )
+                for branch in branches:
+                    upgrade_candidates.append(
+                        {
+                            "action": "upgrade",
+                            "tower_index": tower_index,
+                            "tower": tower.kind,
+                            "specialization": branch,
+                            "from_level": tower.level,
+                            "to_level": tower.level + 1,
+                            "cost": round(
+                                detail_towers[tower.kind]["cost"] * upgrade_cost[tower.level - 1]
+                            ),
+                        }
+                    )
+            considered_actions.extend(upgrade_candidates)
+            if upgradable and (
+                len(towers) >= 24
+                or stable_unit(policy_name, map_id, diff_name, variant, wave_no, actions, "up")
+                < policy["upgrade_preference"]
             ):
                 target = max(upgradable, key=lambda t: (t.level, -abs(t.center - 0.55)))
                 target_index = towers.index(target)
-                candidates = [candidate for candidate in upgrade_candidates
-                              if candidate["tower_index"] == target_index]
+                candidates = [
+                    candidate
+                    for candidate in upgrade_candidates
+                    if candidate["tower_index"] == target_index
+                ]
                 if target.specialization is None:
-                    pick = int(stable_unit(policy_name, map_id, wave_no,
-                                           target.kind, tuple(sorted(preview))) * len(candidates))
+                    pick = int(
+                        stable_unit(
+                            policy_name, map_id, wave_no, target.kind, tuple(sorted(preview))
+                        )
+                        * len(candidates)
+                    )
                     selected_upgrade = candidates[pick]
                 else:
                     selected_upgrade = candidates[0]
@@ -441,8 +435,7 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                         "shock",
                         "plasma",
                     )
-                    if candidate in detail_towers
-                    and detail_towers[candidate]["cost"] <= money
+                    if candidate in detail_towers and detail_towers[candidate]["cost"] <= money
                 ]
                 if not affordable:
                     break
@@ -457,8 +450,13 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 cost = detail_towers[kind]["cost"]
             center = placement(policy_name, policy, path_len, len(towers), variant)
             coverage = min(0.22, detail_towers[kind]["range"] * 2 / max(12, path_len))
-            purchase = {"action": "purchase", "tower": kind,
-                        "specialization": None, "level": 1, "cost": cost}
+            purchase = {
+                "action": "purchase",
+                "tower": kind,
+                "specialization": None,
+                "level": 1,
+                "cost": cost,
+            }
             considered_actions.append(purchase)
             towers.append(Tower(kind, center, coverage, investment=cost))
             build_actions.append(purchase)
@@ -480,10 +478,7 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
             while cursor < len(spawn) and spawn[cursor][0] <= now + 1e-8:
                 kind = spawn[cursor][1]
                 ed = detail_enemies[kind]
-                mult = (
-                    curve_multiplier_bp(curve, wave_no, map_index, diff, ed["boss"])
-                    / BP
-                )
+                mult = curve_multiplier_bp(curve, wave_no, map_index, diff, ed["boss"]) / BP
                 hp = ed["hp"] * mult
                 live.append(
                     Enemy(
@@ -502,9 +497,7 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 opportunities += 1
                 if (
                     now >= policy["ability_delay"]
-                    and stable_unit(
-                        policy_name, map_id, variant, wave_no, int(now * 10)
-                    )
+                    and stable_unit(policy_name, map_id, variant, wave_no, int(now * 10))
                     < policy["ability_accuracy"]
                 ):
                     cluster = sorted(live, key=lambda e: e.pos, reverse=True)[
@@ -521,13 +514,9 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 tower.cooldown -= TICK
                 if tower.cooldown <= 0:
                     tower_def = detail_towers[tower.kind]
-                    primary, additional_targets = select_tower_targets(
-                        tower, tower_def, live
-                    )
+                    primary, additional_targets = select_tower_targets(tower, tower_def, live)
                     if primary is not None:
-                        resolve_tower_attack(
-                            tower, tower_def, primary, additional_targets, now
-                        )
+                        resolve_tower_attack(tower, tower_def, primary, additional_targets, now)
             survivors = []
             for e in live:
                 if e.poison_until > now:
@@ -580,8 +569,9 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
         # A failed late defense may sell its worst placement and genuinely rebuild.
         if lives < 4 and towers and policy_name != "novice":
             worst = min(towers, key=lambda t: t.coverage)
-            refund = int(worst.investment *
-                         ({"easy": 0.85, "normal": 0.75, "hard": 0.6}[diff_name]))
+            refund = int(
+                worst.investment * ({"easy": 0.85, "normal": 0.75, "hard": 0.6}[diff_name])
+            )
             sale = {**tower_state(worst), "after_wave": wave_no, "refund": refund}
             towers.remove(worst)
             money += refund
@@ -627,17 +617,15 @@ def build_report(difficulties=None, policies=None, map_ids=None):
     }
     for map_id in maps:
         mi = all_maps.index(map_id) + 1
-        for diff in (difficulties or ("easy", "normal", "hard")):
+        for diff in difficulties or ("easy", "normal", "hard"):
             policy_results = {}
-            for pname in (policies or POLICIES):
+            for pname in policies or POLICIES:
                 runs = [
                     campaign(map_id, mi, lengths[mi - 1], diff, v, pname, defs)
                     for v in range(bands["campaigns_per_policy"])
                 ]
                 policy_results[pname] = {
-                    "victory_rate": round(
-                        sum(r["victory"] for r in runs) / len(runs), 4
-                    ),
+                    "victory_rate": round(sum(r["victory"] for r in runs) / len(runs), 4),
                     "runs": runs,
                 }
                 branch_totals = {}
@@ -665,28 +653,20 @@ def check(report):
         selected = row["policies"][req["policy"]]
         rate = selected["victory_rate"]
         if "minimum_victory_rate" in req and rate < req["minimum_victory_rate"]:
-            errors.append(
-                f'{row["difficulty"]}/{row["map"]}: {req["policy"]} victory rate {rate}'
-            )
+            errors.append(f'{row["difficulty"]}/{row["map"]}: {req["policy"]} victory rate {rate}')
         if "maximum_victory_rate" in req and rate > req["maximum_victory_rate"]:
-            errors.append(
-                f'{row["difficulty"]}/{row["map"]}: {req["policy"]} victory rate {rate}'
-            )
+            errors.append(f'{row["difficulty"]}/{row["map"]}: {req["policy"]} victory rate {rate}')
         metric = bands["metric_bands"]
         if row["success_failure_margin"] < metric["minimum_policy_margin"]:
             errors.append(
                 f'{row["difficulty"]}/{row["map"]}: policy margin {row["success_failure_margin"]}'
             )
-        rebuilds = sum(run["rebuild_count"] for run in selected["runs"]) / len(
-            selected["runs"]
-        )
+        rebuilds = sum(run["rebuild_count"] for run in selected["runs"]) / len(selected["runs"])
         utilization = sum(run["ability_utilization"] for run in selected["runs"]) / len(
             selected["runs"]
         )
         if rebuilds > metric["maximum_mean_rebuilds"]:
-            errors.append(
-                f'{row["difficulty"]}/{row["map"]}: mean rebuilds {rebuilds:.3f}'
-            )
+            errors.append(f'{row["difficulty"]}/{row["map"]}: mean rebuilds {rebuilds:.3f}')
         if utilization < metric["minimum_ability_utilization"]:
             errors.append(
                 f'{row["difficulty"]}/{row["map"]}: ability utilization {utilization:.3f}'

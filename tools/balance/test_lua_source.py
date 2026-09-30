@@ -1,4 +1,5 @@
 """Focused tests for the declarative Lua source helpers."""
+
 import unittest
 import sys
 from pathlib import Path
@@ -19,8 +20,7 @@ class LuaSourceTests(unittest.TestCase):
 
     def test_adjacent_entries(self):
         root = "first = { value = 1 }, second = { value = 2 }"
-        self.assertEqual(["first", "second"],
-                         list(named_entries(root, "defs", self.SOURCE)))
+        self.assertEqual(["first", "second"], list(named_entries(root, "defs", self.SOURCE)))
 
     def test_missing_declaration_names_source(self):
         with self.assertRaisesRegex(ValueError, r"missing.*'missing'.*fixture\.lua"):

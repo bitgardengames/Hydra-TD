@@ -6,6 +6,7 @@ truth machine.  Candidate reports are produced by the same parser/calculations a
 ``challenge_fixtures`` and every accepted change retains the authored tower-role
 invariants below.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -24,10 +25,15 @@ import challenge_fixtures  # noqa: E402 (local, dependency-free fixture)
 
 MANIFEST = HERE / "tuning_parameters.json"
 PROFILES = HERE / "target_profiles.json"
-METRIC_NAMES = ("required_to_affordable_dps_bp", "wave_income_coverage_bp",
-                "threat_per_reward_dollar", "specialist_role_performance_bp",
-                "leak_allowance_bp", "upgrade_purchase_timing_wave",
-                "wave_to_wave_difficulty_growth_bp")
+METRIC_NAMES = (
+    "required_to_affordable_dps_bp",
+    "wave_income_coverage_bp",
+    "threat_per_reward_dollar",
+    "specialist_role_performance_bp",
+    "leak_allowance_bp",
+    "upgrade_purchase_timing_wave",
+    "wave_to_wave_difficulty_growth_bp",
+)
 
 
 def canonical(value: object) -> str:
@@ -68,10 +74,22 @@ def value_span(text: str, parameter: dict) -> tuple[int, int, str]:
         body = text[start:end]
         row = re.search(rf"^\s*\[{wave}\]\s*=\s*\{{([^\n]+)", body, re.M)
         # Start-immediately groups omit the optional delay argument.
-        calls = list(re.finditer(r'g\("[a-z_]+",\s*([0-9.]+),\s*([0-9.]+)(?:,\s*([0-9.]+))?', row.group(1))) if row else []
+        calls = (
+            list(
+                re.finditer(
+                    r'g\("[a-z_]+",\s*([0-9.]+),\s*([0-9.]+)(?:,\s*([0-9.]+))?', row.group(1)
+                )
+            )
+            if row
+            else []
+        )
         call = calls[int(group) - 1]
         capture = 1 if key == "count" else 2
-        return start + row.start(1) + call.start(capture), start + row.start(1) + call.end(capture), call.group(capture)
+        return (
+            start + row.start(1) + call.start(capture),
+            start + row.start(1) + call.end(capture),
+            call.group(capture),
+        )
     start, end = entry_block(text, parameter["entry"])
     match = re.search(rf"\b{re.escape(key)}\s*=\s*([0-9]+(?:\.[0-9]+)?)", text[start:end])
     if not match:
@@ -98,30 +116,48 @@ def current_value(parameter: dict, texts: dict[str, str]) -> int | float:
 
 
 def metrics(report: dict, texts: dict[str, str], manifest: list[dict]) -> dict[str, int]:
-    rows = [row for maps in report["difficulties"].values() for waves in maps.values() for row in waves]
+    rows = [
+        row for maps in report["difficulties"].values() for waves in maps.values() for row in waves
+    ]
     ratios = sorted(row["required_to_affordable_bp"] for row in rows)
     incomes = sorted(row["wave_income_to_required_bp"] for row in rows)
-    threat = sorted(row["threat_per_dollar"] for key, row in report["enemy_archetypes"].items()
-                    if not key.startswith("boss_"))
+    threat = sorted(
+        row["threat_per_dollar"]
+        for key, row in report["enemy_archetypes"].items()
+        if not key.startswith("boss_")
+    )
     coverage = sum(len(row["specialist_coverage"]) for row in rows)
     required = sum(len(row["required_specialists"]) for row in rows)
     leaks = sum(row["required_to_affordable_bp"] > 10_000 for row in rows)
     growth = []
     for maps in report["difficulties"].values():
         for waves in maps.values():
-            growth.extend(round(b["required_damage"] * 10_000 / max(1, a["required_damage"]))
-                          for a, b in zip(waves, waves[1:]))
+            growth.extend(
+                round(b["required_damage"] * 10_000 / max(1, a["required_damage"]))
+                for a, b in zip(waves, waves[1:])
+            )
 
     # Upgrade timing is a design affordability proxy: median wave at which
     # cumulative full-clear income buys a representative first upgrade.
-    tower_costs = [current_value(p, texts) for p in manifest if p["id"].startswith("tower.") and p["lua_key"] == "cost"]
-    multiplier = current_value(next(p for p in manifest if p["id"] == "upgrade_cost_multiplier.1"), texts)
+    tower_costs = [
+        current_value(p, texts)
+        for p in manifest
+        if p["id"].startswith("tower.") and p["lua_key"] == "cost"
+    ]
+    multiplier = current_value(
+        next(p for p in manifest if p["id"] == "upgrade_cost_multiplier.1"), texts
+    )
     purchase_waves = []
     target = sorted(tower_costs)[len(tower_costs) // 2] * (1 + multiplier)
     for maps in report["difficulties"].values():
         for waves in maps.values():
-            purchase_waves.append(next((r["wave"] for r in waves if r["purchasing_power_before_wave"] >= target), 10))
-    median = lambda values: int(sorted(values)[len(values) // 2])
+            purchase_waves.append(
+                next((r["wave"] for r in waves if r["purchasing_power_before_wave"] >= target), 10)
+            )
+
+    def median(values: list[int]) -> int:
+        return int(sorted(values)[len(values) // 2])
+
     return {
         "required_to_affordable_dps_bp": median(ratios),
         "wave_income_coverage_bp": median(incomes),
@@ -146,7 +182,10 @@ def score(values: dict, objectives: dict) -> int:
 def role_constraints(report: dict, texts: dict[str, str], manifest: list[dict]) -> list[str]:
     towers, *_ = challenge_fixtures.definitions()
     failures = []
-    if not towers["lancer"]["sustained_damage"] * towers["slow"]["cost"] > towers["slow"]["sustained_damage"] * towers["lancer"]["cost"]:
+    if (
+        not towers["lancer"]["sustained_damage"] * towers["slow"]["cost"]
+        > towers["slow"]["sustained_damage"] * towers["lancer"]["cost"]
+    ):
         failures.append("lancer must remain more cost-efficient than control-focused slow")
     if not towers["cannon"]["sustained_damage"] > towers["slow"]["sustained_damage"]:
         failures.append("cannon burst must remain above slow direct damage")
@@ -159,14 +198,19 @@ def role_constraints(report: dict, texts: dict[str, str], manifest: list[dict]) 
 
 class Sources:
     """Transactionally expose candidate Lua source to challenge_fixtures."""
-    def __init__(self, texts: dict[str, str]): self.texts = texts
+
+    def __init__(self, texts: dict[str, str]):
+        self.texts = texts
+
     def evaluate(self) -> dict:
         originals = {name: (ROOT / name).read_text() for name in self.texts}
         try:
-            for name, value in self.texts.items(): (ROOT / name).write_text(value)
+            for name, value in self.texts.items():
+                (ROOT / name).write_text(value)
             return challenge_fixtures.build_report()
         finally:
-            for name, value in originals.items(): (ROOT / name).write_text(value)
+            for name, value in originals.items():
+                (ROOT / name).write_text(value)
 
 
 def candidate_pool(parameters: list[dict]) -> list[dict]:
@@ -199,22 +243,46 @@ def recommend(profile_name: str) -> dict:
         # pass reverses naturally if a metric crosses its target envelope.
         ident = parameter["id"]
         if ident.startswith("upgrade_cost_multiplier"):
-            direction = 1 if before["upgrade_purchase_timing_wave"] < objectives["upgrade_purchase_timing_wave"]["minimum"] else -1
+            direction = (
+                1
+                if before["upgrade_purchase_timing_wave"]
+                < objectives["upgrade_purchase_timing_wave"]["minimum"]
+                else -1
+            )
         elif ident.endswith(".spacing"):
-            direction = 1 if before["leak_allowance_bp"] > objectives["leak_allowance_bp"]["maximum"] else -1
+            direction = (
+                1
+                if before["leak_allowance_bp"] > objectives["leak_allowance_bp"]["maximum"]
+                else -1
+            )
         elif ident.endswith(".count") or ident.endswith(".hp") or ident.endswith(".cost"):
-            direction = -1 if before["leak_allowance_bp"] > objectives["leak_allowance_bp"]["maximum"] else 1
+            direction = (
+                -1
+                if before["leak_allowance_bp"] > objectives["leak_allowance_bp"]["maximum"]
+                else 1
+            )
         else:  # damage, fire rate, and rewards all increase affordable output
-            direction = 1 if before["leak_allowance_bp"] > objectives["leak_allowance_bp"]["maximum"] else -1
+            direction = (
+                1
+                if before["leak_allowance_bp"] > objectives["leak_allowance_bp"]["maximum"]
+                else -1
+            )
         for direction in (direction,):
             proposed = display(old + direction * parameter["step"], parameter)
-            if not parameter["minimum"] <= proposed <= parameter["maximum"] or abs(proposed - old) > cap + 1e-9:
+            if (
+                not parameter["minimum"] <= proposed <= parameter["maximum"]
+                or abs(proposed - old) > cap + 1e-9
+            ):
                 continue
             texts = dict(base_texts)
-            texts[parameter["source_file"]] = replace_value(texts[parameter["source_file"]], parameter, proposed)
+            texts[parameter["source_file"]] = replace_value(
+                texts[parameter["source_file"]], parameter, proposed
+            )
             report = Sources(texts).evaluate()
             after = metrics(report, texts, parameters)
-            failures = challenge_fixtures.checks(report) + role_constraints(report, texts, parameters)
+            failures = challenge_fixtures.checks(report) + role_constraints(
+                report, texts, parameters
+            )
             change_penalty = 500 + round(abs(proposed - old) / max(1, abs(old)) * 10_000)
             candidate_score = score(after, objectives) + change_penalty
             if not failures and candidate_score < base_score:
@@ -227,20 +295,41 @@ def recommend(profile_name: str) -> dict:
     if evaluated:
         candidate_score, parameter, proposed, after, affected = evaluated[0]
         improvement = base_score - candidate_score
-        reasons = [f"moves {name} from {before[name]} toward {objectives[name]['minimum']}..{objectives[name]['maximum']}"
-                   for name in affected if not objectives[name]["minimum"] <= before[name] <= objectives[name]["maximum"]]
-        changes.append({"parameter": parameter["id"], "source_file": parameter["source_file"],
-                        "lua_table": parameter["lua_table"], "lua_key": parameter["lua_key"],
-                        "current_value": current_value(parameter, base_texts), "proposed_value": proposed,
-                        "reason": "; ".join(reasons) or "reduces the weighted target-profile penalty",
-                        "affected_metrics": {name: {"current": before[name], "proposed": after[name]} for name in affected},
-                        "confidence": "high" if improvement * 4 > max(1, base_score) else "medium"})
-    return {"format_version": 1, "mode": "recommend", "profile": profile_name,
-            "reviewed": False, "manifest_sha256": digest(MANIFEST),
-            "source_sha256": {name: hashlib.sha256(base_texts[name].encode()).hexdigest() for name in files},
-            "current_metrics": before, "target_objectives": objectives,
-            "current_penalty": base_score, "candidates_evaluated": len(pool),
-            "recommendations": changes}
+        reasons = [
+            f"moves {name} from {before[name]} toward {objectives[name]['minimum']}..{objectives[name]['maximum']}"
+            for name in affected
+            if not objectives[name]["minimum"] <= before[name] <= objectives[name]["maximum"]
+        ]
+        changes.append(
+            {
+                "parameter": parameter["id"],
+                "source_file": parameter["source_file"],
+                "lua_table": parameter["lua_table"],
+                "lua_key": parameter["lua_key"],
+                "current_value": current_value(parameter, base_texts),
+                "proposed_value": proposed,
+                "reason": "; ".join(reasons) or "reduces the weighted target-profile penalty",
+                "affected_metrics": {
+                    name: {"current": before[name], "proposed": after[name]} for name in affected
+                },
+                "confidence": "high" if improvement * 4 > max(1, base_score) else "medium",
+            }
+        )
+    return {
+        "format_version": 1,
+        "mode": "recommend",
+        "profile": profile_name,
+        "reviewed": False,
+        "manifest_sha256": digest(MANIFEST),
+        "source_sha256": {
+            name: hashlib.sha256(base_texts[name].encode()).hexdigest() for name in files
+        },
+        "current_metrics": before,
+        "target_objectives": objectives,
+        "current_penalty": base_score,
+        "candidates_evaluated": len(pool),
+        "recommendations": changes,
+    }
 
 
 def reviewed_changes(artifact_path: Path) -> tuple[dict, list[dict], dict[str, str]]:
@@ -263,9 +352,16 @@ def reviewed_changes(artifact_path: Path) -> tuple[dict, list[dict], dict[str, s
         current, proposed = current_value(parameter, texts), change["proposed_value"]
         cap = float(current) * parameter["maximum_percentage_change"] / 100
         steps = abs((float(proposed) - float(current)) / parameter["step"])
-        if current != change["current_value"] or not parameter["minimum"] <= proposed <= parameter["maximum"] or abs(steps - round(steps)) > 1e-7 or abs(proposed-current) > cap + 1e-9:
+        if (
+            current != change["current_value"]
+            or not parameter["minimum"] <= proposed <= parameter["maximum"]
+            or abs(steps - round(steps)) > 1e-7
+            or abs(proposed - current) > cap + 1e-9
+        ):
             raise ValueError(f"reviewed value violates manifest constraints: {parameter['id']}")
-        texts[parameter["source_file"]] = replace_value(texts[parameter["source_file"]], parameter, proposed)
+        texts[parameter["source_file"]] = replace_value(
+            texts[parameter["source_file"]], parameter, proposed
+        )
         selected.append(parameter)
     return artifact, selected, texts
 
@@ -286,12 +382,14 @@ def apply(artifact_path: Path) -> None:
         return
     originals = {name: (ROOT / name).read_text() for name in texts}
     try:
-        for name, value in texts.items(): (ROOT / name).write_text(value)
+        for name, value in texts.items():
+            (ROOT / name).write_text(value)
         result = subprocess.run([sys.executable, str(HERE / "check.py")], cwd=ROOT)
         if result.returncode:
             raise RuntimeError("balance gate rejected the reviewed candidate")
     except BaseException:
-        for name, value in originals.items(): (ROOT / name).write_text(value)
+        for name, value in originals.items():
+            (ROOT / name).write_text(value)
         raise
 
 
@@ -308,8 +406,10 @@ def main() -> int:
         if args.recommend:
             profiles = json.loads(PROFILES.read_text())
             result = canonical(recommend(args.profile or profiles["default_profile"]))
-            if args.output: args.output.write_text(result)
-            else: sys.stdout.write(result)
+            if args.output:
+                args.output.write_text(result)
+            else:
+                sys.stdout.write(result)
         elif args.patch:
             sys.stdout.write(patch_text(args.patch)[0])
         else:

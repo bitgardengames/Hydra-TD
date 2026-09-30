@@ -11,7 +11,6 @@ return function(context)
 			local p = Shared.acquire(record.pool)
 
 			local ang = random() * pi * 2
-			--local spd = 70 + random() * 90
 			local spd = 80 + random() * 120
 
 			p.x = x

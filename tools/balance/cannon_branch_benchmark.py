@@ -1,8 +1,8 @@
 """Deterministic damage benchmark for Cannon's Siege and Bombardment tiers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-
 
 LEVELS = (2, 4, 5)
 BASE_DAMAGE = 14.0
@@ -11,14 +11,14 @@ DURATION = 12.0
 IMPACT_DISTANCES = (0, 30, 44, 56, 70, 84)
 
 SIEGE = {
-    2: (1.80, 1.02, 50, .68),
-    4: (2.90, 1.06, 54, .70),
-    5: (3.55, 1.08, 56, .72),
+    2: (1.80, 1.02, 50, 0.68),
+    4: (2.90, 1.06, 54, 0.70),
+    5: (3.55, 1.08, 56, 0.72),
 }
 BOMBARDMENT = {
-    2: (1.35, 1.04, 64, .72),
-    4: (1.95, 1.12, 78, .76),
-    5: (2.30, 1.16, 84, .78),
+    2: (1.35, 1.04, 64, 0.72),
+    4: (1.95, 1.12, 78, 0.76),
+    5: (2.30, 1.16, 84, 0.78),
 }
 
 # Counts are deliberately explicit. Runner timing is part of the fixture rather
@@ -61,8 +61,12 @@ def damage(level: int, branch: str, distances: tuple[float, ...]) -> float:
 
 def run() -> list[Result]:
     return [
-        Result(level, scenario, damage(level, "siege", distances),
-               damage(level, "bombardment", distances))
+        Result(
+            level,
+            scenario,
+            damage(level, "siege", distances),
+            damage(level, "bombardment", distances),
+        )
         for level in LEVELS
         for scenario, distances in SCENARIOS.items()
     ]
@@ -70,8 +74,7 @@ def run() -> list[Result]:
 
 def validate(rows: list[Result]) -> None:
     isolated = [row for row in rows if row.scenario.startswith("isolated:")]
-    assert isolated and all(row.siege_damage >= row.bombardment_damage * 1.30
-                            for row in isolated)
+    assert isolated and all(row.siege_damage >= row.bombardment_damage * 1.30 for row in isolated)
     # Three ordinary targets in the part of Bombardment's blast beyond Siege's
     # radius are enough to establish the crowd-damage crossover.
     for level in LEVELS:
@@ -86,5 +89,7 @@ if __name__ == "__main__":
     validate(results)
     print("level,scenario,siege_damage,bombardment_damage")
     for result in results:
-        print(f"{result.level},{result.scenario},{result.siege_damage:.3f},"
-              f"{result.bombardment_damage:.3f}")
+        print(
+            f"{result.level},{result.scenario},{result.siege_damage:.3f},"
+            f"{result.bombardment_damage:.3f}"
+        )

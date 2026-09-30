@@ -4,17 +4,17 @@ The small model intentionally isolates the authored poison contract: a tower fir
 for ten seconds, poison ticks every half second, and dead generation-zero targets
 transfer once to the nearest least-poisoned living members of a packed formation.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-
 LEVELS = (2, 4, 5)
 VIRULENT = {2: (6.0, 5.0, 10), 4: (8.5, 6.0, 14), 5: (10.0, 6.5, 16)}
 CONTAGION = {
-    2: (4.5, 4.8, 9, 64, .50, 3),
-    4: (5.5, 5.6, 11, 88, .60, 4),
-    5: (6.0, 6.0, 12, 104, .70, 5),
+    2: (4.5, 4.8, 9, 64, 0.50, 3),
+    4: (5.5, 5.6, 11, 88, 0.60, 4),
+    5: (6.0, 6.0, 12, 104, 0.70, 5),
 }
 FIRE_RATE = {
     "virulent": {2: 1.4 * 1.05, 4: 1.4 * 1.15, 5: 1.4 * 1.20},
@@ -32,7 +32,7 @@ class Poison:
 
 
 def isolated_damage(level: int, branch: str) -> float:
-    dps, duration, cap = (VIRULENT[level] if branch == "virulent" else CONTAGION[level][:3])
+    dps, duration, cap = VIRULENT[level] if branch == "virulent" else CONTAGION[level][:3]
     poison = Poison()
     cooldown = 0.0
     damage = 0.0
@@ -42,9 +42,9 @@ def isolated_damage(level: int, branch: str) -> float:
             poison.remaining = max(poison.remaining, duration)
             poison.generation = 0 if branch == "contagion" else None
             cooldown += 1 / FIRE_RATE[branch][level]
-        damage += dps * poison.stacks * .5
-        poison.remaining -= .5
-        cooldown -= .5
+        damage += dps * poison.stacks * 0.5
+        poison.remaining -= 0.5
+        cooldown -= 0.5
     return damage
 
 
@@ -66,11 +66,23 @@ def run():
     counts = dict(zip(DENSE, (12, 16, 9, 9)))
     for level in LEVELS:
         for scenario in ISOLATED:
-            rows.append((level, scenario, isolated_damage(level, "virulent"),
-                         isolated_damage(level, "contagion")))
+            rows.append(
+                (
+                    level,
+                    scenario,
+                    isolated_damage(level, "virulent"),
+                    isolated_damage(level, "contagion"),
+                )
+            )
         for scenario in DENSE:
-            rows.append((level, scenario, dense_damage(level, "virulent", counts[scenario]),
-                         dense_damage(level, "contagion", counts[scenario])))
+            rows.append(
+                (
+                    level,
+                    scenario,
+                    dense_damage(level, "virulent", counts[scenario]),
+                    dense_damage(level, "contagion", counts[scenario]),
+                )
+            )
     return rows
 
 

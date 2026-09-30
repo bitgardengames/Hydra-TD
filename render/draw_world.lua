@@ -306,7 +306,7 @@ local function buildPathGeometry(path)
 
 		if dx1 ~= dx2 or dy1 ~= dy2 then
 			local cx, cy = gridToCenter(cur[1], cur[2])
-			
+
 			geometry.corners[#geometry.corners + 1] = {x = cx, y = cy}
 		end
 	end
@@ -322,7 +322,7 @@ local function getPathGeometry(targetMap)
 			path = targetMap.path,
 			geometry = buildPathGeometry(targetMap.path),
 		}
-		
+
 		pathGeometryByMap[targetMap] = cached
 	end
 
@@ -341,11 +341,11 @@ local function drawPathGeometry(geometry, thickness, color)
 
 		if segment.orientation == "horizontal" then
 			local width = segment.x2 - segment.x1 - trimA - trimB
-			
+
 			lg.rectangle("fill", segment.x1 + trimA, segment.y1 - halfThickness, width, thickness)
 		else
 			local height = segment.y2 - segment.y1 - trimA - trimB
-			
+
 			lg.rectangle("fill", segment.x1 - halfThickness, segment.y1 + trimA, thickness, height)
 		end
 	end
@@ -365,13 +365,12 @@ local function drawPath(targetMap)
 
 	-- Each pass applies its own half-thickness to endpoint trims.
 	drawPathGeometry(geometry, outlineThickness, terrain.pathOutline)
-	
+
 	drawPathGeometry(geometry, fillThickness, terrain.path)
 end
 
 local function drawWorld()
 	drawGrass()
-	--drawWater()
 	drawPath()
 	drawScatter()
 end

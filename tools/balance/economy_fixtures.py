@@ -22,8 +22,7 @@ CURVES = {
     "balanced": (0.90, 0.65, 0.35),
     "aggressive": (1.00, 1.00, 0.80),
 }
-TIER_ANCHORS = {"entry_pair": 110, "lancer_t2": 135,
-                "cannon_t3": 360, "plasma_t5": 1152}
+TIER_ANCHORS = {"entry_pair": 110, "lancer_t2": 135, "cannon_t3": 360, "plasma_t5": 1152}
 TARGET_DIFFICULTY = "hard"
 
 
@@ -31,10 +30,16 @@ def definitions() -> tuple[dict, dict, dict]:
     difficulty_text = (ROOT / "systems/difficulty.lua").read_text()
     enemy_text = (ROOT / "world/enemy_defs.lua").read_text()
     wave_text = (ROOT / "systems/campaign_wave_defs.lua").read_text()
-    difficulty_root = table_body(difficulty_text, "Difficulty.defs", ROOT / "systems/difficulty.lua")
-    difficulties = {name: numeric_fields(body) for name, body in
-                    named_entries(difficulty_root, "Difficulty.defs", ROOT / "systems/difficulty.lua").items()
-                    if name in ("easy", "normal", "hard")}
+    difficulty_root = table_body(
+        difficulty_text, "Difficulty.defs", ROOT / "systems/difficulty.lua"
+    )
+    difficulties = {
+        name: numeric_fields(body)
+        for name, body in named_entries(
+            difficulty_root, "Difficulty.defs", ROOT / "systems/difficulty.lua"
+        ).items()
+        if name in ("easy", "normal", "hard")
+    }
     wave_root = table_body(wave_text, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua")
     enemy_root = table_body(enemy_text, "return", ROOT / "world/enemy_defs.lua")
     rewards = {
@@ -44,7 +49,9 @@ def definitions() -> tuple[dict, dict, dict]:
     }
     maps = {}
     waves_root = wave_root
-    for map_id, block in named_entries(waves_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua").items():
+    for map_id, block in named_entries(
+        waves_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua"
+    ).items():
         maps[map_id] = []
         wave_numbers = sorted(int(value) for value in re.findall(r"\[(\d+)\]\s*=", block))
         if wave_numbers != list(range(1, max(wave_numbers, default=0) + 1)):
@@ -54,9 +61,15 @@ def definitions() -> tuple[dict, dict, dict]:
             if not match:
                 raise ValueError(f"{map_id} wave {wave} not found")
             groups = re.findall(r'g\("([a-z_]+)",\s*(\d+)', match.group(1))
-            maps[map_id].append({kind: sum(int(n) for k, n in groups if k == kind)
-                                 for kind in {k for k, _ in groups}})
-    boss_root = table_body(wave_text, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua")
+            maps[map_id].append(
+                {
+                    kind: sum(int(n) for k, n in groups if k == kind)
+                    for kind in {k for k, _ in groups}
+                }
+            )
+    boss_root = table_body(
+        wave_text, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua"
+    )
     for map_id, body in named_entries(
         boss_root, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua"
     ).items():
@@ -88,13 +101,26 @@ def build_report() -> dict:
         }
         for kind, tower in tower_defs.items()
     }
-    report = {"format_version": 2, "assumptions": {
-        "curves": {k: {"kill_share": v[0], "flawless_chance": v[1],
-                        "early_call_chance": v[2]} for k, v in CURVES.items()},
-        "early_call_reward": 0, "tier_anchors": TIER_ANCHORS,
-        "upgrade_anchors": upgrade_anchors,
-        "upgrade_purchase_sequence": ["base_tower", "first_specialization", "tier_3",
-                                      "tier_4", "tier_5"]}, "difficulties": {}}
+    report = {
+        "format_version": 2,
+        "assumptions": {
+            "curves": {
+                k: {"kill_share": v[0], "flawless_chance": v[1], "early_call_chance": v[2]}
+                for k, v in CURVES.items()
+            },
+            "early_call_reward": 0,
+            "tier_anchors": TIER_ANCHORS,
+            "upgrade_anchors": upgrade_anchors,
+            "upgrade_purchase_sequence": [
+                "base_tower",
+                "first_specialization",
+                "tier_3",
+                "tier_4",
+                "tier_5",
+            ],
+        },
+        "difficulties": {},
+    }
     for diff_name, diff in difficulties.items():
         curves = {}
         for curve_name, (kill_share, flawless_chance, early_chance) in CURVES.items():
@@ -102,10 +128,11 @@ def build_report() -> dict:
             for map_id, waves in maps.items():
                 power = diff["startMoney"]
                 rows = []
-                affordable = {name: 0 if power >= cost else None for name, cost in TIER_ANCHORS.items()}
+                affordable = {
+                    name: 0 if power >= cost else None for name, cost in TIER_ANCHORS.items()
+                }
                 for wave_no, counts in enumerate(waves, 1):
-                    full_kills = sum(count * rewards[kind]
-                                     for kind, count in counts.items())
+                    full_kills = sum(count * rewards[kind] for kind, count in counts.items())
                     kill_income = round(full_kills * kill_share, 2)
                     flawless = round(flawless_bonus(diff, wave_no) * flawless_chance, 2)
                     early = round(0 * early_chance, 2)
@@ -113,24 +140,39 @@ def build_report() -> dict:
                     for name, cost in TIER_ANCHORS.items():
                         if affordable[name] is None and power >= cost:
                             affordable[name] = wave_no
-                    rows.append({"wave": wave_no, "expected_kill_income": kill_income,
-                                 "flawless_income": flawless, "early_call_income": early,
-                                 "cumulative_purchasing_power": power})
+                    rows.append(
+                        {
+                            "wave": wave_no,
+                            "expected_kill_income": kill_income,
+                            "flawless_income": flawless,
+                            "early_call_income": early,
+                            "cumulative_purchasing_power": power,
+                        }
+                    )
                 map_rows[map_id] = {"waves": rows, "affordable_wave": affordable}
                 map_rows[map_id]["upgrade_affordable_wave"] = {
                     kind: {
-                        label: next((row["wave"] for row in rows
-                                     if row["cumulative_purchasing_power"] >= cost),
-                                    0 if diff["startMoney"] >= cost else None)
+                        label: next(
+                            (
+                                row["wave"]
+                                for row in rows
+                                if row["cumulative_purchasing_power"] >= cost
+                            ),
+                            0 if diff["startMoney"] >= cost else None,
+                        )
                         for label, cost in anchors.items()
                     }
                     for kind, anchors in upgrade_anchors.items()
                 }
             curves[curve_name] = map_rows
-        loss = {name: cost - math.floor(cost * diff["sellRefund"])
-                for name, cost in {"slow": 50, "lancer": 60, "plasma": 120}.items()}
+        loss = {
+            name: cost - math.floor(cost * diff["sellRefund"])
+            for name, cost in {"slow": 50, "lancer": 60, "plasma": 120}.items()
+        }
         report["difficulties"][diff_name] = {
-            "start_money": int(diff["startMoney"]), "sell_loss": loss, "curves": curves,
+            "start_money": int(diff["startMoney"]),
+            "sell_loss": loss,
+            "curves": curves,
         }
     return report
 
@@ -148,24 +190,46 @@ def checks(report: dict) -> list[tuple[str, bool, str]]:
         for curve in ("balanced", "conservative"):
             actual = range_at(report, difficulty, curve, 10)
             band = bands[f"wave_10_{curve}_power"]
-            out.append((f"{difficulty}/{curve}/wave_10", actual[0] >= band[0] and actual[1] <= band[1],
-                        f"range {actual[0]:.2f}..{actual[1]:.2f}, accepted {band[0]}..{band[1]}"))
+            out.append(
+                (
+                    f"{difficulty}/{curve}/wave_10",
+                    actual[0] >= band[0] and actual[1] <= band[1],
+                    f"range {actual[0]:.2f}..{actual[1]:.2f}, accepted {band[0]}..{band[1]}",
+                )
+            )
         loss = report["difficulties"][difficulty]["sell_loss"]["lancer"]
         band = bands["sell_loss_lancer"]
-        out.append((f"{difficulty}/sell_loss", band[0] <= loss <= band[1], f"${loss}, accepted ${band[0]}..${band[1]}"))
+        out.append(
+            (
+                f"{difficulty}/sell_loss",
+                band[0] <= loss <= band[1],
+                f"${loss}, accepted ${band[0]}..${band[1]}",
+            )
+        )
     shared = accepted["shared"]
     # Read the opening budget from the authored target difficulty rather than
     # embedding Normal's historical $120.
     target_opening_money = report["difficulties"][TARGET_DIFFICULTY]["start_money"]
     opening_entries = int(target_opening_money // 50)
     band = shared["hard_opening_entry_towers"]
-    out.append(("hard/two_entry_opening", band[0] <= opening_entries <= band[1],
-                f"{opening_entries} cheapest entry towers"))
+    out.append(
+        (
+            "hard/two_entry_opening",
+            band[0] <= opening_entries <= band[1],
+            f"{opening_entries} cheapest entry towers",
+        )
+    )
     easy = range_at(report, "easy", "balanced", 10)[0]
     normal = range_at(report, "normal", "balanced", 10)[0]
     advantage = easy - normal
     band = shared["easy_recovery_advantage_wave_10"]
-    out.append(("easy/recovery_room", band[0] <= advantage <= band[1], f"minimum-map advantage ${advantage:.2f}"))
+    out.append(
+        (
+            "easy/recovery_room",
+            band[0] <= advantage <= band[1],
+            f"minimum-map advantage ${advantage:.2f}",
+        )
+    )
     hard = range_at(report, "hard", "balanced", 10)[1]
     normal_high = range_at(report, "normal", "balanced", 10)[1]
     delay = normal_high - hard
@@ -173,23 +237,37 @@ def checks(report: dict) -> list[tuple[str, bool, str]]:
     out.append(("hard/power_delay", band[0] <= delay <= band[1], f"maximum-map delay ${delay:.2f}"))
     entries = sum(120 >= cost for cost in (50, 60, 70, 90, 95, 120))
     band = shared["hard_wave_1_affordable_entries"]
-    out.append(("hard/no_mandatory_opening", band[0] <= entries <= band[1], f"{entries} distinct base towers affordable"))
+    out.append(
+        (
+            "hard/no_mandatory_opening",
+            band[0] <= entries <= band[1],
+            f"{entries} distinct base towers affordable",
+        )
+    )
     normal_maps = report["difficulties"]["normal"]["curves"]["aggressive"]
     for difficulty in ("easy", "hard"):
         diff_maps = report["difficulties"][difficulty]["curves"]["aggressive"]
         income_matches = all(
             diff_maps[map_id]["waves"][wave]["expected_kill_income"]
             == normal_maps[map_id]["waves"][wave]["expected_kill_income"]
-            for map_id in normal_maps for wave in range(len(normal_maps[map_id]["waves"]))
+            for map_id in normal_maps
+            for wave in range(len(normal_maps[map_id]["waves"]))
         )
-        out.append((f"{difficulty}/authored_kill_values", income_matches,
-                    "kill income matches Normal on every map and wave"))
+        out.append(
+            (
+                f"{difficulty}/authored_kill_values",
+                income_matches,
+                "kill income matches Normal on every map and wave",
+            )
+        )
     return out
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true", help="fail only outside accepted economy bands")
+    parser.add_argument(
+        "--check", action="store_true", help="fail only outside accepted economy bands"
+    )
     args = parser.parse_args()
     report = build_report()
     results = checks(report)

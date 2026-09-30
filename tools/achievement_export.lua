@@ -652,7 +652,7 @@ local function drawStopwatchIcon()
 	local highlightScale = lighting.highlightScale
 
 	--local faceR, faceG, faceB = 0.90, 0.90, 0.88
-	
+
 	local color = Theme.tower.lancer
 	local faceR, faceG, faceB = color[1], color[2], color[3]
 

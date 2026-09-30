@@ -666,7 +666,7 @@ function Save.markEnemyEncountered(kind)
 
 	if not meta.encounteredEnemies[kind] then
 		meta.encounteredEnemies[kind] = true
-		
+
 		Save.markDirty()
 	end
 end
@@ -724,7 +724,7 @@ function Save.recordTowerPlacement(kind)
 	end
 
 	history.placements = (history.placements or 0) + 1
-	
+
 	Save.markDirty()
 end
 
@@ -736,7 +736,7 @@ function Save.recordTowerUpgrade(kind)
 	end
 
 	history.upgrades = (history.upgrades or 0) + 1
-	
+
 	Save.markDirty()
 end
 
@@ -753,7 +753,7 @@ function Save.recordTowerRun(kind, damage, kills, bossDamage, investment)
 	history.bestRunDamage = math.max(history.bestRunDamage or 0, damage)
 	history.bossDamage = (history.bossDamage or 0) + math.max(0, bossDamage or 0)
 	history.investment = (history.investment or 0) + math.max(0, investment or 0)
-	
+
 	Save.markDirty()
 end
 
@@ -783,10 +783,10 @@ function Save.discoverModule(moduleId)
 	if not Save.data or not moduleId then
 		return
 	end
-	
+
 	Save.data.meta.discoveredModules = Save.data.meta.discoveredModules or {}
 	Save.data.meta.discoveredModules[moduleId] = true
-	
+
 	Save.markDirty()
 end
 

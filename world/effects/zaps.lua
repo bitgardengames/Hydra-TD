@@ -90,7 +90,6 @@ return function(context)
 						-- Chained segments still use enemy positions
 						seg.x1 = from.rx or from.x
 						seg.y1 = from.renderY or from.ry or from.y
-						--seg.y1 = from.renderY or from.ry
 					else
 						seg.x1 = x
 						seg.y1 = y

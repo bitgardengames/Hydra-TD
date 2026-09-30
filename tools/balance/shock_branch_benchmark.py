@@ -1,8 +1,8 @@
 """Deterministic 12-second benchmark for Shock's two specializations."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-
 
 LEVELS = (2, 4, 5)
 BASE_DAMAGE = 8.0
@@ -46,7 +46,7 @@ def attack_count(rate_mult: float) -> int:
 
 
 def chain_multiplier(targets: int, jumps: int, falloff: float) -> float:
-    return sum(falloff ** contact for contact in range(min(targets, jumps + 1)))
+    return sum(falloff**contact for contact in range(min(targets, jumps + 1)))
 
 
 def capacitor_result(level: int, targets: int) -> tuple[float, int]:
@@ -60,8 +60,7 @@ def capacitor_result(level: int, targets: int) -> tuple[float, int]:
 
 def forked_result(level: int, targets: int) -> float:
     damage, rate, jumps, falloff = FORKED[level]
-    return (attack_count(rate) * BASE_DAMAGE * damage
-            * chain_multiplier(targets, jumps, falloff))
+    return attack_count(rate) * BASE_DAMAGE * damage * chain_multiplier(targets, jumps, falloff)
 
 
 def run() -> list[Result]:
@@ -69,8 +68,16 @@ def run() -> list[Result]:
     for level in LEVELS:
         for scenario, targets in SCENARIOS.items():
             capacitor_damage, charges = capacitor_result(level, targets)
-            rows.append(Result(level, scenario, targets, capacitor_damage,
-                               forked_result(level, targets), charges))
+            rows.append(
+                Result(
+                    level,
+                    scenario,
+                    targets,
+                    capacitor_damage,
+                    forked_result(level, targets),
+                    charges,
+                )
+            )
     return rows
 
 
@@ -91,6 +98,8 @@ if __name__ == "__main__":
     validate(results)
     print("level,scenario,targets,capacitor_damage,forked_damage,capacitor_charges")
     for result in results:
-        print(f"{result.level},{result.scenario},{result.targets},"
-              f"{result.capacitor_damage:.3f},{result.forked_damage:.3f},"
-              f"{result.capacitor_charges}")
+        print(
+            f"{result.level},{result.scenario},{result.targets},"
+            f"{result.capacitor_damage:.3f},{result.forked_damage:.3f},"
+            f"{result.capacitor_charges}"
+        )

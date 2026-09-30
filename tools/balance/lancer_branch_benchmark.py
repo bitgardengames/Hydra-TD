@@ -1,8 +1,8 @@
 """Deterministic geometry benchmark for the two Lancer upgrade branches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-
 
 LEVELS = (2, 4, 5)
 ENEMIES = ("grunt", "tank", "regenerator", "warcaller", "summoner", "boss")
@@ -31,7 +31,9 @@ class Result:
 
     @property
     def rupture_contacts(self) -> float:
-        return self.rupture / (BASE_DAMAGE * RUPTURE[self.level][0] * BASE_FIRE_RATE * RUPTURE[self.level][1])
+        return self.rupture / (
+            BASE_DAMAGE * RUPTURE[self.level][0] * BASE_FIRE_RATE * RUPTURE[self.level][1]
+        )
 
 
 def sustained_damage(level: int, branch: str, contacts: int = 1) -> float:
@@ -50,12 +52,14 @@ def run() -> list[Result]:
         for enemy in ENEMIES:
             rows.append(Result(level, f"isolated:{enemy}", marksman, rupture))
         for count in (2, 4):
-            rows.append(Result(level, f"aligned:{count}", marksman,
-                               sustained_damage(level, "rupture", count)))
+            rows.append(
+                Result(
+                    level, f"aligned:{count}", marksman, sustained_damage(level, "rupture", count)
+                )
+            )
             # A perpendicular displacement strictly greater than the collision
             # radius means only the aimed-at enemy can intersect the projectile.
-            rows.append(Result(level, f"offset>{COLLISION_RADIUS:g}px:{count}",
-                               marksman, rupture))
+            rows.append(Result(level, f"offset>{COLLISION_RADIUS:g}px:{count}", marksman, rupture))
     return rows
 
 

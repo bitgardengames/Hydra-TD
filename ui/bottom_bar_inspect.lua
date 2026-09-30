@@ -187,9 +187,7 @@ function Inspect.draw(x, y, w, h, dt, textH, now, mx, my)
 	-- Critically damped style snap
 	local speed = 18
 
-	--if not forceShow then
-		inspectAnim = inspectAnim + (inspectTarget - inspectAnim) * min(1, dt * speed)
-	--end
+	inspectAnim = inspectAnim + (inspectTarget - inspectAnim) * min(1, dt * speed)
 
 	-- Clamp to avoid micro drift
 	if abs(inspectAnim - inspectTarget) < 0.001 then

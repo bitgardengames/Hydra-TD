@@ -3,6 +3,7 @@
 The deterministic combat benchmarks cover numeric outcomes; these checks keep
 the runtime wiring that makes opposing variants safe in the same simulation.
 """
+
 import sys
 import unittest
 from pathlib import Path
@@ -33,17 +34,29 @@ class BranchTierContractTest(unittest.TestCase):
         self.assertIn("BranchTierResolver.resolve(t", towers)
         self.assertIn("BranchTierResolver.resolve(tower)", modules)
         self.assertIn("Modules.getFireProfile(t)", emissions)
-        for mechanic in ("slowFactor", "poisonOrigin", "infect_spread",
-                         "capacitor", "splashFalloff", "tickRate"):
+        for mechanic in (
+            "slowFactor",
+            "poisonOrigin",
+            "infect_spread",
+            "capacitor",
+            "splashFalloff",
+            "tickRate",
+        ):
             with self.subTest(mechanic=mechanic):
-                corpus = resolver + (ROOT / "world/projectile_behaviors/status_proc.lua").read_text() + \
-                    (ROOT / "world/projectiles.lua").read_text()
+                corpus = (
+                    resolver
+                    + (ROOT / "world/projectile_behaviors/status_proc.lua").read_text()
+                    + (ROOT / "world/projectiles.lua").read_text()
+                )
                 self.assertIn(mechanic, corpus)
 
     def test_preview_clone_carries_choice_without_touching_live_tower(self):
         source = (ROOT / "world/towers.lua").read_text()
-        clone = source[source.index("local function cloneForPreview"):
-                       source.index("local function behaviorMap")]
+        clone = source[
+            source.index("local function cloneForPreview") : source.index(
+                "local function behaviorMap"
+            )
+        ]
         self.assertIn("clone.specialization =", clone)
         self.assertIn("clone._cache = {}", clone)
         self.assertNotIn("t.specialization = specialization", clone)
@@ -56,8 +69,11 @@ class BranchTierContractTest(unittest.TestCase):
         self.assertLess(validation, charge)
         self.assertLess(locked, charge)
         picker = (ROOT / "ui/module_picker.lua").read_text()
-        close = picker[picker.index("function ModulePicker.close"):
-                       picker.index("function ModulePicker.isActive")]
+        close = picker[
+            picker.index("function ModulePicker.close") : picker.index(
+                "function ModulePicker.isActive"
+            )
+        ]
         self.assertNotIn("money", close.lower())
 
     def test_sell_refund_uses_selected_difficulty_for_every_purchase(self):
