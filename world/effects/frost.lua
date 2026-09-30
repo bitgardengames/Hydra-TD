@@ -68,7 +68,10 @@ return function(context)
 
 
 	function record.update(o, dt, _, drag96)
-		if o.kind ~= "field" then Shared.drag(o, dt, drag96); o.rot = o.rot + o.vr * dt end
+		if o.kind ~= "field" then
+			Shared.drag(o, dt, drag96)
+			o.rot = o.rot + o.vr * dt
+		end
 	end
 	record.spawn = spawnFrostBurst
 	record.draw = draw

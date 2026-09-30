@@ -55,7 +55,9 @@ function Overlay.keypressed(key)
 end
 
 function Overlay.resize(w, h)
-	if active and active.resize then active.resize(w, h) end
+	if active and active.resize then
+		active.resize(w, h)
+	end
 end
 
 function Overlay.newEnterAnimation()

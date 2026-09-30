@@ -128,12 +128,18 @@ function Modules.clear()
 end
 
 function Modules.add(moduleId, towerType)
-	if not Modules.isEnabled() then return false, "campaign_disabled" end
+	if not Modules.isEnabled() then
+		return false, "campaign_disabled"
+	end
 	local mod = getModule(moduleId)
-	if not mod then return false, "invalid_module" end
+	if not mod then
+		return false, "invalid_module"
+	end
 
 	local list = Modules.active[towerType]
-	if not list then return false, "invalid_target" end
+	if not list then
+		return false, "invalid_target"
+	end
 
 	list[#list + 1] = mod
 	Modules.version = Modules.version + 1
@@ -186,9 +192,13 @@ local function toSet(values)
 end
 
 local function contains(values, value)
-	if value == nil then return false end
+	if value == nil then
+		return false
+	end
 	for i = 1, #(values or {}) do
-		if values[i] == value then return true end
+		if values[i] == value then
+			return true
+		end
 	end
 	return false
 end

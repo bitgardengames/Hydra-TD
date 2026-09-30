@@ -61,7 +61,9 @@ local function drawEnemy(e)
 	local iy = e.ry
 	local animT = e.rAnimT or 0
 	local enemyAlpha = e.alpha
-	if e.phaseActive then enemyAlpha = enemyAlpha * 0.28 end
+	if e.phaseActive then
+		enemyAlpha = enemyAlpha * 0.28
+	end
 
 	e.drawX = ix
 	e.drawY = iy
@@ -268,7 +270,9 @@ local function drawEnemy(e)
 		local browLift = eyeSize * 0.35
 		local browIn = eyeSize * 0.35
 
-		if e.enraged then lg.setColor(1, 0.18, 0.12, enemyAlpha) end
+		if e.enraged then
+			lg.setColor(1, 0.18, 0.12, enemyAlpha)
+		end
 		lg.circle("fill", ix - eyeSep, eyeY, eyeSize)
 		lg.circle("fill", ix + eyeSep, eyeY, eyeSize)
 
@@ -306,8 +310,12 @@ local function drawEnemy(e)
 		local m = 1.2 -- max
 
 		-- Tiny movement deadzone to avoid twitching when almost stationary.
-		if abs(dx) < EYE_DEADZONE then dx = 0 end
-		if abs(dy) < EYE_DEADZONE then dy = 0 end
+		if abs(dx) < EYE_DEADZONE then
+			dx = 0
+		end
+		if abs(dy) < EYE_DEADZONE then
+			dy = 0
+		end
 
 		-- Soft clamp avoids hard pops at limit.
 		dx = (dx * m) / (abs(dx) + m)
@@ -431,7 +439,9 @@ end
 -- a fake enemy with simulation, targeting, or spatial systems.
 local function newEnemyPortrait(kind)
 	local def = require("world.enemy_defs")[kind]
-	if not def then return nil end
+	if not def then
+		return nil
+	end
 
 	return {
 		kind = kind,
@@ -465,7 +475,9 @@ local function newEnemyPortrait(kind)
 end
 
 local function drawEnemyPortrait(enemy, x, y, animT)
-	if not enemy then return end
+	if not enemy then
+		return
+	end
 
 	enemy.rx, enemy.ry = x, y
 	enemy.rAnimT = animT or 0

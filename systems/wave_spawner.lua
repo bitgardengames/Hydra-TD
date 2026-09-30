@@ -15,7 +15,9 @@ local spatialQueryContext = Spatial.newQueryContext(true)
 local nearbyBossAddsContext = {count=0, cap=0, kind=nil}
 
 local function reset(target, defaults, overrides)
-	for key in pairs(target) do target[key] = nil end
+	for key in pairs(target) do
+		target[key] = nil
+	end
 	Util.shallowCopyInto(target, defaults)
 	Util.copyNonNilInto(target, overrides)
 end
@@ -67,18 +69,29 @@ local function advance(group)
 end
 
 local function updateWave(dt, context, cap, loops)
-	if not state.active then return loops, false end
+	if not state.active then
+		return loops, false
+	end
 	state.timer = state.timer - dt
 	while state.timer <= 0 and state.active and state.remaining > 0 and loops < CATCHUP_LIMIT and context.enemyCount() < cap do
 		state.waitingGroupDelay = false
 		local group = state.groups and state.groups[state.groupIndex]
-		if not (group and group.kind) then state.remaining, state.active = 0, false; return loops, true end
+		if not (group and group.kind) then
+			state.remaining, state.active = 0, false
+			return loops, true
+		end
 		local enemy = context.spawnEnemy(group.kind, group.hpMult or state.hpMult, group.spdMult or state.spdMult)
-		if group.rewardMult then enemy.reward = min(1e6, enemy.reward * group.rewardMult) end
-		if group.eliteTrait then enemy.eliteTrait = group.eliteTrait end
+		if group.rewardMult then
+			enemy.reward = min(1e6, enemy.reward * group.rewardMult)
+		end
+		if group.eliteTrait then
+			enemy.eliteTrait = group.eliteTrait
+		end
 		enemy.scheduledWaveEnemy = true
 		state.livingScheduledEnemies = state.livingScheduledEnemies + 1
-		if enemy.boss and context.onBossSpawn then context.onBossSpawn(enemy) end
+		if enemy.boss and context.onBossSpawn then
+			context.onBossSpawn(enemy)
+		end
 		advance(group)
 		loops = loops + 1
 	end
@@ -90,7 +103,9 @@ end
 local function countVisitor(enemy, context)
 	if not enemy.boss and enemy.kind == context.kind then
 		context.count = context.count + 1
-		if context.count >= context.cap then return false end
+		if context.count >= context.cap then
+			return false
+		end
 	end
 end
 
@@ -101,13 +116,17 @@ local function nearbyAdds(boss)
 end
 
 local function updateBoss(dt, context, cap, loops)
-	if not bossAdds.active then return end
+	if not bossAdds.active then
+		return
+	end
 	local boss = context.activeBoss()
 	if not (boss and boss.hp and boss.hp > 0 and not boss.dying) then
 		bossAdds.active, bossAdds.queued = false, 0
 		return
 	end
-	if context.onBossPosition then context.onBossPosition(boss) end
+	if context.onBossPosition then
+		context.onBossPosition(boss)
+	end
 	bossAdds.timer, bossAdds.queueTimer = bossAdds.timer - dt, bossAdds.queueTimer - dt
 	if bossAdds.timer <= 0 and bossAdds.totalSpawned < bossAdds.maxTotal then
 		local count = context.enemyCount()
@@ -127,14 +146,18 @@ end
 function Spawner.update(dt, context)
 	local cap = context.activeCap or ACTIVE_CAP
 	local loops, invalid = updateWave(dt, context, cap, 0)
-	if not invalid then updateBoss(dt, context, cap, loops) end
+	if not invalid then
+		updateBoss(dt, context, cap, loops)
+	end
 end
 
 function Spawner.allEnemiesCleared(enemyCount) return enemyCount == 0 and not state.active and bossAdds.queued == 0 end
 function Spawner.getState() return state end
 function Spawner.getActiveEnemyCap() return ACTIVE_CAP end
 function Spawner.onScheduledEnemyRemoved(enemy)
-	if not enemy or not enemy.scheduledWaveEnemy then return end
+	if not enemy or not enemy.scheduledWaveEnemy then
+		return
+	end
 	enemy.scheduledWaveEnemy = false
 	state.livingScheduledEnemies = max(0, state.livingScheduledEnemies - 1)
 	state.clearedScheduledEnemies = state.clearedScheduledEnemies + 1

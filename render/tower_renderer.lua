@@ -157,7 +157,9 @@ end
 
 local function drawPlasmaFX(t)
 	local a = t.fireAnim
-	if a <= 0 then return end
+	if a <= 0 then
+		return
+	end
 
 	local size = TILE * 0.48
 	local tipX = size * 0.86
@@ -197,7 +199,9 @@ end
 
 local function drawPoisonFX(t)
 	local a = t.fireAnim
-	if not a or a <= 0 then return end
+	if not a or a <= 0 then
+		return
+	end
 
 	local size = TILE * 0.42
 	local tipX = size * 0.6

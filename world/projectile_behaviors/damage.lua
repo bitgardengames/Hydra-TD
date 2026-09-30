@@ -233,7 +233,9 @@ return function(ctx, register)
 			local dmg = currentDamage
 
 			for i = 1, jumps + 1 do
-				if not current or current.hp <= 0 then break end
+				if not current or current.hp <= 0 then
+					break
+				end
 
 				-- deal damage
 				local dealt = dmg
@@ -303,7 +305,9 @@ return function(ctx, register)
 		type = "damage",
 
 		onHit = function(p, e, data)
-			if not p._chain then return end
+			if not p._chain then
+				return
+			end
 			data = data or {}
 
 			local bonusPerStack = data.bonusPerStack or 0.2
@@ -353,7 +357,9 @@ return function(ctx, register)
 		type = "damage",
 
 		onHit = function(p, e, data)
-			if not p._chain then return end
+			if not p._chain then
+				return
+			end
 			data = data or {}
 
 			local radius = data.radius or 32
@@ -410,7 +416,9 @@ return function(ctx, register)
 		update = function(p, dt)
 			local z = p._zap
 			z.timer = z.timer - dt
-			if z.timer > 0 then return end
+			if z.timer > 0 then
+				return
+			end
 
 			local radius = z.radius
 			local r2 = radius * radius

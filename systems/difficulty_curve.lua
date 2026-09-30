@@ -16,7 +16,9 @@ DifficultyCurve.localExponent = 1.25
 DifficultyCurve.mapIndexCap = 15
 DifficultyCurve.finalMapHp = 1.75
 function DifficultyCurve.getMapHpMultiplier(mapIndex, authoredScalar)
-	if tonumber(authoredScalar) then return math.max(0.1, tonumber(authoredScalar)) end
+	if tonumber(authoredScalar) then
+		return math.max(0.1, tonumber(authoredScalar))
+	end
 	mapIndex = math.max(1, math.floor(tonumber(mapIndex) or 1))
 	local progress = math.min(1, (mapIndex - 1) / (DifficultyCurve.mapIndexCap - 1))
 	return 1 + (DifficultyCurve.finalMapHp - 1) * progress

@@ -377,7 +377,9 @@ end
 
 local function drawGrid()
 	local fade = State.placingFade or 0
-	if fade == 0 then return end
+	if fade == 0 then
+		return
+	end
 
 	lg.setColor(colorGrid[1], colorGrid[2], colorGrid[3], colorGrid[4] * fade)
 

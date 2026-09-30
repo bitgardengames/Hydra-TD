@@ -25,9 +25,17 @@ local effectNames = {
 
 local function exchange(a, b)
 	local temporary = {}
-	for i = 1, #a do temporary[i] = a[i]; a[i] = nil end
-	for i = 1, #b do a[i] = b[i]; b[i] = nil end
-	for i = 1, #temporary do b[i] = temporary[i] end
+	for i = 1, #a do
+		temporary[i] = a[i]
+		a[i] = nil
+	end
+	for i = 1, #b do
+		a[i] = b[i]
+		b[i] = nil
+	end
+	for i = 1, #temporary do
+		b[i] = temporary[i]
+	end
 end
 
 local function buildPath(points, biome)
@@ -52,7 +60,9 @@ local function makeTower(kind, specialization, gx, gy)
 		abilityAttackSpeed=1,
 	}
 	local resolved = BranchTierResolver.resolve(t, {modifiers={}})
-	for key, value in pairs(resolved.stats) do t[key] = value end
+	for key, value in pairs(resolved.stats) do
+		t[key] = value
+	end
 	t.fireInterval = 1 / math.max(0.001, t.fireRate)
 	t.range2 = t.range * t.range
 	t.targetingPolicy = resolved.targetingPolicy
@@ -65,7 +75,9 @@ function Sandbox.new(config)
 		map=buildPath(config.path, config.biome), enemies={}, towers={}, projectiles={}, effects={},
 		pendingEnemies={}, time=0, duration=config.duration or 5, config=config,
 	}, Sandbox)
-	for _, name in ipairs(effectNames) do self.effects[name] = {} end
+	for _, name in ipairs(effectNames) do
+		self.effects[name] = {}
+	end
 	self.towers[1] = makeTower(config.tower.kind, config.branchId, config.tower.x, config.tower.y)
 	for _, authored in ipairs(config.enemies) do
 		local count = authored.count or 1
@@ -73,7 +85,9 @@ function Sandbox.new(config)
 		local initialDistance = authored.distance or authored.initialDistance or authored.spawnDistance or 0
 		for i=1,count do
 			local spawn={}
-			for key,value in pairs(authored) do spawn[key]=value end
+			for key,value in pairs(authored) do
+				spawn[key]=value
+			end
 			spawn.distance=initialDistance+(i-1)*spacing
 			spawn.spawnTime=(authored.spawnTime or 0)+(i-1)*(authored.spawnInterval or 0)
 			self.pendingEnemies[#self.pendingEnemies+1]=spawn
@@ -91,24 +105,36 @@ function Sandbox:spawnDueEnemies(now)
 			local distance = math.max(0, spawn.distance or 0)
 			local start = self.map.pathWorld[1]
 			local speedScale=spawn.speedScale or 1
-			if spawn.speedOverride then speedScale=spawn.speedOverride/assert(EnemyDefs[spawn.kind]).speed end
+			if spawn.speedOverride then
+				speedScale=spawn.speedOverride/assert(EnemyDefs[spawn.kind]).speed
+			end
 			local e = Enemies.spawnEnemy(spawn.kind, spawn.hpScale or 1, speedScale,
 				start[1], start[2], 1, nil, distance, 0)
 			Enemies.setPathDistance(e, distance)
 			local health=spawn.healthOverride or spawn.health
-			if health then e.hp=health; e.maxHp=health end
+			if health then
+				e.hp=health
+				e.maxHp=health
+			end
 		end
 	end)
 end
 
 function Sandbox:withWorld(fn)
 	local map, savedMap = Map.map, {}
-	for key, value in pairs(map) do savedMap[key] = value; map[key] = nil end
-	for key, value in pairs(self.map) do map[key] = value end
+	for key, value in pairs(map) do
+		savedMap[key] = value
+		map[key] = nil
+	end
+	for key, value in pairs(self.map) do
+		map[key] = value
+	end
 	exchange(Enemies.enemies, self.enemies)
 	exchange(Towers.towers, self.towers)
 	exchange(Projectiles.projectiles, self.projectiles)
-	for _, name in ipairs(effectNames) do exchange(Effects[name], self.effects[name]) end
+	for _, name in ipairs(effectNames) do
+		exchange(Effects[name], self.effects[name])
+	end
 	local oldPreview, oldFrame = State.previewSandbox, State.frameId
 	local randomState = love.math.getRandomState and love.math.getRandomState()
 	State.previewSandbox = true
@@ -118,20 +144,34 @@ function Sandbox:withWorld(fn)
 	-- tick a clean gameplay query without retaining preview entities afterward.
 	Targeting.clearFrameCache()
 	Spatial.clear()
-	for i=1,#Enemies.enemies do Spatial.updateEnemy(Enemies.enemies[i]) end
+	for i=1,#Enemies.enemies do
+		Spatial.updateEnemy(Enemies.enemies[i])
+	end
 	local ok, err = pcall(fn)
 	Spatial.clear()
 	exchange(Enemies.enemies, self.enemies)
 	exchange(Towers.towers, self.towers)
 	exchange(Projectiles.projectiles, self.projectiles)
-	for _, name in ipairs(effectNames) do exchange(Effects[name], self.effects[name]) end
-	for key in pairs(map) do map[key] = nil end
-	for key, value in pairs(savedMap) do map[key] = value end
-	for i=1,#Enemies.enemies do Spatial.updateEnemy(Enemies.enemies[i]) end
+	for _, name in ipairs(effectNames) do
+		exchange(Effects[name], self.effects[name])
+	end
+	for key in pairs(map) do
+		map[key] = nil
+	end
+	for key, value in pairs(savedMap) do
+		map[key] = value
+	end
+	for i=1,#Enemies.enemies do
+		Spatial.updateEnemy(Enemies.enemies[i])
+	end
 	Targeting.clearFrameCache()
 	State.previewSandbox, State.frameId = oldPreview, oldFrame
-	if randomState and love.math.setRandomState then love.math.setRandomState(randomState) end
-	if not ok then error(err, 0) end
+	if randomState and love.math.setRandomState then
+		love.math.setRandomState(randomState)
+	end
+	if not ok then
+		error(err, 0)
+	end
 end
 
 function Sandbox:update(dt)
@@ -150,8 +190,12 @@ end
 function Sandbox:reset()
 	local config = self.config
 	local fresh = Sandbox.new(config)
-	for key in pairs(self) do self[key] = nil end
-	for key, value in pairs(fresh) do self[key] = value end
+	for key in pairs(self) do
+		self[key] = nil
+	end
+	for key, value in pairs(fresh) do
+		self[key] = value
+	end
 	setmetatable(self, Sandbox)
 end
 
@@ -162,7 +206,9 @@ function Sandbox:draw(drawWorld)
 	local tower = self.towers[1]
 	TowerRenderer.drawTowerVisual(tower.kind, tower.x, tower.renderY, tower.angle, tower.recoil, tower.level)
 	TowerRenderer.drawTowerFX(tower)
-	for i=1,#self.enemies do EnemyRenderer.drawEnemy(self.enemies[i]) end
+	for i=1,#self.enemies do
+		EnemyRenderer.drawEnemy(self.enemies[i])
+	end
 	self:withWorld(function() Projectiles.draw(); Effects.draw() end)
 end
 

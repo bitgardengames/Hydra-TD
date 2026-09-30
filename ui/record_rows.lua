@@ -9,7 +9,9 @@ local definitions = {
 
 function RecordRows.build(records, newKeys)
 	local fresh, rows = {}, {}
-	for _, key in ipairs(newKeys or {}) do fresh[key] = true end
+	for _, key in ipairs(newKeys or {}) do
+		fresh[key] = true
+	end
 	for _, definition in ipairs(definitions) do
 		local key, label = definition[1], definition[2]
 		if records and records[key] ~= nil then

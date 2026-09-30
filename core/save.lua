@@ -761,7 +761,9 @@ end
 -- preserves every legacy key and lets old saves/UI continue reading flat totals.
 function Save.recordTowerBranchRun(kind, branch, totals)
 	local history = towerHistory(kind)
-	if not history or type(branch) ~= "string" then return end
+	if not history or type(branch) ~= "string" then
+		return
+	end
 	history.branches = type(history.branches) == "table" and history.branches or {}
 	local entry = history.branches[branch]
 	if type(entry) ~= "table" then

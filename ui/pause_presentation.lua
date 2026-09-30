@@ -11,7 +11,9 @@ local function smoothstep(value)
 end
 
 function Presentation.pose(progress, reducedMotion)
-	if reducedMotion then progress = 1 end
+	if reducedMotion then
+		progress = 1
+	end
 
 	-- Let the context arrive just behind the primary pause controls.
 	local contextProgress = smoothstep((clamp01(progress) - 0.15) / 0.85)

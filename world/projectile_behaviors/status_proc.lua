@@ -463,7 +463,9 @@ return function(ctx, register)
 	-- world position, and the spawned projectile owns its finite combat lifetime.
 	B.slow_field = {
 		onHit = function(p, e, data)
-			if not e or e.hp <= 0 or p.hitOrigin == "slow_field" then return end
+			if not e or e.hp <= 0 or p.hitOrigin == "slow_field" then
+				return
+			end
 			data = data or {}
 			local evt = emitEvent(p, "spawn_slow_field")
 			evt.x, evt.y = p.x, p.y
@@ -476,7 +478,9 @@ return function(ctx, register)
 		end,
 
 		on_shot = function(p, data)
-			if p.hitOrigin ~= "slow_field" then return end
+			if p.hitOrigin ~= "slow_field" then
+				return
+			end
 			p._slowFieldTimer = 0
 			p._slowFieldRadius = data.radius
 			p._slowFieldFactor = data.factor
@@ -485,9 +489,13 @@ return function(ctx, register)
 		end,
 
 		on_tick = function(p, dt)
-			if p.hitOrigin ~= "slow_field" then return end
+			if p.hitOrigin ~= "slow_field" then
+				return
+			end
 			p._slowFieldTimer = (p._slowFieldTimer or 0) - dt
-			if p._slowFieldTimer > 0 then return end
+			if p._slowFieldTimer > 0 then
+				return
+			end
 
 			local radius = p._slowFieldRadius or 62
 			radiusVisitContext.op = "slow"

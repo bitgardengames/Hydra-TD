@@ -33,7 +33,9 @@ local function prepare(enemies, alpha, dt, timestamp)
 			e.regenVisualPulse = max(0, (e.regenVisualPulse or 0) - presentationDt)
 			if e.face ~= "normal" then
 				e.faceT = (e.faceT or 0) + presentationDt
-				if e.faceT >= (e.faceDur or 0) then e.face = "normal" end
+				if e.faceT >= (e.faceDur or 0) then
+					e.face = "normal"
+				end
 			end
 			e.spawnFade = max(0, (e.spawnFade or 0) - presentationDt)
 			local alphaIn = e.spawnFade > 0 and 1 - e.spawnFade * INV_SPAWN_FADE_DUR or 1

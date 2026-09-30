@@ -17,7 +17,9 @@ local UNKNOWN_REQUIRED_MAP = math.huge
 local rewardsByMapId = {}
 
 local requiredMapByTower = {}
-for _, kind in ipairs(Constants.TOWER_LIST) do requiredMapByTower[kind] = 1 end
+for _, kind in ipairs(Constants.TOWER_LIST) do
+	requiredMapByTower[kind] = 1
+end
 
 local requiredMapByFeature = {}
 local requiredMapByAbilitySlot = {}
@@ -29,8 +31,12 @@ end
 local function validateRewards()
 	local AbilityDefs = require("systems.ability_defs")
 	local knownMaps, knownTowers, knownAbilities = {}, {}, {}
-	for _, map in ipairs(Maps) do knownMaps[map.id] = true end
-	for _, towerId in ipairs(Constants.TOWER_LIST) do knownTowers[towerId] = true end
+	for _, map in ipairs(Maps) do
+		knownMaps[map.id] = true
+	end
+	for _, towerId in ipairs(Constants.TOWER_LIST) do
+		knownTowers[towerId] = true
+	end
 	for abilityId, def in pairs(AbilityDefs) do
 		if type(def) == "table" and def.id then
 			knownAbilities[abilityId] = true
@@ -160,7 +166,9 @@ function CampaignUnlocks.getEquippedAbilities()
 	-- empty slot or has a still-locked ability selected there. Build the runtime
 	-- loadout from campaign progress rather than rewriting the player's save.
 	for _, abilityId in ipairs(AbilityDefs.order) do
-		if #equipped >= unlockedSlots then break end
+		if #equipped >= unlockedSlots then
+			break
+		end
 		if CampaignUnlocks.isAbilityUnlocked(abilityId) and not equippedById[abilityId] then
 			equipped[#equipped + 1] = abilityId
 			equippedById[abilityId] = true

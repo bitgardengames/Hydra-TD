@@ -5,8 +5,12 @@ local Constants = require("core.constants")
 local target = {x = 0, y = 0}
 
 local function clamp01(x)
-	if x < 0 then return 0 end
-	if x > 1 then return 1 end
+	if x < 0 then
+		return 0
+	end
+	if x > 1 then
+		return 1
+	end
 
 	return x
 end

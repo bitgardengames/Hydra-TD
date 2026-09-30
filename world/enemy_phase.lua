@@ -9,7 +9,9 @@ function Phase.initialize(enemy, config)
 end
 
 function Phase.update(enemy, dt)
-	if not enemy.hasPhase then return end
+	if not enemy.hasPhase then
+		return
+	end
 	enemy.phaseTimer = enemy.phaseTimer - dt
 	if enemy.phaseActive and enemy.phaseTimer <= 0 then
 		enemy.phaseActive = false

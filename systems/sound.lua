@@ -41,7 +41,9 @@ local sfxChannelByCategory = {
 
 local function focusGain()
 	local settings = Save.data and Save.data.settings
-	if not Sound.focused and settings and settings.muteWhenUnfocused then return 0 end
+	if not Sound.focused and settings and settings.muteWhenUnfocused then
+		return 0
+	end
 	return 1
 end
 
@@ -119,7 +121,9 @@ function Sound.play(name, opts)
 				break
 			end
 		end
-		if not sound then return end
+		if not sound then
+			return
+		end
 	else
 		sound = entry.source
 	end

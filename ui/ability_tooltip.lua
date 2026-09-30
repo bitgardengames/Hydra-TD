@@ -7,7 +7,9 @@ local cachedTooltips = {}
 
 function AbilityTooltip.show(abilityId)
 	local def = AbilityDefs[abilityId]
-	if not def then return end
+	if not def then
+		return
+	end
 
 	local title = L(def.nameKey)
 	local description = L(def.descKey)

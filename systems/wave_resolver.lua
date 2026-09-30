@@ -21,7 +21,9 @@ end
 
 function Resolver.resolveBossEncounterTemplate(_, bossKind)
 	local base = encounterTemplates[bossKind]
-	if not base then return nil end
+	if not base then
+		return nil
+	end
 	local resolved = {}
 	Util.copyNonNilInto(resolved, base)
 	return resolved
@@ -35,7 +37,9 @@ function Resolver.getWaveMultipliers(waveNumber, mapIndex, map, isBoss)
 end
 
 function Resolver.resolveWaveGroups(wave, map, waveNumber)
-	if not wave.groups then return nil end
+	if not wave.groups then
+		return nil
+	end
 	local bossIndex = math.max(1, math.floor(waveNumber / 10))
 	local groups = {}
 	for i, group in ipairs(wave.groups) do

@@ -60,7 +60,9 @@ end
 -- Tower titles are kept here so every UI surface applies branch naming and
 -- punctuation consistently, while older/localized tower names still fall back.
 function Localization.towerTitle(tower)
-	if not tower then return "" end
+	if not tower then
+		return ""
+	end
 	local base = Localization.get(tower.def.nameKey)
 	if tower.specialization then
 		return Localization.get("inspect.specializedTowerTitle",

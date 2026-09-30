@@ -80,11 +80,15 @@ function Hud.update(dt)
 		-- makes bursts feel continuous without allowing them to extend forever.
 		moneyPulse = math.max(-1, math.min(1, moneyPulse * 0.55 + signedStrength))
 		moneyPulseTime = math.max(moneyPulseTime, MONEY_PULSE_DURATION * 0.65)
-		if moneyPulseTime == 0 then moneyPulseTime = MONEY_PULSE_DURATION end
+		if moneyPulseTime == 0 then
+			moneyPulseTime = MONEY_PULSE_DURATION
+		end
 		previousMoney = State.money
 	end
 	moneyPulseTime = math.max(0, moneyPulseTime - dt)
-	if moneyPulseTime == 0 then moneyPulse = 0 end
+	if moneyPulseTime == 0 then
+		moneyPulse = 0
+	end
 	local factor = 1 - exp(-MONEY_RESPONSE * dt)
 	State.moneyLerp = State.moneyLerp + (State.money - State.moneyLerp) * factor
 end

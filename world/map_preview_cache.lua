@@ -79,17 +79,23 @@ function MapPreviewCache.buildAll(w, h)
 		local sizes = cache[mapDef.id] or {}
 		cache[mapDef.id] = sizes
 		local key = w .. "x" .. h
-		if not sizes[key] then sizes[key] = build(mapIndex, mapDef, w, h) end
+		if not sizes[key] then
+			sizes[key] = build(mapIndex, mapDef, w, h)
+		end
 	end
 end
 
 function MapPreviewCache.get(mapId, w, h)
 	local sizes = cache[mapId]
-	if not w or not h then return nil end
+	if not w or not h then
+		return nil
+	end
 
 	w, h = math.max(1, math.floor(w + 0.5)), math.max(1, math.floor(h + 0.5))
 	local key = w .. "x" .. h
-	if sizes and sizes[key] then return sizes[key] end
+	if sizes and sizes[key] then
+		return sizes[key]
+	end
 
 	for mapIndex, mapDef in ipairs(Maps) do
 		if mapDef.id == mapId then
@@ -109,7 +115,9 @@ end
 function MapPreviewCache.clear()
 	for _, sizes in pairs(cache) do
 		for _, entry in pairs(sizes) do
-			if entry.canvas then entry.canvas:release() end
+			if entry.canvas then
+				entry.canvas:release()
+			end
 		end
 	end
 	cache = {}

@@ -84,8 +84,12 @@ end
 local function releaseEnemy(e)
 	local supportAffected = e.supportAffected
 	local supportContributions = e.supportContributions
-	if supportAffected then Util.clearTable(supportAffected) end
-	if supportContributions then Util.clearTable(supportContributions) end
+	if supportAffected then
+		Util.clearTable(supportAffected)
+	end
+	if supportContributions then
+		Util.clearTable(supportContributions)
+	end
 	Util.clearTable(e)
 	-- Retain the cleared membership maps on the pooled object so respawns do not
 	-- allocate replacements.
@@ -181,7 +185,9 @@ local function advanceEnemyByDistance(e, moveDist, pathWorld, pathSegLen, totalL
 	totalLen = totalLen or map.totalWorldLength
 	local moved = advanceEnemyAlongPath(e, max(0, moveDist or 0), pathWorld, pathSegLen, totalLen)
 	if moved then
-		if e.supportSourceIndex then EnemySupport.markSourceDirty(e) end
+		if e.supportSourceIndex then
+			EnemySupport.markSourceDirty(e)
+		end
 		Spatial.updateEnemy(e)
 	end
 	return moved, e.dist >= totalLen
@@ -189,13 +195,19 @@ end
 
 local function triggerHealthThresholds(e)
 	local thresholds = e.healthThresholds
-	if not e.lunge or type(thresholds) ~= "table" then return 0 end
+	if not e.lunge or type(thresholds) ~= "table" then
+		return 0
+	end
 	local crossed = 0
 	while e.nextHealthThreshold <= #thresholds do
 		local value = thresholds[e.nextHealthThreshold]
-		if type(value) == "table" then value = value.hpFraction or value.fraction or value.hp end
+		if type(value) == "table" then
+			value = value.hpFraction or value.fraction or value.hp
+		end
 		local thresholdHp = value and (value <= 1 and e.maxHp * value or value)
-		if not thresholdHp or e.hp > thresholdHp then break end
+		if not thresholdHp or e.hp > thresholdHp then
+			break
+		end
 		e.nextHealthThreshold = e.nextHealthThreshold + 1
 		crossed = crossed + 1
 	end
@@ -238,7 +250,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 
 	-- Sandboxes use the real enemy constructor, but are presentation-only.  Keep
 	-- persistence out of that path without maintaining a second fake enemy type.
-	if not State.previewSandbox then Save.markEnemyEncountered(kind) end
+	if not State.previewSandbox then
+		Save.markEnemyEncountered(kind)
+	end
 
 	local x, y
 
@@ -393,7 +407,9 @@ local function spawnEnemy(kind, hpScale, spdScale, spawnX, spawnY, pathIndex, op
 end
 
 local function handleEnemyKilled(e, i, isBoss)
-	if not State.previewSandbox then Save.recordEnemyResult(e.kind, "kill", e.combatAge) end
+	if not State.previewSandbox then
+		Save.recordEnemyResult(e.kind, "kill", e.combatAge)
+	end
 	if isBoss then
 		State.activeBoss = nil
 		State.activeBossKind = nil
@@ -416,12 +432,18 @@ local function handleEnemyKilled(e, i, isBoss)
 	if e.scheduledWaveEnemy then
 		State.spawnedKills = (State.spawnedKills or 0) + 1
 	end
-	if not State.previewSandbox then Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true) end
+	if not State.previewSandbox then
+		Floaters.add(e.x, e.y - 20, "+" .. reward, cmR, cmG, cmB, true)
+	end
 
-	if not State.previewSandbox then Achievements.increment("ENEMIES_KILLED") end
+	if not State.previewSandbox then
+		Achievements.increment("ENEMIES_KILLED")
+	end
 
 	if isBoss then
-		if not State.previewSandbox then Achievements.increment("BOSSES_KILLED") end
+		if not State.previewSandbox then
+			Achievements.increment("BOSSES_KILLED")
+		end
 	end
 
 	require("systems.waves").onScheduledEnemyRemoved(e)
@@ -436,7 +458,9 @@ local function recordKiller(e)
 		return
 	end
 
-	if State.previewSandbox then return end
+	if State.previewSandbox then
+		return
+	end
 	killer.kills = killer.kills + 1
 	killer._killsStatName = killer._killsStatName or ("TOWER_" .. upper(killer.kind) .. "_KILLS")
 	Achievements.increment(killer._killsStatName)
@@ -573,14 +597,20 @@ local function spreadInfection(e)
 		infectionVisitContext.spreadStacks = spreadStacks
 		local candidates = infectionVisitContext.candidates or {}
 		infectionVisitContext.candidates = candidates
-		for i = #candidates, 1, -1 do candidates[i] = nil end
+		for i = #candidates, 1, -1 do
+			candidates[i] = nil
+		end
 		Spatial.visitRadius(e.x, e.y, infect.radius, collectInfectionCandidate,
 			infectionVisitContext, enemyQueryContext, Spatial.radiusOptions.living)
 		table.sort(candidates, function(a, b)
 			local aStacks = a.enemy.poisonStacks or 0
 			local bStacks = b.enemy.poisonStacks or 0
-			if aStacks ~= bStacks then return aStacks < bStacks end
-			if a.distanceSquared ~= b.distanceSquared then return a.distanceSquared < b.distanceSquared end
+			if aStacks ~= bStacks then
+				return aStacks < bStacks
+			end
+			if a.distanceSquared ~= b.distanceSquared then
+				return a.distanceSquared < b.distanceSquared
+			end
 			return (a.enemy.id or 0) < (b.enemy.id or 0)
 		end)
 		for i = 1, min(#candidates, infect.recipientCap or 3) do
@@ -668,9 +698,13 @@ local function updateStatusesAndMechanics(e, dt)
 end
 
 local function updateGatecrasherLunge(e, dt, pathWorld, pathSegLen, totalLen)
-	if not e.lungeWindup then return false end
+	if not e.lungeWindup then
+		return false
+	end
 	e.lungeWindup = e.lungeWindup - dt
-	if e.lungeWindup > 0 then return false end
+	if e.lungeWindup > 0 then
+		return false
+	end
 
 	local oldX, oldY = e.x, e.y
 	local _, reachedExit = advanceEnemyByDistance(e, e.lunge.distance, pathWorld, pathSegLen, totalLen)
@@ -882,7 +916,9 @@ end
 
 -- Single damage gateway for enemy mechanics. The second return value reports mitigation.
 local function applyDamage(e, amount, context)
-	if not e or e.hp <= 0 or amount <= 0 then return 0, 0 end
+	if not e or e.hp <= 0 or amount <= 0 then
+		return 0, 0
+	end
 	context = context or {}
 	local raw = amount
 	amount = amount * incomingDamageMultiplier(e)
@@ -907,7 +943,9 @@ local function applyDamage(e, amount, context)
 			e.nudgeHitReaction = true
 		end
 	end
-	if e.regeneration then e.regenDelay = e.regeneration.delay end
+	if e.regeneration then
+		e.regenDelay = e.regeneration.delay
+	end
 	e.lastDamageSourceKind = context.sourceKind
 	return amount, 0
 end
@@ -918,7 +956,10 @@ local function setPathDistance(e, distance)
 	local path = map.pathWorld or {}
 	distance = max(0, min(map.totalWorldLength or distance, distance))
 	local remaining, seg = distance, 1
-	while seg < #path and remaining > (lengths[seg] or 0) do remaining = remaining - (lengths[seg] or 0); seg = seg + 1 end
+	while seg < #path and remaining > (lengths[seg] or 0) do
+		remaining = remaining - (lengths[seg] or 0)
+		seg = seg + 1
+	end
 	e.dist, e.pathSeg = distance, seg
 	local len = lengths[seg] or 0
 	e.pathT = len > EPS and min(1, remaining / len) or 0
@@ -930,7 +971,9 @@ end
 -- active enemy state. Callers can therefore present expiring state separately
 -- from the mechanics that define an enemy.
 local function statusRemainingFraction(remaining, duration)
-	if not remaining or not duration or duration <= 0 then return nil end
+	if not remaining or not duration or duration <= 0 then
+		return nil
+	end
 	return max(0, min(1, remaining / duration))
 end
 
@@ -956,7 +999,9 @@ local function getDisplayStatuses(e, result)
 	result = result or {}
 	local count = 0
 	if not e then
-		for i = #result, 1, -1 do result[i] = nil end
+		for i = #result, 1, -1 do
+			result[i] = nil
+		end
 		return result
 	end
 
@@ -976,15 +1021,21 @@ local function getDisplayStatuses(e, result)
 			nil, nil, statusRemainingFraction(e.phaseTimer, e.phase.duration))
 	end
 
-	for i = #result, count + 1, -1 do result[i] = nil end
+	for i = #result, count + 1, -1 do
+		result[i] = nil
+	end
 
 	return result
 end
 
 local function applySlow(e, factor, duration)
-	if not e or e.hp <= 0 then return false end
+	if not e or e.hp <= 0 then
+		return false
+	end
 	local newFactor = math.max(0, math.min(1, factor))
-	if not e.slowFactor or newFactor < e.slowFactor then e.slowFactor = newFactor end
+	if not e.slowFactor or newFactor < e.slowFactor then
+		e.slowFactor = newFactor
+	end
 	e.slowTimer = math.max(e.slowTimer or 0, duration or 0)
 	e.slowDuration = math.max(e.slowDuration or 0, duration or 0)
 	return true

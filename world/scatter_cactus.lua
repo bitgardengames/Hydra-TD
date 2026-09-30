@@ -163,7 +163,9 @@ end
 
 function Cactus.draw(list, targetMap)
 	list = list or Cactus.list
-	if #list == 0 then return end
+	if #list == 0 then
+		return
+	end
 
 	local styles = getCactusStyles(targetMap or Map.map)
 	local flowerColor = {0.95, 0.45, 0.55}
@@ -222,8 +224,12 @@ function Cactus.draw(list, targetMap)
 				drawPart(armX, armY, armW, armH, style)
 			end
 
-			if c.armMode >= 1 then drawArm(c.arm1) end
-			if c.armMode >= 2 then drawArm(c.arm2) end
+			if c.armMode >= 1 then
+				drawArm(c.arm1)
+			end
+			if c.armMode >= 2 then
+				drawArm(c.arm2)
+			end
 
 			drawPart(x, baseY, w, h, style)
 

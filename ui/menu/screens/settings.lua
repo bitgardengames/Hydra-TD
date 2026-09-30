@@ -143,7 +143,9 @@ end
 local function switchTab(nextTab)
 	local clamped = Util.clamp(nextTab, 1, #tabs)
 
-	if clamped == activeTab then return end
+	if clamped == activeTab then
+		return
+	end
 
 	if draggingSlider then
 		flushSettingsNow()
@@ -314,10 +316,14 @@ local function layoutRows()
 		end
 	end
 	for i in pairs(rowRects) do
-		if i > #rows then rowRects[i] = nil end
+		if i > #rows then
+			rowRects[i] = nil
+		end
 	end
 	for i in pairs(sliderRects) do
-		if i > #rows then sliderRects[i] = nil end
+		if i > #rows then
+			sliderRects[i] = nil
+		end
 	end
 	layoutDirty = false
 end
@@ -360,7 +366,9 @@ local function updatePanelLayout(sw, sh)
 	Fonts.set("menu")
 	rows = getActiveRows()
 	local widestLabel = 0
-	for _, row in ipairs(rows) do widestLabel = max(widestLabel, lg.getFont():getWidth(row.label or "")) end
+	for _, row in ipairs(rows) do
+		widestLabel = max(widestLabel, lg.getFont():getWidth(row.label or ""))
+	end
 	LABEL_W = min(280, max(180, widestLabel + 24))
 	ROW_W = LABEL_W + SLIDER_W + SLIDER_VALUE_GAP + SLIDER_VALUE_W
 
@@ -412,7 +420,9 @@ local function updatePanelLayout(sw, sh)
 		rect.w, rect.h = tabW, tabH
 		tabRects[i] = rect
 	end
-	for i = #tabs + 1, #tabRects do tabRects[i] = nil end
+	for i = #tabs + 1, #tabRects do
+		tabRects[i] = nil
+	end
 
 	layoutMeasurementDirty = false
 end
@@ -605,7 +615,9 @@ function Screen.draw()
 end
 
 function Screen.keypressed(key)
-	if confirmation:isOpen() then return confirmation:keypressed(key) end
+	if confirmation:isOpen() then
+		return confirmation:keypressed(key)
+	end
 	if keybindCapture:keypressed(key, rows) then
 		return
 	end
@@ -619,11 +631,15 @@ function Screen.keypressed(key)
 			if rowTop < rowsScroll.offset then
 				local previousOffset = rowsScroll.offset
 				rowsScroll:move(rowTop - rowsScroll.offset)
-				if rowsScroll.offset ~= previousOffset then requestRowLayout() end
+				if rowsScroll.offset ~= previousOffset then
+					requestRowLayout()
+				end
 			elseif rowBottom > rowsScroll.offset + rowsViewportH then
 				local previousOffset = rowsScroll.offset
 				rowsScroll:move(rowBottom - rowsScroll.offset - rowsViewportH)
-				if rowsScroll.offset ~= previousOffset then requestRowLayout() end
+				if rowsScroll.offset ~= previousOffset then
+					requestRowLayout()
+				end
 			end
 			Sound.play("uiMove")
 		end
@@ -692,7 +708,9 @@ controlContext = {
 }
 
 function Screen.mousepressed(x, y, button)
-	if confirmation:isOpen() then return confirmation:mousepressed(x, y, button) end
+	if confirmation:isOpen() then
+		return confirmation:mousepressed(x, y, button)
+	end
 	if button == 1 then
 		local tabIndex = findRectAt(tabRects, x, y)
 		if tabIndex then
@@ -717,7 +735,9 @@ function Screen.mousepressed(x, y, button)
 end
 
 function Screen.mousereleased(x, y, button)
-	if confirmation:isOpen() then return confirmation:mousereleased(x, y, button) end
+	if confirmation:isOpen() then
+		return confirmation:mousereleased(x, y, button)
+	end
 	if draggingSlider then
 		Sound.play("uiMove")
 		flushSettingsNow()
@@ -736,7 +756,9 @@ function Screen.wheelmoved(_, y)
 
 	local previousOffset = rowsScroll.offset
 	rowsScroll:move(-y * activeLineH)
-	if rowsScroll.offset ~= previousOffset then requestRowLayout() end
+	if rowsScroll.offset ~= previousOffset then
+		requestRowLayout()
+	end
 end
 
 return Screen

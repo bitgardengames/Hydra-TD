@@ -52,7 +52,9 @@ function AnimatedRunStats:update(dt)
 			row.flashElapsed = math.min(FULL_BAR_FLASH_DURATION, row.flashElapsed + dt)
 		end
 	end
-	if self.complete then return end
+	if self.complete then
+		return
+	end
 	self.elapsed = self.elapsed + dt
 	for index, row in ipairs(self.rows) do
 		-- Give each result its own moment instead of overlapping every fill.
@@ -63,10 +65,14 @@ function AnimatedRunStats:update(dt)
 			and clamp((row.value or 0) / row.denominator) * eased or nil
 		-- Fade the track in with the leading edge instead of revealing an empty bar.
 		row.barOpacity = clamp(progress * 4)
-		if row.fill and row.fill >= 1 and not row.flashElapsed then row.flashElapsed = 0 end
+		if row.fill and row.fill >= 1 and not row.flashElapsed then
+			row.flashElapsed = 0
+		end
 	end
 	local lastStart = math.max(0, (#self.rows - 1) * self.rowDuration)
-	if self.elapsed >= lastStart + self.rowDuration then self:finish() end
+	if self.elapsed >= lastStart + self.rowDuration then
+		self:finish()
+	end
 end
 
 function AnimatedRunStats:finish()
@@ -75,7 +81,9 @@ function AnimatedRunStats:finish()
 		row.fill = row.denominator and row.denominator > 0
 			and clamp((row.value or 0) / row.denominator) or nil
 		row.barOpacity = row.fill and 1 or 0
-		if row.fill and row.fill >= 1 and not row.flashElapsed then row.flashElapsed = 0 end
+		if row.fill and row.fill >= 1 and not row.flashElapsed then
+			row.flashElapsed = 0
+		end
 	end
 	self.complete = true
 end
@@ -97,7 +105,9 @@ function AnimatedRunStats:draw(x, y, width, alpha)
 		lg.setColor(rowColor[1], rowColor[2], rowColor[3], 0.78 * alpha)
 		Text.printfShadow(row.label, barX, rowY, barWidth * 0.68, "left")
 		local value = formatNumber(row.displayedValue)
-		if row.denominator then value = value .. " / " .. formatNumber(row.denominator) end
+		if row.denominator then
+			value = value .. " / " .. formatNumber(row.denominator)
+		end
 		Text.printfShadow(value, barX, rowY, barWidth, "right")
 		local barY = rowY + 25
 		if row.denominator and row.denominator > 0 then

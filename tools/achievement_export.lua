@@ -175,7 +175,9 @@ local function drawDroplet(cx, cy, r, tier)
 		local function perp(x1, y1, x2, y2)
 			local dx, dy = x2 - x1, y2 - y1
 			local len = math.sqrt(dx*dx + dy*dy)
-			if len == 0 then return 0, 0 end
+			if len == 0 then
+				return 0, 0
+			end
 			return -dy / len, dx / len
 		end
 

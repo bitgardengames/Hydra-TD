@@ -480,7 +480,9 @@ function Screen.draw()
 end
 
 function Screen.wheelmoved(_, y)
-	if not layout then return end
+	if not layout then
+		return
+	end
 	recapScroll:move(-y * 36)
 end
 

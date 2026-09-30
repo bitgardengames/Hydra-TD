@@ -56,7 +56,9 @@ end
 
 local function viewAt(x, y)
 	local stats = State.combatStats
-	if not stats or not stats.showDamageMeter or not stats.damageByTower then return nil end
+	if not stats or not stats.showDamageMeter or not stats.damageByTower then
+		return nil
+	end
 
 	local headerX, headerY = getHeaderLayout()
 	if x < headerX or x > headerX + panelW or y < headerY or y > headerY + headerH then
@@ -68,7 +70,9 @@ end
 
 
 function DamageMeter.mousepressed(x, y, button)
-	if button ~= 1 then return false end
+	if button ~= 1 then
+		return false
+	end
 	pressedView = viewAt(x, y)
 	if pressedView ~= nil then
 		Sound.play("uiMove")
@@ -78,7 +82,9 @@ function DamageMeter.mousepressed(x, y, button)
 end
 
 function DamageMeter.mousereleased(x, y, button)
-	if button ~= 1 then return false end
+	if button ~= 1 then
+		return false
+	end
 	local releasedView = viewAt(x, y)
 	local activated = pressedView ~= nil and releasedView == pressedView
 	pressedView = nil
@@ -176,7 +182,9 @@ function DamageMeter.update(dt)
 	for _, entry in ipairs(list) do
 		local pct = (total > 0) and (entry.dmg / total) or 0
 		entry.displayPct = entry.displayPct + (pct - entry.displayPct) * factor
-		if abs(pct - entry.displayPct) < 0.001 then entry.displayPct = pct end
+		if abs(pct - entry.displayPct) < 0.001 then
+			entry.displayPct = pct
+		end
 		local def = Towers.TowerDefs[entry.kind]
 		if def then
 			local name = L(def.nameKey)
@@ -187,12 +195,16 @@ function DamageMeter.update(dt)
 end
 
 function DamageMeter.draw()
-	if not State.combatStats or not State.combatStats.showDamageMeter then return end
+	if not State.combatStats or not State.combatStats.showDamageMeter then
+		return
+	end
 	local stats = State.combatStats
 	local isBossView = stats.damageView == 1
 	local total = isBossView and stats.bossTotalDamage or stats.totalDamage
 	local list = meterCache.list
-	if #list == 0 and not isBossView then return end
+	if #list == 0 and not isBossView then
+		return
+	end
 
 	-- layout
 	local sw = lg.getWidth()

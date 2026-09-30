@@ -118,11 +118,19 @@ end
 function Hotkeys.getDisplay(action)
 	local key = Hotkeys.kb.actions[action] or Hotkeys.kb.shop[action]
 
-	if not key then return nil end
+	if not key then
+		return nil
+	end
 
-	if key == "escape" then return "Esc" end
-	if key == "space" then return "Space" end
-	if key == "tab" then return "Tab" end
+	if key == "escape" then
+		return "Esc"
+	end
+	if key == "space" then
+		return "Space"
+	end
+	if key == "tab" then
+		return "Tab"
+	end
 
 	return key:upper()
 end

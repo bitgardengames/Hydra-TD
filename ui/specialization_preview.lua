@@ -9,7 +9,9 @@ local Preview = {}
 local TILE = Constants.TILE
 local function cast(spacing, ...)
 	local kinds={...}; local result={}
-	for i=1,#kinds do result[i]={kind=kinds[i],distance=(i-1)*spacing*TILE} end
+	for i=1,#kinds do
+		result[i]={kind=kinds[i],distance=(i-1)*spacing*TILE}
+	end
 	return result
 end
 
@@ -45,11 +47,17 @@ function Preview.new(branchId)
 end
 function Preview.reset(p) p.world:reset(); p.elapsed=0 end
 function Preview.update(p,dt)
-	if not p or dt<=0 then return end
+	if not p or dt<=0 then
+		return
+	end
 	while dt>0 do
 		local step=math.min(dt,p.def.duration-p.elapsed)
 		p.world:update(step); p.elapsed=p.elapsed+step; dt=dt-step
-		if p.elapsed>=p.def.duration then p.world:reset(); p.elapsed=0; p.cycle=p.cycle+1 end
+		if p.elapsed>=p.def.duration then
+			p.world:reset()
+			p.elapsed=0
+			p.cycle=p.cycle+1
+		end
 	end
 end
 
@@ -66,14 +74,24 @@ local function drawDebug(p, bounds)
 	local lg=love.graphics
 	lg.setLineWidth(1)
 	lg.setColor(1,1,1,.14)
-	for x=math.floor(bounds.x/TILE)*TILE,bounds.x+bounds.w,TILE do lg.line(x,bounds.y,x,bounds.y+bounds.h) end
-	for y=math.floor(bounds.y/TILE)*TILE,bounds.y+bounds.h,TILE do lg.line(bounds.x,y,bounds.x+bounds.w,y) end
+	for x=math.floor(bounds.x/TILE)*TILE,bounds.x+bounds.w,TILE do
+		lg.line(x,bounds.y,x,bounds.y+bounds.h)
+	end
+	for y=math.floor(bounds.y/TILE)*TILE,bounds.y+bounds.h,TILE do
+		lg.line(bounds.x,y,bounds.x+bounds.w,y)
+	end
 	lg.setColor(1,.25,.2,.18); lg.setLineWidth(TILE)
 	local points=p.world.map.pathWorld
-	for i=1,#points-1 do lg.line(points[i][1],points[i][2],points[i+1][1],points[i+1][2]) end
-	for i=1,#points do lg.circle("fill",points[i][1],points[i][2],TILE*.5) end
+	for i=1,#points-1 do
+		lg.line(points[i][1],points[i][2],points[i+1][1],points[i+1][2])
+	end
+	for i=1,#points do
+		lg.circle("fill",points[i][1],points[i][2],TILE*.5)
+	end
 	lg.setColor(1,.25,.2,.9); lg.setLineWidth(2)
-	for i=1,#points-1 do lg.line(points[i][1],points[i][2],points[i+1][1],points[i+1][2]) end
+	for i=1,#points-1 do
+		lg.line(points[i][1],points[i][2],points[i+1][1],points[i+1][2])
+	end
 	local tower=p.world.towers[1]
 	lg.setColor(.25,.7,1,.55); lg.circle("line",tower.x,tower.y,tower.range); lg.rectangle("line",tower.x-TILE*.5,tower.y-TILE*.5,TILE,TILE); lg.circle("fill",tower.x,tower.y,3)
 	lg.print(string.format("tower (%g,%g)",tower.gx,tower.gy),tower.x+5,tower.y+5)
@@ -104,7 +122,9 @@ function Preview.resolveCamera(p, width, height)
 	return (minX+maxX)*.5,(minY+maxY)*.5,zoom
 end
 function Preview.draw(p,x,y,w,h,radius)
-	if not p or w<1 or h<1 then return end
+	if not p or w<1 or h<1 then
+		return
+	end
 	local lg=love.graphics; local cw,ch=math.max(1,math.floor(w+.5)),math.max(1,math.floor(h+.5))
 	if not p.canvas or p.canvasW~=cw or p.canvasH~=ch then if p.canvas and p.canvas.release then p.canvas:release() end; p.canvas=lg.newCanvas(cw,ch,{dpiscale=1,msaa=8}); p.canvasW,p.canvasH=cw,ch end
 	local old=lg.getCanvas(); lg.push("all"); lg.setCanvas({p.canvas,stencil=true}); lg.origin(); lg.clear(0,0,0,0)

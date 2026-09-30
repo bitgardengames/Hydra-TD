@@ -12,12 +12,18 @@ function Registry.new(families, graphics)
 	local dispatch = {}
 	for i = 1, #families do
 		local family = families[i]
-		for id, handler in pairs(family.ids or {}) do dispatch[id] = handler end
+		for id, handler in pairs(family.ids or {}) do
+			dispatch[id] = handler
+		end
 	end
 	self.spawnFX = function(fx)
-		if not fx or not fx.id then return end
+		if not fx or not fx.id then
+			return
+		end
 		local handler = dispatch[fx.id]
-		if handler then handler(fx) end
+		if handler then
+			handler(fx)
+		end
 	end
 	return self
 end
@@ -39,7 +45,9 @@ function Registry:update(dt)
 		for i = #list, 1, -1 do
 			local object = list[i]
 			object.t = object.t + dt
-			if family.update then family.update(object, dt, frameExponent, drag96, drag92) end
+			if family.update then
+				family.update(object, dt, frameExponent, drag96, drag92)
+			end
 			if object.t >= object.life then
 				swapRemove(list, i)
 				family.release(object)
@@ -49,14 +57,18 @@ function Registry:update(dt)
 end
 
 function Registry:draw()
-	for i = 1, #self.families do self.families[i].draw(self.families[i].list) end
+	for i = 1, #self.families do
+		self.families[i].draw(self.families[i].list)
+	end
 	self.graphics.setLineWidth(1)
 end
 
 function Registry:drawOverlay()
 	for i = 1, #self.families do
 		local family = self.families[i]
-		if family.drawOverlay then family.drawOverlay(family.list) end
+		if family.drawOverlay then
+			family.drawOverlay(family.list)
+		end
 	end
 end
 

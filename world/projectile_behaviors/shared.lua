@@ -78,8 +78,12 @@ end
 --]]
 
 local function pushEvent(p, evt)
-	if not p or not evt then return end
-	if not evt.id then return end
+	if not p or not evt then
+		return
+	end
+	if not evt.id then
+		return
+	end
 
 	local events = p.events
 	if not events then
@@ -146,8 +150,12 @@ local SHARED_BEHAVIORS_FROST_SHATTER = {
 
 local function getStat(p, key, fallback)
 	local t = p.sourceTower
-	if t and t[key] ~= nil then return t[key] end
-	if p[key] ~= nil then return p[key] end
+	if t and t[key] ~= nil then
+		return t[key]
+	end
+	if p[key] ~= nil then
+		return p[key]
+	end
 	return fallback
 end
 
@@ -269,7 +277,9 @@ local function getProjectileColor(p, fallback)
 		siege={1,0.58,0.28}, bombardment={1,0.78,0.38}, accelerator={0.72,0.58,1}, overcharged={1,0.42,0.92},
 	}
 	local branchColor = t and branchColors[t.specialization]
-	if branchColor then return branchColor[1], branchColor[2], branchColor[3] end
+	if branchColor then
+		return branchColor[1], branchColor[2], branchColor[3]
+	end
 	local c = t and t.color
 
 	if c then

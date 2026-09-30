@@ -6,7 +6,9 @@ local function clamp01(value)
 end
 
 local function reveal(elapsed, delay, duration, reducedMotion)
-	if reducedMotion then return 1 end
+	if reducedMotion then
+		return 1
+	end
 
 	local progress = clamp01((elapsed - delay) / duration)
 	return progress * progress * (3 - 2 * progress)

@@ -48,13 +48,17 @@ end
 
 local function slotContaining(list, value)
 	for slot, item in ipairs(list) do
-		if item == value then return slot end
+		if item == value then
+			return slot
+		end
 	end
 end
 
 local function contains(list, value)
 	for _, item in ipairs(list) do
-		if item == value then return true end
+		if item == value then
+			return true
+		end
 	end
 	return false
 end
@@ -132,8 +136,12 @@ function Loadout.refresh()
 		end
 	end
 	for _, abilityId in ipairs(available) do
-		if #equipped >= unlockedSlots then break end
-		if not contains(equipped, abilityId) then equipped[#equipped + 1] = abilityId end
+		if #equipped >= unlockedSlots then
+			break
+		end
+		if not contains(equipped, abilityId) then
+			equipped[#equipped + 1] = abilityId
+		end
 	end
 
 	selectedSlot = nil
@@ -178,7 +186,9 @@ function Loadout.update(dt)
 	layout()
 	Button.updateList(buttons, dt)
 	feedbackTimer = math.max(0, feedbackTimer - dt)
-	if feedbackTimer == 0 then feedbackText = nil end
+	if feedbackTimer == 0 then
+		feedbackText = nil
+	end
 end
 
 local function drawIconButton(button, abilityId, selected, disabled)
@@ -208,7 +218,9 @@ end
 
 local function drawSlotLabel(button)
 	local binding = Hotkeys.getDisplay("abilitySlot" .. button.slot)
-	if not binding then return end
+	if not binding then
+		return
+	end
 
 	Fonts.set("version")
 	lg.setColor(Theme.ui.text)
@@ -216,7 +228,9 @@ local function drawSlotLabel(button)
 end
 
 function Loadout.draw()
-	if slotCount() == 0 then return end
+	if slotCount() == 0 then
+		return
+	end
 	local x, y, panelW, panelH, titleY, poolY = layout()
 	lg.setColor(Theme.outline.color)
 	lg.rectangle("fill", x - 2, y - 2, panelW + 4, panelH + 4, 9)
@@ -231,8 +245,12 @@ function Loadout.draw()
 		if button.kind == "slot" then
 			local abilityId = equipped[button.slot]
 			drawIconButton(button, abilityId, selectedSlot == button.slot)
-			if abilityId then drawSlotLabel(button) end
-			if abilityId and button.anim.hovered then AbilityTooltip.show(abilityId) end
+			if abilityId then
+				drawSlotLabel(button)
+			end
+			if abilityId and button.anim.hovered then
+				AbilityTooltip.show(abilityId)
+			end
 		else
 			drawIconButton(button, button.abilityId, equipped[selectedSlot] == button.abilityId,
 				button.equippedElsewhere)
@@ -274,7 +292,9 @@ end
 function Loadout.mousereleased(x, y, mouseButton)
 	for _, button in ipairs(buttons) do
 		local wasPressed = button.anim and button.anim.pressed
-		if Button.mousereleased(button, x, y, mouseButton) then return true end
+		if Button.mousereleased(button, x, y, mouseButton) then
+			return true
+		end
 		if wasPressed and x >= button.x and x <= button.x + button.w and y >= button.y and y <= button.y + button.h then
 			if button.kind == "slot" then
 				-- Clicking the active slot closes the picker. Clicking another slot keeps
@@ -292,7 +312,9 @@ end
 
 function Loadout.getEquipped()
 	local result = {}
-	for i = 1, slotCount() do result[i] = equipped[i] end
+	for i = 1, slotCount() do
+		result[i] = equipped[i]
+	end
 	return result
 end
 

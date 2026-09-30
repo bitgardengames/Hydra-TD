@@ -8,7 +8,9 @@ local Emissions = {}
 -- feedback share one tower-specific presentation entry point. No projectile or
 -- damage is created here.
 function Emissions.emitUpgradeTransformation(tower, preview, finalTier)
-	if not tower then return end
+	if not tower then
+		return
+	end
 
 	local before = preview and preview.current or {}
 	local after = preview and preview.postUpgrade or {}

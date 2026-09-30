@@ -4,7 +4,9 @@ local EnemyDefs = require("world.enemy_defs")
 local Outcome = {}
 
 function Outcome.getWaveCompletionBonus(wave, waveLeaks, bossKind)
-	if waveLeaks ~= 0 then return 0 end
+	if waveLeaks ~= 0 then
+		return 0
+	end
 	local base = Difficulty.get().perfectWaveBonus
 	local def = bossKind and EnemyDefs[bossKind]
 	local mechanicWeight = (def and def.mechanicWeight) or 1

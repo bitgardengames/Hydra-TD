@@ -145,7 +145,9 @@ function Trees.generate(targetMap, mapIndex, list, occupied)
 		local isCluster = inCluster(gx, gy)
 
 		-- Individuals
-		if not isCluster and random() < 0.55 then return false end
+		if not isCluster and random() < 0.55 then
+			return false
+		end
 
 		return not ScatterCommon.isNearPath(targetMap.isPath, gx, gy) and not Map.isBlockedForMap(targetMap, gx, gy)
 	end

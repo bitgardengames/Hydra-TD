@@ -26,7 +26,9 @@ function Presentation.waveStarted(wave, map)
 end
 
 function Presentation.waveCleared(wave, map, bonus, bossPosition, wasBoss)
-	if wasBoss then Presentation.event("boss_defeated", {wave=wave, x=bossPosition and bossPosition.x, y=bossPosition and bossPosition.y}) end
+	if wasBoss then
+		Presentation.event("boss_defeated", {wave=wave, x=bossPosition and bossPosition.x, y=bossPosition and bossPosition.y})
+	end
 	local finish = map and map.path and map.path[#map.path]
 	Presentation.event("wave_cleared", {wave=wave, perfectWaveBonus=bonus,
 		x=finish and (finish[1]-.5)*Constants.TILE, y=finish and (finish[2]-.5)*Constants.TILE})
