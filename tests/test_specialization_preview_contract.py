@@ -70,23 +70,24 @@ def test_preview_requests_stencil_buffer_when_setting_render_target():
     assert "lg.stencil(drawCanvasClip" in preview
 
 
-def test_preview_uses_a_straight_lane_and_the_gameplay_path_renderer():
+def test_preview_uses_grid_authored_paths_and_the_gameplay_path_renderer():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
     assert 'require("render.draw_world")' in preview
     assert "DrawWorld.drawPath(map)" in preview
-    path = re.search(r"local path = \{\{([^}]+)\},\{([^}]+)\}\}", preview)
-    assert path
-    assert path.group(1).split(",")[1] == path.group(2).split(",")[1]
-    assert "lg.line" not in preview
+    assert "local lane = {{1,3},{8,3}}" in preview
+    assert "local bend = {{1,2},{5,2},{5,5},{8,5}}" in preview
+    assert "Map.createRenderContext" in sandbox
+    assert "drawPathGeometry" not in preview
 
 
-def test_preview_composition_puts_the_tower_above_the_lowered_lane():
+def test_preview_composition_uses_real_grid_placement_and_world_distances():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
-    lane = re.search(r"local path = \{\{[^,]+,([^}]+)\},\{[^,]+,([^}]+)\}\}", preview)
     towers = re.findall(r'tower=\{kind="[^"]+",x=(\d+),y=(\d+)\}', preview)
-    assert lane and int(lane.group(1)) == 82
     assert towers
-    assert all(132 <= int(x) <= 136 and int(y) == 36 for x, y in towers)
+    assert all((int(x), int(y)) in {(4, 3), (5, 2)} for x, y in towers)
+    assert "*TILE" in preview
+    assert "lg.scale(zoom)" in preview
 
 
 def test_specialization_cards_prioritize_preview_area_without_extra_height():
@@ -99,7 +100,22 @@ def test_specialization_cards_prioritize_preview_area_without_extra_height():
 def test_preview_background_uses_the_default_biome_grass_palette():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     assert "lg.setColor(map.biome.terrain.grass)" in preview
-    assert "lg.circle" not in preview
+    assert "DrawWorld.drawPath(map)" in preview
+
+
+def test_preview_camera_is_uniform_and_objects_have_no_preview_scale():
+    preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    assert "lg.scale(cw/" not in preview
+    assert "lg.scale(zoom)" in preview
+    assert "function Preview.resolveCamera" in preview
+    for duplicated_scale in ("PREVIEW_PATH_WIDTH", "PREVIEW_ENEMY_SIZE", "PREVIEW_TOWER_SCALE", "PREVIEW_PROJECTILE_SCALE"):
+        assert duplicated_scale not in preview
+
+
+def test_sandbox_supports_authored_real_enemy_staging():
+    sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
+    for field in ("initialDistance", "spawnDistance", "spawnTime", "spacing", "count", "healthOverride", "speedOverride"):
+        assert field in sandbox
 
 
 def test_preview_targeting_cache_is_isolated_between_cards():
