@@ -4,6 +4,7 @@ This deliberately models control rather than damage. Shots resolve immediately a
 valid target position; Cold Fields remain at that impact point, so every geometry
 fixture measures path exposure instead of accidentally modelling a tower aura.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,21 +17,29 @@ BASE_RANGE = 4.25 * 48
 DIRECT_STRENGTH = 0.45
 DIRECT_DURATION = 1.7
 DEEP = {
-    2: (1.05, .18 * 48, .58, 1.7 + .55),
-    4: (1.15, .54 * 48, .68, 1.7 + .55),
-    5: (1.20, .72 * 48, .72, 1.7 + .55),
+    2: (1.05, 0.18 * 48, 0.58, 1.7 + 0.55),
+    4: (1.15, 0.54 * 48, 0.68, 1.7 + 0.55),
+    5: (1.20, 0.72 * 48, 0.72, 1.7 + 0.55),
 }
 FIELD = {
-    2: (1.08, .14 * 48, 62, 2.4, .36),
-    4: (1.24, .42 * 48, 74, 3.2, .42),
-    5: (1.32, .56 * 48, 82, 3.6, .45),
+    2: (1.08, 0.14 * 48, 62, 2.4, 0.36),
+    4: (1.24, 0.42 * 48, 74, 3.2, 0.42),
+    5: (1.32, 0.56 * 48, 82, 3.6, 0.45),
 }
 PATHS = {
-    "straight": ((-300., 0.), (300., 0.)),
-    "bend_90": ((-300., 0.), (0., 0.), (0., 300.)),
-    "crossing": ((-300., -110.), (180., 110.), (-180., 110.), (300., -110.)),
-    "loop": ((-280., 0.), (-120., 0.), (-120., 120.), (120., 120.),
-             (120., -120.), (-120., -120.), (-120., 0.), (280., 0.)),
+    "straight": ((-300.0, 0.0), (300.0, 0.0)),
+    "bend_90": ((-300.0, 0.0), (0.0, 0.0), (0.0, 300.0)),
+    "crossing": ((-300.0, -110.0), (180.0, 110.0), (-180.0, 110.0), (300.0, -110.0)),
+    "loop": (
+        (-280.0, 0.0),
+        (-120.0, 0.0),
+        (-120.0, 120.0),
+        (120.0, 120.0),
+        (120.0, -120.0),
+        (-120.0, -120.0),
+        (-120.0, 0.0),
+        (280.0, 0.0),
+    ),
 }
 
 
@@ -82,8 +91,10 @@ def path_time(path, speed):
 
 def simulate(level, branch, path, count, spacing, speed, support=False):
     enemies = [Enemy(path, speed * (1.12 if support else 1), i * spacing) for i in range(count)]
-    rate, range_add = (DEEP[level][0], DEEP[level][1]) if branch == "deep_freeze" else FIELD[level][:2]
-    cooldown, fields, now = 0., [], 0.
+    rate, range_add = (
+        (DEEP[level][0], DEEP[level][1]) if branch == "deep_freeze" else FIELD[level][:2]
+    )
+    cooldown, fields, now = 0.0, [], 0.0
     while any(e.exit_time is None for e in enemies) and now < 180:
         for e in enemies:
             if e.exit_time is not None or now < e.spawn:
@@ -103,8 +114,8 @@ def simulate(level, branch, path, count, spacing, speed, support=False):
                             x, y = e.position
                             if hypot(x - field.x, y - field.y) <= field.radius:
                                 e.slow_factor = min(e.slow_factor, 1 - field.strength)
-                                e.slow_until = max(e.slow_until, now + .4)
-                    field.next_tick += .25
+                                e.slow_until = max(e.slow_until, now + 0.4)
+                    field.next_tick += 0.25
             fields[:] = [field for field in fields if now < field.expires]
         cooldown -= DT
         if cooldown <= 0:
@@ -119,7 +130,10 @@ def simulate(level, branch, path, count, spacing, speed, support=False):
                 if branch == "deep_freeze":
                     strength, duration = DEEP[level][2:]
                 else:
-                    strength, duration = DIRECT_STRENGTH, DIRECT_DURATION + {2:.35, 4:1.05, 5:1.40}[level]
+                    strength, duration = (
+                        DIRECT_STRENGTH,
+                        DIRECT_DURATION + {2: 0.35, 4: 1.05, 5: 1.40}[level],
+                    )
                 target.slow_factor = min(target.slow_factor, 1 - strength)
                 target.slow_until = max(target.slow_until, now + duration)
                 if branch == "cold_field":
@@ -135,10 +149,10 @@ def simulate(level, branch, path, count, spacing, speed, support=False):
 def run():
     rows = []
     scenarios = [
-        ("runner", 1, 0., 104., False),
-        ("runner_pack", 8, .35, 104., False),
-        ("warcaller", 1, 0., 48., False),
-        ("warcaller_group", 8, .35, 72., True),
+        ("runner", 1, 0.0, 104.0, False),
+        ("runner_pack", 8, 0.35, 104.0, False),
+        ("warcaller", 1, 0.0, 48.0, False),
+        ("warcaller_group", 8, 0.35, 72.0, True),
     ]
     for level in LEVELS:
         for fixture, path in PATHS.items():

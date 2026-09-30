@@ -1,7 +1,7 @@
 """Source-level coverage for the preview contract (does not require LÖVE)."""
+
 import re
 from pathlib import Path
-
 
 ROOT = Path(__file__).parents[1]
 
@@ -15,8 +15,18 @@ def test_every_tower_branch_has_an_authored_preview():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     preview_ids = set(re.findall(r"^\t([a-z_]+)\s*=\{duration=", preview, re.M))
     branch_ids = {
-        "marksman", "rupture", "deep_freeze", "cold_field", "virulent", "contagion",
-        "siege", "bombardment", "capacitor", "forked_lightning", "accelerator", "overcharged",
+        "marksman",
+        "rupture",
+        "deep_freeze",
+        "cold_field",
+        "virulent",
+        "contagion",
+        "siege",
+        "bombardment",
+        "capacitor",
+        "forked_lightning",
+        "accelerator",
+        "overcharged",
     }
     assert branch_ids <= tower_ids
     assert preview_ids == branch_ids
@@ -26,7 +36,12 @@ def test_preview_uses_real_gameplay_sandbox():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
     assert 'require("world.gameplay_sandbox")' in preview
-    for system in ("Enemies.updateEnemies", "Towers.updateTowers", "Projectiles.update", "Effects.update"):
+    for system in (
+        "Enemies.updateEnemies",
+        "Towers.updateTowers",
+        "Projectiles.update",
+        "Effects.update",
+    ):
         assert system in sandbox
     assert "drawProjectile" not in preview
     assert "drawEffect" not in preview
@@ -108,7 +123,12 @@ def test_preview_camera_is_uniform_and_objects_have_no_preview_scale():
     assert "lg.scale(cw/" not in preview
     assert "lg.scale(zoom)" in preview
     assert "function Preview.resolveCamera" in preview
-    for duplicated_scale in ("PREVIEW_PATH_WIDTH", "PREVIEW_ENEMY_SIZE", "PREVIEW_TOWER_SCALE", "PREVIEW_PROJECTILE_SCALE"):
+    for duplicated_scale in (
+        "PREVIEW_PATH_WIDTH",
+        "PREVIEW_ENEMY_SIZE",
+        "PREVIEW_TOWER_SCALE",
+        "PREVIEW_PROJECTILE_SCALE",
+    ):
         assert duplicated_scale not in preview
 
 
@@ -120,7 +140,15 @@ def test_authored_specialization_cameras_use_one_x_zoom():
 
 def test_sandbox_supports_authored_real_enemy_staging():
     sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
-    for field in ("initialDistance", "spawnDistance", "spawnTime", "spacing", "count", "healthOverride", "speedOverride"):
+    for field in (
+        "initialDistance",
+        "spawnDistance",
+        "spawnTime",
+        "spacing",
+        "count",
+        "healthOverride",
+        "speedOverride",
+    ):
         assert field in sandbox
 
 
@@ -132,7 +160,8 @@ def test_preview_targeting_cache_is_isolated_between_cards():
 
 def test_spatial_clear_invalidates_entity_membership_before_a_rebuild():
     spatial = (ROOT / "world/spatial_grid.lua").read_text()
-    clear_body = spatial[spatial.index("function Spatial.clear()"):
-                         spatial.index("function Spatial.beginFrame()")]
+    clear_body = spatial[
+        spatial.index("function Spatial.clear()") : spatial.index("function Spatial.beginFrame()")
+    ]
     for field in ("cell", "cellIndex", "cellX", "cellY"):
         assert f"enemy.{field} = nil" in clear_body

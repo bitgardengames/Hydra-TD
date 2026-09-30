@@ -15,7 +15,7 @@ MAP_SOURCE = ROOT / "world/map_defs.lua"
 WINDOW_SECONDS = 5.0
 GROUP = re.compile(
     r'g\("(?P<kind>[a-z]+)",\s*(?P<count>\d+),\s*'
-    r'(?P<spacing>[0-9.]+)(?:,\s*(?P<delay>[0-9.]+))?'
+    r"(?P<spacing>[0-9.]+)(?:,\s*(?P<delay>[0-9.]+))?"
 )
 
 
@@ -31,11 +31,14 @@ def parse_waves(text: str) -> dict[str, list[list[dict]]]:
                 raise ValueError(f"{map_id} wave {wave} is missing")
             groups = []
             for group in GROUP.finditer(match.group(1)):
-                groups.append({
-                    "kind": group["kind"], "count": int(group["count"]),
-                    "spacing": float(group["spacing"]),
-                    "delay": float(group["delay"] or 0),
-                })
+                groups.append(
+                    {
+                        "kind": group["kind"],
+                        "count": int(group["count"]),
+                        "spacing": float(group["spacing"]),
+                        "delay": float(group["delay"] or 0),
+                    }
+                )
             if not groups:
                 raise ValueError(f"{map_id} wave {wave} has no groups")
             waves.append(groups)
@@ -94,12 +97,21 @@ def introduction_audit(maps: dict[str, list[list[dict]]]) -> dict:
 
 def main() -> int:
     text = SOURCE.read_text()
-    measured = {map_id: [wave_metrics(w) for w in waves]
-                for map_id, waves in parse_waves(text).items()}
+    measured = {
+        map_id: [wave_metrics(w) for w in waves] for map_id, waves in parse_waves(text).items()
+    }
     summaries = {map_id: summarize(waves) for map_id, waves in measured.items()}
-    print(json.dumps({"engagementWindowSeconds": WINDOW_SECONDS,
-                      "introductions": introduction_audit(parse_waves(text)),
-                      "maps": measured, "summaries": summaries}, indent=2))
+    print(
+        json.dumps(
+            {
+                "engagementWindowSeconds": WINDOW_SECONDS,
+                "introductions": introduction_audit(parse_waves(text)),
+                "maps": measured,
+                "summaries": summaries,
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

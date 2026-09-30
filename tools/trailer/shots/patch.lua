@@ -28,10 +28,10 @@ return {
 		towers = {
 			{kind = "cannon", gx = 18, gy = 7},
 			{kind = "shock", gx = 19, gy = 7},
-			
+
 			{kind = "poison", gx = 18, gy = 9},
 			{kind = "lancer", gx = 19, gy = 9},
-			
+
 			{kind = "slow", gx = 20, gy = 7},
 		},
 

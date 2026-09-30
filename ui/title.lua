@@ -26,7 +26,6 @@ local SERVO_AMPLITUDE = rad(0.35)
 local SERVO_SPEED = 1.8
 
 local TITLE_TEXT = "HYDRA TD"
---local TITLE_TEXT = "Hydra TD"
 
 local SHOW_TOWER = true
 local TOWER_TYPE = "lancer"
@@ -92,7 +91,6 @@ local function buildTitleCanvas(lancerScale)
 	local prevCanvas = lg.getCanvas()
 
 	local font = lg.newFont("assets/fonts/PTSans.ttf", fontPx)
-	--local font = lg.newFont("assets/fonts/Fredoka_SemiCondensed-SemiBold.ttf", fontPx)
 	lg.setFont(font)
 
 	local textW = font:getWidth(TITLE_TEXT)

@@ -5,7 +5,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from slow_branch_benchmark import LEVELS, PATHS, run, validate
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 

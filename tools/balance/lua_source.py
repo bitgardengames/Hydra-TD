@@ -4,6 +4,7 @@ This is intentionally not a Lua parser.  It understands the subset used by the
 balance sources, while ensuring braces in quoted strings and comments do not
 change table boundaries.
 """
+
 from __future__ import annotations
 
 import re
@@ -42,7 +43,7 @@ def _brace_end(text: str, opening: int) -> int | None:
         elif char in "\"'":
             quote = char
         elif char == "-" and following == "-":
-            if text[pos + 2:pos + 4] == "[[":
+            if text[pos + 2 : pos + 4] == "[[":
                 block_comment = True
                 pos += 3
             else:
@@ -63,8 +64,7 @@ def table_body(text: str, declaration: str, source_path: str | Path) -> str:
     if declaration == "return":
         pattern = r"\breturn\s*\{"
     else:
-        pattern = (r"(?:^|\n)\s*(?:local\s+)?" + re.escape(declaration)
-                   + r"\s*(?:=\s*)?\{")
+        pattern = r"(?:^|\n)\s*(?:local\s+)?" + re.escape(declaration) + r"\s*(?:=\s*)?\{"
     match = re.search(pattern, text)
     # Tower definitions are validated before export, so their root table has a
     # name and the final return references it. Treat that form identically.
@@ -72,22 +72,22 @@ def table_body(text: str, declaration: str, source_path: str | Path) -> str:
         pattern = r"(?:^|\n)\s*local\s+definitions\s*=\s*\{"
         match = re.search(pattern, text)
     if not match:
-        raise ValueError(
-            f"missing Lua table declaration {declaration!r} in {_where(source_path)}"
-        )
+        raise ValueError(f"missing Lua table declaration {declaration!r} in {_where(source_path)}")
     opening = match.end() - 1
     end = _brace_end(text, opening)
     if end is None:
         raise ValueError(
             f"unterminated Lua table declaration {declaration!r} in {_where(source_path)}"
         )
-    return text[opening + 1:end]
+    return text[opening + 1 : end]
 
 
 _ENTRY = re.compile(r"([a-z][a-z0-9_]*)\s*=\s*\{")
 
 
-def iter_named_entries(body: str, declaration: str, source_path: str | Path) -> Iterator[tuple[str, str]]:
+def iter_named_entries(
+    body: str, declaration: str, source_path: str | Path
+) -> Iterator[tuple[str, str]]:
     """Yield top-level named table entries using one forward pass over *body*."""
     pos = 0
     while pos < len(body):
@@ -109,7 +109,7 @@ def iter_named_entries(body: str, declaration: str, source_path: str | Path) -> 
                 f"unterminated Lua entry {name!r} in declaration {declaration!r} "
                 f"in {_where(source_path)}"
             )
-        yield name, body[opening + 1:close]
+        yield name, body[opening + 1 : close]
         pos = close + 1
 
 
@@ -118,15 +118,19 @@ def named_entries(body: str, declaration: str, source_path: str | Path) -> dict[
 
 
 def numeric_fields(body: str) -> dict[str, float]:
-    return {key: float(value) for key, value in re.findall(
-        r"\b(\w+)\s*=\s*([0-9]+(?:\.[0-9]+)?)", body)}
+    return {
+        key: float(value) for key, value in re.findall(r"\b(\w+)\s*=\s*([0-9]+(?:\.[0-9]+)?)", body)
+    }
 
 
-def numeric_field(body: str, key: str, source_path: str | Path,
-                  entry_name: str, default: float | None = None) -> float:
+def numeric_field(
+    body: str, key: str, source_path: str | Path, entry_name: str, default: float | None = None
+) -> float:
     match = re.search(r"\b" + re.escape(key) + r"\s*=\s*([0-9]+(?:\.[0-9]+)?)", body)
     if match:
         return float(match.group(1))
     if default is not None:
         return default
-    raise ValueError(f"missing numeric field {key!r} in entry {entry_name!r} in {_where(source_path)}")
+    raise ValueError(
+        f"missing numeric field {key!r} in entry {entry_name!r} in {_where(source_path)}"
+    )

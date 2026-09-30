@@ -3,7 +3,6 @@ from pathlib import Path
 
 from poison_branch_benchmark import CONTAGION, DENSE, ISOLATED, LEVELS, run, validate
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -19,8 +18,10 @@ class PoisonBranchBenchmarkTest(unittest.TestCase):
         self.assertIn('id = "virulent"', source)
         self.assertIn("contagion = {", source)
         for level, (_, _, _, radius, fraction, cap) in CONTAGION.items():
-            needle = (f"spreadRadius = {radius}, transferFraction = {fraction:.2f}, "
-                      f"recipientCap = {cap}")
+            needle = (
+                f"spreadRadius = {radius}, transferFraction = {fraction:.2f}, "
+                f"recipientCap = {cap}"
+            )
             self.assertIn(needle, source, f"tier {level}")
         self.assertNotIn("loop = true", source)
 

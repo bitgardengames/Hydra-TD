@@ -1,0 +1,16 @@
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    # Black deliberately leaves long strings and other indivisible expressions alone.
+    "E501",
+    # Tests add the local tools directory before importing project modules.
+    "E402",
+]

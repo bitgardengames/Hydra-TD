@@ -45,8 +45,13 @@ def decimal_bp(value: str) -> int:
 
 
 def number(body: str, key: str, default: str | None = None) -> str:
-    value = numeric_field(body, key, "balance definition", "anonymous",
-                          float(default) if default is not None else None)
+    value = numeric_field(
+        body,
+        key,
+        "balance definition",
+        "anonymous",
+        float(default) if default is not None else None,
+    )
     return str(value)
 
 
@@ -58,7 +63,11 @@ def definitions():
     curve_text = (ROOT / "systems/difficulty_curve.lua").read_text()
 
     towers = {}
-    for kind, body in named_entries(table_body(towers_text, "return", ROOT / "world/tower_defs.lua"), "return", ROOT / "world/tower_defs.lua").items():
+    for kind, body in named_entries(
+        table_body(towers_text, "return", ROOT / "world/tower_defs.lua"),
+        "return",
+        ROOT / "world/tower_defs.lua",
+    ).items():
         if not re.search(r"\bcost\s*=", body):
             continue
         cost = int(float(number(body, "cost")))
@@ -74,23 +83,37 @@ def definitions():
         towers[kind] = {"cost": cost, "sustained_damage": max(1, dps)}
 
     enemies = {}
-    for kind, body in named_entries(table_body(enemies_text, "return", ROOT / "world/enemy_defs.lua"), "return", ROOT / "world/enemy_defs.lua").items():
+    for kind, body in named_entries(
+        table_body(enemies_text, "return", ROOT / "world/enemy_defs.lua"),
+        "return",
+        ROOT / "world/enemy_defs.lua",
+    ).items():
         if not re.search(r"\bhp\s*=", body) or not re.search(r"\breward\s*=", body):
             continue
         mechanic_bp, counter = ENEMY_MECHANICS.get(kind, (BP, None))
-        enemies[kind] = {"hp_bp": decimal_bp(number(body, "hp")),
-                         "reward": decimal_bp(number(body, "reward")),
-                         "mechanic_bp": mechanic_bp, "counter": counter,
-                         "boss": "boss = true" in body}
+        enemies[kind] = {
+            "hp_bp": decimal_bp(number(body, "hp")),
+            "reward": decimal_bp(number(body, "reward")),
+            "mechanic_bp": mechanic_bp,
+            "counter": counter,
+            "boss": "boss = true" in body,
+        }
 
     diff_root = table_body(difficulty_text, "Difficulty.defs", ROOT / "systems/difficulty.lua")
-    diffs = {name: {"hp_bp": decimal_bp(number(body, "enemyHpBias")),
-                    "boss_bp": decimal_bp(number(body, "bossHpBias")),
-                    "money": int(float(number(body, "startMoney")))}
-             for name, body in named_entries(diff_root, "Difficulty.defs", ROOT / "systems/difficulty.lua").items()}
-    curve = {key: decimal_bp(number(curve_text, key)) for key in
-             ("localStartHp", "localMidHp", "localEndHp", "localExponent",
-              "finalMapHp")}
+    diffs = {
+        name: {
+            "hp_bp": decimal_bp(number(body, "enemyHpBias")),
+            "boss_bp": decimal_bp(number(body, "bossHpBias")),
+            "money": int(float(number(body, "startMoney"))),
+        }
+        for name, body in named_entries(
+            diff_root, "Difficulty.defs", ROOT / "systems/difficulty.lua"
+        ).items()
+    }
+    curve = {
+        key: decimal_bp(number(curve_text, key))
+        for key in ("localStartHp", "localMidHp", "localEndHp", "localExponent", "finalMapHp")
+    }
     curve["campaignMidpoint"] = int(float(number(curve_text, "campaignMidpoint")))
     curve["campaignEnd"] = int(float(number(curve_text, "campaignEnd")))
 
@@ -99,7 +122,9 @@ def definitions():
     # Match the schedule arguments, not the closing parenthesis: campaign
     # groups may append metadata that does not change this calculation.
     group_re = re.compile(r'g\("([a-z_]+)",\s*(\d+),\s*([0-9.]+)(?:,\s*([0-9.]+))?')
-    for map_id, body in named_entries(wave_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua").items():
+    for map_id, body in named_entries(
+        wave_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua"
+    ).items():
         maps[map_id] = []
         wave_numbers = sorted(int(value) for value in re.findall(r"\[(\d+)\]\s*=", body))
         if wave_numbers != list(range(1, max(wave_numbers, default=0) + 1)):
@@ -108,11 +133,20 @@ def definitions():
             row = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)", body)
             if not row:
                 raise ValueError(f"missing {map_id} wave {wave}")
-            maps[map_id].append([{"kind": k, "count": int(c),
-                                  "spacing_ms": half_up(decimal_bp(s) * 1000, BP),
-                                  "delay_ms": half_up(decimal_bp(d or "0") * 1000, BP)}
-                                 for k, c, s, d in group_re.findall(row.group(1))])
-    boss_root = table_body(waves_text, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua")
+            maps[map_id].append(
+                [
+                    {
+                        "kind": k,
+                        "count": int(c),
+                        "spacing_ms": half_up(decimal_bp(s) * 1000, BP),
+                        "delay_ms": half_up(decimal_bp(d or "0") * 1000, BP),
+                    }
+                    for k, c, s, d in group_re.findall(row.group(1))
+                ]
+            )
+    boss_root = table_body(
+        waves_text, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua"
+    )
     for map_id, body in named_entries(
         boss_root, "bossArchetypesByMapId", ROOT / "systems/campaign_wave_defs.lua"
     ).items():
@@ -143,7 +177,9 @@ def curve_multiplier_bp(curve: dict, wave: int, map_index: int, diff: dict, boss
     return value
 
 
-def affordable_loadout(towers: dict, money: int, specialists: set[str]) -> tuple[int, int, dict[str, int]]:
+def affordable_loadout(
+    towers: dict, money: int, specialists: set[str]
+) -> tuple[int, int, dict[str, int]]:
     """Buy each relevant counter once, then maximize sustained base-tower DPS.
 
     This deliberately uses an integer unbounded-knapsack table.  Unlike the old
@@ -181,23 +217,36 @@ def affordable_loadout(towers: dict, money: int, specialists: set[str]) -> tuple
 
 def build_report() -> dict:
     towers, enemies, diffs, curve, maps = definitions()
-    best = max(towers.values(), key=lambda tower: tower["sustained_damage"] * 10_000 // tower["cost"])
+    best = max(
+        towers.values(), key=lambda tower: tower["sustained_damage"] * 10_000 // tower["cost"]
+    )
     archetypes = {}
     for kind, enemy in enemies.items():
         threat = half_up(enemy["hp_bp"] * enemy["mechanic_bp"], BP * BP)
         reward = half_up(enemy["reward"], BP)
-        archetypes[kind] = {"base_effective_durability": threat, "reward": reward,
-                            "threat_per_dollar": half_up(threat, max(1, reward))}
+        archetypes[kind] = {
+            "base_effective_durability": threat,
+            "reward": reward,
+            "threat_per_dollar": half_up(threat, max(1, reward)),
+        }
     configured_bands = json.loads(BANDS_FILE.read_text())
     ratio_bands = configured_bands["required_to_affordable_bp"]
     income_bands = configured_bands["wave_income_to_required_bp"]
-    report = {"format_version": 5, "units": {"durability": "threat points",
-              "damage": "damage points per second", "money": "dollars",
-              "multipliers_and_ratios": "basis points"}, "engagement_window_seconds": 5,
-              "enemy_threat_per_dollar_band": list(ENEMY_THREAT_PER_DOLLAR),
-              "enemy_archetypes": archetypes,
-              "ratio_bands_bp": ratio_bands, "income_coverage_bands_bp": income_bands,
-              "difficulties": {}}
+    report = {
+        "format_version": 5,
+        "units": {
+            "durability": "threat points",
+            "damage": "damage points per second",
+            "money": "dollars",
+            "multipliers_and_ratios": "basis points",
+        },
+        "engagement_window_seconds": 5,
+        "enemy_threat_per_dollar_band": list(ENEMY_THREAT_PER_DOLLAR),
+        "enemy_archetypes": archetypes,
+        "ratio_bands_bp": ratio_bands,
+        "income_coverage_bands_bp": income_bands,
+        "difficulties": {},
+    }
     for diff_name, diff in diffs.items():
         diff_maps = {}
         for map_index, (map_id, waves) in enumerate(maps.items(), 1):
@@ -235,26 +284,35 @@ def build_report() -> dict:
                         left += 1
                     peak = max(peak, running)
                 specialists = mechanics
-                affordable, specialist_cost, loadout = affordable_loadout(towers, money, specialists)
+                affordable, specialist_cost, loadout = affordable_loadout(
+                    towers, money, specialists
+                )
                 required = half_up(peak, 5)
                 ratio = half_up(required * BP, max(1, affordable))
                 threat_per_dollar = half_up(durability, max(1, income))
                 funded_damage = half_up(income * best["sustained_damage"], best["cost"])
                 coverage = sorted(kind for kind in specialists if loadout.get(kind, 0))
-                rows.append({"wave": wave_no, "enemy_count": enemy_count,
-                             "composition": composition,
-                             "effective_durability": durability,
-                             "peak_five_second_durability": peak, "full_clear_kill_income": income,
-                             "threat_per_income_dollar": threat_per_dollar,
-                             "income_funded_sustained_damage": funded_damage,
-                             "purchasing_power_before_wave": money,
-                             "affordable_sustained_damage": affordable,
-                             "specialist_commitment_cost": specialist_cost,
-                             "affordable_loadout": loadout,
-                             "wave_income_to_required_bp": half_up(funded_damage * BP, max(1, required)),
-                             "required_specialists": sorted(specialists),
-                             "specialist_coverage": coverage,
-                             "required_damage": required, "required_to_affordable_bp": ratio})
+                rows.append(
+                    {
+                        "wave": wave_no,
+                        "enemy_count": enemy_count,
+                        "composition": composition,
+                        "effective_durability": durability,
+                        "peak_five_second_durability": peak,
+                        "full_clear_kill_income": income,
+                        "threat_per_income_dollar": threat_per_dollar,
+                        "income_funded_sustained_damage": funded_damage,
+                        "purchasing_power_before_wave": money,
+                        "affordable_sustained_damage": affordable,
+                        "specialist_commitment_cost": specialist_cost,
+                        "affordable_loadout": loadout,
+                        "wave_income_to_required_bp": half_up(funded_damage * BP, max(1, required)),
+                        "required_specialists": sorted(specialists),
+                        "specialist_coverage": coverage,
+                        "required_damage": required,
+                        "required_to_affordable_bp": ratio,
+                    }
+                )
                 money += income
             diff_maps[map_id] = rows
         report["difficulties"][diff_name] = diff_maps
@@ -281,52 +339,91 @@ def checks(report: dict) -> list[str]:
         income_bands = income_configured.get(difficulty, [])
         wave_count = max(len(waves) for waves in maps.values())
         if len(bands) != wave_count:
-            failures.append(f"bands/{difficulty}: expected {wave_count} wave bands, got {len(bands)}")
+            failures.append(
+                f"bands/{difficulty}: expected {wave_count} wave bands, got {len(bands)}"
+            )
             continue
         if len(income_bands) != wave_count:
-            failures.append(f"income bands/{difficulty}: expected {wave_count} wave bands, got {len(income_bands)}")
+            failures.append(
+                f"income bands/{difficulty}: expected {wave_count} wave bands, got {len(income_bands)}"
+            )
             continue
         for map_id, waves in maps.items():
             for row, (low, high), (income_low, income_high) in zip(waves, bands, income_bands):
                 ratio = row["required_to_affordable_bp"]
                 if not low <= ratio <= high:
-                    failures.append(f"{difficulty}/{map_id}/wave_{row['wave']}: {ratio}bp outside {low}..{high}")
+                    failures.append(
+                        f"{difficulty}/{map_id}/wave_{row['wave']}: {ratio}bp outside {low}..{high}"
+                    )
                 income_ratio = row["wave_income_to_required_bp"]
                 if not income_low <= income_ratio <= income_high:
-                    failures.append(f"{difficulty}/{map_id}/wave_{row['wave']}: income coverage {income_ratio}bp outside {income_low}..{income_high}")
+                    failures.append(
+                        f"{difficulty}/{map_id}/wave_{row['wave']}: income coverage {income_ratio}bp outside {income_low}..{income_high}"
+                    )
     return failures
 
 
 def write_docs(report: dict) -> None:
-    lines = ["# Campaign challenge fixtures", "",
-             "Generated by `python3 tools/balance/challenge_fixtures.py --write-docs`.", "",
-             "Durability includes HP and broad mechanic threat weights. Peak is the busiest inclusive five-second spawn window. Purchasing power is starting cash plus prior full-clear kill income; flawless bonuses are intentionally excluded. Affordable damage uses an integer budget optimizer that first buys one counter for every mechanic in the composition, then spends the remainder for sustained output. Income DPS shows the sustained damage that a wave's income funds at the most efficient base tower's damage-per-dollar rate. Threat/$ connects composition durability to its payout. Ratios and multipliers are integer basis points; counts, damage, threat, and money columns are integers. Enemy durability is rounded half-up once after the spawn multiplier, matching the fixture's runtime-spawn boundary.", "",
-             "## Enemy economy anchors", "",
-             "Each non-special boss archetype targets three to six base effective durability per reward dollar. This makes enemy count and type change both the damage requirement and the money returned without allowing a composition to create an unrelated windfall.", "",
-             "| Enemy | Base threat | Reward | Threat/$ |", "|:---|---:|---:|---:|"]
-    lines += [f"| {kind} | {row['base_effective_durability']} | {row['reward']} | {row['threat_per_dollar']} |"
-              for kind, row in sorted(report["enemy_archetypes"].items())]
-    lines += ["",
-             "## Acceptance bands", "",
-             "Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 and 4, then tighten on higher-numbered waves as kill income funds a broader loadout. Each range is tuned to the shipped maps with approximately ten percent integer headroom, so a change to tower output, count, composition, reward, or difficulty economy must remain part of the same challenge curve. The income-coverage envelope independently requires each wave's enemy payout to fund a deliberate share of that same wave's damage demand, directly coupling tower output, enemy count, enemy type, and income. A ratio of 10,000 bp means the compared DPS values are equal.", "",
-             "| Difficulty | Wave | Minimum ratio (bp) | Maximum ratio (bp) |", "|:---|---:|---:|---:|"]
+    lines = [
+        "# Campaign challenge fixtures",
+        "",
+        "Generated by `python3 tools/balance/challenge_fixtures.py --write-docs`.",
+        "",
+        "Durability includes HP and broad mechanic threat weights. Peak is the busiest inclusive five-second spawn window. Purchasing power is starting cash plus prior full-clear kill income; flawless bonuses are intentionally excluded. Affordable damage uses an integer budget optimizer that first buys one counter for every mechanic in the composition, then spends the remainder for sustained output. Income DPS shows the sustained damage that a wave's income funds at the most efficient base tower's damage-per-dollar rate. Threat/$ connects composition durability to its payout. Ratios and multipliers are integer basis points; counts, damage, threat, and money columns are integers. Enemy durability is rounded half-up once after the spawn multiplier, matching the fixture's runtime-spawn boundary.",
+        "",
+        "## Enemy economy anchors",
+        "",
+        "Each non-special boss archetype targets three to six base effective durability per reward dollar. This makes enemy count and type change both the damage requirement and the money returned without allowing a composition to create an unrelated windfall.",
+        "",
+        "| Enemy | Base threat | Reward | Threat/$ |",
+        "|:---|---:|---:|---:|",
+    ]
+    lines += [
+        f"| {kind} | {row['base_effective_durability']} | {row['reward']} | {row['threat_per_dollar']} |"
+        for kind, row in sorted(report["enemy_archetypes"].items())
+    ]
+    lines += [
+        "",
+        "## Acceptance bands",
+        "",
+        "Two difficulty-specific envelopes allow specialist-purchase spikes on waves 2 and 4, then tighten on higher-numbered waves as kill income funds a broader loadout. Each range is tuned to the shipped maps with approximately ten percent integer headroom, so a change to tower output, count, composition, reward, or difficulty economy must remain part of the same challenge curve. The income-coverage envelope independently requires each wave's enemy payout to fund a deliberate share of that same wave's damage demand, directly coupling tower output, enemy count, enemy type, and income. A ratio of 10,000 bp means the compared DPS values are equal.",
+        "",
+        "| Difficulty | Wave | Minimum ratio (bp) | Maximum ratio (bp) |",
+        "|:---|---:|---:|---:|",
+    ]
     for difficulty, bands in report["ratio_bands_bp"].items():
-        lines += [f"| {difficulty} | {wave} | {low} | {high} |"
-                  for wave, (low, high) in enumerate(bands, 1)]
-    lines += ["", "| Difficulty | Wave | Minimum income coverage (bp) | Maximum income coverage (bp) |", "|:---|---:|---:|---:|"]
+        lines += [
+            f"| {difficulty} | {wave} | {low} | {high} |"
+            for wave, (low, high) in enumerate(bands, 1)
+        ]
+    lines += [
+        "",
+        "| Difficulty | Wave | Minimum income coverage (bp) | Maximum income coverage (bp) |",
+        "|:---|---:|---:|---:|",
+    ]
     for difficulty, bands in report["income_coverage_bands_bp"].items():
-        lines += [f"| {difficulty} | {wave} | {low} | {high} |"
-                  for wave, (low, high) in enumerate(bands, 1)]
+        lines += [
+            f"| {difficulty} | {wave} | {low} | {high} |"
+            for wave, (low, high) in enumerate(bands, 1)
+        ]
     lines.append("")
     for difficulty, maps in report["difficulties"].items():
         lines += [f"## {difficulty.title()}", ""]
         for map_id, waves in maps.items():
-            lines += [f"### {map_id}", "", "| Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |",
-                      "|---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|"]
+            lines += [
+                f"### {map_id}",
+                "",
+                "| Wave | Enemies | Types | Threat | Peak 5s | Income | Threat/$ | Income DPS | Income coverage | Pre-wave $ | Counter $ | Affordable loadout | Affordable DPS | Req. DPS | Ratio (bp) |",
+                "|---:|---:|:---|---:|---:|---:|---:|---:|---:|---:|---:|:---|---:|---:|---:|",
+            ]
             for r in waves:
                 kinds = ", ".join(f"{kind}×{count}" for kind, count in r["composition"].items())
-                loadout = ", ".join(f"{kind}×{count}" for kind, count in sorted(r["affordable_loadout"].items()))
-                lines.append(f"| {r['wave']} | {r['enemy_count']} | {kinds} | {r['effective_durability']} | {r['peak_five_second_durability']} | {r['full_clear_kill_income']} | {r['threat_per_income_dollar']} | {r['income_funded_sustained_damage']} | {r['wave_income_to_required_bp']} | {r['purchasing_power_before_wave']} | {r['specialist_commitment_cost']} | {loadout or 'none'} | {r['affordable_sustained_damage']} | {r['required_damage']} | {r['required_to_affordable_bp']} |")
+                loadout = ", ".join(
+                    f"{kind}×{count}" for kind, count in sorted(r["affordable_loadout"].items())
+                )
+                lines.append(
+                    f"| {r['wave']} | {r['enemy_count']} | {kinds} | {r['effective_durability']} | {r['peak_five_second_durability']} | {r['full_clear_kill_income']} | {r['threat_per_income_dollar']} | {r['income_funded_sustained_damage']} | {r['wave_income_to_required_bp']} | {r['purchasing_power_before_wave']} | {r['specialist_commitment_cost']} | {loadout or 'none'} | {r['affordable_sustained_damage']} | {r['required_damage']} | {r['required_to_affordable_bp']} |"
+                )
             lines.append("")
     (ROOT / "docs/challenge_fixtures.md").write_text("\n".join(lines))
 
