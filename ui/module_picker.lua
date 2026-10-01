@@ -356,7 +356,7 @@ function ModulePicker.update(dt)
 		local hovered = alpha > 0 and pointInCard(mx, my, c)
 		c.hover = lerp(c.hover or 0, hovered and 1 or 0, factor)
 		local intro = easeOutBack((now - openedAt - c.delay) * 6.0)
-		local baseY = c.y + (1 - smoothstep(alpha)) * 34 - c.hover * 4
+		local baseY = c.y + (1 - smoothstep(alpha)) * 34
 		c.drawW = c.w * lerp(0.95, 1.0, intro)
 		c.drawH = c.h * lerp(0.95, 1.0, intro)
 		c.drawX = c.x - (c.drawW - c.w) * 0.5
@@ -467,6 +467,9 @@ function ModulePicker.draw()
 			if specialization then
 				local previewX, previewY = drawX + 18, bodyY + 48
 				local previewW, previewH = drawW - 36, math.min(156, drawH * 0.46)
+				lg.setColor(borderR, borderG, borderB, alpha)
+				lg.rectangle("fill", previewX - outlineW, previewY - outlineW,
+					previewW + outlineW * 2, previewH + outlineW * 2, outerSmallRadius)
 				SpecializationPreview.draw(previews[i], previewX, previewY, previewW, previewH, 8)
 				descY = previewY + previewH + 12
 			end
