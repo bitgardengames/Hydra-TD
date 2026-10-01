@@ -45,7 +45,6 @@ local grassCacheTile
 local grassCacheW
 local grassCacheH
 local grassCacheR, grassCacheG, grassCacheB, grassCacheA
-local grassCacheLightMul, grassCacheDarkMul
 
 local function buildGrassScatterCache(terrain, map)
 
@@ -61,9 +60,6 @@ local function buildGrassScatterCache(terrain, map)
 	local gG = grass[2] or 0
 	local gB = grass[3] or 0
 	local gA = grass[4] or 1
-	local ground = map.biome and map.biome.ground or {}
-	local lightMul = ground.lightMul or 1.06
-	local darkMul = ground.darkMul or 0.94
 
 	if grassScatterCanvas
 		and grassCacheMapRef == map.isPath
@@ -73,9 +69,7 @@ local function buildGrassScatterCache(terrain, map)
 		and grassCacheR == gR
 		and grassCacheG == gG
 		and grassCacheB == gB
-		and grassCacheA == gA
-		and grassCacheLightMul == lightMul
-		and grassCacheDarkMul == darkMul then
+		and grassCacheA == gA then
 
 		return
 	end
@@ -85,11 +79,10 @@ local function buildGrassScatterCache(terrain, map)
 	grassCacheH = gridH
 	grassCacheTile = tile
 	grassCacheR, grassCacheG, grassCacheB, grassCacheA = gR, gG, gB, gA
-	grassCacheLightMul, grassCacheDarkMul = lightMul, darkMul
 	grassScatterCanvas = lg.newCanvas(gridW * tile, gridH * tile)
 
-	local colorScatterDark = {gR * darkMul, gG * darkMul, gB * darkMul, 1}
-	local colorScatterLight = {gR * lightMul, gG * lightMul, gB * lightMul, 1}
+	local colorScatterDark = {gR * 0.94, gG * 0.94, gB * 0.94, 1}
+	local colorScatterLight = {gR * 1.06, gG * 1.06, gB * 1.06, 1}
 
 	lg.push("all")
 	lg.setCanvas(grassScatterCanvas)
@@ -108,7 +101,7 @@ local function buildGrassScatterCache(terrain, map)
 
 					lg.setColor(useLight and colorScatterLight or colorScatterDark)
 
-					for i = 1, 3 do
+					for i = 1, 2 do
 						local ox = (seed * (13 + i * 17)) % (tile - 8) + 4
 						local oy = (seed * (29 + i * 23)) % (tile - 8) + 4
 
@@ -363,81 +356,6 @@ local function drawPathGeometry(geometry, thickness, color)
 	end
 end
 
-local pathScatterCanvas
-local pathScatterMap
-local pathScatterPath
-local pathScatterR, pathScatterG, pathScatterB
-local pathScatterLightMul, pathScatterDarkMul
-
-local function buildPathScatterCache(targetMap, geometry, terrain, fillThickness)
-	local pathColor = terrain.path
-	local pR = pathColor[1] or 0
-	local pG = pathColor[2] or 0
-	local pB = pathColor[3] or 0
-	local ground = targetMap.biome and targetMap.biome.ground or {}
-	local darkMul = ground.darkMul or 0.94
-	local lightMul = ground.lightMul or 1.06
-
-	if pathScatterCanvas
-		and pathScatterMap == targetMap
-		and pathScatterPath == targetMap.path
-		and pathScatterR == pR
-		and pathScatterG == pG
-		and pathScatterB == pB
-		and pathScatterLightMul == lightMul
-		and pathScatterDarkMul == darkMul then
-
-		return
-	end
-
-	pathScatterMap = targetMap
-	pathScatterPath = targetMap.path
-	pathScatterR, pathScatterG, pathScatterB = pR, pG, pB
-	pathScatterLightMul, pathScatterDarkMul = lightMul, darkMul
-	pathScatterCanvas = lg.newCanvas(gridW * tile, gridH * tile)
-
-	local colorScatterDark = {pR * darkMul, pG * darkMul, pB * darkMul, 1}
-	local colorScatterLight = {pR * lightMul, pG * lightMul, pB * lightMul, 1}
-	local dotSize = 5
-	local halfDot = dotSize * 0.5
-	local lateralRange = fillThickness * 0.5 - halfDot
-
-	lg.push("all")
-	lg.setCanvas(pathScatterCanvas)
-	lg.clear(0, 0, 0, 0)
-
-	for i = 1, #geometry.segments do
-		local segment = geometry.segments[i]
-		local trimA = segment.trimA and fillThickness * 0.5 or 0
-		local trimB = segment.trimB and fillThickness * 0.5 or 0
-		local length = segment.orientation == "horizontal"
-			and segment.x2 - segment.x1 - trimA - trimB
-			or segment.y2 - segment.y1 - trimA - trimB
-		local usableLength = length - dotSize
-		local count = usableLength >= 0 and math.max(1, floor(length / tile * 1.25)) or 0
-
-		for j = 1, count do
-			local seed = i * 131 + j * 337
-			local along = halfDot + (j - 0.5) / count * usableLength
-			local lateral = (hashNoise(i, j, seed) * 2 - 1) * lateralRange
-			local x, y
-
-			if segment.orientation == "horizontal" then
-				x = segment.x1 + trimA + along
-				y = segment.y1 + lateral
-			else
-				x = segment.x1 + lateral
-				y = segment.y1 + trimA + along
-			end
-
-			lg.setColor(seed % 7 < 3 and colorScatterLight or colorScatterDark)
-			lg.rectangle("fill", x - halfDot, y - halfDot, dotSize, dotSize, 2)
-		end
-	end
-
-	lg.pop()
-end
-
 local function drawPath(targetMap)
 	targetMap = targetMap or MapMod.map
 	local geometry = getPathGeometry(targetMap)
@@ -449,12 +367,6 @@ local function drawPath(targetMap)
 	drawPathGeometry(geometry, outlineThickness, terrain.pathOutline)
 
 	drawPathGeometry(geometry, fillThickness, terrain.path)
-	buildPathScatterCache(targetMap, geometry, terrain, fillThickness)
-
-	if pathScatterCanvas then
-		lg.setColor(1, 1, 1, 1)
-		lg.draw(pathScatterCanvas, 0, 0)
-	end
 end
 
 local function drawWorld()
