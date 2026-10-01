@@ -112,6 +112,18 @@ def test_specialization_cards_prioritize_preview_area_without_extra_height():
     assert "math.min(156, drawH * 0.46)" in picker
 
 
+def test_specialization_preview_uses_the_upgrade_name_border_and_cards_do_not_lift():
+    picker = (ROOT / "ui/module_picker.lua").read_text()
+    preview_border = re.search(
+        r'lg\.setColor\(borderR, borderG, borderB, alpha\)\s*'
+        r'lg\.rectangle\("fill", previewX - outlineW, previewY - outlineW,\s*'
+        r'previewW \+ outlineW \* 2, previewH \+ outlineW \* 2, outerSmallRadius\)',
+        picker,
+    )
+    assert preview_border
+    assert "- c.hover * 4" not in picker
+
+
 def test_preview_background_uses_the_default_biome_grass_palette():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     assert "lg.setColor(map.biome.terrain.grass)" in preview
