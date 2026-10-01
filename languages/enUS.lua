@@ -431,7 +431,6 @@ return {
 		specializeTitle = "Specialize %s",
 		specializeSubtitle = "Choose a permanent combat branch",
 		specializeHint = "Press 1 or 2 • Click a card",
-		specializeCta = "Specialize — $%d",
 	},
 
 	branch = {

@@ -112,6 +112,13 @@ def test_specialization_cards_prioritize_preview_area_without_extra_height():
     assert "math.min(156, drawH * 0.46)" in picker
 
 
+def test_specialization_cards_do_not_show_a_specialize_price_cta():
+    picker = (ROOT / "ui/module_picker.lua").read_text()
+    strings = (ROOT / "languages/enUS.lua").read_text()
+    assert "specializeCta" not in picker
+    assert "specializeCta" not in strings
+
+
 def test_specialization_preview_uses_the_upgrade_name_border_and_cards_do_not_lift():
     picker = (ROOT / "ui/module_picker.lua").read_text()
     preview_border = re.search(
