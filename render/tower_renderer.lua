@@ -253,11 +253,6 @@ end
 local size = TILE * 0.42
 local pad = 2
 
-local function drawTowerShadow(cx, groundY)
-	lg.setColor(tsR, tsG, tsB, tsA)
-	lg.ellipse("fill", cx, groundY + size * 0.4, size * 0.85, size * 0.30)
-end
-
 local function drawTowerBase(kind, cx, cy, alpha, tintR, tintG, tintB, height)
 	local def = towerDefs[kind]
 
@@ -654,7 +649,8 @@ local function drawTowers()
 		local riseAnim = t.levelUpAnim or 0
 
 		-- Shadow
-		drawTowerShadow(cx, groundY)
+		lg.setColor(tsR, tsG, tsB, tsA)
+		lg.ellipse("fill", cx, t.y + size * 0.4, size * 0.85, size * 0.30)
 
 		-- Only upgrades grow the grounded column. Placement offset moves the
 		-- complete tower, so treating it as height would stretch it to the tile
@@ -706,4 +702,4 @@ local function drawSuppressionProjectiles()
 	end
 end
 
-return {drawTowerBase = drawTowerBase, drawTowerCore = drawTowerCore, drawTowerGhost = drawTowerGhost, drawTowerShadow = drawTowerShadow, drawTowerVisual = drawTowerVisual, drawTowerFX = drawTowerFX, drawTowers = drawTowers, drawSuppressionProjectiles = drawSuppressionProjectiles}
+return {drawTowerBase = drawTowerBase, drawTowerCore = drawTowerCore, drawTowerGhost = drawTowerGhost, drawTowerVisual = drawTowerVisual, drawTowerFX = drawTowerFX, drawTowers = drawTowers, drawSuppressionProjectiles = drawSuppressionProjectiles}

@@ -204,7 +204,6 @@ function Sandbox:draw(drawWorld)
 	local TowerRenderer = require("render.tower_renderer")
 	drawWorld(self.map)
 	local tower = self.towers[1]
-	TowerRenderer.drawTowerShadow(tower.x, tower.y)
 	TowerRenderer.drawTowerVisual(tower.kind, tower.x, tower.renderY, tower.angle, tower.recoil, tower.level)
 	TowerRenderer.drawTowerFX(tower)
 	for i=1,#self.enemies do

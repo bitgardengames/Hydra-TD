@@ -47,14 +47,6 @@ def test_preview_uses_real_gameplay_sandbox():
     assert "drawEffect" not in preview
 
 
-def test_preview_tower_uses_the_game_world_shadow_renderer():
-    sandbox = (ROOT / "world/gameplay_sandbox.lua").read_text()
-    renderer = (ROOT / "render/tower_renderer.lua").read_text()
-    assert "TowerRenderer.drawTowerShadow(tower.x, tower.y)" in sandbox
-    assert "drawTowerShadow(cx, groundY)" in renderer
-    assert "drawTowerShadow = drawTowerShadow" in renderer
-
-
 def test_picker_lifecycle_owns_preview_updates_and_release():
     picker = (ROOT / "ui/module_picker.lua").read_text()
     assert 'State.modulePicker.mode == "specialization"' in picker
