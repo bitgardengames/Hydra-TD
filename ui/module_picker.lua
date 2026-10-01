@@ -481,14 +481,6 @@ function ModulePicker.draw()
 				lg.printf(choice.statusText, drawX + 18, drawY + drawH - 54, drawW - 36, "left")
 			end
 
-			if specialization then
-				local pulse = hovered and (0.5 + 0.5 * math.sin(now * 8 + i)) or 0
-				lg.setColor(1, 1, 1, (0.56 + hoverT * 0.16 + pulse * 0.08) * alpha)
-				Fonts.set("ui")
-				lg.printf(L("modulePicker.specializeCta", Towers.getUpgradeCost(picker.tower) or 0),
-					drawX + 18, drawY + drawH - 32, drawW - 36, "right")
-			end
-
 			if hovered then
 				local pulse = 0.5 + 0.5 * math.sin(now * 8 + i)
 				lg.setColor(towerColor[1], towerColor[2], towerColor[3], (0.14 + 0.08 * pulse) * alpha)
