@@ -126,7 +126,6 @@ return {
 		ability = "Ability: %s",
 		abilities = "Abilities: %s",
 		locked = "LOCKED",
-		mapOf = "Map %d of %d",
 		completed = "Completed: %s",
 		newEnemy = "New enemy: %s",
 		newEnemies = "New enemies: %s",
