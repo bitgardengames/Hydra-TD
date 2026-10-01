@@ -24,7 +24,7 @@ local straightCamera = {centerX=4.5,centerY=2.5,zoom=1}
 local bendCamera = {centerX=4.5,centerY=2.5,zoom=1}
 Preview.definitions = {
 	marksman={duration=5.2,path=lane,camera=straightCamera,tower={kind="lancer",x=5,y=2},enemies={{kind="tank",hpScale=7,distance=.3*TILE},{kind="runner",hpScale=4,distance=1.4*TILE}}},
-	rupture={duration=4.8,path=lane,camera=straightCamera,tower={kind="lancer",x=5,y=2},enemies=cast(.72,"grunt","grunt","grunt")},
+	rupture={duration=4.8,path=bend,camera=bendCamera,tower={kind="lancer",x=4,y=3},enemies=cast(.72,"grunt","grunt","grunt")},
 	deep_freeze={duration=5.4,path=lane,camera=straightCamera,tower={kind="slow",x=5,y=2},enemies={{kind="tank",hpScale=7,distance=.35*TILE}}},
 	cold_field={duration=5.4,path=bend,camera=bendCamera,tower={kind="slow",x=4,y=3},enemies=cast(.68,"grunt","runner","grunt","grunt")},
 	virulent={duration=5.8,path=lane,camera=straightCamera,tower={kind="poison",x=5,y=2},enemies={{kind="tank",hpScale=6,distance=.3*TILE}}},
