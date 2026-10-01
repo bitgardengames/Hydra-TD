@@ -103,14 +103,18 @@ def test_rupture_and_cold_field_previews_use_the_bend_composition():
         assert "path=bend" in definition
         assert "camera=bendCamera" in definition
         assert 'tower={kind="' in definition
-        assert "x=4,y=3" in definition
+
+    rupture = re.search(r"^\trupture=\{([^\n]+)", preview, re.M).group(1)
+    cold_field = re.search(r"^\tcold_field=\{([^\n]+)", preview, re.M).group(1)
+    assert "x=6,y=2" in rupture
+    assert "x=4,y=3" in cold_field
 
 
 def test_preview_composition_uses_real_grid_placement_and_world_distances():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     towers = re.findall(r'tower=\{kind="[^"]+",x=(\d+),y=(\d+)\}', preview)
     assert towers
-    assert all((int(x), int(y)) in {(4, 3), (5, 2)} for x, y in towers)
+    assert all((int(x), int(y)) in {(4, 3), (5, 2), (6, 2)} for x, y in towers)
     assert "*TILE" in preview
     assert "lg.scale(zoom)" in preview
 
