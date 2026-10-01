@@ -96,6 +96,16 @@ def test_preview_uses_grid_authored_paths_and_the_gameplay_path_renderer():
     assert "drawPathGeometry" not in preview
 
 
+def test_rupture_and_cold_field_previews_use_the_bend_composition():
+    preview = (ROOT / "ui/specialization_preview.lua").read_text()
+    for branch in ("rupture", "cold_field"):
+        definition = re.search(rf"^\t{branch}=\{{([^\n]+)", preview, re.M).group(1)
+        assert "path=bend" in definition
+        assert "camera=bendCamera" in definition
+        assert 'tower={kind="' in definition
+        assert "x=4,y=3" in definition
+
+
 def test_preview_composition_uses_real_grid_placement_and_world_distances():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     towers = re.findall(r'tower=\{kind="[^"]+",x=(\d+),y=(\d+)\}', preview)
