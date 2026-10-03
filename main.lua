@@ -271,6 +271,7 @@ end
 function love.update(dt)
 	State.presentationFrameId = (State.presentationFrameId or 0) + 1
 	State.presentationDt = dt
+	State.presentationTime = (State.presentationTime or 0) + dt
 	Save.update(dt)
 	Camera.update(dt)
 

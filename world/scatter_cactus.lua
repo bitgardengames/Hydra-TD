@@ -27,6 +27,14 @@ local GRID_H = Constants.GRID_H
 
 local rng = love.math.newRandomGenerator()
 
+-- Gestures should read as occasional bits of environmental life, rather than as
+-- another source of combat motion.  Each cactus gets its own values from the
+-- placement RNG so drawing never has to sample randomness.
+local MIN_IDLE_INTERVAL = 5.5
+local IDLE_INTERVAL_VARIANCE = 4.0
+local MIN_GESTURE_DURATION = 0.34
+local GESTURE_DURATION_VARIANCE = 0.20
+
 local function rand(a, b)
 	return rng:random(a, b)
 end
@@ -131,6 +139,7 @@ function Cactus.generate(targetMap, mapIndex, list, treeOccupied)
 
 		local side1 = rand() < 0.5 and -1 or 1
 		local side2 = (armMode == 2) and -side1 or side1
+		local animInterval = MIN_IDLE_INTERVAL + rand() * IDLE_INTERVAL_VARIANCE
 
 		return {
 			x = cx + rand(-10, 10),
@@ -149,6 +158,11 @@ function Cactus.generate(targetMap, mapIndex, list, treeOccupied)
 
 			arm1 = {side = side1, height = rand(), width = rand(), offset = rand(), y = rand()},
 			arm2 = {side = side2, height = rand(), width = rand(), offset = rand(), y = rand()},
+
+			idlePhase = rand() * animInterval,
+			idleInterval = animInterval,
+			idleDuration = MIN_GESTURE_DURATION + rand() * GESTURE_DURATION_VARIANCE,
+			motionDirection = rand() < 0.5 and -1 or 1,
 		}
 
 	end
@@ -161,7 +175,29 @@ function Cactus.generate(targetMap, mapIndex, list, treeOccupied)
 	return list
 end
 
-function Cactus.draw(list, targetMap)
+local function smoothstep(t)
+	t = math.max(0, math.min(1, t))
+	return t * t * (3 - 2 * t)
+end
+
+local function gestureAmount(cactus, presentationTime)
+	local interval = cactus.idleInterval
+	local duration = cactus.idleDuration
+	if not interval or not duration or interval <= 0 or duration <= 0 then
+		return 0
+	end
+
+	local localTime = ((presentationTime or 0) + (cactus.idlePhase or 0)) % interval
+	if localTime >= duration then
+		return 0
+	end
+
+	-- Smoothly rise and fall inside the short active portion of the interval.
+	local progress = localTime / duration
+	return smoothstep(math.min(progress * 2, (1 - progress) * 2))
+end
+
+function Cactus.draw(list, targetMap, presentationTime)
 	list = list or Cactus.list
 	if #list == 0 then
 		return
@@ -177,6 +213,8 @@ function Cactus.draw(list, targetMap)
 		local x = c.x
 		local baseY = c.y
 		local s = c.scale
+		local gesture = gestureAmount(c, presentationTime)
+		local direction = c.motionDirection or 1
 
 		local h, w
 
@@ -195,6 +233,13 @@ function Cactus.draw(list, targetMap)
 		lg.ellipse("fill", x, baseY + 1, radius * shW, radius * shH)
 
 		if c.shape == "round" then
+			-- Anchor the squash at the soil line.  A small opposing horizontal
+			-- stretch preserves the body's visual volume without lifting its base.
+			lg.push()
+			lg.translate(x, baseY)
+			lg.scale(1 + gesture * 0.035, 1 - gesture * 0.05)
+			lg.translate(-x, -baseY)
+
 			local cy = baseY - h * 0.5
 			local rx = w * 0.5
 			local ry = h * 0.5
@@ -212,6 +257,8 @@ function Cactus.draw(list, targetMap)
 				local top = cy - ry
 				drawFlower(x, top - 3.5 * s, 0.7 * s, flowerColor)
 			end
+
+			lg.pop()
 		else
 			local function drawArm(a)
 				local armW = w * (0.55 + a.width * 0.20)
@@ -221,7 +268,15 @@ function Cactus.draw(list, targetMap)
 				local armX = edgeX + (w * (0.16 + a.offset * 0.34)) * a.side
 				local armY = baseY - h * (0.44 + a.y * 0.32)
 
+				-- Rotate around the point where the arm meets the trunk.  Opposite
+				-- arms naturally fan in opposite directions, while motionDirection
+				-- keeps the character of each cactus deterministic.
+				lg.push()
+				lg.translate(edgeX, armY)
+				lg.rotate(a.side * direction * gesture * 0.045)
+				lg.translate(-edgeX, -armY)
 				drawPart(armX, armY, armW, armH, style)
+				lg.pop()
 			end
 
 			if c.armMode >= 1 then
