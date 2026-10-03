@@ -1,7 +1,7 @@
 """Parse the shipped branch-aware tower progression model.
 
-The public helpers in this module are shared by all balance simulations.  In
-particular, callers must select a specialization for paid tiers; silently
+The public helpers in this module are shared by all balance simulations. In
+particular, callers must select a specialization for levels three and above; silently
 interpolating one tier-five ``dmgMult`` curve used to erase most of the authored
 branch behaviour.
 """
@@ -61,6 +61,10 @@ def progression() -> tuple[tuple[float, ...], dict[str, dict]]:
         if kind not in TOWERS:
             continue
         upgrade = table_body(raw, "upgrade", path)
+        shared_tiers_body = table_body(upgrade, "tiers", path)
+        shared_tier_match = re.search(r"\[2\]\s*=\s*\{([^{}]*)\}", shared_tiers_body)
+        if not shared_tier_match:
+            raise ValueError(f"missing {kind} unbranched paid tier 2")
         branches_body = table_body(upgrade, "branches", path)
         branches = {}
         for branch, branch_body in named_entries(branches_body, "branches", path).items():
@@ -79,6 +83,7 @@ def progression() -> tuple[tuple[float, ...], dict[str, dict]]:
             "damage": numeric_field(raw, "damage", path, kind),
             "fireRate": numeric_field(raw, "fireRate", path, kind),
             "range": numeric_field(raw, "range", path, kind),
+            "tiers": {2: _fields(shared_tier_match.group(1), f"{kind}/base/2")},
             "branches": branches,
         }
     branch_ids = [branch for tower in towers.values() for branch in tower["branches"]]
@@ -93,6 +98,15 @@ def level_stats(tower: dict, level: int, branch: str | None = None) -> dict[str,
         raise ValueError("tower level must be 1..5")
     stats = {"damage": tower["damage"], "fireRate": tower["fireRate"], "range": tower["range"]}
     if level == 1:
+        stats["dps"] = stats["damage"] * stats["fireRate"]
+        return stats
+
+    if level == 2:
+        tier = tower["tiers"][2]
+        stats.update(tier)
+        stats["damage"] = tower["damage"] * tier.get("dmgMult", 1)
+        stats["fireRate"] = tower["fireRate"] * tier.get("fireMult", 1)
+        stats["range"] = tower["range"] + tier.get("rangeAdd", 0)
         stats["dps"] = stats["damage"] * stats["fireRate"]
         return stats
     # Compatibility for presentation-only callers: this still resolves an

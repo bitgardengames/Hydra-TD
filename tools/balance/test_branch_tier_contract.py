@@ -76,6 +76,20 @@ class BranchTierContractTest(unittest.TestCase):
         ]
         self.assertNotIn("money", close.lower())
 
+    def test_specialization_is_chosen_when_buying_level_three(self):
+        towers = (ROOT / "world/towers.lua").read_text()
+        picker = (ROOT / "ui/module_picker.lua").read_text()
+        inspect = (ROOT / "ui/bottom_bar_inspect.lua").read_text()
+        resolver = (ROOT / "systems/branch_tier_resolver.lua").read_text()
+
+        self.assertIn("if currentLevel == 2 then", towers)
+        self.assertIn("if currentLevel == 2 then\n\t\tt.specialization = specialization", towers)
+        self.assertIn("(tower.level or 1) == 2", picker)
+        self.assertIn("(tower.level or 1) ~= 2", picker)
+        self.assertIn('t.level == 2 and "actions.specialize"', inspect)
+        self.assertIn("if level > 2 then", resolver)
+        self.assertIn("level == 2 and def.upgrade.tiers[2]", resolver)
+
     def test_sell_refund_uses_selected_difficulty_for_every_purchase(self):
         towers = (ROOT / "world/towers.lua").read_text()
         difficulty = (ROOT / "systems/difficulty.lua").read_text()

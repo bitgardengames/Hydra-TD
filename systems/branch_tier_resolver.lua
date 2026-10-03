@@ -99,7 +99,8 @@ function Resolver.validate(definitions)
 	local ids = {}
 	for kind, def in pairs(definitions) do
 		local branches = def.upgrade and def.upgrade.branches or {}
-		local count, level2Cost = 0, nil
+		assert(def.upgrade and def.upgrade.tiers and def.upgrade.tiers[2], kind .. " missing unbranched tier 2")
+		local count = 0
 		for id, branch in pairs(branches) do
 			count = count + 1
 			assert(type(id) == "string" and id:match("^[a-z][a-z0-9_]*$"), kind .. " has an unstable branch id")
@@ -109,12 +110,9 @@ function Resolver.validate(definitions)
 			for level = 2, 5 do
 				assert(branch.tiers and branch.tiers[level], kind .. "/" .. id .. " missing tier " .. level)
 			end
-			local branchCost = branch.tiers[2].cost
-			if count == 1 then level2Cost = branchCost
-			else assert(branchCost == level2Cost, kind .. " level-2 branch costs must match") end
 		end
 		assert(count == 2, kind .. " must have exactly two branches")
-		-- Tier-two choices share the tower-level upgrade price by construction.
+		-- The unbranched tier-two upgrade always uses the tower-level price.
 		assert(not def.upgrade.level2Costs, kind .. " may not define branch-specific level-2 costs")
 	end
 	return true
@@ -130,11 +128,12 @@ function Resolver.resolve(tower, options)
 	end
 	local branches = def.upgrade and def.upgrade.branches
 	local branch = specialization and branches and branches[specialization]
-	if level > 1 then
+	if level > 2 then
 		assert(branch and branch.tiers[level], "invalid branch tier")
 	end
-	local tier = level == 1 and ((def.upgrade and def.upgrade.base) or {}) or branch.tiers[level]
-	local baseBehaviors = level > 1 and branch and branch.fireProfile or def.behaviors or {}
+	local tier = level == 1 and ((def.upgrade and def.upgrade.base) or {})
+		or level == 2 and def.upgrade.tiers[2] or branch.tiers[level]
+	local baseBehaviors = level > 2 and branch and branch.fireProfile or def.behaviors or {}
 	local behaviors = copy(baseBehaviors)
 	applyTier(behaviors, tier)
 	local modifiers = options.modifiers or {damageMult = 1, fireRateMult = 1, rangeAdd = 0}

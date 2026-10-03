@@ -254,8 +254,9 @@ def resolve_tower_attack(
     now: float,
 ) -> None:
     """Apply one tower attack and advance its cooldown."""
-    tier = (
-        tower_def["branches"][tower.specialization]["tiers"][tower.level] if tower.level > 1 else {}
+    tier = tower_def["tiers"][2] if tower.level == 2 else (
+        tower_def["branches"][tower.specialization]["tiers"][tower.level]
+        if tower.level > 2 else {}
     )
     damage = tower_def["damage"] * tier.get("dmgMult", 1)
     rate = tower_def["rate"] * tier.get("fireMult", 1)
@@ -363,6 +364,8 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                     (tower.specialization,)
                     if tower.specialization
                     else tuple(detail_towers[tower.kind]["branches"])
+                    if tower.level == 2
+                    else (None,)
                 )
                 for branch in branches:
                     upgrade_candidates.append(
@@ -404,7 +407,8 @@ def campaign(map_id, map_index, path_len, diff_name, variant, policy_name, defs)
                 cost = selected_upgrade["cost"]
                 if money >= cost:
                     money -= cost
-                    target.specialization = selected_upgrade["specialization"]
+                    if target.level == 2:
+                        target.specialization = selected_upgrade["specialization"]
                     target.level += 1
                     target.investment += cost
                     build_actions.append(selected_upgrade)

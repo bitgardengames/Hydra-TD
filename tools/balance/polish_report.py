@@ -325,9 +325,8 @@ def affordability_metrics() -> dict:
     multipliers, towers = progression()
     anchors = {
         kind: {
-            # The first paid upgrade is the branch purchase. Tiers 3--5 retain
-            # it, so they are later timings rather than a synthetic fifth step.
-            "first_specialization": round(tower["cost"] * multipliers[0]),
+            # The second paid upgrade specializes the tower at level three.
+            "first_specialization": round(tower["cost"] * multipliers[1]),
             "tier_3_total": round(tower["cost"] * (1 + sum(multipliers[:2]))),
             "tier_4_total": round(tower["cost"] * (1 + sum(multipliers[:3]))),
             "tier_5_total": round(tower["cost"] * (1 + sum(multipliers))),

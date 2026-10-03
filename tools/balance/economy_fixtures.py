@@ -93,8 +93,8 @@ def build_report() -> dict:
     upgrade_costs, tower_defs = progression()
     upgrade_anchors = {
         kind: {
-            # Tier two is the specialization decision, not an extra purchase.
-            "first_specialization": round(tower["cost"] * upgrade_costs[0]),
+            # Specialization is selected while purchasing level three.
+            "first_specialization": round(tower["cost"] * upgrade_costs[1]),
             "tier_3_total": round(tower["cost"] * (1 + sum(upgrade_costs[:2]))),
             "tier_4_total": round(tower["cost"] * (1 + sum(upgrade_costs[:3]))),
             "tier_5_total": round(tower["cost"] * (1 + sum(upgrade_costs))),
