@@ -24,6 +24,8 @@ local GRID_H = Constants.GRID_H
 
 local TREE_SWAY_SPEED = 1.35
 local TREE_SWAY_ANGLE = 0.025
+local EVERGREEN_TIER_SWAY = {0.25, 0.38, 0.5}
+local EVERGREEN_TIER_PHASE = 0.16
 
 local rng = love.math.newRandomGenerator()
 
@@ -308,17 +310,12 @@ function Trees.draw(mode, list, targetMap)
 		elseif t.shape == "evergreen" then
 			local layers = 3
 			local baseSize = TILE * 0.34 * s
-			local sway = math.sin(swayTime * TREE_SWAY_SPEED + (t.swayPhase or 0)) * TREE_SWAY_ANGLE
-
-			-- Pivot the canopy at its base so the three layers move as one in the breeze.
-			lg.push()
-			lg.translate(x, trunkY)
-			lg.rotate(sway)
-			lg.translate(-x, -trunkY)
+			local swayPhase = swayTime * TREE_SWAY_SPEED + (t.swayPhase or 0)
 
 			local yOffset = 0
 
 			for i = layers, 1, -1 do
+				local tier = layers - i + 1
 				local tScale = 0.6 + (i / layers) * 0.6
 				local w = baseSize * tScale
 				local h = w * 0.85
@@ -329,6 +326,14 @@ function Trees.draw(mode, list, targetMap)
 				local x1, y1 = x, ly - h
 				local x2, y2 = x - w, ly + h
 				local x3, y3 = x + w, ly + h
+				local sway = math.sin(swayPhase + (tier - 1) * EVERGREEN_TIER_PHASE)
+					* TREE_SWAY_ANGLE * EVERGREEN_TIER_SWAY[tier]
+
+				-- Each foliage tier flexes gently from its own base; the trunk stays rooted.
+				lg.push()
+				lg.translate(x, ly + h)
+				lg.rotate(sway)
+				lg.translate(-x, -(ly + h))
 
 				-- Outline
 				lg.setColor(style.outline)
@@ -377,9 +382,8 @@ function Trees.draw(mode, list, targetMap)
 
 				lg.setColor(style.fill)
 				lg.polygon("fill", hx1, hy1, hx2, hy2, hx3, hy3)
+				lg.pop()
 			end
-
-			lg.pop()
 		end
 	end
 end
