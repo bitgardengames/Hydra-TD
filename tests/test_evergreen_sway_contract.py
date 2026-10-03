@@ -31,5 +31,5 @@ def test_evergreen_tiers_keep_per_tree_and_vertical_phase_offsets():
 def test_evergreen_sway_increases_from_bottom_to_top():
     source = (ROOT / "world/scatter_trees.lua").read_text()
 
-    assert "local EVERGREEN_TIER_SWAY = {0.36, 0.55, 0.72}" in source
+    assert "local EVERGREEN_TIER_SWAY = {0.43, 0.66, 0.86}" in source
     assert "local tier = layers - i + 1" in _evergreen_branch()
