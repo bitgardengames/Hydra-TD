@@ -24,7 +24,6 @@ local GRID_H = Constants.GRID_H
 
 local TREE_SWAY_SPEED = 1.35
 local TREE_SWAY_ANGLE = 0.025
-local EVERGREEN_SWAY_DISTANCE = 1.2
 local EVERGREEN_TIER_SWAY = {0.25, 0.38, 0.5}
 local EVERGREEN_TIER_PHASE = 0.16
 
@@ -327,12 +326,14 @@ function Trees.draw(mode, list, targetMap)
 				local x1, y1 = x, ly - h
 				local x2, y2 = x - w, ly + h
 				local x3, y3 = x + w, ly + h
-				local swayX = math.sin(swayPhase + (tier - 1) * EVERGREEN_TIER_PHASE)
-					* EVERGREEN_SWAY_DISTANCE * EVERGREEN_TIER_SWAY[tier] * s
+				local sway = math.sin(swayPhase + (tier - 1) * EVERGREEN_TIER_PHASE)
+					* TREE_SWAY_ANGLE * EVERGREEN_TIER_SWAY[tier]
 
-				-- Slightly offset each foliage tier while the trunk stays rooted.
+				-- Flex each tier from its base, with the motion increasing toward the top.
 				lg.push()
-				lg.translate(swayX, 0)
+				lg.translate(x, ly + h)
+				lg.rotate(sway)
+				lg.translate(-x, -(ly + h))
 
 				-- Outline
 				lg.setColor(style.outline)
