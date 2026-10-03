@@ -247,7 +247,11 @@ local gameplayActions = {
 	end,
 	upgrade = function()
 		if State.selectedTower then
-			ModulePicker.openTowerUpgrade(State.selectedTower)
+			if (State.selectedTower.level or 1) == 3 then
+				ModulePicker.openSpecialization(State.selectedTower)
+			else
+				ModulePicker.openTowerUpgrade(State.selectedTower)
+			end
 		end
 	end,
 	sell = function()

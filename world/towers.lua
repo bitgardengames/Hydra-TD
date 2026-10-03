@@ -430,17 +430,21 @@ local function upgradeTower(t, specialization)
 
 	local currentLevel = t.level or 1
 	local branches = t.def.upgrade and t.def.upgrade.branches
-	if currentLevel == 1 then
-		-- The first paid tier is the one and only branch decision. Do not mutate
+	if currentLevel == 3 then
+		-- Level four is the one and only branch decision. Do not mutate
 		-- the tower (or charge it) until a valid specialization was supplied.
 		if type(specialization) ~= "string" or not branches or not branches[specialization]
-			or not branches[specialization].tiers[2] then
+			or not branches[specialization].tiers[4] then
 			return false, "specialization_required"
 		end
-	elseif not t.specialization or not branches or not branches[t.specialization]
-		or not branches[t.specialization].tiers[currentLevel + 1] then
-		return false, "invalid_specialization"
-	elseif specialization and specialization ~= t.specialization then
+	elseif currentLevel >= 4 then
+		if not t.specialization or not branches or not branches[t.specialization]
+			or not branches[t.specialization].tiers[currentLevel + 1] then
+			return false, "invalid_specialization"
+		elseif specialization and specialization ~= t.specialization then
+			return false, "specialization_locked"
+		end
+	elseif specialization then
 		return false, "specialization_locked"
 	end
 
@@ -455,7 +459,7 @@ local function upgradeTower(t, specialization)
 
 	State.money = State.money - cost
 
-	if currentLevel == 1 then
+	if currentLevel == 3 then
 		t.specialization = specialization
 		RunStats.recordSpecialization(t, specialization, cost)
 	else
@@ -612,17 +616,14 @@ getUpgradePreview = function(t, specialization)
 	end
 	local level = max(1, t.level or 1)
 	local nextLevel = level + 1
-	local currentClone = cloneForPreview(t, level, level > 1 and (t.specialization or specialization) or nil)
+	local currentClone = cloneForPreview(t, level, t.specialization)
 	local nextClone = cloneForPreview(t, nextLevel, t.specialization or specialization)
-	if level == 1 and not specialization then
+	if level == 3 and not (t.specialization or specialization) then
 		return nil
 	end
-	if level > 1 then
-		currentClone.specialization = currentClone.specialization or specialization
-	end
 	nextClone.specialization = nextClone.specialization or specialization
-	local currentStats = previewTowerStats(currentClone, level, specialization)
-	local nextStats = previewTowerStats(nextClone, nextLevel, specialization)
+	local currentStats = previewTowerStats(currentClone, level, t.specialization)
+	local nextStats = previewTowerStats(nextClone, nextLevel, t.specialization or specialization)
 	local currentBehaviors = behaviorMap(Modules.getFireProfile(currentClone))
 	local nextBehaviors = behaviorMap(Modules.getFireProfile(nextClone))
 	local rows = {}
@@ -640,8 +641,11 @@ getUpgradePreview = function(t, specialization)
 	local upgrade = t.def.upgrade or {}
 	local branchId = t.specialization or specialization
 	local branch = branchId and upgrade.branches and upgrade.branches[branchId]
-	local currentTier = level > 1 and branch and branch.tiers[level] or nil
-	local nextTier = branch and branch.tiers[nextLevel]
+	local currentTier = level == 1 and upgrade.base
+		or level <= 3 and upgrade.tiers and upgrade.tiers[level]
+		or branch and branch.tiers[level]
+	local nextTier = nextLevel <= 3 and upgrade.tiers and upgrade.tiers[nextLevel]
+		or branch and branch.tiers[nextLevel]
 	addTierMechanicRows(rows, currentTier, nextTier, branch)
 
 	return {
