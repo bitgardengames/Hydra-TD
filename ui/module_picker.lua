@@ -248,7 +248,7 @@ function ModulePicker.openTowerUpgrade(tower)
 end
 
 function ModulePicker.openSpecialization(tower)
-	if not tower or (tower.level or 1) ~= 1 then
+	if not tower or (tower.level or 1) ~= 3 then
 		return false
 	end
 	local branches = tower.def.upgrade and tower.def.upgrade.branches

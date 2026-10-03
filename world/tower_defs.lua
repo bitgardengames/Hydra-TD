@@ -23,6 +23,10 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0, slowDurAdd = 0},
+			tiers = {
+				[2] = {dmgMult = 1.12, fireMult = 1.06, rangeAdd = 0.16 * Constants.TILE},
+				[3] = {dmgMult = 1.25, fireMult = 1.13, rangeAdd = 0.32 * Constants.TILE},
+			},
 			branches = {
 				deep_freeze = {
 					id = "deep_freeze",
@@ -84,6 +88,10 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {
+				[2] = {dmgMult = 1.40, fireMult = 1.02, rangeAdd = 0.10 * Constants.TILE},
+				[3] = {dmgMult = 1.90, fireMult = 1.06, rangeAdd = 0.20 * Constants.TILE},
+			},
 			branches = {
 				marksman = {
 					id = "marksman",
@@ -141,6 +149,10 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {
+				[2] = {dmgMult = 1.22, fireMult = 1.06, rangeAdd = 0.09 * Constants.TILE},
+				[3] = {dmgMult = 1.42, fireMult = 1.13, rangeAdd = 0.18 * Constants.TILE},
+			},
 			branches = {
 				virulent = {
 					id = "virulent",
@@ -201,6 +213,10 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {
+				[2] = {dmgMult = 1.55, fireMult = 1.03, rangeAdd = 0.08 * Constants.TILE},
+				[3] = {dmgMult = 1.98, fireMult = 1.06, rangeAdd = 0.16 * Constants.TILE},
+			},
 			branches = {
 				siege = {
 					id = "siege",
@@ -255,6 +271,10 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {
+				[2] = {dmgMult = 1.32, fireMult = 1.04, rangeAdd = 0.11 * Constants.TILE},
+				[3] = {dmgMult = 1.68, fireMult = 1.09, rangeAdd = 0.22 * Constants.TILE},
+			},
 			branches = {
 				capacitor = {
 					id = "capacitor",
@@ -314,6 +334,10 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {
+				[2] = {dmgMult = 1.26, fireMult = 1.05, rangeAdd = 0.09 * Constants.TILE},
+				[3] = {dmgMult = 1.52, fireMult = 1.11, rangeAdd = 0.18 * Constants.TILE},
+			},
 			branches = {
 				accelerator = {
 					id = "accelerator",

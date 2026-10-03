@@ -98,24 +98,23 @@ end
 function Resolver.validate(definitions)
 	local ids = {}
 	for kind, def in pairs(definitions) do
-		local branches = def.upgrade and def.upgrade.branches or {}
-		local count, level2Cost = 0, nil
+		local upgrade = def.upgrade or {}
+		local branches = upgrade.branches or {}
+		for level = 2, 3 do
+			assert(upgrade.tiers and upgrade.tiers[level], kind .. " missing normal tier " .. level)
+		end
+		local count = 0
 		for id, branch in pairs(branches) do
 			count = count + 1
 			assert(type(id) == "string" and id:match("^[a-z][a-z0-9_]*$"), kind .. " has an unstable branch id")
 			assert(not ids[id], "duplicate branch id: " .. id)
 			assert(branch.id == id, kind .. "/" .. id .. " must declare its stable id")
 			ids[id] = kind
-			for level = 2, 5 do
-				assert(branch.tiers and branch.tiers[level], kind .. "/" .. id .. " missing tier " .. level)
+			for level = 4, 5 do
+				assert(branch.tiers and branch.tiers[level], kind .. "/" .. id .. " missing specialized tier " .. level)
 			end
-			local branchCost = branch.tiers[2].cost
-			if count == 1 then level2Cost = branchCost
-			else assert(branchCost == level2Cost, kind .. " level-2 branch costs must match") end
 		end
 		assert(count == 2, kind .. " must have exactly two branches")
-		-- Tier-two choices share the tower-level upgrade price by construction.
-		assert(not def.upgrade.level2Costs, kind .. " may not define branch-specific level-2 costs")
 	end
 	return true
 end
@@ -129,12 +128,17 @@ function Resolver.resolve(tower, options)
 		specialization = tower.specialization
 	end
 	local branches = def.upgrade and def.upgrade.branches
+	local upgrade = def.upgrade or {}
 	local branch = specialization and branches and branches[specialization]
-	if level > 1 then
-		assert(branch and branch.tiers[level], "invalid branch tier")
+	if level >= 4 then
+		assert(branch and branch.tiers[level], "invalid specialized tier")
+	elseif specialization then
+		assert(branch, "invalid specialization")
 	end
-	local tier = level == 1 and ((def.upgrade and def.upgrade.base) or {}) or branch.tiers[level]
-	local baseBehaviors = level > 1 and branch and branch.fireProfile or def.behaviors or {}
+	local tier = level == 1 and (upgrade.base or {})
+		or level <= 3 and assert(upgrade.tiers and upgrade.tiers[level], "invalid normal tier")
+		or branch.tiers[level]
+	local baseBehaviors = level >= 4 and branch.fireProfile or def.behaviors or {}
 	local behaviors = copy(baseBehaviors)
 	applyTier(behaviors, tier)
 	local modifiers = options.modifiers or {damageMult = 1, fireRateMult = 1, rangeAdd = 0}

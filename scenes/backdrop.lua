@@ -88,8 +88,8 @@ Backdrop.shots = {
 			{kind = "lancer", gx = 13, gy = 9, level = 2},
 			{kind = "poison", gx = 13, gy = 6, level = 2},
 			{kind = "poison", gx = 21, gy = 9, level = 2},
-			{kind = "shock", gx = 17, gy = 6, level = 5},
-			{kind = "cannon", gx = 14, gy = 5, level = 4},
+			{kind = "shock", gx = 17, gy = 6, level = 5, specialization = "capacitor"},
+			{kind = "cannon", gx = 14, gy = 5, level = 4, specialization = "siege"},
 			{kind = "slow", gx = 12, gy = 6, level = 1},
 			{kind = "plasma", gx = 20, gy = 2, level = 3},
 			{kind = "poison", gx = 17, gy = 5, level = 3},
@@ -103,12 +103,12 @@ Backdrop.shots = {
 		duration = 14,
 		map = 10,
 		towers = {
-			{kind = "lancer", gx = 16, gy = 7, level = 5},
+			{kind = "lancer", gx = 16, gy = 7, level = 5, specialization = "marksman"},
 			{kind = "slow", gx = 17, gy = 7, level = 1},
-			{kind = "poison", gx = 17, gy = 8, level = 4},
+			{kind = "poison", gx = 17, gy = 8, level = 4, specialization = "virulent"},
 			{kind = "poison", gx = 22, gy = 8, level = 3},
-			{kind = "shock", gx = 16, gy = 8, level = 4},
-			{kind = "cannon", gx = 14, gy = 5, level = 4},
+			{kind = "shock", gx = 16, gy = 8, level = 4, specialization = "capacitor"},
+			{kind = "cannon", gx = 14, gy = 5, level = 4, specialization = "siege"},
 			{kind = "slow", gx = 21, gy = 8, level = 1},
 			{kind = "plasma", gx = 11, gy = 3, level = 2},
 		},
@@ -171,7 +171,7 @@ function Backdrop.start(index)
 
 			if tower then
 				for _ = 1, (t.level - 1) do
-					Towers.upgradeTower(tower)
+					Towers.upgradeTower(tower, tower.level == 3 and t.specialization or nil)
 				end
 			end
 		end
