@@ -12,6 +12,51 @@ local B = Registry.definitions()
 local HOOKS = { "on_shot", "on_tick", "on_hit", "on_kill", "on_expire" }
 local compiledPlans = setmetatable({}, { __mode = "k" })
 
+local function dispatchFireAndForget(hooks, invoke)
+	if not hooks then
+		return
+	end
+	for i = 1, #hooks do
+		invoke(hooks[i].fn, hooks[i].data)
+	end
+end
+
+local function dispatchFirstResult(hooks, invoke)
+	if not hooks then
+		return nil
+	end
+	for i = 1, #hooks do
+		local result = invoke(hooks[i].fn, hooks[i].data)
+		if result ~= nil then
+			return result
+		end
+	end
+	return nil
+end
+
+local function dispatchAndAggregateConsumption(hooks, invoke)
+	local shouldConsume = false
+	if not hooks then
+		return shouldConsume
+	end
+	for i = 1, #hooks do
+		if invoke(hooks[i].fn, hooks[i].data) == "consume" then
+			shouldConsume = true
+		end
+	end
+	return shouldConsume
+end
+
+local function withTemporaryHitCoordinates(p, ctx, dispatch)
+	local oldX, oldY = p.x, p.y
+	if ctx.hitX and ctx.hitY then
+		p.x, p.y = ctx.hitX, ctx.hitY
+	end
+	local result = dispatch()
+	p.x, p.y = oldX, oldY
+	return result
+end
+
 local function hookIsDeclared(declared, hook)
 	if not declared then
 		return true
@@ -64,7 +109,9 @@ local function consumeProjectile(p)
 	if p and not p._didExpireHook then
 		p._didExpireHook = true
 		local hooks = p._hooks and p._hooks.on_expire
-		if hooks then for i = 1, #hooks do hooks[i].fn(p, hooks[i].data) end end
+		dispatchFireAndForget(hooks, function(fn, data)
+			fn(p, data)
+		end)
 	end
 	return "consume"
 end
@@ -99,34 +146,35 @@ end
 
 function ProjectileBehaviors.init(p)
 	local hooks = p._hooks and p._hooks.on_shot
-	if hooks then for i = 1, #hooks do hooks[i].fn(p, hooks[i].data) end end
+	dispatchFireAndForget(hooks, function(fn, data)
+		fn(p, data)
+	end)
 end
 function ProjectileBehaviors.update(p, dt)
 	local hooks = p._hooks and p._hooks.on_tick
-	if hooks then for i = 1, #hooks do
-		local result = hooks[i].fn(p, dt, hooks[i].data)
-		if result == "consume" then
-			return consumeProjectile(p)
-		end
-		if result then
-			return result
-		end
-	end end
+	local result = dispatchFirstResult(hooks, function(fn, data)
+		return fn(p, dt, data)
+	end)
+	if result == "consume" then
+		return consumeProjectile(p)
+	end
+	return result
 end
 function ProjectileBehaviors.hit(p, e, ctx)
 	ctx = ctx or p._defaultHitCtx or { origin = p.hitOrigin or "primary" }
-	local oldX, oldY = p.x, p.y
-	if ctx.hitX and ctx.hitY then
-		p.x, p.y = ctx.hitX, ctx.hitY
-	end
-	local shouldConsume = false
-	local hooks = p._hooks and p._hooks.on_hit
-	if hooks then for i = 1, #hooks do if hooks[i].fn(p, e, hooks[i].data, ctx) == "consume" then shouldConsume = true end end end
-	if e and e.hp and e.hp <= 0 then
-		hooks = p._hooks and p._hooks.on_kill
-		if hooks then for i = 1, #hooks do hooks[i].fn(p, e, hooks[i].data, ctx) end end
-	end
-	p.x, p.y = oldX, oldY
+	local shouldConsume = withTemporaryHitCoordinates(p, ctx, function()
+		local hitHooks = p._hooks and p._hooks.on_hit
+		local consumed = dispatchAndAggregateConsumption(hitHooks, function(fn, data)
+			return fn(p, e, data, ctx)
+		end)
+		if e and e.hp and e.hp <= 0 then
+			local killHooks = p._hooks and p._hooks.on_kill
+			dispatchFireAndForget(killHooks, function(fn, data)
+				fn(p, e, data, ctx)
+			end)
+		end
+		return consumed
+	end)
 	if shouldConsume then
 		return consumeProjectile(p)
 	end
