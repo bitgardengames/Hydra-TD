@@ -23,6 +23,7 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0, slowDurAdd = 0},
+			tiers = {[2] = {dmgMult = 1.125, fireMult = 1.065, rangeAdd = 0.16 * Constants.TILE}},
 			branches = {
 				deep_freeze = {
 					id = "deep_freeze",
@@ -84,6 +85,7 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {[2] = {dmgMult = 1.425, fireMult = 1.0225, rangeAdd = 0.10 * Constants.TILE}},
 			branches = {
 				marksman = {
 					id = "marksman",
@@ -141,6 +143,7 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {[2] = {dmgMult = 1.215, fireMult = 1.065, rangeAdd = 0.09 * Constants.TILE}},
 			branches = {
 				virulent = {
 					id = "virulent",
@@ -201,6 +204,7 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {[2] = {dmgMult = 1.575, fireMult = 1.03, rangeAdd = 0.08 * Constants.TILE}},
 			branches = {
 				siege = {
 					id = "siege",
@@ -255,6 +259,7 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {[2] = {dmgMult = 1.325, fireMult = 1.04, rangeAdd = 0.11 * Constants.TILE}},
 			branches = {
 				capacitor = {
 					id = "capacitor",
@@ -314,6 +319,7 @@ local definitions = {
 		canRotate = true,
 		upgrade = {
 			base = {dmgMult = 1, fireMult = 1, rangeAdd = 0},
+			tiers = {[2] = {dmgMult = 1.265, fireMult = 1.055, rangeAdd = 0.09 * Constants.TILE}},
 			branches = {
 				accelerator = {
 					id = "accelerator",
