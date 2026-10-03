@@ -86,18 +86,16 @@ local SLIDER_KEY_STEP = 0.05
 
 local ROW_W = LABEL_W + SLIDER_W + SLIDER_VALUE_GAP + SLIDER_VALUE_W
 
-local rows = {}
+local rowViews = {}
 local buttons = {}
 
-local sliderRects = {}
-local rowRects = {}
-local tabRects = {}
 local draggingSlider = nil
 local focusedRow = nil
 local controlContext
 
 local tabs = {}
-local activeTab = 1
+local activeTabId
+local tabViews = {}
 local tabAnim = {}
 local tabTime = 0
 local keybindCapture = KeybindCapture.new()
@@ -136,21 +134,27 @@ local function isControlsTab(index)
 	return tab and tab.id == "controls_keyboard"
 end
 
+local function getActiveTab()
+	for i, tab in ipairs(tabs) do
+		if tab.id == activeTabId then
+			return tab, i
+		end
+	end
+end
+
 local function flushSettingsNow()
 	Save.flush()
 end
 
-local function switchTab(nextTab)
-	local clamped = Util.clamp(nextTab, 1, #tabs)
-
-	if clamped == activeTab then
+local function switchTab(tabView)
+	if not tabView or tabView.tab.id == activeTabId then
 		return
 	end
 
 	if draggingSlider then
 		flushSettingsNow()
 	end
-	activeTab = clamped
+	activeTabId = tabView.tab.id
 	draggingSlider = nil
 	keybindCapture:close()
 	focusedRow = nil
@@ -177,7 +181,7 @@ local function exitToMenu()
 end
 
 local function getActiveRows()
-	local tab = tabs[activeTab]
+	local tab = getActiveTab()
 
 	return tab and tab.rows or {}
 end
@@ -192,9 +196,9 @@ local function rowSliderY(yTop)
 	return yTop + (ROW_H - SLIDER_H) * 0.5
 end
 
-local function drawRowHighlight(index, hovered)
+local function drawRowHighlight(view, hovered)
 	if hovered then
-		local r = rowRects[index]
+		local r = view.bounds
 
 		lg.setColor(1, 1, 1, 0.06)
 		lg.rectangle("fill", r.x, r.y, r.w, r.h, 6, 6)
@@ -202,11 +206,12 @@ local function drawRowHighlight(index, hovered)
 end
 
 -- Row renderers
-local function drawSliderRow(row, x, yTop, hovered, index)
+local function drawSliderRow(row, view, hovered)
+	local x, yTop = view.bounds.x, view.bounds.y
 	Text.printShadow(row.label, x, rowTextY(yTop))
 
-	local sliderX = x + LABEL_W
-	local sliderY = rowSliderY(yTop)
+	local sliderX = view.sliderBounds.x
+	local sliderY = view.sliderBounds.y
 
 	local t = max(0, min(1, row.get()))
 
@@ -220,9 +225,9 @@ local function drawSliderRow(row, x, yTop, hovered, index)
 
 	local thumbX = sliderX + SLIDER_W * t
 	local thumbY = sliderY + 5
-	local grow = (hovered or draggingSlider == index) and 2 or 0
+	local grow = (hovered or draggingSlider == row.id) and 2 or 0
 
-	if focusedRow == index then
+	if focusedRow == row.id then
 		lg.setColor(row.color[1], row.color[2], row.color[3], 0.8)
 		lg.setLineWidth(2)
 		lg.rectangle("line", sliderX - 5, sliderY - 7, SLIDER_W + 10, SLIDER_H + 14, 7, 7)
@@ -282,10 +287,10 @@ local function drawActionRow(row, x, yTop)
 	end
 end
 
-local function drawRow(row, hovered, x, yTop, index)
-	drawRowHighlight(index, hovered)
+local function drawRow(view, hovered)
+	drawRowHighlight(view, hovered)
 	lg.setColor(colorText)
-	SettingsControls.dispatch(row, "draw", x, yTop, hovered, index, controlContext)
+	SettingsControls.dispatch(view.row, "draw", view, hovered, controlContext)
 end
 
 local function contains(rect, x, y)
@@ -296,34 +301,19 @@ end
 -- Interaction geometry is layout state, not a side effect of rendering. Build
 -- it once so update, drawing, and input all operate on the same frame's rows.
 local function layoutRows()
-	for i, row in ipairs(rows) do
+	rowViews = {}
+	for i, row in ipairs(getActiveRows()) do
 		local yTop = rowsStartY + (i - 1) * activeLineH - rowsScroll.offset
-		if yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH then
-			local rowRect = rowRects[i] or {}
-			rowRect.x, rowRect.y, rowRect.w, rowRect.h = listX, yTop, ROW_W, ROW_H
-			rowRects[i] = rowRect
-			if row.type == "slider" then
-				local sliderRect = sliderRects[i] or {}
-				sliderRect.x, sliderRect.y = listX + LABEL_W, rowSliderY(yTop)
-				sliderRect.w, sliderRect.h = SLIDER_W, SLIDER_H
-				sliderRects[i] = sliderRect
-			else
-				sliderRects[i] = nil
-			end
-		else
-			rowRects[i] = nil
-			sliderRects[i] = nil
+		local view = {
+			row = row,
+			index = i,
+			bounds = {x = listX, y = yTop, w = ROW_W, h = ROW_H},
+			visible = yTop + ROW_H >= rowsViewportY and yTop <= rowsViewportY + rowsViewportH,
+		}
+		if row.type == "slider" then
+			view.sliderBounds = {x = listX + LABEL_W, y = rowSliderY(yTop), w = SLIDER_W, h = SLIDER_H}
 		end
-	end
-	for i in pairs(rowRects) do
-		if i > #rows then
-			rowRects[i] = nil
-		end
-	end
-	for i in pairs(sliderRects) do
-		if i > #rows then
-			sliderRects[i] = nil
-		end
+		rowViews[#rowViews + 1] = view
 	end
 	layoutDirty = false
 end
@@ -335,10 +325,11 @@ function Screen.load()
 	confirmation = ConfirmationDialog.new()
 	rowsScroll:reset()
 	focusedRow = nil
-	activeTab = 1
+	activeTabId = nil
 	tabTime = 0
 
 	tabs = buildTabs()
+	activeTabId = tabs[1] and tabs[1].id
 
 	buttons = {
 		{
@@ -354,7 +345,7 @@ function Screen.load()
 
 	tabAnim = {}
 	for i = 1, #tabs do
-		tabAnim[i] = (i == activeTab) and 1 or 0
+		tabAnim[i] = (tabs[i].id == activeTabId) and 1 or 0
 	end
 
 	cachedWindowW, cachedWindowH = nil, nil
@@ -364,7 +355,8 @@ end
 local function updatePanelLayout(sw, sh)
 	local cx = floor(sw * 0.5)
 	Fonts.set("menu")
-	rows = getActiveRows()
+	local rows = getActiveRows()
+	local _, activeTab = getActiveTab()
 	local widestLabel = 0
 	for _, row in ipairs(rows) do
 		widestLabel = max(widestLabel, lg.getFont():getWidth(row.label or ""))
@@ -414,14 +406,11 @@ local function updatePanelLayout(sw, sh)
 	local tabsStartX = cx - tabsTotalW * 0.5
 	local tabsY = boxY + boxH + 4
 
+	tabViews = {}
 	for i, tab in ipairs(tabs) do
-		local rect = tabRects[i] or {}
-		rect.x, rect.y = tabsStartX + (i - 1) * (tabW + tabGap), tabsY
-		rect.w, rect.h = tabW, tabH
-		tabRects[i] = rect
-	end
-	for i = #tabs + 1, #tabRects do
-		tabRects[i] = nil
+		tabViews[i] = {tab = tab, index = i, bounds = {
+			x = tabsStartX + (i - 1) * (tabW + tabGap), y = tabsY, w = tabW, h = tabH,
+		}}
 	end
 
 	layoutMeasurementDirty = false
@@ -429,9 +418,9 @@ end
 
 local function updateTabAnimations(dt)
 	local mouseX, mouseY = lm.getPosition()
-	for i, rect in ipairs(tabRects) do
-		local hovered = contains(rect, mouseX, mouseY)
-		local target = (i == activeTab) and 1 or (hovered and 0.65 or 0)
+	for i, view in ipairs(tabViews) do
+		local hovered = contains(view.bounds, mouseX, mouseY)
+		local target = (view.tab.id == activeTabId) and 1 or (hovered and 0.65 or 0)
 		local a = tabAnim[i] or 0
 		tabAnim[i] = a + (target - a) * min(1, dt * tabAnimSpeed)
 	end
@@ -443,11 +432,11 @@ end
 
 local function updateDraggedSlider()
 	if draggingSlider then
-		local rect = sliderRects[draggingSlider]
-
-		if rect then
-			SettingsControls.dispatch(rows[draggingSlider], "setFromPointer",
-				draggingSlider, lm.getX(), controlContext)
+		for _, view in ipairs(rowViews) do
+			if view.row.id == draggingSlider then
+				SettingsControls.dispatch(view.row, "setFromPointer", view, lm.getX(), controlContext)
+				break
+			end
 		end
 	end
 end
@@ -494,6 +483,9 @@ function Screen.localizationChanged()
 	-- Localized row collections are rebuilt by their owner before this hook.
 	-- Widths and counts may both have changed, requiring a complete pass.
 	tabs = buildTabs()
+	if not getActiveTab() then
+		activeTabId = tabs[1] and tabs[1].id
+	end
 	requestLayoutMeasurement()
 end
 
@@ -527,18 +519,17 @@ function Screen.draw()
 	Fonts.set("menu")
 
 	lg.setScissor(listX, rowsViewportY, ROW_W, rowsViewportH)
-	for i, row in ipairs(rows) do
-		local rect = rowRects[i]
-		if rect then
-			drawRow(row, contains(rect, mouseX, mouseY) or focusedRow == i, rect.x, rect.y, i)
+	for _, view in ipairs(rowViews) do
+		if view.visible then
+			drawRow(view, contains(view.bounds, mouseX, mouseY) or focusedRow == view.row.id)
 		end
 	end
 	lg.setScissor()
 
 	local describedRow
-	for i, rect in pairs(rowRects) do
-		if contains(rect, mouseX, mouseY) then
-			describedRow = rows[i]
+	for _, view in ipairs(rowViews) do
+		if view.visible and contains(view.bounds, mouseX, mouseY) then
+			describedRow = view.row
 			break
 		end
 	end
@@ -561,9 +552,9 @@ function Screen.draw()
 	end
 
 	if keybindCapture.rowId then
-		for i, row in ipairs(rows) do
-			if row.id == keybindCapture.rowId then
-				local focusedRect = rowRects[i]
+		for _, view in ipairs(rowViews) do
+			if view.row.id == keybindCapture.rowId then
+				local focusedRect = view.visible and view.bounds
 				if focusedRect then
 					lg.setColor(colorText)
 					Text.printfShadow(keybindCapture.hint or L("settings.controlListeningHint"), focusedRect.x, focusedRect.y + focusedRect.h + 6, focusedRect.w, "left")
@@ -575,10 +566,11 @@ function Screen.draw()
 
 	-- Tabs
 	Fonts.set("menu")
-	for i, rect in ipairs(tabRects) do
-		local tab = tabs[i]
+	for i, view in ipairs(tabViews) do
+		local rect = view.bounds
+		local tab = view.tab
 		local hovered = contains(rect, mouseX, mouseY)
-		local active = i == activeTab
+		local active = tab.id == activeTabId
 		local anim = tabAnim[i] or 0
 		local wobble = active and (sin(tabTime * 4 + i * 0.6) * 0.5 + 0.5) or 0
 		local highlightAlpha = 0.05 + anim * 0.08 + wobble * 0.02
@@ -606,6 +598,7 @@ function Screen.draw()
 	-- Button
 	Button.drawList(buttons)
 
+	local _, activeTab = getActiveTab()
 	if isControlsTab(activeTab) and keybindCapture.conflictMessage then
 		lg.setColor(colorText)
 		Text.printfShadow(keybindCapture.conflictMessage, listX, buttonsStartY - 24, ROW_W, "left")
@@ -618,15 +611,22 @@ function Screen.keypressed(key)
 	if confirmation:isOpen() then
 		return confirmation:keypressed(key)
 	end
+	local rows = getActiveRows()
 	if keybindCapture:keypressed(key, rows) then
 		return
 	end
 
 	if key == "up" or key == "down" then
-		if #rows > 0 then
+		if #rowViews > 0 then
 			local direction = key == "up" and -1 or 1
-			focusedRow = Util.clamp((focusedRow or (direction > 0 and 0 or #rows + 1)) + direction, 1, #rows)
-			local rowTop = (focusedRow - 1) * activeLineH
+			local focusedIndex
+			for i, view in ipairs(rowViews) do
+				if view.row.id == focusedRow then focusedIndex = i; break end
+			end
+			focusedIndex = Util.clamp((focusedIndex or (direction > 0 and 0 or #rowViews + 1)) + direction, 1, #rowViews)
+			local focusedView = rowViews[focusedIndex]
+			focusedRow = focusedView.row.id
+			local rowTop = (focusedView.index - 1) * activeLineH
 			local rowBottom = rowTop + ROW_H
 			if rowTop < rowsScroll.offset then
 				local previousOffset = rowsScroll.offset
@@ -647,12 +647,22 @@ function Screen.keypressed(key)
 	end
 
 	if (key == "left" or key == "right") and focusedRow then
-		SettingsControls.dispatch(rows[focusedRow], "adjust", key == "left" and -1 or 1, controlContext)
+		for _, view in ipairs(rowViews) do
+			if view.row.id == focusedRow then
+				SettingsControls.dispatch(view.row, "adjust", key == "left" and -1 or 1, controlContext)
+				break
+			end
+		end
 		return
 	end
 
 	if (key == "return" or key == "space") and focusedRow then
-		SettingsControls.dispatch(rows[focusedRow], "activate", focusedRow, controlContext)
+		for _, view in ipairs(rowViews) do
+			if view.row.id == focusedRow then
+				SettingsControls.dispatch(view.row, "activate", view, controlContext)
+				break
+			end
+		end
 		return
 	end
 
@@ -683,12 +693,10 @@ function Screen.gamepadpressed(_, button)
 	end
 end
 
-local function findRectAt(rects, x, y)
-	-- Row rectangles are intentionally sparse when the list is scrolled because
-	-- only visible rows are drawn and hit-testable.
-	for i, rect in pairs(rects) do
-		if contains(rect, x, y) then
-			return i
+local function findViewAt(views, x, y)
+	for _, view in ipairs(views) do
+		if view.visible ~= false and contains(view.bounds, x, y) then
+			return view
 		end
 	end
 end
@@ -699,12 +707,11 @@ controlContext = {
 	drawKeybind = drawKeybindRow,
 	drawAction = drawActionRow,
 	drawInfo = drawInfoRow,
-	sliderRects = sliderRects,
 	sliderKeyStep = SLIDER_KEY_STEP,
 	capture = keybindCapture,
 	changed = settingsChanged,
 	flush = flushSettingsNow,
-	beginDrag = function(index) draggingSlider = index end,
+	beginDrag = function(view) draggingSlider = view.row.id end,
 }
 
 function Screen.mousepressed(x, y, button)
@@ -712,19 +719,18 @@ function Screen.mousepressed(x, y, button)
 		return confirmation:mousepressed(x, y, button)
 	end
 	if button == 1 then
-		local tabIndex = findRectAt(tabRects, x, y)
-		if tabIndex then
-			switchTab(tabIndex)
+		local tabView = findViewAt(tabViews, x, y)
+		if tabView then
+			switchTab(tabView)
 			return true
 		end
 
-		local rowIndex = findRectAt(rowRects, x, y)
-		if rowIndex then
-			local row = rows[rowIndex]
-			if contains(sliderRects[rowIndex], x, y) then
-				SettingsControls.dispatch(row, "setFromPointer", rowIndex, x, controlContext)
+		local rowView = findViewAt(rowViews, x, y)
+		if rowView then
+			if contains(rowView.sliderBounds, x, y) then
+				SettingsControls.dispatch(rowView.row, "setFromPointer", rowView, x, controlContext)
 			else
-				SettingsControls.dispatch(row, "activate", rowIndex, controlContext)
+				SettingsControls.dispatch(rowView.row, "activate", rowView, controlContext)
 			end
 			return true
 		end
