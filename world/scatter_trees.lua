@@ -24,7 +24,7 @@ local GRID_H = Constants.GRID_H
 
 local TREE_SWAY_SPEED = 1.35
 local TREE_SWAY_ANGLE = 0.025
-local EVERGREEN_TIER_SWAY = {0.25, 0.38, 0.5}
+local EVERGREEN_TIER_SWAY = {0.3, 0.46, 0.6}
 local EVERGREEN_TIER_PHASE = 0.16
 
 local rng = love.math.newRandomGenerator()
