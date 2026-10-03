@@ -361,15 +361,15 @@ local function drawPathScatter(targetMap, terrain, fillThickness)
 	local halfDot = 3
 	local maxOffset = floor(fillThickness * 0.25)
 	local colorScatterDark = {
-		(terrain.path[1] or 0) * 0.90,
-		(terrain.path[2] or 0) * 0.90,
-		(terrain.path[3] or 0) * 0.90,
+		(terrain.path[1] or 0) * 0.95,
+		(terrain.path[2] or 0) * 0.95,
+		(terrain.path[3] or 0) * 0.95,
 		1,
 	}
 	local colorScatterLight = {
-		(terrain.path[1] or 0) * 1.08,
-		(terrain.path[2] or 0) * 1.08,
-		(terrain.path[3] or 0) * 1.08,
+		(terrain.path[1] or 0) * 1.05,
+		(terrain.path[2] or 0) * 1.05,
+		(terrain.path[3] or 0) * 1.05,
 		1,
 	}
 
