@@ -11,12 +11,13 @@ def _evergreen_branch():
     return source[source.index('elseif t.shape == "evergreen" then') :]
 
 
-def test_evergreen_sway_translates_foliage_without_rotating_it():
+def test_evergreen_sway_rotates_each_tier_from_its_base():
     evergreen = _evergreen_branch()
 
-    assert "local swayX = math.sin(" in evergreen
-    assert "lg.translate(swayX, 0)" in evergreen
-    assert "lg.rotate" not in evergreen
+    assert "local sway = math.sin(" in evergreen
+    assert "lg.translate(x, ly + h)" in evergreen
+    assert "lg.rotate(sway)" in evergreen
+    assert "lg.translate(-x, -(ly + h))" in evergreen
 
 
 def test_evergreen_tiers_keep_per_tree_and_vertical_phase_offsets():
@@ -25,3 +26,10 @@ def test_evergreen_tiers_keep_per_tree_and_vertical_phase_offsets():
     assert "(t.swayPhase or 0)" in evergreen
     assert "(tier - 1) * EVERGREEN_TIER_PHASE" in evergreen
     assert "EVERGREEN_TIER_SWAY[tier]" in evergreen
+
+
+def test_evergreen_sway_increases_from_bottom_to_top():
+    source = (ROOT / "world/scatter_trees.lua").read_text()
+
+    assert "local EVERGREEN_TIER_SWAY = {0.25, 0.38, 0.5}" in source
+    assert "local tier = layers - i + 1" in _evergreen_branch()
