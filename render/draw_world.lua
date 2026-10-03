@@ -218,7 +218,7 @@ local function updateWaterColor(color)
 end
 
 -- This system is already getting ready for a rework
-local function drawScatter(treeMode, targetMap, decorations)
+local function drawScatter(treeMode, targetMap, decorations, presentationTime)
 	targetMap = targetMap or MapMod.map
 	local biome = targetMap and targetMap.biome
 	local scatter = biome and biome.scatter
@@ -227,7 +227,7 @@ local function drawScatter(treeMode, targetMap, decorations)
 		return
 	end
 
-	if scatter.rocks and scatter.rocks.enabled then
+	if treeMode ~= "animated" and scatter.rocks and scatter.rocks.enabled then
 		Rocks.draw(decorations and decorations.rocks, targetMap)
 	end
 
@@ -235,22 +235,19 @@ local function drawScatter(treeMode, targetMap, decorations)
 		Trees.draw(treeMode, decorations and decorations.trees, targetMap)
 	end
 
-	if scatter.cactus and scatter.cactus.enabled then
-		Cacti.draw(decorations and decorations.cacti, targetMap)
+	-- Gameplay's terrain canvas uses the static pass; animated cacti are drawn
+	-- over it below. Preview/export callers use the default, stable zero-time pose.
+	if treeMode ~= "static" and scatter.cactus and scatter.cactus.enabled then
+		Cacti.draw(decorations and decorations.cacti, targetMap, presentationTime or 0)
 	end
 
-	if scatter.mushrooms and scatter.mushrooms.enabled then
+	if treeMode ~= "animated" and scatter.mushrooms and scatter.mushrooms.enabled then
 		Mushrooms.draw(decorations and decorations.mushrooms, targetMap)
 	end
 end
 
 local function drawAnimatedScatter()
-	local biome = MapMod.map and MapMod.map.biome
-	local trees = biome and biome.scatter and biome.scatter.trees
-
-	if trees and trees.enabled then
-		Trees.draw("animated")
-	end
+	drawScatter("animated", MapMod.map, nil, State.presentationTime or 0)
 end
 
 -- Keep preview/export maps isolated from the gameplay map while avoiding rebuilding
@@ -419,7 +416,7 @@ end
 local function drawWorld()
 	drawGrass()
 	drawPath()
-	drawScatter()
+	drawScatter(nil, nil, nil, State.presentationTime or 0)
 end
 
 local function drawGrid()
