@@ -94,7 +94,7 @@ local function buildGrassScatterCache(terrain, map)
 
 			if not (col and col[y]) then
 				local seed = (x * 127 + y * 331) % 997
-				local r = seed % 4
+				local r = seed % 3
 
 				if r == 0 then
 					local useLight = (seed % 7) < 3
@@ -356,6 +356,52 @@ local function drawPathGeometry(geometry, thickness, color)
 	end
 end
 
+local function drawPathScatter(targetMap, terrain, fillThickness)
+	local path = targetMap.path
+	local halfDot = 3
+	local maxOffset = floor(fillThickness * 0.25)
+	local colorScatterDark = {
+		(terrain.path[1] or 0) * 0.90,
+		(terrain.path[2] or 0) * 0.90,
+		(terrain.path[3] or 0) * 0.90,
+		1,
+	}
+	local colorScatterLight = {
+		(terrain.path[1] or 0) * 1.08,
+		(terrain.path[2] or 0) * 1.08,
+		(terrain.path[3] or 0) * 1.08,
+		1,
+	}
+
+	for i = 1, #path do
+		local point = path[i]
+		local previous = path[i - 1]
+
+		-- Segment endpoints are repeated in authored paths, so only decorate each
+		-- occupied tile once.
+		if not previous or point[1] ~= previous[1] or point[2] ~= previous[2] then
+			local seed = (point[1] * 127 + point[2] * 331) % 997
+
+			if seed % 5 == 0 then
+				local neighbor = path[i + 1] or previous
+				local horizontal = neighbor and neighbor[1] ~= point[1]
+				local offset = seed % (maxOffset * 2 + 1) - maxOffset
+				local wx, wy = gridToCenter(point[1], point[2])
+
+				lg.setColor(seed % 7 < 3 and colorScatterLight or colorScatterDark)
+				lg.rectangle(
+					"fill",
+					wx + (horizontal and 0 or offset) - halfDot,
+					wy + (horizontal and offset or 0) - halfDot,
+					halfDot * 2,
+					halfDot * 2,
+					2
+				)
+			end
+		end
+	end
+end
+
 local function drawPath(targetMap)
 	targetMap = targetMap or MapMod.map
 	local geometry = getPathGeometry(targetMap)
@@ -367,6 +413,7 @@ local function drawPath(targetMap)
 	drawPathGeometry(geometry, outlineThickness, terrain.pathOutline)
 
 	drawPathGeometry(geometry, fillThickness, terrain.path)
+	drawPathScatter(targetMap, terrain, fillThickness)
 end
 
 local function drawWorld()
