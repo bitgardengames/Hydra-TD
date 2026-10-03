@@ -263,7 +263,6 @@ local function clearTowerIndexAt(gx, gy, expectedTower)
 		if not next(col) then
 			towersByCell[gx] = nil
 		end
-		::continue_tower_update::
 	end
 end
 
@@ -850,6 +849,146 @@ local function updateSuppression(dt)
 	boss.suppressionTimer = suppression.period
 end
 
+local function tickTowerTimers(t, dt)
+	local prevWindUp = t.windUp or 0
+	t.cooldown = max(0, (t.cooldown or 0) - dt)
+	t.windUp = max(0, prevWindUp - dt)
+	t.retargetT = max(0, (t.retargetT or 0) - dt)
+	return prevWindUp > 0 and t.windUp <= 0
+end
+
+local function resolveTowerTarget(t)
+	local target = t.target
+	if target and not isSemanticallyValidTarget(t, target) then
+		target = nil
+	end
+
+	if not target and t.retargetT <= 0 then
+		target = findTarget(t)
+		t.retargetT = nextRetargetInterval(t)
+	end
+
+	t.target = target
+	return target
+end
+
+local function updateTowerAim(t, target, windUpCompleted, dt)
+	if not target then
+		t.lastTargetId = nil
+		t.lastTargetX = nil
+		t.lastTargetY = nil
+		t.lastAimDiff = nil
+		t.aimStaleFrames = 0
+		return nil
+	end
+
+	local targetId = target.id or target.uid or target.spawnId or target
+	local targetX, targetY = target.x, target.y
+	local lastTargetX = t.lastTargetX
+	local lastTargetY = t.lastTargetY
+	local dxTarget = (targetX or 0) - (lastTargetX or targetX or 0)
+	local dyTarget = (targetY or 0) - (lastTargetY or targetY or 0)
+	local movedEnough = (dxTarget * dxTarget + dyTarget * dyTarget) > AIM_RECOMPUTE_POS_EPS2
+	local targetChanged = targetId ~= t.lastTargetId
+	local hasFreshGate = windUpCompleted or t.cooldown <= 0
+	local staleFrames = (t.aimStaleFrames or 0) + 1
+	local shouldRecompute = targetChanged
+		or movedEnough
+		or staleFrames >= AIM_RECOMPUTE_STALE_FRAMES
+		or hasFreshGate
+
+	if not shouldRecompute and t.canRotate and t.lastAimDiff then
+		shouldRecompute = abs(t.lastAimDiff) > AIM_RECOMPUTE_ANGLE_EPS
+	end
+
+	local aimDiff
+	if shouldRecompute then
+		local ax, ay = targetX, targetY
+		local targetSpeed = target.speed or 0
+		if t.splash and targetSpeed > SPLASH_LEAD_SPEED_THRESHOLD then
+			local speedFactor = min(targetSpeed / 120, 0.18)
+			-- Preserve the tuned lead at the authored base speed, while making a
+			-- future branch-specific shell speed participate in prediction.
+			local projectileLeadScale = (t.def.projSpeed or t.projSpeed) / max(1, t.projSpeed or 1)
+			local leadTime = (0.28 + speedFactor) * projectileLeadScale
+			if target.slowTimer and target.slowTimer > 0 then
+				leadTime = leadTime * 0.85
+			end
+			local futureDist = (target.dist or 0) + targetSpeed * leadTime
+			local nx, ny = sampleFast(futureDist)
+			ax = ax + (nx - targetX)
+			ay = ay + (ny - targetY)
+		end
+
+		t.aimX, t.aimY = ax, ay
+		t.targetAngle = atan2(ay - t.y, ax - t.x)
+		aimDiff = normalizeAngle(t.targetAngle - t.angle)
+		t.lastTargetId = targetId
+		t.lastTargetX, t.lastTargetY = targetX, targetY
+		t.aimStaleFrames = 0
+	else
+		aimDiff = t.lastAimDiff
+		t.aimStaleFrames = staleFrames
+	end
+
+	if t.canRotate then
+		local recoilT = t.recoil / (t.recoilStrength or 1)
+		local recoilDamp = 1 - min(1, recoilT)
+		local turnSpeed = (t.turnSpeed or 12) * (1 + t.fireAnim * 0.35) * recoilDamp
+		if abs(aimDiff) > 0.001 then
+			t.angle = t.angle + aimDiff * min(1, turnSpeed * dt)
+			aimDiff = normalizeAngle(t.targetAngle - t.angle)
+		end
+	else
+		aimDiff = 0
+	end
+
+	t.lastAimDiff = aimDiff
+	return aimDiff
+end
+
+local function updateTowerFiring(t, target, aimDiff, windUpCompleted)
+	if windUpCompleted and target then
+		local canFire = not t.canRotate or (aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS)
+		if canFire then
+			Emissions.emit(t, target)
+			t.fireAnim = 1
+			t.recoil = t.recoilStrength or 0
+			t.cooldown = t.fireInterval
+		end
+		t.windUp = 0
+	elseif t.windUp > 0 then
+		-- Keep winding up.
+	elseif t.cooldown <= 0 and target then
+		if not t.canRotate or (aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS) then
+			t.windUp = 0.08
+		end
+	end
+end
+
+local function updateTower(t, dt)
+	local windUpCompleted = tickTowerTimers(t, dt)
+	updateTowerVisuals(t, dt)
+
+	if (t.suppressedTimer or 0) > 0 then
+		t.target = nil
+		t.windUp = 0
+		return
+	end
+
+	if t.cooldown > 0 and not t.target and t.windUp <= 0 and t.retargetT > 0 then
+		return
+	end
+
+	local target = resolveTowerTarget(t)
+	if not target and t.cooldown > 0 and t.windUp <= 0 then
+		return
+	end
+
+	local aimDiff = updateTowerAim(t, target, windUpCompleted, dt)
+	updateTowerFiring(t, target, aimDiff, windUpCompleted)
+end
+
 local function updateTowers(dt)
 	-- Retire last frame's targeting keys even when no tower needs to retarget.
 	beginTargetingFrame(State.frameId)
@@ -860,165 +999,7 @@ local function updateTowers(dt)
 	updateSuppression(dt)
 
 	for i = 1, #towers do
-		local t = towers[i]
-		local prevWindUp = t.windUp or 0
-		t.cooldown = max(0, (t.cooldown or 0) - dt)
-		t.windUp = max(0, prevWindUp - dt)
-		t.retargetT = max(0, (t.retargetT or 0) - dt)
-		local windUpCompleted = prevWindUp > 0 and t.windUp <= 0
-
-		updateTowerVisuals(t, dt)
-		if (t.suppressedTimer or 0) > 0 then
-			t.target = nil
-			t.windUp = 0
-			goto continue_tower_update
-		end
-
-		if t.cooldown > 0
-			and not t.target
-			and (not t.windUp or t.windUp <= 0)
-			and t.retargetT > 0 then
-			goto continue_tower_update
-		end
-
-		local target = t.target
-
-		-- Keep existing target if still valid
-		if target then
-			if not isSemanticallyValidTarget(t, target) then
-				target = nil
-			end
-		end
-
-		-- Only search when we need a new target
-		local canRetarget = t.retargetT <= 0
-		if not target and canRetarget then
-			target = findTarget(t)
-			t.retargetT = nextRetargetInterval(t)
-		end
-
-		t.target = target
-
-		if not target and t.cooldown > 0 and (not t.windUp or t.windUp <= 0) then
-			goto continue_tower_update
-		end
-
-		-- Aim + rotation
-		local aimDiff = nil
-		local canRotate = t.canRotate
-		local tx, ty = t.x, t.y
-		local turnSpeedBase = t.turnSpeed or 12
-		local recoilStrength = t.recoilStrength or 1
-
-		if target then
-			local targetId = target.id or target.uid or target.spawnId or target
-			local targetX, targetY = target.x, target.y
-			local lastTargetId = t.lastTargetId
-			local lastTargetX = t.lastTargetX
-			local lastTargetY = t.lastTargetY
-			local dxTarget = (targetX or 0) - (lastTargetX or targetX or 0)
-			local dyTarget = (targetY or 0) - (lastTargetY or targetY or 0)
-			local movedEnough = (dxTarget * dxTarget + dyTarget * dyTarget) > AIM_RECOMPUTE_POS_EPS2
-			local targetChanged = targetId ~= lastTargetId
-			local hasFreshGate = windUpCompleted or (t.cooldown <= 0)
-			local staleFrames = (t.aimStaleFrames or 0) + 1
-			local staleExceeded = staleFrames >= AIM_RECOMPUTE_STALE_FRAMES
-
-			local shouldRecompute = targetChanged or movedEnough or staleExceeded or hasFreshGate
-
-			if not shouldRecompute and canRotate and t.lastAimDiff then
-				shouldRecompute = abs(t.lastAimDiff) > AIM_RECOMPUTE_ANGLE_EPS
-			end
-
-			if shouldRecompute then
-				local ax, ay = targetX, targetY
-				local targetSpeed = target.speed or 0
-				if t.splash and targetSpeed > SPLASH_LEAD_SPEED_THRESHOLD then
-					local speedFactor = min(targetSpeed / 120, 0.18)
-					-- Preserve the tuned lead at the authored base speed, while making a
-					-- future branch-specific shell speed participate in prediction.
-					local projectileLeadScale = (t.def.projSpeed or t.projSpeed) / max(1, t.projSpeed or 1)
-					local leadTime = (0.28 + speedFactor) * projectileLeadScale
-
-					if target.slowTimer and target.slowTimer > 0 then
-						leadTime = leadTime * 0.85
-					end
-
-					local futureDist = (target.dist or 0) + targetSpeed * leadTime
-					local nx, ny = sampleFast(futureDist)
-
-					ax = ax + (nx - targetX)
-					ay = ay + (ny - targetY)
-				end
-
-				t.aimX = ax
-				t.aimY = ay
-
-				local dx = ax - tx
-				local dy = ay - ty
-				local targetAngle = atan2(dy, dx)
-				t.targetAngle = targetAngle
-				aimDiff = normalizeAngle(targetAngle - t.angle)
-
-				t.lastTargetId = targetId
-				t.lastTargetX = targetX
-				t.lastTargetY = targetY
-				t.lastAimDiff = aimDiff
-				t.aimStaleFrames = 0
-			else
-				aimDiff = t.lastAimDiff
-				t.aimStaleFrames = staleFrames
-			end
-
-			if canRotate then
-				local recoilT = t.recoil / recoilStrength
-				local recoilDamp = 1 - min(1, recoilT)
-				local turnSpeed = turnSpeedBase * (1 + t.fireAnim * 0.35) * recoilDamp
-
-				if abs(aimDiff) > 0.001 then
-					t.angle = t.angle + aimDiff * min(1, turnSpeed * dt)
-					aimDiff = normalizeAngle(t.targetAngle - t.angle)
-					t.lastAimDiff = aimDiff
-				end
-			else
-				aimDiff = 0
-				t.lastAimDiff = 0
-			end
-		else
-			t.lastTargetId = nil
-			t.lastTargetX = nil
-			t.lastTargetY = nil
-			t.lastAimDiff = nil
-			t.aimStaleFrames = 0
-		end
-
-		-- Wind-up / fire
-		if windUpCompleted and target then
-				local canFire = true
-
-				if canRotate then
-					canFire = aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS
-				end
-
-				if canFire then
-					Emissions.emit(t, target)
-					t.fireAnim = 1
-					t.recoil = t.recoilStrength or 0
-
-					t.cooldown = t.fireInterval
-				end
-
-				t.windUp = 0
-
-		elseif t.windUp > 0 then
-			-- Keep winding up.
-		elseif t.cooldown <= 0 and target then
-			if not canRotate or (aimDiff and abs(aimDiff) <= FIRE_ANGLE_EPS) then
-				t.windUp = 0.08
-			end
-		end
-
-		::continue_tower_update::
+		updateTower(towers[i], dt)
 	end
 end
 
@@ -1063,5 +1044,12 @@ return {
 	findTowerAt = findTowerAt,
 	updateTowers = updateTowers,
 	updateSuppression = updateSuppression,
+	_test = {
+		tickTowerTimers = tickTowerTimers,
+		resolveTowerTarget = resolveTowerTarget,
+		updateTowerAim = updateTowerAim,
+		updateTowerFiring = updateTowerFiring,
+		updateTower = updateTower,
+	},
 	clear = clear,
 }
