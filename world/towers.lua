@@ -631,9 +631,24 @@ getUpgradePreview = function(t, specialization)
 	currentStats.mechanics = currentBehaviors
 	nextStats.directDamage = nextDamage
 	nextStats.mechanics = nextBehaviors
-	addPreviewRow(rows, "damage", numberText(currentDamage, 1), numberText(nextDamage, 1), nextDamage > currentDamage and "good" or "bad", true)
-	addPreviewRow(rows, "fireRate", tostring(TowerStatDisplay.attackSpeed(currentStats.fireRate)), tostring(TowerStatDisplay.attackSpeed(nextStats.fireRate)), nextStats.fireRate > currentStats.fireRate and "good" or "bad", true)
-	addPreviewRow(rows, "range", tostring(TowerStatDisplay.range(currentStats.range)), tostring(TowerStatDisplay.range(nextStats.range)), nextStats.range > currentStats.range and "good" or "bad", true)
+	local formattedCurrentDamage = numberText(currentDamage, 1)
+	local formattedNextDamage = numberText(nextDamage, 1)
+	local formattedCurrentFireRate = tostring(TowerStatDisplay.attackSpeed(currentStats.fireRate))
+	local formattedNextFireRate = tostring(TowerStatDisplay.attackSpeed(nextStats.fireRate))
+	local formattedCurrentRange = tostring(TowerStatDisplay.range(currentStats.range))
+	local formattedNextRange = tostring(TowerStatDisplay.range(nextStats.range))
+	addPreviewRow(
+		rows, "damage", formattedCurrentDamage, formattedNextDamage,
+		nextDamage > currentDamage and "good" or "bad", true
+	)
+	addPreviewRow(
+		rows, "fireRate", formattedCurrentFireRate, formattedNextFireRate,
+		nextStats.fireRate > currentStats.fireRate and "good" or "bad", true
+	)
+	addPreviewRow(
+		rows, "range", formattedCurrentRange, formattedNextRange,
+		nextStats.range > currentStats.range and "good" or "bad", true
+	)
 	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
 	local upgrade = t.def.upgrade or {}
 	local branchId = t.specialization or specialization
