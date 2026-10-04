@@ -534,6 +534,10 @@ local function numberText(value, decimals, suffix)
 	return format("%." .. decimals .. "f%s", value, suffix or "")
 end
 
+local function upgradeDirection(currentValue, nextValue)
+	return nextValue > currentValue and "good" or "bad"
+end
+
 local function addPreviewRow(rows, key, current, nextValue, direction, always)
 	if always or current ~= nextValue then
 		rows[#rows + 1] = {
@@ -639,15 +643,15 @@ getUpgradePreview = function(t, specialization)
 	local formattedNextRange = tostring(TowerStatDisplay.range(nextStats.range))
 	addPreviewRow(
 		rows, "damage", formattedCurrentDamage, formattedNextDamage,
-		nextDamage > currentDamage and "good" or "bad", true
+		upgradeDirection(currentDamage, nextDamage), true
 	)
 	addPreviewRow(
 		rows, "fireRate", formattedCurrentFireRate, formattedNextFireRate,
-		nextStats.fireRate > currentStats.fireRate and "good" or "bad", true
+		upgradeDirection(currentStats.fireRate, nextStats.fireRate), true
 	)
 	addPreviewRow(
 		rows, "range", formattedCurrentRange, formattedNextRange,
-		nextStats.range > currentStats.range and "good" or "bad", true
+		upgradeDirection(currentStats.range, nextStats.range), true
 	)
 	addBehaviorRows(rows, currentBehaviors, nextBehaviors)
 	local upgrade = t.def.upgrade or {}
