@@ -7,7 +7,7 @@ import json
 import re
 from pathlib import Path
 
-from lua_source import named_entries, table_body
+from lua_source import indexed_entries, named_entries, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "systems/campaign_wave_defs.lua"
@@ -24,13 +24,14 @@ def parse_waves(text: str) -> dict[str, list[list[dict]]]:
     maps = named_entries(table_body(text, declaration, SOURCE), declaration, SOURCE)
     result = {}
     for map_id, block in maps.items():
+        authored_waves = indexed_entries(block, map_id, SOURCE)
         waves = []
         for wave in range(1, 21):
-            match = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)\}}", block)
-            if not match:
+            wave_body = authored_waves.get(wave)
+            if wave_body is None:
                 raise ValueError(f"{map_id} wave {wave} is missing")
             groups = []
-            for group in GROUP.finditer(match.group(1)):
+            for group in GROUP.finditer(wave_body):
                 groups.append(
                     {
                         "kind": group["kind"],

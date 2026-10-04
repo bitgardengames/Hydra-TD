@@ -10,7 +10,7 @@ import re
 import sys
 from pathlib import Path
 
-from lua_source import named_entries, numeric_fields, table_body
+from lua_source import indexed_entries, named_entries, numeric_fields, table_body
 from upgrade_model import progression
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,14 +53,14 @@ def definitions() -> tuple[dict, dict, dict]:
         waves_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua"
     ).items():
         maps[map_id] = []
-        wave_numbers = sorted(int(value) for value in re.findall(r"\[(\d+)\]\s*=", block))
+        waves = indexed_entries(
+            block, map_id, ROOT / "systems/campaign_wave_defs.lua"
+        )
+        wave_numbers = sorted(waves)
         if wave_numbers != list(range(1, max(wave_numbers, default=0) + 1)):
             raise ValueError(f"{map_id} waves must be contiguous from 1")
         for wave in wave_numbers:
-            match = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)", block)
-            if not match:
-                raise ValueError(f"{map_id} wave {wave} not found")
-            groups = re.findall(r'g\("([a-z_]+)",\s*(\d+)', match.group(1))
+            groups = re.findall(r'g\("([a-z_]+)",\s*(\d+)', waves[wave])
             maps[map_id].append(
                 {
                     kind: sum(int(n) for k, n in groups if k == kind)

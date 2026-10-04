@@ -83,6 +83,7 @@ def table_body(text: str, declaration: str, source_path: str | Path) -> str:
 
 
 _ENTRY = re.compile(r"([a-z][a-z0-9_]*)\s*=\s*\{")
+_INDEXED_ENTRY = re.compile(r"\[(\d+)\]\s*=\s*\{")
 
 
 def iter_named_entries(
@@ -115,6 +116,54 @@ def iter_named_entries(
 
 def named_entries(body: str, declaration: str, source_path: str | Path) -> dict[str, str]:
     return dict(iter_named_entries(body, declaration, source_path))
+
+
+def _iter_indexed_entry_spans(
+    body: str, declaration: str, source_path: str | Path
+) -> Iterator[tuple[int, int, int]]:
+    pos = 0
+    while pos < len(body):
+        match = _INDEXED_ENTRY.match(body, pos)
+        if not match:
+            if body[pos] == "{":
+                close = _brace_end(body, pos)
+                pos = len(body) if close is None else close + 1
+            else:
+                pos += 1
+            continue
+        opening = match.end() - 1
+        close = _brace_end(body, opening)
+        index = int(match.group(1))
+        if close is None:
+            raise ValueError(
+                f"unterminated Lua entry {index} in declaration {declaration!r} "
+                f"in {_where(source_path)}"
+            )
+        yield index, opening + 1, close
+        pos = close + 1
+
+
+def iter_indexed_entries(
+    body: str, declaration: str, source_path: str | Path
+) -> Iterator[tuple[int, str]]:
+    """Yield top-level numeric table entries, including multiline entry bodies."""
+    for index, start, end in _iter_indexed_entry_spans(body, declaration, source_path):
+        yield index, body[start:end]
+
+
+def indexed_entries(body: str, declaration: str, source_path: str | Path) -> dict[int, str]:
+    """Return top-level ``[number] = {...}`` entries keyed by their number."""
+    return dict(iter_indexed_entries(body, declaration, source_path))
+
+
+def indexed_entry_spans(
+    body: str, declaration: str, source_path: str | Path
+) -> dict[int, tuple[int, int]]:
+    """Return entry-content offsets for callers which safely edit Lua source."""
+    return {
+        index: (start, end)
+        for index, start, end in _iter_indexed_entry_spans(body, declaration, source_path)
+    }
 
 
 def numeric_fields(body: str) -> dict[str, float]:

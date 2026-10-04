@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 HERE = ROOT / "tools/balance"
 sys.path.insert(0, str(HERE))
 import challenge_fixtures  # noqa: E402 (local, dependency-free fixture)
+from lua_source import indexed_entry_spans  # noqa: E402
 
 MANIFEST = HERE / "tuning_parameters.json"
 PROFILES = HERE / "target_profiles.json"
@@ -72,22 +73,24 @@ def value_span(text: str, parameter: dict) -> tuple[int, int, str]:
         relative_start, relative_end = entry_block(text[root:], map_id)
         start, end = root + relative_start, root + relative_end
         body = text[start:end]
-        row = re.search(rf"^\s*\[{wave}\]\s*=\s*\{{([^\n]+)", body, re.M)
+        spans = indexed_entry_spans(body, map_id, parameter["source_file"])
+        span = spans.get(int(wave))
+        if not span:
+            raise ValueError(f"wave not found: {parameter['entry']}")
+        wave_start, wave_end = span
+        wave_body = body[wave_start:wave_end]
         # Start-immediately groups omit the optional delay argument.
-        calls = (
-            list(
-                re.finditer(
-                    r'g\("[a-z_]+",\s*([0-9.]+),\s*([0-9.]+)(?:,\s*([0-9.]+))?', row.group(1)
-                )
+        calls = list(
+            re.finditer(
+                r'g\("[a-z_]+",\s*([0-9.]+),\s*([0-9.]+)(?:,\s*([0-9.]+))?',
+                wave_body,
             )
-            if row
-            else []
         )
         call = calls[int(group) - 1]
         capture = 1 if key == "count" else 2
         return (
-            start + row.start(1) + call.start(capture),
-            start + row.start(1) + call.end(capture),
+            start + wave_start + call.start(capture),
+            start + wave_start + call.end(capture),
             call.group(capture),
         )
     start, end = entry_block(text, parameter["entry"])

@@ -136,6 +136,7 @@ def parse_detail():
             towers[kind]["tick"] = 0.14
     _, branch_towers = progression()
     for kind, parsed in towers.items():
+        parsed["tiers"] = branch_towers[kind]["tiers"]
         parsed["branches"] = branch_towers[kind]["branches"]
     enemies = {}
     enemy_root = table_body(enemy_text, "return", ROOT / "world/enemy_defs.lua")
@@ -653,7 +654,10 @@ def check(report):
     bands = json.loads(BANDS.read_text())
     errors = []
     for row in report["results"]:
-        req = bands["required_policy_by_difficulty"][row["difficulty"]]
+        key = f'{row["difficulty"]}/{row["map"]}'
+        req = bands.get("required_policy_by_map", {}).get(
+            key, bands["required_policy_by_difficulty"][row["difficulty"]]
+        )
         selected = row["policies"][req["policy"]]
         rate = selected["victory_rate"]
         if "minimum_victory_rate" in req and rate < req["minimum_victory_rate"]:

@@ -15,7 +15,7 @@ import re
 import sys
 from pathlib import Path
 
-from lua_source import named_entries, numeric_field, table_body
+from lua_source import indexed_entries, named_entries, numeric_field, table_body
 
 ROOT = Path(__file__).resolve().parents[2]
 BP = 10_000
@@ -126,13 +126,13 @@ def definitions():
         wave_root, "wavesByMapId", ROOT / "systems/campaign_wave_defs.lua"
     ).items():
         maps[map_id] = []
-        wave_numbers = sorted(int(value) for value in re.findall(r"\[(\d+)\]\s*=", body))
+        waves = indexed_entries(
+            body, map_id, ROOT / "systems/campaign_wave_defs.lua"
+        )
+        wave_numbers = sorted(waves)
         if wave_numbers != list(range(1, max(wave_numbers, default=0) + 1)):
             raise ValueError(f"{map_id} waves must be contiguous from 1")
         for wave in wave_numbers:
-            row = re.search(rf"\[{wave}\]\s*=\s*\{{([^\n]+)", body)
-            if not row:
-                raise ValueError(f"missing {map_id} wave {wave}")
             maps[map_id].append(
                 [
                     {
@@ -141,7 +141,7 @@ def definitions():
                         "spacing_ms": half_up(decimal_bp(s) * 1000, BP),
                         "delay_ms": half_up(decimal_bp(d or "0") * 1000, BP),
                     }
-                    for k, c, s, d in group_re.findall(row.group(1))
+                    for k, c, s, d in group_re.findall(waves[wave])
                 ]
             )
     boss_root = table_body(
