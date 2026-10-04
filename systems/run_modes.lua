@@ -4,7 +4,11 @@ RunModes.CAMPAIGN = "campaign"
 RunModes.REPLAY = "replay"
 RunModes.MODULE_PLAYTEST = "module_playtest"
 
-local valid = {campaign = true, replay = true, module_playtest = true}
+local valid = {
+	campaign = true,
+	replay = true,
+	module_playtest = true,
+}
 
 function RunModes.normalize(mode)
 	return valid[mode] and mode or RunModes.CAMPAIGN
@@ -37,10 +41,24 @@ function RunModes.experimentalModulesEnabled(state)
 		and state.runRules.experimentalModules == true
 end
 
-function RunModes.isCampaign(state) return RunModes.get(state) == RunModes.CAMPAIGN end
-function RunModes.isReplay(state) return RunModes.get(state) == RunModes.REPLAY end
-function RunModes.hasCampaignVictory() return true end
-function RunModes.awardsCampaignProgress() return true end
-function RunModes.lossCondition(state) return (tonumber(state and state.lives) or 0) <= 0 end
+function RunModes.isCampaign(state)
+	return RunModes.get(state) == RunModes.CAMPAIGN
+end
+
+function RunModes.isReplay(state)
+	return RunModes.get(state) == RunModes.REPLAY
+end
+
+function RunModes.hasCampaignVictory()
+	return true
+end
+
+function RunModes.awardsCampaignProgress()
+	return true
+end
+
+function RunModes.lossCondition(state)
+	return (tonumber(state and state.lives) or 0) <= 0
+end
 
 return RunModes
