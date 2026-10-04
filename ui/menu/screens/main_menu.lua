@@ -89,6 +89,16 @@ function Screen.load()
 			end
 		},
 		{
+			id = "career",
+			label = L("menu.career"),
+			w = btnW,
+			h = btnH,
+			onClick = function()
+				require("ui.menu.menu").set("career")
+				Sound.play("uiConfirm")
+			end
+		},
+		{
 			id = "settings",
 			label = L("menu.settings"),
 			w = btnW,

@@ -7,6 +7,7 @@ return {
 
 	menu = {
 		play = "Play",
+		career = "Career & Records",
 		settings = "Settings",
 		quit = "Quit",
 		back = "Back",
@@ -16,6 +17,32 @@ return {
 		mapSelect = "Map Select",
 		nextMap = "Next Map",
 		paused = "Paused",
+	},
+
+	career = {
+		title = "COMMAND CENTER",
+		tabs = {career = "Career", records = "Records", codex = "Enemy Codex"},
+		mapsCleared = "Maps Cleared",
+		medalsEarned = "Medals Earned",
+		enemiesDefeated = "Enemies Defeated",
+		bossesDefeated = "Bosses Defeated",
+		towersPlaced = "Towers Placed",
+		towerUpgrades = "Tower Upgrades",
+		damageDealt = "Tower Damage",
+		achievements = "Achievements",
+		recordMap = "Map",
+		recordMedals = "Medals",
+		recordScore = "Best Score",
+		recordTime = "Fastest Clear",
+		recordLeaks = "Fewest Leaks",
+		unknownEnemy = "Unknown Enemy",
+		notEncountered = "Not yet encountered",
+		discoverHint = "Encounter this enemy during the campaign to reveal its dossier.",
+		enemyKills = "%s defeated",
+		kills = "Defeated",
+		leaks = "Leaks",
+		fastestKill = "Fastest Kill",
+		seconds = "%.1fs",
 	},
 
 	confirmation = {
