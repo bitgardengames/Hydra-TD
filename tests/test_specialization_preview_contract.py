@@ -13,7 +13,9 @@ def _branch_ids(source):
 def test_every_tower_branch_has_an_authored_preview():
     tower_ids = _branch_ids((ROOT / "world/tower_defs.lua").read_text())
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
-    preview_ids = set(re.findall(r"^\t([a-z_]+)\s*=\{duration=", preview, re.M))
+    preview_ids = set(
+        re.findall(r"^\t([a-z_]+)\s*=\s*\{\s*duration\s*=", preview, re.M)
+    )
     branch_ids = {
         "marksman",
         "rupture",
@@ -99,20 +101,29 @@ def test_preview_uses_grid_authored_paths_and_the_gameplay_path_renderer():
 def test_rupture_and_cold_field_previews_use_the_bend_composition():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
     for branch in ("rupture", "cold_field"):
-        definition = re.search(rf"^\t{branch}=\{{([^\n]+)", preview, re.M).group(1)
-        assert "path=bend" in definition
-        assert "camera=bendCamera" in definition
-        assert 'tower={kind="' in definition
+        definition = re.search(
+            rf"^\t{branch}\s*=\s*\{{(.*?)^\t\}},", preview, re.M | re.S
+        ).group(1)
+        assert re.search(r"\bpath\s*=\s*bend\b", definition)
+        assert re.search(r"\bcamera\s*=\s*bendCamera\b", definition)
+        assert re.search(r'\btower\s*=\s*\{\s*kind\s*=\s*"', definition)
 
-    rupture = re.search(r"^\trupture=\{([^\n]+)", preview, re.M).group(1)
-    cold_field = re.search(r"^\tcold_field=\{([^\n]+)", preview, re.M).group(1)
-    assert "x=6,y=2" in rupture
-    assert "x=4,y=3" in cold_field
+    rupture = re.search(
+        r"^\trupture\s*=\s*\{(.*?)^\t\},", preview, re.M | re.S
+    ).group(1)
+    cold_field = re.search(
+        r"^\tcold_field\s*=\s*\{(.*?)^\t\},", preview, re.M | re.S
+    ).group(1)
+    assert re.search(r"\bx\s*=\s*6,\s*y\s*=\s*2", rupture)
+    assert re.search(r"\bx\s*=\s*4,\s*y\s*=\s*3", cold_field)
 
 
 def test_preview_composition_uses_real_grid_placement_and_world_distances():
     preview = (ROOT / "ui/specialization_preview.lua").read_text()
-    towers = re.findall(r'tower=\{kind="[^"]+",x=(\d+),y=(\d+)\}', preview)
+    towers = re.findall(
+        r'tower\s*=\s*\{\s*kind\s*=\s*"[^"]+",\s*x\s*=\s*(\d+),\s*y\s*=\s*(\d+)',
+        preview,
+    )
     assert towers
     assert all((int(x), int(y)) in {(4, 3), (5, 2), (6, 2)} for x, y in towers)
     assert "*TILE" in preview
