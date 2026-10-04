@@ -4,7 +4,25 @@
   "required_policy_by_difficulty": {
     "easy": {"policy": "novice", "minimum_victory_rate": 0.66},
     "normal": {"policy": "competent", "minimum_victory_rate": 0.66},
-    "hard": {"policy": "hard", "maximum_victory_rate": 0.02}
+    "hard": {"policy": "hard"}
+  },
+  "required_policy_by_map": {
+    "normal/highridge": {"policy": "hard", "minimum_victory_rate": 0.66},
+    "hard/riverbend": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/switchback": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/highpass": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/roundabout": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/gauntlet": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/snaketrail": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/backtrack": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/lowvalley": {"policy": "hard", "minimum_victory_rate": 0.0, "maximum_victory_rate": 0.67},
+    "hard/circuit": {"policy": "hard", "minimum_victory_rate": 0.0, "maximum_victory_rate": 0.67},
+    "hard/outerloop": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/terrace": {"policy": "hard", "minimum_victory_rate": 0.66, "maximum_victory_rate": 1.0},
+    "hard/highridge": {"policy": "hard", "minimum_victory_rate": 0.33, "maximum_victory_rate": 1.0},
+    "hard/crossflow": {"policy": "hard", "minimum_victory_rate": 0.0, "maximum_victory_rate": 0.34},
+    "hard/steppingstones": {"policy": "hard", "minimum_victory_rate": 0.33, "maximum_victory_rate": 1.0},
+    "hard/twinloop": {"policy": "hard", "minimum_victory_rate": 0.0, "maximum_victory_rate": 0.67}
   },
   "metric_bands": {
     "minimum_policy_margin": 0.0,

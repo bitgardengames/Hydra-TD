@@ -430,7 +430,7 @@ def checks(data: dict) -> list[tuple[str, bool, str]]:
         alarm(
             "upgrade/final/" + kind,
             row["affordable_wave_range"]["tier_5_total"][1],
-            b["balanced_final_tier_wave"],
+            b["balanced_final_tier_wave"][kind],
         )
     return out
 
