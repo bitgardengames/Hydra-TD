@@ -3,16 +3,44 @@ local Util = require("core.util")
 
 local Spawner = {}
 local max, min = math.max, math.min
-local ACTIVE_CAP, CATCHUP_LIMIT, BACKPRESSURE_DELAY = 140, 12, .10
+local ACTIVE_CAP = 140
+local CATCHUP_LIMIT = 12
+local BACKPRESSURE_DELAY = 0.10
 
-local spawnerDefaults = {active=false, remaining=0, gap=.6, timer=0, hpMult=1, spdMult=1, groups=nil,
-	groupIndex=1, groupRemaining=0, totalScheduled=0, spawned=0, livingScheduledEnemies=0,
-	clearedScheduledEnemies=0, waitingGroupDelay=false}
-local bossDefaults = {active=false, kind=nil, burst=0, timer=0, interval=0, maxAlive=0, maxTotal=0,
-	totalSpawned=0, queued=0, queueTimer=0, queueGap=.18, hpMult=1, spdMult=1}
+local spawnerDefaults = {
+	active = false,
+	remaining = 0,
+	gap = 0.6,
+	timer = 0,
+	hpMult = 1,
+	spdMult = 1,
+	groups = nil,
+	groupIndex = 1,
+	groupRemaining = 0,
+	totalScheduled = 0,
+	spawned = 0,
+	livingScheduledEnemies = 0,
+	clearedScheduledEnemies = 0,
+	waitingGroupDelay = false,
+}
+local bossDefaults = {
+	active = false,
+	kind = nil,
+	burst = 0,
+	timer = 0,
+	interval = 0,
+	maxAlive = 0,
+	maxTotal = 0,
+	totalSpawned = 0,
+	queued = 0,
+	queueTimer = 0,
+	queueGap = 0.18,
+	hpMult = 1,
+	spdMult = 1,
+}
 local state, bossAdds = {}, {}
 local spatialQueryContext = Spatial.newQueryContext(true)
-local nearbyBossAddsContext = {count=0, cap=0, kind=nil}
+local nearbyBossAddsContext = { count = 0, cap = 0, kind = nil }
 
 local function reset(target, defaults, overrides)
 	for key in pairs(target) do
@@ -26,10 +54,18 @@ reset(bossAdds, bossDefaults)
 
 function Spawner.begin(count, hpMult, spdMult, groups)
 	local first = groups and groups[1]
-	reset(state, spawnerDefaults, {active=true, remaining=count or 0, timer=first and first.delay or 0,
-		hpMult=hpMult or 1, spdMult=spdMult or 1, groups=groups, groupIndex=1,
-		groupRemaining=first and first.count or 0, totalScheduled=count or 0,
-		waitingGroupDelay=first ~= nil and (first.delay or 0) > 0})
+	reset(state, spawnerDefaults, {
+		active = true,
+		remaining = count or 0,
+		timer = first and first.delay or 0,
+		hpMult = hpMult or 1,
+		spdMult = spdMult or 1,
+		groups = groups,
+		groupIndex = 1,
+		groupRemaining = first and first.count or 0,
+		totalScheduled = count or 0,
+		waitingGroupDelay = first ~= nil and (first.delay or 0) > 0,
+	})
 end
 
 function Spawner.configureBossAdds(config)
@@ -73,7 +109,13 @@ local function updateWave(dt, context, cap, loops)
 		return loops, false
 	end
 	state.timer = state.timer - dt
-	while state.timer <= 0 and state.active and state.remaining > 0 and loops < CATCHUP_LIMIT and context.enemyCount() < cap do
+	while
+		state.timer <= 0
+		and state.active
+		and state.remaining > 0
+		and loops < CATCHUP_LIMIT
+		and context.enemyCount() < cap
+	do
 		state.waitingGroupDelay = false
 		local group = state.groups and state.groups[state.groupIndex]
 		if not (group and group.kind) then
@@ -110,8 +152,18 @@ local function countVisitor(enemy, context)
 end
 
 local function nearbyAdds(boss)
-	nearbyBossAddsContext.count, nearbyBossAddsContext.cap, nearbyBossAddsContext.kind = 0, bossAdds.maxAlive, bossAdds.kind
-	Spatial.visitRadius(boss.x, boss.y, 320, countVisitor, nearbyBossAddsContext, spatialQueryContext, Spatial.radiusOptions.living)
+	nearbyBossAddsContext.count = 0
+	nearbyBossAddsContext.cap = bossAdds.maxAlive
+	nearbyBossAddsContext.kind = bossAdds.kind
+	Spatial.visitRadius(
+		boss.x,
+		boss.y,
+		320,
+		countVisitor,
+		nearbyBossAddsContext,
+		spatialQueryContext,
+		Spatial.radiusOptions.living
+	)
 	return nearbyBossAddsContext.count
 end
 
@@ -151,9 +203,18 @@ function Spawner.update(dt, context)
 	end
 end
 
-function Spawner.allEnemiesCleared(enemyCount) return enemyCount == 0 and not state.active and bossAdds.queued == 0 end
-function Spawner.getState() return state end
-function Spawner.getActiveEnemyCap() return ACTIVE_CAP end
+function Spawner.allEnemiesCleared(enemyCount)
+	return enemyCount == 0 and not state.active and bossAdds.queued == 0
+end
+
+function Spawner.getState()
+	return state
+end
+
+function Spawner.getActiveEnemyCap()
+	return ACTIVE_CAP
+end
+
 function Spawner.onScheduledEnemyRemoved(enemy)
 	if not enemy or not enemy.scheduledWaveEnemy then
 		return
@@ -163,15 +224,22 @@ function Spawner.onScheduledEnemyRemoved(enemy)
 	state.clearedScheduledEnemies = state.clearedScheduledEnemies + 1
 end
 
-local snapshot = {_currentAuthoredGroup={}}
+local snapshot = { _currentAuthoredGroup = {} }
+
 function Spawner.getProgress(enemyCount, out)
 	out = out or snapshot
 	local group = state.groups and state.groups[state.groupIndex]
-	local current = out._currentAuthoredGroup or {}; out._currentAuthoredGroup = current
+	local current = out._currentAuthoredGroup or {}
+	out._currentAuthoredGroup = current
 	if group then
-		current.index, current.total, current.kind, current.remaining = state.groupIndex, #state.groups, group.kind, state.groupRemaining
+		current.index = state.groupIndex
+		current.total = #state.groups
+		current.kind = group.kind
+		current.remaining = state.groupRemaining
 		out.currentAuthoredGroup = current
-	else out.currentAuthoredGroup = nil end
+	else
+		out.currentAuthoredGroup = nil
+	end
 	out.totalScheduled, out.spawnedCount = state.totalScheduled, state.spawned
 	out.livingCount, out.clearedCount = state.livingScheduledEnemies, state.clearedScheduledEnemies
 	out.remainingQueuedCount = state.remaining

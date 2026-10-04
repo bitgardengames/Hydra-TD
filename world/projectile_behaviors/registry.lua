@@ -4,12 +4,19 @@ local Registry = {}
 local descriptors = {}
 local definitions = {}
 local validRoles = {
-	movement = true, collision = true, damage = true,
-	status_proc = true, emission = true, drawing = true,
+	movement = true,
+	collision = true,
+	damage = true,
+	status_proc = true,
+	emission = true,
+	drawing = true,
 }
 local hookAliases = {
-	init = "on_shot", update = "on_tick", onHit = "on_hit",
-	onKill = "on_kill", onExpire = "on_expire",
+	init = "on_shot",
+	update = "on_tick",
+	onHit = "on_hit",
+	onKill = "on_kill",
+	onExpire = "on_expire",
 }
 local canonicalHooks = { "on_shot", "on_tick", "on_hit", "on_kill", "on_expire" }
 
@@ -69,14 +76,24 @@ for _, moduleName in ipairs({ "movement", "collision", "damage", "status_proc", 
 	require("world.projectile_behaviors." .. moduleName)(Shared, register)
 end
 
-function Registry.get(id) return descriptors[id] end
+function Registry.get(id)
+	return descriptors[id]
+end
+
 Registry.validateDescriptor = validateDescriptor
+
 function Registry.getRole(id)
 	local descriptor = descriptors[id]
 	return descriptor and descriptor.role or nil
 end
-function Registry.all() return descriptors end
-function Registry.definitions() return definitions end
+function Registry.all()
+	return descriptors
+end
+
+function Registry.definitions()
+	return definitions
+end
+
 function Registry.validateBehaviorIds(behaviors)
 	for i = 1, #behaviors do
 		assert(descriptors[behaviors[i].id], "unknown projectile behavior id: " .. tostring(behaviors[i].id))

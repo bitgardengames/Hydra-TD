@@ -22,9 +22,14 @@ end
 
 local function describeEnemyGroup(kind, count, spacing, delay, hpMultiplier)
 	local def = EnemyDefs[kind]
-	local group = {kind=kind, name=L((def and def.nameKey) or ("enemy." .. kind)), count=count,
-		spacing=spacing or 0, delay=delay or 0,
-		health=def and def.hp and def.hp * (hpMultiplier or 1) or nil}
+	local group = {
+		kind = kind,
+		name = L((def and def.nameKey) or ("enemy." .. kind)),
+		count = count,
+		spacing = spacing or 0,
+		delay = delay or 0,
+		health = def and def.hp and def.hp * (hpMultiplier or 1) or nil,
+	}
 	return group
 end
 
@@ -56,14 +61,22 @@ function Waves.getWavePreview(waveNumber)
 	for _, group in ipairs(descriptions) do
 		counts[group.kind] = (counts[group.kind] or 0) + group.count
 	end
-	return {count=wave.count or 0, total=wave.count or 0, totalCount=wave.count or 0, counts=counts, composition=descriptions}
+	return {
+		count = wave.count or 0,
+		total = wave.count or 0,
+		totalCount = wave.count or 0,
+		counts = counts,
+		composition = descriptions,
+	}
 end
 
-function Waves.presentationEvent(kind, payload) Presentation.event(kind, payload) end
+function Waves.presentationEvent(kind, payload)
+	Presentation.event(kind, payload)
+end
 
 local function startBossWave(wave, map, mapIndex)
 	bossSpawnPresented, lastBossPosition = false, nil
-	Presentation.event("boss_incoming", {wave=State.wave, path=Presentation.path(map)})
+	Presentation.event("boss_incoming", { wave = State.wave, path = Presentation.path(map) })
 	local bossIndex = max(1, math.floor(State.wave / 10))
 	local bossKind = wave.bossArchetype or Resolver.getBossByArchetype(map, bossIndex)
 	local encounter = Resolver.resolveBossEncounterTemplate(map, bossKind, bossIndex)
@@ -80,11 +93,17 @@ local function startBossWave(wave, map, mapIndex)
 		Spawner.configureBossAdds()
 		return
 	end
-	Spawner.configureBossAdds({active=true, kind=encounter.flankKind,
-		burst=min(8, encounter.flankBurst + math.floor(bossIndex / 2)),
-		timer=max(1.5, encounter.initialDelay - bossIndex * .12), interval=max(3, encounter.interval * (.96 ^ bossIndex)),
-		maxAlive=min(32, encounter.maxAliveAdds + bossIndex * 2), maxTotal=min(72, encounter.maxTotalAdds + bossIndex * 5),
-		hpMult=addHpMult * encounter.addHpMult, spdMult=spdMult * encounter.addSpdMult})
+	Spawner.configureBossAdds({
+		active = true,
+		kind = encounter.flankKind,
+		burst = min(8, encounter.flankBurst + math.floor(bossIndex / 2)),
+		timer = max(1.5, encounter.initialDelay - bossIndex * 0.12),
+		interval = max(3, encounter.interval * (0.96 ^ bossIndex)),
+		maxAlive = min(32, encounter.maxAliveAdds + bossIndex * 2),
+		maxTotal = min(72, encounter.maxTotalAdds + bossIndex * 5),
+		hpMult = addHpMult * encounter.addHpMult,
+		spdMult = spdMult * encounter.addSpdMult,
+	})
 end
 
 local function startNormalWave(wave, map, mapIndex)
@@ -106,35 +125,67 @@ function Waves.startWave(mapIndex)
 	local wave = getWave(map, State.wave)
 	Presentation.waveStarted(State.wave, map)
 	if wave.boss then
-		startBossWave(wave, map, mapIndex) else startNormalWave(wave, map, mapIndex)
+		startBossWave(wave, map, mapIndex)
+	else
+		startNormalWave(wave, map, mapIndex)
 	end
 	return true
 end
 
 local spawnContext = {}
 spawnContext.spawnEnemy = Enemies.spawnEnemy
-spawnContext.enemyCount = function() return #Enemies.enemies end
-spawnContext.activeBoss = function() return State.activeBoss end
-spawnContext.onBossPosition = function(boss) lastBossPosition = {x=boss.x, y=boss.y} end
+spawnContext.enemyCount = function()
+	return #Enemies.enemies
+end
+spawnContext.activeBoss = function()
+	return State.activeBoss
+end
+spawnContext.onBossPosition = function(boss)
+	lastBossPosition = { x = boss.x, y = boss.y }
+end
 spawnContext.onBossSpawn = function(enemy)
 	if bossSpawnPresented then
 		return
 	end
 	bossSpawnPresented = true
-	lastBossPosition = {x=enemy.x, y=enemy.y}
-	Presentation.event("boss_spawn", {wave=State.wave, x=enemy.x, y=enemy.y})
+	lastBossPosition = { x = enemy.x, y = enemy.y }
+	Presentation.event("boss_spawn", { wave = State.wave, x = enemy.x, y = enemy.y })
 end
 
-function Waves.updateSpawner(dt) Spawner.update(dt, spawnContext) end
-function Waves.allEnemiesCleared() return Spawner.allEnemiesCleared(#Enemies.enemies) end
-function Waves.getWaveCompletionBonus(wave, leaks) return Outcome.getWaveCompletionBonus(wave, leaks, State.activeBossKind) end
-function Waves.resetSpawner() Spawner.reset() end
+function Waves.updateSpawner(dt)
+	Spawner.update(dt, spawnContext)
+end
+
+function Waves.allEnemiesCleared()
+	return Spawner.allEnemiesCleared(#Enemies.enemies)
+end
+
+function Waves.getWaveCompletionBonus(wave, leaks)
+	return Outcome.getWaveCompletionBonus(wave, leaks, State.activeBossKind)
+end
+
+function Waves.resetSpawner()
+	Spawner.reset()
+end
+
 function Waves.presentWaveCleared(bonus)
 	Presentation.waveCleared(State.wave, Maps[State.mapIndex], bonus, lastBossPosition, State.activeBossKind ~= nil)
 end
-function Waves.getSpawner() return Spawner.getState() end
-function Waves.onScheduledEnemyRemoved(enemy) Spawner.onScheduledEnemyRemoved(enemy) end
-function Waves.getProgress(out) return Spawner.getProgress(#Enemies.enemies, out) end
-function Waves.getActiveEnemyCap() return Spawner.getActiveEnemyCap() end
+
+function Waves.getSpawner()
+	return Spawner.getState()
+end
+
+function Waves.onScheduledEnemyRemoved(enemy)
+	Spawner.onScheduledEnemyRemoved(enemy)
+end
+
+function Waves.getProgress(out)
+	return Spawner.getProgress(#Enemies.enemies, out)
+end
+
+function Waves.getActiveEnemyCap()
+	return Spawner.getActiveEnemyCap()
+end
 
 return Waves
