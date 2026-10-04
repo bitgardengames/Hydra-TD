@@ -552,59 +552,59 @@ end
 
 local function addBehaviorRows(rows, before, after)
 	local scalar = {
-		{ "splash", "aoe_damage", "radius", function(v) return numberText(v, 0, " px") end },
-		{ "slowStrength", "apply_slow", "factor", function(v) return numberText((1 - v) * 100, 0, "%") end, true },
-		{ "poisonStrength", "apply_poison", "dps", function(v) return numberText(v, 1, "/s") end },
-		{ "poisonStacks", "apply_poison", "maxStacks", function(v) return numberText(v, 0) end },
-		{ "poisonDuration", "apply_poison", "dur", function(v) return numberText(v, 1, "s") end },
-		{ "slowDuration", "apply_slow", "dur", function(v) return numberText(v, 1, "s") end },
-		{ "tickRate", "tick_damage", "rate", function(v) return numberText(v, 3, "s") end, true },
+		{ rowKey = "splash", behaviorId = "aoe_damage", property = "radius", format = function(v) return numberText(v, 0, " px") end },
+		{ rowKey = "slowStrength", behaviorId = "apply_slow", property = "factor", format = function(v) return numberText((1 - v) * 100, 0, "%") end, lowerIsBetter = true },
+		{ rowKey = "poisonStrength", behaviorId = "apply_poison", property = "dps", format = function(v) return numberText(v, 1, "/s") end },
+		{ rowKey = "poisonStacks", behaviorId = "apply_poison", property = "maxStacks", format = function(v) return numberText(v, 0) end },
+		{ rowKey = "poisonDuration", behaviorId = "apply_poison", property = "dur", format = function(v) return numberText(v, 1, "s") end },
+		{ rowKey = "slowDuration", behaviorId = "apply_slow", property = "dur", format = function(v) return numberText(v, 1, "s") end },
+		{ rowKey = "tickRate", behaviorId = "tick_damage", property = "rate", format = function(v) return numberText(v, 3, "s") end, lowerIsBetter = true },
 	}
 	for i = 1, #scalar do
 		local item = scalar[i]
-		local a = before[item[2]] and before[item[2]][item[3]]
-		local b = after[item[2]] and after[item[2]][item[3]]
+		local a = before[item.behaviorId] and before[item.behaviorId][item.property]
+		local b = after[item.behaviorId] and after[item.behaviorId][item.property]
 		if a and b and a ~= b then
-			addPreviewRow(rows, item[1], item[4](a), item[4](b), item[5] and (b < a and "good" or "bad") or (b > a and "good" or "bad"))
+			addPreviewRow(rows, item.rowKey, item.format(a), item.format(b), item.lowerIsBetter and (b < a and "good" or "bad") or (b > a and "good" or "bad"))
 		elseif b and not a then
-			addPreviewRow(rows, item[1], "—", item[4](b), "good")
+			addPreviewRow(rows, item.rowKey, "—", item.format(b), "good")
 		end
 	end
 
 	local descriptors = {
-		{ "chains", "hit_chain", "jumps", function(v) return format("%d", v) end },
-		{ "impactFragments", "split_on_hit", "count", function(v) return format("%d", v) end },
-		{ "pierce", "pierce", "maxHits", function(v) return format("%d", v) end },
+		{ rowKey = "chains", behaviorId = "hit_chain", property = "jumps", format = function(v) return format("%d", v) end },
+		{ rowKey = "impactFragments", behaviorId = "split_on_hit", property = "count", format = function(v) return format("%d", v) end },
+		{ rowKey = "pierce", behaviorId = "pierce", property = "maxHits", format = function(v) return format("%d", v) end },
 	}
 	for i = 1, #descriptors do
 		local item = descriptors[i]
-		local a = before[item[2]] and before[item[2]][item[3]]
-		local b = after[item[2]] and after[item[2]][item[3]]
+		local a = before[item.behaviorId] and before[item.behaviorId][item.property]
+		local b = after[item.behaviorId] and after[item.behaviorId][item.property]
 		if b and a ~= b then
-			addPreviewRow(rows, item[1], a and item[4](a) or "—", item[4](b), "good")
+			addPreviewRow(rows, item.rowKey, a and item.format(a) or "—", item.format(b), "good")
 		end
 	end
 end
 
 local function addTierMechanicRows(rows, currentTier, nextTier, branch)
 	local mechanics = {
-		{"fieldRadius", "fieldRadius", 0, " px"}, {"fieldLifetime", "fieldLifetime", 1, "s"},
-		{"spreadRadius", "spreadRadius", 0, " px"}, {"transferFraction", "transferFraction", 0, "%", 100},
-		{"recipients", "recipientCap", 0}, {"chainRadius", "chainRadius", 0, " px"},
-		{"chainRetention", "chainFalloff", 0, "%", 100}, {"capacitorThreshold", "capacitorThreshold", 0},
-		{"dischargeDamage", "dischargeMult", 0, "%", 100}, {"projectileSpeed", "projSpeed", 0, " px/s"},
-		{"travelDistance", "travelDistance", 0, " px"}, {"tickRadius", "tickRadius", 0, " px"},
+		{ rowKey = "fieldRadius", property = "fieldRadius", decimals = 0, suffix = " px" }, { rowKey = "fieldLifetime", property = "fieldLifetime", decimals = 1, suffix = "s" },
+		{ rowKey = "spreadRadius", property = "spreadRadius", decimals = 0, suffix = " px" }, { rowKey = "transferFraction", property = "transferFraction", decimals = 0, suffix = "%", multiplier = 100 },
+		{ rowKey = "recipients", property = "recipientCap", decimals = 0 }, { rowKey = "chainRadius", property = "chainRadius", decimals = 0, suffix = " px" },
+		{ rowKey = "chainRetention", property = "chainFalloff", decimals = 0, suffix = "%", multiplier = 100 }, { rowKey = "capacitorThreshold", property = "capacitorThreshold", decimals = 0 },
+		{ rowKey = "dischargeDamage", property = "dischargeMult", decimals = 0, suffix = "%", multiplier = 100 }, { rowKey = "projectileSpeed", property = "projSpeed", decimals = 0, suffix = " px/s" },
+		{ rowKey = "travelDistance", property = "travelDistance", decimals = 0, suffix = " px" }, { rowKey = "tickRadius", property = "tickRadius", decimals = 0, suffix = " px" },
 	}
 	if branch and branch.targetingPolicy then
 		addPreviewRow(rows, "targeting", "—", L("upgradePreview.targetingDurable"), "good")
 	end
 	for i = 1, #mechanics do
 		local item = mechanics[i]
-		local before, after = currentTier and currentTier[item[2]], nextTier and nextTier[item[2]]
+		local before, after = currentTier and currentTier[item.property], nextTier and nextTier[item.property]
 		if after and before ~= after then
-			local mult = item[5] or 1
-			addPreviewRow(rows, item[1], before and numberText(before * mult, item[3], item[4]) or "—",
-				numberText(after * mult, item[3], item[4]), "good")
+			local mult = item.multiplier or 1
+			addPreviewRow(rows, item.rowKey, before and numberText(before * mult, item.decimals, item.suffix) or "—",
+				numberText(after * mult, item.decimals, item.suffix), "good")
 		end
 	end
 end
