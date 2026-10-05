@@ -27,6 +27,7 @@ return {
 		enemiesDefeated = "Enemies Defeated",
 		bossesDefeated = "Bosses Defeated",
 		towersPlaced = "Towers Placed",
+		towerKills = "Tower Kills",
 		towerUpgrades = "Tower Upgrades",
 		damageDealt = "Tower Damage",
 		achievements = "Achievements",

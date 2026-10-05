@@ -6,7 +6,9 @@ local EnemyRenderer = require("render.enemy_renderer")
 local Fonts = require("core.fonts")
 local L = require("core.localization")
 local Maps = require("world.map_defs")
+local Medals = require("ui.medals")
 local Model = require("ui.career_model")
+local TowerRenderer = require("render.tower_renderer")
 local Save = require("core.save")
 local ScrollView = require("ui.scroll_view")
 local Sound = require("systems.sound")
@@ -128,43 +130,89 @@ local function drawHeader()
 	end
 end
 
-local function statCard(x, y, w, h, label, value, accent)
+local function drawMapIcon(cx, cy, accent)
+	lg.setColor(accent)
+	lg.circle("fill", cx, cy - 5, 10)
+	lg.polygon("fill", cx - 8, cy, cx + 8, cy, cx, cy + 15)
+	lg.setColor(Theme.ui.panel2)
+	lg.circle("fill", cx, cy - 5, 4)
+end
+
+local function drawSkullIcon(cx, cy, accent, crowned)
+	lg.setColor(accent)
+	lg.circle("fill", cx, cy - 2, 15)
+	lg.rectangle("fill", cx - 10, cy + 6, 20, 9, 3)
+	lg.setColor(Theme.ui.panel2)
+	lg.circle("fill", cx - 6, cy - 3, 3)
+	lg.circle("fill", cx + 6, cy - 3, 3)
+	lg.rectangle("fill", cx - 2, cy + 7, 4, 8)
+	if crowned then
+		lg.setColor(Theme.medal.gold)
+		lg.polygon("fill", cx - 15, cy - 13, cx - 11, cy - 24, cx - 3, cy - 16,
+			cx + 5, cy - 25, cx + 15, cy - 13)
+	end
+end
+
+local function drawTowerIcon(cx, cy)
+	lg.push("all")
+	lg.translate(cx, cy + 5)
+	lg.scale(0.65)
+	TowerRenderer.drawTowerVisual("cannon", 0, 0, -math.pi * 0.5, 0, 1)
+	lg.pop()
+end
+
+local function drawGlyphIcon(cx, cy, accent, glyph)
+	Fonts.set("menu")
+	lg.setColor(accent)
+	Text.printfShadow(glyph, cx - 24, cy - 17, 48, "center")
+end
+
+local function drawMedalIcon(cx, cy)
+	for tier = 1, 3 do
+		Medals.drawTier(cx + (tier - 2) * 19, cy, tier, 9, 1)
+	end
+end
+
+local function statCard(x, y, w, h, label, value, accent, icon)
 	panel(x, y, w, h, Theme.ui.panel2)
+	lg.setColor(accent[1], accent[2], accent[3], 0.72)
+	lg.rectangle("fill", x, y, 4, h, 2)
+	local iconX, iconY = x + 42, y + h * 0.5
+	lg.setColor(accent[1], accent[2], accent[3], 0.1)
+	lg.circle("fill", iconX, iconY, min(29, h * 0.32))
+	icon(iconX, iconY, accent)
+	local textX, textW = x + 78, w - 90
 	Fonts.set("tooltip")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.7)
-	Text.printfShadow(label, x + 10, y + 12, w - 20, "center")
+	Text.printfShadow(label, textX, y + h * 0.5 - 29, textW, "left")
 	Fonts.set("menu")
 	lg.setColor(accent or Theme.ui.text)
-	Text.printfShadow(value, x + 10, y + h - 40, w - 20, "center")
+	Text.printfShadow(value, textX, y + h * 0.5 - 2, textW, "left")
 end
 
 local function drawCareer()
 	local c = layout.content
 	local gap = 16
-	local columns = c.w >= 800 and 4 or 2
-	local rows = math.ceil(8 / columns)
+	local columns = c.w >= 800 and 3 or 2
+	local rows = math.ceil(9 / columns)
 	local cardW = (c.w - gap * (columns - 1)) / columns
 	local cardH = min(130, (c.h - gap * (rows - 1)) / rows)
 	local cards = {
-		{L("career.mapsCleared"), string.format("%d / %d", career.mapsCleared, career.totalMaps), Theme.ui.good},
-		{L("career.medalsEarned"), string.format("%d / %d", career.medals, career.totalMedals), Theme.medal.gold},
-		{L("career.enemiesDefeated"), Model.formatNumber(career.enemiesKilled), Theme.tower.cannon},
-		{L("career.bossesDefeated"), Model.formatNumber(career.bossesKilled), Theme.effects.colors.boss},
-		{L("career.towersPlaced"), Model.formatNumber(career.towerPlacements), Theme.tower.lancer},
-		{L("career.towerUpgrades"), Model.formatNumber(career.towerUpgrades), Theme.ui.selected},
-		{L("career.damageDealt"), Model.formatNumber(career.towerDamage), Theme.ui.bad},
-		{L("career.achievements"), string.format("%d / %d", career.achievements, career.totalAchievements), Theme.tower.shock},
+		{L("career.mapsCleared"), string.format("%d / %d", career.mapsCleared, career.totalMaps), Theme.ui.good, drawMapIcon},
+		{L("career.medalsEarned"), string.format("%d / %d", career.medals, career.totalMedals), Theme.medal.gold, drawMedalIcon},
+		{L("career.enemiesDefeated"), Model.formatNumber(career.enemiesKilled), Theme.tower.cannon, function(x, y, color) drawSkullIcon(x, y, color, false) end},
+		{L("career.bossesDefeated"), Model.formatNumber(career.bossesKilled), Theme.effects.colors.boss, function(x, y, color) drawSkullIcon(x, y, color, true) end},
+		{L("career.towersPlaced"), Model.formatNumber(career.towerPlacements), Theme.tower.lancer, drawTowerIcon},
+		{L("career.towerKills"), Model.formatNumber(career.towerKills), Theme.tower.cannon, drawTowerIcon},
+		{L("career.towerUpgrades"), Model.formatNumber(career.towerUpgrades), Theme.ui.selected, function(x, y, color) drawGlyphIcon(x, y, color, "▲") end},
+		{L("career.damageDealt"), Model.formatNumber(career.towerDamage), Theme.ui.bad, function(x, y, color) drawGlyphIcon(x, y, color, "✦") end},
+		{L("career.achievements"), string.format("%d / %d", career.achievements, career.totalAchievements), Theme.tower.shock, function(x, y, color) drawGlyphIcon(x, y, color, "★") end},
 	}
 	for index, card in ipairs(cards) do
 		local col = (index - 1) % columns
 		local row = floor((index - 1) / columns)
-		statCard(c.x + col * (cardW + gap), c.y + row * (cardH + gap), cardW, cardH, card[1], card[2], card[3])
+		statCard(c.x + col * (cardW + gap), c.y + row * (cardH + gap), cardW, cardH, card[1], card[2], card[3], card[4])
 	end
-end
-
-local function medalText(difficulty)
-	local count = MEDAL_RANK[difficulty] or 0
-	return count > 0 and string.rep("●", count) or "—"
 end
 
 local function drawRecords()
@@ -185,14 +233,21 @@ local function drawRecords()
 			Fonts.set("ui"); lg.setColor(Theme.ui.text)
 			Text.printShadow(L(row.nameKey), c.x + 12, y + 17)
 			local values = {
-				medalText(row.completedDifficulty),
 				row.bestScore and Model.formatNumber(row.bestScore) or "—",
 				row.fastestClear and Model.formatDuration(row.fastestClear) or "—",
 				row.fewestLeaks ~= nil and Model.formatNumber(row.fewestLeaks) or "—",
 			}
+			local medalCount = MEDAL_RANK[row.completedDifficulty] or 0
+			if medalCount > 0 then
+				local clusterW = Medals.getClusterSize(9, 8)
+				Medals.draw(c.x + nameW + (colW - clusterW) * 0.5, y + 16, medalCount, 9, 8, love.timer.getTime())
+			else
+				lg.setColor(Theme.ui.text)
+				Text.printfShadow("—", c.x + nameW, y + 17, colW, "center")
+			end
 			for i, value in ipairs(values) do
-				lg.setColor(i == 1 and Theme.medal.gold or Theme.ui.text)
-				Text.printfShadow(value, c.x + nameW + (i - 1) * colW, y + 17, colW, "center")
+				lg.setColor(Theme.ui.text)
+				Text.printfShadow(value, c.x + nameW + i * colW, y + 17, colW, "center")
 			end
 		end
 	end
