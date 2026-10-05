@@ -24,6 +24,11 @@ def test_screen_exposes_all_three_views_and_navigation():
     assert "function Screen.wheelmoved" in SCREEN
 
 
+def test_resize_is_safe_before_screen_load_initializes_controls():
+    assert "if backButton then" in SCREEN
+    assert "backButton.x, backButton.y, backButton.w, backButton.h" in SCREEN
+
+
 def test_model_reads_existing_persistent_telemetry():
     for field in (
         "ENEMIES_KILLED",
