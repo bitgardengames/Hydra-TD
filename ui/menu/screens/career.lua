@@ -85,7 +85,9 @@ local function updateLayout()
 		w = layout.panel.w - PAD * 2,
 		h = layout.panel.h - 132 - 72,
 	}
-	backButton.x, backButton.y, backButton.w, backButton.h = layout.panel.x + PAD, layout.panel.y + layout.panel.h - 49, 130, 36
+	if backButton then
+		backButton.x, backButton.y, backButton.w, backButton.h = layout.panel.x + PAD, layout.panel.y + layout.panel.h - 49, 130, 36
+	end
 end
 
 function Screen.load()
