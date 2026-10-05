@@ -49,9 +49,10 @@ function Model.career(saveData, maps, achievementDefs)
 		end
 	end
 
-	local towerPlacements, towerDamage = 0, 0
+	local towerPlacements, towerKills, towerDamage = 0, 0, 0
 	for _, history in pairs(meta.towerHistory or {}) do
 		towerPlacements = towerPlacements + number(history.placements)
+		towerKills = towerKills + number(history.kills)
 		towerDamage = towerDamage + number(history.damage)
 	end
 
@@ -63,6 +64,7 @@ function Model.career(saveData, maps, achievementDefs)
 		enemiesKilled = number(meta.ENEMIES_KILLED),
 		bossesKilled = number(meta.BOSSES_KILLED),
 		towerPlacements = towerPlacements,
+		towerKills = towerKills,
 		towerUpgrades = number(meta.TOWER_UPGRADES),
 		towerDamage = towerDamage,
 		achievements = tableCount(meta.unlockedAchievements),

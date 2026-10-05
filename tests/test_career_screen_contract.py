@@ -34,6 +34,7 @@ def test_model_reads_existing_persistent_telemetry():
         "ENEMIES_KILLED",
         "BOSSES_KILLED",
         "towerHistory",
+        "history.kills",
         "TOWER_UPGRADES",
         "unlockedAchievements",
         "mapStats",
@@ -41,16 +42,23 @@ def test_model_reads_existing_persistent_telemetry():
         "enemyHistory",
     ):
         assert field in MODEL
-    assert 'record.bestScore' in MODEL
-    assert 'record.fastestClear' in MODEL
-    assert 'record.fewestLeaks' in MODEL
+    assert "record.bestScore" in MODEL
+    assert "record.fastestClear" in MODEL
+    assert "record.fewestLeaks" in MODEL
+
+
+def test_career_metrics_use_semantic_visuals():
+    assert 'L("career.towerKills")' in SCREEN
+    assert "TowerRenderer.drawTowerVisual" in SCREEN
+    assert "Medals.drawTier" in SCREEN
+    assert "Medals.draw(c.x + nameW" in SCREEN
 
 
 def test_codex_preserves_discovery_and_unknown_enemy_states():
-    assert 'encountered[kind] == true' in MODEL
+    assert "encountered[kind] == true" in MODEL
     assert 'L("career.unknownEnemy")' in SCREEN
-    assert 'EnemyRenderer.drawEnemyPortrait' in SCREEN
-    assert 'L(enemy.def.descriptionKey)' in SCREEN
+    assert "EnemyRenderer.drawEnemyPortrait" in SCREEN
+    assert "L(enemy.def.descriptionKey)" in SCREEN
 
 
 def test_english_catalog_has_career_labels():
