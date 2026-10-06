@@ -75,7 +75,7 @@ end
 
 local function updateLayout()
 	local sw, sh = lg.getDimensions()
-	local panelW = min(1100, sw - 56)
+	local panelW = min(960, sw - 56)
 	local panelH = min(720, sh - 56)
 	layout.panel = {x = floor((sw - panelW) * 0.5), y = floor((sh - panelH) * 0.5), w = panelW, h = panelH}
 	layout.titleY = layout.panel.y + 21
@@ -144,7 +144,7 @@ end
 local function towerRow(tower, x, y, w, h)
 	local accent = Theme.tower[tower.kind] or Theme.ui.selected
 	panel(x, y, w, h, Theme.ui.panel2)
-	drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 2)
+	drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 1.5)
 
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)

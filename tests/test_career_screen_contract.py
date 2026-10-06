@@ -25,6 +25,7 @@ def test_screen_exposes_all_three_views_and_navigation():
 
 
 def test_resize_is_safe_before_screen_load_initializes_controls():
+    assert "local panelW = min(960, sw - 56)" in SCREEN
     assert "if backButton then" in SCREEN
     assert "backButton.x, backButton.y, backButton.w, backButton.h" in SCREEN
 
@@ -50,7 +51,7 @@ def test_model_reads_existing_persistent_telemetry():
 def test_career_metrics_use_semantic_visuals():
     assert 'L("career.lifetimeKills")' in SCREEN
     assert "TowerRenderer.drawTowerVisual(kind" in SCREEN
-    assert "drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 2)" in SCREEN
+    assert "drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 1.5)" in SCREEN
     assert "Theme.tower[tower.kind]" in SCREEN
     assert "barW * tower.killRatio" in SCREEN
     assert "Medals.draw(c.x + nameW" in SCREEN
