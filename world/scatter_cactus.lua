@@ -34,6 +34,7 @@ local MIN_IDLE_INTERVAL = 5.5
 local IDLE_INTERVAL_VARIANCE = 4.0
 local MIN_GESTURE_DURATION = 0.34
 local GESTURE_DURATION_VARIANCE = 0.20
+local WIGGLES_PER_GESTURE = 2
 
 local function rand(a, b)
 	return rng:random(a, b)
@@ -192,9 +193,11 @@ local function gestureAmount(cactus, presentationTime)
 		return 0
 	end
 
-	-- Smoothly rise and fall inside the short active portion of the interval.
-	local progress = localTime / duration
-	return smoothstep(math.min(progress * 2, (1 - progress) * 2))
+	-- Repeat the smooth rise and fall twice within the same short active window.
+	-- Keeping the interval unchanged ensures that gestures remain rare.
+	local wiggleProgress = (localTime / duration) * WIGGLES_PER_GESTURE
+	local cycleProgress = wiggleProgress % 1
+	return smoothstep(math.min(cycleProgress * 2, (1 - cycleProgress) * 2))
 end
 
 function Cactus.draw(list, targetMap, presentationTime)
