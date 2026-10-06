@@ -14,6 +14,7 @@ local Sound = require("systems.sound")
 local Text = require("ui.text")
 local Theme = require("core.theme")
 local TowerDefs = require("world.tower_defs")
+local AchievementDefs = require("systems.achievement_defs")
 
 local lg = love.graphics
 local floor, max, min = math.floor, math.max, math.min
@@ -32,7 +33,7 @@ local scroll = ScrollView.new()
 local selectedTab = 1
 local selectedEnemy = 1
 local tabs, backButton = {}, nil
-local towerStats, towerKills, records, enemies = {}, 0, {}, {}
+local towerStats, towerKills, careerStats, records, enemies = {}, 0, {}, {}, {}
 local portraits = {}
 local layout = {}
 
@@ -49,6 +50,7 @@ end
 
 local function refreshData()
 	towerStats, towerKills = Model.towers(Save.data, TowerDefs, TOWER_ORDER)
+	careerStats = Model.career(Save.data, Maps, AchievementDefs)
 	records = Model.records(Save.data, Maps)
 	enemies = Model.enemies(Save.data, EnemyDefs, ENEMY_ORDER)
 	for _, enemy in ipairs(enemies) do
@@ -139,22 +141,22 @@ local function drawTowerIcon(kind, cx, cy, scale)
 	lg.pop()
 end
 
-local function towerCard(tower, x, y, w, h)
+local function towerRow(tower, x, y, w, h)
 	local accent = Theme.tower[tower.kind] or Theme.ui.selected
 	panel(x, y, w, h, Theme.ui.panel2)
-	drawTowerIcon(tower.kind, x + w * 0.5, y + 53, 1.12)
+	drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 0.58)
 
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
-	Text.printfShadow(L(tower.nameKey), x + 14, y + 94, w - 28, "center")
-	Fonts.set("tooltip")
-	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-	Text.printfShadow(L("career.lifetimeKills"), x + 14, y + 124, w - 28, "center")
+	Text.printShadow(L(tower.nameKey), x + 76, y + 10)
+	Fonts.set("version")
+	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.48)
+	Text.printShadow(L("career.lifetimeKills"), x + 76, y + 38)
 	Fonts.set("menu")
 	lg.setColor(accent)
-	Text.printfShadow(Model.formatNumber(tower.kills), x + 14, y + 145, w - 28, "center")
+	Text.printfShadow(Model.formatNumber(tower.kills), x + w - 150, y + 10, 132, "right")
 
-	local barX, barY, barW, barH = x + 22, y + h - 24, w - 44, 8
+	local barX, barY, barW, barH = x + 76, y + h - 16, w - 94, 8
 	lg.setColor(0, 0, 0, 0.34)
 	lg.rectangle("fill", barX, barY, barW, barH, 4)
 	if tower.killRatio > 0 then
@@ -163,22 +165,58 @@ local function towerCard(tower, x, y, w, h)
 	end
 end
 
+local function statPanel(title, stats, x, y, w, h)
+	panel(x, y, w, h, Theme.ui.panel2)
+	Fonts.set("menu")
+	lg.setColor(Theme.ui.text)
+	Text.printShadow(title, x + 18, y + 10)
+	local top = y + 49
+	local rowH = (h - 57) / #stats
+	for index, stat in ipairs(stats) do
+		local rowY = top + (index - 1) * rowH
+		if index > 1 then
+			lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.14)
+			lg.rectangle("fill", x + 18, rowY, w - 36, 1)
+		end
+		Fonts.set("ui")
+		lg.setColor(Theme.ui.text)
+		Text.printShadow(stat[1], x + 20, rowY + 7)
+		Text.printfShadow(stat[2], x + w - 170, rowY + 7, 150, "right")
+	end
+end
+
 local function drawCareer()
 	local c = layout.content
-	local gap, headingH, columns = 14, 42, 3
-	local cardW = (c.w - gap * (columns - 1)) / columns
-	local cardH = (c.h - headingH - gap) / 2
+	local gap, headingH = 18, 42
+	local leftW = floor(c.w * 0.57)
+	local rightX, rightW = c.x + leftW + gap, c.w - leftW - gap
+	local rowGap = 8
+	local rowH = (c.h - headingH - rowGap * (#towerStats - 1)) / #towerStats
 	Fonts.set("ui")
 	lg.setColor(Theme.ui.text)
 	Text.printShadow(L("career.towerLegacy"), c.x, c.y + 2)
 	Fonts.set("tooltip")
 	lg.setColor(Theme.ui.text[1], Theme.ui.text[2], Theme.ui.text[3], 0.62)
-	Text.printfShadow(L("career.totalLifetimeKills", Model.formatNumber(towerKills)), c.x, c.y + 5, c.w, "right")
+	Text.printfShadow(L("career.totalLifetimeKills", Model.formatNumber(towerKills)), c.x, c.y + 5, leftW, "right")
 	for index, tower in ipairs(towerStats) do
-		local col = (index - 1) % columns
-		local row = floor((index - 1) / columns)
-		towerCard(tower, c.x + col * (cardW + gap), c.y + headingH + row * (cardH + gap), cardW, cardH)
+		towerRow(tower, c.x, c.y + headingH + (index - 1) * (rowH + rowGap), leftW, rowH)
 	end
+
+	local sectionGap = 16
+	local campaignH = floor((c.h - sectionGap) * 0.44)
+	statPanel(L("career.campaignProgress"), {
+		{L("career.mapsCleared"), Model.formatNumber(careerStats.mapsCleared) .. " / " .. Model.formatNumber(careerStats.totalMaps)},
+		{L("career.medalsEarned"), Model.formatNumber(careerStats.medals) .. " / " .. Model.formatNumber(careerStats.totalMedals)},
+		{L("career.enemiesDefeated"), Model.formatNumber(careerStats.enemiesKilled)},
+		{L("career.bossesDefeated"), Model.formatNumber(careerStats.bossesKilled)},
+	}, rightX, c.y, rightW, campaignH)
+	statPanel(L("career.lifetimeStats"), {
+		{L("career.towersPlaced"), Model.formatNumber(careerStats.towerPlacements)},
+		{L("career.towerKills"), Model.formatNumber(careerStats.towerKills)},
+		{L("career.towerUpgrades"), Model.formatNumber(careerStats.towerUpgrades)},
+		{L("career.damageDealt"), Model.formatNumber(careerStats.towerDamage)},
+		{L("career.achievements"), Model.formatNumber(careerStats.achievements) .. " / " .. Model.formatNumber(careerStats.totalAchievements)},
+	}, rightX, c.y + campaignH + sectionGap, rightW, c.h - campaignH - sectionGap)
 end
 
 local function drawRecords()

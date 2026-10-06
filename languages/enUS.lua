@@ -29,6 +29,8 @@ return {
 		towersPlaced = "Towers Placed",
 		towerKills = "Tower Kills",
 		towerLegacy = "TOWER LEGACY",
+		campaignProgress = "CAMPAIGN PROGRESS",
+		lifetimeStats = "LIFETIME STATS",
 		lifetimeKills = "LIFETIME KILLS",
 		totalLifetimeKills = "%s TOTAL KILLS",
 		towerUpgrades = "Tower Upgrades",
