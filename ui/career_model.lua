@@ -74,13 +74,12 @@ end
 
 function Model.towers(saveData, towerDefs, order)
 	local history = saveData and saveData.meta and saveData.meta.towerHistory or {}
-	local rows, highestKills, totalKills = {}, 0, 0
+	local rows, totalKills = {}, 0
 
 	for _, kind in ipairs(order or {}) do
 		local def = towerDefs and towerDefs[kind]
 		if def then
 			local kills = number(history[kind] and history[kind].kills)
-			highestKills = math.max(highestKills, kills)
 			totalKills = totalKills + kills
 			rows[#rows + 1] = {
 				kind = kind,
@@ -91,7 +90,7 @@ function Model.towers(saveData, towerDefs, order)
 	end
 
 	for _, row in ipairs(rows) do
-		row.killRatio = highestKills > 0 and row.kills / highestKills or 0
+		row.killRatio = totalKills > 0 and row.kills / totalKills or 0
 	end
 
 	return rows, totalKills
