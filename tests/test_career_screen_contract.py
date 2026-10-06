@@ -50,7 +50,7 @@ def test_model_reads_existing_persistent_telemetry():
 def test_career_metrics_use_semantic_visuals():
     assert 'L("career.lifetimeKills")' in SCREEN
     assert "TowerRenderer.drawTowerVisual(kind" in SCREEN
-    assert "drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 1)" in SCREEN
+    assert "drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 2)" in SCREEN
     assert "Theme.tower[tower.kind]" in SCREEN
     assert "barW * tower.killRatio" in SCREEN
     assert "Medals.draw(c.x + nameW" in SCREEN
