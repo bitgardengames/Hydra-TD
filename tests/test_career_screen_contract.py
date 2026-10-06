@@ -55,6 +55,16 @@ def test_career_metrics_use_semantic_visuals():
     assert "Medals.draw(c.x + nameW" in SCREEN
 
 
+def test_career_dashboard_uses_aligned_legacy_and_summary_columns():
+    assert "local leftW = floor(c.w * 0.57)" in SCREEN
+    assert "local function towerRow" in SCREEN
+    assert "local function statPanel" in SCREEN
+    assert 'L("career.campaignProgress")' in SCREEN
+    assert 'L("career.lifetimeStats")' in SCREEN
+    assert "careerStats.mapsCleared" in SCREEN
+    assert "careerStats.towerPlacements" in SCREEN
+
+
 def test_career_model_builds_per_tower_lifetime_kill_progress():
     assert "function Model.towers" in MODEL
     assert "history[kind].kills" in MODEL
@@ -77,6 +87,8 @@ def test_english_catalog_has_career_labels():
         'codex = "Enemy Codex"',
         'recordScore = "Best Score"',
         'lifetimeKills = "LIFETIME KILLS"',
+        'campaignProgress = "CAMPAIGN PROGRESS"',
+        'lifetimeStats = "LIFETIME STATS"',
         'unknownEnemy = "Unknown Enemy"',
     ):
         assert label in ENGLISH
