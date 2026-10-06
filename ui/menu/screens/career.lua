@@ -144,7 +144,7 @@ end
 local function towerRow(tower, x, y, w, h)
 	local accent = Theme.tower[tower.kind] or Theme.ui.selected
 	panel(x, y, w, h, Theme.ui.panel2)
-	drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 1)
+	drawTowerIcon(tower.kind, x + 38, y + h * 0.5, 2)
 
 	Fonts.set("menu")
 	lg.setColor(Theme.ui.text)
