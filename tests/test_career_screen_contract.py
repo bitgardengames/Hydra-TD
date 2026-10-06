@@ -58,7 +58,7 @@ def test_career_metrics_use_semantic_visuals():
 def test_career_model_builds_per_tower_lifetime_kill_progress():
     assert "function Model.towers" in MODEL
     assert "history[kind].kills" in MODEL
-    assert "row.kills / highestKills" in MODEL
+    assert "row.kills / totalKills" in MODEL
     assert "local TOWER_ORDER" in SCREEN
 
 
