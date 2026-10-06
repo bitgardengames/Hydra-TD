@@ -142,8 +142,6 @@ end
 local function towerCard(tower, x, y, w, h)
 	local accent = Theme.tower[tower.kind] or Theme.ui.selected
 	panel(x, y, w, h, Theme.ui.panel2)
-	lg.setColor(accent[1], accent[2], accent[3], 0.1)
-	lg.circle("fill", x + w * 0.5, y + 51, 43)
 	drawTowerIcon(tower.kind, x + w * 0.5, y + 53, 1.12)
 
 	Fonts.set("menu")
